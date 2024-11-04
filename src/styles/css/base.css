@@ -1,0 +1,82 @@
+:root {
+  color-scheme: dark;
+  --bs-body-color: #adb5bd;
+  --bs-body-color-rgb: 173, 181, 189;
+  --bs-body-bg: #212529;
+  --bs-body-bg-rgb: 33, 37, 41;
+  --bs-emphasis-color: #fff;
+  --bs-emphasis-color-rgb: 255, 255, 255;
+  --bs-secondary-color: rgba(173, 181, 189, 0.75);
+  --bs-secondary-color-rgb: 173, 181, 189;
+  --bs-secondary-bg: #343a40;
+  --bs-secondary-bg-rgb: 52, 58, 64;
+  --bs-tertiary-color: rgba(173, 181, 189, 0.5);
+  --bs-tertiary-color-rgb: 173, 181, 189;
+  --bs-tertiary-bg: #2b3035;
+  --bs-tertiary-bg-rgb: 43, 48, 53;
+  --bs-primary-text-emphasis: #ffb76b;
+  --bs-secondary-text-emphasis: rgba(255, 255, 255, 0.688);
+  --bs-success-text-emphasis: #75b798;
+  --bs-info-text-emphasis: #6edff6;
+  --bs-warning-text-emphasis: #ffe466;
+  --bs-danger-text-emphasis: #ff8289;
+  --bs-light-text-emphasis: #f8f9fa;
+  --bs-dark-text-emphasis: #dee2e6;
+  --bs-primary-bg-subtle: #331b02;
+  --bs-secondary-bg-subtle: rgba(19, 19, 19, 0.896);
+  --bs-success-bg-subtle: #051b11;
+  --bs-info-bg-subtle: #032830;
+  --bs-warning-bg-subtle: #332a00;
+  --bs-danger-bg-subtle: #33090c;
+  --bs-light-bg-subtle: #343a40;
+  --bs-dark-bg-subtle: #1a1d20;
+  --bs-primary-border-subtle: #995105;
+  --bs-secondary-border-subtle: rgba(82, 82, 82, 0.688);
+  --bs-success-border-subtle: #0f5132;
+  --bs-info-border-subtle: #087990;
+  --bs-warning-border-subtle: #997e00;
+  --bs-danger-border-subtle: #991c23;
+  --bs-light-border-subtle: #495057;
+  --bs-dark-border-subtle: #343a40;
+  --bs-link-color: #ffb76b;
+  --bs-link-hover-color: #ffc589;
+  --bs-link-color-rgb: 255, 183, 107;
+  --bs-link-hover-color-rgb: 255, 197, 137;
+  --bs-code-color: #e685b5;
+  --bs-border-color: #495057;
+  --bs-border-color-translucent: rgba(255, 255, 255, 0.15);
+  --bs-form-valid-color: #75b798;
+  --bs-form-valid-border-color: #75b798;
+  --bs-form-invalid-color: #ff8289;
+  --bs-form-invalid-border-color: #ff8289;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  line-height: 1.6;
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 15px;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
