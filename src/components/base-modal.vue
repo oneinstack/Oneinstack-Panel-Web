@@ -5,7 +5,13 @@ defineProps({
   footer: Boolean,
 })
 
-const show = defineModel()
+const show = defineModel({
+  default: false,
+  get: value => {
+    document.body.style.overflow = value ? 'hidden' : 'auto'
+    return value
+  },
+})
 </script>
 
 <template>
@@ -27,7 +33,7 @@ const show = defineModel()
             </slot>
           </div>
         </div>
-        <div v-if="show" class="overlay"></div>
+        <div v-if="show" class="overlay" @click="show = false"></div>
       </div>
     </transition>
   </teleport>
@@ -50,6 +56,7 @@ const show = defineModel()
     height: 100%;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+    will-change: backdrop-filter;
     z-index: 1000;
   }
 

@@ -72,7 +72,7 @@ const marqueeList = Array.from({ length: 5 }, (_, i) => ({
     <div class="game-marquee">
       <h2 class="game-marquee-title"><span>热门游戏</span></h2>
       <div class="game-marquee-list">
-        <vue3-marquee :duration="30">
+        <vue3-marquee pause-on-hover :duration="30">
           <div
             v-for="item in marqueeList"
             :key="item.id"
@@ -276,9 +276,8 @@ const marqueeList = Array.from({ length: 5 }, (_, i) => ({
       opacity: 0;
       transition: all ease-in-out 0.3s;
       background: rgba(0, 0, 0, 0.4);
-      padding: 30px;
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       justify-content: center;
 
       .svg-inline--fa {

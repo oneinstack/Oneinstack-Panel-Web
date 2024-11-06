@@ -2,9 +2,11 @@
 import NavBar from '@/components/nav-bar.vue'
 import BaseFooter from '@/components/base-footer.vue'
 import BaseModal from '@/components/base-modal.vue'
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const show = ref(false)
+
+onMounted(() => {})
 </script>
 
 <template>
@@ -46,7 +48,13 @@ const show = ref(false)
         </div>
       </template>
     </nav-bar>
-    <router-view class="main" />
+
+    <router-view #default="{ Component }" class="main">
+      <transition name="fade" mode="out-in">
+        <component :is="Component" />
+      </transition>
+    </router-view>
+
     <base-footer />
 
     <base-modal v-model="show" />
