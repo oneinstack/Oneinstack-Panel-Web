@@ -13,6 +13,17 @@ const router = createRouter({
       name: 'About',
       component: () => import('../views/about/base-about.vue'),
     },
+    {
+      path: '/game',
+      name: 'Game',
+      children: [
+        {
+          path: 'list',
+          name: 'GameList',
+          component: () => import('../views/game/base-game.vue'),
+        },
+      ],
+    },
   ],
 })
 
