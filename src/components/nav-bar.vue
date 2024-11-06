@@ -16,14 +16,14 @@ defineProps({
       <slot name="center" />
     </div>
     <div class="right">
-      <slot name="center" />
+      <slot name="right" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .nav-bar-container {
-  padding: 20px 0;
+  padding: 20px 300px;
   position: fixed;
   left: 0;
   top: 0;
