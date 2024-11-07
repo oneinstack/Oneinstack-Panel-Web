@@ -2,11 +2,11 @@
 import BaseTag from '@/components/base-tag.vue'
 import BaseButton from '@/components/base-button.vue'
 
-defineProps({
+const props = defineProps({
   data: {
     type: Object,
-    required: true,
-  },
+    required: true
+  }
 })
 </script>
 
@@ -38,18 +38,9 @@ defineProps({
                   d="M18.0249 5.9248H0.703125C0.314758 5.9248 0 6.23975 0 6.62793V15.8654C0 16.2538 0.314758 16.5685 0.703125 16.5685H18.0249C18.4133 16.5685 18.728 16.2538 18.728 15.8654V6.62793C18.728 6.23975 18.4133 5.9248 18.0249 5.9248ZM15.7156 14.2592C15.7156 14.6476 15.4008 14.9623 15.0125 14.9623H3.71558C3.32739 14.9623 3.01245 14.6476 3.01245 14.2592V8.23431C3.01245 7.84595 3.32739 7.53119 3.71558 7.53119H15.0125C15.4008 7.53119 15.7156 7.84595 15.7156 8.23431V14.2592Z"
                   fill="white"
                 ></path>
-                <path
-                  d="M11.95 8.9375H14.3093V13.5562H11.95V8.9375Z"
-                  fill="white"
-                ></path>
-                <path
-                  d="M8.18457 8.9375H10.5439V13.5562H8.18457V8.9375Z"
-                  fill="white"
-                ></path>
-                <path
-                  d="M4.4187 8.9375H6.7782V13.5562H4.4187V8.9375Z"
-                  fill="white"
-                ></path>
+                <path d="M11.95 8.9375H14.3093V13.5562H11.95V8.9375Z" fill="white"></path>
+                <path d="M8.18457 8.9375H10.5439V13.5562H8.18457V8.9375Z" fill="white"></path>
+                <path d="M4.4187 8.9375H6.7782V13.5562H4.4187V8.9375Z" fill="white"></path>
                 <path
                   d="M1.5061 23.2969C1.5061 23.6852 1.82104 24 2.20923 24H16.5186C16.9069 24 17.2217 23.6852 17.2217 23.2969V17.9751H1.5061V23.2969ZM11.9999 19.5813H13.5061C13.8945 19.5813 14.2092 19.8961 14.2092 20.2844C14.2092 20.6726 13.8945 20.9875 13.5061 20.9875H11.9999C11.6115 20.9875 11.2968 20.6726 11.2968 20.2844C11.2968 19.8961 11.6115 19.5813 11.9999 19.5813Z"
                   fill="white"
@@ -80,7 +71,8 @@ defineProps({
           {{ data.desc }}
         </div>
         <div class="action">
-          <base-button type="primary">立即试玩</base-button>
+          <base-button v-if="data.isSupportTry" type="primary" @click="$emit('click-play', data)">立即试玩</base-button>
+          <base-button v-else>敬请期待</base-button>
         </div>
       </div>
     </div>

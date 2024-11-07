@@ -1,13 +1,9 @@
 <script setup>
 import { Vue3Marquee } from 'vue3-marquee'
 import NewGameCard from './new-game-card.vue'
+import { Scope } from 'tools-vue3'
 
-const newGames = Array.from({ length: 10 }, (_, i) => ({
-  id: i + 1,
-  img: '/images/scroll-game.png',
-  name: '雷神之锤',
-  desc: '「雷神之锤在手，威力无穷」快来体验堆栈百搭疯狂赚的雷神之锤，大力锤出您的2000倍大赏！',
-}))
+const mconf = Scope.getConf()
 </script>
 
 <template>
@@ -19,34 +15,33 @@ const newGames = Array.from({ length: 10 }, (_, i) => ({
         <span>发布</span>
       </h1>
       <img src="/svg/game-split.svg" class="split" alt="" />
-      <div class="desc">
-        最新、最火热的全新在线娱乐游戏热腾腾上架、就等你来一探究竟！
-      </div>
+      <div class="desc">最新、最火热的全新在线娱乐游戏热腾腾上架、就等你来一探究竟！</div>
     </div>
 
     <div class="scroll-view">
-      <vue3-marquee
-        pauseOnHover
-        direction="reverse"
-        :duration="newGames.length * 10"
-        class="marquee"
-      >
-        <new-game-card v-for="game in newGames" :key="game.id" :data="game" />
+      <vue3-marquee pauseOnHover direction="reverse" :duration="mconf.newGames.length * 10" class="marquee">
+        <new-game-card
+          v-for="game in mconf.newGames"
+          :key="game.id"
+          :data="game"
+          @click-play="mconf.modal.open(game)"
+        />
       </vue3-marquee>
-      <vue3-marquee
-        pauseOnHover
-        :duration="newGames.length * 10"
-        class="marquee"
-      >
-        <new-game-card v-for="game in newGames" :key="game.id" :data="game" />
+      <vue3-marquee pauseOnHover :duration="mconf.newGames.length * 10" class="marquee">
+        <new-game-card
+          v-for="game in mconf.newGames"
+          :key="game.id"
+          :data="game"
+          @click-play="mconf.modal.open(game)"
+        />
       </vue3-marquee>
-      <vue3-marquee
-        pauseOnHover
-        direction="reverse"
-        :duration="newGames.length * 10"
-        class="marquee"
-      >
-        <new-game-card v-for="game in newGames" :key="game.id" :data="game" />
+      <vue3-marquee pauseOnHover direction="reverse" :duration="mconf.newGames.length * 10" class="marquee">
+        <new-game-card
+          v-for="game in mconf.newGames"
+          :key="game.id"
+          :data="game"
+          @click-play="mconf.modal.open(game)"
+        />
       </vue3-marquee>
     </div>
 

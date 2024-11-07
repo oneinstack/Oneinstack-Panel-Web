@@ -1,17 +1,28 @@
 <script setup>
-defineProps({
+const props = defineProps({
   title: String,
   header: Boolean,
   footer: Boolean,
+  overlayClose: {
+    type: Boolean,
+    default: true
+  }
 })
+
+const emit = defineEmits(['click-overlay'])
 
 const show = defineModel({
   default: false,
-  get: value => {
+  get: (value) => {
     document.body.style.overflow = value ? 'hidden' : 'auto'
     return value
-  },
+  }
 })
+
+const handleClickOverlay = () => {
+  emit('click-overlay')
+  if (props.overlayClose) show.value = false
+}
 </script>
 
 <template>
@@ -33,7 +44,7 @@ const show = defineModel({
             </slot>
           </div>
         </div>
-        <div v-if="show" class="overlay" @click="show = false"></div>
+        <div v-if="show" class="overlay" @click="handleClickOverlay"></div>
       </div>
     </transition>
   </teleport>
@@ -62,7 +73,6 @@ const show = defineModel({
 
   .modal-body {
     width: 800px;
-    padding: 8%;
     box-shadow:
       0 0 2px #ffffff3d,
       0 0 16px #0000007a;

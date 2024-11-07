@@ -2,48 +2,12 @@
 import { Vue3Marquee } from 'vue3-marquee'
 import BaseTag from '@/components/base-tag.vue'
 import BaseButton from '@/components/base-button.vue'
+import { Scope } from 'tools-vue3'
+import { useRoute } from 'vue-router'
 
-const gameType = [
-  {
-    id: 1,
-    name: '全部游戏',
-    link: '',
-  },
-  {
-    id: 2,
-    name: '老虎机',
-    link: '',
-  },
-  {
-    id: 3,
-    name: '捕鱼机',
-    link: '',
-  },
-  {
-    id: 4,
-    name: '街机',
-    link: '',
-  },
-  {
-    id: 5,
-    name: '棋牌',
-    link: '',
-  },
-  {
-    id: 6,
-    name: '宾果',
-    link: '',
-  },
-]
+const route = useRoute()
 
-const marqueeList = Array.from({ length: 5 }, (_, i) => ({
-  id: i,
-  name: '财神驾到',
-  desc: 'JDB首款中國風跑灯押分机游戏！',
-  type: '',
-  img: '/images/game-marquee.jpg',
-  smallImg: '/images/marquee-label.png',
-}))
+const conf = Scope.getConf()
 </script>
 
 <template>
@@ -57,32 +21,28 @@ const marqueeList = Array.from({ length: 5 }, (_, i) => ({
       </div>
       <div class="row justify-content-center game-select">
         <ul class="game-select-nav">
-          <li
-            v-for="item in gameType"
-            :key="item.id"
-            class="game-select-nav-item"
-          >
-            <router-link :to="item.link" class="game-select-nav-link">
+          <li v-for="item in conf.gameType" :key="item.id" class="game-select-nav-item">
+            <router-link
+              :to="item.link"
+              class="game-select-nav-link"
+              :class="{ active: item.link === conf.currentActive.link }"
+            >
               <span>{{ item.name }}</span>
             </router-link>
           </li>
         </ul>
       </div>
     </div>
-    <div class="game-marquee">
+    <div v-if="route.path === '/game/list' && conf.gameType.length" class="game-marquee">
       <h2 class="game-marquee-title"><span>热门游戏</span></h2>
       <div class="game-marquee-list">
         <vue3-marquee pause-on-hover :duration="30">
-          <div
-            v-for="item in marqueeList"
-            :key="item.id"
-            class="game-marquee-card"
-          >
+          <div v-for="item in conf.marqueeList" :key="item.id" class="game-marquee-card">
             <div class="card-img">
               <img :src="item.img" alt="marquee-img" />
             </div>
-            <div class="card-mask">
-              <base-button type="primary">
+            <div v-if="item.isSupportTry" class="card-mask">
+              <base-button type="primary" @click="conf.modal.open(item)">
                 <svg
                   data-v-12c6513b=""
                   class="svg-inline--fa fa-play me-2"
@@ -100,8 +60,8 @@ const marqueeList = Array.from({ length: 5 }, (_, i) => ({
                     d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"
                   ></path>
                 </svg>
-                <span>立即试玩</span></base-button
-              >
+                <span>立即试玩</span>
+              </base-button>
             </div>
             <div class="card-content">
               <div class="row">

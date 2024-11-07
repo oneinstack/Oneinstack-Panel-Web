@@ -1,11 +1,15 @@
-<script setup></script>
+<script setup>
+import { Scope } from 'tools-vue3'
+
+const conf = Scope.getConf()
+</script>
 
 <template>
   <div class="game-list-container">
     <div class="container">
       <div class="game-list-info">
-        <h4 class="game-list-title">全部游戏</h4>
-        <div class="game-list-count">95</div>
+        <h4 class="game-list-title">{{ conf.currentActive.name }}</h4>
+        <div class="game-list-count">{{ conf.currentActive.number }}</div>
       </div>
       <div class="row">
         <slot />

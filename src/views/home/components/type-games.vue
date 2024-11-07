@@ -1,48 +1,8 @@
 <script setup>
-import { reactive } from 'vue'
+import { Scope } from 'tools-vue3'
 
-const categories = reactive([
-  {
-    index: 1,
-    name: '老虎机',
-    img: '/images/game-slot.jpg',
-    link: '',
-    number: 0,
-    color: '#FFD200',
-  },
-  {
-    index: 2,
-    name: '捕鱼机',
-    img: '/images/game-fish.jpg',
-    link: '',
-    number: 0,
-    color: '#FFB40B',
-  },
-  {
-    index: 3,
-    name: '街机',
-    img: '/images/game-arcade.jpg',
-    link: '',
-    number: 0,
-    color: '#FF8708',
-  },
-  {
-    index: 4,
-    name: '棋牌',
-    img: '/images/game-card.jpg',
-    link: '',
-    number: 0,
-    color: '#FF6128',
-  },
-  {
-    index: 5,
-    name: '宾果',
-    img: '/images/game-bingo.jpg',
-    link: '',
-    number: 0,
-    color: '#FF2E3A',
-  },
-])
+const mconf = Scope.getConf()
+const categories = mconf.categories
 </script>
 
 <template>
@@ -65,6 +25,7 @@ const categories = reactive([
         :key="item.id"
         class="categories-item"
         :style="{ borderColor: item.color }"
+        @click="$router.push(item.link)"
       >
         <div class="bg" :style="{ backgroundImage: `url(${item.img})` }" />
         <div>

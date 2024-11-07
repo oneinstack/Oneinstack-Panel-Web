@@ -6,12 +6,12 @@ const router = createRouter({
     {
       path: '/',
       name: 'Home',
-      component: () => import('../views/home/base-home.vue'),
+      component: () => import('../views/home/base-home.vue')
     },
     {
       path: '/about',
       name: 'About',
-      component: () => import('../views/about/base-about.vue'),
+      component: () => import('../views/about/base-about.vue')
     },
     {
       path: '/game',
@@ -21,10 +21,21 @@ const router = createRouter({
           path: 'list',
           name: 'GameList',
           component: () => import('../views/game/base-game.vue'),
-        },
-      ],
-    },
+          children: [
+            {
+              path: ':type',
+              name: 'GameType',
+              component: () => import('../views/game/base-game.vue')
+            }
+          ]
+        }
+      ]
+    }
   ],
+  scrollBehavior() {
+    // 始终滚动到顶部
+    return { top: 0, behavior: 'smooth' }
+  }
 })
 
 export default router
