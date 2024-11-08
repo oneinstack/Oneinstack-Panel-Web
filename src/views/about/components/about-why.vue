@@ -1,40 +1,44 @@
-<script setup></script>
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
 
 <template>
   <div class="about-why-container">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-xxl-10">
-          <h2 class="why-title">必须是BG夺宝电子的最佳理由</h2>
+          <h2 class="why-title">{{ t('whyBg') }}</h2>
           <div class="card-list row">
             <div class="card-item">
-              <h4 class="title">因地制宜，创造双赢</h4>
+              <h4 class="title">{{ t('whyReason1') }}</h4>
               <p class="text">
-                针对客户营运区域、依据游戏表现、玩家上线频率与喜好，提供游戏的调整建议与协助策略布局。
+                {{ t('whyReason1Desc') }}
               </p>
             </div>
             <div class="card-item">
-              <h4 class="title">风险控管，保障利益</h4>
+              <h4 class="title">{{ t('whyReason2') }}</h4>
               <p class="text">
-                计算落点分布与潜在风险值，严格监控与管理游戏营运状况。
+                {{ t('whyReason2Desc') }}
               </p>
             </div>
             <div class="card-item">
-              <h4 class="title">开发预测，抢先商机</h4>
+              <h4 class="title">{{ t('whyReason3') }}</h4>
               <p class="text">
-                根据历史资料与产业经验，判断新游戏开发所需具备的特点与元素来锁定目标市场，大幅提升成功率，并藉由营销活动，提高玩家对BG游戏产品的忠诚度，以保障客户期望。
+                {{ t('whyReason3Desc') }}
               </p>
             </div>
             <div class="card-item">
-              <h4 class="title">状况比对，成效分析</h4>
+              <h4 class="title">{{ t('whyReason4') }}</h4>
               <p class="text">
-                交叉比对客户状况、玩家分布、留存率评估等，定期追踪玩家行为，藉由BG专业团队与大资料分析游戏成效和玩家习性，开发更具吸引力与高黏着度产品。
+                {{ t('whyReason4Desc') }}
               </p>
             </div>
             <div class="card-item">
-              <h4 class="title">游戏推荐，投其所好</h4>
+              <h4 class="title">{{ t('whyReason5') }}</h4>
               <p class="text">
-                根据玩家与游戏主题的关联性、游玩频率、游戏黏着度、游戏调性等数据评估，提供玩家更适当的游戏选择，让JDB游戏产品更能促进玩家的游玩体验，并提高客户的经营获利。
+                {{ t('whyReason5Desc') }}
               </p>
             </div>
           </div>

@@ -1,41 +1,43 @@
-<script setup></script>
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
 
 <template>
   <div class="about-mission-container">
     <div class="container row">
       <div class="desc">
-        <h4 class="mission-title">我们的使命</h4>
+        <h4 class="mission-title">{{ t('ourMission') }}</h4>
         <h3 class="mission-slogan">
-          “Just Do the Best“ 是BG夺宝电子的座右铭。
+          “Just Do the Best“
+          <br />
+          {{ t('theMottoOf') }}
         </h3>
         <div class="mission-texts">
           <p class="text">
-            为持续成为产业的领先者，我们以更高的标准鞭策自己。我们将BG夺宝电子的三大核心要素注入成为品牌的血液，Innovate
-            / Challenge / Evolve
-            持续创新、拥抱挑战、展翅进化，贯彻品牌核心目标。
+            {{ t('ourMissionDesc1') }}
           </p>
-          <p class="text">
-            期许BG夺宝电子成为你不可或缺的线上娱乐解决方案伙伴，共同在国际上闪耀光芒！
-          </p>
+          <p class="text">{{ t('ourMissionDesc2') }}</p>
         </div>
       </div>
       <div class="list">
         <div class="list-item">
-          <h4 class="title">创新</h4>
+          <h4 class="title">{{ t('innovate') }}</h4>
           <ul>
-            <li class="text">点燃游戏中的新可能。</li>
+            <li class="text">{{ t('innovateDesc') }}</li>
           </ul>
         </div>
         <div class="list-item">
-          <h4 class="title">挑战</h4>
+          <h4 class="title">{{ t('challenge') }}</h4>
           <ul>
-            <li class="text">突破界限，缔造难忘体验。</li>
+            <li class="text">{{ t('challengeDesc') }}</li>
           </ul>
         </div>
         <div class="list-item">
-          <h4 class="title">进化</h4>
+          <h4 class="title">{{ t('evolve') }}</h4>
           <ul>
-            <li class="text">拥抱变革，迈向游戏进化的下一个层次。</li>
+            <li class="text">{{ t('evolveDesc') }}</li>
           </ul>
         </div>
       </div>

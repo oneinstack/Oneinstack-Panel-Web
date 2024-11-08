@@ -1,6 +1,9 @@
 <script setup>
 import BaseTag from '@/components/base-tag.vue'
 import BaseButton from '@/components/base-button.vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps({
   data: {
@@ -71,8 +74,10 @@ const props = defineProps({
           {{ data.desc }}
         </div>
         <div class="action">
-          <base-button v-if="data.isSupportTry" type="primary" @click="$emit('click-play', data)">立即试玩</base-button>
-          <base-button v-else>敬请期待</base-button>
+          <base-button v-if="data.isSupportTry" type="primary" @click="$emit('click-play', data)">
+            {{ t('tryNow') }}
+          </base-button>
+          <base-button v-else>{{ t('comingSoon') }}</base-button>
         </div>
       </div>
     </div>
@@ -91,12 +96,13 @@ const props = defineProps({
     position: absolute;
     width: 330px;
     height: 330px;
+    overflow: hidden;
     z-index: 2;
 
     img {
       width: 100%;
       max-width: 100%;
-      height: auto;
+      height: 100%;
       object-fit: cover;
     }
   }

@@ -1,5 +1,8 @@
 <script setup>
 import { Scope } from 'tools-vue3'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const mconf = Scope.getConf()
 const categories = mconf.categories
@@ -13,9 +16,9 @@ const categories = mconf.categories
     <img src="/images/category-bg-4.png" alt="" class="category-bg-4" />
     <img src="/images/category-bg-5.png" alt="" class="category-bg-5" />
     <div class="title">
-      <h1 class="type-games-title">游戏类型</h1>
+      <h1 class="type-games-title">{{ t('gameTypes') }}</h1>
       <h2 class="type-games-subtitle">
-        完美复刻受欢迎经典游戏、开发独特新玩法原创游戏，多元游戏类型，满足你的各种在线娱乐需求！
+        {{ t('gameTypesDesc') }}
       </h2>
     </div>
     <ul class="categories">
@@ -38,7 +41,7 @@ const categories = mconf.categories
         </div>
         <div class="game-num">
           <div class="value">{{ item.number }}</div>
-          <div class="label">游戏</div>
+          <div class="label">{{ t('games') }}</div>
         </div>
       </li>
     </ul>

@@ -5,54 +5,45 @@ import NewGames from './components/new-games.vue'
 import TypeGames from './components/type-games.vue'
 import { Scope } from 'tools-vue3'
 import GameModal from '@/components/game-modal.vue'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const conf = reactive({
   fetchData: async () => {
-    const { data } = await http.get('/api/game/getGameList')
+    const { data } = await http.get('/api/game/getGameList', { pages: 1, size: 999 })
     const statistics = await http.get('/api/game/getTypeCount')
     Object.keys(statistics).forEach((key) => {
       const currentItem = conf.categories.find((item) => item.id === parseInt(key))
       currentItem.number = statistics[key]
     })
-    conf.banners = data
+    conf.banners = data.records
       .filter((item) => item.isSwiper)
       .map((item, i) => ({
         id: i + 1,
-        imgUrl: item.imgUrl ? item.imgUrl : '/images/banner-test.jpg'
+        imgUrl: item.imgUrl
       }))
-    conf.newGames = data.map((item, i) => ({
-      id: i + 1,
-      img: item.imgUrl ? item.imgUrl : '/images/scroll-game.png',
-      name: item.name ? item.name : '雷神之锤',
-      desc: item.gameDesc
-        ? item.gameDesc
-        : '「雷神之锤在手，威力无穷」快来体验堆栈百搭疯狂赚的雷神之锤，大力锤出您的2000倍大赏！',
-      link: item.supportTryUrl ? item.supportTryUrl : '',
-      isSupportTry: item.isSupportTry
-    }))
-    for (let i = 5 - conf.newGames.length; i >= 0; i--) {
-      conf.newGames.push({
+    conf.newGames = data.records
+      .filter((item) => item.isNewGame)
+      .map((item, i) => ({
         id: i + 1,
-        img: '/images/scroll-game.png',
-        name: '雷神之锤',
-        desc: '雷神之锤在手，威力无穷」快来体验堆栈百搭疯狂赚的雷神之锤，大力锤出您的2000倍大赏！',
-        link: '',
-        isSupportTry: false
-      })
+        img: item.imgUrl,
+        name: item.gameName,
+        desc: item.gameDesc,
+        link: item.supportTryUrl,
+        isSupportTry: item.isSupportTry
+      }))
+    if (!conf.newGames.length || conf.newGames.length >= 5) return
+    for (let i = 4 - conf.newGames.length; i >= 0; i--) {
+      conf.newGames.push(conf.newGames[i % conf.newGames.length])
     }
   },
   banners: [],
-  newGames: Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    img: '/images/scroll-game.png',
-    name: '雷神之锤',
-    desc: '「雷神之锤在手，威力无穷」快来体验堆栈百搭疯狂赚的雷神之锤，大力锤出您的2000倍大赏！'
-  })),
+  newGames: [],
   categories: [
     {
       id: 1,
       index: 1,
-      name: '老虎机',
+      name: t('gameSlot'),
       img: '/images/game-slot.jpg',
       link: '/game/list/slot',
       number: 0,
@@ -61,7 +52,7 @@ const conf = reactive({
     {
       id: 2,
       index: 2,
-      name: '捕鱼机',
+      name: t('gameFish'),
       img: '/images/game-fish.jpg',
       link: '/game/list/fish-shooting',
       number: 0,
@@ -70,7 +61,7 @@ const conf = reactive({
     {
       id: 3,
       index: 3,
-      name: '街机',
+      name: t('gameArcade'),
       img: '/images/game-arcade.jpg',
       link: '/game/list/arcade',
       number: 0,
@@ -79,7 +70,7 @@ const conf = reactive({
     {
       id: 4,
       index: 4,
-      name: '棋牌',
+      name: t('gameCard'),
       img: '/images/game-card.jpg',
       link: '/game/list/poker-card',
       number: 0,
@@ -88,7 +79,7 @@ const conf = reactive({
     {
       id: 5,
       index: 5,
-      name: '宾果',
+      name: t('gameBingo'),
       img: '/images/game-bingo.jpg',
       link: '/game/list/bingo',
       number: 0,
@@ -111,7 +102,7 @@ Scope.setConf(conf)
 <template>
   <div class="base-home-container">
     <home-banner />
-    <new-games />
+    <new-games v-if="conf.newGames.length" />
     <type-games />
 
     <game-modal v-model="conf.modal.show" :game-link="conf.modal.link" />

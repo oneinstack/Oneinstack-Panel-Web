@@ -61,8 +61,11 @@
   padding: 0;
 }
 
+html {
+  overflow: hidden;
+}
 body {
-  min-height: 100vh;
+  height: 100vh;
   font-family:
     Inter,
     -apple-system,

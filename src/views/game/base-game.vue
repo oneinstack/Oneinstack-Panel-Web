@@ -6,105 +6,110 @@ import GameCard from './components/game-card.vue'
 import { Scope } from 'tools-vue3'
 import GameModal from '@/components/game-modal.vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const conf = reactive({
+  queryParams: {
+    current: 1,
+    size: 8
+  },
+  hasMore: true,
   fetchData: async () => {
-    const { data } = await http.get('/api/game/getGameList')
+    const { data } = await http.get('/api/game/getGameList', conf.queryParams)
     const statistics = await http.get('/api/game/getTypeCount')
-    let allGameNumber = 0
     Object.keys(statistics).forEach((key) => {
       const currentItem = conf.gameType.find((item) => item.id === parseInt(key))
       currentItem.number = parseInt(statistics[key])
     })
-    conf.marqueeList = data
+    conf.marqueeList = data.records
       .filter((item) => item.isHot)
       .map((item, i) => ({
         id: i + 1,
-        name: item.name ? item.name : '财神驾到',
-        desc: item.gameDesc ? item.gameDesc : 'JDB首款中國風跑灯押分机游戏！',
-        type: item.type,
-        img: item.imgUrl ? item.imgUrl : '/images/game-marquee.jpg',
-        smallImg: item.iconUrl ? item.iconUrl : '/images/marquee-label.png',
-        link: item.supportTryUrl ? item.supportTryUrl : '',
+        name: item.gameName,
+        desc: item.gameDesc,
+        img: item.imgUrl,
+        smallImg: item.iconUrl,
+        link: item.supportTryUrl,
         isSupportTry: item.isSupportTry
       }))
-    for (let i = 5 - conf.marqueeList.length; i >= 0; i--) {
-      conf.marqueeList.push({
-        id: i + 1,
-        name: '财神驾到',
-        desc: 'JDB首款中國風跑灯押分机游戏！',
-        type: 'marquee',
-        img: '/images/game-marquee.jpg',
-        smallImg: '/images/marquee-label.png',
-        link: '',
-        isSupportTry: false
-      })
-    }
-    conf.games = data.map((item, i) => ({
+    conf.games = data.records.map((item, i) => ({
       id: i + 1,
-      name: item.name ? item.name : '海皇争霸龙凤传说',
-      bg: item.imgUrl ? item.imgUrl : '/images/cover-bg.jpg',
-      logo: item.iconUrl ? item.iconUrl : '/images/cover-game-log.png',
-      link: item.supportTryUrl ? item.supportTryUrl : '',
-      isSupportTry: item.isSupportTry
+      name: item.gameName,
+      bg: item.imgUrl,
+      logo: item.iconUrl,
+      link: item.supportTryUrl,
+      isSupportTry: item.isSupportTry,
+      isHot: item.isHot,
+      isNew: item.isNewGame
     }))
-    conf.gameType[0].number = conf.games.length
+    conf.hasMore = conf.games.length < data.total
+    conf.gameType[0].number = data.total
+    if (!conf.marqueeList.length || conf.marqueeList.length >= 5) return
+    for (let i = 4 - conf.marqueeList.length; i >= 0; i--) {
+      conf.marqueeList.push(conf.marqueeList[i % conf.marqueeList.length])
+    }
+  },
+  nextPage: async () => {
+    if (!conf.hasMore) return
+    conf.queryParams.current++
+    const { data } = await http.get('/api/game/getGameList', conf.queryParams)
+    const newData = data.records.map((item) => ({
+      id: item.gameCode,
+      name: item.gameName,
+      bg: item.imgUrl,
+      logo: item.iconUrl,
+      link: item.supportTryUrl,
+      isSupportTry: item.isSupportTry,
+      isHot: item.isHot,
+      isNew: item.isNewGame
+    }))
+    conf.games.push(...newData)
+    conf.hasMore = conf.games.length < data.total
   },
   currentActive: computed(() => conf.gameType.find((item) => item.link === route.path)),
   gameType: [
     {
       id: 0,
-      name: '全部游戏',
+      name: t('all'),
       link: '/game/list',
       number: 0
     },
     {
       id: 1,
-      name: '老虎机',
+      name: t('gameSlot'),
       link: '/game/list/slot',
       number: 0
     },
     {
       id: 2,
-      name: '捕鱼机',
+      name: t('gameFish'),
       link: '/game/list/fish-shooting',
       number: 0
     },
     {
       id: 3,
-      name: '街机',
+      name: t('gameArcade'),
       link: '/game/list/arcade',
       number: 0
     },
     {
       id: 4,
-      name: '棋牌',
+      name: t('gameCard'),
       link: '/game/list/poker-card',
       number: 0
     },
     {
       id: 5,
-      name: '宾果',
+      name: t('gameBingo'),
       link: '/game/list/bingo',
       number: 0
     }
   ],
-  marqueeList: Array.from({ length: 5 }, (_, i) => ({
-    id: i,
-    name: '财神驾到',
-    desc: 'JDB首款中國風跑灯押分机游戏！',
-    type: '',
-    img: '/images/game-marquee.jpg',
-    smallImg: '/images/marquee-label.png'
-  })),
-  games: Array.from({ length: 10 }, (_, i) => ({
-    id: i + 1,
-    name: '海皇争霸龙凤传说',
-    bg: '/images/cover-bg.jpg',
-    logo: '/images/cover-game-log.png',
-    link: ''
-  })),
+  marqueeList: [],
+  games: [],
   modal: {
     show: false,
     link: '',
@@ -119,9 +124,9 @@ Scope.setConf(conf)
 </script>
 
 <template>
-  <div class="base-game-container">
+  <div ref="container" class="base-game-container">
     <game-banner />
-    <game-list>
+    <game-list :has-more="conf.hasMore" @load="conf.nextPage">
       <div class="game-list-box">
         <game-card v-for="game in conf.games" :key="game.id" :data="game" @click-play="conf.modal.open(game)" />
       </div>

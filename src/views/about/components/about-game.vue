@@ -1,53 +1,37 @@
-<script setup></script>
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
 
 <template>
   <div class="about-game-container">
     <div class="services">
       <div class="container">
-        <h3 class="services-title">游戏特色</h3>
+        <h3 class="services-title">{{ t('gameFeatures') }}</h3>
         <div class="row services-items">
           <div class="services-item">
             <div class="desc">
               <div class="index">01</div>
-              <div class="title">游戏种类多元</div>
+              <div class="title">{{ t('allrounded') }}</div>
               <div class="text">
-                作为一富具经验的游戏开发商，BG夺宝电子供应了多样类型的线上游戏，除了在亚洲极受欢迎的捕鱼机游戏外，更多的有老虎机(角子机)、宾果、棋牌、街机游戏及其他街机游戏等等，让你玩不尽玩不腻！
+                {{ t('allroundedDesc') }}
               </div>
             </div>
             <div class="category">
-              <img
-                class="category-split-img"
-                src="/images/game-slot.jpg"
-                alt=""
-              />
-              <img
-                class="category-split-img"
-                src="/images/game-fish.jpg"
-                alt=""
-              />
-              <img
-                class="category-split-img"
-                src="/images/game-arcade.jpg"
-                alt=""
-              />
-              <img
-                class="category-split-img"
-                src="/images/game-card.jpg"
-                alt=""
-              />
-              <img
-                class="category-split-img"
-                src="/images/game-bingo.jpg"
-                alt=""
-              />
+              <img class="category-split-img" src="/images/game-slot.jpg" alt="" />
+              <img class="category-split-img" src="/images/game-fish.jpg" alt="" />
+              <img class="category-split-img" src="/images/game-arcade.jpg" alt="" />
+              <img class="category-split-img" src="/images/game-card.jpg" alt="" />
+              <img class="category-split-img" src="/images/game-bingo.jpg" alt="" />
             </div>
           </div>
           <div class="services-item">
             <div class="desc" style="order: 2">
               <div class="index">02</div>
-              <div class="title">完美复刻经典</div>
+              <div class="title">{{ t('classicGaming') }}</div>
               <div class="text">
-                承袭线下游戏优点，BG夺宝电子将备受欢迎的经典游戏完美复刻至线上平台，并将线上游戏优化、发展再进化，让玩家只需动动手指，即刻仿佛置身赌场体验捕鱼机、老虎机等游玩快感！
+                {{ t('classicGamingDesc') }}
               </div>
             </div>
             <div class="category">
@@ -57,9 +41,9 @@
           <div class="services-item">
             <div class="desc">
               <div class="index">03</div>
-              <div class="title">打造原创大作</div>
+              <div class="title">{{ t('originalMasterpieces') }}</div>
               <div class="text">
-                BG夺宝电子洞察市场趋势，持续尝试各种线上游戏新玩法及开发多元游戏类型，大至操作功能、小至图腾音效，皆掌握玩家的喜好与欲望，创造高黏着度原创大作！
+                {{ t('originalMasterpiecesDesc') }}
               </div>
             </div>
             <div class="category">
@@ -69,9 +53,9 @@
           <div class="services-item">
             <div class="desc" style="order: 2">
               <div class="index">04</div>
-              <div class="title">客制在地化游戏</div>
+              <div class="title">{{ t('localizedGameplay') }}</div>
               <div class="text">
-                BG夺宝电子跻身国际市场，具备了设计在地化游戏的优秀能力，能够将当地文化、特殊玩法融入至游戏中，进而引起玩家的共鸣，为准备开拓新市场的合作伙伴打造最佳利器！
+                {{ t('localizedGameplayDesc') }}
               </div>
             </div>
             <div class="category">
@@ -84,7 +68,7 @@
 
     <div class="features">
       <div class="container">
-        <h3 class="features-title">服务范畴</h3>
+        <h3 class="features-title">{{ t('services') }}</h3>
         <div class="features-items">
           <div class="features-item">
             <div class="features-item-icon">
@@ -104,9 +88,9 @@
                 ></path>
               </svg>
             </div>
-            <h4 class="features-item-title">API介接服务</h4>
+            <h4 class="features-item-title">{{ t('APIIntegration') }}</h4>
             <p class="features-item-text">
-              提供客户安全可靠的API快速对接服务，跨平台无缝接合、免下载切换快速，让您快速掌握商机不用等。
+              {{ t('APIIntegrationDesc') }}
             </p>
           </div>
           <div class="features-item">
@@ -127,9 +111,9 @@
                 ></path>
               </svg>
             </div>
-            <h4 class="features-item-title">大数据分析</h4>
+            <h4 class="features-item-title">{{ t('bigDataAnalysis') }}</h4>
             <p class="features-item-text">
-              藉由BG夺宝电子专业的大数据分析系统，定期追踪与剖析玩家行为，提升玩家们的游戏体验与好感，创造稳定客群与持续成长的获利。
+              {{ t('bigDataAnalysisDesc') }}
             </p>
           </div>
           <div class="features-item">
@@ -150,9 +134,9 @@
                 ></path>
               </svg>
             </div>
-            <h4 class="features-item-title">全年无休</h4>
+            <h4 class="features-item-title">{{ t('onDuty') }}</h4>
             <p class="features-item-text">
-              提供全球客户365天全年无休，24/7全天候待命的专业团队，打造安全可靠的监控系统，及时解决玩家问题，让客户拥有最强后盾、让玩家尽情享受游戏体验，保障客户营运实况。
+              {{ t('onDutyDesc') }}
             </p>
           </div>
         </div>
@@ -226,13 +210,7 @@
 
         &:after {
           content: '';
-          background: linear-gradient(
-            135deg,
-            #000000 0%,
-            #000000 25%,
-            #ffd200 50%,
-            #ff2e3a 100%
-          );
+          background: linear-gradient(135deg, #000000 0%, #000000 25%, #ffd200 50%, #ff2e3a 100%);
           background-size: 400% 400%;
           opacity: 0.4;
           position: absolute;

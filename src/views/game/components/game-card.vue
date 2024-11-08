@@ -1,5 +1,6 @@
 <script setup>
 import BaseButton from '@/components/base-button.vue'
+import BaseTag from '@/components/base-tag.vue'
 
 defineProps({
   data: {
@@ -13,15 +14,15 @@ defineProps({
   <div class="game-card-container">
     <div class="game-card-bg" :style="{ backgroundImage: `url(${data.bg})` }" />
     <div class="game-tags">
-      <slot name="tags" />
+      <base-tag v-if="data.isNew" type="new">NEW</base-tag>
+      <base-tag v-if="data.isHot">HOT</base-tag>
     </div>
     <div class="game-logo">
       <img :src="data.logo" class="img-fluid" alt="" />
     </div>
     <div class="game-name-row">
-      <div data-v-d97743db="" class="game-type-icon">
+      <div class="game-type-icon">
         <svg
-          data-v-d97743db=""
           width="24"
           height="24"
           viewBox="0 0 24 24"
@@ -95,7 +96,7 @@ defineProps({
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  height: 434px;
   position: relative;
 
   &::before {
@@ -110,6 +111,8 @@ defineProps({
   }
 
   .game-card-bg {
+    width: 100%;
+    height: 100%;
     position: absolute;
     top: 0;
     left: 0;

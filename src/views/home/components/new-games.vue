@@ -2,52 +2,47 @@
 import { Vue3Marquee } from 'vue3-marquee'
 import NewGameCard from './new-game-card.vue'
 import { Scope } from 'tools-vue3'
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const mconf = Scope.getConf()
+
+const rows = computed(() => {
+  const row = parseInt(mconf.newGames.length / 5)
+  return row < 3 ? parseInt(mconf.newGames.length / 5) : 3
+})
 </script>
 
 <template>
   <div class="new-games-container">
     <div class="txt">
       <h1 class="title">
-        <span>最新游戏</span>
+        <span v-html="t('newGames')" />
         <br />
-        <span>发布</span>
+        <span>{{ t('release') }}</span>
       </h1>
       <img src="/svg/game-split.svg" class="split" alt="" />
-      <div class="desc">最新、最火热的全新在线娱乐游戏热腾腾上架、就等你来一探究竟！</div>
+      <div class="desc">{{ t('newGamesDesc') }}</div>
     </div>
 
     <div class="scroll-view">
-      <vue3-marquee pauseOnHover direction="reverse" :duration="mconf.newGames.length * 10" class="marquee">
-        <new-game-card
-          v-for="game in mconf.newGames"
-          :key="game.id"
-          :data="game"
-          @click-play="mconf.modal.open(game)"
-        />
-      </vue3-marquee>
-      <vue3-marquee pauseOnHover :duration="mconf.newGames.length * 10" class="marquee">
-        <new-game-card
-          v-for="game in mconf.newGames"
-          :key="game.id"
-          :data="game"
-          @click-play="mconf.modal.open(game)"
-        />
-      </vue3-marquee>
-      <vue3-marquee pauseOnHover direction="reverse" :duration="mconf.newGames.length * 10" class="marquee">
-        <new-game-card
-          v-for="game in mconf.newGames"
-          :key="game.id"
-          :data="game"
-          @click-play="mconf.modal.open(game)"
-        />
-      </vue3-marquee>
+      <template v-for="(item, index) in rows" :key="item">
+        <vue3-marquee pauseOnHover direction="reverse" :duration="50" class="marquee">
+          <new-game-card
+            v-for="game in mconf.newGames.slice(index * 5 + 1, item * 5)"
+            :key="game.id"
+            :data="game"
+            @click-play="mconf.modal.open(game)"
+          />
+        </vue3-marquee>
+      </template>
     </div>
 
     <div class="footer">
       <router-link to="/game/list" class="btn">
-        <span>全部游戏</span>
+        <span>{{ t('allGames') }}</span>
       </router-link>
     </div>
   </div>

@@ -1,7 +1,34 @@
 <script setup>
 import { Scope } from 'tools-vue3'
+import { computed, onMounted, onBeforeUnmount } from 'vue'
+
+const props = defineProps({
+  hasMore: {
+    type: Boolean,
+    default: true
+  }
+})
+
+const hasMore = computed(() => props.hasMore)
+
+const emit = defineEmits(['load'])
 
 const conf = Scope.getConf()
+
+function scrollBottom() {
+  if (!hasMore.value) return document.body.removeEventListener('scroll', scrollBottom)
+  const threshold = 100
+  const bottomDistance = document.body.scrollHeight - document.body.scrollTop - document.body.offsetHeight
+  if (bottomDistance < threshold) emit('load')
+}
+
+onMounted(() => {
+  document.body.addEventListener('scroll', scrollBottom)
+})
+
+onBeforeUnmount(() => {
+  document.body.removeEventListener('scroll', scrollBottom)
+})
 </script>
 
 <template>

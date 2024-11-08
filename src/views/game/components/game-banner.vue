@@ -4,7 +4,9 @@ import BaseTag from '@/components/base-tag.vue'
 import BaseButton from '@/components/base-button.vue'
 import { Scope } from 'tools-vue3'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
+const { t } = useI18n()
 const route = useRoute()
 
 const conf = Scope.getConf()
@@ -14,9 +16,9 @@ const conf = Scope.getConf()
   <div class="game-banner-container">
     <div class="container">
       <div class="row justify-content-center game-t">
-        <h1 class="title">游戏</h1>
+        <h1 class="title">{{ t('games') }}</h1>
         <p class="text">
-          多样化在线娱乐解决方案，打鱼机、角子机、棋牌游戏、宾果等，满足各种需求，给你最刺激又难忘的游戏体验！
+          {{ t('gameDesc') }}
         </p>
       </div>
       <div class="row justify-content-center game-select">
@@ -34,7 +36,9 @@ const conf = Scope.getConf()
       </div>
     </div>
     <div v-if="route.path === '/game/list' && conf.gameType.length" class="game-marquee">
-      <h2 class="game-marquee-title"><span>热门游戏</span></h2>
+      <h2 class="game-marquee-title">
+        <span>{{ t('hotGames') }}</span>
+      </h2>
       <div class="game-marquee-list">
         <vue3-marquee pause-on-hover :duration="30">
           <div v-for="item in conf.marqueeList" :key="item.id" class="game-marquee-card">
@@ -60,13 +64,12 @@ const conf = Scope.getConf()
                     d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"
                   ></path>
                 </svg>
-                <span>立即试玩</span>
+                <span>{{ t('tryNow') }}</span>
               </base-button>
             </div>
             <div class="card-content">
               <div class="row">
                 <div class="tag">
-                  <base-tag type="new">NEW</base-tag>
                   <base-tag type="hot">HOT</base-tag>
                 </div>
                 <div class="name">
@@ -152,7 +155,7 @@ const conf = Scope.getConf()
       justify-content: center;
 
       &-link {
-        padding: 8px 32px;
+        padding: 8px 24px;
         color: #fff;
         font-size: 18px;
         font-weight: 600;

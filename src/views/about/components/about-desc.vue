@@ -1,4 +1,8 @@
-<script setup></script>
+<script setup>
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+</script>
 
 <template>
   <div class="about-desc-container">
@@ -8,16 +12,15 @@
         <span class="bg-gradient">BG</span>
       </h1>
       <div class="desc">
-        <h3>线上游戏开发霸主</h3>
+        <h3>{{ t('gameDeveloper') }}</h3>
         <p>
-          BG夺宝电子以开发老虎机(角子机)起家，并拥有亚洲最大老虎机台制造商独家授权，首开亚洲先锋整合线下到线上娱乐，指尖上便能享受如同亲临赌场般的刺激游玩体验，并以捕鱼机、老虎机、宾果、棋牌、街机游戏等多元游戏种类制霸市场！BG夺宝电子以稳定、可靠且值得信赖的全方位服务品质引以为傲，也深受玩家及合作伙伴的青睐与喜爱。持续开发创新的游戏玩法，提供玩家流畅游玩环境及卓越的游戏体验是我们坚持努力的目标，BG夺宝电子是您在线上娱乐领域的最佳合作伙伴！
+          {{ t('gameDeveloperDesc') }}
         </p>
       </div>
       <div class="desc">
-        <h3>线上游戏开发商第一首选！</h3>
+        <h3>{{ t('iGamingProviders') }}</h3>
         <p>
-          BG夺宝电子积极进军国际市场，并陆续获得市场上的广大回响。我们能够为合作伙伴提供全面且专业的服务，包括全年无休技术支援、安全可靠API快速串接、透过大数据分析提升玩家游戏体验等等。
-          BG夺宝电子相信，与合作伙伴共同创造更优秀的产品和服务，将能够为玩家带来更多美好的游玩历程，进而创造出更大的商机！
+          {{ t('iGamingProvidersDesc') }}
         </p>
       </div>
     </div>
