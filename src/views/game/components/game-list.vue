@@ -1,6 +1,6 @@
 <script setup>
 import { Scope } from 'tools-vue3'
-import { computed, onMounted, onBeforeUnmount } from 'vue'
+import { onMounted, onBeforeUnmount, watch } from 'vue'
 
 const props = defineProps({
   hasMore: {
@@ -9,14 +9,20 @@ const props = defineProps({
   }
 })
 
-const hasMore = computed(() => props.hasMore)
+watch(
+  () => props.hasMore,
+  (newVal) => {
+    if (newVal) document.body.addEventListener('scroll', scrollBottom)
+    else document.body.removeEventListener('scroll', scrollBottom)
+  }
+)
 
 const emit = defineEmits(['load'])
 
 const conf = Scope.getConf()
 
 function scrollBottom() {
-  if (!hasMore.value) return document.body.removeEventListener('scroll', scrollBottom)
+  if (!props.hasMore) return
   const threshold = 100
   const bottomDistance = document.body.scrollHeight - document.body.scrollTop - document.body.offsetHeight
   if (bottomDistance < threshold) emit('load')

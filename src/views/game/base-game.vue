@@ -1,23 +1,34 @@
 <script setup>
-import { computed, reactive } from 'vue'
+import { computed, reactive, watch, nextTick } from 'vue'
 import GameBanner from './components/game-banner.vue'
 import GameList from './components/game-list.vue'
 import GameCard from './components/game-card.vue'
 import { Scope } from 'tools-vue3'
 import GameModal from '@/components/game-modal.vue'
-import { useRoute } from 'vue-router'
+import { useRoute, onBeforeRouteLeave } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
 const route = useRoute()
+
+watch(
+  () => route.path,
+  async (path) => {
+    await nextTick()
+    const currentType = conf.gameType.find((item) => item.link === path).id
+    conf.changeType(currentType)
+  }
+)
 const conf = reactive({
   queryParams: {
     current: 1,
-    size: 8
+    size: 8,
+    type: ''
   },
   hasMore: true,
   fetchData: async () => {
+    conf.queryParams.type = conf.currentActive.id
     const { data } = await http.get('/api/game/getGameList', conf.queryParams)
     const statistics = await http.get('/api/game/getTypeCount')
     Object.keys(statistics).forEach((key) => {
@@ -52,6 +63,27 @@ const conf = reactive({
       conf.marqueeList.push(conf.marqueeList[i % conf.marqueeList.length])
     }
   },
+  changeType: async (type) => {
+    conf.hasMore = true
+    conf.queryParams = {
+      current: 1,
+      size: 8,
+      type
+    }
+    const { data } = await http.get('/api/game/getGameList', conf.queryParams)
+    conf.gameType[0].number = data.total
+    conf.games = data.records.map((item) => ({
+      id: item.gameCode,
+      name: item.gameName,
+      bg: item.imgUrl,
+      logo: item.iconUrl,
+      link: item.supportTryUrl,
+      isSupportTry: item.isSupportTry,
+      isHot: item.isHot,
+      isNew: item.isNewGame
+    }))
+    conf.hasMore = conf.games.length < data.total
+  },
   nextPage: async () => {
     if (!conf.hasMore) return
     conf.queryParams.current++
@@ -72,7 +104,7 @@ const conf = reactive({
   currentActive: computed(() => conf.gameType.find((item) => item.link === route.path)),
   gameType: [
     {
-      id: 0,
+      id: '',
       name: t('all'),
       link: '/game/list',
       number: 0

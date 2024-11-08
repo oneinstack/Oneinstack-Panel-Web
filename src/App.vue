@@ -11,7 +11,7 @@ const { t } = useI18n()
 
 const route = useRoute()
 http.setConfig({
-  base: 'http://192.168.31.60'
+  base: '/'
 })
 
 const modal = reactive({
@@ -98,19 +98,19 @@ onMounted(() => {
 
     <base-modal v-model="modal.show">
       <div class="modal-content">
-        <h1 class="title">欢迎来到BG。</h1>
+        <h1 class="title">{{ t('welcome') }}</h1>
         <p>
-          我们非常重视社会责任，并确保您的安全和娱乐享受是我们的首要任务。因此，我们诚挚地要求您进行年龄验证。
-          <span class="question">您年满18岁吗?</span>
+          {{ t('welcomeDesc') }}
+          <span class="question">{{ t('welcomeQuestion') }}</span>
         </p>
         <p v-show="modal.tips" class="tips">
-          <span>本网站仅限18岁及以上的用户访问。</span>
+          <span>{{ t('welcomeCacelTip1') }}</span>
           <br />
-          <span>请确认您已年满18岁，方可继续访问。</span>
+          <span>{{ t('welcomeCacelTip2') }}</span>
         </p>
         <div class="btn">
-          <base-button @click="modal.cancel">尚未</base-button>
-          <base-button type="primary" @click="modal.confirm">我已年满18岁</base-button>
+          <base-button @click="modal.cancel">{{ t('welcomeCancel') }}</base-button>
+          <base-button type="primary" @click="modal.confirm">{{ t('welcomeOK') }}</base-button>
         </div>
       </div>
     </base-modal>

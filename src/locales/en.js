@@ -76,5 +76,13 @@ export default {
     "By cross-comparing customer status, player distribution, retention rate, and tracking players' behaviors regularly, etc., BG assists clients to develop more suitable games on the market.",
   whyReason5: 'Game Recommendations',
   whyReason5Desc:
-    "According to the market research of players, such as players' gaming interests, playing frequency, and gaming adhesion, etc., BG recommends appropriate types of games for our clients to increase more profits."
+    "According to the market research of players, such as players' gaming interests, playing frequency, and gaming adhesion, etc., BG recommends appropriate types of games for our clients to increase more profits.",
+  welcome: 'Welcome to BG',
+  welcomeDesc:
+    'We take our social responsibility seriously and ensuring your safety and enjoyment is our priority, we kindly ask you to verify your age.',
+  welcomeQuestion: 'Are you over 18?',
+  welcomeCancel: 'NO',
+  welcomeCacelTip1: 'The website is designed for over 18s.',
+  welcomeCacelTip2: 'Please confirm that you are over the age of 18 to continue.',
+  welcomeOK: 'YES'
 }
