@@ -221,4 +221,52 @@ const categories = mconf.categories
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .type-games-container {
+    overflow: hidden;
+  }
+
+  .category-bg-2 {
+    display: none;
+  }
+
+  .category-bg-3 {
+    right: -200px !important;
+    z-index: -1;
+  }
+
+  .category-bg-4 {
+    display: none;
+  }
+
+  .category-bg-5 {
+    z-index: -1;
+  }
+
+  .title {
+    width: 100% !important;
+
+    .type-games-title {
+      font-size: 48px;
+    }
+  }
+
+  .categories {
+    flex-direction: column;
+    gap: 24px 0 !important;
+
+    &-item {
+      border-bottom: none !important;
+      border-right: 10px solid;
+      align-items: center;
+      flex-direction: row !important;
+      z-index: 1;
+
+      .name {
+        font-size: calc(1.325rem + 0.9vw) !important;
+      }
+    }
+  }
+}
 </style>

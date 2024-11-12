@@ -254,4 +254,19 @@ const rows = computed(() => {
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .txt {
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: calc(1.575rem + 3.9vw) !important;
+    margin-bottom: 32px;
+  }
+
+  .split {
+    display: none;
+  }
+}
 </style>

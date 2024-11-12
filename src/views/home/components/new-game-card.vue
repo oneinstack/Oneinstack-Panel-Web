@@ -5,18 +5,25 @@ import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
+const emit = defineEmits(['click-play'])
+
 const props = defineProps({
   data: {
     type: Object,
     required: true
   }
 })
+
+const handleImageClick = () => {
+  const mediaQuery = matchMedia('(max-width: 768px)')
+  if (mediaQuery.matches) emit('click-play', props.data)
+}
 </script>
 
 <template>
   <div class="game-card">
     <div class="game-card-img">
-      <img :src="data.img" alt="" />
+      <img :src="data.img" alt="" @click="handleImageClick" />
     </div>
     <div class="game-card-body">
       <img :src="data.img" alt="" class="bg" />
@@ -175,6 +182,22 @@ const props = defineProps({
       display: flex;
       justify-content: center;
       gap: 0.5rem;
+    }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .game-card {
+    padding: 0 24px 24px 0 !important;
+
+    &-img {
+      position: relative;
+      width: 160px;
+      height: 160px;
+    }
+
+    &-body {
+      display: none;
     }
   }
 }

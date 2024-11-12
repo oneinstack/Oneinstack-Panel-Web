@@ -162,4 +162,46 @@ const { t } = useI18n()
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .row {
+    padding: 0 !important;
+  }
+
+  .about-mission-container {
+    padding: 80px 0 60px;
+
+    .container {
+      width: 100%;
+      flex-direction: column;
+
+      .desc,
+      .list {
+        flex: 1;
+      }
+
+      .desc {
+        .mission-title {
+          font-size: 32px;
+        }
+
+        .mission-slogan {
+          font-size: 35px;
+        }
+
+        .text {
+          padding: 0 0 24px;
+        }
+      }
+
+      .list {
+        padding: 0 16px;
+
+        &-item {
+          padding: 16px;
+        }
+      }
+    }
+  }
+}
 </style>

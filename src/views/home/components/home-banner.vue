@@ -2,7 +2,7 @@
 import { ref } from 'vue'
 import ArrowdownIcon from '@/components/arrowdown-icon.vue'
 import { Scope } from 'tools-vue3'
-import { Swiper, SwiperSlide, useSwiper } from 'swiper/vue'
+import { Swiper, SwiperSlide } from 'swiper/vue'
 import 'swiper/css'
 
 const mconf = Scope.getConf()
@@ -17,7 +17,7 @@ const onSlideChange = (swiper) => {
   <div class="home-banner-container">
     <swiper loop @slideChange="onSlideChange">
       <swiper-slide>
-        <video autoplay muted loop playsinline src="/media/banner.mp4">
+        <video autoplay muted loop playsinline :controls="false" src="/media/banner.mp4">
           <source src="/media/banner.mp4" type="video/mp4" />
           Your browser does not support the video tag.
         </video>
@@ -64,7 +64,6 @@ const onSlideChange = (swiper) => {
   .swiper-pagination {
     bottom: 32px;
     width: auto;
-    white-space: nowrap;
     padding: 12px 4px;
     border-radius: 999px;
     background: rgba(255, 255, 255, 0.12);
@@ -96,6 +95,25 @@ const onSlideChange = (swiper) => {
         max-width: 100%;
         height: auto;
         vertical-align: middle;
+      }
+    }
+  }
+
+  @media screen and (max-width: 768px) {
+    .arrowdown-icon {
+      display: none;
+    }
+
+    .swiper-pagination {
+      width: 100%;
+      padding: 8px 4px;
+      top: auto;
+      bottom: -20%;
+
+      &-bullet {
+        width: 40px;
+        height: 40px;
+        margin: 0 12px;
       }
     }
   }

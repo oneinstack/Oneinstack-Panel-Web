@@ -76,4 +76,23 @@ const { t } = useI18n()
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .about-desc-container {
+    padding: 60px 0 62px;
+
+    .content {
+      .title {
+        font-size: 60px;
+        margin-bottom: 60px;
+      }
+    }
+
+    .desc {
+      & > h3 {
+        font-size: 32px;
+      }
+    }
+  }
+}
 </style>

@@ -5,7 +5,7 @@ import GameList from './components/game-list.vue'
 import GameCard from './components/game-card.vue'
 import { Scope } from 'tools-vue3'
 import GameModal from '@/components/game-modal.vue'
-import { useRoute, onBeforeRouteLeave } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -146,6 +146,8 @@ const conf = reactive({
     show: false,
     link: '',
     open: (item) => {
+      const mediaQuery = matchMedia('(max-width: 768px)')
+      if (mediaQuery.matches) return window.open(item.link, '_blank')
       conf.modal.link = item.link
       conf.modal.show = true
     }
@@ -177,6 +179,12 @@ Scope.setConf(conf)
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: auto;
     gap: 1.5em;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .game-list-box {
+    grid-template-columns: 1fr !important;
   }
 }
 </style>

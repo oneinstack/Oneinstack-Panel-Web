@@ -88,4 +88,10 @@ const handleClickOverlay = () => {
     z-index: 1001;
   }
 }
+
+@media screen and (max-width: 768px) {
+  .modal-body {
+    width: 95% !important;
+  }
+}
 </style>

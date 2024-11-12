@@ -6,6 +6,7 @@ import BaseButton from '@/components/base-button.vue'
 import { onMounted, reactive } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import BackTop from '@/components/back-top.vue'
 
 const { t } = useI18n()
 
@@ -35,6 +36,23 @@ const search = reactive({
   }
 })
 
+const nav = reactive({
+  show: false,
+  close: () => {
+    nav.show = false
+  },
+  list: [
+    {
+      label: t('game'),
+      path: '/game/list'
+    },
+    {
+      label: t('about'),
+      path: '/about'
+    }
+  ]
+})
+
 onMounted(() => {
   const ageRestriction = localStorage.getItem('age-restriction')
   if (!ageRestriction) modal.show = true
@@ -45,23 +63,39 @@ onMounted(() => {
   <div class="app-container">
     <nav-bar>
       <template #left>
-        <router-link to="/" class="logo-box">
+        <router-link to="/" class="logo-box" @click="nav.close">
           <img src="/images/BG.png" alt="" class="img" />
         </router-link>
       </template>
       <template #center>
-        <ul class="nav-list">
-          <li>
-            <router-link to="/game/list" class="link" :class="{ active: route.path === '/game/list' }">
-              {{ t('game') }}
-            </router-link>
-          </li>
-          <li>
-            <router-link to="/about" class="link" :class="{ active: route.path === '/about' }">
-              {{ t('about') }}
+        <ul class="nav-block">
+          <li v-for="nav in nav.list" :key="nav.path">
+            <router-link :to="nav.path" class="link" :class="{ active: route.path === nav.path }">
+              {{ nav.label }}
             </router-link>
           </li>
         </ul>
+      </template>
+      <template #right>
+        <button class="menu-btn" @click="nav.show = !nav.show">
+          <svg
+            class="svg-inline--fa fa-bars"
+            aria-hidden="true"
+            focusable="false"
+            data-prefix="fas"
+            data-icon="bars"
+            role="img"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 448 512"
+          >
+            <path
+              class=""
+              fill="currentColor"
+              d="M0 96C0 78.3 14.3 64 32 64H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32H416c17.7 0 32 14.3 32 32s-14.3 32-32 32H32c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H416c17.7 0 32 14.3 32 32z"
+            ></path>
+          </svg>
+          <span>MENU</span>
+        </button>
       </template>
     </nav-bar>
     <div v-show="search.show" class="search-input row">
@@ -87,6 +121,16 @@ onMounted(() => {
         </button>
       </div>
     </div>
+
+    <transition name="slide-bottom">
+      <ul v-show="nav.show" class="nav-list" @click="nav.close">
+        <li v-for="nav in nav.list" :key="nav.path">
+          <router-link :to="nav.path" class="link" :class="{ active: route.path === nav.path }">
+            {{ nav.label }}
+          </router-link>
+        </li>
+      </ul>
+    </transition>
 
     <router-view #default="{ Component }" class="main">
       <transition name="fade" mode="out-in">
@@ -114,6 +158,8 @@ onMounted(() => {
         </div>
       </div>
     </base-modal>
+
+    <back-top />
   </div>
 </template>
 
@@ -126,6 +172,7 @@ onMounted(() => {
     }
   }
 
+  .nav-block,
   .nav-list {
     list-style: none;
     display: flex;
@@ -156,6 +203,58 @@ onMounted(() => {
           color: rgba(var(--bs-emphasis-color-rgb), 0.8);
         }
       }
+    }
+  }
+
+  .nav-list {
+    background-color: #080807;
+    width: 100%;
+    height: calc(100% - var(--nav-heaght));
+    position: fixed;
+    top: var(--nav-heaght);
+    left: 0;
+    z-index: 98;
+    flex-flow: column nowrap;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      transform: translateX(-50%);
+      height: 1px;
+      width: 90%;
+      background-color: gray;
+    }
+
+    li {
+      padding: 0;
+    }
+
+    .link {
+      font-size: 24px !important;
+      padding: 16px !important;
+    }
+  }
+
+  .menu-btn {
+    display: none;
+    font-size: 18px;
+    padding: 11px 15px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: 0.2s;
+    border-radius: var(--bs-btn-border-radius);
+    background: transparent;
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.48);
+    }
+
+    svg {
+      margin-right: 0.25em;
+      display: inline-block;
+      height: 1em;
+      vertical-align: -0.125em;
     }
   }
 
@@ -332,6 +431,28 @@ onMounted(() => {
     .base-button {
       flex: 0.5;
     }
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .nav-block {
+    display: none !important;
+  }
+
+  .menu-btn {
+    display: block !important;
+  }
+
+  .main {
+    padding-top: var(--nav-heaght);
+  }
+
+  .title {
+    font-size: calc(1.575rem + 3.9vw) !important;
+  }
+
+  .question {
+    font-size: calc(1.325rem + 0.9vw) !important;
   }
 }
 </style>

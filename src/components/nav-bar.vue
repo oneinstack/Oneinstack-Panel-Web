@@ -39,4 +39,11 @@ defineProps({
     rgba(0, 0, 0, 0) 100%
   );
 }
+
+@media screen and (max-width: 768px) {
+  .nav-bar-container {
+    background: #080807;
+    padding: 0 5%;
+  }
+}
 </style>

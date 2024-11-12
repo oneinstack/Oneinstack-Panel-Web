@@ -5,11 +5,19 @@ import BaseButton from '@/components/base-button.vue'
 import { Scope } from 'tools-vue3'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { ref } from 'vue'
 
 const { t } = useI18n()
 const route = useRoute()
 
 const conf = Scope.getConf()
+
+const navMenuVisible = ref(false)
+
+const handleImageClick = (item) => {
+  const mediaQuery = matchMedia('(max-width: 768px)')
+  if (mediaQuery.matches) conf.modal.open(item)
+}
 </script>
 
 <template>
@@ -33,6 +41,22 @@ const conf = Scope.getConf()
             </router-link>
           </li>
         </ul>
+        <div class="dropdown-nav">
+          <button class="dropdown-toggle" @click="navMenuVisible = !navMenuVisible">
+            {{ conf.currentActive.name }}
+          </button>
+          <ul v-show="navMenuVisible" class="dropdown-menu" @click="navMenuVisible = false">
+            <li v-for="item in conf.gameType" :key="item.id">
+              <router-link
+                :to="item.link"
+                class="dropdown-menu-link"
+                :class="{ active: item.link === conf.currentActive.link }"
+              >
+                {{ item.name }}
+              </router-link>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
     <div v-if="route.path === '/game/list' && conf.gameType.length" class="game-marquee">
@@ -42,8 +66,8 @@ const conf = Scope.getConf()
       <div class="game-marquee-list">
         <vue3-marquee pause-on-hover :duration="30">
           <div v-for="item in conf.marqueeList" :key="item.id" class="game-marquee-card">
-            <div class="card-img">
-              <img :src="item.img" alt="marquee-img" />
+            <div class="card-img" @click="item.isSupportTry && handleImageClick(item)">
+              <img :src="item.img" :alt="item.name" />
             </div>
             <div v-if="item.isSupportTry" class="card-mask">
               <base-button type="primary" @click="conf.modal.open(item)">
@@ -112,15 +136,9 @@ const conf = Scope.getConf()
 
 <style scoped lang="scss">
 .game-banner-container {
-  padding: 80px 0 0;
+  padding: 120px 0 0;
   background: url('/images/game-banner-bg.png') top center no-repeat;
   background-size: cover;
-
-  @media (min-width: 768px) {
-    .game-banner-container {
-      padding: 120px 0 0;
-    }
-  }
 
   .container {
     padding: 0 15%;
@@ -176,6 +194,97 @@ const conf = Scope.getConf()
         &.active {
           color: #ff8708;
           background-color: transparent;
+        }
+      }
+    }
+  }
+
+  .dropdown-nav {
+    display: none;
+    justify-content: center;
+    position: relative;
+    padding: 0 calc(var(--bs-gutter-x) * 0.5) 80px;
+
+    .dropdown-toggle {
+      display: inline-block;
+      padding: 0.75rem 1.25rem;
+      flex-grow: 1;
+      background: rgba(255, 255, 255, 0.05);
+      position: relative;
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 24px;
+      color: #fff;
+      text-align: center;
+      user-select: none;
+      transition:
+        color 0.15s ease-in-out,
+        background-color 0.15s ease-in-out,
+        border-color 0.15s ease-in-out,
+        box-shadow 0.15s ease-in-out;
+
+      &::after {
+        position: absolute;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: inline-block;
+        margin-left: 0.255em;
+        vertical-align: 0.255em;
+        content: '';
+        border-top: 0.3em solid;
+        border-right: 0.3em solid transparent;
+        border-bottom: 0;
+        border-left: 0.3em solid transparent;
+      }
+
+      &:active {
+        background: rgba(255, 255, 255, 0.12);
+      }
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      inset: 0px auto auto 0px;
+      margin: 0px;
+      transform: translate3d(0px, 64px, 0px);
+      --bs-dropdown-bg: rgba(255, 255, 255, 0.24);
+      --bs-dropdown-border-color: rgba(255, 255, 255, 0.48);
+      --bs-border-radius: 8px;
+      width: 100%;
+      text-align: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      margin-top: 16px !important;
+      display: block;
+      z-index: 1000;
+      padding: 0.5rem 0;
+      font-size: 1rem;
+      color: #fff;
+      list-style: none;
+      background-color: rgba(255, 255, 255, 0.24);
+      background-clip: padding-box;
+      border: 1px solid rgba(255, 255, 255, 0.48);
+      border-radius: 8px;
+
+      &-link {
+        font-weight: 600;
+        display: block;
+        width: 100%;
+        padding: 0.5rem 1.5rem;
+        clear: both;
+        text-decoration: none;
+        white-space: nowrap;
+        background-color: transparent;
+        border: 0;
+        font-size: 18px;
+        color: inherit;
+
+        &.active {
+          color: #ff8708;
         }
       }
     }
@@ -302,10 +411,7 @@ const conf = Scope.getConf()
       .desc {
         overflow: hidden;
         text-overflow: ellipsis;
-        display: -webkit-box;
-        line-clamp: 1;
-        -webkit-line-clamp: 1;
-        -webkit-box-orient: vertical;
+        white-space: nowrap;
         color: #fffc;
       }
     }
@@ -317,6 +423,64 @@ const conf = Scope.getConf()
       height: auto;
       max-width: 180px;
       transition: all ease-in-out 0.3s;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 0 calc(var(--bs-gutter-x) * 1) 0 !important;
+  }
+
+  .game-banner-container {
+    padding: 80px 0 0;
+  }
+
+  .title {
+    font-size: 48px !important;
+  }
+
+  .text {
+    font-size: 18px !important;
+    margin: 0 0 54px !important;
+  }
+
+  .game-select {
+    &-nav {
+      display: none !important;
+    }
+  }
+
+  .dropdown-nav {
+    display: flex !important;
+  }
+
+  .game-marquee {
+    &-title {
+      font-size: 40px !important;
+      margin: 0 0 48px !important;
+    }
+
+    &-card {
+      width: 180px !important;
+      height: 180px !important;
+
+      .card-img {
+        width: 100%;
+        height: 100%;
+      }
+
+      .card-mask {
+        display: none !important;
+      }
+
+      .card-content {
+        display: none;
+      }
+
+      .small-img {
+        display: none;
+      }
     }
   }
 }

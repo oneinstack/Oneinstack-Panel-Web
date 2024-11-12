@@ -90,6 +90,8 @@ const conf = reactive({
     show: false,
     link: '',
     open: (item) => {
+      const mediaQuery = matchMedia('(max-width: 768px)')
+      if (mediaQuery.matches) return window.open(item.link, '_blank')
       conf.modal.link = item.link
       conf.modal.show = true
     }

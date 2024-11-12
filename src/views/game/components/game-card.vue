@@ -221,4 +221,10 @@ const { t } = useI18n()
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .game-card-container {
+    height: 535px;
+  }
+}
 </style>

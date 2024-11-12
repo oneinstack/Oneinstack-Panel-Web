@@ -7,3 +7,14 @@
 .fade-leave-to {
   opacity: 0;
 }
+
+.slide-bottom-enter-active,
+.slide-bottom-leave-active {
+  transition: all 0.25s;
+}
+
+.slide-bottom-enter-from,
+.slide-bottom-leave-to {
+  opacity: 0;
+  transform: translateY(-50%);
+}

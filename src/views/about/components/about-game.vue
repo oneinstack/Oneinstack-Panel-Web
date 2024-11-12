@@ -305,4 +305,68 @@ const { t } = useI18n()
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .services {
+    padding: 80px 0 75px !important;
+
+    .container {
+      padding: 0;
+    }
+
+    &-title {
+      font-size: 32px !important;
+      margin: 0 0 60px !important;
+    }
+
+    &-items {
+      width: 100% !important;
+    }
+
+    &-item {
+      width: 100%;
+      margin: 0 0 60px !important;
+      flex-direction: column;
+
+      .desc {
+        order: 1;
+        flex: 1;
+        padding: 0 !important;
+
+        .index {
+          font-size: 36px !important;
+        }
+
+        .title {
+          font-size: 24px !important;
+        }
+      }
+
+      .category {
+        flex: 1;
+        width: 100%;
+      }
+    }
+  }
+
+  .features {
+    padding: 0 0 80px !important;
+
+    &-title {
+      font-size: 32px !important;
+      margin: 0 0 60px !important;
+    }
+
+    &-items {
+      width: 100% !important;
+      display: flex !important;
+      flex-direction: column;
+    }
+
+    &-item {
+      padding: 0 !important;
+      margin-bottom: 3rem;
+    }
+  }
+}
 </style>

@@ -121,4 +121,24 @@ const { t } = useI18n()
     }
   }
 }
+
+@media screen and (max-width: 768px) {
+  .about-why-container {
+    .container {
+      width: 100%;
+    }
+
+    .why-title {
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+
+    .card-list {
+      .card-item {
+        padding: 0 16px;
+        width: 100%;
+      }
+    }
+  }
+}
 </style>
