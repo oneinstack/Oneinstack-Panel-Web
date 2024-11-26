@@ -37,8 +37,8 @@ const conf = reactive({
     })
     conf.marqueeList = data.records
       .filter((item) => item.isHot)
-      .map((item, i) => ({
-        id: i + 1,
+      .map((item) => ({
+        id: item.gameCode,
         name: item.gameName,
         desc: item.gameDesc,
         img: item.imgUrl,
@@ -46,8 +46,8 @@ const conf = reactive({
         link: item.supportTryUrl,
         isSupportTry: item.isSupportTry
       }))
-    conf.games = data.records.map((item, i) => ({
-      id: i + 1,
+    conf.games = data.records.map((item) => ({
+      id: item.gameCode,
       name: item.gameName,
       bg: item.imgUrl,
       logo: item.iconUrl,
@@ -146,7 +146,7 @@ const conf = reactive({
     show: false,
     link: '',
     open: async (item) => {
-      const { data } = await http.get('/api/game/try', { gameCode: item.gameCode })
+      const { data } = await http.get('/api/game/try', { gameCode: item.id })
       const mediaQuery = matchMedia('(max-width: 768px)')
       if (mediaQuery.matches) return window.open(data, '_blank')
       conf.modal.link = data

@@ -18,14 +18,14 @@ const conf = reactive({
     })
     conf.banners = data.records
       .filter((item) => item.isSwiper)
-      .map((item, i) => ({
-        id: i + 1,
+      .map((item) => ({
+        id: item.gameCode,
         imgUrl: item.imgUrl
       }))
     conf.newGames = data.records
       .filter((item) => item.isNewGame)
-      .map((item, i) => ({
-        id: i + 1,
+      .map((item) => ({
+        id: item.gameCode,
         img: item.imgUrl,
         name: item.gameName,
         desc: item.gameDesc,
