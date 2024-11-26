@@ -145,10 +145,11 @@ const conf = reactive({
   modal: {
     show: false,
     link: '',
-    open: (item) => {
+    open: async (item) => {
+      const { data } = await http.get('/api/game/try', { gameCode: item.gameCode })
       const mediaQuery = matchMedia('(max-width: 768px)')
-      if (mediaQuery.matches) return window.open(item.link, '_blank')
-      conf.modal.link = item.link
+      if (mediaQuery.matches) return window.open(data, '_blank')
+      conf.modal.link = data
       conf.modal.show = true
     }
   }
