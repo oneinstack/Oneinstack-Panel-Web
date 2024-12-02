@@ -1,0 +1,26 @@
+export default [
+  {
+    path: '/game/3D/3D',
+    component: '/game/3D/3D'
+  },
+  {
+    path: '/game/Color/Color',
+    component: '/game/color/color'
+  },
+  {
+    path: '/game/5D/5D',
+    component: '/game/5D/5D'
+  },
+  {
+    path: '/game/PK10/PK10',
+    component: '/game/pk10/pk10'
+  },
+  {
+    path: '/game/TrxWinGo/TrxWinGo',
+    component: '/game/winGo/winGo'
+  },
+  {
+    path: '/game/Satta/Satta',
+    component: '/game/satta/satta'
+  }
+]

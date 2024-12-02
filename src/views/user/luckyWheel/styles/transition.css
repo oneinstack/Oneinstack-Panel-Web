@@ -1,0 +1,32 @@
+/* 从下向上渐入渐出 */
+.fade-slide-up-enter-active,
+.fade-slide-up-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-up-enter-from,
+.fade-slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
+}
+
+/* 从上向下渐入渐出 */
+.fade-slide-down-enter-active,
+.fade-slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-slide-down-enter-from,
+.fade-slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-100%);
+}
+
+/* 缩放 */
+.fade-zoom-in-enter-active,
+.fade-zoom-in-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-zoom-in-enter-from,
+.fade-zoom-in-leave-to {
+  opacity: 0;
+  transform: scale(.5);
+}
