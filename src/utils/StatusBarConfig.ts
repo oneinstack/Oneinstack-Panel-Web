@@ -1,3 +1,4 @@
+import sapp from '@/sstore/sapp'
 import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
 export default class StatusBarConfig {
@@ -6,7 +7,10 @@ export default class StatusBarConfig {
   static async initStatusBar() {
     const setBoxHeight = () => {
       const initialHeight = document.documentElement.clientHeight
-      document.documentElement.style.setProperty('--height', `${initialHeight}px`)
+      if (initialHeight > sapp.maxHeight) {
+        sapp.maxHeight = initialHeight
+        document.documentElement.style.setProperty('--height', `${initialHeight}px`)
+      }
     }
     setBoxHeight()
     window.addEventListener('resize', setBoxHeight)
