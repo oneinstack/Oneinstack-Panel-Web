@@ -2,9 +2,9 @@
 
 import path from 'path'
 import { defineConfig } from 'vite'
-import { globalVar } from './build/env/globalVar'
 import { viteVar } from 'vite-var'
 import { getBuild, getPlugins } from './build/config'
+import { globalVar } from './build/env/globalVar'
 import { initLog } from './build/env/log'
 
 // https://vitejs.dev/config/
@@ -21,13 +21,9 @@ export default ({ mode, command }) => {
         '@': path.resolve(__dirname, './src')
       }
     },
-    // test: {
-    //     globals: true,
-    //     environment: 'jsdom'
-    // },
     server: {
       host: '0.0.0.0',
-      port: 5173
+      port: env.port || 5100
     },
     build: getBuild(env)
   })

@@ -7,6 +7,7 @@ import _var from './_var'
 import ll from './_ll'
 import ac from './_ac'
 import kk from './_kk'
+import test from './_test'
 
 const getConf = () => {
   return {
@@ -17,13 +18,18 @@ const getConf = () => {
     proview,
     ll,
     ac,
-    kk
+    kk,
+    test
   } as any
 }
 
 export const globalVar = (mode: string) => {
   mode = mode == 'production' ? 'pro' : mode
-  const env: envType = Object.assign(getConf()[mode])
+  const _conf = getConf()[mode]
+  if (!_conf) {
+    throw new Error(`环境${mode}不存在，确认是否导入或声明环境`)
+  }
+  const env: envType = Object.assign(_conf)
   let res = Object.assign(_var, { env })
   //@ts-ignore
   res = Object.assign(res, env)
