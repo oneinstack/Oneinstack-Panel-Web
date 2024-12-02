@@ -68,7 +68,11 @@ const conf = reactive({
   //红包雨img => click => 获取红包雨列表
   async handleClickRedEnvelopeImg() {
     System.loading()
-    const res = await apis.getPacketRainList()
+    const res = await apis.getPacketRainList({
+      final(status, config, xhr) {
+        System.loading(false)
+      }
+    })
     conf.redpacketList = res.data || []
     let index = conf.redpacketList.findIndex((item: any) => item.states == 0)
     //红包活动未开始

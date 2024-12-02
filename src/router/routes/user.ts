@@ -210,5 +210,9 @@ export default [
   {
     path: '/user/invite/toImg',
     component: '/user/invite/toImg'
+  },
+  {
+    path: '/user/redEnvelope/index',
+    component: '/user/redEnvelope/index'
   }
 ]

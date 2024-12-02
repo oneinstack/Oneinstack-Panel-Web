@@ -154,7 +154,7 @@ export const apis = {
   //充值单列表
   depositList: (obj?: ApiData) => http.get('/api/wallet/depositList', obj),
   //提现 -- 第三方
-  payouts: (obj?: ApiData) => http.post('/api/wallet/payouts', obj),
+  payouts: (obj?: ApiData) => http.post('/api/wallet/payouts', { ...obj, json: true }),
   //提现单 -- OTC新增
   OtcWithdraw: (obj?: ApiData) => http.post('/api/OtcWithdraw/save', obj),
   //OTC -- 选择提现人或充值人交易
