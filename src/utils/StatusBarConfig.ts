@@ -6,11 +6,16 @@ export default class StatusBarConfig {
   static statusHeight = Cookie.get('statusHeight') || 0
   static async initStatusBar() {
     const setBoxHeight = () => {
-      const initialHeight = document.documentElement.clientHeight
-      if (initialHeight > sapp.maxHeight) {
-        sapp.maxHeight = initialHeight
-        document.documentElement.style.setProperty('--height', `${initialHeight}px`)
-      }
+      setTimeout(() => {
+        const initialHeight = document.documentElement.clientHeight
+        const initialWidth = document.documentElement.clientWidth
+
+        if (initialHeight > sapp.maxHeight || initialWidth !== sapp.maxWidth) {
+          sapp.maxHeight = initialHeight
+          sapp.maxWidth = initialWidth
+          document.documentElement.style.setProperty('--height', `${initialHeight}px`)
+        }
+      }, 20)
     }
     setBoxHeight()
     window.addEventListener('resize', setBoxHeight)
