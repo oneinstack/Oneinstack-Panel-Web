@@ -31,7 +31,7 @@
                   }}
                 </div>
               </div>
-              <div class="row text-1">
+              <div class="row text-1 items-center">
                 <div class="border-4" style="background: #d9d9d9">
                   <div style="margin: 0 8rem">{{ item.playName }}</div>
                 </div>

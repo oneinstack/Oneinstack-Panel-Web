@@ -1,4 +1,5 @@
 import { VantResolver } from '@vant/auto-import-resolver'
+import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import { readFileSync, writeFileSync,rmSync } from 'node:fs'
 import path from 'node:path'
@@ -43,7 +44,8 @@ export const getPlugins = (env: globalType) => {
       open: env.env.BUILDVIEW,
       gzipSize: true,
       brotliSize: true
-    }) as any
+    }) as any,
+    legacy()
   ]
 
   if (isBuild) {

@@ -12,11 +12,11 @@
                 {{ conf.lottery.item.label }}
               </div>
             </div>
-            <image
+            <img
               src="/static/images/point_up.png"
               style="height: 22rem; width: 33rem; transition: 0.3s"
               :class="{ 'rotate-180': conf.dialog.show && conf.dialog.showRef === 'lotteryType' }"
-            ></image>
+            />
           </div>
         </div>
         <div
@@ -28,11 +28,11 @@
             <div class="col row justify-center no-wrap" style="text-wrap: nowrap">
               <div>{{ conf.bettime.item.label }}</div>
             </div>
-            <image
+            <img
               src="/static/images/point_up.png"
               style="height: 22rem; width: 33rem; transition: 0.3s"
               :class="{ 'rotate-180': conf.dialog.show && conf.dialog.showRef === 'betTime' }"
-            ></image>
+            />
           </div>
         </div>
       </div>
