@@ -283,7 +283,7 @@
     </div>
 
     <!--模态框-->
-    <van-popup v-model:show="conf.modalShow" round position="bottom">
+    <van-popup class="popup-bottom-center" v-model:show="conf.modalShow" round position="bottom">
       <div class="cu-bar bg-white justify-end">
         <div class="content">
           {{ $t('rechargeModule.Select') }}

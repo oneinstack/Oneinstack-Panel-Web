@@ -25,7 +25,7 @@
         </div>
       </div>
     </div>
-    <van-popup v-model:show="conf.outPopup" position="bottom">
+    <van-popup class="popup-bottom-center" v-model:show="conf.outPopup" position="bottom">
       <div class="out-popup">
         <div class="out-line" @click="conf.chageGameType(0)">
           <div>{{ $t('me.defaultMethod') }}</div>

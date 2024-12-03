@@ -193,7 +193,7 @@
       <div class="cu-modal bottom-modal" :class="conf.isOpenAreacodeModal ? 'show' : ''">
         <div class="cu-dialog">
           <div class="padding-xl">
-            <van-popup v-model:show="conf.isOpenAreacodeModal" round position="bottom">
+            <van-popup class="popup-bottom-center" v-model:show="conf.isOpenAreacodeModal" round position="bottom">
               <!-- btns -->
               <div class="model-btn" v-if="conf.areaCodeList.length > 0">
                 <div class="left-btn" @click="conf.handleAreaCodeCancel">

@@ -150,7 +150,7 @@
       </div>
     </div>
     <!-- 多语言弹框 -->
-    <van-popup v-model:show="conf.langPopup" position="bottom">
+    <van-popup class="popup-bottom-center" v-model:show="conf.langPopup" position="bottom">
       <div class="lang-select">
         <div class="select-title">
           <span>{{ $t('me.switchLanguage') }}</span>

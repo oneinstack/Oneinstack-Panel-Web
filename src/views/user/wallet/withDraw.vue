@@ -577,7 +577,7 @@ onMounted(async () => {
     </div>
 
     <!--模态框-->
-    <van-popup :show="!!conf.modalName" round position="bottom" class="cu-modal-x" closeable @close="conf.hideModal">
+    <van-popup :show="!!conf.modalName" round position="bottom" class="cu-modal-x popup-bottom-center" closeable @close="conf.hideModal">
       <div class="cu-dialog-x">
         <div class="title">
           {{ $t('rechargeModule.Select') }}

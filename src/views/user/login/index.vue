@@ -196,7 +196,7 @@
             <div class="cu-dialog">
               <div class="padding-xl">
                 <!-- picker -->
-                <van-popup v-model:show="conf.isOpenAreacodeModal" round position="bottom">
+                <van-popup class="popup-bottom-center" v-model:show="conf.isOpenAreacodeModal" round position="bottom">
                   <!-- btns -->
                   <div class="model-btn" v-if="conf.areaCodeList.length > 0">
                     <div class="left-btn" @click="conf.handleAreaCodeCancel">
@@ -216,7 +216,6 @@
                     v-if="conf.areaCodeList.length > 0"
                     :show-toolbar="false"
                     :columns="conf.areaCodeList"
-                    @cancel="conf.cancelModal"
                     @scroll-into="conf.bindChange"
                   >
                     <template #option="scope">
@@ -604,6 +603,7 @@ const conf = reactive({
   },
   changeCode() {
     conf.isOpenAreacodeModal = true
+    conf.value = conf.selectAreaCodeInfo as any
   },
   goRegister() {
     System.router.replace('/register')

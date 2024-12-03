@@ -663,7 +663,6 @@ onMounted(() => {
                   <img :src="conf.selectAreaCodeObj.flagUrl" style="width: 37rem; height: 37rem; margin-right: 15rem" />
                   {{ conf.formData.area_code ? '+' + conf.formData.area_code : '' }}
                 </div>
-                <!-- <van-icon class="cuIcon-right" name="arrow" /> -->
               </div>
               <div class="right-view">
                 <input
@@ -864,6 +863,7 @@ onMounted(() => {
 
     <!-- 模态框 -->
     <van-popup
+      class="popup-bottom-center"
       :show="conf.modalName && conf.modalName != 'area_code'"
       closeable
       position="bottom"
@@ -953,7 +953,7 @@ onMounted(() => {
       </div>
     </van-popup>
     <!-- 手机区号模态框 -->
-    <van-popup :show="conf.modalName == 'area_code'" class="cu-modal bottom-modal" @close="conf.modalName == ''">
+    <van-popup  :show="conf.modalName == 'area_code'" class="cu-modal bottom-modal popup-bottom-center" @close="conf.modalName == ''">
       <div class="cu-dialog">
         <div class="padding-xl" v-if="conf.areaCodeList.length > 0">
           <!-- btns -->
