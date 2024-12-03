@@ -125,19 +125,30 @@ const conf = reactive({
     return new Promise((resolve, reject) => {
       System.loading()
       conf.ws = new WebSocketBean({
-        url: `${wsurl}/api/mini/games/RedPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
-        async onopen() {
+        url: `${wsurl}/api/mini/games/redPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
+        onopen() {
           System.loading(false)
           conf.activityProgress = 1
-          resolve(true)
+          timer.once(() => {
+            resolve(true)
+          }, 300)
+          return new Promise((res) => {
+            res(true)
+          })
         },
         onerror() {
           System.loading(false)
           conf.activityProgress = 0
+          conf.isRedEnvelopeRain = false
+          conf.ws = null!
           reject(false)
         },
         onmessage(ev) {
-          event.emit(conf.wsEventKey + ev.data.id, ev.data)
+          try {
+            let _data = JSON.parse(ev.data)
+            _data = JSON.parse(_data.data)
+            event.emit(conf.wsEventKey + _data.data.id, _data.data)
+          } catch (error) {}
         },
         binaryType: 'arraybuffer'
       })
@@ -172,7 +183,8 @@ const conf = reactive({
     const res = await conf.sendData({
       type: 'click'
     })
-    item.count = res.count
+    console.log('res', res)
+    item.amount = res.money
   },
 
   /**
@@ -182,10 +194,12 @@ const conf = reactive({
     conf.isRedEnvelopeRain = false
     conf.activityProgress = 2
 
-    conf.sendData({
+    const res = await conf.sendData({
       type: 'expense',
       userCoinCode: conf.walletInfo.walletCoin || ''
     })
+    console.log('res1', res)
+    conf.redAmount = res.money
   },
 
   /**
