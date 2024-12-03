@@ -24,7 +24,7 @@
             <div class="box-view" v-else>
               <img src="/static/img/redEnvelope/open_bot.webp" class="click-img" />
               <img src="/static/img/redEnvelope/open_top.webp" class="click-img-top" />
-              <div class="amount-view" :class="{ 'amount-view-ani': item.innerAnimation }">
+              <div class="amount-view" :class="{ 'amount-bg-ani': item.innerAnimation }">
                 {{ item.amount }}
               </div>
               <div class="amount-bg" :class="{ 'amount-bg-ani': item.innerAnimation }"></div>
@@ -49,17 +49,11 @@ export default {
   name: 'redpacketrain',
   data() {
     return {
-      scrollerArea: {},
       redsHeight: 80,
       redsWidth: 64,
       duration: 15, // 持续时间
       redpacketsRe: [],
-      animationData: {},
-      countdownFlag: false, //倒计时
-      isActivity: false, //显示红包雨
-      activityData: {
-        totalTime: 15 // 活动持续时间 秒
-      }
+      countdownFlag: false //倒计时
     }
   },
   created() {
@@ -80,7 +74,7 @@ export default {
         height: res.bottom - res.top - this.redsHeight,
         width: res.right - res.left - this.redsWidth
       }
-      this.startRedPacket()
+      this.run()
     }, 4000)
   },
   methods: {
@@ -104,13 +98,11 @@ export default {
     },
 
     // 运行
-    run() {
+    async run() {
       this.startRedPacket()
       for (let i = 0; i < this.duration * 2; i++) {
-        // 红包密度
-        this.timer.once(() => {
-          this.startRedPacket()
-        }, 500)
+        await Timer.delay(500)
+        this.startRedPacket()
       }
     },
 

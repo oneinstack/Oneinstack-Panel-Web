@@ -24,7 +24,7 @@ export default class HttpConfig {
     }
 
     const error = (_code: number, config: any, xhr: any) => {
-      let code = xhr.data?.code || _code
+      let code = xhr?.data?.code || _code
       const msg = i18n.t(`code.${code}`)
       if (config.data.toast) config.data.toast(code, xhr, config)
       else System.toast(msg, 'error')

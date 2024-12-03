@@ -19,11 +19,13 @@
             </template>
             <!-- 红包已抢完 -->
             <template v-if="conf.activityProgress == 2">
+              <!-- 红包已抢完，且金额大于0 -->
               <div class="end" v-if="Number(conf.redAmount) > 0">
-                {{ $t('redEnvelopeModule.Whoaa') + ': ' + conf.coinMark + conf.redAmount }}
+                {{ $t('redEnvelopeModule.Whoaa') + ': ' + conf.walletInfo.coinSymbol + conf.redAmount }}
               </div>
+              <!-- 红包已抢完，但金额为0 -->
               <div class="end" v-else>
-                {{ $t('redEnvelopeModule.Unfortunately') + ' : ' + conf.coinMark + conf.redAmount }}
+                {{ $t('redEnvelopeModule.Unfortunately') + ' : ' + conf.walletInfo.coinSymbol + conf.redAmount }}
               </div>
               <div class="end-item">{{ $t('redEnvelopeModule.Keep') }}</div>
             </template>
@@ -53,32 +55,38 @@
 <script setup lang="ts">
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
-import { onMounted, reactive } from 'vue'
+import { Scope } from 'tools-vue3'
+import { onBeforeMount, onMounted, reactive } from 'vue'
 import redpacketrain from './redpacketrain.vue'
+
+const timer = Scope.Timer()
+const event = Scope.Event()
 const conf = reactive({
   serviceHeiht: 300,
   countdown: 0, //抢红包倒计时
   isRedEnvelopeRain: false, //判断是否掉落红包雨
-  timer: null, //定时器
   ws: null! as WebSocketBeanInter,
+  wsEventKey: 'wsEventKey_' + StrUtil.getId() + '_',
   userInfo: {} as any,
   redpacketList: [] as any[],
-  animationData: {} as any,
   clickRedIndex: null as any,
   redRainList: [] as any[],
   redAmount: '' as any, //抢到红包金额
-  coinMark: '' as any,
   redInfo: {} as any,
-  defaultCoin: {} as any, //接口返回默认币种钱包
 
+  /**
+   * 用户默认钱包
+   */
+  walletInfo: {} as any,
   /**
    * 0:活动未开始
    * 1:准备抢红包
    * 2:红包已抢完
    * 3:今日红包已抢过
    */
-  activityProgress: 0,
+  activityProgress: 1,
 
   //获取红包雨列表
   getList() {
@@ -98,64 +106,119 @@ const conf = reactive({
 
     //红包活动开始 -- 未玩
     conf.redInfo = conf.redpacketList[0] || {}
-    conf.checkOpenSocket()
   },
 
-  //建立websocket连接
-  checkOpenSocket() {
-    System.loading()
-    conf.ws = new WebSocketBean({
-      url: `ws://192.168.31.50/api/mini/games/${sconfig.userInfo.token}/RedPacketRain`,
-      onopen() {
-        console.log('连接成功')
-        System.loading(false)
-        conf.activityProgress = 1
-        return new Promise((resolve) => {
-          resolve(true)
-        })
-      },
-      onerror() {
-        System.loading(false)
-        conf.activityProgress = 0
-      },
-      binaryType: 'arraybuffer'
-    })
-    conf.ws.start()
-  },
-
-  clickRedPacket(item: any, index: any, arr: any) {
-    let obj = {
-      miniGame: conf.redInfo.id || '',
-      uid: conf.userInfo.uid || '',
-      userId: conf.userInfo.userId || '',
-      contentType: 'MINI_GAME',
-      content: {
-        gameName: 'redPacketRain',
-        operateType: 'GAME_INFO',
-        data: {
-          rainId: conf.redInfo.id || '',
-          uid: conf.userInfo.uid || '',
-          userId: conf.userInfo.userId || '',
-          type: 'click'
-        }
-      }
+  /**
+   * 检查并建立websocket连接
+   */
+  async checkOpenSocket() {
+    let wsurl = System.env.API
+    //#ifvar-dev
+    if (System.env.API.includes('66:6521/api')) {
+      wsurl = Cookie.get('apiurl')
     }
-    conf.ws.send(obj)
+    //#endvar
+
+    if (wsurl.startsWith('/')) wsurl = location.origin
+    wsurl = wsurl.replace('http', 'ws')
+
+    return new Promise((resolve, reject) => {
+      System.loading()
+      conf.ws = new WebSocketBean({
+        url: `${wsurl}/api/mini/games/RedPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
+        async onopen() {
+          System.loading(false)
+          conf.activityProgress = 1
+          resolve(true)
+        },
+        onerror() {
+          System.loading(false)
+          conf.activityProgress = 0
+          reject(false)
+        },
+        onmessage(ev) {
+          event.emit(conf.wsEventKey + ev.data.id, ev.data)
+        },
+        binaryType: 'arraybuffer'
+      })
+      conf.ws.start()
+    })
+  },
+
+  /**
+   * 发送数据
+   * @param data 数据
+   */
+  sendData(data: any): Promise<any> {
+    return new Promise((res) => {
+      const id = StrUtil.getId()
+      conf.ws.send(
+        JSON.stringify({
+          ...data,
+          id
+        })
+      )
+      event.once(conf.wsEventKey + id, (data) => {
+        res(data)
+      })
+    })
+  },
+
+  /**
+   * 点击红包
+   * @param item 红包对象
+   */
+  async clickRedPacket(item: any) {
+    const res = await conf.sendData({
+      type: 'click'
+    })
+    item.count = res.count
+  },
+
+  /**
+   * 结束红包雨
+   */
+  async endRedPacket() {
+    conf.isRedEnvelopeRain = false
+    conf.activityProgress = 2
+
+    conf.sendData({
+      type: 'expense',
+      userCoinCode: conf.walletInfo.walletCoin || ''
+    })
+  },
+
+  /**
+   * 倒计时
+   */
+  async startDownTime() {
+    await Timer.delay(4000)
+    conf.countdown = 15
+    timer.on(() => {
+      conf.countdown--
+      if (conf.countdown <= 0) {
+        timer.clear()
+        conf.endRedPacket()
+      }
+    }, 1000)
   },
 
   //btns
-  handleBtns(type: any) {
+  async handleBtns(type: any) {
+    await conf.checkOpenSocket()
+    conf.startDownTime()
     conf.isRedEnvelopeRain = true
   }
 })
 
 const init = async () => {
+  conf.walletInfo = await svalue.getDefaultWallet()
+}
+
+onBeforeMount(() => {
   conf.userInfo = sconfig.userInfo
   conf.getList()
-  // conf.getWalletMoney(1)
-  // await svalue.getCoinlist()
-  // conf.defaultCoin = svalue.coinlist.find((item) => item.isDefault)
-}
+})
 
 onMounted(() => {
   init()
