@@ -17,7 +17,7 @@
                 {{ $t('redEnvelopeModule.StartLooting') }}
               </div>
             </template>
-            <!-- 已抢完红包 -->
+            <!-- 红包已抢完 -->
             <template v-if="conf.activityProgress == 2">
               <div class="end" v-if="Number(conf.redAmount) > 0">
                 {{ $t('redEnvelopeModule.Whoaa') + ': ' + conf.coinMark + conf.redAmount }}
@@ -51,16 +51,17 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import sconfig from '@/sstore/sconfig';
+import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
+import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
+import redpacketrain from './redpacketrain.vue'
 const conf = reactive({
   serviceHeiht: 300,
   countdown: 0, //抢红包倒计时
-  activityProgress: null, //判断活动进度（ 0 => 未开始，1 => 准备抢红包 ，2 => 已抢完红包 ,3 => 今日红包已抢过）
   isRedEnvelopeRain: false, //判断是否掉落红包雨
   timer: null, //定时器
-  ws: null as any,
+  ws: null! as WebSocketBeanInter,
   userInfo: {} as any,
   redpacketList: [] as any[],
   animationData: {} as any,
@@ -71,28 +72,58 @@ const conf = reactive({
   redInfo: {} as any,
   defaultCoin: {} as any, //接口返回默认币种钱包
 
+  /**
+   * 0:活动未开始
+   * 1:准备抢红包
+   * 2:红包已抢完
+   * 3:今日红包已抢过
+   */
+  activityProgress: 0,
+
   //获取红包雨列表
   getList() {
     let obj = Cookie.get('redEnvelopeInfo')
-    console.log('obj', obj)
 
-    conf.redpacketList = obj.redpacketList
-    conf.activityProgress = obj.redEnvelopeProgress
-    let index = conf.redpacketList.findIndex((item) => item.states == 0)
-    //红包活动开始 -- 未玩
-    if (conf.activityProgress == 1) {
-      conf.redInfo = conf.redpacketList[index] || {}
-      conf.checkOpenSocket()
+    if (!obj?.redpacketList?.length) {
+      System.router.replace('/')
+      return
     }
+
+    conf.redpacketList = obj.redpacketList.filter((item: any) => item.states == 0)
+
+    if (!obj.redpacketList.length) {
+      conf.activityProgress = 3
+      return
+    }
+
+    //红包活动开始 -- 未玩
+    conf.redInfo = conf.redpacketList[0] || {}
+    conf.checkOpenSocket()
   },
 
   //建立websocket连接
-  checkOpenSocket() {},
+  checkOpenSocket() {
+    System.loading()
+    conf.ws = new WebSocketBean({
+      url: `ws://192.168.31.50/api/mini/games/${sconfig.userInfo.token}/RedPacketRain`,
+      onopen() {
+        console.log('连接成功')
+        System.loading(false)
+        conf.activityProgress = 1
+        return new Promise((resolve) => {
+          resolve(true)
+        })
+      },
+      onerror() {
+        System.loading(false)
+        conf.activityProgress = 0
+      },
+      binaryType: 'arraybuffer'
+    })
+    conf.ws.start()
+  },
 
   clickRedPacket(item: any, index: any, arr: any) {
-    conf.clickRedIndex = index
-    conf.redRainList = arr
-
     let obj = {
       miniGame: conf.redInfo.id || '',
       uid: conf.userInfo.uid || '',
@@ -105,23 +136,17 @@ const conf = reactive({
           rainId: conf.redInfo.id || '',
           uid: conf.userInfo.uid || '',
           userId: conf.userInfo.userId || '',
-          type: 'click',
-          month: String(conf.redInfo.month) || '',
-          day: String(conf.redInfo.day) || '',
-          time: String(conf.redInfo.time) || ''
+          type: 'click'
         }
       }
     }
-    conf.sendInfo(obj)
+    conf.ws.send(obj)
   },
 
   //btns
   handleBtns(type: any) {
     conf.isRedEnvelopeRain = true
-  },
-
-  //发送消息
-  sendInfo(obj: any) {}
+  }
 })
 
 const init = async () => {
@@ -139,15 +164,18 @@ onMounted(() => {
 <style lang="less" scoped>
 .content-view {
   height: 100%;
+  overflow: hidden;
   background: url(/static/img/redEnvelope/underlay.png);
 
   .top-view {
     width: 100%;
     height: 172rem;
+    position: relative;
 
     .top-img {
       width: 100%;
       height: 100%;
+      position: absolute;
       z-index: 99;
       filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.25));
     }
@@ -247,6 +275,8 @@ onMounted(() => {
       width: 100%;
       height: 100%;
       z-index: 99;
+      position: absolute;
+      left: 0;
       filter: drop-shadow(0px -10px 20px rgba(0, 0, 0, 0.25));
     }
 

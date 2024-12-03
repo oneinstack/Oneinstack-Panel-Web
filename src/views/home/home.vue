@@ -150,7 +150,6 @@ const conf = reactive({
   language: '',
   localGameArr: [] as any[],
   slotsGamesList: [] as any[],
-  redEnvelopeProgress: null as any, //判断红包雨活动进度（ 0 => 未开始，1 => 准备抢红包 ，2 => 已抢完红包 ,3 => 今日红包已抢过）
   redpacketList: [] as any[],
   scratchList: [] as any[],
   swiperList: [] as any[],

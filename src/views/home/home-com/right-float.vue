@@ -59,7 +59,6 @@ const timer = Scope.Timer()
 const conf = reactive({
   isScroll: false,
   redpacketList: [],
-  redEnvelopeProgress: 0,
   showTitle: {
     Redpayout: false,
     Chatroom: false,
@@ -74,26 +73,11 @@ const conf = reactive({
       }
     })
     conf.redpacketList = res.data || []
-    let index = conf.redpacketList.findIndex((item: any) => item.states == 0)
-    //红包活动未开始
-    if (conf.redpacketList.length == 0) {
-      conf.redEnvelopeProgress = 0
-    }
-    //红包活动开始 -- 未玩
-    if (conf.redpacketList.length > 0 && index != -1) {
-      conf.redEnvelopeProgress = 1
-    }
-    //红包活动开始 -- 已玩
-    if (conf.redpacketList.length > 0 && index == -1) {
-      conf.redEnvelopeProgress = 3
-    }
 
-    if (conf.redEnvelopeProgress != 0) {
-      let obj = {
-        redEnvelopeProgress: conf.redEnvelopeProgress,
+    if (conf.redpacketList.length) {
+      Cookie.set('redEnvelopeInfo', {
         redpacketList: conf.redpacketList
-      }
-      Cookie.set('redEnvelopeInfo', obj)
+      })
       System.router.push('/user/redEnvelope/index')
     } else {
       System.toast(i18n.t('redEnvelopeModule.notStarted'))
