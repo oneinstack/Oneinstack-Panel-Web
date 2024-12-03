@@ -94,6 +94,10 @@ const conf = reactive({
   loading: false,
   lastTime: 0,
   toPage: (path: string) => {
+    if (!sconfig.userInfo) {
+      System.router.push('/login')
+      return
+    }
     System.router.push(path)
   },
   getList: async () => {
