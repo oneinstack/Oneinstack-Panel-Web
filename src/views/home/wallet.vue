@@ -274,7 +274,7 @@ const conf = reactive({
         System.toast(i18n.t(`code.${res.code}`), 'success')
         svalue.walletlist = []
         conf.isShowCustomPopup = false
-        conf.currentWallet = conf.addWalletInfo.coinCode
+        // conf.currentWallet = conf.addWalletInfo.coinCode
         conf.getWalletList(null, conf.addWalletInfo)
       }
     });
@@ -283,7 +283,7 @@ const conf = reactive({
   async getConsumptionRecords() {
     let info = await svalue.getAppConfiguration()
     conf.isMore = false
-
+    let addNumType = [1,3,5,6,8,10,12,13,15,20,21,22,23,24,25,26,27,28,29,30,31]
     //获取当前钱包的消费记录
     apis.trade({
       coinCode: conf.defaultWalletInfo.walletCoin || conf.defaultWalletInfo.coinCode,
@@ -291,10 +291,7 @@ const conf = reactive({
       size: conf.pageSize,
       success: (res: any) => {
         res.data.records?.forEach((item: any) => {
-          if (item.tradeType == 1 || item.tradeType == 3 || item.tradeType ==
-            5 || item.tradeType == 6 || item.tradeType == 8 || item
-              .tradeType == 10 || item.tradeType == 12 || item.tradeType == 13 ||
-            item.tradeType == 15 || item.tradeType == 20 || item.tradeType == 21) {
+          if ( addNumType.includes(item.tradeType)) {
             item.symbol = ' + '
           } else {
             item.symbol = ' - '

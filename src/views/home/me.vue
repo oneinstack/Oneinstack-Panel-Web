@@ -105,11 +105,11 @@
                     class="select-item"
                     @click="conf.handleCilckImg('Remittance', $event)"
                     :style="{
-                      maxWidth: conf.swiperList.length ? '100%' : '0px'
+                      maxWidth: conf.swiperList.length > 1 ? '100%' : '0px'
                     }"
                   >
-                    <img v-if="conf.swiperList.length" src="/static/img/wallet/remittance-new.png" />
-                    <span v-if="conf.swiperList.length">{{ $t('wallet.Remittance') }}</span>
+                    <img v-if="conf.swiperList.length > 1" src="/static/img/wallet/remittance-new.png" />
+                    <span v-if="conf.swiperList.length > 1">{{ $t('wallet.Remittance') }}</span>
                   </div>
                   <div class="select-item" @click="conf.handleCilckImg('CentralWallet', $event)">
                     <img src="/static/img/wallet/center-new.png" />
@@ -150,7 +150,7 @@
       </div>
     </div>
     <!-- 多语言弹框 -->
-    <van-popup class="popup-bottom-center" v-model:show="conf.langPopup" position="bottom">
+    <van-popup v-model:show="conf.langPopup" position="bottom">
       <div class="lang-select">
         <div class="select-title">
           <span>{{ $t('me.switchLanguage') }}</span>

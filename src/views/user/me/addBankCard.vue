@@ -314,7 +314,7 @@ const conf = reactive({
     System.loading()
     apis.getBankByCode({
       payTypeCode: conf.selectMethodObj.payMethodCode,
-      payTrdCountry: conf.selectCountry.countryCode,
+      payTrdCountry: conf.selectCountry.countryCode || '',
       success: (res: any) => {
         if (res.code == 200) {
           conf.bankTypeList = res.data || []
@@ -663,6 +663,7 @@ onMounted(() => {
                   <img :src="conf.selectAreaCodeObj.flagUrl" style="width: 37rem; height: 37rem; margin-right: 15rem" />
                   {{ conf.formData.area_code ? '+' + conf.formData.area_code : '' }}
                 </div>
+                <!-- <van-icon class="cuIcon-right" name="arrow" /> -->
               </div>
               <div class="right-view">
                 <input
@@ -863,7 +864,6 @@ onMounted(() => {
 
     <!-- 模态框 -->
     <van-popup
-      class="popup-bottom-center"
       :show="conf.modalName && conf.modalName != 'area_code'"
       closeable
       position="bottom"
@@ -953,7 +953,7 @@ onMounted(() => {
       </div>
     </van-popup>
     <!-- 手机区号模态框 -->
-    <van-popup  :show="conf.modalName == 'area_code'" class="cu-modal bottom-modal popup-bottom-center" @close="conf.modalName == ''">
+    <van-popup :show="conf.modalName == 'area_code'" class="cu-modal bottom-modal" @close="conf.modalName == ''">
       <div class="cu-dialog">
         <div class="padding-xl" v-if="conf.areaCodeList.length > 0">
           <!-- btns -->
@@ -1171,6 +1171,7 @@ input::placeholder,
   // color: #fff;
   background: #fffbf5;
   background: linear-gradient(#eb602d, #ffa64f);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1225,6 +1226,7 @@ input::placeholder,
       border: 1rem solid rgb(0, 0, 0);
       border-color: #ffd8ba !important;
       background: linear-gradient(to right, #eb602d, #ffa64f);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       top: calc(50% - 20rem);
@@ -1242,6 +1244,7 @@ input::placeholder,
       // border: 1rem solid rgb(0, 0, 0);
       // border-color: #FFD8BA !important;
       background: linear-gradient(to right, #eb602d, #ffa64f);
+      background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       top: calc(50% - 20rem);
@@ -1303,6 +1306,7 @@ input::placeholder,
   }
   .right-btn {
     background: linear-gradient(#eb602d, #ffa64f);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }

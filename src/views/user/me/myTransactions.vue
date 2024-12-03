@@ -25,9 +25,9 @@
 			</div>
 		</template>
 		<!-- content -->
-		<div class="content-div" scroll-y="true">
-			<div :style="{ maxHeight: conf.scrollHeight + 'px' }" style="width: 100%;margin-bottom: 150rem;">
-				<div class="winning-box" scroll-y="true" v-if="conf.detailData.length > 0">
+		<div class="content-div">
+			<div style="width: 100%;margin-bottom: 20rem;">
+				<div class="winning-box" v-if="conf.detailData.length > 0">
 					<div class="winning-item" v-for="(item, itemIndex) in conf.detailData" :key="itemIndex">
 						<div class="left-user">
 							<div class="userName">
@@ -35,7 +35,7 @@
 									<span>{{ item.tradeObjName || conf.tradeLable || "--" }} </span>
 								</div>
 								<div>
-									<span style="color: #BCBCBC;font-size:20rem">{{ conf.getTime(item.tradeTime)
+									<span style="color: #BCBCBC;font-size:20rem">{{ sutil.getTimeFormat(item.tradeTime)
 										}}</span>
 								</div>
 							</div>
@@ -62,6 +62,7 @@
 import { apis } from '@/api';
 import { EPage } from '@/enum/Enum';
 import i18n from '@/lang';
+import sutil from '@/sstore/sutil';
 import { svalue } from '@/sstore/svalue';
 import System from '@/utils/System';
 import { Scope } from 'tools-vue3';
@@ -144,7 +145,7 @@ const conf = reactive({
 	tradeType: 1,
 	tradeStatus: 1,
 	tradeExamineStatus: 1,
-	tradeLable: 'recharge',
+	tradeLable: i18n.t('tradeType.1'),
 	getList() {
 		System.loading()
 		apis.meTrade({
@@ -199,6 +200,8 @@ const conf = reactive({
 	},
 
 	getTime(val: any) {
+		console.log(val);
+		
 		let _time = String(new Date(val))
 		return String(_time).split("(")[0]
 	},

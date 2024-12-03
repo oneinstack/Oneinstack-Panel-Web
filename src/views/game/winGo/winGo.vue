@@ -25,7 +25,7 @@
 			<div class="open-number-list">
 				<template v-for="(item, itemIndex) in conf.drawLotteryResult">
 					<div class="result-item">
-						<img class="number-item-img" src="/static/img/game/twgo/openCodeImg.png" />
+						<img class="number-item-img" src="/static/img/game/twgo/openCodeImg.webp" />
 						<!-- 未开奖 -->
 						<span class="result-text" v-if="conf.resuleIndex === null">{{
 							conf.openCodeAllData[conf.scollIndex + itemIndex] || itemIndex }}</span>
@@ -729,8 +729,8 @@ onUnmounted(() => {
 		justify-content: space-between;
 
 		.number-item-img {
-			height: 115rem;
-			width: 91rem;
+			height: 120rem;
+			width: 100rem;
 		}
 
 		.result-item {
@@ -740,8 +740,8 @@ onUnmounted(() => {
 
 		.result-text {
 			position: absolute;
-			top: 20rem;
-			left: 30rem;
+			top: 32rem;
+			left: 34rem;
 			font-size: 45rem;
 			color: #FEC748;
 		}
