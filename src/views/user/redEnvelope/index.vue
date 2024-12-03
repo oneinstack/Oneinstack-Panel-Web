@@ -99,7 +99,7 @@ const conf = reactive({
 
     conf.redpacketList = obj.redpacketList.filter((item: any) => item.states == 0)
 
-    if (!obj.redpacketList.length) {
+    if (!conf.redpacketList.length) {
       conf.activityProgress = 3
       return
     }
@@ -114,7 +114,7 @@ const conf = reactive({
   async checkOpenSocket() {
     let wsurl = System.env.API
     //#ifvar-dev
-    if (System.env.API.includes('66:6521/api')) {
+    if (System.env.API.includes('6521/api')) {
       wsurl = Cookie.get('apiurl')
     }
     //#endvar
@@ -129,9 +129,6 @@ const conf = reactive({
         onopen() {
           System.loading(false)
           conf.activityProgress = 1
-          timer.once(() => {
-            resolve(true)
-          }, 300)
           return new Promise((res) => {
             res(true)
           })
@@ -147,8 +144,11 @@ const conf = reactive({
           try {
             let _data = JSON.parse(ev.data)
             _data = JSON.parse(_data.data)
+            console.log('conf.wsEventKey + _data.data.id', conf.wsEventKey + _data.data.id, _data.data)
             event.emit(conf.wsEventKey + _data.data.id, _data.data)
-          } catch (error) {}
+          } catch (error) {
+            console.log(error)
+          }
         },
         binaryType: 'arraybuffer'
       })
