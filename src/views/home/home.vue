@@ -40,7 +40,7 @@
           <div class="see-all" @click="conf.goPage('/user/casino/index?type=Games', 2)">{{ $t('home.more') }}</div>
         </div>
         <div class="lottery-item">
-          <div class="lottery-list">
+          <div class="lottery-list" v-scroll>
             <div v-for="(item, itemIndex) in conf.slotsGamesList" :key="itemIndex">
               <slotsGamesItem :ani="false" :item="item" @clickItem="conf.handleClickGameTip(item)" />
             </div>
@@ -55,7 +55,7 @@
           {{ $t('home.LOTTERY') }}
         </div>
         <div class="lottery-item">
-          <div class="lottery-list">
+          <div class="lottery-list" v-scroll>
             <div v-for="(item, itemIndex) in conf.localGameArr" :key="itemIndex">
               <lotteryItem :item="item" @clickItem="conf.handleIntoLocalGame(item, 0)" style="margin-left: 10rem" />
             </div>

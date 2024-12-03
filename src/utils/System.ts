@@ -11,6 +11,9 @@ export default class System {
   /** 平台 */
   static platform = 'web' as 'web' | 'android' | 'ios'
 
+  /** 是否是移动端 */
+  static isMobile = false
+
   /**
    * 环境变量
    */
@@ -190,4 +193,5 @@ export default class System {
     document.body.removeChild(tempLink)
     window.URL.revokeObjectURL(content)
   }
+
 }

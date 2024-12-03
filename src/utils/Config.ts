@@ -1,6 +1,7 @@
 import i18n from '@/lang'
 import plugins from '@/plugins'
 import { initRouter } from '@/router'
+import { initApp } from '@/sstore'
 import { Capacitor } from '@capacitor/core'
 import { getPlatforms } from '@ionic/vue'
 import { App } from 'vue'
@@ -8,7 +9,6 @@ import HttpConfig from './HttpConfig'
 import StatusBarConfig from './StatusBarConfig'
 import System from './System'
 import { UpdateVersion } from './UpdateVersion'
-import { initApp } from '@/sstore'
 export default class Config {
   /**
    * 初始化
@@ -16,9 +16,19 @@ export default class Config {
   static async init(app: App) {
     // 是否是原生
     System.isNative = Capacitor.isNativePlatform()
+
     // 平台
     const platforms = getPlatforms() as string[]
     System.platform = System.isNative ? (platforms.includes('android') ? 'android' : 'ios') : 'web'
+
+    // 是否是移动端
+    if (
+      window.navigator.userAgent.match(
+        /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+      )
+    ) {
+      System.isMobile = true
+    }
 
     // 初始化环境变量
     System.env = JSON.parse('#{global}')
