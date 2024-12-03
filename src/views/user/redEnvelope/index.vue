@@ -58,7 +58,7 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
-import { onBeforeMount, onMounted, reactive } from 'vue'
+import { onBeforeMount, onMounted, onUnmounted, reactive } from 'vue'
 import redpacketrain from './redpacketrain.vue'
 
 const timer = Scope.Timer()
@@ -222,6 +222,11 @@ onBeforeMount(() => {
 
 onMounted(() => {
   init()
+})
+
+onUnmounted(() => {
+  conf.ws?.dispose()
+  conf.ws = null!
 })
 </script>
 <style lang="less" scoped>
