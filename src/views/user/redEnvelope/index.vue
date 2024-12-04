@@ -53,6 +53,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
+import { apis } from '@/api'
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
@@ -129,6 +130,7 @@ const conf = reactive({
         onopen() {
           System.loading(false)
           conf.activityProgress = 1
+          resolve(true)
           return new Promise((res) => {
             res(true)
           })
@@ -144,8 +146,7 @@ const conf = reactive({
           try {
             let _data = JSON.parse(ev.data)
             _data = JSON.parse(_data.data)
-            console.log('conf.wsEventKey + _data.data.id', conf.wsEventKey + _data.data.id, _data.data)
-            event.emit(conf.wsEventKey + _data.data.id, _data.data)
+            event.emit(conf.wsEventKey + _data.id, _data)
           } catch (error) {
             console.log(error)
           }
@@ -183,7 +184,6 @@ const conf = reactive({
     const res = await conf.sendData({
       type: 'click'
     })
-    console.log('res', res)
     item.amount = res.money
   },
 
@@ -198,8 +198,15 @@ const conf = reactive({
       type: 'expense',
       userCoinCode: conf.walletInfo.walletCoin || ''
     })
-    console.log('res1', res)
     conf.redAmount = res.money
+
+    //刷新红包雨列表
+    const res1 = await apis.getPacketRainList()
+    if (res1.data.length) {
+      Cookie.set('redEnvelopeInfo', {
+        redpacketList: res1.data
+      })
+    }
   },
 
   /**
