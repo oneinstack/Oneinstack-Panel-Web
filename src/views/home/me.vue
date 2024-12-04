@@ -419,7 +419,6 @@ const conf = reactive({
   },
   //获取用户钱包列表
   async getWalletList(arr: any) {
-    console.log(arr);
     
     let wlist = await svalue.getWalletlist()
     let defaultWalletId = sconfig.userInfo.defaultWalletId
@@ -429,7 +428,6 @@ const conf = reactive({
     }
     let newArr = wlist || []
     arr?.forEach((item: any) => {
-      console.log(item.coinTousdt);
       
       let index = newArr?.findIndex((into: any) => into.walletCoin == item.coinCode)
       if (index != -1) {
@@ -441,7 +439,6 @@ const conf = reactive({
         newArr[index].coinSymbol = item.coinSymbol
       }
     })
-    console.log(conf.defaultCoin);
     
     conf.total_money = 0
     newArr?.forEach((item: any, itemIndex: number) => {
