@@ -192,7 +192,7 @@ const conf = reactive({
       // 重置页码
       conf.page.pageNum = 1
       conf.list = []
-      FunUtil.throttle(conf.getList)
+      FunUtil.debounce(conf.getList)
     }
   },
   page: {

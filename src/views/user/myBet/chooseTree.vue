@@ -145,7 +145,8 @@ onBeforeMount(() => {
 defineExpose({
   reset: conf.reset,
   confirm: conf.confirm,
-  init: conf.init
+  init: conf.init,
+  chooseItem: conf.chooseItem
 })
 </script>
 <style lang="less" scoped>

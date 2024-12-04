@@ -365,9 +365,10 @@ const conf = reactive({
 
 	//查看my order
 	handleMyOrderdiv() {
-		conf.typeShow = false
-		conf.resultShow = false
-		conf.showOrder = true
+		System.router.push('/user/myBet/index?lottery=Satta')
+		// conf.typeShow = false
+		// conf.resultShow = false
+		// conf.showOrder = true
 	},
 
 	//打开游戏类型弹窗

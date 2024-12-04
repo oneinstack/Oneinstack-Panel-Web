@@ -63,6 +63,7 @@
 <script lang="ts" setup>
 import { slottery } from '@/sstore/slottery'
 import sutil from '@/sstore/sutil'
+import System from '@/utils/System'
 import { reactive, ref } from 'vue'
 import chooseTree from './chooseTree.vue'
 
@@ -118,7 +119,16 @@ const conf = reactive({
 
     let timeArr = sutil.getDateOptions(false)
     betTimeRef.value.init(timeArr)
-    conf.confirm()
+
+    const options = System.getRouterParams()
+    let fItemIndex = _data.findIndex((v: any) => v.label == options.lottery)
+    let fItem = _data.find((v: any) => v.label == options.lottery)
+    if (options.lottery && fItemIndex >= 0) {
+      conf.dialog.refObj.lotteryType.chooseItem(0, fItem)
+      conf.dialog.refObj.lotteryType.confirm()
+    } else {
+      conf.confirm()
+    }
   },
   /** 对话框 */
   dialog: {
