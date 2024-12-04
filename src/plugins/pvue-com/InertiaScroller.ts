@@ -5,7 +5,7 @@ type Point = {
 }
 
 export class InertiaScroller {
-  
+
   //是否正在获取竞争
   static getIsRunPro = false
 
@@ -93,7 +93,7 @@ export class InertiaScroller {
     let { vx, vy } = this.calculateVelocity()
     if (Math.abs(vx) < 1 && Math.abs(vy) < 1) return // 速度过低不进行惯性滑动
 
-    const friction = 0.75 // 摩擦力（速度衰减系数）
+    const friction = 0.95 // 摩擦力（速度衰减系数）
 
     const step = () => {
       if (!this.needInertia) return
@@ -109,7 +109,7 @@ export class InertiaScroller {
       const newVy = vy * friction
 
       // 如果速度接近于零，停止惯性滑动
-      if (Math.abs(newVx) < 1 && Math.abs(newVy) < 1) {
+      if (Math.abs(newVx) < 10 && Math.abs(newVy) < 10) {
         this.clearInertia()
         return
       }
