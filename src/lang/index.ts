@@ -17,7 +17,6 @@ export const langobj: any = {
 
 //@ts-ignore
 i18n.setLang = async (lang: string = Cookie.get('language') || 'en-us') => {
-  System.loading(true)
   const modules = import.meta.glob('@/lang/**/*.ts')
   const module: any = await modules[`/src/lang/${lang}.ts`]()
   i18n.global.setLocaleMessage(lang, module.default)
@@ -25,7 +24,6 @@ i18n.setLang = async (lang: string = Cookie.get('language') || 'en-us') => {
   //@ts-ignore
   i18n.locale = lang
   Cookie.set('language', lang)
-  System.loading(false)
 }
 
 //@ts-ignore

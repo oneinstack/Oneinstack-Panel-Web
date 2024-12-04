@@ -390,7 +390,9 @@ const conf = reactive({
   },
   async changeLang(item: any) {
     conf.language = item.id
+    System.loading()
     await i18n.setLang(item.id)
+    System.loading(false)
     conf.langPopup = false
   },
   async goLogin(url: string) {
