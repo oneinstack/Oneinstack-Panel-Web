@@ -1,4 +1,3 @@
-import System from '@/utils/System'
 import { App } from 'vue'
 import { InertiaScroller } from './pvue-com/InertiaScroller'
 
@@ -7,7 +6,6 @@ export const install = (app: App) => {
   app.directive('scroll', {
     mounted(el: HTMLDivElement, bindinfo) {
       const value = bindinfo.value
-
       if (value && typeof value === 'object') {
         //滚动到顶部指定位置
         value.toTop = (top: number, useAni: boolean = true) => {
@@ -65,7 +63,6 @@ export const install = (app: App) => {
           value.toLeft(el.scrollLeft + rect.left - el.clientWidth / 2, useAni)
         }
       }
-      if (System.isMobile || value === false) return
       new InertiaScroller(el)
     }
   })
