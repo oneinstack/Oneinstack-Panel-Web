@@ -48,11 +48,14 @@ export class InertiaScroller {
     this.points = []
     this.recordPoint(e.clientX, e.clientY)
 
+    let moveNum = 0
     const onMouseMove = (event: MouseEvent) => {
       this.recordPoint(event.clientX, event.clientY)
       this.container.scrollLeft -= event.movementX
       this.container.scrollTop -= event.movementY
-      this.container.style.pointerEvents = 'none'
+
+      if (moveNum == 1) this.container.style.pointerEvents = 'none'
+      moveNum = 1
     }
 
     const onMouseUp = () => {
