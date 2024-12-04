@@ -864,6 +864,7 @@ onMounted(() => {
 
     <!-- 模态框 -->
     <van-popup
+      class="popup-bottom-center"
       :show="conf.modalName && conf.modalName != 'area_code'"
       closeable
       position="bottom"

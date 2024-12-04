@@ -227,7 +227,7 @@
       </div>
 
       <div class="cu-modal bottom-modal" :class="conf.isMore ? 'show' : ''">
-        <van-popup v-model:show="conf.isMore" round position="bottom" class="cu-dialog" style="height: 250rem">
+        <van-popup v-model:show="conf.isMore" round position="bottom" class="cu-dialog popup-bottom-center" style="height: 250rem">
           <div class="close-icon" @click.stop="conf.handleCloseMore">×</div>
           <div class="padding-xl">
             <div class="foot" style="margin-top: 50rem">
