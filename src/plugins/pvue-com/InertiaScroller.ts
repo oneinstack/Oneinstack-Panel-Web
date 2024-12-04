@@ -5,7 +5,6 @@ type Point = {
 }
 
 export class InertiaScroller {
-
   //是否正在获取竞争
   static getIsRunPro = false
 
@@ -27,6 +26,10 @@ export class InertiaScroller {
 
   constructor(container: HTMLElement) {
     this.container = container
+    const overflow = this.container.style.overflow
+    if (StrUtil.isNull(overflow)) {
+      this.container.style.overflow = 'scroll'
+    }
     this.bindEvents()
   }
 
@@ -37,7 +40,6 @@ export class InertiaScroller {
   private needInertia = false
 
   private onMouseDown = (e: MouseEvent) => {
-
     const isRun = InertiaScroller.getIsRun()
     if (!isRun) return
 
