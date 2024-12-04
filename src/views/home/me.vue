@@ -259,7 +259,7 @@ const conf = reactive({
       //充值
       case 'Recharge':
         Cookie.set('userWalletList', conf.userWalletList)
-        if (conf.userWalletList == 0) {
+        if (conf.userWalletList.length == 0) {
           System.toast(i18n.t('wallet.noWalletTip'))
         } else {
           System.router.push('/user/wallet/Recharge')
