@@ -1,3 +1,4 @@
+import System from '@/utils/System'
 import { sbet } from './sbet'
 import { sconfig } from './sconfig'
 import { shome } from './shome'
@@ -40,6 +41,15 @@ export const load = () => {
 export const initApp = async () => {
   load()
   await sconfig.getSystemTime()
+
+  //web端设置icon
+  if (System.platform === 'web') {
+    const appConfig = await svalue.getAppConfiguration()
+    let link = document.createElement('link')
+    link.rel = 'icon'
+    link.href = appConfig.app_logo
+    document.getElementsByTagName('head')[0].appendChild(link)
+  }
 }
 
 sutil.reset = reset

@@ -10,7 +10,6 @@ export const svalue = reactive({
     svalue.showRedBag = true
     svalue.showServer = true
     svalue.gameTypeList = []
-    svalue.getDefaultWalletPro = null
   },
   //系统配置
   configv1: {} as any,
@@ -45,14 +44,12 @@ export const svalue = reactive({
     return svalue.coinlist
   },
 
-  getDefaultWalletPro: null as any,
   /**
    * 获取最新钱包数据，刷新用户余额
    * @returns
    */
   async getDefaultWallet() {
-    if (svalue.getDefaultWalletPro) return await svalue.getDefaultWalletPro
-    svalue.getDefaultWalletPro = new Promise(async (res) => {
+    return await FunUtil.lock(async () => {
       const sconfig = sutil.getStore('sconfig')
       let wlist = await svalue.getWalletlist()
       let clist = await svalue.getCoinlist()
@@ -60,7 +57,7 @@ export const svalue = reactive({
       // 获取默认钱包对象
       let item = wlist.find((cur: any) => cur.id == defaultWalletId)
       // 没有默认钱包时，默认为第1个
-      if(!item && wlist.length) item = wlist[0]
+      if (!item && wlist.length) item = wlist[0]
       // 获取默认钱包币种
       let coinItem = item ? clist.find((it: any) => it.coinCode == item.walletCoin) : {}
       let defaultWalletInfo = item
@@ -80,30 +77,26 @@ export const svalue = reactive({
       sconfig.money = parseFloat(defaultWalletInfo.walletMoney)
       //更新用户默认钱包信息
       sconfig.walletInfo = defaultWalletInfo
-
-      res(defaultWalletInfo)
-
-      svalue.getDefaultWalletPro = null
+      return defaultWalletInfo
     })
-    return await svalue.getDefaultWalletPro
   },
 
   // 获取系统信息
   async getAppConfiguration(load = false) {
     let _config = svalue.configv1 as any
-    if(load) _config = {}
+    if (load) _config = {}
     if (!_config.app_logo) {
-      const { data } = await appConfigurationV1()
-
-      //将所有字符串的true和false转为布尔值
-      for (const key in data) {
-        if (typeof data[key] === 'string') {
-          data[key] = data[key] === 'true' ? true : data[key] === 'false' ? false : data[key]
+      await FunUtil.lock(async () => {
+        const { data } = await appConfigurationV1()
+        //将所有字符串的true和false转为布尔值
+        for (const key in data) {
+          if (typeof data[key] === 'string') {
+            data[key] = data[key] === 'true' ? true : data[key] === 'false' ? false : data[key]
+          }
         }
-      }
-      _config = data
-
-      svalue.configv1 = data
+        _config = data
+        svalue.configv1 = data
+      })
     }
     return _config
   },

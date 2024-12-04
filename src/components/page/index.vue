@@ -27,11 +27,11 @@
     <div class="col relative" style="overflow-y: scroll; overflow-x: hidden" ref="scrollRef" @scroll="conf.scroll" v-scroll>
       <div class="absolute column no-wrap" style="width: 750rem; height: 100%">
         <div v-if="noHeader === false && topfill && fixed">
-          <x-statusbar header />
+          <x-statusbar header :headerHeight="headerHeight" />
         </div>
         <slot></slot>
         <div>
-          <div v-if="noFooter === false" :style="{ height: tabbar === false ? '60rem' : '210rem' }"></div>
+          <div v-if="noFooter === false" :style="{ height: tabbar === false ? '60rem' : tabbarHeight }"></div>
         </div>
       </div>
     </div>
@@ -82,6 +82,12 @@ const props = defineProps({
     default: 'linear-gradient(180deg, #EB602D 0%, #FFA64F 100%)'
   },
   /**
+   * 头部高度，默认104rem
+   */
+  headerHeight: {
+    default: '104rem'
+  },
+  /**
    * 背景颜色，默认透明
    */
   bgcolor: {
@@ -98,6 +104,12 @@ const props = defineProps({
    */
   tabbar: {
     default: false
+  },
+  /**
+   * 底部导航栏的高度，默认210rem
+   */
+  tabbarHeight: {
+    default: '210rem'
   }
 })
 
