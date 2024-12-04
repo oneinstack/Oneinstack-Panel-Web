@@ -90,7 +90,7 @@ const conf = reactive({
 const init = async () => {
   conf.InvitationCode = sconfig.userInfo.userInvitationCode.toUpperCase()
   conf.hrefUrl = location.origin
-  conf.qrcode = location.origin + '/#/user/register/register?code=' + conf.InvitationCode
+  conf.qrcode = location.origin + '/#/register?code=' + conf.InvitationCode
 }
 onMounted(init)
 </script>

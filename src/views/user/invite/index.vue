@@ -181,7 +181,7 @@ const conf = reactive({
   //复制邀请码
   handleCopyCode() {
     let promoteCode = conf.userInfo.userInvitationCode //拿到想要复制的值
-    StrUtil.copyText(location.origin + '/#/user/register/register?code=' + promoteCode)
+    StrUtil.copyText(location.origin + '/#/register?code=' + promoteCode)
     System.toast(i18n.t('invite.CopySuccessful'), 'success')
   },
 

@@ -23,7 +23,7 @@ withDefaults(defineProps<Props>(), {
 
 async function hanldeCopyLink() {
   const userInvitationCode = sconfig.userInfo.userInvitationCode.toUpperCase()
-  await StrUtil.copyText(location.origin + '/#/user/register/register?code=' + userInvitationCode)
+  await StrUtil.copyText(location.origin + '/#/register?code=' + userInvitationCode)
   System.toast(i18n.t('invite.CopySuccessful'), 'success')
 }
 </script>
