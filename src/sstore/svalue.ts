@@ -60,7 +60,7 @@ export const svalue = reactive({
       // 获取默认钱包对象
       let item = wlist.find((cur: any) => cur.id == defaultWalletId)
       // 没有默认钱包时，默认为第1个
-      // if(!item && wlist.length) item = wlist[0]
+      if(!item && wlist.length) item = wlist[0]
       // 获取默认钱包币种
       let coinItem = item ? clist.find((it: any) => it.coinCode == item.walletCoin) : {}
       let defaultWalletInfo = item

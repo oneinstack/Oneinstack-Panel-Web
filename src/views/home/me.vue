@@ -104,12 +104,10 @@
                   <div
                     class="select-item"
                     @click="conf.handleCilckImg('Remittance', $event)"
-                    :style="{
-                      maxWidth: conf.swiperList.length > 1 ? '100%' : '0px'
-                    }"
+                    v-if="conf.userWalletList.length > 1"
                   >
-                    <img v-if="conf.swiperList.length > 1" src="/static/img/wallet/remittance-new.png" />
-                    <span v-if="conf.swiperList.length > 1">{{ $t('wallet.Remittance') }}</span>
+                    <img src="/static/img/wallet/remittance-new.png" />
+                    <span>{{ $t('wallet.Remittance') }}</span>
                   </div>
                   <div class="select-item" @click="conf.handleCilckImg('CentralWallet', $event)">
                     <img src="/static/img/wallet/center-new.png" />
@@ -237,7 +235,7 @@ const conf = reactive({
   }, //接口返回默认币种钱包
   swiperList: [] as any[],
   showNumberBox: false,
-  userWalletList: undefined as any,
+  userWalletList: [] as any[],
   isRefash: false,
 
   //bind安全信息弹窗关闭
@@ -423,6 +421,8 @@ const conf = reactive({
   async getWalletList(arr: any) {
     
     let wlist = await svalue.getWalletlist()
+    conf.userWalletList = wlist
+    conf.coinLosding = false
     let defaultWalletId = sconfig.userInfo.defaultWalletId
     let obj = wlist.find((item: any) => item.id == defaultWalletId)
     if (obj) {
@@ -463,7 +463,6 @@ const init = async () => {
   conf.userGradedInfo()
   svalue.coinlist = []
   conf.swiperList = await svalue.getCoinlist()
-  conf.coinLosding = false
   conf.total_money = 0
   sconfig.userInfo && conf.goWallet()
 }
