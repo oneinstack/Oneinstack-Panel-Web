@@ -5,7 +5,7 @@
 		<template #top>
 			<div class="top-content">
 				<div class="scroll-times" style="overflow-x: scroll;">
-					<div class="scroll-title">
+					<div class="scroll-title" v-scroll>
 						<span>{{ $t('Transactions.TradeType') + ':' }}</span>
 						<span v-for="(item, index) in conf.typeList" :key="index" class="times-times"
 							:class="item.isCheck ? 'checked' : ''" @click="conf.handleChange('type', item)">
