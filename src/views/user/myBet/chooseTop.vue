@@ -121,9 +121,8 @@ const conf = reactive({
     betTimeRef.value.init(timeArr)
 
     const options = System.getRouterParams()
-    let fItemIndex = _data.findIndex((v: any) => v.label == options.lottery)
     let fItem = _data.find((v: any) => v.label == options.lottery)
-    if (options.lottery && fItemIndex >= 0) {
+    if (options.lottery && fItem) {
       conf.dialog.refObj.lotteryType.chooseItem(0, fItem)
       conf.dialog.refObj.lotteryType.confirm()
     } else {
