@@ -68,7 +68,7 @@ const conf = reactive({
   serviceHeiht: 300,
   countdown: 0, //抢红包倒计时
   isRedEnvelopeRain: false, //判断是否掉落红包雨
-  ws: null! as WebSocketBeanInter,
+  ws: null! as IWebSocketBean,
   wsEventKey: 'wsEventKey_' + StrUtil.getId() + '_',
   userInfo: {} as any,
   redpacketList: [] as any[],
@@ -127,21 +127,6 @@ const conf = reactive({
       System.loading()
       conf.ws = new WebSocketBean({
         url: `${wsurl}/api/mini/games/redPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
-        onopen() {
-          System.loading(false)
-          conf.activityProgress = 1
-          resolve(true)
-          return new Promise((res) => {
-            res(true)
-          })
-        },
-        onerror() {
-          System.loading(false)
-          conf.activityProgress = 0
-          conf.isRedEnvelopeRain = false
-          conf.ws = null!
-          reject(false)
-        },
         onmessage(ev) {
           try {
             let _data = JSON.parse(ev.data)
@@ -151,7 +136,18 @@ const conf = reactive({
             console.log(error)
           }
         },
-        binaryType: 'arraybuffer'
+        onopen() {
+          System.loading(false)
+          conf.activityProgress = 1
+          resolve(true)
+        },
+        onerror() {
+          System.loading(false)
+          conf.activityProgress = 0
+          conf.isRedEnvelopeRain = false
+          conf.ws = null!
+          reject(false)
+        },
       })
       conf.ws.start()
     })
