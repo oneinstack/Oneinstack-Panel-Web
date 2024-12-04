@@ -89,11 +89,8 @@ const conf = reactive({
 
 const init = async () => {
   conf.InvitationCode = sconfig.userInfo.userInvitationCode.toUpperCase()
-  let arr = window.location.href.split('#')
-  conf.hrefUrl = arr[0]
-  let lastStr = conf.hrefUrl.substr(conf.hrefUrl.length - 1)
-  if (lastStr == '/') conf.hrefUrl = conf.hrefUrl.substr(0, conf.hrefUrl.length - 1)
-  conf.qrcode = arr[0] + '#/user/register/register?code=' + conf.InvitationCode
+  conf.hrefUrl = location.origin
+  conf.qrcode = location.origin + '/#/user/register/register?code=' + conf.InvitationCode
 }
 onMounted(init)
 </script>

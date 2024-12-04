@@ -164,7 +164,7 @@ const conf = reactive({
 
   getDataFun: async () => {
     const res = await apis.getSubUserDataStatistics({
-      ...conf.searchParams,
+      ...conf.searchParams
     })
 
     conf.modifiedTime = new Date().Format()
@@ -181,8 +181,8 @@ const conf = reactive({
   //复制邀请码
   handleCopyCode() {
     let promoteCode = conf.userInfo.userInvitationCode //拿到想要复制的值
-    StrUtil.copyText(promoteCode)
-    System.toast(i18n.t('invite.CopySuccessful'),'success')
+    StrUtil.copyText(location.origin + '/#/user/register/register?code=' + promoteCode)
+    System.toast(i18n.t('invite.CopySuccessful'), 'success')
   },
 
   //页面跳转
