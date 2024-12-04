@@ -5,6 +5,22 @@ type Point = {
 }
 
 export class InertiaScroller {
+  
+  //是否正在获取竞争
+  static getIsRunPro = false
+
+  //获取竞争
+  static getIsRun = () => {
+    if (this.getIsRunPro) {
+      return false
+    }
+    this.getIsRunPro = true
+    setTimeout(() => {
+      this.getIsRunPro = false
+    }, 50)
+    return true
+  }
+
   private container: HTMLElement
   private points: Point[] = []
   private inertiaFrame: number | null = null
@@ -21,6 +37,10 @@ export class InertiaScroller {
   private needInertia = false
 
   private onMouseDown = (e: MouseEvent) => {
+
+    const isRun = InertiaScroller.getIsRun()
+    if (!isRun) return
+
     this.needInertia = false
     this.clearInertia()
     this.points = []

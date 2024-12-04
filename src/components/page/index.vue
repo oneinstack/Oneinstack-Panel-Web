@@ -24,7 +24,7 @@
       </div>
     </slot>
     <slot name="top"></slot>
-    <div class="col relative" style="overflow-y: scroll; overflow-x: hidden" ref="scrollRef" @scroll="conf.scroll">
+    <div class="col relative" style="overflow-y: scroll; overflow-x: hidden" ref="scrollRef" @scroll="conf.scroll" v-scroll>
       <div class="absolute column no-wrap" style="width: 750rem; height: 100%">
         <div v-if="noHeader === false && topfill && fixed">
           <x-statusbar header />
