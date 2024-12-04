@@ -1,7 +1,7 @@
 <template>
   <div class="luckyWinners" v-show="conf.winnerInfoVoListInit.length">
     <h1>{{ $t('home.Winning') }}</h1>
-    <div class="wrapper" id="box" ref="winListRef">
+    <div class="wrapper" id="box" ref="winListRef" :style="{ height: conf.boxHeight * 120 + 'rem' }">
       <win-loop
         ref="winLoopRef"
         :winList="conf.winnerInfoVoListInit"
@@ -43,6 +43,7 @@ import WinLoop from './winLoop.vue'
 const mconf = Scope.getConf()
 const conf = reactive({
   winnerInfoVoListInit: [] as any[],
+  boxHeight: 5,
   winSlateNum: sutil.rem2px(120),
   show: false,
 
@@ -65,6 +66,8 @@ const conf = reactive({
       if (randomIndex == -1) randomIndex = 0
       item.winImg = imgArr[randomIndex]
     })
+
+    conf.boxHeight = conf.winnerInfoVoListInit.length >= 5 ? 5 : conf.winnerInfoVoListInit.length
   }
 })
 const winListRef = ref<HTMLElement | null>(null)
@@ -114,7 +117,6 @@ onUnmounted(() => {
   }
 
   .wrapper {
-    height: 600rem;
     .item {
       box-sizing: border-box;
       display: flex;

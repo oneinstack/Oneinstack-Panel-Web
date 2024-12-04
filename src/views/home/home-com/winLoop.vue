@@ -9,7 +9,7 @@
             top: conf.data[key].style.top + 'px'
           }"
         >
-          <slot :num="conf.data[key].data.id" :topNum="conf.data[key].style.top"></slot>
+          <slot :num="conf.data[key].data?.id" :topNum="conf.data[key].style.top"></slot>
         </div>
       </template>
     </div>
@@ -45,6 +45,9 @@ const conf = reactive({
       })
     }
 
+    if(conf.totalLength > conf.dataSource.length){
+      conf.totalLength = conf.dataSource.length
+    }
     for (let i = 0; i < conf.totalLength + 1; i++) {
       conf.dataKeys.push(conf.totalLength - i)
       conf.data[i] = {
