@@ -59,7 +59,7 @@
 			<div class="betting" v-if="conf.categoryIndex == 1">
 				<img class="box-top" src="/static/img/box-top.png" />
 				<div class="time-tabs" v-if="conf.tabs.length">
-					<div style="overflow-x: scroll;" ref="tabsRefs">
+					<div style="overflow-x: scroll;" ref="tabsRefs" v-scroll>
 						<div class="tabs-list">
 							<template v-for="(item, index) in conf.tabs" :key="index">
 								<div class="tab-item" :class="{ 'tab-active': item.lotteryInterval == conf.tabIndex }"

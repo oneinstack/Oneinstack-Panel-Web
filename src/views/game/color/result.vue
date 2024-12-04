@@ -1,6 +1,6 @@
 <template>
 	<div class="result">
-		<div style="overflow-x: scroll;" ref="tabRrfs">
+		<div style="overflow-x: scroll;" ref="tabRrfs" v-scroll>
 			<div class="scale">
 				<div class="scale-list">
 					<template v-for="(item, index) in props.tabs" :key="index">

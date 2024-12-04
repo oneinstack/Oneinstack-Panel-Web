@@ -36,7 +36,7 @@
             <span>{{ $t('wallet.Withdrawal') }}</span>
           </div>
           <div class="select-item" @click="conf.handleCilckImg('Remittance', $event)"
-            v-show="conf.swiperList.length > 1">
+            v-show="conf.userWalletList.length > 1">
             <img src="/static/img/wallet/remittance-new.png" />
             <span>{{ $t('wallet.Remittance') }}</span>
           </div>

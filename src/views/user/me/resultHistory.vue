@@ -6,7 +6,7 @@
     <template #top>
       <div class="tabs-comtent">
         <div class="tabs-type">
-          <div style="width: 720rem; overflow: auto" ref="typeRefs" v-if="conf.lotteryList.length > 0">
+          <div style="width: 720rem; overflow: auto" ref="typeRefs" v-if="conf.lotteryList.length > 0" v-scroll>
             <div class="type-list">
               <template v-for="(item, index) in conf.lotteryList" :key="index">
                 <div
@@ -22,7 +22,7 @@
           </div>
         </div>
         <div>
-          <div style="width: 720rem; overflow: auto" v-if="conf.timesList.length > 0">
+          <div style="width: 720rem; overflow: auto" v-if="conf.timesList.length > 0" v-scroll>
             <div class="tabs-times">
               <template v-for="(item, index) in conf.timesList" :key="index">
                 <div

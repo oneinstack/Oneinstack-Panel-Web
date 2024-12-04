@@ -1781,6 +1781,7 @@ uni-button:after {
   .copy-btn {
     margin-left: 20rem;
     background: linear-gradient(#eb602d, #ffa64f) !important;
+    background-clip: text;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
   }
