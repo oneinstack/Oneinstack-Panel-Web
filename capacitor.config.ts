@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'XApp',
   webDir: 'dist',
   server: {
-    url: 'http://192.168.31.66:5173',
+    url: 'http://192.168.31.66:5100',
     cleartext: true
   },
   plugins: {
