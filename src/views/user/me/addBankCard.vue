@@ -178,8 +178,18 @@ const conf = reactive({
   },
 
   //选择图片上传
-  handleSelectPhoto() {
-
+  async handleSelectPhoto(file: any) {
+    if (file.content.startsWith('data:image')) {
+      System.loading()
+      const res = await apis.upload({
+        file: file.file,
+        final: (_, res) => {
+          System.loading(false)
+        }
+      })
+      conf.formData.scanCodePayImgUrl = res.data.link
+      conf.isShowImg = true
+    }
   },
 
   //模态框数据选择
@@ -534,7 +544,7 @@ const conf = reactive({
 })
 
 onMounted(() => {
-  if(!sapp.tempData.BankCardInfo && sapp.tempData.BankCardType === 'edit'){
+  if (!sapp.tempData.BankCardInfo && sapp.tempData.BankCardType === 'edit') {
     System.router.replace('/')
     return
   }
@@ -560,10 +570,8 @@ onMounted(() => {
       <div class="input-box">
         <div class="lable">{{ $t('addBankCradModule.PaymentMethods') }}</div>
         <div class="input-view" @click="!conf.isEditPage ? conf.handleOpenMadal('payment_methods') : ''">
-          <div
-            class="input"
-            :class="[!conf.formData.payment_methods ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']"
-          >
+          <div class="input"
+            :class="[!conf.formData.payment_methods ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']">
             {{ conf.formData.payment_methods || $t('addBankCradModule.pleaseSelectPaymentMethod') }}
           </div>
           <van-icon class="cuIcon-right" name="arrow" />
@@ -572,87 +580,57 @@ onMounted(() => {
       <div class="input-box" v-if="conf.selectMethodObj.payMethodCode != 'USDT_PAYMENT'">
         <div class="lable">{{ $t('addBankCradModule.Country') }}</div>
         <div class="input-view" @click="!conf.isEditPage ? conf.handleOpenMadal('country') : ''">
-          <div
-            class="input"
-            :class="[!conf.formData.country ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']"
-          >
+          <div class="input"
+            :class="[!conf.formData.country ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']">
             {{ conf.formData.country || $t('addBankCradModule.pleaseSelectCountry') }}
           </div>
           <van-icon class="cuIcon-right" name="arrow" />
         </div>
       </div>
-      <div
-        class="input-box"
-        v-if="
-          conf.selectMethodObj.payMethodCode != 'USDT_PAYMENT'
-            ? conf.formData.country && conf.formData.payment_methods
-            : conf.formData.payment_methods
-        "
-      >
+      <div class="input-box" v-if="
+        conf.selectMethodObj.payMethodCode != 'USDT_PAYMENT'
+          ? conf.formData.country && conf.formData.payment_methods
+          : conf.formData.payment_methods
+      ">
         <div class="lable">{{ $t('addBankCradModule.AccountType') }}</div>
         <div class="input-view" @click="!conf.isEditPage ? conf.handleOpenMadal('bank_type') : ''">
-          <div
-            class="input"
-            :class="[!conf.formData.bank_type ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']"
-          >
+          <div class="input"
+            :class="[!conf.formData.bank_type ? 'select-value' : '', conf.isEditPage ? 'disabledView' : '']">
             {{ conf.formData.bank_type || $t('addBankCradModule.pleaseSelectAccountType') }}
           </div>
           <van-icon class="cuIcon-right" name="arrow" />
         </div>
       </div>
       <!-- 支付通道类型 -- BANK_CARD_PAYMENT -->
-      <template v-if="conf.selectMethodObj.payMethodCode == 'BANK_CARD_PAYMENT'">
+      <div v-if="conf.selectMethodObj.payMethodCode == 'BANK_CARD_PAYMENT'">
         <div class="input-box">
           <div class="lable">{{ $t('addBankCradModule.Cardholder') }}</div>
           <div class="input-view">
-            <input
-              class="input"
-              :class="[conf.isEditPage ? 'disabledView' : '']"
-              :placeholder="$t('addBankCradModule.pleaseEnterCardholder')"
-              v-model="conf.formData.bankCardUserName"
-              :disabled="conf.isEditPage"
-            />
-            <van-icon
-              v-if="conf.formData.bankCardUserName && !conf.isEditPage"
-              class="clear-icon"
-              name="cross"
-              @click="conf.handleClearInput('bankCardUserName')"
-            />
+            <input class="input" :class="[conf.isEditPage ? 'disabledView' : '']"
+              :placeholder="$t('addBankCradModule.pleaseEnterCardholder')" v-model="conf.formData.bankCardUserName"
+              :disabled="conf.isEditPage" />
+            <van-icon v-if="conf.formData.bankCardUserName && !conf.isEditPage" class="clear-icon" name="cross"
+              @click="conf.handleClearInput('bankCardUserName')" />
           </div>
         </div>
         <!-- 选择country => 巴西 -->
-        <template v-if="conf.selectAreaCodeObj.countryCode == 'BR'">
+        <div v-if="conf.selectAreaCodeObj.countryCode == 'BR'">
           <div class="input-box">
             <div class="lable">{{ $t('addBankCradModule.PixAccount') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.PixAccountTip')"
-                v-model="conf.formData.bankCardNum"
-              />
-              <van-icon
-                v-if="conf.formData.bankCardNum"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('bankCardNum')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.PixAccountTip')"
+                v-model="conf.formData.bankCardNum" />
+              <van-icon v-if="conf.formData.bankCardNum" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('bankCardNum')" />
             </div>
           </div>
           <div class="input-box">
             <div class="lable">{{ $t('addBankCradModule.CPFNumber') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.CPFNumberTip')"
-                v-model="conf.formData.bankBranch"
-                maxlength="11"
-              />
-              <van-icon
-                v-if="conf.formData.bankBranch"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('bankBranch')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.CPFNumberTip')"
+                v-model="conf.formData.bankBranch" maxlength="11" />
+              <van-icon v-if="conf.formData.bankBranch" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('bankBranch')" />
             </div>
           </div>
           <div class="input-box" v-if="conf.selectTypeObj.payTrdType == 'PHONE'">
@@ -666,64 +644,40 @@ onMounted(() => {
                 <!-- <van-icon class="cuIcon-right" name="arrow" /> -->
               </div>
               <div class="right-view">
-                <input
-                  class="input2"
-                  :placeholder="$t('addBankCradModule.pleaseEnterPhone')"
-                  v-model="conf.formData.mobile_phone"
-                />
+                <input class="input2" :placeholder="$t('addBankCradModule.pleaseEnterPhone')"
+                  v-model="conf.formData.mobile_phone" />
               </div>
             </div>
           </div>
           <div class="input-box" v-if="conf.selectTypeObj.payTrdType == 'EMAIL'">
             <div class="lable">{{ $t('login.email') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.pleaseEnterEmail')"
-                v-model="conf.formData.email"
-              />
-              <van-icon
-                v-if="conf.formData.email"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('email')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterEmail')"
+                v-model="conf.formData.email" />
+              <van-icon v-if="conf.formData.email" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('email')" />
             </div>
           </div>
-        </template>
+        </div>
 
         <!-- 选择country => 印度 -->
-        <template v-if="conf.selectAreaCodeObj.countryCode == 'IN'">
+        <div v-if="conf.selectAreaCodeObj.countryCode == 'IN'">
           <div class="input-box">
             <div class="lable">{{ $t('addBankCradModule.IFSC') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.pleaseEnterIFSC')"
-                v-model="conf.formData.bankBranch"
-              />
-              <van-icon
-                v-if="conf.formData.bankBranch"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('bankBranch')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterIFSC')"
+                v-model="conf.formData.bankBranch" />
+              <van-icon v-if="conf.formData.bankBranch" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('bankBranch')" />
             </div>
           </div>
           <div class="input-box">
             <div class="lable">{{ $t('addBankCradModule.AccountNumber') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.pleaseEnterAccountNumber')"
-                v-model="conf.formData.bankCardNum"
-              />
-              <van-icon
-                v-if="conf.formData.bankCardNum"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('bankCardNum')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterAccountNumber')"
+                v-model="conf.formData.bankCardNum" />
+              <van-icon v-if="conf.formData.bankCardNum" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('bankCardNum')" />
             </div>
           </div>
           <div class="input-box">
@@ -737,31 +691,21 @@ onMounted(() => {
                 <!-- <van-icon class="cuIcon-right" name="arrow" /> -->
               </div>
               <div class="right-view">
-                <input
-                  class="input2"
-                  :placeholder="$t('addBankCradModule.pleaseEnterPhone')"
-                  v-model="conf.formData.mobile_phone"
-                />
+                <input class="input2" :placeholder="$t('addBankCradModule.pleaseEnterPhone')"
+                  v-model="conf.formData.mobile_phone" />
               </div>
             </div>
           </div>
           <div class="input-box">
             <div class="lable">{{ $t('login.email') }}</div>
             <div class="input-view">
-              <input
-                class="input"
-                :placeholder="$t('addBankCradModule.pleaseEnterEmail')"
-                v-model="conf.formData.email"
-              />
-              <van-icon
-                v-if="conf.formData.email"
-                name="cross"
-                class="clear-icon"
-                @click="conf.handleClearInput('email')"
-              />
+              <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterEmail')"
+                v-model="conf.formData.email" />
+              <van-icon v-if="conf.formData.email" name="cross" class="clear-icon"
+                @click="conf.handleClearInput('email')" />
             </div>
           </div>
-        </template>
+        </div>
         <!-- <div class="input-box">
 					<div class="lable">{{$t('addBankCradModule.VerificationCode')}}</div>
 					<div class="input-view">
@@ -770,14 +714,12 @@ onMounted(() => {
 						<div class="countdown" v-else>{{Countdown + 's'}}</div>
 					</div>
 				</div> -->
-      </template>
+      </div>
 
       <!-- 支付通道类型 -- ONLINE_PAYMENT / USDT_PAYMENT -->
-      <template
-        v-if="
-          conf.selectMethodObj.payMethodCode == 'ONLINE_PAYMENT' || conf.selectMethodObj.payMethodCode == 'USDT_PAYMENT'
-        "
-      >
+      <div v-if="
+        conf.selectMethodObj.payMethodCode == 'ONLINE_PAYMENT' || conf.selectMethodObj.payMethodCode == 'USDT_PAYMENT'
+      ">
         <div class="input-box" v-if="conf.selectMethodObj.payMethodCode == 'USDT_PAYMENT'">
           <div class="lable">{{ $t('addBankCradModule.Network') }}</div>
           <div class="input-view" @click="conf.handleOpenMadal('protocol')">
@@ -790,69 +732,45 @@ onMounted(() => {
         <div class="input-box" v-else>
           <div class="lable">{{ $t('addBankCradModule.Account') }}</div>
           <div class="input-view">
-            <input
-              class="input"
-              :placeholder="$t('addBankCradModule.pleaseEnterAccount')"
-              v-model="conf.formData.onlinePayName"
-            />
-            <van-icon
-              v-if="conf.formData.onlinePayName"
-              name="cross"
-              class="clear-icon"
-              @click="conf.handleClearInput('onlinePayName')"
-            />
+            <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterAccount')"
+              v-model="conf.formData.onlinePayName" />
+            <van-icon v-if="conf.formData.onlinePayName" name="cross" class="clear-icon"
+              @click="conf.handleClearInput('onlinePayName')" />
           </div>
         </div>
         <div class="input-box">
           <!-- <div class="lable">{{$t('addBankCradModule.PaymentAddress')}}</div> -->
           <div class="lable">{{ $t('addBankCradModule.Address') }}</div>
           <div class="input-view">
-            <input
-              class="input"
-              :placeholder="$t('addBankCradModule.pleaseEnterAddress')"
-              v-model="conf.formData.onlinePayUrl"
-            />
-            <van-icon
-              v-if="conf.formData.onlinePayUrl"
-              name="cross"
-              class="clear-icon"
-              @click="conf.handleClearInput('onlinePayUrl')"
-            />
+            <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterAddress')"
+              v-model="conf.formData.onlinePayUrl" />
+            <van-icon v-if="conf.formData.onlinePayUrl" name="cross" class="clear-icon"
+              @click="conf.handleClearInput('onlinePayUrl')" />
           </div>
         </div>
-      </template>
+      </div>
 
       <!-- 支付通道类型 -- SCAN_CODE_PAYMENT -->
-      <template v-if="conf.selectMethodObj.payMethodCode == 'SCAN_CODE_PAYMENT'">
+      <div v-if="conf.selectMethodObj.payMethodCode == 'SCAN_CODE_PAYMENT'">
         <div class="input-box">
           <div class="lable">{{ $t('addBankCradModule.Account') }}</div>
           <div class="input-view">
-            <input
-              class="input"
-              :placeholder="$t('addBankCradModule.pleaseEnterAccount')"
-              v-model="conf.formData.scanCodePayName"
-            />
-            <van-icon
-              v-if="conf.formData.scanCodePayName"
-              name="cross"
-              class="clear-icon"
-              @click="conf.handleClearInput('scanCodePayName')"
-            />
+            <input class="input" :placeholder="$t('addBankCradModule.pleaseEnterAccount')"
+              v-model="conf.formData.scanCodePayName" />
+            <van-icon v-if="conf.formData.scanCodePayName" name="cross" class="clear-icon"
+              @click="conf.handleClearInput('scanCodePayName')" />
           </div>
         </div>
         <div class="input-box">
           <div class="lable">{{ $t('addBankCradModule.QRCode') }}</div>
-          <div class="photo-view" @click="conf.handleSelectPhoto">
-            <template v-if="!conf.isShowImg">
-              <van-icon name="plus" size="50" color="#ccc" />
-              <!-- <span>Upload</span> -->
-            </template>
-            <template v-else>
-              <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" />
-            </template>
+          <div class="photo-view">
+            <van-uploader :after-read="conf.handleSelectPhoto">
+              <van-icon name="plus" size="50" color="#ccc" v-if="!conf.isShowImg" />
+              <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" v-else />
+            </van-uploader>
           </div>
         </div>
-      </template>
+      </div>
 
       <!-- btn -->
       <div class="btn-view">
@@ -863,26 +781,16 @@ onMounted(() => {
     </div>
 
     <!-- 模态框 -->
-    <van-popup
-      class="popup-bottom-center"
-      :show="conf.modalName && conf.modalName != 'area_code'"
-      closeable
-      position="bottom"
-      @close="conf.hideModal"
-    >
+    <van-popup class="popup-bottom-center" :show="conf.modalName && conf.modalName != 'area_code'" closeable
+      position="bottom" @close="conf.hideModal">
       <div class="cu-bar bg-white justify-end">
         <div class="content">{{ conf.modalTitle }}</div>
       </div>
       <div class="winning-box" scroll-y="true" style="width: 100%; max-height: 700rem">
         <!-- 国家模态框 -->
-        <template v-if="conf.modalName == 'country'">
-          <div
-            class="winning-item"
-            v-for="(item, itemIndex) in conf.countryList"
-            :key="itemIndex"
-            @click="conf.handleModalSelect('country', item, false)"
-            :class="item.isChecked ? 'active-view' : ''"
-          >
+        <div v-if="conf.modalName == 'country'">
+          <div class="winning-item" v-for="(item, itemIndex) in conf.countryList" :key="itemIndex"
+            @click="conf.handleModalSelect('country', item, false)" :class="item.isChecked ? 'active-view' : ''">
             <div class="left-view" style="width: 50%">
               <span>{{ item.showName }}</span>
             </div>
@@ -891,15 +799,11 @@ onMounted(() => {
             </div>
           </div>
           <x-no-data v-if="conf.countryList.length == 0" :top="0"></x-no-data>
-        </template>
+        </div>
         <!-- 支付方式模态框 -->
-        <template v-if="conf.modalName == 'payment_methods'">
-          <div
-            class="winning-item"
-            v-for="(item, itemIndex) in conf.menthodsList"
-            :key="itemIndex"
-            @click="conf.handleModalSelect('methods', item, false)"
-          >
+        <div v-if="conf.modalName == 'payment_methods'">
+          <div class="winning-item" v-for="(item, itemIndex) in conf.menthodsList" :key="itemIndex"
+            @click="conf.handleModalSelect('methods', item, false)">
             <div class="left-view">
               <!-- <img class="avatar" :src="item.bankLogo"/> -->
               <span>{{ item.payMethodName }}</span>
@@ -911,15 +815,11 @@ onMounted(() => {
             </div>
           </div>
           <x-no-data v-if="conf.menthodsList.length == 0" :top="0"></x-no-data>
-        </template>
+        </div>
         <!-- 银行类型模态框 -->
-        <template v-if="conf.modalName == 'bank_type'">
-          <div
-            class="winning-item"
-            v-for="(item, itemIndex) in conf.bankTypeList"
-            :key="itemIndex"
-            @click="conf.handleModalSelect('bankType', item, false)"
-          >
+        <div v-if="conf.modalName == 'bank_type'">
+          <div class="winning-item" v-for="(item, itemIndex) in conf.bankTypeList" :key="itemIndex"
+            @click="conf.handleModalSelect('bankType', item, false)">
             <div class="left-view">
               <img class="avatar" :src="item.bankIcon" />
               <span>{{ item.bankName }}</span>
@@ -931,15 +831,11 @@ onMounted(() => {
             </div>
           </div>
           <x-no-data v-if="conf.bankTypeList.length == 0" :top="0"></x-no-data>
-        </template>
+        </div>
         <!-- USDT协议模态框 -->
-        <template v-if="conf.modalName == 'protocol'">
-          <div
-            class="winning-item"
-            v-for="(item, itemIndex) in conf.protocolList"
-            :key="itemIndex"
-            @click="conf.handleModalSelect('protocol', item, false)"
-          >
+        <div v-if="conf.modalName == 'protocol'">
+          <div class="winning-item" v-for="(item, itemIndex) in conf.protocolList" :key="itemIndex"
+            @click="conf.handleModalSelect('protocol', item, false)">
             <div class="left-view">
               <span>{{ item.name }}</span>
             </div>
@@ -950,7 +846,7 @@ onMounted(() => {
             </div>
           </div>
           <x-no-data v-if="conf.protocolList.length == 0" :top="0"></x-no-data>
-        </template>
+        </div>
       </div>
     </van-popup>
     <!-- 手机区号模态框 -->
@@ -963,12 +859,8 @@ onMounted(() => {
             <div class="right-btn" @click="conf.handleAreaCodeConfirm">{{ $t('agencyCenterModule.determine') }}</div>
           </div>
           <!-- picker -->
-          <van-picker
-            :show-toolbar="false"
-            :columns="conf.areaCodeList"
-            @scroll-into="conf.bindChange"
-            class="picker-view"
-          >
+          <van-picker :show-toolbar="false" :columns="conf.areaCodeList" @scroll-into="conf.bindChange"
+            class="picker-view">
             <template #option="scope">
               <div class="item">{{ scope.cnName + ' ' + scope.areaCode }}</div>
             </template>
@@ -1023,6 +915,7 @@ onMounted(() => {
 .winning-box {
   // padding: 0rem 24rem 24rem;
   background: #fff;
+
   .winning-item {
     padding: 0rem 24rem 24rem;
     display: flex;
@@ -1030,22 +923,27 @@ onMounted(() => {
     align-items: center;
     height: 96rem;
     border-bottom: 1px solid #f9fafc;
+
     .left-view {
       display: flex;
       align-items: center;
+
       .avatar {
         width: 70rem;
         height: 70rem;
         margin-right: 15rem;
         border-radius: 50%;
       }
+
       .userName {
         color: rgb(132, 132, 144);
         font-size: 24rem;
       }
     }
+
     .right-view {
       text-align: right;
+
       .actOpt::before {
         content: '✔';
         width: 30rem;
@@ -1155,6 +1053,7 @@ onMounted(() => {
   color: #00000010;
   text-align: center;
   line-height: 280rem;
+
   .img-bg {
     width: 100%;
     height: 100%;
@@ -1179,6 +1078,7 @@ input::placeholder,
 
 .input-box {
   padding: 30rem 30rem 0rem 30rem;
+
   .lable {
     color: #000;
     font-weight: 500;
@@ -1189,6 +1089,7 @@ input::placeholder,
   .input-view {
     position: relative;
     height: 72rem;
+
     .input {
       width: 100%;
       border-radius: 10rem;
@@ -1258,6 +1159,7 @@ input::placeholder,
       position: relative;
       height: 72rem;
       margin-top: 20rem;
+
       .input1 {
         border-radius: 10rem;
         background: #fffbf5;
@@ -1267,11 +1169,13 @@ input::placeholder,
         font-size: 28rem;
       }
     }
+
     .right-view {
       width: 78%;
       height: 72rem;
       margin-top: 20rem;
       background: #fffbf5;
+
       .input2 {
         border-radius: 0rem 10rem 10rem 0rem;
         height: 40rem;
@@ -1289,6 +1193,7 @@ input::placeholder,
   // height: 356rem;
   border-radius: 40rem 40rem 0rem 0rem !important;
 }
+
 .padding-xl {
   padding: 0rem;
 }
@@ -1305,6 +1210,7 @@ input::placeholder,
   .left-btn {
     color: #a8a8a8;
   }
+
   .right-btn {
     background: linear-gradient(#eb602d, #ffa64f);
     background-clip: text;
@@ -1312,10 +1218,12 @@ input::placeholder,
     -webkit-text-fill-color: transparent;
   }
 }
+
 .picker-view {
   width: 100%;
   height: 258rem;
 }
+
 .item {
   line-height: 100rem;
   text-align: center;

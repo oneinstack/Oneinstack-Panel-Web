@@ -31,7 +31,7 @@
 				<img class="incline-img" src="/static/img/incline.png" />
 			</div>
 			<div class="time-nav">
-				<div style="overflow-x: scroll;">
+				<div style="overflow-x: scroll;" v-scroll>
 					<div class="time-list" v-if="conf.lotteryVOList.length">
 						<div v-for="(item, index) in conf.lotteryVOList" :key="index" class="time-item"
 							:class="{ 'time-active': conf.timeIndex == item.lotteryInterval }"
@@ -205,6 +205,7 @@ import i18n from '@/lang';
 import { svalue } from '@/sstore/svalue';
 import sutil from '@/sstore/sutil';
 import sconfig from '@/sstore/sconfig';
+import slottery from '@/sstore/slottery';
 
 const resultRefs = ref<any>()
 const analyzeRefs = ref<any>()
@@ -422,34 +423,28 @@ const conf = reactive({
 		}
 	},
 	// 游戏列表
-	getLotteryList(index: any) {
-		apis.lotteryList({
-			success: (res: any) => {
-				let datas = res.data
-				let newIndex = datas.findIndex((item: any) => item.lotteryTypeVO.lotteryTypeCode == '3D')
-				let lotteryTypeId = datas[newIndex].lotteryTypeVO.lotteryTypeId
-				conf.lotteryVOList = datas[newIndex].lotteryVOList
-				conf.lotteryRuleurl = conf.lotteryVOList[index]?.lotteryRuleurl
-				conf.timeIndex = conf.lotteryVOList[index].lotteryInterval
-				conf.openLockCountdown = conf.lotteryVOList[index].openLockCountdown
-				clearTimeout(conf.setTimer)
-				clearTimeout(conf.setTimer1)
-				if (conf.timer) {
-					clearInterval(conf.timer);
-					conf.timer = null;
-				}
-				if (conf.noOpenCodeTimer) {
-					clearTimeout(conf.noOpenCodeTimer);
-					conf.noOpenCodeTimer = null;
-				}
-				if (conf.hasOpenCodeTimer) {
-					clearTimeout(conf.hasOpenCodeTimer);
-					conf.hasOpenCodeTimer = null;
-				}
-				conf.getLotteryOpen(conf.lotteryVOList[index].id)
-				conf.getLotteryOdds(lotteryTypeId)
-			}
-		});
+	async getLotteryList(index: any) {
+		conf.lotteryVOList = await slottery.findLotteryList('3D')
+		conf.lotteryRuleurl = conf.lotteryVOList[index]?.lotteryRuleurl
+		conf.timeIndex = conf.lotteryVOList[index].lotteryInterval
+		conf.openLockCountdown = conf.lotteryVOList[index].openLockCountdown
+		let lotteryTypeId = conf.lotteryVOList[index].lotteryTypeId
+		clearTimeout(conf.setTimer)
+		clearTimeout(conf.setTimer1)
+		if (conf.timer) {
+			clearInterval(conf.timer);
+			conf.timer = null;
+		}
+		if (conf.noOpenCodeTimer) {
+			clearTimeout(conf.noOpenCodeTimer);
+			conf.noOpenCodeTimer = null;
+		}
+		if (conf.hasOpenCodeTimer) {
+			clearTimeout(conf.hasOpenCodeTimer);
+			conf.hasOpenCodeTimer = null;
+		}
+		conf.getLotteryOpen(conf.lotteryVOList[index].id)
+		conf.getLotteryOdds(lotteryTypeId)
 	},
 	getLotteryOdds(lotteryTypeId: any) {
 		apis.lotteryOdds({
@@ -537,8 +532,6 @@ const conf = reactive({
 	},
 	// 获取页面显示开奖信息
 	setCode(code: any) {
-		console.log('99999');
-
 		if (!code) return;
 		conf.autoplay = false;
 		conf.duration = 0
@@ -636,49 +629,6 @@ const conf = reactive({
 	ripr(num: any) {
 		return num < 10 ? `0${num}` : num
 	},
-	getShare() {
-		if (!conf.autoplay) {
-			conf.autoplay = true
-			conf.duration = 100
-		}
-		setTimeout(() => {
-			let share1 = Math.floor(Math.random() * 6)
-			let share2 = Math.floor(Math.random() * 6)
-			let share3 = Math.floor(Math.random() * 6)
-			let total = share1 + share2 + share3
-			let sizeNum = 0
-			let doubleNum = 0
-			if (share1 == share2 && share1 == share3 && share2 == share3) {
-				sizeNum = 0
-				doubleNum = 0
-			} else {
-				let totalNum = total + 3
-				if (totalNum % 2 == 0) {
-					doubleNum = 2
-				} else {
-					doubleNum = 1
-				}
-				if (totalNum > 10) {
-					sizeNum = 2
-				} else {
-					sizeNum = 1
-				}
-			}
-			conf.autoplay = false;
-			conf.duration = 0
-			conf.share1 = share1
-			conf.share2 = share2
-			conf.share3 = share3
-			conf.total = total
-			conf.sizeNum = sizeNum
-			conf.doubleNum = doubleNum
-			console.log(share1);
-			console.log(share2);
-			console.log(share3);
-
-
-		}, 1260);
-	},
 	// 导航栏
 	changeStatus(i: any) {
 		conf.categoryIndex = i
@@ -727,6 +677,7 @@ const conf = reactive({
 			return
 		}
 		conf.money = e
+		System.loading()
 		apis.lotteryUserBets({
 			money: e,
 			betCodes: conf.addsItem.oddsCode,
@@ -747,6 +698,9 @@ const conf = reactive({
 				conf.showBet = false
 				// 更新钱包金额
 				conf.getWalletMoney(2)
+			},
+			final: () => {
+				System.loading(false)
 			}
 		});
 	},
@@ -817,10 +771,6 @@ onUnmounted(() => {
 </script>
 
 <style lang="less" scoped>
-page {
-	background: #edeff5;
-}
-
 .right-content {
 	text-align: right;
 	letter-spacing: -0.3px;

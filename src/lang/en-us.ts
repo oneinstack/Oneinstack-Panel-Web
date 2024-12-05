@@ -727,7 +727,7 @@ export default {
     intoOtherTip: 'Whether to enter the third party to recharge?',
     Manufacturer: 'Please select Manufacturer',
     card: 'Please select a channel',
-    userName: 'PleatradeTypese enter your payment account number or name',
+    userName: 'Please enter payment account number or name',
     userRemark: 'Please enter remarks',
     PaymentInformation: 'Payment information',
     PaymentNote: 'Payment note',

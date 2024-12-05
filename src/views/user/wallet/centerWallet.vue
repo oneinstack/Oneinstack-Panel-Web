@@ -21,6 +21,7 @@ const conf = reactive({
   },
 
   async handleClickIntoPage(obj: any) {
+    if(conf.gameList.length < 2) return
     if (obj.walletMoney == -1) {
       System.loading()
       obj.loading = true
