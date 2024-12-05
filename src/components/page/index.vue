@@ -5,12 +5,12 @@
         class="c-head-main"
         :style="{
           position: fixed ? 'fixed' : 'relative',
-          background: headerBgColor
+          background: conf.headerBgColor
         }"
         v-if="noHeader === false"
       >
         <x-statusbar />
-        <div class="c-head-nav">
+        <div class="c-head-nav" :style="{ height: uspage.header.height }">
           <div class="back" @click="conf.goBack">
             <van-icon class="back-img" name="arrow-left" v-if="showBack" size="25" />
           </div>
@@ -24,14 +24,20 @@
       </div>
     </slot>
     <slot name="top"></slot>
-    <div class="col relative" style="overflow-y: scroll; overflow-x: hidden" ref="scrollRef" @scroll="conf.scroll" v-scroll>
+    <div
+      class="col relative"
+      style="overflow-y: scroll; overflow-x: hidden"
+      ref="scrollRef"
+      @scroll="conf.scroll"
+      v-scroll
+    >
       <div class="absolute column no-wrap" style="width: 750rem; height: 100%">
         <div v-if="noHeader === false && topfill && fixed">
-          <x-statusbar header :headerHeight="headerHeight" />
+          <x-statusbar header />
         </div>
         <slot></slot>
         <div>
-          <div v-if="noFooter === false" :style="{ height: tabbar === false ? '60rem' : tabbarHeight }"></div>
+          <div v-if="noFooter === false" :style="{ height: tabbar === false ? '60rem' : uspage.tabbar.height }"></div>
         </div>
       </div>
     </div>
@@ -44,6 +50,8 @@ import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import uspage from './uspage'
+
 const props = defineProps({
   /**
    * 是否固定header，默认true
@@ -79,19 +87,13 @@ const props = defineProps({
    * 头部背景颜色，默认渐变'linear-gradient(180deg, #EB602D 0%, #FFA64F 100%)'
    */
   headerBgColor: {
-    default: 'linear-gradient(180deg, #EB602D 0%, #FFA64F 100%)'
-  },
-  /**
-   * 头部高度，默认104rem
-   */
-  headerHeight: {
-    default: '104rem'
+    default: undefined as any
   },
   /**
    * 背景颜色，默认透明
    */
   bgcolor: {
-    default: '#f5f5f7' as any
+    default: undefined as any
   },
   /**
    * 是否隐藏底部，默认false
@@ -104,18 +106,15 @@ const props = defineProps({
    */
   tabbar: {
     default: false
-  },
-  /**
-   * 底部导航栏的高度，默认210rem
-   */
-  tabbarHeight: {
-    default: '210rem'
   }
 })
 
 const scrollRef = ref<any>()
 
 const conf = reactive({
+  bgColor: props.bgcolor || uspage.bgcolor,
+  headerBgColor: props.headerBgColor || uspage.header.bgColor,
+
   /**
    * 滚动事件
    */
@@ -154,7 +153,7 @@ const conf = reactive({
    * 设置背景颜色
    */
   setBgColor: () => {
-    document.documentElement.style.setProperty('--bgcolor', props.bgcolor)
+    document.documentElement.style.setProperty('--bgcolor', conf.bgColor)
   },
   /**
    * 滚动到顶部
@@ -180,7 +179,7 @@ const conf = reactive({
 
 watch(
   () => props.bgcolor,
-  () => {
+  (val) => {
     conf.setBgColor()
   }
 )
@@ -214,7 +213,6 @@ onBeforeUnmount(() => {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 104rem;
     position: relative;
 
     &-title {

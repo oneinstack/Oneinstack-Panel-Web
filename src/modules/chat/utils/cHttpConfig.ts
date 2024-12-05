@@ -1,21 +1,13 @@
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
-import { Capacitor } from '@capacitor/core'
-import { globalType } from '../../build/env/globalVar'
-import System from './System'
+import System from '@/utils/System'
+import csconfig from '../sstore/csconfig'
 
-export default class HttpConfig {
-  static init(env: globalType) {
-    //#ifvar-dev
-    let apiurl = StrUtil.getParam(location.href).apiurl
-    if (!apiurl) apiurl = Cookie.get('apiurl')
-    if (apiurl) {
-      Cookie.set('apiurl', apiurl)
-    }
-    if (Capacitor.isNativePlatform()) {
-      // env.API = 'https://demo.bggame.live'
-    }
-    //#endvar
+export default class cHttpConfig {
+  static isInit = false
+  static init(config: cConfigParam) {
+    if (cHttpConfig.isInit) return
+    cHttpConfig.isInit = true
 
     const funrun = (obj: any, fields: string[], ...data: any) => {
       fields.forEach((field) => {
@@ -36,18 +28,14 @@ export default class HttpConfig {
         }
       }
     }
-    http.setConfig({
-      base: env.API,
+    const _http = httpBean()
+    _http.setConfig({
+      base: config.url,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Authorization': 'Basic c2FiZXI6c2FiZXJfc2VjcmV0'
+        'Content-Type': 'application/x-www-form-urlencoded'
       },
       before(config) {
         config.param.headers = config.param.headers || {}
-
-        //#ifvar-dev
-        config.param.headers['apiurl'] = apiurl
-        //#endvar
 
         Object.keys(config.data).forEach((key) => {
           const _str = config.data[key] + ''
@@ -55,12 +43,7 @@ export default class HttpConfig {
             delete config.data[key]
           }
         })
-        const token = sconfig.userInfo?.token
-        token && (config.param.headers.Token = token)
-        if (config.data?.json) {
-          config.param.headers['Content-Type'] = 'application/json'
-          delete config.data.json
-        }
+        csconfig.token && (config.param.headers.Token = csconfig.token)
       },
       after(xhr, config) {
         const { code } = xhr.data
@@ -72,5 +55,6 @@ export default class HttpConfig {
       },
       error
     })
+    window.chttp = _http
   }
 }

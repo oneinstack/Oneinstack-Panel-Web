@@ -3,10 +3,11 @@
   <x-tabbar :list="conf.list" @change="conf.change"></x-tabbar>
 </template>
 <script setup lang="ts">
+import uspage from '@/components/page/uspage'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { reactive } from 'vue'
-
+uspage.setConfig()
 const conf = reactive({
   list: [
     {
@@ -51,6 +52,5 @@ conf.list.forEach((item, index) => {
   item.iconActive = `/static/img/icon/${_icon}-active.png`
   item.index = index
 })
-
 </script>
 <style lang="less" scoped></style>

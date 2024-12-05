@@ -18,7 +18,8 @@ export default ({ mode, command }) => {
     css: { postcss: { plugins: [viteVar(env as any)] } },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src')
+        '@': path.resolve(__dirname, './src'),
+        '@chat': path.resolve(__dirname, './src/modules/chat')
       }
     },
     server: {

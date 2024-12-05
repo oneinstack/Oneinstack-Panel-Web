@@ -42,9 +42,6 @@ export const sconfig = reactive({
       }, 300)
   },
 
-  // 进入聊天室
-  async getToken({ tip, final, end, backCancelJump = false }: any) {},
-
   systemTime: 0,
   localTime: 0,
   getSystemTime: async () => {
