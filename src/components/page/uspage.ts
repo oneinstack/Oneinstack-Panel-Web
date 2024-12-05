@@ -3,7 +3,7 @@ import { reactive } from 'vue'
 const defaultConf = {
   bgcolor: '#f5f5f7',
   tabbar: {
-    height: '112rem'
+    height: '210rem'
   },
   header: {
     height: '104rem',
