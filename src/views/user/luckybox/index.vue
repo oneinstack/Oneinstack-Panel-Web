@@ -130,7 +130,7 @@
                       <div
                         v-if="item.rewardType === 0 && item.coinCode !== 'USDT'"
                         class="award-item-unit"
-                        :class="{ small: item.coinSymbol.length > 1 }"
+                        :class="{ small: item.coinSymbol?.length > 1 }"
                       >
                         {{ item.coinSymbol }}
                       </div>
@@ -425,7 +425,7 @@ const conf = reactive({
   coin: {
     list: [] as any[],
     getSymbol: (coinCode: string) => {
-      return conf.coin.list.find((it: any) => it.coinCode === coinCode).coinSymbol
+      return conf.coin.list.find((it: any) => it.coinCode === coinCode)?.coinSymbol
     }
   }
 })
