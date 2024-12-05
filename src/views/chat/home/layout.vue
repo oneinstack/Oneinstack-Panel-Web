@@ -22,10 +22,9 @@ const conf = reactive({
     }
   ] as any[],
   change: (item: any) => {
-    System.router.push(item.path)
+    System.router.replace(item.path)
   }
 })
-
 conf.list.forEach((item, index) => {
   item.iconActive = item.icon + '-active'
   item.index = index
