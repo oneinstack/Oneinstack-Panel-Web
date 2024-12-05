@@ -30,18 +30,18 @@
   </x-page>
 </template>
 <script setup lang="ts">
+import { apis } from '@/api'
+import { EPage } from '@/enum/Enum'
+import i18n from '@/lang'
+import sconfig from '@/sstore/sconfig'
+import { svalue } from '@/sstore/svalue'
+import sweb from '@/sstore/sweb'
+import StatusBarConfig from '@/utils/StatusBarConfig'
 import System from '@/utils/System'
 import { getPlatforms } from '@ionic/vue'
-import gridBlock from './components/gridBlock.vue';
+import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
-import { svalue } from '@/sstore/svalue';
-import { apis } from '@/api'
-import sconfig from '@/sstore/sconfig';
-import i18n from '@/lang';
-import StatusBarConfig from '@/utils/StatusBarConfig'
-import sweb from '@/sstore/sweb';
-import { Scope } from 'tools-vue3';
-import { EPage } from '@/enum/Enum';
+import gridBlock from './components/gridBlock.vue'
 
 const conf = reactive({
   platform: [] as any[],
@@ -57,21 +57,7 @@ const conf = reactive({
   datas: [] as any[],
   // 客服
   async handleClickServiceImg() {
-    let currentLan: any = await svalue.currentLanguage()
-    apis.getCustomerUrl({
-      userCountry: sconfig.userInfo.userCountry || currentLan.areaCode,
-      success: (res: any) => {
-        if (res.data) {
-          let datas = res.data
-          if (datas.states == 'true') System.router.push('/login')
-          else {
-            if (datas.url.indexOf('http') != -1) {
-              sweb.open(datas.url)
-            }
-          }
-        }
-      }
-    });
+    svalue.toService()
   },
   hanldeItemClick({ type, link }: any) {
     if (!sconfig.userInfo) return System.router.push('/login')
@@ -83,8 +69,6 @@ const conf = reactive({
   goSign() {
     apis.signinRecordList({
       success: (res: any) => {
-        console.log(res);
-        
         conf.datas = res.data || []
         Cookie.set('signData', conf.datas)
         if (conf.datas.length == 0) {
@@ -134,14 +118,15 @@ const conf = reactive({
         link: '/user/luckyWheel/index',
         wait: !config['activity_luckyWheel'],
         type: 'luckyWheel'
-      },
+      }
     ]
-    conf.gridBlock.sort((a, b) => {
-      if (a && a.wait) return 1
-      if (b && b.wait) return -1
-      return 0
-    }).push(null)
-
+    conf.gridBlock
+      .sort((a, b) => {
+        if (a && a.wait) return 1
+        if (b && b.wait) return -1
+        return 0
+      })
+      .push(null)
   },
   // 获取当前语言
   async getLanguageList() {
@@ -169,10 +154,10 @@ const conf = reactive({
     })
   },
   moreMessage() {
-			if (conf.pageSize * conf.pageNum >= conf.total) return conf.tips = true
-			conf.pageNum++;
-			conf.getActivityList(conf.languageId);
-		}
+    if (conf.pageSize * conf.pageNum >= conf.total) return (conf.tips = true)
+    conf.pageNum++
+    conf.getActivityList(conf.languageId)
+  }
 })
 conf.platform = getPlatforms()
 const init = async () => {
@@ -190,7 +175,7 @@ onMounted(() => {
 })
 const event = Scope.Event()
 event.on(EPage.scrollBottom, () => {
-	conf.moreMessage()
+  conf.moreMessage()
 })
 </script>
 <style lang="less" scoped>
@@ -249,7 +234,7 @@ event.on(EPage.scrollBottom, () => {
 
     .img-item {
       margin-bottom: 24rem;
-      background: #FFF;
+      background: #fff;
       border-radius: 10rem;
       width: 100%;
       padding-bottom: 20rem;

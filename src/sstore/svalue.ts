@@ -1,5 +1,6 @@
 import { apis } from '@/api/index'
 import i18n, { langobj } from '@/lang'
+import System from '@/utils/System'
 import { reactive } from 'vue'
 import { sutil } from './sutil'
 const { appConfigurationV1, coinlist, gameType, languageList, walletlist } = apis
@@ -121,6 +122,26 @@ export const svalue = reactive({
     let item = _list.find((x: any) => x.countryCode == langobj[i18n.locale])
     if (!item) item = _list.find((x: any) => x.countryCode == langobj['en-us'])
     return item
+  },
+
+  async toService() {
+    let currentLan: any = await svalue.currentLanguage()
+    const sconfig = sutil.getStore('sconfig')
+    const sweb = sutil.getStore('sweb')
+    apis.getCustomerUrl({
+      userCountry: sconfig.userInfo?.userCountry || currentLan.areaCode,
+      success: (res: any) => {
+        if (res.data) {
+          let datas = res.data
+          if (datas.states == 'true') System.router.push('/login')
+          else {
+            if (datas.url.indexOf('http') != -1) {
+              sweb.open(datas.url)
+            }
+          }
+        }
+      }
+    })
   },
 
   // 三方游戏跳转

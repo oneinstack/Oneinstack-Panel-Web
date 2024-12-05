@@ -164,7 +164,9 @@ const conf = reactive({
   },
 
   // 客服
-  async handleClickServiceImg() {},
+  async handleClickServiceImg() {
+    svalue.toService()
+  },
   //获取slots游戏列表
   async getSlotsGames() {
     const res = await apis.getThirdGameList({
