@@ -32,6 +32,7 @@ export default class Config {
 
     // 初始化环境变量
     System.env = JSON.parse('#{global}')
+    System.setNavigationBarColor('#ffffff')
 
     // 初始化插件
     app.use(plugins)

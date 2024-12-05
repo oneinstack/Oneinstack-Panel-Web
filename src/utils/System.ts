@@ -194,4 +194,14 @@ export default class System {
     window.URL.revokeObjectURL(content)
   }
 
+  /**
+   * 设置底部导航栏背景颜色
+   * @param hex 十六进制颜色值
+   */
+  static setNavigationBarColor = (hex: string) => {
+    try {
+      //@ts-ignore
+      if (System.platform !== 'web') NavigationBar.backgroundColorByHexString(hex, false)
+    } catch (error) {}
+  }
 }

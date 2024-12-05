@@ -8,6 +8,7 @@ import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { reactive } from 'vue'
 uspage.setConfig()
+System.setNavigationBarColor('#ffffff')
 const conf = reactive({
   list: [
     {

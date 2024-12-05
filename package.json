@@ -30,6 +30,7 @@
     "@ionic/vue-router": "8.4.0",
     "@lottiefiles/lottie-player": "2.0.12",
     "@vant/touch-emulator": "1.4.0",
+    "cordova-plugin-navigationbar-color": "0.1.0",
     "encryptlong": "3.1.4",
     "html2canvas": "1.4.1",
     "ionicons": "7.4.0",
