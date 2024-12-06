@@ -10,7 +10,11 @@
         v-if="noHeader === false"
       >
         <x-statusbar />
-        <div class="c-head-nav" :style="{ height: uspage.header.height }">
+        <div
+          class="c-head-nav"
+          :style="{ height: uspage.header.height }"
+          :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }"
+        >
           <div class="back" @click="conf.goBack">
             <van-icon class="back-img" name="arrow-left" v-if="showBack" size="25" />
           </div>
@@ -31,7 +35,7 @@
       @scroll="conf.scroll"
       v-scroll
     >
-      <div class="absolute column no-wrap" style="width: 750rem; height: 100%">
+      <div class="absolute column no-wrap" style="width: 750rem; height: max-content">
         <div v-if="noHeader === false && topfill && fixed">
           <x-statusbar header />
         </div>
@@ -114,12 +118,13 @@ const scrollRef = ref<any>()
 const conf = reactive({
   bgColor: props.bgcolor || uspage.bgcolor,
   headerBgColor: props.headerBgColor || uspage.header.bgColor,
-
+  scrollTop: 0,
   /**
    * 滚动事件
    */
   scroll: (e: any) => {
     const { scrollTop, scrollHeight, clientHeight } = e.target
+    conf.scrollTop = scrollTop
     const _bottom = scrollHeight - scrollTop - clientHeight
     CEvent.emit(EPage.scroll, {
       top: scrollTop,
