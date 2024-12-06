@@ -1,8 +1,113 @@
 <template>
-  <x-page tabbar>contact</x-page>
+  <x-page :show-back="false" tabbar>
+    <template #title>
+      <span class="title">{{ $t('chatRoom.contacts') }}</span>
+    </template>
+    <template #right>
+      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
+        <img style="width: 44rem;height: 44rem;" src="/static/img/chat/contacts_add.png" />
+      </div>
+    </template>
+    <div>
+      <div class="search-box flex flex-center">
+        <van-icon name="search" size="15" color="#B9B9B9" />
+        <span>Search</span>
+      </div>
+      <div style="background: #fff;">
+        <template v-for="(item, index) in conf.meaus" :key="index">
+          <div class="anchor-item">
+            <div class="item-author">
+              <img style="width: 100%; height: 100%" :src="item.icon" />
+            </div>
+            <div class="item-name">{{ item.title }}</div>
+          </div>
+        </template>
+      </div>
+    </div>
+    <van-index-bar style="background: #FFF;" :index-list="conf.indexList">
+      <template v-for="(item, index) in conf.userList" :key="index">
+        <van-index-anchor :index="item.index" />
+        <template v-for="(user, i2) in item.list" :key="i2">
+          <div class="anchor-item">
+            <div class="item-author">
+              <img style="width: 100%; height: 100%" src="/static/img/home-banner.png" />
+            </div>
+            <div class="item-name">{{ user }}</div>
+          </div>
+        </template>
+      </template>
+    </van-index-bar>
+  </x-page>
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue'
-const conf = reactive({})
+import i18n from '@/lang'
+const conf = reactive({
+indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#'],
+  meaus: [{
+    idx: 0,
+    title: i18n.t('chatRoom.new_friend'),
+    icon: '/static/img/chat/new_friends.png'
+  },
+  {
+    idx: 1,
+    title: i18n.t('chatRoom.new_grp'),
+    icon: '/static/img/chat/new_group.png'
+  }],
+  userList: [{
+    index: 'A',
+    list: ['a11', 'a22', 'a33', 'a44', 'a55', 'a66']
+  }, {
+    index: 'B',
+    list: ['b11', 'b22', 'b33', 'b44', 'b55', 'b66']
+  }, {
+    index: 'C',
+    list: ['c11', 'c22', 'c33', 'c44', 'c55', 'c66']
+  }, {
+    index: '#',
+    list: ['/1223', '!22', '#33', '%44', '*55', '*66']
+  }]
+})
 </script>
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.title {
+  font-size: 32rem;
+  color: #000;
+}
+
+.search-box {
+  width: 716rem;
+  height: 68rem;
+  background-color: #ffffff;
+  margin: 0 auto;
+  border-radius: 4rem;
+  margin-bottom: 20rem;
+
+  span {
+    font-size: 32rem;
+    color: #b9b9b9;
+    margin-left: 16rem;
+  }
+}
+
+.anchor-item {
+  display: flex;
+  align-items: center;
+  border-bottom: 1rem #F6F7FA solid;
+  padding: 20rem 24rem;
+
+  .item-author {
+    width: 76rem;
+    height: 76rem;
+    border-radius: 8rem;
+    overflow: hidden;
+    margin-right: 26rem;
+  }
+
+  .item-name {
+    font-size: 30rem;
+    color: #333333;
+    font-weight: 500;
+  }
+}
+</style>
