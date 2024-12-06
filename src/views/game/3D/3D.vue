@@ -656,7 +656,11 @@ const conf = reactive({
 	},
 	// 下注
 	submit(e: any) {
-		conf.isBetBtnClick = false
+		console.log('6666');
+		
+		console.log(e);
+		
+		// conf.isBetBtnClick = false
 		if (!e) return conf.showBet = false
 		if (!conf.defaultWalletInfo.hasOwnProperty('coinCode')) {
 			System.toast(i18n.t('game.setWalletTip'))
@@ -691,6 +695,8 @@ const conf = reactive({
 			walletCoinCode: conf.defaultWalletInfo.walletCoin,
 			success: (res: any) => {
 				conf.isBetBtnClick = true
+				console.log(conf.isBetBtnClick);
+				
 				conf.isWinBet = true
 				setTimeout(() => {
 					conf.isWinBet = false
