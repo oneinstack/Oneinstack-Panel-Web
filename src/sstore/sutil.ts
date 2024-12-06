@@ -531,6 +531,26 @@ export const sutil = reactive({
     interval.push(thisMonth)
 
     return interval
+  },
+
+  getShowTime: (time: number) => {
+    const _thisTime = new Date()
+    const _formatTime = new Date(time)
+    const now = _thisTime.getTime()
+    const diff = now - time
+    if (diff < 60 * 1000) return '刚刚'
+    if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + '分钟前'
+    if (diff < 24 * 60 * 60 * 1000) return Math.floor(diff / 3600000) + '小时前'
+
+    //昨天
+    if (diff < 48 * 60 * 60 * 1000) return '昨天'
+
+    //今年的显示月日
+    const _year = _thisTime.getFullYear()
+    const _yearFormat = _formatTime.getFullYear()
+    if (_year == _yearFormat) return _formatTime.Format('MM/dd')
+
+    return _formatTime.Format('MM/dd/yyyy')
   }
 })
 
