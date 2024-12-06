@@ -16,8 +16,11 @@
       <van-swipe-cell v-for="item in conf.list">
         <div class="user-item" :class="{ pinned: item.isPinned }">
           <div class="row items-center" style="height: 92rem">
-            <div style="width: 92rem; height: 100%; border-radius: 8rem; overflow: hidden; margin-right: 26rem">
-              <img style="width: 100%; height: 100%" :src="item.faceURL" />
+            <div class="relative face-box">
+              <img class="face" :src="item.faceURL" />
+              <div class="message-count" v-if="item.unreadCount > 0">
+                {{ item.unreadCount < 99 ? item.unreadCount : '99+' }}
+              </div>
             </div>
             <div class="col">
               <div class="row" style="width: 44rem; width: 100%">
@@ -86,7 +89,8 @@ const conf = reactive({
         isPrivateChat: false,
         attachedInfo: '',
         ex: '',
-        remark: 'Remark_' + i + ''
+        remark: 'Remark_' + i + '',
+        unreadCount: MathUtil.getRandomInt(0, 200)
       } as any)
     }
 
@@ -146,6 +150,30 @@ onMounted(() => {
   border-bottom: 2rem solid #f6f7fa;
   &.pinned {
     background-color: #f1f1f1;
+  }
+}
+
+.face-box {
+  width: 92rem;
+  height: 100%;
+  margin-right: 26rem;
+  .face {
+    width: 100%;
+    height: 100%;
+    border-radius: 8rem;
+  }
+  .message-count {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 36rem;
+    background-color: #f45551;
+    border-radius: 18rem;
+    padding: 0 10rem;
+    text-align: center;
+    line-height: 36rem;
+    transform: translate(50%, -50%);
+    color: #fff;
   }
 }
 </style>
