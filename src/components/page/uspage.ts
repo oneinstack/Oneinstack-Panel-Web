@@ -15,7 +15,14 @@ const defaultConf = {
  * 默认x-page组件配置
  */
 export const uspage = reactive({
-  ...defaultConf,
+  bgcolor: '#f5f5f7',
+  tabbar: {
+    height: '210rem'
+  },
+  header: {
+    height: '104rem',
+    bgColor: 'linear-gradient(180deg, #eb602d 0%, #ffa64f 100%)'
+  },
   /**
    * 恢复到默认
    */

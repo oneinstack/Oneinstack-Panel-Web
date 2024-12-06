@@ -35,7 +35,7 @@
       @scroll="conf.scroll"
       v-scroll
     >
-      <div class="absolute column no-wrap" style="width: 750rem; height: max-content">
+      <div class="absolute column no-wrap" style="width: 750rem; height: 100%">
         <div v-if="noHeader === false && topfill && fixed">
           <x-statusbar header />
         </div>

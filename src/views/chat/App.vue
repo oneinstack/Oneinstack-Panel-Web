@@ -5,19 +5,40 @@
 </template>
 <script setup lang="ts">
 import uspage from '@/components/page/uspage'
+import csconfig from '@/modules/chat/sstore/csconfig'
 import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
 import { reactive } from 'vue'
 const conf = reactive({
   show: false,
   init: async () => {
+    //优先从url中获取
+    const param = System.getRouterParams()
+    let chatInfo = {} as any
+    if (param.url) {
+      chatInfo = param
+      Cookie.set('chatInfo', param, {
+        expire: 3600
+      })
+    } else {
+      chatInfo = Cookie.get('chatInfo') || {}
+    }
+
+    //如果cookie有问题，则跳转至首页
+    // if (!chatInfo.url) {
+    //   System.router.replace('/')
+    //   return
+    // }
+
+    //初始化x-page页面ui默认配置
     uspage.bgcolor = '#f1f1f1'
     uspage.tabbar.height = '112rem'
     uspage.header.height = '104rem'
     uspage.header.bgColor = '#f1f1f1'
-    cConfig.init({
-      url: 'http://127.0.0.1:8080/api'
-    })
+
+    csconfig.userInfo = chatInfo
+
+    cConfig.init()
     conf.show = true
   }
 })
@@ -30,7 +51,7 @@ conf.init()
   height: 100%;
 }
 
-::v-deep(.c-head-nav) {
+::v-deep(.c-head-nav-bottom) {
   border-bottom: 1rem solid #d3d3d3 !important;
 }
 </style>

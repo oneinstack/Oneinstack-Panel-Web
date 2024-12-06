@@ -5,7 +5,7 @@ import csconfig from '../sstore/csconfig'
 
 export default class cHttpConfig {
   static isInit = false
-  static init(config: cConfigParam) {
+  static init() {
     if (cHttpConfig.isInit) return
     cHttpConfig.isInit = true
 
@@ -30,7 +30,7 @@ export default class cHttpConfig {
     }
     const _http = httpBean()
     _http.setConfig({
-      base: config.url,
+      base: csconfig.userInfo.url,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
@@ -43,7 +43,7 @@ export default class cHttpConfig {
             delete config.data[key]
           }
         })
-        csconfig.token && (config.param.headers.Token = csconfig.token)
+        csconfig.userInfo.imToken && (config.param.headers.Token = csconfig.userInfo.imToken)
       },
       after(xhr, config) {
         const { code } = xhr.data

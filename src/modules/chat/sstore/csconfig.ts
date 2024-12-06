@@ -1,10 +1,8 @@
 import { reactive } from 'vue'
 
 export const csconfig = reactive({
-  token: null,
-  load: () => {
-    csconfig.token = Cookie.get('IMToken')
-  }
+  userInfo: {} as cConfigParam,
+  load: () => {}
 })
 
 export default csconfig
