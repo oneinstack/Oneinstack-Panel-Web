@@ -1,7 +1,7 @@
 <template>
   <x-page backColor="#666" headerBgColor="#fff">
     <template #title>
-      <span class="title">Chat Messages</span>
+      <span class="head-title">Chat Messages</span>
     </template>
     <!-- 成员列表 -->
     <div class="user">
@@ -21,7 +21,7 @@
     </div>
 
     <!-- 名称公告 -->
-    <div style="margin-top: 20rem;">
+    <div class="m-t20">
       <div class="edit border_b flex-b-c">
         <div class="title">Group Name</div>
         <div class="more flex-center">
@@ -49,7 +49,7 @@
     </div>
 
     <!-- 开关 -->
-    <div style="margin-top: 20rem;">
+    <div class="m-t20">
       <div class="edit border_b flex-b-c">
         <div class="title">Mute Notification</div>
         <van-switch v-model="conf.muteChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
@@ -64,7 +64,7 @@
       </div>
     </div>
 
-    <div style="margin-top: 20rem;">
+    <div class="m-t20">
       <div class="edit border_b flex-b-c">
         <div class="title">My Alias in Group</div>
         <div class="more flex-center">
@@ -86,7 +86,7 @@
     <div class="edit flex-b-c">
       <div class="title">Clear Chat History</div>
     </div>
-    
+
     <div class="edit flex-center">
       <div class="title" style="color: #f45551;">Leave</div>
     </div>
@@ -101,11 +101,6 @@ const conf = reactive({
 })
 </script>
 <style lang="less" scoped>
-.title {
-  font-size: 30rem;
-  color: #000;
-}
-
 .user {
   background: #fff;
   padding: 20rem 30rem 30rem;
@@ -137,49 +132,5 @@ const conf = reactive({
     }
   }
 }
-
-.more {
-  color: #999;
-  font-size: 26rem;
-  margin-top: 10rem;
-
-  span {
-    margin-right: 10rem;
-    word-wrap: break-word;
-    word-break: break-all;
-  }
-}
-
-.flex-b {
-  display: flex;
-  justify-content: space-between;
-}
-.flex-b-c {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.flex-center {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.edit {
-  background: #FFF;
-  padding: 24rem 24rem;
-  margin-top: 20rem;
-
-  .title {
-    font-size: 28rem;
-    font-weight: 500;
-    color: #000;
-  }
-}
-
-.border_b {
-  border-bottom: 2rem solid #F6F7FA;
-  margin-top: 0rem;
-}
+@import './index.less';
 </style>
