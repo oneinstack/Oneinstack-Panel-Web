@@ -8,7 +8,7 @@
         <van-icon name="add-o" size="22" color="#333333" />
       </div>
     </template>
-    <div>
+    <div class="relative">
       <div class="search-box flex flex-center">
         <van-icon name="search" size="15" color="#B9B9B9" />
         <span>{{ $t('chatRoom.search') }}</span>
@@ -53,6 +53,7 @@
           />
         </template>
       </van-swipe-cell>
+      <div class="border-right"></div>
     </div>
   </x-page>
 </template>
@@ -129,7 +130,14 @@ onMounted(() => {
   font-size: 32rem;
   color: #000;
 }
-
+.border-right {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 1rem;
+  height: 100%;
+  background-color: #efefef;
+}
 .search-box {
   width: 716rem;
   height: 68rem;
