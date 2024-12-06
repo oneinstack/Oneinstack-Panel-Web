@@ -11,7 +11,7 @@
     <div>
       <div class="search-box flex flex-center">
         <van-icon name="search" size="15" color="#B9B9B9" />
-        <span>Search</span>
+        <span>{{ $t('chatRoom.search') }}</span>
       </div>
       <van-swipe-cell v-for="item in conf.list">
         <div class="user-item" :class="{ pinned: item.isPinned }">
@@ -24,7 +24,7 @@
                 <div class="col" style="font-size: 32rem; color: #333333; font-weight: 500">
                   {{ item.remark || item.nickname || item.groupName || item.showName }}
                 </div>
-                <div style="font-size: 24rem; color: #808080">{{ sutil.getShowTime(item.latestMsgSendTime) }}</div>
+                <div style="font-size: 24rem; color: #808080">{{ sutil.getTimeTip(item.latestMsgSendTime) }}</div>
               </div>
               <div class="row ellipsis" style="display: block; font-size: 28rem; color: #b1b1b1">
                 {{ item.latestMsg }}
@@ -36,11 +36,17 @@
           <van-button
             square
             type="primary"
-            :text="item.isPinned ? '取消置顶' : '置顶'"
+            :text="item.isPinned ? $t('chatRoom.cancel') : $t('chatRoom.pin')"
             style="height: 100%; width: 180rem"
             @click="conf.top(item)"
           />
-          <van-button square type="danger" text="删除" style="height: 100%; width: 152rem" @click="conf.delete(item)" />
+          <van-button
+            square
+            type="danger"
+            :text="$t('chatRoom.remove')"
+            style="height: 100%; width: 152rem"
+            @click="conf.delete(item)"
+          />
         </template>
       </van-swipe-cell>
     </div>
@@ -73,7 +79,7 @@ const conf = reactive({
         unreadCount: 0,
         groupAtType: 0 as GroupAtType,
         latestMsg: 'hello-=-------==================' + i * MathUtil.getRandomInt(1, 3000),
-        latestMsgSendTime: new Date().getTime() - MathUtil.getRandomInt(1, 1000000) * 36000,
+        latestMsgSendTime: new Date().getTime() - MathUtil.getRandomInt(1, 1000000) * 360,
         draftText: '',
         draftTextTime: 0,
         isNotInGroup: false,

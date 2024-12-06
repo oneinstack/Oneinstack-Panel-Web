@@ -533,17 +533,34 @@ export const sutil = reactive({
     return interval
   },
 
-  getShowTime: (time: number) => {
+  /**
+   * 获取时间提示
+   * @param time 时间戳
+   * @returns 时间提示
+   */
+  getTimeTip: (time: number) => {
     const _thisTime = new Date()
     const _formatTime = new Date(time)
     const now = _thisTime.getTime()
     const diff = now - time
-    if (diff < 60 * 1000) return '刚刚'
-    if (diff < 60 * 60 * 1000) return Math.floor(diff / 60000) + '分钟前'
-    if (diff < 24 * 60 * 60 * 1000) return Math.floor(diff / 3600000) + '小时前'
 
+    // //刚刚
+    // if (diff < 60 * 1000) return i18n.t('chatRoom.just_now')
+
+    //今天
+    if (diff < 24 * 60 * 60 * 1000) {
+      const _dd = _thisTime.Format('dd')
+      const _ddFormat = _formatTime.Format('dd')
+      if (_dd == _ddFormat) return _formatTime.Format('hh:mm')
+    }
+  
     //昨天
-    if (diff < 48 * 60 * 60 * 1000) return '昨天'
+    if (diff < 48 * 60 * 60 * 1000) {
+      const _yd = new Date(TimeUtil.somedayse(-1)[0])
+      const _dd = _yd.Format('dd')
+      const _ddFormat = _formatTime.Format('dd')
+      if (_dd == _ddFormat) return i18n.t('chatRoom.yesterday')
+    }
 
     //今年的显示月日
     const _year = _thisTime.getFullYear()
