@@ -1257,7 +1257,7 @@ export default {
     search_grp: 'Search Group',
     scan_qr: 'Scan QR Code',
     new_grp_chat: 'New Group Chat',
-    new_friend: 'New Friend',
+    new_friend: 'New Friends',
     no_data: 'No Data Available',
     grp_join_app: 'Group Join Application',
     my_req: 'My Requests',
