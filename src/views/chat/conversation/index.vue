@@ -18,7 +18,7 @@
           <div class="row items-center" style="height: 92rem">
             <div class="relative face-box">
               <img class="face" :src="item.faceURL" />
-              <div class="message-count" v-if="item.unreadCount > 0">
+              <div class="message-count flex flex-center" v-if="item.unreadCount > 0">
                 {{ item.unreadCount < 99 ? item.unreadCount : '99+' }}
               </div>
             </div>
