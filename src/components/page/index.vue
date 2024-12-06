@@ -16,7 +16,7 @@
           :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }"
         >
           <div class="back" @click="conf.goBack">
-            <van-icon class="back-img" name="arrow-left" v-if="showBack" size="25" />
+            <van-icon class="back-img" name="arrow-left" :color="backColor" v-if="showBack" size="25" />
           </div>
           <div class="c-head-nav-title">
             <slot name="title" />
@@ -74,6 +74,12 @@ const props = defineProps({
    */
   showBack: {
     default: true
+  },
+  /**
+   * 是否显示返回按钮，默认true
+   */
+   backColor: {
+    default: '#fff'
   },
   /**
    * 返回按钮点击事件，默认null

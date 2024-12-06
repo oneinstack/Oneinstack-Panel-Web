@@ -61,7 +61,7 @@
                   $t('wallet.FirstWithdrawal') : item.tradeTypeName) }}</span>
                 <!-- 交易中 -->
                 <span
-                  v-if="(item.tradeStatus == 2 && item.tradeType == 1) || (item.tradeStatus == 7 && (item.tradeType == 1 || item.tradeType == 2)) || item.tradeStatus == 5">
+                  v-if="(item.tradeStatus == 0 && item.tradeType == 2) || (item.tradeStatus == 2 && item.tradeType == 1) || (item.tradeStatus == 7 && (item.tradeType == 1 || item.tradeType == 2)) || item.tradeStatus == 5">
                   {{ '(' + $t('wallet.wait') + ')' }}
                 </span>
                 <span v-else-if="item.tradeStatus == 1 && item.recordMark == 1">{{ ' (' +

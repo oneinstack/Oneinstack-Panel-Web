@@ -28,7 +28,7 @@
       <template v-for="(item, index) in conf.userList" :key="index">
         <van-index-anchor :index="item.index" />
         <template v-for="(user, i2) in item.list" :key="i2">
-          <div class="anchor-item">
+          <div class="anchor-item" @click="conf.goPages('/chat/userCard')">
             <div class="item-author">
               <img style="width: 100%; height: 100%" src="/static/img/home-banner.png" />
             </div>
@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import i18n from '@/lang'
+import System from '@/utils/System';
 const conf = reactive({
 indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#'],
   meaus: [{
@@ -66,7 +67,10 @@ indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q',
   }, {
     index: '#',
     list: ['/1223', '!22', '#33', '%44', '*55', '*66']
-  }]
+  }],
+  goPages(url: string) {
+    System.router.push(url)
+  }
 })
 </script>
 <style lang="less" scoped>
@@ -93,7 +97,7 @@ indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q',
 .anchor-item {
   display: flex;
   align-items: center;
-  border-bottom: 1rem #F6F7FA solid;
+  border-bottom: 2rem #F6F7FA solid;
   padding: 20rem 24rem;
 
   .item-author {
