@@ -34,6 +34,7 @@
               </div>
             </div>
           </div>
+          <div class="border-bottom"></div>
         </div>
         <template #right>
           <van-button
@@ -147,9 +148,16 @@ onMounted(() => {
   width: 100%;
   background: #fff;
   padding: 24rem 26rem;
-  border-bottom: 2rem solid #f6f7fa;
+  position: relative;
   &.pinned {
-    background-color: #f1f1f1;
+    background-color: #efefef;
+  }
+  .border-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 138rem;
+    right: 0;
+    border-bottom: 2rem solid #e1e1e1;
   }
 }
 

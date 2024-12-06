@@ -31,10 +31,10 @@ const conf = reactive({
     // }
 
     //初始化x-page页面ui默认配置
-    uspage.bgcolor = '#f1f1f1'
+    uspage.bgcolor = '#efefef'
     uspage.tabbar.height = '112rem'
     uspage.header.height = '104rem'
-    uspage.header.bgColor = '#f1f1f1'
+    uspage.header.bgColor = '#efefef'
 
     csconfig.userInfo = chatInfo
 
@@ -42,7 +42,7 @@ const conf = reactive({
     conf.show = true
   }
 })
-System.setNavigationBarColor('#f1f1f1')
+System.setNavigationBarColor('#efefef')
 conf.init()
 </script>
 <style lang="less" scoped>
