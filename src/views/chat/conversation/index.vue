@@ -13,7 +13,7 @@
         <van-icon name="search" size="15" color="#B9B9B9" />
         <span>{{ $t('chatRoom.search') }}</span>
       </div>
-      <van-swipe-cell v-for="item in conf.list">
+      <van-swipe-cell v-for="(item, index) in conf.list">
         <div class="user-item" :class="{ pinned: item.isPinned }">
           <div class="row items-center" style="height: 92rem">
             <div class="relative face-box">
@@ -34,7 +34,7 @@
               </div>
             </div>
           </div>
-          <div class="border-bottom"></div>
+          <div class="border-bottom" v-if="index !== conf.list.length - 1"></div>
         </div>
         <template #right>
           <van-button
