@@ -6,9 +6,3 @@ declare module '*.vue' {
   const componentOptions: ComponentOptions
   export default componentOptions
 }
-
-declare var NavigationBar: {
-  backgroundColorByHexString: (hex: string, overlay: boolean) => void
-  hide: () => void
-  show: () => void
-}

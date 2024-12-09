@@ -1,6 +1,7 @@
 import sapp from '@/sstore/sapp'
 import { Capacitor } from '@capacitor/core'
 import { StatusBar, Style } from '@capacitor/status-bar'
+import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 export default class StatusBarConfig {
   /** 状态栏高度 */
   static statusHeight = Cookie.get('statusHeight') || 0

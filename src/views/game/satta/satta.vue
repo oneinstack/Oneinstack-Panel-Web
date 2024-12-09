@@ -772,16 +772,8 @@ const conf = reactive({
 		obj.betTitle = obj.betExpect
 		console.log('obj', obj)
 		Cookie.set('betRecord', JSON.stringify(obj))
-		System.loading()
-
-		await sconfig.getToken({
-			final: () => {
-				System.loading(false)
-			},
-			end: () => {
-				System.router.push('/chatRoom/conversation/betRecordForward/index')
-			}
-		})
+		
+		await sconfig.toChat('/chatRoom/conversation/betRecordForward/index')
 	}
 })
 const canShare = computed(() => {

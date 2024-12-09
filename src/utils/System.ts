@@ -1,6 +1,7 @@
 import { loading } from '@/components/loading/loading'
 import { toast } from '@/components/toast/toast'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 import { Router } from 'vue-router'
 import { globalType } from '../../build/env/globalVar'
 
@@ -200,7 +201,10 @@ export default class System {
    */
   static setNavigationBarColor = (hex: string) => {
     try {
-      if (System.platform !== 'web') NavigationBar.backgroundColorByHexString(hex, false)
+      if (System.platform !== 'web')
+        NavigationBar.setColor({
+          color: hex
+        })
     } catch (error) {}
   }
 }

@@ -12,6 +12,51 @@ export const sconfig = reactive({
   walletInfo: {} as any,
   systemWalletInfo: {} as any,
 
+  async toChat(url: string = '/chat') {
+    const _info = Cookie.get('chatInfo')
+
+    if (_info) {
+      console.log('info', _info)
+      System.router.push(url)
+      return
+    }
+
+    System.loading(true)
+    let { data: info } = await apis.getToken()
+    let urlStr = info.url.replace(/\s+/g, '')
+    let urlList = urlStr.split(',')
+
+    const getFastUrl = async (_list: any[]) => {
+      return new Promise(async (resolve) => {
+        await Promise.all(
+          _list.map((u: any) =>
+            HttpUtil.ping(u).then((time) => {
+              resolve({ time, u })
+              return { time, u }
+            })
+          )
+        )
+      })
+    }
+
+    let resultUrl = await getFastUrl(urlList)
+
+    console.log('info', info)
+
+    Cookie.set(
+      'chatInfo',
+      {
+        ...info,
+        url: resultUrl
+      },
+      {
+        expire: 3600
+      }
+    )
+
+    System.router.push(url)
+  },
+
   /**
    * 成功登录用户
    */

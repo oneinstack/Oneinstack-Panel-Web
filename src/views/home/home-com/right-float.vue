@@ -85,48 +85,8 @@ const conf = reactive({
     }
   },
   async toChat() {
-    return System.router.push(`/chat`)
-    const _info = Cookie.get('chatInfo')
-
-    if (_info) {
-      console.log('info', _info)
-      System.router.push(`/chat`)
-      return
-    }
-
-    let { data: info } = await apis.getToken()
-    let urlStr = info.url.replace(/\s+/g, '')
-    let urlList = urlStr.split(',')
-
-    const getFastUrl = async (_list: any[]) => {
-      return new Promise(async (resolve) => {
-        await Promise.all(
-          _list.map((u: any) =>
-            HttpUtil.ping(u).then((time) => {
-              resolve({ time, u })
-              return { time, u }
-            })
-          )
-        )
-      })
-    }
-
-    let resultUrl = await getFastUrl(urlList)
-
-    console.log('info', info)
-
-    Cookie.set(
-      'chatInfo',
-      {
-        ...info,
-        url: resultUrl
-      },
-      {
-        expire: 3600
-      }
-    )
-
     System.router.push(`/chat`)
+    // sconfig.toChat()
   },
   // 客服
   async handleClickServiceImg() {
