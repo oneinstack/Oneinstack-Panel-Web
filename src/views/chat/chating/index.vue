@@ -1,5 +1,5 @@
 <template>
-  <x-page class="chating-box">
+  <x-page class="chating-box" no-footer log>
     <template #title>
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>
@@ -8,8 +8,15 @@
         <van-icon name="ellipsis" size="24" color="#666" />
       </div>
     </template>
-    <div class="col">
-      <div>+666</div>
+    <div class="col column relative">
+      <div class="col">+666</div>
+      <div class="row">
+        <div>1</div>
+        <div class="col">
+          <input type="text" placeholder="请输入内容" />
+        </div>
+        <div>3</div>
+      </div>
     </div>
   </x-page>
 </template>

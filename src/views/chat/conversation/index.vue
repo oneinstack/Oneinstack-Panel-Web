@@ -165,6 +165,9 @@ onMounted(() => {
   background: #fff;
   padding: 24rem 26rem;
   position: relative;
+  &:active {
+    background-color: #e5e5e5;
+  }
   &.pinned {
     background-color: #efefef;
   }
@@ -185,6 +188,7 @@ onMounted(() => {
     width: 100%;
     height: 100%;
     border-radius: 8rem;
+    object-fit: cover;
   }
   .message-count {
     position: absolute;

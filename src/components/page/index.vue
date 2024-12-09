@@ -40,6 +40,9 @@
       </div>
     </div>
     <slot name="bottom"></slot>
+    <!-- #ifvar-dev -->
+    <showlog v-if="log !== false" />
+    <!-- #endvar -->
   </div>
 </template>
 <script setup lang="ts">
@@ -48,6 +51,9 @@ import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onBeforeMount, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+//#ifvar-dev
+import showlog from './showlog.vue'
+//#endvar
 import uspage from './uspage'
 
 const props = defineProps({
@@ -122,11 +128,18 @@ const props = defineProps({
    */
   tabbar: {
     default: false
+  },
+  //#ifvar-dev
+  /**
+   * 是否显示日志，默认false
+   */
+  log: {
+    default: false
   }
+  //#endvar
 })
 
 const scrollRef = ref<any>()
-
 const conf = reactive({
   bgColor: props.bgcolor || uspage.bgcolor,
   headerBgColor: props.headerBgColor || uspage.header.bgColor,

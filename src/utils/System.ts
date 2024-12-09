@@ -200,7 +200,6 @@ export default class System {
    */
   static setNavigationBarColor = (hex: string) => {
     try {
-      //@ts-ignore
       if (System.platform !== 'web') NavigationBar.backgroundColorByHexString(hex, false)
     } catch (error) {}
   }

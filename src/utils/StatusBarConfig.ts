@@ -7,14 +7,7 @@ export default class StatusBarConfig {
   static async initStatusBar() {
     const setBoxHeight = () => {
       setTimeout(() => {
-        const initialHeight = document.documentElement.clientHeight
-        const initialWidth = document.documentElement.clientWidth
-
-        if (initialHeight > sapp.maxHeight || initialWidth !== sapp.maxWidth) {
-          sapp.maxHeight = initialHeight
-          sapp.maxWidth = initialWidth
-          document.documentElement.style.setProperty('--height', `${initialHeight}px`)
-        }
+        sapp.setAppHeight()
       }, 20)
     }
     setBoxHeight()
@@ -24,8 +17,12 @@ export default class StatusBarConfig {
       style: Style.Light
     })
     await StatusBarConfig.getStatusHeight()
+    StatusBarConfig.getBottomBarHeight()
   }
 
+  /**
+   * 获取状态栏高度
+   */
   static async getStatusHeight() {
     const getSafeArea = async () => {
       await StatusBar.setOverlaysWebView({
@@ -33,20 +30,41 @@ export default class StatusBarConfig {
       })
       await Timer.delay(20)
       const initialHeight = document.documentElement.clientHeight
-      document.documentElement.style.setProperty('--height', `${initialHeight}px`)
+      sapp.setAppHeight()
       await StatusBar.setOverlaysWebView({
         overlay: true
       })
       await Timer.delay(20)
       const currentHeight = document.documentElement.clientHeight
-      const safeArea = currentHeight - initialHeight
+      const safeArea = Math.abs(currentHeight - initialHeight)
       document.documentElement.style.setProperty('--safe-area-top', `${safeArea}px`)
-      return Math.abs(safeArea)
+      return safeArea
     }
     const _statusHeight = await getSafeArea()
     if (_statusHeight > 0) {
       StatusBarConfig.statusHeight = _statusHeight
-      Cookie.set('statusHeight', StatusBarConfig.statusHeight)
+      sapp.app.statusBarHeight = _statusHeight
+      Cookie.set('statusHeight', _statusHeight)
     }
+  }
+
+  /** 底部导航栏高度 */
+  static bottomBarHeight = Cookie.get('bottomBarHeight') || 0
+
+  static async getBottomBarHeight() {
+    let initialHeight = document.documentElement.clientHeight
+    sapp.app.height
+    NavigationBar.hide()
+    setTimeout(() => {
+      const _maxHeight = document.documentElement.clientHeight
+      initialHeight = _maxHeight - initialHeight
+      if (initialHeight > 0) {
+        sapp.app.noBottomBarHeight = _maxHeight
+        StatusBarConfig.bottomBarHeight = initialHeight
+        sapp.app.bottomBarHeight = initialHeight
+        Cookie.set('bottomBarHeight', initialHeight)
+      }
+      NavigationBar.show()
+    }, 20)
   }
 }

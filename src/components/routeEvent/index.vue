@@ -2,6 +2,7 @@
 
 <script setup lang="ts">
 import { ERouter } from '@/enum/Enum'
+import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
 import { watch } from 'vue'
 
@@ -12,4 +13,7 @@ watch(
   },
   { immediate: true }
 )
+// 添加键盘事件
+sapp.addKeyboardEvent()
+
 </script>
