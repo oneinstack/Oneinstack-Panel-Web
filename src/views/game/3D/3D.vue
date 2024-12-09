@@ -392,34 +392,23 @@ const conf = reactive({
 	countdownNum: 0,
 	barTotal: 0,
 	lotteryRuleurl: '',
-	hasOpenCodeTimer: null as any,
-	noOpenCodeTimer: null as any,
+	requestOpen: true,
 	gameType: '3D',
 	isBetBtnClick: true,
 	defaultWalletInfo: {} as any,
+	navIndex: 0,
 	// 选择时间期数
 	changeTime(item: any, index: any) {
 		if (conf.timeIndex == item.lotteryInterval) return;
 		conf.timeIndex = item.lotteryInterval
 		conf.openLockCountdown = item.openLockCountdown
+		conf.openShow = true
 		conf.getLotteryList(index)
-		if (conf.timer) {
-			clearInterval(conf.timer);
-			conf.timer = null;
-		}
-		if (conf.noOpenCodeTimer) {
-			clearTimeout(conf.noOpenCodeTimer);
-			conf.noOpenCodeTimer = null;
-		}
-		if (conf.hasOpenCodeTimer) {
-			clearTimeout(conf.hasOpenCodeTimer);
-			conf.hasOpenCodeTimer = null;
-		}
 		// conf.getLotteryOpen(item.id)
 		if (index == 1 && conf.scrollLeft > 30) {
 			conf.scrollLeft = 0
 		} else {
-			conf.scrollLeft = index * 30
+			conf.scrollLeft = index * 32
 		}
 	},
 	// 游戏列表
@@ -429,20 +418,7 @@ const conf = reactive({
 		conf.timeIndex = conf.lotteryVOList[index].lotteryInterval
 		conf.openLockCountdown = conf.lotteryVOList[index].openLockCountdown
 		let lotteryTypeId = conf.lotteryVOList[index].lotteryTypeId
-		clearTimeout(conf.setTimer)
-		clearTimeout(conf.setTimer1)
-		if (conf.timer) {
-			clearInterval(conf.timer);
-			conf.timer = null;
-		}
-		if (conf.noOpenCodeTimer) {
-			clearTimeout(conf.noOpenCodeTimer);
-			conf.noOpenCodeTimer = null;
-		}
-		if (conf.hasOpenCodeTimer) {
-			clearTimeout(conf.hasOpenCodeTimer);
-			conf.hasOpenCodeTimer = null;
-		}
+		conf.navIndex = index
 		conf.getLotteryOpen(conf.lotteryVOList[index].id)
 		conf.getLotteryOdds(lotteryTypeId)
 	},
@@ -457,12 +433,12 @@ const conf = reactive({
 	},
 	// 获取上期开奖数据及本期时间
 	getLotteryOpen(lotteryId: any) {
+		if(!conf.requestOpen) return
 		if (!conf.autoplay) {
 			conf.autoplay = true
 			conf.duration = 120
-			console.log('88888');
-
 		}
+		
 		lotteryId && (conf.lotteryId = lotteryId)
 		apis.lotteryOpen({
 			lotteryId: lotteryId || conf.lotteryId,
@@ -470,7 +446,9 @@ const conf = reactive({
 				if (res.code == 200) {
 					if (conf.openShow) {
 						let cdata = res.data
-						if (cdata.currentOpen) conf.openShow = false
+						let id = conf.lotteryVOList[conf.navIndex].lotteryTypeId
+						
+						if (cdata.currentOpen && (id == lotteryId)) conf.openShow = false
 						let currentOpen = cdata.currentOpen.openTime
 						conf.countdownCurr = parseInt(currentOpen) - parseInt(cdata.currentSystemTime)
 						let currentNext = cdata.nextOpen.openTime
@@ -478,6 +456,7 @@ const conf = reactive({
 
 						conf.countdownNum = conf.countdownCurr
 						conf.barTotal = conf.countdownCurr
+						
 						conf.currentTime()
 					}
 					conf.currentOpen = res.data.currentOpen
@@ -487,7 +466,7 @@ const conf = reactive({
 					if (!conf.LastOpenCode && !conf.isRequest) {
 						conf.sizeNum = 0
 						conf.doubleNum = 0
-						conf.noOpenCodeTimer = setTimeout(() => {
+						setTimeout(() => {
 							conf.getLotteryOpen(conf.lotteryId)
 						}, 1000)
 					}
@@ -506,20 +485,12 @@ const conf = reactive({
 					conf.sizeNum = 0
 					conf.doubleNum = 0
 					// conf.autoplay = false
-					if (res.code == '1306' && conf.openNum < 6) {
-						conf.hasOpenCodeTimer = setTimeout(() => {
+					if (res.code == '1306') {
+						setTimeout(() => {
 							conf.openNum++
 							if (conf.timer) {
 								clearInterval(conf.timer);
 								conf.timer = null;
-							}
-							if (conf.noOpenCodeTimer) {
-								clearTimeout(conf.noOpenCodeTimer);
-								conf.noOpenCodeTimer = null;
-							}
-							if (conf.hasOpenCodeTimer) {
-								clearTimeout(conf.hasOpenCodeTimer);
-								conf.hasOpenCodeTimer = null;
 							}
 							conf.getLotteryOpen(conf.lotteryId)
 						}, 2000)
@@ -575,6 +546,7 @@ const conf = reactive({
 		conf.timeClose = false
 		conf.shareOpen = false
 		if (conf.timer) return;
+		
 		conf.timer = setInterval(() => {
 			if (conf.countdownNum > 0) {
 				conf.getCountDown(conf.countdownNum)
@@ -600,14 +572,6 @@ const conf = reactive({
 				if (conf.timer) {
 					clearInterval(conf.timer);
 					conf.timer = null;
-				}
-				if (conf.noOpenCodeTimer) {
-					clearTimeout(conf.noOpenCodeTimer);
-					conf.noOpenCodeTimer = null;
-				}
-				if (conf.hasOpenCodeTimer) {
-					clearTimeout(conf.hasOpenCodeTimer);
-					conf.hasOpenCodeTimer = null;
 				}
 				conf.getLotteryOpen(conf.currentOpen.lotteryId)
 			}
@@ -755,17 +719,10 @@ onMounted(() => {
 onUnmounted(() => {
 	clearTimeout(conf.setTimer)
 	clearTimeout(conf.setTimer1)
+	conf.requestOpen = false
 	if (conf.timer) {
 		clearInterval(conf.timer);
 		conf.timer = null;
-	}
-	if (conf.noOpenCodeTimer) {
-		clearTimeout(conf.noOpenCodeTimer);
-		conf.noOpenCodeTimer = null;
-	}
-	if (conf.hasOpenCodeTimer) {
-		clearTimeout(conf.hasOpenCodeTimer);
-		conf.hasOpenCodeTimer = null;
 	}
 })
 </script>
