@@ -60,7 +60,6 @@ export default class StatusBarConfig {
     const _maxHeight = document.documentElement.clientHeight
     initialHeight = _maxHeight - initialHeight
     if (initialHeight > 0) {
-      sapp.app.noBottomBarHeight = _maxHeight
       StatusBarConfig.bottomBarHeight = initialHeight
       sapp.app.bottomBarHeight = initialHeight
       Cookie.set('bottomBarHeight', initialHeight)

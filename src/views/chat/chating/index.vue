@@ -10,22 +10,59 @@
       </div>
     </template>
     <div class="col column relative">
-      <div class="col">+666</div>
-      <div class="row">
-        <div>1</div>
-        <div class="col">
-          <input type="text" placeholder="请输入内容" />
+      <div class="col" style="height: 100%; overflow: auto" ref="chatBoxRef">
+        <div v-for="item in 200" :key="item">
+          {{ item }}
         </div>
-        <div>3</div>
+      </div>
+      <div class="row items-center" style="height: 98rem; width: 100%; padding: 0 32rem">
+        <div class="flex flex-center">
+          <VSIcon name="chat-yy" :size="50" />
+        </div>
+        <div class="col input-box">
+          <input
+            @click="conf.messageBlur"
+            @focus="conf.messageBlur"
+            @keyup.enter="conf.sendMessage"
+            v-model="conf.message"
+            class="input"
+            type="text"
+          />
+        </div>
+        <div class="flex flex-center" style="gap: 20rem">
+          <VSIcon name="chat-emoji" :size="50" />
+          <VSIcon name="chat-plus" :size="50" />
+        </div>
       </div>
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
-import i18n from '@/lang'
-import System from '@/utils/System'
-const conf = reactive({})
+import { onMounted, reactive, ref } from 'vue'
+import { Scope } from 'tools-vue3'
+import { EPage } from '@/enum/Enum'
+
+const event = Scope.Event()
+const chatBoxRef = ref<HTMLElement | null>(null)
+const conf = reactive({
+  message: '',
+  messageBlur: () => {
+    setTimeout(() => {
+      chatBoxRef.value?.scrollTo({
+        top: chatBoxRef.value?.scrollHeight
+      })
+    }, 100)
+  },
+  sendMessage: () => {
+    console.log('sendMessage', conf.message)
+  }
+})
+
+onMounted(() => {
+  event.on(EPage.changeHeight, () => {
+    conf.messageBlur()
+  })
+})
 </script>
 <style lang="less" scoped>
 .title {
@@ -36,6 +73,21 @@ const conf = reactive({})
 .chating-box {
   ::v-deep(.c-head-nav) {
     border-bottom: 1rem solid #d3d3d3 !important;
+  }
+}
+
+.input-box {
+  width: 100%;
+  height: 72rem;
+  background: #fff;
+  margin: 0 20rem;
+  padding: 0 10rem;
+  border-radius: 6rem;
+  .input {
+    width: 100%;
+    height: 100%;
+    border: none;
+    outline: none;
   }
 }
 </style>

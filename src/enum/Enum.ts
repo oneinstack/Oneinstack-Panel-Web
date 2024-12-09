@@ -18,12 +18,15 @@ const manager = {
   },
   EPage: {
     /**
-     * page组件页面滚动
+     * page组件页面正在滚动
      */
     scroll: '',
 
-    /** page组件页面滚动到底部50px */
-    scrollBottom: ''
+    /** page组件页面被滚动到底部50px */
+    scrollBottom: '',
+
+    /** 页面高度被改变 */
+    changeHeight: ''
   }
 }
 

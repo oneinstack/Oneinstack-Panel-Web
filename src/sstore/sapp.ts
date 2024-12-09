@@ -1,3 +1,4 @@
+import { EPage } from '@/enum/Enum'
 import System from '@/utils/System'
 import { Capacitor } from '@capacitor/core'
 import { Keyboard } from '@capacitor/keyboard'
@@ -28,10 +29,6 @@ export const sapp = reactive({
      * 底部导航栏高度
      */
     bottomBarHeight: 0,
-    /**
-     * 没有底部导航栏的高度
-     */
-    noBottomBarHeight: 0
   },
   /**
    * 设置页面高度
@@ -40,9 +37,12 @@ export const sapp = reactive({
     if (!sapp.keyboard.show) {
       const _height = document.documentElement.clientHeight
       //如果是点击input，则不设置高度
-      if (Date.now() - sapp.keyboard.clickInputTime < 1000) return
+      if (Date.now() - sapp.keyboard.clickInputTime < 1000) {
+        if (!sapp.whiteList.includes(System.getRouterPath())) return
+      }
       document.documentElement.style.setProperty('--height', `${_height}px`)
       sapp.app.height = _height
+      CEvent.emit(EPage.changeHeight, _height)
     }
   },
   /**
@@ -82,7 +82,10 @@ export const sapp = reactive({
     sapp.keyboard.height = height
     if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
-      document.documentElement.style.setProperty('--height', `${sapp.app.height - sapp.keyboard.height + sapp.app.bottomBarHeight }px`)
+      document.documentElement.style.setProperty(
+        '--height',
+        `${sapp.app.height - sapp.keyboard.height + sapp.app.bottomBarHeight}px`
+      )
     }, 100)
   },
   /**
