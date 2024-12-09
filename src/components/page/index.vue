@@ -95,10 +95,10 @@ const props = defineProps({
     default: 'arrow-left'
   },
   /**
-   * 返回按钮图标大小，默认25
+   * 返回按钮图标大小，默认50rem
    */
   backIconSize: {
-    default: 25
+    default: '48rem'
   },
   /**
    * 头部背景颜色，默认渐变'linear-gradient(180deg, #EB602D 0%, #FFA64F 100%)'
