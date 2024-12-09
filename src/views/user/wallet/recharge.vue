@@ -820,7 +820,7 @@ const conf = reactive({
     System.toast(i18n.t('invite.CopySuccessful') || '', 'success') //弹出提示信息，不同组件可能存在写法不同
     //复制之后再删除元素，否则无法成功赋值
     copyInput.remove() //删除动态创建的节点
-    // #endif
+    // #endvar
   },
 
   // 数据提交

@@ -897,7 +897,7 @@ onMounted(async () => {
   if (conf.BackByCode) {
     conf.googleLoginCallBackByCode()
   }
-  // #endif
+  // #endvar
 
   //邮箱 电话号码发送倒计时
   let timeVal = Cookie.get('timeValLog')

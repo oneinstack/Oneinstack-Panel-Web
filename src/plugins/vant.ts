@@ -1,13 +1,13 @@
 import '@vant/touch-emulator'
 import { App } from 'vue'
-//#ifvar-dev
+// #ifvar-dev
 import Vant from 'vant'
 import 'vant/lib/index.css'
-//#endif
+// #endvar
 export const install = (app: App) => {
-  //#ifvar-dev
+  // #ifvar-dev
   app.use(Vant)
-  //#endif
+  // #endvar
 }
 
 export default {
