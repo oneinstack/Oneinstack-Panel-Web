@@ -15,21 +15,14 @@
           {{ item }}
         </div>
       </div>
-      <div class="row items-center" style="height: 98rem; width: 100%; padding: 0 32rem">
-        <div class="flex flex-center">
+      <div class="row items-end chat-bottom">
+        <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="50" />
         </div>
         <div class="col input-box">
-          <input
-            @click="conf.messageBlur"
-            @focus="conf.messageBlur"
-            @keyup.enter="conf.sendMessage"
-            v-model="conf.message"
-            class="input"
-            type="text"
-          />
+          <CInput />
         </div>
-        <div class="flex flex-center" style="gap: 20rem">
+        <div class="flex flex-center" style="height: 72rem; gap: 20rem">
           <VSIcon name="chat-emoji" :size="50" />
           <VSIcon name="chat-plus" :size="50" />
         </div>
@@ -41,7 +34,7 @@
 import { onMounted, reactive, ref } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
-
+import CInput from './com/cinput.vue'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>(null)
 const conf = reactive({
@@ -75,14 +68,19 @@ onMounted(() => {
     border-bottom: 1rem solid #d3d3d3 !important;
   }
 }
-
+.chat-bottom {
+  min-height: 98rem;
+  width: 100%;
+  padding: 15rem 32rem;
+  border-top: 1rem solid #d3d3d3;
+}
 .input-box {
   width: 100%;
-  height: 72rem;
   background: #fff;
   margin: 0 20rem;
   padding: 0 10rem;
   border-radius: 6rem;
+  min-height: 72rem;
   .input {
     width: 100%;
     height: 100%;
