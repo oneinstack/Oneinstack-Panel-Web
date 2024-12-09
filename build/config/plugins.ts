@@ -1,7 +1,7 @@
 import { VantResolver } from '@vant/auto-import-resolver'
 import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
-import { readFileSync, writeFileSync,rmSync } from 'node:fs'
+import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { visualizer } from 'rollup-plugin-visualizer'
 import { UIViteAutoImport } from 'ui-vite/src/autoimport'
@@ -10,8 +10,8 @@ import Components from 'unplugin-vue-components/vite'
 import { PluginOption } from 'vite'
 import { viteComType, viteDef, viteVar } from 'vite-var'
 import { globalType } from '../env/globalVar'
-import { tozip } from './plugins/tozip'
 import { androidSSL } from './plugins/androidSSL/androidSSL'
+import { tozip } from './plugins/tozip'
 
 export const getPlugins = (env: globalType) => {
   const isBuild = env.env.pro === 'build'
@@ -32,14 +32,6 @@ export const getPlugins = (env: globalType) => {
         }
       }
     }),
-    AutoImport({
-      dts: './build/auto/auto-imports.d.ts',
-      resolvers: [VantResolver()]
-    }),
-    Components({
-      dts: './build/auto/components.d.ts',
-      resolvers: [VantResolver()]
-    }),
     visualizer({
       open: env.env.BUILDVIEW,
       gzipSize: true,
@@ -49,21 +41,31 @@ export const getPlugins = (env: globalType) => {
   ]
 
   if (isBuild) {
-    plugin.push(androidSSL(),
-    {
-      name: 'end',
-      async closeBundle() {
-        const htmlDir = path.join(__dirname, '../../dist/index.html')
-        let _str = readFileSync(htmlDir).toString()
-        _str = _str.replace(new RegExp(`"./static/`, 'g'), `"${env.static}/`)
-        writeFileSync(htmlDir, _str)
-        const versionDir = path.join(__dirname, '../../dist/version.json ')
-        const appName = `app-${env.version}.zip`
-        writeFileSync(versionDir, JSON.stringify({ version: env.version, url: appName }))
-        await tozip(path.join(__dirname, '../../dist'), path.join(__dirname, `../../version/${appName}`))
-        rmSync(versionDir)
+    plugin.push(
+      AutoImport({
+        dts: './build/auto/auto-imports.d.ts',
+        resolvers: [VantResolver()]
+      }),
+      Components({
+        dts: './build/auto/components.d.ts',
+        resolvers: [VantResolver()]
+      }),
+      androidSSL(),
+      {
+        name: 'end',
+        async closeBundle() {
+          const htmlDir = path.join(__dirname, '../../dist/index.html')
+          let _str = readFileSync(htmlDir).toString()
+          _str = _str.replace(new RegExp(`"./static/`, 'g'), `"${env.static}/`)
+          writeFileSync(htmlDir, _str)
+          const versionDir = path.join(__dirname, '../../dist/version.json ')
+          const appName = `app-${env.version}.zip`
+          writeFileSync(versionDir, JSON.stringify({ version: env.version, url: appName }))
+          await tozip(path.join(__dirname, '../../dist'), path.join(__dirname, `../../version/${appName}`))
+          rmSync(versionDir)
+        }
       }
-    })
+    )
   }
 
   return plugin
