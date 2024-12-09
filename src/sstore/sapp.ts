@@ -1,3 +1,4 @@
+import System from '@/utils/System'
 import { Capacitor } from '@capacitor/core'
 import { Keyboard } from '@capacitor/keyboard'
 import { reactive } from 'vue'
@@ -56,7 +57,7 @@ export const sapp = reactive({
   /**
    * 添加键盘事件
    */
-  addKeyboardEvent: (changeHeight = true) => {
+  addKeyboardEvent: () => {
     //检测input地址点击
     document.addEventListener(
       'click',
@@ -71,20 +72,24 @@ export const sapp = reactive({
 
     if (!Capacitor.isNativePlatform()) return
     Keyboard.addListener('keyboardWillShow', (info) => {
-      sapp.showKeyboard(info.keyboardHeight, changeHeight)
+      sapp.showKeyboard(info.keyboardHeight)
     })
 
     Keyboard.addListener('keyboardWillHide', () => {
-      sapp.hideKeyboard(changeHeight)
+      sapp.hideKeyboard()
     })
   },
   /**
+   * 键盘高度影响的白名单列表
+   */
+  whiteList: ['/chat/chating'] as string[],
+  /**
    * 显示键盘事件通知
    */
-  showKeyboard: (height: number, changeHeight: boolean) => {
+  showKeyboard: (height: number) => {
     sapp.keyboard.show = true
     sapp.keyboard.height = height
-    if (!changeHeight) return
+    if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty(
         '--height',
@@ -95,9 +100,9 @@ export const sapp = reactive({
   /**
    * 隐藏键盘事件通知
    */
-  hideKeyboard: (changeHeight: boolean) => {
+  hideKeyboard: () => {
     sapp.keyboard.show = false
-    if (!changeHeight) return
+    if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty('--height', `${sapp.app.height}px`)
     }, 100)
