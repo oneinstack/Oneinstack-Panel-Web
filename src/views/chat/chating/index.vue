@@ -1,5 +1,6 @@
 <template>
   <x-page class="chating-box" no-footer log>
+    <x-log />
     <template #title>
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>

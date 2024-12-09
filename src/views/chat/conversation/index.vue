@@ -82,7 +82,6 @@ const conf = reactive({
         showName: '',
         faceURL: '/static/img/home-banner.png',
         recvMsgOpt: 0 as MessageReceiveOptType,
-        unreadCount: 0,
         groupAtType: 0 as GroupAtType,
         latestMsg: 'hello-=-------==================' + i * MathUtil.getRandomInt(1, 3000),
         latestMsgSendTime: new Date().getTime() - MathUtil.getRandomInt(1, 1000000) * 360,

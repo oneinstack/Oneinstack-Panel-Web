@@ -8,6 +8,7 @@ import statusbar from './statusbar/index.vue'
 import tabbar from './tabbar/index.vue'
 import imgAni from './imgAni/index.vue'
 import tabs from './tabs/index.vue'
+import log from './log/index.vue'
 export const install = (app: App) => {
   app.component('xTabbar', tabbar)
   app.component('xStatusbar', statusbar)
@@ -18,6 +19,7 @@ export const install = (app: App) => {
   app.component('xLoadImg', loadImg)
   app.component('xImgAni', imgAni)
   app.component('xTabs', tabs)
+  app.component('xLog', log)
 }
 
 export default {
