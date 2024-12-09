@@ -39,7 +39,9 @@
         </div>
       </div>
     </div>
-    <slot name="bottom"></slot>
+    <slot name="bottom">
+      <x-navigationbar />
+    </slot>
   </div>
 </template>
 <script setup lang="ts">
@@ -49,7 +51,6 @@ import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onBeforeMount, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import uspage from './uspage'
-
 const props = defineProps({
   /**
    * 是否固定header，默认true

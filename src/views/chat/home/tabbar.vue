@@ -1,25 +1,28 @@
 <template>
   <div class="tarbar-foot">
     <div style="transform: translateY(-100%)">
-      <div class="tabbar row items-center">
-        <div class="row fit-width">
-          <template v-for="item in conf.tabbar">
-            <div
-              class="col row flex-center"
-              @click="conf.clickItem(item)"
-              :class="[{ 'tabbar-item-active': item.name === conf.activeItem.name }]"
-            >
-              <div class="column flex-center">
-                <div class="flex items-center">
-                  <VSIcon :name="`${item.name == conf.activeItem.name ? item.iconActive : item.icon}`" :size="44" />
-                </div>
-                <div class="tabbar-item-text">
-                  {{ item.name }}
+      <div>
+        <div class="tabbar row items-center">
+          <div class="row fit-width">
+            <template v-for="item in conf.tabbar">
+              <div
+                class="col row flex-center"
+                @click="conf.clickItem(item)"
+                :class="[{ 'tabbar-item-active': item.name === conf.activeItem.name }]"
+              >
+                <div class="column flex-center">
+                  <div class="flex items-center">
+                    <VSIcon :name="`${item.name == conf.activeItem.name ? item.iconActive : item.icon}`" :size="44" />
+                  </div>
+                  <div class="tabbar-item-text">
+                    {{ item.name }}
+                  </div>
                 </div>
               </div>
-            </div>
-          </template>
+            </template>
+          </div>
         </div>
+        <x-navigationbar />
       </div>
     </div>
   </div>

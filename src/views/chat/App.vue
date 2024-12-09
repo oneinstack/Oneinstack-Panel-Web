@@ -49,7 +49,6 @@ const conf = reactive({
     conf.show = true
   }
 })
-System.setNavigationBarColor('#efefef')
 conf.init()
 </script>
 <style lang="less" scoped>

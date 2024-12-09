@@ -1,5 +1,5 @@
 <template>
-  <x-page no-header no-footer>
+  <x-page no-header no-footer bgcolor="#a92532">
     <div class="content-view">
       <div class="top-view">
         <img src="/static/img/redEnvelope/top.webp" class="top-img" />

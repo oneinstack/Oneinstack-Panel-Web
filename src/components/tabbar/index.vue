@@ -1,30 +1,33 @@
 <template>
   <div class="tarbar-foot">
     <div style="transform: translateY(-100%)">
-      <div class="tabbar">
-        <div
-          class="tabbar__bg"
-          :style="{
-            'background-position-x': `${conf.bgPositionX}rem`
-          }"
-        ></div>
-        <div class="tabbar__list">
-          <div v-for="(item, index) in conf.tabbar" :key="index">
-            <div
-              :id="`tabbar_item_${index}`"
-              class="tabbar__item"
-              :class="[{ 'tabbar__item--active': index === conf.currentTabbarIndex }]"
-              @click="conf.clickItem(item)"
-            >
-              <div class="tabbar__item__icon">
-                <img
-                  :class="{ 'img': index == conf.currentTabbarIndex }"
-                  :src="`${index == conf.currentTabbarIndex ? item.iconActive : item.icon}`"
-                />
+      <div>
+        <div class="tabbar">
+          <div
+            class="tabbar__bg"
+            :style="{
+              'background-position-x': `${conf.bgPositionX}rem`
+            }"
+          ></div>
+          <div class="tabbar__list">
+            <div v-for="(item, index) in conf.tabbar" :key="index">
+              <div
+                :id="`tabbar_item_${index}`"
+                class="tabbar__item"
+                :class="[{ 'tabbar__item--active': index === conf.currentTabbarIndex }]"
+                @click="conf.clickItem(item)"
+              >
+                <div class="tabbar__item__icon">
+                  <img
+                    :class="{ 'img': index == conf.currentTabbarIndex }"
+                    :src="`${index == conf.currentTabbarIndex ? item.iconActive : item.icon}`"
+                  />
+                </div>
               </div>
             </div>
           </div>
         </div>
+        <x-navigationbar />
       </div>
     </div>
   </div>

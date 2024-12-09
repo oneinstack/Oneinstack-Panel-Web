@@ -55,17 +55,19 @@ export default class StatusBarConfig {
   static async getBottomBarHeight() {
     let initialHeight = document.documentElement.clientHeight
     sapp.app.height
-    NavigationBar.hide()
-    setTimeout(() => {
-      const _maxHeight = document.documentElement.clientHeight
-      initialHeight = _maxHeight - initialHeight
-      if (initialHeight > 0) {
-        sapp.app.noBottomBarHeight = _maxHeight
-        StatusBarConfig.bottomBarHeight = initialHeight
-        sapp.app.bottomBarHeight = initialHeight
-        Cookie.set('bottomBarHeight', initialHeight)
-      }
-      NavigationBar.show()
-    }, 20)
+    await NavigationBar.hide()
+    await Timer.delay(20)
+    const _maxHeight = document.documentElement.clientHeight
+    initialHeight = _maxHeight - initialHeight
+    if (initialHeight > 0) {
+      sapp.app.noBottomBarHeight = _maxHeight
+      StatusBarConfig.bottomBarHeight = initialHeight
+      sapp.app.bottomBarHeight = initialHeight
+      Cookie.set('bottomBarHeight', initialHeight)
+    }
+    await NavigationBar.setTransparency({
+      isTransparent: true
+    })
+    await NavigationBar.show()
   }
 }

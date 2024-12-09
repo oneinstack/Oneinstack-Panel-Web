@@ -29,15 +29,6 @@ export const sapp = reactive({
      */
     bottomBarHeight: 0,
     /**
-     * 获取底部导航栏高度
-     */
-    getBottomBarHeight: () => {
-      if (sapp.app.noBottomBarHeight > sapp.app.height) {
-        return sapp.app.bottomBarHeight
-      }
-      return 0
-    },
-    /**
      * 没有底部导航栏的高度
      */
     noBottomBarHeight: 0
@@ -91,10 +82,7 @@ export const sapp = reactive({
     sapp.keyboard.height = height
     if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
-      document.documentElement.style.setProperty(
-        '--height',
-        `${sapp.app.height - sapp.keyboard.height + sapp.app.getBottomBarHeight()}px`
-      )
+      document.documentElement.style.setProperty('--height', `${sapp.app.height - sapp.keyboard.height + sapp.app.bottomBarHeight }px`)
     }, 100)
   },
   /**
