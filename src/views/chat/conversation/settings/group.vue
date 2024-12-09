@@ -1,5 +1,5 @@
 <template>
-  <x-page backColor="#666" headerBgColor="#fff">
+  <x-page headerBgColor="#fff">
     <template #title>
       <span class="head-title">Chat Messages</span>
     </template>

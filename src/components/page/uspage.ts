@@ -7,7 +7,8 @@ const defaultConf = {
   },
   header: {
     height: '104rem',
-    bgColor: 'linear-gradient(180deg, #eb602d 0%, #ffa64f 100%)'
+    bgColor: 'linear-gradient(180deg, #eb602d 0%, #ffa64f 100%)',
+    backColor: '#ffffff'
   }
 }
 
@@ -21,7 +22,8 @@ export const uspage = reactive({
   },
   header: {
     height: '104rem',
-    bgColor: 'linear-gradient(180deg, #eb602d 0%, #ffa64f 100%)'
+    bgColor: 'linear-gradient(180deg, #eb602d 0%, #ffa64f 100%)',
+    backColor: '#ffffff'
   },
   /**
    * 恢复到默认

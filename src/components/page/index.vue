@@ -16,7 +16,7 @@
           :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }"
         >
           <div class="back" @click="conf.goBack">
-            <van-icon class="back-img" name="arrow-left" :color="backColor" v-if="showBack" size="25" />
+            <van-icon class="back-img" :name="backIcon" :color="conf.backColor" v-if="showBack" :size="backIconSize" />
           </div>
           <div class="c-head-nav-title">
             <slot name="title" />
@@ -47,7 +47,7 @@ import { EPage } from '@/enum/Enum'
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
-import { onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { onBeforeMount, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import uspage from './uspage'
 
 const props = defineProps({
@@ -76,16 +76,28 @@ const props = defineProps({
     default: true
   },
   /**
-   * 是否显示返回按钮，默认true
+   * 返回按钮颜色，默认#ffffff
    */
-   backColor: {
-    default: '#fff'
+  backColor: {
+    default: undefined as any
   },
   /**
    * 返回按钮点击事件，默认null
    */
   backFun: {
     default: null as any
+  },
+  /**
+   * 返回按钮图标，默认arrow-left
+   */
+  backIcon: {
+    default: 'arrow-left'
+  },
+  /**
+   * 返回按钮图标大小，默认25
+   */
+  backIconSize: {
+    default: 25
   },
   /**
    * 头部背景颜色，默认渐变'linear-gradient(180deg, #EB602D 0%, #FFA64F 100%)'
@@ -118,6 +130,7 @@ const scrollRef = ref<any>()
 const conf = reactive({
   bgColor: props.bgcolor || uspage.bgcolor,
   headerBgColor: props.headerBgColor || uspage.header.bgColor,
+  backColor: props.backColor || uspage.header.backColor,
   scrollTop: 0,
   /**
    * 滚动事件
@@ -182,18 +195,14 @@ const conf = reactive({
   }
 })
 
-watch(
-  () => props.bgcolor,
-  (val) => {
-    conf.setBgColor()
-  }
-)
-
 defineExpose({ ...conf })
+
+onBeforeMount(() => {
+  conf.setBgColor()
+})
 
 onMounted(() => {
   System.loading(false)
-  conf.setBgColor()
 })
 
 onBeforeUnmount(() => {

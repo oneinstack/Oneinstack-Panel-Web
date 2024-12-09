@@ -14,7 +14,7 @@
         <span>{{ $t('chatRoom.search') }}</span>
       </div>
       <van-swipe-cell v-for="(item, index) in conf.list">
-        <div class="user-item" :class="{ pinned: item.isPinned }">
+        <div class="user-item" :class="{ pinned: item.isPinned }" @click="conf.toChating(item)">
           <div class="row items-center" style="height: 92rem">
             <div class="relative face-box">
               <img class="face" :src="item.faceURL" />
@@ -68,6 +68,7 @@ import {
   MessageReceiveOptType,
   SessionType
 } from 'openim-uniapp-polyfill'
+import System from '@/utils/System'
 const conf = reactive({
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
   getList: async () => {
@@ -118,6 +119,13 @@ const conf = reactive({
   },
   delete: (item: any) => {
     conf.list = conf.list.filter((i) => i.conversationID !== item.conversationID)
+  },
+  toChating: (item: any) => {
+    console.log(item)
+    System.router.push({
+      path: '/chat/chating',
+      query: item
+    })
   }
 })
 

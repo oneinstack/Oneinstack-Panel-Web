@@ -1,5 +1,5 @@
 <template>
-  <x-page headerBgColor="#fff" backColor="#666">
+  <x-page headerBgColor="#fff">
     <template #right>
       <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
         <van-icon name="ellipsis" size="24" color="#666" />

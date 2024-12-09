@@ -72,7 +72,7 @@ onMounted(() => {
   position: relative;
   width: 100%;
   height: 112rem;
-  background-color: #f1f1f1;
+  background-color: #efefef;
   border-top: 1rem solid #d3d3d3;
 
   .tabbar-item-text {

@@ -31,10 +31,17 @@ const conf = reactive({
     // }
 
     //初始化x-page页面ui默认配置
-    uspage.bgcolor = '#efefef'
-    uspage.tabbar.height = '112rem'
-    uspage.header.height = '104rem'
-    uspage.header.bgColor = '#efefef'
+    uspage.setConfig({
+      bgcolor: '#efefef',
+      header: {
+        height: '104rem',
+        bgColor: '#efefef',
+        backColor: '#666666'
+      },
+      tabbar: {
+        height: '112rem'
+      }
+    })
 
     csconfig.userInfo = chatInfo
 
