@@ -16,7 +16,7 @@
       </div>
       <div class="more flex-center">
         <span>View more group members</span>
-        <van-icon name="arrow" size="16" color="#B8B8B8" />
+        <van-icon name="arrow" size="30rem" color="#B8B8B8" />
       </div>
     </div>
 
@@ -26,7 +26,7 @@
         <div class="title">Group Name</div>
         <div class="more flex-center">
           <span>Zoo</span>
-          <van-icon name="arrow" size="16" color="#B8B8B8" />
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <div class="edit border_b">
@@ -34,33 +34,33 @@
         <div class="more flex-b">
           <span>dsigjjhejahdsjzfdfjNWGJHFDJBNJXZCTREYTVSNVJKSndjkgvBNSFJKBNFDJKAGBDJVSNVJKSndjkgvBNSFJKBNFDJKAGBDJ
           </span>
-          <van-icon style="margin-top: 8rem;" name="arrow" size="16" color="#B8B8B8" />
+          <van-icon style="margin-top: 8rem;" name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <div class="edit flex-b-c" style="margin-top: 0;">
         <div class="title">Remark</div>
-        <van-icon name="arrow" size="16" color="#B8B8B8" />
+        <van-icon name="arrow" size="30rem" color="#B8B8B8" />
       </div>
     </div>
 
     <div class="edit flex-b-c">
       <div class="title">Search chat history</div>
-      <van-icon name="arrow" size="16" color="#B8B8B8" />
+      <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
 
     <!-- 开关 -->
     <div class="m-t20">
       <div class="edit border_b flex-b-c">
         <div class="title">Mute Notification</div>
-        <van-switch v-model="conf.muteChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.muteChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
       <div class="edit border_b flex-b-c">
         <div class="title">-Minimize Group</div>
-        <van-switch v-model="conf.alertChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.alertChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
       <div class="edit flex-b-c" style="margin-top: 0;">
         <div class="title">Sticky on Top</div>
-        <van-switch v-model="conf.topChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.topChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
     </div>
 
@@ -69,18 +69,18 @@
         <div class="title">My Alias in Group</div>
         <div class="more flex-center">
           <span>Lucky boy</span>
-          <van-icon name="arrow" size="16" color="#B8B8B8" />
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <div class="edit flex-b-c" style="margin-top: 0;">
         <div class="title">On-Screen Names</div>
-        <van-switch v-model="conf.topChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.topChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
     </div>
 
     <div class="edit flex-b-c">
       <div class="title">Background</div>
-      <van-icon name="arrow" size="16" color="#B8B8B8" />
+      <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
 
     <div class="edit flex-b-c">

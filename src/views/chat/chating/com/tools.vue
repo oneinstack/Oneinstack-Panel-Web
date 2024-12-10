@@ -38,7 +38,7 @@ const conf = reactive({
       icon: 'tools-pack',
       fun: () => {
         mconf.tools.close()
-        System.router.push('/chat/redEnvelope/send')
+        System.router.push('/chat/redPacket/send')
       }
     },
     {

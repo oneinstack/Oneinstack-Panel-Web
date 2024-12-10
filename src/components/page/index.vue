@@ -234,6 +234,9 @@ onBeforeUnmount(() => {
     &-title {
       font-size: 32rem;
       font-weight: Bold;
+      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     .back {

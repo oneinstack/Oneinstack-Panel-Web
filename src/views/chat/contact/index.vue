@@ -15,7 +15,7 @@
       </div>
       <div style="background: #fff;">
         <template v-for="(item, index) in conf.meaus" :key="index">
-          <div class="anchor-item">
+          <div class="anchor-item" @click="conf.goPages('/chat/search')">
             <div class="item-author">
               <img style="width: 100%; height: 100%" :src="item.icon" />
             </div>
@@ -40,11 +40,11 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import System from '@/utils/System';
 const conf = reactive({
-indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','#'],
+  indexList: [] as any[],
   meaus: [{
     idx: 0,
     title: i18n.t('chatRoom.new_friend'),
@@ -71,6 +71,14 @@ indexList: ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q',
   goPages(url: string) {
     System.router.push(url)
   }
+})
+const init = () => {
+  conf.indexList = conf.userList.map((item:any) => {
+    return item.index
+  })
+}
+onMounted(() => {
+  init()
 })
 </script>
 <style lang="less" scoped>

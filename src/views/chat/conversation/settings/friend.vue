@@ -12,25 +12,25 @@
     </div>
     <div class="edit flex-b-c">
       <div class="title">Search chat history</div>
-      <van-icon name="arrow" size="16" color="#B8B8B8" />
+      <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
     <div class="m-t20">
       <div class="edit border_b flex-b-c">
         <div class="title">Mute Notification</div>
-        <van-switch v-model="conf.muteChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.muteChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
       <div class="edit border_b flex-b-c">
         <div class="title">Sticky on Top</div>
-        <van-switch v-model="conf.topChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.topChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
       <div class="edit flex-b-c" style="margin-top: 0;">
         <div class="title">Alert</div>
-        <van-switch v-model="conf.alertChecked" size="18" active-color="#07c261" inactive-color="#95959D" />
+        <van-switch v-model="conf.alertChecked" size="33rem" active-color="#07c261" inactive-color="#95959D" />
       </div>
     </div>
     <div class="edit flex-b-c">
       <div class="title">Background</div>
-      <van-icon name="arrow" size="16" color="#B8B8B8" />
+      <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
     <div class="edit">
       <div class="title">Clear Chat History</div>

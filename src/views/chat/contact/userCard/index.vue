@@ -2,7 +2,7 @@
   <x-page headerBgColor="#fff">
     <template #right>
       <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
-        <van-icon name="ellipsis" size="24" color="#666" />
+        <van-icon name="ellipsis" size="44rem" color="#666" />
       </div>
     </template>
     <div class="user-card">
@@ -20,7 +20,7 @@
       </div>
       <div class="edit">
         <div class="title">Edit Contact</div>
-        <van-icon name="arrow" size="18" color="#B8B8B8" />
+        <van-icon name="arrow" size="34rem" color="#B8B8B8" />
       </div>
     </div>
     <div class="other">
