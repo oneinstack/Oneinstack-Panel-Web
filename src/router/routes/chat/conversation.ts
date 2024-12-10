@@ -14,5 +14,9 @@ export default [
   {
     path: '/chat/redPacket/list',
     component: '/chat/conversation/redPacket/list'
+  },
+  {
+    path: '/chat/betRecord',
+    component: '/chat/conversation/betRecord/index'
   }
 ]

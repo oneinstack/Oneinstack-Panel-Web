@@ -44,7 +44,10 @@ const conf = reactive({
     {
       name: i18n.t('chatRoom.ShareBet'),
       icon: 'tools-record',
-      fun: () => {}
+      fun: () => {
+        mconf.tools.close()
+        System.router.push('/chat/betRecord')
+      }
     }
   ]
 })
