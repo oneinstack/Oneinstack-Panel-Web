@@ -23,14 +23,10 @@ const emit = defineEmits(['update:modelValue', 'enter'])
 const conf = reactive({
   inputmode: undefined as any,
   enter: (e: any) => {
-    if (System.platform === 'pc') {
-      if (e.shiftKey && e.keyCode === 13) {
-        return
-      } else if (e.keyCode === 13) {
-        e.preventDefault()
-        emit('enter', getMessage())
-      }
-    } else if (System.platform === 'ios') {
+    const isEnterKey = e.keyCode === 13
+    const isShiftEnter = e.shiftKey && isEnterKey
+    if (isEnterKey && System.platform !== 'android') {
+      if (System.platform === 'pc' && isShiftEnter) return
       e.preventDefault()
       emit('enter', getMessage())
     }
@@ -153,7 +149,10 @@ const insertEmoji = (url: string, size: string = '18rem') => {
 defineExpose({
   insertEmoji,
   getMessage,
-  clear
+  clear,
+  focus: () => {
+    messageInputDom.value.focus()
+  }
 })
 </script>
 <style lang="less" scoped>
