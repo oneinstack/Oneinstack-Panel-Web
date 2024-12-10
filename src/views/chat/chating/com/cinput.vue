@@ -95,10 +95,10 @@ const getMessage = () => {
   }
 }
 
-const clear = () => {
+const clear = (focus = false) => {
   message.value = ''
   messageInputDom.value.innerHTML = ''
-  messageInputDom.value.focus()
+  if (focus) messageInputDom.value.focus()
 }
 
 // emoji图标是否选中

@@ -34,7 +34,7 @@
               @click="conf.chat.send"
               :class="{ 'show': conf.input.isNull() }"
             >
-              {{$t('chatRoom.send')}}
+              {{ $t('chatRoom.send') }}
             </div>
           </div>
         </div>
@@ -42,14 +42,14 @@
       <div class="bottom-box" v-if="!conf.input.hiddenBottomBox" :class="{ show: conf.emoji.show || conf.tools.show }">
         <div class="emoji-box column no-wrap" :class="{ show: conf.emoji.show }">
           <template v-if="conf.emoji.history.length">
-            <div class="emoji-title">{{$t('chatRoom.RecentlyUsed')}}</div>
+            <div class="emoji-title">{{ $t('chatRoom.RecentlyUsed') }}</div>
             <div class="row">
               <div class="emoji-item" v-for="item in conf.emoji.history">
                 <img class="img" :src="`/static/chat/emoji/${item}.png`" @click="conf.emoji.insertEmoji(item)" />
               </div>
             </div>
           </template>
-          <div class="emoji-title">{{$t('chatRoom.AllStickers')}}</div>
+          <div class="emoji-title">{{ $t('chatRoom.AllStickers') }}</div>
           <div class="row" v-if="conf.emoji.show">
             <div class="emoji-item" v-for="(item, index) in 109">
               <x-img
@@ -171,7 +171,7 @@ const conf = reactive({
     send: () => {
       conf.chat.list.push(conf.input.message)
       conf.input.message = ''
-      inputRef.value.clear()
+      inputRef.value.clear(!conf.emoji.show)
     }
   }
 })
