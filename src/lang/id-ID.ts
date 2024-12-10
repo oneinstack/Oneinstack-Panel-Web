@@ -1493,7 +1493,9 @@ export default {
     DownloadedSuccessfully: 'Unduhan Berhasil, Disimpan di Galeri',
     SaveFailure: 'Gagal Menyimpan',
     DownloadFailure: 'Gagal Mengunduh',
-    FailedObtainPersonal: 'Gagal Mendapatkan Informasi Pribadi'
+    FailedObtainPersonal: 'Gagal Mendapatkan Informasi Pribadi',
+    RecentlyUsed: 'Sedang Digunakan',
+    AllStickers: 'Semua Stiker'
   },
   uView: {
     modal: {

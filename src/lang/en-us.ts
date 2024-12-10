@@ -1490,7 +1490,9 @@ export default {
     DownloadedSuccessfully: 'Download Successful, Saved to Gallery',
     SaveFailure: 'Save Failed',
     DownloadFailure: 'Download Failed',
-    FailedObtainPersonal: 'Failed to Obtain Personal Information'
+    FailedObtainPersonal: 'Failed to Obtain Personal Information',
+    RecentlyUsed: 'Recently Used',
+    AllStickers: 'All Stickers'
   },
   uView: {
     modal: {

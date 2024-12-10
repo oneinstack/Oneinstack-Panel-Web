@@ -1493,7 +1493,9 @@ export default {
     DownloadedSuccessfully: 'ดาวน์โหลดสำเร็จ, บันทึกลงในอัลบั้ม',
     SaveFailure: 'การบันทึกล้มเหลว',
     DownloadFailure: 'การดาวน์โหลดล้มเหลว',
-    FailedObtainPersonal: 'ไม่สามารถรับข้อมูลส่วนบุคคลได้'
+    FailedObtainPersonal: 'ไม่สามารถรับข้อมูลส่วนบุคคลได้',
+    RecentlyUsed: 'ถูกใช้เมื่อสักครู่',
+    AllStickers: 'สติกเกอิทั้งหมด'
   },
   uView: {
     modal: {

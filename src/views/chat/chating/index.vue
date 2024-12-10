@@ -20,7 +20,7 @@
           <VSIcon name="chat-yy" :size="56" />
         </div>
         <div class="col input-box">
-          <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.sendMessage" />
+          <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.chat.send" />
         </div>
         <div class="flex flex-center" style="height: 72rem; gap: 10rem">
           <VSIcon name="chat-keybord" :size="56" @click="conf.input.focus" v-if="conf.emoji.show" />
@@ -31,10 +31,10 @@
             </div>
             <div
               class="android-send-btn flex flex-center"
-              @click="conf.sendMessage"
+              @click="conf.chat.send"
               :class="{ 'show': conf.input.isNull() }"
             >
-              发送
+              {{$t('chatRoom.send')}}
             </div>
           </div>
         </div>
@@ -42,14 +42,14 @@
       <div class="bottom-box" v-if="!conf.input.hiddenBottomBox" :class="{ show: conf.emoji.show || conf.tools.show }">
         <div class="emoji-box column no-wrap" :class="{ show: conf.emoji.show }">
           <template v-if="conf.emoji.history.length">
-            <div class="emoji-title">最近使用</div>
+            <div class="emoji-title">{{$t('chatRoom.RecentlyUsed')}}</div>
             <div class="row">
               <div class="emoji-item" v-for="item in conf.emoji.history">
                 <img class="img" :src="`/static/chat/emoji/${item}.png`" @click="conf.emoji.insertEmoji(item)" />
               </div>
             </div>
           </template>
-          <div class="emoji-title">全部表情</div>
+          <div class="emoji-title">{{$t('chatRoom.AllStickers')}}</div>
           <div class="row" v-if="conf.emoji.show">
             <div class="emoji-item" v-for="(item, index) in 109">
               <x-img
@@ -122,11 +122,6 @@ const conf = reactive({
      */
     hiddenBottomBox: false
   },
-  sendMessage: () => {
-    conf.chat.list.push(conf.input.message)
-    conf.input.message = ''
-    inputRef.value.clear()
-  },
   content: {
     click: () => {
       conf.emoji.show = false
@@ -172,7 +167,12 @@ const conf = reactive({
     }
   },
   chat: {
-    list: [] as any
+    list: [] as any,
+    send: () => {
+      conf.chat.list.push(conf.input.message)
+      conf.input.message = ''
+      inputRef.value.clear()
+    }
   }
 })
 

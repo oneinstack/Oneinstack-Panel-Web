@@ -1494,7 +1494,9 @@ export default {
     DownloadedSuccessfully: 'डाउनलोड सफल, गैलरी में सहेजा गया',
     SaveFailure: 'सहेजने में विफल',
     DownloadFailure: 'डाउनलोड विफल',
-    FailedObtainPersonal: 'व्यक्तिगत जानकारी प्राप्त करने में विफल'
+    FailedObtainPersonal: 'व्यक्तिगत जानकारी प्राप्त करने में विफल',
+    RecentlyUsed: 'हाल ही में उपयोग किया',
+    AllStickers: 'सभी स्टिकर्स'
   },
   uView: {
     modal: {

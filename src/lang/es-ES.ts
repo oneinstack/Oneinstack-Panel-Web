@@ -1494,7 +1494,9 @@ export default {
     DownloadedSuccessfully: 'Descarga Exitosa, Guardado en la Galería',
     SaveFailure: 'Fallo al Guardar',
     DownloadFailure: 'Fallo al Descargar',
-    FailedObtainPersonal: 'Error al Obtener Información Personal'
+    FailedObtainPersonal: 'Error al Obtener Información Personal',
+    RecentlyUsed: 'Usado recientemente',
+    AllStickers: 'Todos los sellos'
   },
   uView: {
     modal: {
