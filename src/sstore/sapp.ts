@@ -102,7 +102,21 @@ export const sapp = reactive({
     /**
      * 返回事件函数映射
      */
-    funMap: {} as any
+    funMap: {} as any,
+    /**
+     * 执行返回事件函数
+     */
+    runFun: () => {
+      const _keys = Object.keys(sapp.backbtn.funMap)
+      if (_keys.length) {
+        for (let i = 0; i < _keys.length; i++) {
+          sapp.backbtn.funMap[_keys[i]]()
+        }
+        sapp.backbtn.funMap = {}
+        return true
+      }
+      return false
+    }
   },
   /**
    * 添加返回事件
@@ -110,14 +124,6 @@ export const sapp = reactive({
   addBackButton: () => {
     if (!System.isNative) return
     CapacitorApp.addListener('backButton', ({ canGoBack }) => {
-      const _keys = Object.keys(sapp.backbtn.funMap)
-      if (_keys.length) {
-        for (let i = 0; i < _keys.length; i++) {
-          sapp.backbtn.funMap[_keys[i]]()
-        }
-        sapp.backbtn.funMap = {}
-        return
-      }
       if (!canGoBack) {
         if (Date.now() - sapp.backbtn.lastTime < 1000) {
           CapacitorApp.exitApp()

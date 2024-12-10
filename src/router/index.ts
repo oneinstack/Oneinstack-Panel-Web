@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from '@ionic/vue-router'
 
+import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
 import prefetchRouteData from './prefetch'
 import privateRoutes from './routes/index'
@@ -22,6 +23,7 @@ export const initRouter = () => {
   })
 
   router.beforeEach(async (to, from, next) => {
+    if (sapp.backbtn.runFun()) return
     let _name = (to.meta.name as any) || ''
     let _title = System.env.title
     if (_name) _title = _title + ' - ' + _name
