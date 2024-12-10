@@ -15,5 +15,6 @@ watch(
 )
 // 添加键盘事件
 sapp.addKeyboardEvent()
-
+// 添加返回事件
+sapp.addBackButton()
 </script>

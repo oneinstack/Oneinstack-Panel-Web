@@ -1,9 +1,11 @@
 import { EPage } from '@/enum/Enum'
 import StatusBarConfig from '@/utils/StatusBarConfig'
 import System from '@/utils/System'
+import { App as CapacitorApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { Keyboard } from '@capacitor/keyboard'
 import { reactive } from 'vue'
+import sutil from './sutil'
 
 export const sapp = reactive({
   globalData: {} as any,
@@ -21,7 +23,7 @@ export const sapp = reactive({
     /**
      * 页面高度
      */
-    height: 0,
+    height: 0
   },
   /**
    * 设置页面高度
@@ -90,6 +92,43 @@ export const sapp = reactive({
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty('--height', `${sapp.app.height}px`)
     }, 100)
+  },
+
+  backbtn: {
+    /**
+     * 最后一次无法返回点击时间
+     */
+    lastTime: 0,
+    /**
+     * 返回事件函数映射
+     */
+    funMap: {} as any
+  },
+  /**
+   * 添加返回事件
+   */
+  addBackButton: () => {
+    if (!System.isNative) return
+    CapacitorApp.addListener('backButton', ({ canGoBack }) => {
+      const _keys = Object.keys(sapp.backbtn.funMap)
+      if (_keys.length) {
+        for (let i = 0; i < _keys.length; i++) {
+          sapp.backbtn.funMap[_keys[i]]()
+        }
+        sapp.backbtn.funMap = {}
+        return
+      }
+      if (!canGoBack) {
+        if (Date.now() - sapp.backbtn.lastTime < 1000) {
+          CapacitorApp.exitApp()
+        } else {
+          sapp.backbtn.lastTime = Date.now()
+          System.toast('再按一次退出应用')
+        }
+      } else {
+        sutil.pageBack()
+      }
+    })
   }
 })
 

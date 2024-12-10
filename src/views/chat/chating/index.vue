@@ -52,9 +52,7 @@
         </div>
       </div>
 
-      <div class="tools-box" v-if="conf.tools.show">
-
-      </div>
+      <div class="tools-box" v-if="conf.tools.show"></div>
     </div>
   </x-page>
 </template>
@@ -64,10 +62,15 @@ import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
 import System from '@/utils/System'
+import sapp from '@/sstore/sapp'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>()
 const inputRef = ref({} as any)
 const conf = reactive({
+  /**
+   * 返回事件函数id
+   */
+  funId: '_chat_content',
   input: {
     message: '',
     isNull: () => {
@@ -106,6 +109,9 @@ const conf = reactive({
     open: () => {
       conf.emoji.show = true
       conf.emoji.history = Cookie.get('emojiHistory') || []
+      sapp.backbtn.funMap[conf.funId] = () => {
+        conf.emoji.show = false
+      }
     },
     history: Cookie.get('emojiHistory') || [],
     historyArr: Cookie.get('emojiHistory') || [],
@@ -163,7 +169,6 @@ onMounted(() => {
     outline: none;
   }
 }
-
 
 .android-send-btn {
   width: 0rem;
