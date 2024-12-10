@@ -3,7 +3,7 @@
     <div class="row" style="gap: 60rem">
       <template v-for="item in conf.list">
         <div>
-          <div class="tools-item flex flex-center" @click="conf.clickItem(item)">
+          <div class="tools-item flex flex-center" @click="item.fun()">
             <VSIcon :name="item.icon" :size="56" />
           </div>
           <div class="flex flex-center" style="font-size: 20rem; margin-top: 10rem">{{ item.name }}</div>
@@ -22,10 +22,6 @@ defineProps<{
 }>()
 const mconf = Scope.getConf()
 const conf = reactive({
-  clickItem: (item: any) => {
-    mconf.tools.close()
-    item.fun()
-  },
   list: [
     {
       name: i18n.t('chatRoom.album'),
@@ -41,6 +37,7 @@ const conf = reactive({
       name: i18n.t('chatRoom.rpkt'),
       icon: 'tools-pack',
       fun: () => {
+        mconf.tools.close()
         System.router.push('/chat/redEnvelope/send')
       }
     },
