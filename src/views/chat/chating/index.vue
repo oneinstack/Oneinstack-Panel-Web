@@ -15,7 +15,7 @@
           {{ item }}
         </div>
       </div>
-      <div class="row items-end chat-bottom">
+      <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
         <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="56" />
         </div>
@@ -50,6 +50,10 @@
             <img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" />
           </div>
         </div>
+      </div>
+
+      <div class="tools-box" v-if="conf.tools.show">
+
       </div>
     </div>
   </x-page>
@@ -116,6 +120,9 @@ const conf = reactive({
       conf.emoji.historyArr = conf.emoji.historyArr.splice(0, 9)
       Cookie.set('emojiHistory', conf.emoji.historyArr)
     }
+  },
+  tools: {
+    show: false
   }
 })
 
@@ -157,11 +164,28 @@ onMounted(() => {
   }
 }
 
+
+.android-send-btn {
+  width: 0rem;
+  height: 60rem;
+  background: #07c261;
+  color: #fff;
+  border-radius: 8rem;
+  opacity: 0;
+  transition: all 0.3s;
+  font-size: 30rem;
+  &.show {
+    opacity: 1;
+    width: 112rem;
+  }
+}
+
 .emoji-box {
   width: 100%;
   height: 516rem;
   overflow: auto;
   padding-left: 30rem;
+  background-color: #f1f1f1;
 
   .emoji-title {
     font-size: 24rem;
@@ -179,18 +203,10 @@ onMounted(() => {
   }
 }
 
-.android-send-btn {
-  width: 0rem;
-  height: 60rem;
-  background: #07c261;
-  color: #fff;
-  border-radius: 8rem;
-  opacity: 0;
-  transition: all 0.3s;
-  font-size: 30rem;
-  &.show {
-    opacity: 1;
-    width: 112rem;
-  }
+.tools-box {
+  width: 100%;
+  height: 516rem;
+  overflow: auto;
+  padding: 30rem;
 }
 </style>
