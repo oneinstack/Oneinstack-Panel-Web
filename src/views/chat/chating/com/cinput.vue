@@ -75,24 +75,9 @@ const getMessage = () => {
     if (arg.indexOf('http') == -1 && arg.indexOf('https') == -1) {
       cur_str = 'http://' + arg
     }
-    return `<a href="${cur_str}" target="_blank" style="text-decoration: underline; cursor: pointer; color: inherit;">${arg}</a>`
+    return `<a href="${cur_str}" target="_blank" style="text-decoration: underline; cursor: pointer; color: inherit;color:#1a0dab;">${arg}</a>`
   })
-  // 默认消息类型
-  let msgType = 0
-  if (childNodes.value.length === 1 && childNodes.value[0].nodeName.toLowerCase() === 'img') {
-    // 单个emoji 变为大图emoji (4为前后端约定的参数)
-    msgType = 4
-    let imgTag = `<img src="${childNodes.value[0].getAttribute('src')}" width="40rem" height="40rem">`
-    return {
-      imgTag,
-      msgType
-    }
-  } else {
-    return {
-      msg: message_res,
-      msgType
-    }
-  }
+  return message_res
 }
 
 const clear = (focus = false) => {

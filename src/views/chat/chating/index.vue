@@ -11,9 +11,7 @@
     </template>
     <div class="col column relative">
       <div class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click">
-        <div v-for="item in conf.chat.list" :key="item">
-          <div v-html="item"></div>
-        </div>
+        <MessageList />
       </div>
       <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
         <div class="flex flex-center" style="height: 72rem">
@@ -75,6 +73,7 @@ import CInput from './com/cinput.vue'
 import System from '@/utils/System'
 import sapp from '@/sstore/sapp'
 import toolsVue from './com/tools.vue'
+import MessageList from './message/list.vue'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>()
 const inputRef = ref({} as any)
@@ -169,13 +168,17 @@ const conf = reactive({
   chat: {
     list: [] as any,
     send: () => {
-      conf.chat.list.push(conf.input.message)
+      conf.chat.list.push({
+        content: inputRef.value.getMessage(),
+        type: 'text'
+      })
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)
     }
   }
 })
 
+Scope.setConf(conf)
 onMounted(() => {
   event.on(EPage.changeHeight, () => {
     if (!conf.emoji.show && !conf.tools.show) conf.input.click()
