@@ -52,7 +52,7 @@
           <div class="emoji-title">全部表情</div>
           <div class="row" v-if="conf.emoji.show">
             <div class="emoji-item" v-for="(item, index) in 109">
-              <img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" />
+              <x-img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" cache />
             </div>
           </div>
         </div>
@@ -240,7 +240,7 @@ onMounted(() => {
   transition: all 0.3s;
   overflow: hidden;
   &.show {
-    max-height: 516rem;
+    max-height: 356rem;
   }
 }
 
@@ -255,7 +255,7 @@ onMounted(() => {
 
   &.show {
     opacity: 1;
-    height: 516rem;
+    height: 356rem;
   }
 
   .emoji-title {

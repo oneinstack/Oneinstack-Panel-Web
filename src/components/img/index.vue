@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import sconfig from '@/sstore/sconfig'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import uximg from '.'
 const props = defineProps({
   lazyLoad: {
     default: true
@@ -15,7 +16,8 @@ const props = defineProps({
   extensions: { default: undefined as any as any[] },
   styles: { default: {} as any },
   classs: { default: '' as any },
-  zIndex: { default: undefined as any }
+  zIndex: { default: undefined as any },
+  cache: { default: false }
 })
 
 const emit = defineEmits(['load', 'error'])
@@ -31,6 +33,16 @@ const config = reactive({
         config.img = null
       }
     }
+    if (props.cache !== false) {
+      const _img = uximg.cache[props.src]
+      if (_img) {
+        emit('load')
+        imgRef.value?.appendChild(_img)
+        config.img = _img
+        config.setStyle()
+        return
+      }
+    }
     const loadId = StrUtil.getId()
     config.loadId = loadId
     sconfig.img.getLoadPro((resolve: any) => {
@@ -40,6 +52,9 @@ const config = reactive({
         base64: props.base64,
         timeout: 5000,
         load: (img) => {
+          if (props.cache !== false) {
+            uximg.cache[props.src] = img
+          }
           if (loadId !== config.loadId) return
           emit('load')
           img.id = 'x_img_' + config.loadId
