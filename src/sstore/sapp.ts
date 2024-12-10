@@ -106,7 +106,7 @@ export const sapp = reactive({
     /**
      * 执行返回事件函数
      */
-    runFun: () => {
+    run: () => {
       const _keys = Object.keys(sapp.backbtn.funMap)
       if (_keys.length) {
         for (let i = 0; i < _keys.length; i++) {
@@ -116,6 +116,12 @@ export const sapp = reactive({
         return true
       }
       return false
+    },
+    /**
+     * 清空返回事件函数映射
+     */
+    clear: () => {
+      sapp.backbtn.funMap = {}
     }
   },
   /**

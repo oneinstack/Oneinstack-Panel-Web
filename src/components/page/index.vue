@@ -51,6 +51,7 @@ import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onBeforeMount, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import uspage from './uspage'
+import sapp from '@/sstore/sapp'
 const props = defineProps({
   /**
    * 是否固定header，默认true
@@ -161,6 +162,7 @@ const conf = reactive({
    */
   goBack: () => {
     if (!props.showBack) return
+    sapp.backbtn.clear()
     if (typeof props.backFun === 'function') {
       props.backFun()
     } else {

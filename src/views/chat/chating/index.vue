@@ -163,6 +163,10 @@ const conf = reactive({
       sapp.backbtn.funMap[conf.funId] = () => {
         conf.tools.show = false
       }
+    },
+    close: () => {
+      conf.tools.show = false
+      delete sapp.backbtn.funMap[conf.funId]
     }
   },
   chat: {

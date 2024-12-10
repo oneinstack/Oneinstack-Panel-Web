@@ -23,7 +23,7 @@ export const initRouter = () => {
   })
 
   router.beforeEach(async (to, from, next) => {
-    if (sapp.backbtn.runFun()) return
+    if (sapp.backbtn.run()) return
     let _name = (to.meta.name as any) || ''
     let _title = System.env.title
     if (_name) _title = _title + ' - ' + _name
