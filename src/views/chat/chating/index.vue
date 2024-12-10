@@ -11,7 +11,7 @@
     </template>
     <div class="col column relative">
       <div class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click">
-        <div v-for="item in 200" :key="item">
+        <div v-for="item in 30" :key="item">
           {{ item }}
         </div>
       </div>
@@ -25,34 +25,40 @@
         <div class="flex flex-center" style="height: 72rem; gap: 10rem">
           <VSIcon name="chat-keybord" :size="56" @click="conf.input.focus" v-if="conf.emoji.show" />
           <VSIcon name="chat-emoji" :size="56" @click="conf.emoji.open" v-if="!conf.emoji.show" />
-          <VSIcon name="chat-plus" :size="56" v-if="!conf.input.isNull()" />
-          <div
-            class="android-send-btn flex flex-center"
-            @click="conf.sendMessage"
-            :class="{ 'show': conf.input.isNull() }"
-          >
-            发送
-          </div>
-        </div>
-      </div>
-      <div class="emoji-box column no-wrap" v-if="conf.emoji.show">
-        <template v-if="conf.emoji.history.length">
-          <div class="emoji-title">最近使用</div>
-          <div class="row">
-            <div class="emoji-item" v-for="item in conf.emoji.history">
-              <img class="img" :src="`/static/chat/emoji/${item}.png`" @click="conf.emoji.insertEmoji(item)" />
+          <div class="relative row flex-center no-wrap">
+            <div class="chat-plus" :class="{ 'show': !conf.input.isNull() }">
+              <VSIcon class="absolute" name="chat-plus" :size="56" @click="conf.tools.open" />
+            </div>
+            <div
+              class="android-send-btn flex flex-center"
+              @click="conf.sendMessage"
+              :class="{ 'show': conf.input.isNull() }"
+            >
+              发送
             </div>
           </div>
-        </template>
-        <div class="emoji-title">全部表情</div>
-        <div class="row">
-          <div class="emoji-item" v-for="(item, index) in 109">
-            <img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" />
-          </div>
         </div>
       </div>
+      <div class="bottom-box" v-if="!conf.input.hiddenBottomBox" :class="{ show: conf.emoji.show || conf.tools.show }">
+        <div class="emoji-box column no-wrap" :class="{ show: conf.emoji.show }">
+          <template v-if="conf.emoji.history.length">
+            <div class="emoji-title">最近使用</div>
+            <div class="row">
+              <div class="emoji-item" v-for="item in conf.emoji.history">
+                <img class="img" :src="`/static/chat/emoji/${item}.png`" @click="conf.emoji.insertEmoji(item)" />
+              </div>
+            </div>
+          </template>
+          <div class="emoji-title">全部表情</div>
+          <div class="row" v-if="conf.emoji.show">
+            <div class="emoji-item" v-for="(item, index) in 109">
+              <img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" />
+            </div>
+          </div>
+        </div>
 
-      <div class="tools-box" v-if="conf.tools.show"></div>
+        <toolsVue :show="conf.tools.show" />
+      </div>
     </div>
   </x-page>
 </template>
@@ -63,9 +69,11 @@ import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
 import System from '@/utils/System'
 import sapp from '@/sstore/sapp'
+import toolsVue from './com/tools.vue'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>()
 const inputRef = ref({} as any)
+const timer = Scope.Timer()
 const conf = reactive({
   /**
    * 返回事件函数id
@@ -83,16 +91,31 @@ const conf = reactive({
     },
     click: () => {
       conf.emoji.show = false
-      setTimeout(() => {
+      conf.tools.show = false
+      timer.once(() => {
         chatBoxRef.value?.scrollTo({
           top: chatBoxRef.value?.scrollHeight
         })
       }, 100)
+
+      conf.input.hiddenBottomBox = true
+      timer.once(() => {
+        conf.input.hiddenBottomBox = false
+      }, 100)
     },
     focus: () => {
       conf.emoji.show = false
+      conf.tools.show = false
       inputRef.value.focus()
-    }
+      conf.input.hiddenBottomBox = true
+      timer.once(() => {
+        conf.input.hiddenBottomBox = false
+      }, 100)
+    },
+    /**
+     * 强制控制底部隐藏
+     */
+    hiddenBottomBox: false
   },
   sendMessage: () => {
     console.log('sendMessage', conf.input.message)
@@ -102,16 +125,20 @@ const conf = reactive({
   content: {
     click: () => {
       conf.emoji.show = false
+      conf.tools.show = false
     }
   },
   emoji: {
     show: false,
-    open: () => {
-      conf.emoji.show = true
-      conf.emoji.history = Cookie.get('emojiHistory') || []
-      sapp.backbtn.funMap[conf.funId] = () => {
-        conf.emoji.show = false
-      }
+    open: async () => {
+      timer.once(() => {
+        conf.tools.show = false
+        conf.emoji.show = true
+        conf.emoji.history = Cookie.get('emojiHistory') || []
+        sapp.backbtn.funMap[conf.funId] = () => {
+          conf.emoji.show = false
+        }
+      }, 100)
     },
     history: Cookie.get('emojiHistory') || [],
     historyArr: Cookie.get('emojiHistory') || [],
@@ -128,13 +155,20 @@ const conf = reactive({
     }
   },
   tools: {
-    show: false
+    show: false,
+    open: () => {
+      conf.emoji.show = false
+      conf.tools.show = true
+      sapp.backbtn.funMap[conf.funId] = () => {
+        conf.tools.show = false
+      }
+    }
   }
 })
 
 onMounted(() => {
   event.on(EPage.changeHeight, () => {
-    conf.input.click()
+    if (!conf.emoji.show && !conf.tools.show) conf.input.click()
   })
 })
 </script>
@@ -170,6 +204,19 @@ onMounted(() => {
   }
 }
 
+.chat-plus {
+  width: 0rem;
+  height: 56rem;
+  opacity: 0;
+  transition: all 0.3s;
+  pointer-events: none;
+  &.show {
+    width: 56rem;
+    opacity: 1;
+    pointer-events: all;
+  }
+}
+
 .android-send-btn {
   width: 0rem;
   height: 60rem;
@@ -179,18 +226,37 @@ onMounted(() => {
   opacity: 0;
   transition: all 0.3s;
   font-size: 30rem;
+  right: 0rem;
+  pointer-events: none;
   &.show {
     opacity: 1;
     width: 112rem;
+    pointer-events: all;
+  }
+}
+
+.bottom-box {
+  max-height: 0rem;
+  transition: all 0.3s;
+  overflow: hidden;
+  &.show {
+    max-height: 516rem;
   }
 }
 
 .emoji-box {
   width: 100%;
-  height: 516rem;
+  height: 0rem;
   overflow: auto;
   padding-left: 30rem;
   background-color: #f1f1f1;
+  opacity: 0;
+  transition: all 0.3s;
+
+  &.show {
+    opacity: 1;
+    height: 516rem;
+  }
 
   .emoji-title {
     font-size: 24rem;
@@ -206,12 +272,5 @@ onMounted(() => {
       height: 100%;
     }
   }
-}
-
-.tools-box {
-  width: 100%;
-  height: 516rem;
-  overflow: auto;
-  padding: 30rem;
 }
 </style>
