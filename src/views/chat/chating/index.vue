@@ -11,8 +11,8 @@
     </template>
     <div class="col column relative">
       <div class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click">
-        <div v-for="item in 30" :key="item">
-          {{ item }}
+        <div v-for="item in conf.chat.list" :key="item">
+          <div v-html="item"></div>
         </div>
       </div>
       <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
@@ -20,7 +20,7 @@
           <VSIcon name="chat-yy" :size="56" />
         </div>
         <div class="col input-box">
-          <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" />
+          <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.sendMessage" />
         </div>
         <div class="flex flex-center" style="height: 72rem; gap: 10rem">
           <VSIcon name="chat-keybord" :size="56" @click="conf.input.focus" v-if="conf.emoji.show" />
@@ -123,9 +123,9 @@ const conf = reactive({
     hiddenBottomBox: false
   },
   sendMessage: () => {
-    console.log('sendMessage', conf.input.message)
-
-    console.log('inputRef.value.getMessage()', inputRef.value.getMessage())
+    conf.chat.list.push(conf.input.message)
+    conf.input.message = ''
+    inputRef.value.clear()
   },
   content: {
     click: () => {
@@ -170,6 +170,9 @@ const conf = reactive({
         conf.tools.show = false
       }
     }
+  },
+  chat: {
+    list: [] as any
   }
 })
 
