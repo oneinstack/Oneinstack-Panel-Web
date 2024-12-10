@@ -1,12 +1,13 @@
 <template>
-	<x-page :showBack="false">
+	<x-page :showBack="false" :fixed="false">
 		<template #title>
 			<bet-record-header :selectNumber="conf.selectBetRecord.length"
 				@change-select-mode="conf.handleChangeSelectMode" @click-share="conf.handleShare" />
 		</template>
 
-
-		<bet-record-filter ref="filterRefs" @filter="conf.handleFilter" v-if="conf.hasLotteryList" />
+		<template #top>
+			<bet-record-filter ref="filterRefs" @filter="conf.handleFilter" v-if="conf.hasLotteryList" />
+		</template>
 
 		<bet-record-list ref="listRef" :list="conf.chat.list" :listItems="conf.listItems" :currentGroupChatId="conf.chat.active" :selectMode="conf.isSelectMode"
 			@select-share="conf.hanldeSelectShare" @confirm="conf.toShare" />
