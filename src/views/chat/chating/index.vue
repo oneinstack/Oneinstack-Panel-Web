@@ -17,14 +17,20 @@
       </div>
       <div class="row items-end chat-bottom">
         <div class="flex flex-center" style="height: 72rem">
-          <VSIcon name="chat-yy" :size="50" />
+          <VSIcon name="chat-yy" :size="56" />
         </div>
         <div class="col input-box">
-          <CInput @click="conf.messageBlur" v-model="conf.message" @keyup.enter="conf.messageEnter" />
+          <CInput ref="inputRef" @click="conf.messageBlur" v-model="conf.message" />
         </div>
-        <div class="flex flex-center" style="height: 72rem; gap: 20rem">
-          <VSIcon name="chat-emoji" :size="50" />
-          <VSIcon name="chat-plus" :size="50" v-if="!conf.message" />
+        <div class="flex flex-center" style="height: 72rem; gap: 10rem">
+          <VSIcon name="chat-keybord" :size="56" @click="conf.emoji.show = false" v-if="conf.emoji.show" />
+          <VSIcon name="chat-emoji" :size="56" @click="conf.emoji.show = true" v-if="!conf.emoji.show" />
+          <VSIcon name="chat-plus" :size="56" />
+        </div>
+      </div>
+      <div class="emoji-box row" v-if="conf.emoji.show">
+        <div class="emoji-item" v-for="(item, index) in 109">
+          <img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" />
         </div>
       </div>
     </div>
@@ -37,24 +43,28 @@ import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
 import System from '@/utils/System'
 const event = Scope.Event()
-const chatBoxRef = ref<HTMLElement | null>(null)
+const chatBoxRef = ref<HTMLElement | null>()
+const inputRef = ref({} as any)
 const conf = reactive({
   message: '',
   messageBlur: () => {
+    conf.emoji.show = false
     setTimeout(() => {
       chatBoxRef.value?.scrollTo({
         top: chatBoxRef.value?.scrollHeight
       })
     }, 100)
   },
-  messageEnter: () => {
-    if (System.platform === 'ios') {
-      conf.sendMessage()
-      return
-    }
-  },
   sendMessage: () => {
     console.log('sendMessage', conf.message)
+
+    console.log('inputRef.value.getMessage()', inputRef.value.getMessage())
+  },
+  emoji: {
+    show: false,
+    insertEmoji: (index: number) => {
+      inputRef.value.insertEmoji(`/static/chat/emoji/${index}.png`)
+    }
   }
 })
 
@@ -78,7 +88,7 @@ onMounted(() => {
 .chat-bottom {
   min-height: 98rem;
   width: 100%;
-  padding: 15rem 32rem;
+  padding: 15rem 20rem;
   border-top: 1rem solid #d3d3d3;
 }
 .input-box {
@@ -93,6 +103,23 @@ onMounted(() => {
     height: 100%;
     border: none;
     outline: none;
+  }
+}
+
+.emoji-box {
+  width: 100%;
+  height: 300rem;
+  overflow: auto;
+  padding-left: 30rem;
+
+  .emoji-item {
+    width: 52rem;
+    height: 52rem;
+    margin: 12rem;
+    img {
+      width: 100%;
+      height: 100%;
+    }
   }
 }
 </style>

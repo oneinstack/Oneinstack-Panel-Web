@@ -4,19 +4,38 @@
     ref="messageInputDom"
     contenteditable="true"
     spellcheck="false"
+    @keydown="conf.enter"
     @input="messageInput"
     @paste="handlePaste"
+    :inputmode="conf.inputmode"
   ></div>
 </template>
 <script setup lang="ts">
 import System from '@/utils/System'
-import { ref } from 'vue'
+import { reactive, ref } from 'vue'
 
 defineProps<{
   modelValue: string
 }>()
 
-const emit = defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:modelValue', 'enter'])
+
+const conf = reactive({
+  inputmode: undefined as any,
+  enter: (e: any) => {
+    if (System.platform === 'pc') {
+      if (e.shiftKey && e.keyCode === 13) {
+        return
+      } else if (e.keyCode === 13) {
+        e.preventDefault()
+        emit('enter', getMessage())
+      }
+    } else if (System.platform === 'ios') {
+      e.preventDefault()
+      emit('enter', getMessage())
+    }
+  }
+})
 
 // 输入框复制文本事件回调(将复制带样式的文本样式清空, 只保留纯文本)
 const handlePaste = (e: any) => {
@@ -67,7 +86,7 @@ const getMessage = () => {
   if (childNodes.value.length === 1 && childNodes.value[0].nodeName.toLowerCase() === 'img') {
     // 单个emoji 变为大图emoji (4为前后端约定的参数)
     msgType = 4
-    let imgTag = `<img src="${childNodes.value[0].getAttribute('src')}" width="65" height="65">`
+    let imgTag = `<img src="${childNodes.value[0].getAttribute('src')}" width="40rem" height="40rem">`
     return {
       imgTag,
       msgType
@@ -109,13 +128,25 @@ const messageInput = (e: Event) => {
 
 const messageInputDom = ref()
 
+// 没有键盘的聚焦
+const focusWithoutKeyboard = (element: HTMLElement) => {
+  element.setAttribute('readonly', 'true') // 临时设置为 readonly
+  conf.inputmode = 'none'
+  element.focus() // 聚焦元素
+  setTimeout(() => {
+    element.removeAttribute('readonly') // 移除 readonly
+    conf.inputmode = undefined
+  }, 100) // 延迟一定时间后恢复正常状态
+}
+
 // 选择的emoji
-const insertEmoji = (url: string, size: string = '25rem') => {
+const insertEmoji = (url: string, size: string = '18rem') => {
   // 没有焦点就获取输入框焦点
   if (document.activeElement != messageInputDom.value) {
-    messageInputDom.value.focus()
+    // messageInputDom.value.focus()
+    focusWithoutKeyboard(messageInputDom.value)
   }
-  let emojiImg = `<img src="${url}" width="${size}" height="${size}" style="vertical-align: middle;">`
+  let emojiImg = `<img src="${url}" width="${size}" height="${size}" style="vertical-align: middle;transform: translateY(-3rem);">`
   document.execCommand('insertHTML', false, emojiImg)
 }
 
@@ -133,9 +164,8 @@ defineExpose({
   box-sizing: border-box;
   resize: none;
   overflow: auto;
-  max-height: 300rem;
-  &::placeholder {
-    font-size: 24rem;
-  }
+  max-height: 286rem;
+  font-size: 30rem;
+  caret-color: #07c261;
 }
 </style>

@@ -48,7 +48,6 @@ export default class StatusBarConfig {
     const _statusHeight = await getSafeArea()
     if (_statusHeight > 0) {
       StatusBarConfig.statusHeight = _statusHeight
-      sapp.app.statusBarHeight = _statusHeight
       Cookie.set('statusHeight', _statusHeight)
     }
   }
@@ -65,7 +64,6 @@ export default class StatusBarConfig {
     initialHeight = _maxHeight - initialHeight
     if (initialHeight > 0) {
       StatusBarConfig.bottomBarHeight = initialHeight
-      sapp.app.bottomBarHeight = initialHeight
       Cookie.set('bottomBarHeight', initialHeight)
     }
     await NavigationBar.setTransparency({

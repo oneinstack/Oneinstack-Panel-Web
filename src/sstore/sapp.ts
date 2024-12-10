@@ -1,4 +1,5 @@
 import { EPage } from '@/enum/Enum'
+import StatusBarConfig from '@/utils/StatusBarConfig'
 import System from '@/utils/System'
 import { Capacitor } from '@capacitor/core'
 import { Keyboard } from '@capacitor/keyboard'
@@ -21,14 +22,6 @@ export const sapp = reactive({
      * 页面高度
      */
     height: 0,
-    /**
-     * 状态栏高度
-     */
-    statusBarHeight: 0,
-    /**
-     * 底部导航栏高度
-     */
-    bottomBarHeight: 0,
   },
   /**
    * 设置页面高度
@@ -84,7 +77,7 @@ export const sapp = reactive({
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty(
         '--height',
-        `${sapp.app.height - sapp.keyboard.height + sapp.app.bottomBarHeight}px`
+        `${sapp.app.height - sapp.keyboard.height + StatusBarConfig.bottomBarHeight}px`
       )
     }, 100)
   },
