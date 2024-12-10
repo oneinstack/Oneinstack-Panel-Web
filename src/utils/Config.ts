@@ -19,7 +19,14 @@ export default class Config {
 
     // 平台
     const platforms = getPlatforms() as string[]
-    System.platform = System.isNative ? (platforms.includes('android') ? 'android' : 'ios') : 'web'
+    const platformMap = {
+      android: 'android',
+      ios: 'ios',
+      mobile: 'android'
+    } as any
+
+    // 获取运行设备平台
+    System.platform = (platformMap[platforms.find((platform) => platformMap[platform]) as any] || 'pc') as any
 
     // 是否是移动端
     if (

@@ -42,8 +42,8 @@ export const initApp = async () => {
   load()
   await sconfig.getSystemTime()
 
-  //web端设置icon
-  if (System.platform === 'web') {
+  //非原生平台设置icon
+  if (!System.isNative) {
     const appConfig = await svalue.getAppConfiguration()
     let link = document.createElement('link')
     link.rel = 'icon'

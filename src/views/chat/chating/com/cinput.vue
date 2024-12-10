@@ -6,14 +6,17 @@
     spellcheck="false"
     @input="messageInput"
     @paste="handlePaste"
-    @keydown.enter="inputKeyDown"
   ></div>
 </template>
 <script setup lang="ts">
 import System from '@/utils/System'
-import { onMounted, ref } from 'vue'
+import { ref } from 'vue'
 
-const emit = defineEmits(['handleSendMessage'])
+defineProps<{
+  modelValue: string
+}>()
+
+const emit = defineEmits(['update:modelValue'])
 
 // 输入框复制文本事件回调(将复制带样式的文本样式清空, 只保留纯文本)
 const handlePaste = (e: any) => {
@@ -42,10 +45,9 @@ const handlePaste = (e: any) => {
 }
 
 let message = ref<string>('')
-let tips = ref<boolean>(false)
 
 // 发送消息按钮回调
-const sendMessage = () => {
+const getMessage = () => {
   if (!message.value || message.value.length > 2000) {
     return System.toast(!message.value ? '消息不能为空' : '你的小作文别超过2000字')
   }
@@ -66,23 +68,22 @@ const sendMessage = () => {
     // 单个emoji 变为大图emoji (4为前后端约定的参数)
     msgType = 4
     let imgTag = `<img src="${childNodes.value[0].getAttribute('src')}" width="65" height="65">`
-    emit('handleSendMessage', imgTag, msgType)
+    return {
+      imgTag,
+      msgType
+    }
   } else {
-    emit('handleSendMessage', message_res, msgType)
+    return {
+      msg: message_res,
+      msgType
+    }
   }
+}
+
+const clear = () => {
   message.value = ''
   messageInputDom.value.innerHTML = ''
   messageInputDom.value.focus()
-}
-
-// input的keydown事件
-const inputKeyDown = (e: any) => {
-  if (e.shiftKey && e.keyCode === 13) {
-    return
-  } else if (e.keyCode === 13) {
-    e.preventDefault()
-    sendMessage()
-  }
 }
 
 // emoji图标是否选中
@@ -103,49 +104,26 @@ let childNodes = ref<any>([])
 const messageInput = (e: Event) => {
   childNodes.value = (e.target as HTMLInputElement).childNodes
   message.value = (e.target as HTMLInputElement).innerHTML
+  emit('update:modelValue', message.value)
 }
 
 const messageInputDom = ref()
+
 // 选择的emoji
-const selectEmoji = (index: number) => {
+const insertEmoji = (url: string, size: string = '25rem') => {
   // 没有焦点就获取输入框焦点
   if (document.activeElement != messageInputDom.value) {
     messageInputDom.value.focus()
   }
-  let emojiImg = `<img src="./gif/${index}.gif" width="25" height="25" style="vertical-align: middle;">`
+  let emojiImg = `<img src="${url}" width="${size}" height="${size}" style="vertical-align: middle;">`
   document.execCommand('insertHTML', false, emojiImg)
-  // 保存最近使用的emoji
-  recentlyUseEmoji(index)
 }
 
-// 最近使用的emoji列表
-const historyEmojiList = ref<number[]>([])
-
-onMounted(() => {
-  // 加载历史emoji
-  historyEmojiList.value = localStorage.getItem('emojiHistory')
-    ? JSON.parse(localStorage.getItem('emojiHistory') as string)
-    : []
+defineExpose({
+  insertEmoji,
+  getMessage,
+  clear
 })
-
-// 保存最近使用的emoji
-const recentlyUseEmoji = (index: number) => {
-  let idx = historyEmojiList.value.indexOf(index)
-  if (idx < 0) {
-    historyEmojiList.value.unshift(index)
-  } else {
-    historyEmojiList.value.unshift(historyEmojiList.value.splice(idx, 1)[0])
-  }
-  // 只要两行emoji(16个)
-  historyEmojiList.value = historyEmojiList.value.splice(0, 16)
-  // 保存记录
-  localStorage.setItem('emojiHistory', JSON.stringify(historyEmojiList.value))
-}
-
-// emoji图标是否选中
-let codeActive = ref<boolean>(false)
-// emoji组件是否打开
-let codeFlag = ref<boolean>(false)
 </script>
 <style lang="less" scoped>
 #message-input {

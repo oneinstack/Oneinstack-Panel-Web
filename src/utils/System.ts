@@ -10,7 +10,7 @@ export default class System {
   static isNative = false
 
   /** 平台 */
-  static platform = 'web' as 'web' | 'android' | 'ios'
+  static platform = 'pc' as 'pc' | 'android' | 'ios'
 
   /** 是否是移动端 */
   static isMobile = false

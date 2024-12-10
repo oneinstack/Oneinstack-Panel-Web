@@ -20,11 +20,11 @@
           <VSIcon name="chat-yy" :size="50" />
         </div>
         <div class="col input-box">
-          <CInput />
+          <CInput @click="conf.messageBlur" v-model="conf.message" @keyup.enter="conf.messageEnter" />
         </div>
         <div class="flex flex-center" style="height: 72rem; gap: 20rem">
           <VSIcon name="chat-emoji" :size="50" />
-          <VSIcon name="chat-plus" :size="50" />
+          <VSIcon name="chat-plus" :size="50" v-if="!conf.message" />
         </div>
       </div>
     </div>
@@ -35,6 +35,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
+import System from '@/utils/System'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>(null)
 const conf = reactive({
@@ -45,6 +46,12 @@ const conf = reactive({
         top: chatBoxRef.value?.scrollHeight
       })
     }, 100)
+  },
+  messageEnter: () => {
+    if (System.platform === 'ios') {
+      conf.sendMessage()
+      return
+    }
   },
   sendMessage: () => {
     console.log('sendMessage', conf.message)
