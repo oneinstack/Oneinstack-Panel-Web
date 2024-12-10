@@ -4,8 +4,12 @@ import { StatusBar, Style } from '@capacitor/status-bar'
 import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 export default class StatusBarConfig {
   /** 状态栏高度 */
-  static statusHeight = Cookie.get('statusHeight') || 0
+  static statusHeight = 0
   static async initStatusBar() {
+    this.statusHeight = Cookie.get('statusHeight') || 0
+    this.bottomBarHeight = Cookie.get('bottomBarHeight') || 0
+    this.statusHeight = Number(this.statusHeight)
+    this.bottomBarHeight = Number(this.bottomBarHeight)
     const setBoxHeight = () => {
       setTimeout(() => {
         sapp.setAppHeight()
@@ -50,7 +54,7 @@ export default class StatusBarConfig {
   }
 
   /** 底部导航栏高度 */
-  static bottomBarHeight = Cookie.get('bottomBarHeight') || 0
+  static bottomBarHeight = 0
 
   static async getBottomBarHeight() {
     let initialHeight = document.documentElement.clientHeight

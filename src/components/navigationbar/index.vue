@@ -1,6 +1,6 @@
 <template>
-  <div :style="{ height: sapp.app.bottomBarHeight + 'px' }"></div>
+  <div :style="{ height: StatusBarConfig.bottomBarHeight + 'px' }"></div>
 </template>
 <script setup lang="ts">
-import sapp from '@/sstore/sapp'
+import StatusBarConfig from '@/utils/StatusBarConfig'
 </script>

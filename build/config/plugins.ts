@@ -32,24 +32,24 @@ export const getPlugins = (env: globalType) => {
         }
       }
     }),
-    visualizer({
-      open: env.env.BUILDVIEW,
-      gzipSize: true,
-      brotliSize: true
-    }) as any,
-    legacy()
+    AutoImport({
+      dts: './build/auto/auto-imports.d.ts',
+      resolvers: [VantResolver()]
+    }),
+    Components({
+      dts: './build/auto/components.d.ts',
+      resolvers: [VantResolver()]
+    })
   ]
 
   if (isBuild) {
     plugin.push(
-      AutoImport({
-        dts: './build/auto/auto-imports.d.ts',
-        resolvers: [VantResolver()]
-      }),
-      Components({
-        dts: './build/auto/components.d.ts',
-        resolvers: [VantResolver()]
-      }),
+      visualizer({
+        open: env.env.BUILDVIEW,
+        gzipSize: true,
+        brotliSize: true
+      }) as any,
+      legacy(),
       androidSSL(),
       {
         name: 'end',
