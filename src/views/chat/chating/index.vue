@@ -25,7 +25,14 @@
         <div class="flex flex-center" style="height: 72rem; gap: 10rem">
           <VSIcon name="chat-keybord" :size="56" @click="conf.input.focus" v-if="conf.emoji.show" />
           <VSIcon name="chat-emoji" :size="56" @click="conf.emoji.open" v-if="!conf.emoji.show" />
-          <VSIcon name="chat-plus" :size="56" />
+          <VSIcon name="chat-plus" :size="56" v-if="!conf.input.isNull()" />
+          <div
+            class="android-send-btn flex flex-center"
+            @click="conf.sendMessage"
+            :class="{ 'show': conf.input.isNull() }"
+          >
+            发送
+          </div>
         </div>
       </div>
       <div class="emoji-box column no-wrap" v-if="conf.emoji.show">
@@ -52,12 +59,21 @@ import { onMounted, reactive, ref } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
+import System from '@/utils/System'
 const event = Scope.Event()
 const chatBoxRef = ref<HTMLElement | null>()
 const inputRef = ref({} as any)
 const conf = reactive({
   input: {
     message: '',
+    isNull: () => {
+      let _msg = conf.input.message.trim()
+      _msg = _msg
+        .replace(/<br>/g, '')
+        .replace(/<div>/g, '')
+        .replace(/<\/div>/g, '')
+      return _msg.length > 0 && System.platform === 'android'
+    },
     click: () => {
       conf.emoji.show = false
       setTimeout(() => {
@@ -160,6 +176,21 @@ onMounted(() => {
       width: 100%;
       height: 100%;
     }
+  }
+}
+
+.android-send-btn {
+  width: 0rem;
+  height: 60rem;
+  background: #07c261;
+  color: #fff;
+  border-radius: 8rem;
+  opacity: 0;
+  transition: all 0.3s;
+  font-size: 30rem;
+  &.show {
+    opacity: 1;
+    width: 112rem;
   }
 }
 </style>
