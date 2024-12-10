@@ -1,11 +1,13 @@
 import { loading } from '@/components/loading/loading'
 import { toast } from '@/components/toast/toast'
 import { Directory, Filesystem } from '@capacitor/filesystem'
-import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 import { Router } from 'vue-router'
 import { globalType } from '../../build/env/globalVar'
+import { Capacitor } from '@capacitor/core'
+import { getPlatforms } from '@ionic/vue'
 
 export default class System {
+  
   /** 是否是原生 */
   static isNative = false
 
@@ -19,6 +21,32 @@ export default class System {
    * 环境变量
    */
   static env: globalType = {} as any
+
+  /**
+   * 初始化系统参数
+   */
+  static init() {
+    // 是否是原生
+    System.isNative = Capacitor.isNativePlatform()
+
+    // 平台
+    const platforms = getPlatforms() as string[]
+
+    const platformMap = {
+      android: 'android',
+      ios: 'ios',
+      mobile: 'android'
+    } as any
+
+    // 获取运行设备平台
+    System.platform = (platformMap[platforms.find((platform) => platformMap[platform]) as any] || 'pc') as any
+
+    // 是否是移动端
+    System.isMobile = System.platform !== 'pc'
+
+    // 初始化环境变量
+    System.env = JSON.parse('#{global}')
+  }
 
   /**
    * 路由
@@ -194,5 +222,4 @@ export default class System {
     document.body.removeChild(tempLink)
     window.URL.revokeObjectURL(content)
   }
-
 }
