@@ -52,7 +52,12 @@
           <div class="emoji-title">全部表情</div>
           <div class="row" v-if="conf.emoji.show">
             <div class="emoji-item" v-for="(item, index) in 109">
-              <x-img class="img" :src="`/static/chat/emoji/${index}.png`" @click="conf.emoji.insertEmoji(index)" cache />
+              <x-img
+                class="img"
+                :src="`/static/chat/emoji/${index}.png`"
+                @click="conf.emoji.insertEmoji(index)"
+                cache
+              />
             </div>
           </div>
         </div>
@@ -131,14 +136,16 @@ const conf = reactive({
   emoji: {
     show: false,
     open: async () => {
-      timer.once(() => {
+      const run = () => {
         conf.tools.show = false
         conf.emoji.show = true
         conf.emoji.history = Cookie.get('emojiHistory') || []
         sapp.backbtn.funMap[conf.funId] = () => {
           conf.emoji.show = false
         }
-      }, 100)
+      }
+      if (!System.isNative && !conf.tools.show) timer.once(run, 100)
+      else run()
     },
     history: Cookie.get('emojiHistory') || [],
     historyArr: Cookie.get('emojiHistory') || [],
