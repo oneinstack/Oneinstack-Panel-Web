@@ -159,12 +159,13 @@ defineExpose({
 #message-input {
   width: 100%;
   flex: 1;
-  margin: 20rem 0;
+  margin: 15rem 0;
   box-sizing: border-box;
   resize: none;
   overflow: auto;
   max-height: 286rem;
   font-size: 30rem;
+  min-height: 41rem;
   caret-color: #07c261;
 }
 </style>
