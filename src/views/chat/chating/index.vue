@@ -173,6 +173,9 @@ const conf = reactive({
     list: [] as any,
     send: () => {
       conf.chat.list.push({
+        isme: MathUtil.getRandomInt(1, 10) > 5,
+        sendnickname: 'Test',
+        face: '/static/img/home-banner.png',
         content: inputRef.value.getMessage(),
         type: 'text'
       })
