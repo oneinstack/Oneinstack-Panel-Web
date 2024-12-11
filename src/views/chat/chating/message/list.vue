@@ -10,7 +10,7 @@
       >
         <template v-for="(l, index) in conf.scroll.renderMaxLength">
           <div
-            class="absolute"
+            class="absolute fit-width"
             :id="conf.scroll.centent.map[index].id"
             :style="{ top: conf.scroll.centent.map[index].top + 'px' }"
             v-if="conf.scroll.centent.map[index].show"
@@ -41,11 +41,6 @@ const conf = reactive({
 
   scroll: {
     /**
-     * 记录每个数据的高度
-     */
-    heightMap: {} as { [key: string]: number },
-
-    /**
      * 总高度
      */
     height: 0,
@@ -74,6 +69,19 @@ const conf = reactive({
        * 渲染对象
        */
       map: {} as { [key: string]: any },
+
+      /**
+       * 获取排序后的数组
+       */
+      getSortArr: () => {
+        const arr = [] as any[]
+        for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
+          arr.push(conf.scroll.centent.map[i])
+        }
+        return arr.sort((a, b) => {
+          return a.index - b.index
+        })
+      },
       /**
        * 获取索引对象
        */
@@ -94,6 +102,7 @@ const conf = reactive({
         const arr = [] as any[]
 
         const item0 = conf.scroll.centent.findIndex(0)
+        if (!item0) return
 
         for (let i = 0; i < conf.scroll.centent.lazyNum; i++) {
           arr.push(conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - i - 1))
@@ -112,13 +121,14 @@ const conf = reactive({
           }
         }
 
-        const keys = Object.keys(conf.scroll.centent.map)
-        for (let i = 0; i < keys.length; i++) {
-          const key = keys[i]
-          const _item = conf.scroll.centent.map[key]
-          if (_item.dataIndex >= item0.dataIndex) {
-            _item.index += conf.scroll.centent.lazyNum
-            _item.updateTop()
+        if (res.length) {
+          const arr = conf.scroll.centent.getSortArr()
+          for (let i = 0; i < arr.length; i++) {
+            const _item = arr[i]
+            if (_item.dataIndex >= item0.dataIndex) {
+              _item.index += res.length
+              _item.updateTop()
+            }
           }
         }
       },
@@ -238,7 +248,7 @@ const conf = reactive({
             } else {
               //其他的获取上一个对象，设置顶部距离
               const prev = obj.getPrev()
-              obj.top = prev.top + prev.height
+              obj.top = prev.top + prev.data.height
             }
           },
           /**
@@ -249,9 +259,8 @@ const conf = reactive({
               nextTick(() => {
                 obj.data = data
                 obj.show = true
-                const ch = conf.scroll.heightMap[data.id]
-                if (ch) {
-                  obj.height = ch
+                if (data.height) {
+                  obj.height = data.height
                   res(true)
                 } else {
                   const setHeight = () => {
@@ -259,7 +268,7 @@ const conf = reactive({
                     if (_dom) {
                       obj.height = _dom.clientHeight
                       obj.updateTop()
-                      conf.scroll.heightMap[data.id] = obj.height
+                      data.height = obj.height
                       conf.scroll.height += obj.height
                       conf.scroll.centent.height = 0
                       Object.keys(conf.scroll.centent.map).forEach((item) => {
