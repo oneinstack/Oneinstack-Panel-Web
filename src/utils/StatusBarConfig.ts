@@ -42,7 +42,6 @@ export default class StatusBarConfig {
       await Timer.delay(20)
       const currentHeight = document.documentElement.clientHeight
       const safeArea = Math.abs(currentHeight - initialHeight)
-      document.documentElement.style.setProperty('--safe-area-top', `${safeArea}px`)
       return safeArea
     }
     const _statusHeight = await getSafeArea()
@@ -65,6 +64,7 @@ export default class StatusBarConfig {
     if (initialHeight > 0) {
       StatusBarConfig.bottomBarHeight = initialHeight
       Cookie.set('bottomBarHeight', initialHeight)
+      document.documentElement.style.setProperty('--navigation-bar-height', `${StatusBarConfig.bottomBarHeight}px`)
     }
     await NavigationBar.setTransparency({
       isTransparent: true
