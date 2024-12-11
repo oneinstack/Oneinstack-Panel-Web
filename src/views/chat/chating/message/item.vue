@@ -2,7 +2,7 @@
   <div class="row fit-width" :class="{ reverse: item.isme }" style="padding: 0rem 32rem 46rem 32rem">
     <img class="face" :src="item.face" />
     <div style="margin: 0 20rem">
-      <div class="row" :class="{ reverse: item.isme }" style="font-size: 24rem; color: #808080">
+      <div v-if="item.isGroup && !item.isme" class="row" :class="{ reverse: item.isme }" style="font-size: 24rem; color: #808080">
         {{ item.sendnickname }}
       </div>
       <div class="relative">
@@ -30,6 +30,7 @@ defineProps<{
     face: string
     sendnickname: string
     isme: boolean
+    isGroup:boolean
   }
 }>()
 const conf = reactive({})

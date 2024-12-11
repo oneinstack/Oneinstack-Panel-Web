@@ -97,9 +97,7 @@ const conf = reactive({
       conf.emoji.show = false
       conf.tools.show = false
       timer.once(() => {
-        chatBoxRef.value?.scrollTo({
-          top: chatBoxRef.value?.scrollHeight
-        })
+        conf.content.toBottom()
       }, 100)
 
       conf.input.hiddenBottomBox = true
@@ -122,6 +120,16 @@ const conf = reactive({
     hiddenBottomBox: false
   },
   content: {
+    toBottom: async (ani = false, time = 0) => {
+      timer.once(() => {
+        const chatBox = chatBoxRef.value!
+        const obj = {
+          top: chatBox.scrollHeight
+        } as any
+        if (ani || chatBox.scrollTop > chatBox.scrollHeight - chatBox.clientHeight - 800) obj.behavior = 'smooth'
+        chatBox.scrollTo(obj)
+      }, time)
+    },
     click: () => {
       conf.emoji.show = false
       conf.tools.show = false
@@ -131,6 +139,7 @@ const conf = reactive({
     show: false,
     open: async () => {
       const run = () => {
+        conf.content.toBottom(false, 300)
         conf.tools.show = false
         conf.emoji.show = true
         conf.emoji.history = Cookie.get('emojiHistory') || []
@@ -158,6 +167,7 @@ const conf = reactive({
   tools: {
     show: false,
     open: () => {
+      conf.content.toBottom(false, 300)
       conf.emoji.show = false
       conf.tools.show = true
       sapp.backbtn.funMap[conf.funId] = () => {
@@ -174,6 +184,7 @@ const conf = reactive({
     send: () => {
       conf.chat.list.push({
         isme: MathUtil.getRandomInt(1, 10) > 5,
+        isGroup: MathUtil.getRandomInt(1, 10) > 5,
         sendnickname: 'Test',
         face: '/static/img/home-banner.png',
         content: inputRef.value.getMessage(),
@@ -181,6 +192,10 @@ const conf = reactive({
       })
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)
+
+      timer.once(() => {
+        conf.content.toBottom(true)
+      }, 300)
     }
   }
 })
@@ -188,7 +203,9 @@ const conf = reactive({
 Scope.setConf(conf)
 onMounted(() => {
   event.on(EPage.changeHeight, () => {
-    if (!conf.emoji.show && !conf.tools.show) conf.input.click()
+    if (!conf.emoji.show && !conf.tools.show) {
+      conf.input.click()
+    }
   })
 })
 </script>
