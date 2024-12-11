@@ -18,5 +18,9 @@ export default [
   {
     path: '/chat/betRecord',
     component: '/chat/conversation/betRecord/index'
+  },
+  {
+    path: '/chat/betRecordForward',
+    component: '/chat/conversation/betRecordForward/index'
   }
 ]

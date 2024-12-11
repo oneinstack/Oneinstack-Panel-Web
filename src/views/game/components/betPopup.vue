@@ -274,7 +274,7 @@ const conf = reactive({
 		obj.betTitle = obj.betExpect
 		console.log('obj', obj)
 		Cookie.set('betRecord', JSON.stringify(obj))
-		await sconfig.toChat('/chatRoom/conversation/betRecordForward/index')
+		await sconfig.toChat('/chat/betRecordForward')
 	},
 	// 选择连并分享到聊天室
 	shareRoom(item:any) {

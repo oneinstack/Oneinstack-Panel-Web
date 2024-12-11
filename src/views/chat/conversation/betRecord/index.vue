@@ -124,7 +124,7 @@ const conf = reactive({
 	},
 
 	getLotteryOdds(obj: any) {
-		// System.loading()
+		System.loading()
 		apis.lotteryOdds({
 			lotteryTypeId: obj.typeId,
 			lotteryTypeCode: obj.lotteryTypeCode,

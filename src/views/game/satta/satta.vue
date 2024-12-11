@@ -773,7 +773,7 @@ const conf = reactive({
 		console.log('obj', obj)
 		Cookie.set('betRecord', JSON.stringify(obj))
 		
-		await sconfig.toChat('/chatRoom/conversation/betRecordForward/index')
+		await sconfig.toChat('/chat/betRecordForward')
 	}
 })
 const canShare = computed(() => {
