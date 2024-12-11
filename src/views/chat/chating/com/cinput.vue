@@ -63,8 +63,13 @@ let message = ref<string>('')
 
 // 发送消息按钮回调
 const getMessage = () => {
-  if (!message.value || message.value.length > 2000) {
-    return System.toast(!message.value ? '消息不能为空' : '你的小作文别超过2000字')
+  let _msg = message.value.trim()
+  _msg = _msg
+    .replace(/<br>/g, '')
+    .replace(/<div>/g, '')
+    .replace(/<\/div>/g, '')
+  if (!_msg.length) {
+    return ''
   }
   // 识别输入框的内容中是否带有链接
   let reg = /(http:\/\/|https:\/\/|www\.)((\w|=|\?|\.|\/|&|-)+)/g
