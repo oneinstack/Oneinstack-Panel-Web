@@ -1,6 +1,7 @@
 <template>
   <x-page no-header tabbar>
     <template #top>
+      <x-statusbar />
       <div class="w-head">
         <img class="head-bg" src="/static/img/wallet/topBackground.png" />
         <!-- 总金额和通知 -->
