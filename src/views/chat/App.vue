@@ -1,6 +1,6 @@
 <template>
   <div class="chat-box">
-    <router-view v-if="conf.show"></router-view>
+    <x-router-view :show="conf.show"></x-router-view>
   </div>
 </template>
 <script setup lang="ts">
@@ -9,6 +9,12 @@ import csconfig from '@/modules/chat/sstore/csconfig'
 import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
 import { reactive } from 'vue'
+
+
+defineOptions({
+  name: 'ChatApp'
+})
+
 const conf = reactive({
   show: false,
   init: async () => {

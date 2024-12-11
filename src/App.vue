@@ -1,11 +1,15 @@
 <template>
   <x-route-event></x-route-event>
-  <router-view v-if="conf.show"></router-view>
+  <x-router-view :show="conf.show"></x-router-view>
 </template>
 
 <script setup lang="ts">
 import { nextTick, reactive } from 'vue'
 import { ERouter } from './enum/Enum'
+
+defineOptions({
+  name: 'App'
+})
 
 const conf = reactive({
   show: true,

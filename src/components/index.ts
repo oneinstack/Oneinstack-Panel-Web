@@ -10,6 +10,7 @@ import tabbar from './tabbar/index.vue'
 import imgAni from './imgAni/index.vue'
 import tabs from './tabs/index.vue'
 import log from './log/index.vue'
+import routerView from './routerView/index.vue'
 export const install = (app: App) => {
   app.component('xTabbar', tabbar)
   app.component('xStatusbar', statusbar)
@@ -22,6 +23,7 @@ export const install = (app: App) => {
   app.component('xImgAni', imgAni)
   app.component('xTabs', tabs)
   app.component('xLog', log)
+  app.component('xRouterView', routerView)
 }
 
 export default {

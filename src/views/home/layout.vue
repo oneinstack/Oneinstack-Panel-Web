@@ -1,5 +1,5 @@
 <template>
-  <router-view></router-view>
+  <x-router-view></x-router-view>
   <x-tabbar :list="conf.list" @change="conf.change"></x-tabbar>
 </template>
 <script setup lang="ts">
@@ -8,6 +8,11 @@ import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { reactive } from 'vue'
 uspage.setConfig()
+
+defineOptions({
+  name: 'Home'
+})
+
 const conf = reactive({
   list: [
     {
