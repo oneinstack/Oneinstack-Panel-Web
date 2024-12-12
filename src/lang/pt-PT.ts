@@ -438,6 +438,7 @@ export default {
     1122: 'Caixa de correio não está vinculada, por favor, ligue caixa de correio primeiro!', //邮箱未绑定，请先绑定邮箱
     1123: 'A conta deve ser composta por números e letras e pode conter o símbolo ._-', //账户由数字和字母组成,可包含符号._-
     1124: 'O nome de usuário contém de 6 a 20 caracteres', //账户名长度为6-20位
+    1125: 'Falha na concessão de privilégios', //授权失败
     1132: 'Exceções nas configurações de exp', //经验值设置异常
     1133: 'Vincular exceções de IP', //绑定IP异常
 
@@ -910,6 +911,8 @@ export default {
     29: 'Bônus de recarga', //充值赠送
     30: 'Bônus de recarga de atividade', //活动充值赠送
     31: 'Tarefa de entrada', //签到活动
+    32: 'Cancelamento de pedido', //注单撤销
+    33: 'Revogação de reembolso', //返点撤销
     97: 'Ajustamento da conta' //调账
   },
 

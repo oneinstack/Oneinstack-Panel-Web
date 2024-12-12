@@ -435,6 +435,7 @@ export default {
     1122: 'Mailbox is not bound, please bind mailbox first!', //邮箱未绑定，请先绑定邮箱
     1123: 'The account must be composed of numbers and letters and may contain the symbol ._-', //账户由数字和字母组成,可包含符号._-
     1124: 'The user name contains 6 to 20 characters', //账户名长度为6-20位
+    1125: 'Privilege grant failed', //授权失败
     1132: 'The experience value is set abnormally', //经验值设置异常
     1133: 'Abnormal binding IP address', //绑定IP异常
 
@@ -908,6 +909,8 @@ export default {
     29: 'Recharge bonus', //充值赠送
     30: 'Activity recharge bonus', //活动充值赠送
     31: 'Sign in activity', //签到活动
+    32: 'Order cancellation', //注单撤销
+    33: 'Rebate revocation', //返点撤销
     97: 'Account adjustment' //调账
   },
 

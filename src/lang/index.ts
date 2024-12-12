@@ -7,12 +7,12 @@ const i18n = createI18n({
 })
 
 export const langobj: any = {
-  'en-us': 'US',
-  'hi-IN': 'IN',
-  'th-TH': 'TH',
-  'id-ID': 'IDN',
-  'pt-PT': 'PT',
-  'es-ES': 'ES'
+  'en-us': 'US', //英语
+  'hi-IN': 'IN', //印地语
+  'th-TH': 'TH', //泰语
+  'id-ID': 'IDN', //印度利西亚语
+  'pt-PT': 'PT', //葡萄牙语
+  'es-ES': 'ES' //西班牙语
 }
 
 //@ts-ignore
