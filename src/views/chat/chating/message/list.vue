@@ -40,11 +40,12 @@
 <script setup lang="ts">
 import sutil from '@/sstore/sutil'
 import { Scope } from 'tools-vue3'
-import { nextTick, onMounted, reactive, ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 import Item from './item.vue'
 
 const timer = Scope.Timer()
 const listRef = ref()
+
 const conf = reactive({
   /**
    * 数据源
@@ -77,6 +78,11 @@ const conf = reactive({
        * 显示高度
        */
       height: 0,
+      getHeight: () => {
+        const item = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
+        if (!item) return
+        conf.scroll.centent.height = item.top + item.height
+      },
       /**
        * 渲染对象
        */
@@ -156,6 +162,7 @@ const conf = reactive({
           for (let i = 0; i < res.length; i++) {
             lastDom = await res[i].render()
           }
+          conf.scroll.centent.getHeight()
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
             const _item = arr[i]
@@ -243,7 +250,7 @@ const conf = reactive({
             const lastDom = await res[i].render()
             lastHeight += lastDom.height
           }
-
+          conf.scroll.centent.getHeight()
           //排序进行修改索引
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
@@ -271,6 +278,15 @@ const conf = reactive({
         } else {
           conf.scroll.centent.loadStatus = false
         }
+      },
+      /**
+       * 插入数据
+       */
+      insertData: (data: any[]) => {
+        for (let i = 0; i < data.length; i++) {
+          conf.dataSource.push(data[i])
+        }
+        conf.scroll.init()
       }
     },
     /**
@@ -350,33 +366,9 @@ const conf = reactive({
      * 初始化参数
      */
     init: async () => {
-      //模拟数据
-      const _data = [
-        {
-          'isme': false,
-          'isGroup': false,
-          'sendnickname': 'Test',
-          'face': '/static/img/home-banner.png',
-          'content':
-            '<img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);">',
-          'type': 'text'
-        }
-      ] as any
-
-      _data[0].id = StrUtil.getId()
-      _data[0].content += '-0'
-      for (let i = 1; i <= 50; i++) {
-        const obj = { ..._data[0] }
-        obj.id = StrUtil.getId()
-        const num = MathUtil.getRandomInt(1, 3)
-        obj.content += '-' + i
-        for (let j = 0; j < num; j++) {
-          obj.content += obj.content
-        }
-        _data.push(obj)
-      }
-
-      conf.dataSource = _data
+      //如果没有新数据或者本身就在底部，就不刷新和初始化到底部
+      const lastitem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
+      if (lastitem && lastitem.dataIndex === conf.dataSource.length - 1) return
 
       //获取最大渲染数量
       const _px = sutil.rem2px(80)
@@ -393,11 +385,11 @@ const conf = reactive({
           /**
            * 当前展示的数据下标
            */
-          dataIndex: _data[_dataIndex] ? _dataIndex : 9999,
+          dataIndex: conf.dataSource[_dataIndex] ? _dataIndex : 9999,
           /**
            * 展示数据
            */
-          data: _data[_dataIndex],
+          data: conf.dataSource[_dataIndex],
           /**
            * 距离顶部
            */
@@ -446,11 +438,6 @@ const conf = reactive({
 
                 const getResData = () => {
                   obj.updateTop()
-                  conf.scroll.centent.height = 0
-                  Object.keys(conf.scroll.centent.map).forEach((item) => {
-                    const _item = conf.scroll.centent.map[item]
-                    if (_item.data) conf.scroll.centent.height += _item.height
-                  })
                   obj.isRender = false
                   res({
                     height: obj.height,
@@ -527,7 +514,7 @@ const conf = reactive({
       for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
         await _arr[i].render()
       }
-
+      conf.scroll.centent.getHeight()
       //设置滚动位置到底部
       timer.once(() => {
         conf.scroll.isUser = false
@@ -548,18 +535,28 @@ defineExpose({
    * 滚动到底部
    * @param ani 是否使用动画
    */
-  toBottom: (ani = false) => {
+  toBottom: async (ani = false) => {
+    await conf.scroll.init()
     const obj = {
       top: listRef.value.scrollHeight
     } as any
     if (ani || listRef.value.scrollTop > listRef.value.scrollHeight - listRef.value.clientHeight - 800)
       obj.behavior = 'smooth'
     listRef.value.scrollTo(obj)
-  }
-})
-
-onMounted(() => {
-  conf.scroll.init()
+  },
+  /**
+   * 初始化显示内容
+   * @param data 数据
+   */
+  initData: (data: any[]) => {
+    conf.dataSource = [...data]
+    conf.scroll.init()
+  },
+  /**
+   * 插入数据
+   * @param data 数据
+   */
+  insertData: conf.scroll.centent.insertData
 })
 </script>
 <style lang="less" scoped></style>

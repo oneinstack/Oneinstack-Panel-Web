@@ -10,7 +10,12 @@
       </div>
     </template>
     <div class="col column relative">
-      <MessageList class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click" />
+      <MessageList
+        class="col"
+        style="height: 100%; overflow: auto"
+        ref="chatBoxRef"
+        @click="conf.content.click"
+      />
       <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
         <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="56" />
@@ -174,6 +179,35 @@ const conf = reactive({
   },
   chat: {
     list: [] as any,
+    getList: async () => {
+      //模拟数据
+      const _data = [
+        {
+          'isme': false,
+          'isGroup': false,
+          'sendnickname': 'Test',
+          'face': '/static/img/home-banner.png',
+          'content':
+            '<img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);">',
+          'type': 'text'
+        }
+      ] as any
+
+      _data[0].id = StrUtil.getId()
+      _data[0].content += '-0'
+      for (let i = 1; i <= 50; i++) {
+        const obj = { ..._data[0] }
+        obj.id = StrUtil.getId()
+        const num = MathUtil.getRandomInt(1, 3)
+        obj.content += '-' + i
+        for (let j = 0; j < num; j++) {
+          obj.content += obj.content
+        }
+        _data.push(obj)
+      }
+      conf.chat.list = _data
+      chatBoxRef.value.initData(_data)
+    },
     send: () => {
       conf.chat.list.push({
         isme: MathUtil.getRandomInt(1, 10) > 5,
@@ -203,6 +237,7 @@ onMounted(() => {
       conf.input.click()
     }
   })
+  conf.chat.getList()
 })
 </script>
 <style lang="less" scoped>
