@@ -1,13 +1,12 @@
 import { loading } from '@/components/loading/loading'
 import { toast } from '@/components/toast/toast'
+import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { getPlatforms } from '@ionic/vue'
 import { Router } from 'vue-router'
 import { globalType } from '../../build/env/globalVar'
-import { Capacitor } from '@capacitor/core'
-import { getPlatforms } from '@ionic/vue'
 
 export default class System {
-  
   /** 是否是原生 */
   static isNative = false
 
@@ -111,11 +110,13 @@ export default class System {
     status: 'success' | 'error' | 'warning' | 'info' = 'error',
     duration: number = 2000
   ) => {
-    toast({
-      content: message,
-      type: status,
-      duration: duration
-    })
+    FunUtil.debounce(() => {
+      toast({
+        content: message,
+        type: status,
+        duration: duration
+      })
+    }, 300)
   }
 
   /**

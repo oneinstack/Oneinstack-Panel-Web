@@ -39,6 +39,7 @@ onMounted(() => {
 //#ifvar-dev
 .log-box {
   position: fixed;
+  z-index: 9999;
   bottom: 50vh;
   right: 0;
   width: 400rem;

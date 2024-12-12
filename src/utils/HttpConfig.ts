@@ -13,7 +13,7 @@ export default class HttpConfig {
       Cookie.set('apiurl', apiurl)
     }
     if (Capacitor.isNativePlatform()) {
-      // env.API = 'https://demo.bggame.live'
+      env.API = 'https://demo.bggame.live'
     }
     //#endvar
 
