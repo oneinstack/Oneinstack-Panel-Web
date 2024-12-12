@@ -368,7 +368,7 @@ const conf = reactive({
           await conf.scroll.centent.loadBottom(0)
           timer.once(() => {
             toBottom(true)
-          }, 300)
+          }, 80)
           return
         } else return
       }
@@ -563,9 +563,7 @@ defineExpose({
    */
   insertData: (data: any) => {
     conf.dataSource.push(data)
-    timer.once(() => {
-      toBottom(true)
-    }, 300)
+    toBottom(true)
   }
 })
 </script>
