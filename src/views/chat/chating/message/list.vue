@@ -9,9 +9,6 @@
     @touchstart="conf.scroll.mousedown"
     @touchend="conf.scroll.mouseup"
   >
-    <!-- <div class="relative" v-for="(item, index) in mconf.chat.list" :key="item">
-      <Item :item="item" :style="{ paddingTop: index === 0 ? '46rem' : '' }" />
-    </div> -->
     <div class="absolute column no-wrap" style="width: 100%">
       <div
         class="relative fit-width"
@@ -141,7 +138,6 @@ const conf = reactive({
 
         // 更新所有数据
         if (res.length) {
-          System.loading(true)
           let lastDom = {} as any
           for (let i = 0; i < res.length; i++) {
             lastDom = await res[i].rander(conf.dataSource[res[i].dataIndex])
@@ -158,13 +154,12 @@ const conf = reactive({
 
           nextTick(async () => {
             //将scrollTop移动最新添加的数据位置
-            listRef.value.scrollTop = lastDom.top + lastDom.height + 1
+            const top = lastDom.top + lastDom.height + 2
+            listRef.value.scrollTop = top
             timer.once(() => {
-              listRef.value.scrollTop = lastDom.top + lastDom.height + 1
+              listRef.value.scrollTop = top
             }, 20)
           })
-          await timer.delay(700)
-          System.loading(false)
         }
       },
 
@@ -211,7 +206,6 @@ const conf = reactive({
 
         // 更新所有数据
         if (res.length) {
-          System.loading()
 
           //更新底部数据，渲染高度
           let lastHeight = 0
@@ -237,14 +231,12 @@ const conf = reactive({
 
           nextTick(async () => {
             //将scrollTop移动到最新添加的数据位置
-            const top = listRef.value.scrollHeight - listRef.value.clientHeight - lastHeight - 1
+            const top = listRef.value.scrollHeight - listRef.value.clientHeight - lastHeight - 2
             listRef.value.scrollTop = top
             timer.once(() => {
               listRef.value.scrollTop = top
             }, 20)
           })
-          await timer.delay(700)
-          System.loading(false)
         }
       }
     },
@@ -279,24 +271,26 @@ const conf = reactive({
       if (conf.scroll.direction === 1) {
         if (conf.scroll.lastY < 1) {
           //满足触发条件进行加载顶部数据
-          FunUtil.throttle(conf.scroll.centent.loadTop, 1000)
+          FunUtil.throttle(conf.scroll.centent.loadTop, 100)
         }
       } else if (conf.scroll.direction === -1) {
         if (conf.scroll.lastY > listRef.value.scrollHeight - listRef.value.clientHeight - 2) {
           //满足触发条件进行加载底部数据
-          FunUtil.throttle(conf.scroll.centent.loadBottom, 1000)
+          FunUtil.throttle(conf.scroll.centent.loadBottom, 100)
         }
       }
     },
 
     mousedown: () => {
       conf.scroll.isUser = true
+      timer.un(conf.scroll.mouseupTimer)
     },
+    mouseupTimer:null as any,
     mouseup: () => {
       conf.scroll.lastY = -1
-      timer.once(() => {
+      conf.scroll.mouseupTimer = timer.once(() => {
         conf.scroll.isUser = false
-      }, 1000)
+      }, 2000)
     },
     /**
      * 渲染最大数量
@@ -320,7 +314,7 @@ const conf = reactive({
 
       _data[0].id = StrUtil.getId()
       _data[0].content += '-0'
-      for (let i = 1; i <= 30; i++) {
+      for (let i = 1; i <= 100; i++) {
         const obj = { ..._data[0] }
         obj.id = StrUtil.getId()
         obj.content += '-' + i
