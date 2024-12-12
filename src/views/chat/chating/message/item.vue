@@ -1,35 +1,38 @@
 <template>
-  <div
-    ref="itemRef"
-    class="row fit-width"
-    :class="{ reverse: item.isme }"
-    style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
-  >
-    <img class="face" :src="item.face" />
-    <div style="margin: 0 20rem">
-      <div
-        v-if="item.isGroup && !item.isme"
-        class="row"
-        :class="{ reverse: item.isme }"
-        style="font-size: 24rem; color: #808080"
-      >
-        {{ item.sendnickname }}
-      </div>
-      <div class="relative">
-        <template v-if="item.type == 'text'">
-          <div class="relative text-box" :class="{ reverse: item.isme }">
-            <div class="absolute text-bg-arrow" :class="{ reverse: !item.isme }"></div>
-            <div v-html="item.content" style="word-break: break-all"></div>
+  <template v-if="conf.show">
+    <div
+      class="row fit-width"
+      :class="{ reverse: item.isme }"
+      style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
+    >
+      <img class="face" :src="item.face" />
+      <div style="margin: 0 20rem">
+        <div
+          v-if="item.isGroup && !item.isme"
+          class="row"
+          :class="{ reverse: item.isme }"
+          style="font-size: 24rem; color: #808080"
+        >
+          {{ item.sendnickname }}
+        </div>
+        <div class="relative">
+          <template v-if="item.type == 'text'">
+            <div class="relative text-box" :class="{ reverse: item.isme }">
+              <div class="absolute text-bg-arrow" :class="{ reverse: !item.isme }"></div>
+              <div v-html="item.content" style="word-break: break-all"></div>
+            </div>
+          </template>
+          <div v-else-if="item.type == 'img'">
+            <img :src="item.content" />
           </div>
-        </template>
-        <div v-else-if="item.type == 'img'">
-          <img :src="item.content" />
         </div>
       </div>
     </div>
-  </div>
+  </template>
 </template>
 <script setup lang="ts">
+import { onMounted, reactive } from 'vue'
+
 defineProps<{
   item: {
     type: string
@@ -42,6 +45,13 @@ defineProps<{
     isGroup: boolean
   }
 }>()
+
+const conf = reactive({
+  show: true
+})
+
+onMounted(() => {
+})
 </script>
 <style lang="less" scoped>
 .face {

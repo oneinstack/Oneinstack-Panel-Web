@@ -24,6 +24,7 @@
 </template>
 <script setup lang="ts">
 import sutil from '@/sstore/sutil'
+import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import Item from './item.vue'
@@ -101,28 +102,36 @@ const conf = reactive({
         const item0 = conf.scroll.centent.findIndex(0)
         if (!item0) return
 
-        const lazyNum = conf.scroll.centent.lazyNum
+        const lazyNum = conf.scroll.centent.lazyNum * 2
 
+        // 获取末位替换数据
         for (let i = 0; i < lazyNum; i++) {
           const findex = conf.scroll.renderMaxLength - Math.abs(i - lazyNum)
           arr.push(conf.scroll.centent.findIndex(findex))
         }
 
         const res = [] as any[]
+        // 排序索引
         let tindex = 0
+        //获取能渲染的数据
         for (let i = 0; i < lazyNum; i++) {
           const item = arr[i]
           const _dataIndex = item0.dataIndex - lazyNum + i
           if (_dataIndex >= 0) {
             item.dataIndex = _dataIndex
             item.index = tindex
-            await item.rander(conf.dataSource[_dataIndex])
             res.push(item)
             tindex++
           }
         }
 
+        // 更新所有数据
         if (res.length) {
+          System.loading(true)
+          for (let i = 0; i < res.length; i++) {
+            await res[i].rander(conf.dataSource[res[i].dataIndex])
+          }
+
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
             const _item = arr[i]
@@ -131,6 +140,16 @@ const conf = reactive({
               _item.updateTop()
             }
           }
+
+          nextTick(async () => {
+            //将scrollTop移动最新添加的数据位置
+            timer.once(() => {
+              const topItem = conf.scroll.centent.findIndex(res.length + conf.scroll.eventIndex)
+              listRef.value.scrollTop = topItem.top
+            }, 200)
+          })
+          await timer.delay(700)
+          System.loading(false)
         }
       },
 
@@ -148,6 +167,11 @@ const conf = reactive({
      * 1: 向上，-1：向下
      */
     direction: 0,
+
+    /**
+     * 触发事件索引
+     */
+    eventIndex: 1,
     /**
      * 滚动事件
      */
@@ -157,17 +181,17 @@ const conf = reactive({
       conf.scroll.lastY = e.target.scrollTop
 
       if (conf.scroll.direction === 1) {
-        const topItem = conf.scroll.centent.findIndex(conf.scroll.centent.lazyNum)
+        const topItem = conf.scroll.centent.findIndex(conf.scroll.eventIndex)
         if (conf.scroll.lastY < topItem.top) {
           //满足触发条件进行加载顶部数据
-          FunUtil.throttle(conf.scroll.centent.loadTop)
+          FunUtil.throttle(conf.scroll.centent.loadTop, 2000)
         }
       } else if (conf.scroll.direction === -1) {
         const bottomItem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - conf.scroll.centent.lazyNum)
         const topval = conf.scroll.lastY + listRef.value.clientHeight
         if (topval > bottomItem.top) {
           //满足触发条件进行加载底部数据
-          FunUtil.throttle(conf.scroll.centent.loadBottom)
+          FunUtil.throttle(conf.scroll.centent.loadBottom, 2000)
         }
       }
     },
