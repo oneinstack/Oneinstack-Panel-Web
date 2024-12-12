@@ -15,10 +15,7 @@
             :style="{ top: conf.scroll.centent.map[index].top + 'px' }"
             v-if="conf.scroll.centent.map[index].show"
           >
-            <Item
-              :item="conf.scroll.centent.map[index].data"
-              :style="{ paddingTop: conf.scroll.centent.map[index].index === 0 ? '30rem' : '' }"
-            />
+            <Item :item="conf.scroll.centent.map[index].data" />
           </div>
         </template>
       </div>
@@ -104,20 +101,24 @@ const conf = reactive({
         const item0 = conf.scroll.centent.findIndex(0)
         if (!item0) return
 
-        for (let i = 0; i < conf.scroll.centent.lazyNum; i++) {
-          arr.push(conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - i - 1))
+        const lazyNum = conf.scroll.centent.lazyNum
+
+        for (let i = 0; i < lazyNum; i++) {
+          const findex = conf.scroll.renderMaxLength - Math.abs(i - lazyNum)
+          arr.push(conf.scroll.centent.findIndex(findex))
         }
 
         const res = [] as any[]
-        for (let i = 0; i < arr.length; i++) {
+        let tindex = 0
+        for (let i = 0; i < lazyNum; i++) {
           const item = arr[i]
-          const _dataIndex = item0.dataIndex - conf.scroll.centent.lazyNum + i
+          const _dataIndex = item0.dataIndex - lazyNum + i
           if (_dataIndex >= 0) {
             item.dataIndex = _dataIndex
-
-            item.index = i
+            item.index = tindex
             await item.rander(conf.dataSource[_dataIndex])
             res.push(item)
+            tindex++
           }
         }
 
@@ -192,7 +193,7 @@ const conf = reactive({
 
       _data[0].id = StrUtil.getId()
       _data[0].content += '-0'
-      for (let i = 1; i <= 100; i++) {
+      for (let i = 1; i <= 30; i++) {
         const obj = { ..._data[0] }
         obj.id = StrUtil.getId()
         obj.content += '-' + i
