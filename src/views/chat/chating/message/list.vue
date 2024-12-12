@@ -26,7 +26,11 @@
             }"
             v-if="conf.scroll.centent.map[index].show"
           >
-            <Item :item="conf.scroll.centent.map[index].data" />
+            <Item
+              :info="conf.scroll.centent.map[index]"
+              :item="conf.scroll.centent.map[index].data"
+              :height="conf.scroll.centent.map[index].data.height"
+            />
           </div>
         </template>
       </div>
@@ -125,7 +129,7 @@ const conf = reactive({
           arr.push(conf.scroll.centent.findIndex(findex))
         }
 
-        const res = [] as any[]
+        let res = [] as any[]
         // 排序索引
         let tindex = 0
         //获取能渲染的数据
@@ -134,6 +138,7 @@ const conf = reactive({
           const _dataIndex = item0.dataIndex - lazyNum + i
           if (_dataIndex >= 0) {
             item.dataIndex = _dataIndex
+            item.data = conf.dataSource[_dataIndex]
             item.index = tindex
             res.push(item)
             tindex++
@@ -142,11 +147,16 @@ const conf = reactive({
 
         // 更新所有数据
         if (res.length) {
+          
+          //排序保证top存在
+          res = res.sort((a, b) => {
+            return a.index - b.index
+          })
+
           let lastDom = {} as any
           for (let i = 0; i < res.length; i++) {
-            lastDom = await res[i].rander(conf.dataSource[res[i].dataIndex])
+            lastDom = await res[i].render(res[i].data)
           }
-
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
             const _item = arr[i]
@@ -154,6 +164,12 @@ const conf = reactive({
               _item.index += res.length
               _item.updateTop()
             }
+          }
+
+          //排序进行修改top
+          const arr1 = conf.scroll.centent.getSortArr()
+          for (let i = 0; i < arr1.length; i++) {
+            arr1[i].updateTop()
           }
 
           nextTick(async () => {
@@ -208,6 +224,7 @@ const conf = reactive({
           const _dataIndex = itemLast.dataIndex + lazyNum - i
           if (_dataIndex < conf.dataSource.length) {
             item.dataIndex = _dataIndex
+            item.data = conf.dataSource[_dataIndex]
             item.index = tindex
             res.push(item)
             tindex--
@@ -224,7 +241,7 @@ const conf = reactive({
           //更新底部数据，渲染高度
           let lastHeight = 0
           for (let i = 0; i < res.length; i++) {
-            const lastDom = await res[i].rander(conf.dataSource[res[i].dataIndex])
+            const lastDom = await res[i].render(conf.dataSource[res[i].dataIndex])
             lastHeight += lastDom.height
           }
 
@@ -351,7 +368,11 @@ const conf = reactive({
       for (let i = 1; i <= 100; i++) {
         const obj = { ..._data[0] }
         obj.id = StrUtil.getId()
+        const num = MathUtil.getRandomInt(1, 3)
         obj.content += '-' + i
+        for (let j = 0; j < num; j++) {
+          obj.content += obj.content
+        }
         _data.push(obj)
       }
 
@@ -408,9 +429,14 @@ const conf = reactive({
             }
           },
           /**
+           * 是否正在重新渲染数据
+           */
+          isRender: false,
+          /**
            * 渲染到页面
            */
-          rander: async (data: any) => {
+          render: async (data: any) => {
+            obj.isRender = true
             return new Promise((res) => {
               nextTick(() => {
                 obj.data = data
@@ -422,6 +448,7 @@ const conf = reactive({
                   Object.keys(conf.scroll.centent.map).forEach((item) => {
                     conf.scroll.centent.height += conf.scroll.centent.map[item].height
                   })
+                  obj.isRender = false
                   res({
                     height: obj.height,
                     top: obj.top
@@ -476,7 +503,7 @@ const conf = reactive({
 
       for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
         const obj = conf.scroll.centent.map[i]
-        await obj.rander(obj.data)
+        await obj.render(obj.data)
       }
 
       timer.once(() => {
@@ -511,7 +538,5 @@ defineExpose({
 onMounted(() => {
   conf.scroll.init()
 })
-
-onMounted(() => {})
 </script>
 <style lang="less" scoped></style>

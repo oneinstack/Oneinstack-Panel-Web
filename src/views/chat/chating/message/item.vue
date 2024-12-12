@@ -3,6 +3,7 @@
     ref="itemRef"
     class="row fit-width"
     :class="{ reverse: item.isme }"
+    :style="{ height: height ? height + 'px' : undefined }"
     style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
   >
     <template v-if="conf.show">
@@ -33,10 +34,11 @@
 </template>
 <script setup lang="ts">
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive, ref } from 'vue'
+import { onMounted, reactive, ref, watch } from 'vue'
 
 const timer = Scope.Timer()
-defineProps<{
+const props = defineProps<{
+  info: any
   item: {
     type: string
     content: string
@@ -46,14 +48,27 @@ defineProps<{
     sendnickname: string
     isme: boolean
     isGroup: boolean
+    height: number
   }
+  height: any
 }>()
+
+watch(
+  () => props.info.isRender,
+  () => {
+    if (props.info.isRender) {
+      conf.show = true
+    }
+  }
+)
 
 const itemRef = ref()
 
 const observer = new IntersectionObserver((entries) => {
   entries.forEach((entry) => {
-    conf.show = entry.isIntersecting
+    if (!props.info.isRender) {
+      conf.show = entry.isIntersecting
+    }
   })
 })
 
@@ -67,7 +82,7 @@ const conf = reactive({
 onMounted(() => {
   timer.once(() => {
     init()
-  }, 50)
+  }, 100)
 })
 </script>
 <style lang="less" scoped>
