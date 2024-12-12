@@ -122,4 +122,7 @@ onMounted(() => {
     font-weight: 500;
   }
 }
+::v-deep .van-index-bar__sidebar{
+  position: absolute;
+}
 </style>
