@@ -1,5 +1,14 @@
 <template>
-  <div class="relative" ref="listRef" @scroll="conf.scroll.event">
+  <div
+    class="relative"
+    ref="listRef"
+    @scroll="conf.scroll.event"
+    @wheel="conf.scroll.event"
+    @mousedown="conf.scroll.mousedown"
+    @mouseup="conf.scroll.mouseup"
+    @touchstart="conf.scroll.mousedown"
+    @touchend="conf.scroll.mouseup"
+  >
     <!-- <div class="relative" v-for="(item, index) in mconf.chat.list" :key="item">
       <Item :item="item" :style="{ paddingTop: index === 0 ? '46rem' : '' }" />
     </div> -->
@@ -162,12 +171,14 @@ const conf = reactive({
       /**
        * 加载底部数据
        */
-      loadBottom: () => {}
+      loadBottom: () => {
+        System.loading()
+      }
     },
     /**
      * 临时y滚动距离
      */
-    lastY: 0,
+    lastY: 99999,
     /**
      * 滚动方向
      * 1: 向上，-1：向下
@@ -175,9 +186,19 @@ const conf = reactive({
     direction: 0,
 
     /**
+     * 是否是用户滚动
+     */
+    isUser: false,
+
+    /**
      * 滚动事件
      */
     event: (e: any) => {
+      if (!conf.scroll.isUser) return
+      if (conf.scroll.lastY === -1) {
+        conf.scroll.lastY = e.target.scrollTop
+        return
+      }
       //获取滚动方向
       conf.scroll.direction = e.target.scrollTop > conf.scroll.lastY ? -1 : 1
       conf.scroll.lastY = e.target.scrollTop
@@ -188,13 +209,21 @@ const conf = reactive({
           FunUtil.throttle(conf.scroll.centent.loadTop, 1000)
         }
       } else if (conf.scroll.direction === -1) {
-        const bottomItem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - conf.scroll.centent.lazyNum)
-        const topval = conf.scroll.lastY + listRef.value.clientHeight
-        if (topval > bottomItem.top) {
+        if (conf.scroll.lastY > listRef.value.scrollHeight - listRef.value.clientHeight - 2) {
           //满足触发条件进行加载底部数据
           FunUtil.throttle(conf.scroll.centent.loadBottom, 1000)
         }
       }
+    },
+
+    mousedown: () => {
+      conf.scroll.isUser = true
+    },
+    mouseup: () => {
+      conf.scroll.lastY = -1
+      timer.once(() => {
+        conf.scroll.isUser = false
+      }, 1000)
     },
     /**
      * 渲染最大数量
@@ -346,17 +375,32 @@ const conf = reactive({
       }
 
       timer.once(() => {
+        conf.scroll.isUser = false
         if (conf.scroll.height > listRef.value.clientHeight) {
           listRef.value.scrollTop = listRef.value.scrollHeight
         }
-        conf.scroll.centent.show = true
-      }, 100)
+        timer.once(() => {
+          conf.scroll.isUser = true
+          conf.scroll.centent.show = true
+        }, 20)
+      }, 20)
     }
   }
 })
 
 defineExpose({
-  dom: listRef
+  /**
+   * 滚动到底部
+   * @param ani 是否使用动画
+   */
+  toBottom: (ani = false) => {
+    const obj = {
+      top: listRef.value.scrollHeight
+    } as any
+    if (ani || listRef.value.scrollTop > listRef.value.scrollHeight - listRef.value.clientHeight - 800)
+      obj.behavior = 'smooth'
+    listRef.value.scrollTo(obj)
+  }
 })
 
 onMounted(() => {

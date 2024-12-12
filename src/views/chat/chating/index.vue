@@ -120,12 +120,7 @@ const conf = reactive({
   content: {
     toBottom: async (ani = false, time = 0) => {
       timer.once(() => {
-        const chatBox = chatBoxRef.value!.dom
-        const obj = {
-          top: chatBox.scrollHeight
-        } as any
-        if (ani || chatBox.scrollTop > chatBox.scrollHeight - chatBox.clientHeight - 800) obj.behavior = 'smooth'
-        chatBox.scrollTo(obj)
+        chatBoxRef.value.toBottom(ani)
       }, time)
     },
     click: () => {
@@ -189,8 +184,8 @@ const conf = reactive({
         type: 'text'
       })
 
-      console.log('conf.chat.list',conf.chat.list);
-      
+      console.log('conf.chat.list', conf.chat.list)
+
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)
 
