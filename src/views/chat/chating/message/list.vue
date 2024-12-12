@@ -365,7 +365,7 @@ const conf = reactive({
 
       _data[0].id = StrUtil.getId()
       _data[0].content += '-0'
-      for (let i = 1; i <= 5; i++) {
+      for (let i = 1; i <= 50; i++) {
         const obj = { ..._data[0] }
         obj.id = StrUtil.getId()
         const num = MathUtil.getRandomInt(1, 3)
@@ -421,7 +421,7 @@ const conf = reactive({
           updateTop: () => {
             //如果是最上面，则设置0
             if (obj.index === 0) {
-              obj.top = 0
+              obj.top = 15
             } else {
               //其他的获取上一个对象，设置顶部距离
               const prev = obj.getPrev()
