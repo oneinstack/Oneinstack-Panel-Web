@@ -35,7 +35,6 @@
 </template>
 <script setup lang="ts">
 import sutil from '@/sstore/sutil'
-import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { nextTick, onMounted, reactive, ref } from 'vue'
 import Item from './item.vue'
@@ -108,10 +107,15 @@ const conf = reactive({
        * 加载顶部数据
        */
       loadTop: async () => {
+        if (conf.scroll.centent.loadStatus) return
+        conf.scroll.centent.loadStatus = true
         const arr = [] as any[]
 
         const item0 = conf.scroll.centent.findIndex(0)
-        if (!item0) return
+        if (!item0) {
+          conf.scroll.centent.loadStatus = false
+          return
+        }
 
         const lazyNum = conf.scroll.centent.lazyNum * 2
 
@@ -158,19 +162,30 @@ const conf = reactive({
             listRef.value.scrollTop = top
             timer.once(() => {
               listRef.value.scrollTop = top
+              conf.scroll.centent.loadStatus = false
             }, 20)
           })
+        } else {
+          conf.scroll.centent.loadStatus = false
         }
       },
-
+      /**
+       * 数据加载状态，防止重复加载
+       */
+      loadStatus: false,
       /**
        * 加载底部数据
        */
       loadBottom: async () => {
+        if (conf.scroll.centent.loadStatus) return
+        conf.scroll.centent.loadStatus = true
         let arr = [] as any[]
 
         const itemLast = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
-        if (!itemLast) return
+        if (!itemLast) {
+          conf.scroll.centent.loadStatus = false
+          return
+        }
 
         const lazyNum = conf.scroll.centent.lazyNum * 2
 
@@ -206,7 +221,6 @@ const conf = reactive({
 
         // 更新所有数据
         if (res.length) {
-
           //更新底部数据，渲染高度
           let lastHeight = 0
           for (let i = 0; i < res.length; i++) {
@@ -235,20 +249,28 @@ const conf = reactive({
             listRef.value.scrollTop = top
             timer.once(() => {
               listRef.value.scrollTop = top
+              conf.scroll.centent.loadStatus = false
             }, 20)
           })
+        } else {
+          conf.scroll.centent.loadStatus = false
         }
       }
     },
     /**
      * 临时y滚动距离
      */
-    lastY: 99999,
+    lastY: 9999,
     /**
      * 滚动方向
      * 1: 向上，-1：向下
      */
     direction: 0,
+
+    /**
+     * 等于的次数
+     */
+    eqnum: 0,
 
     /**
      * 是否是用户滚动
@@ -260,36 +282,48 @@ const conf = reactive({
      */
     event: (e: any) => {
       if (!conf.scroll.isUser) return
-      if (conf.scroll.lastY === -1) {
-        conf.scroll.lastY = e.target.scrollTop
+
+      const tTop = listRef.value.scrollTop
+      const lastTop = conf.scroll.lastY
+
+      if (lastTop === 9999) {
+        conf.scroll.lastY = tTop
         return
       }
-      //获取滚动方向
-      conf.scroll.direction = e.target.scrollTop > conf.scroll.lastY ? -1 : 1
-      conf.scroll.lastY = e.target.scrollTop
+      conf.scroll.lastY = tTop
 
+      //获取滚动方向
+      conf.scroll.direction = tTop > lastTop ? -1 : 1
+      conf.scroll.getData()
+    },
+
+    getData: () => {
       if (conf.scroll.direction === 1) {
         if (conf.scroll.lastY < 1) {
           //满足触发条件进行加载顶部数据
-          FunUtil.throttle(conf.scroll.centent.loadTop, 100)
+          conf.scroll.centent.loadTop()
         }
       } else if (conf.scroll.direction === -1) {
         if (conf.scroll.lastY > listRef.value.scrollHeight - listRef.value.clientHeight - 2) {
           //满足触发条件进行加载底部数据
-          FunUtil.throttle(conf.scroll.centent.loadBottom, 100)
+          conf.scroll.centent.loadBottom()
         }
       }
     },
 
+    /**
+     * 鼠标按下
+     */
     mousedown: () => {
       conf.scroll.isUser = true
       timer.un(conf.scroll.mouseupTimer)
     },
-    mouseupTimer:null as any,
+    mouseupTimer: null as any,
     mouseup: () => {
-      conf.scroll.lastY = -1
+      timer.un(conf.scroll.mouseupTimer)
       conf.scroll.mouseupTimer = timer.once(() => {
         conf.scroll.isUser = false
+        conf.scroll.lastY = 9999
       }, 2000)
     },
     /**
