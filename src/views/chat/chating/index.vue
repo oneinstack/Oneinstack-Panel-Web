@@ -209,16 +209,20 @@ const conf = reactive({
       chatBoxRef.value.initData(_data)
     },
     send: () => {
-      conf.chat.list.push({
+      const newData = {
         isme: MathUtil.getRandomInt(1, 10) > 5,
         isGroup: MathUtil.getRandomInt(1, 10) > 5,
         sendnickname: 'Test',
         face: '/static/img/home-banner.png',
         content: inputRef.value.getMessage(),
         type: 'text'
-      })
+      }
 
-      console.log('conf.chat.list', conf.chat.list)
+      chatBoxRef.value.insertData([newData])
+
+      // conf.chat.list.push()
+
+      // console.log('conf.chat.list', conf.chat.list)
 
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)

@@ -19,6 +19,7 @@
             class="absolute fit-width"
             :id="conf.scroll.centent.map[index].id"
             :style="{
+              transition: conf.scroll.centent.map[index].transition,
               top: conf.scroll.centent.map[index].top + 'px',
               height: conf.scroll.centent.map[index].data.height
                 ? conf.scroll.centent.map[index].data.height + 'px'
@@ -278,15 +279,6 @@ const conf = reactive({
         } else {
           conf.scroll.centent.loadStatus = false
         }
-      },
-      /**
-       * 插入数据
-       */
-      insertData: (data: any[]) => {
-        for (let i = 0; i < data.length; i++) {
-          conf.dataSource.push(data[i])
-        }
-        conf.scroll.init()
       }
     },
     /**
@@ -368,6 +360,7 @@ const conf = reactive({
     init: async () => {
       //如果没有新数据或者本身就在底部，就不刷新和初始化到底部
       const lastitem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
+      //如果数据已经是最底部，则不进行初始化
       if (lastitem && lastitem.dataIndex === conf.dataSource.length - 1) return
 
       //获取最大渲染数量
@@ -519,7 +512,7 @@ const conf = reactive({
       timer.once(() => {
         conf.scroll.isUser = false
         if (conf.scroll.height > listRef.value.clientHeight) {
-          listRef.value.scrollTop = listRef.value.scrollHeight
+          listRef.value.scrollTop = listRef.value.scrollHeight - listRef.value.clientHeight
         }
         timer.once(() => {
           conf.scroll.isUser = true
@@ -556,7 +549,11 @@ defineExpose({
    * 插入数据
    * @param data 数据
    */
-  insertData: conf.scroll.centent.insertData
+  insertData: (data: any[]) => {
+    for (let i = 0; i < data.length; i++) {
+      conf.dataSource.push(data[i])
+    }
+  }
 })
 </script>
 <style lang="less" scoped></style>
