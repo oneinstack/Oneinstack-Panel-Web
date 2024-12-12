@@ -350,7 +350,6 @@ const conf = reactive({
      * 初始化参数
      */
     init: async () => {
-
       //模拟数据
       const _data = [
         {
@@ -449,7 +448,8 @@ const conf = reactive({
                   obj.updateTop()
                   conf.scroll.centent.height = 0
                   Object.keys(conf.scroll.centent.map).forEach((item) => {
-                    conf.scroll.centent.height += conf.scroll.centent.map[item].height
+                    const _item = conf.scroll.centent.map[item]
+                    if (_item.data) conf.scroll.centent.height += _item.height
                   })
                   obj.isRender = false
                   res({
