@@ -10,12 +10,7 @@
       </div>
     </template>
     <div class="col column relative">
-      <MessageList
-        class="col"
-        style="height: 100%; overflow: auto"
-        ref="chatBoxRef"
-        @click="conf.content.click"
-      />
+      <MessageList class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click" />
       <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
         <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="56" />
@@ -218,18 +213,10 @@ const conf = reactive({
         type: 'text'
       }
 
-      chatBoxRef.value.insertData([newData])
-
-      // conf.chat.list.push()
-
-      // console.log('conf.chat.list', conf.chat.list)
+      chatBoxRef.value.insertData(newData)
 
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)
-
-      timer.once(() => {
-        conf.content.toBottom(true)
-      }, 300)
     }
   }
 })

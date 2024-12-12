@@ -199,7 +199,7 @@ const conf = reactive({
       /**
        * 加载底部数据
        */
-      loadBottom: async () => {
+      loadBottom: async (offset = -2) => {
         if (conf.scroll.centent.loadStatus) return
         conf.scroll.centent.loadStatus = true
         let arr = [] as any[]
@@ -251,7 +251,6 @@ const conf = reactive({
             const lastDom = await res[i].render()
             lastHeight += lastDom.height
           }
-          conf.scroll.centent.getHeight()
           //排序进行修改索引
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
@@ -267,9 +266,10 @@ const conf = reactive({
             arr1[i].updateTop()
           }
 
+          conf.scroll.centent.getHeight()
           nextTick(async () => {
             //将scrollTop移动到最新添加的数据位置
-            const top = listRef.value.scrollHeight - listRef.value.clientHeight - lastHeight - 2
+            const top = listRef.value.scrollHeight - listRef.value.clientHeight - lastHeight + offset
             listRef.value.scrollTop = top
             timer.once(() => {
               listRef.value.scrollTop = top
@@ -361,7 +361,17 @@ const conf = reactive({
       //如果没有新数据或者本身就在底部，就不刷新和初始化到底部
       const lastitem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
       //如果数据已经是最底部，则不进行初始化
-      if (lastitem && lastitem.dataIndex === conf.dataSource.length - 1) return
+      if (lastitem) {
+        const offect = conf.dataSource.length - 1 - lastitem.dataIndex
+        if (lastitem.dataIndex === conf.dataSource.length - 1) return
+        else if (offect === 1) {
+          await conf.scroll.centent.loadBottom(0)
+          timer.once(() => {
+            toBottom(true)
+          }, 300)
+          return
+        } else return
+      }
 
       //获取最大渲染数量
       const _px = sutil.rem2px(80)
@@ -523,20 +533,22 @@ const conf = reactive({
   }
 })
 
+/**
+ * 滚动到底部
+ * @param ani 是否使用动画
+ */
+const toBottom = async (ani = false) => {
+  await conf.scroll.init()
+  const obj = {
+    top: listRef.value.scrollHeight
+  } as any
+  if (ani || listRef.value.scrollTop > listRef.value.scrollHeight - listRef.value.clientHeight - 800)
+    obj.behavior = 'smooth'
+  listRef.value.scrollTo(obj)
+}
+
 defineExpose({
-  /**
-   * 滚动到底部
-   * @param ani 是否使用动画
-   */
-  toBottom: async (ani = false) => {
-    await conf.scroll.init()
-    const obj = {
-      top: listRef.value.scrollHeight
-    } as any
-    if (ani || listRef.value.scrollTop > listRef.value.scrollHeight - listRef.value.clientHeight - 800)
-      obj.behavior = 'smooth'
-    listRef.value.scrollTo(obj)
-  },
+  toBottom: toBottom,
   /**
    * 初始化显示内容
    * @param data 数据
@@ -549,10 +561,11 @@ defineExpose({
    * 插入数据
    * @param data 数据
    */
-  insertData: (data: any[]) => {
-    for (let i = 0; i < data.length; i++) {
-      conf.dataSource.push(data[i])
-    }
+  insertData: (data: any) => {
+    conf.dataSource.push(data)
+    timer.once(() => {
+      toBottom(true)
+    }, 300)
   }
 })
 </script>
