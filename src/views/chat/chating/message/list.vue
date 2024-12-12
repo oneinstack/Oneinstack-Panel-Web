@@ -171,8 +171,81 @@ const conf = reactive({
       /**
        * 加载底部数据
        */
-      loadBottom: () => {
-        System.loading()
+      loadBottom: async () => {
+        let arr = [] as any[]
+
+        const itemLast = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
+        if (!itemLast) return
+
+        const lazyNum = conf.scroll.centent.lazyNum * 2
+
+        // 获取首位替换数据
+        for (let i = 0; i < lazyNum; i++) {
+          arr.push(conf.scroll.centent.findIndex(i))
+        }
+
+        //排序保证取第一位
+        arr = arr.sort((a, b) => {
+          return b.index - a.index
+        })
+
+        let res = [] as any[]
+        // 排序索引
+        let tindex = conf.scroll.renderMaxLength - 1
+        //获取能渲染的数据
+        for (let i = 0; i < lazyNum; i++) {
+          const item = arr[i]
+          const _dataIndex = itemLast.dataIndex + lazyNum - i
+          if (_dataIndex < conf.dataSource.length) {
+            item.dataIndex = _dataIndex
+            item.index = tindex
+            res.push(item)
+            tindex--
+          }
+        }
+
+        //排序保证top存在
+        res = res.sort((a, b) => {
+          return a.index - b.index
+        })
+
+        // 更新所有数据
+        if (res.length) {
+          System.loading()
+
+          //更新底部数据，渲染高度
+          let lastHeight = 0
+          for (let i = 0; i < res.length; i++) {
+            const lastDom = await res[i].rander(conf.dataSource[res[i].dataIndex])
+            lastHeight += lastDom.height
+          }
+
+          //排序进行修改索引
+          const arr = conf.scroll.centent.getSortArr()
+          for (let i = 0; i < arr.length; i++) {
+            const _item = arr[i]
+            if (_item.dataIndex <= itemLast.dataIndex) {
+              _item.index -= res.length
+            }
+          }
+
+          //排序进行修改top
+          const arr1 = conf.scroll.centent.getSortArr()
+          for (let i = 0; i < arr1.length; i++) {
+            arr1[i].updateTop()
+          }
+
+          nextTick(async () => {
+            //将scrollTop移动到最新添加的数据位置
+            const top = listRef.value.scrollHeight - listRef.value.clientHeight - lastHeight - 1
+            listRef.value.scrollTop = top
+            timer.once(() => {
+              listRef.value.scrollTop = top
+            }, 20)
+          })
+          await timer.delay(700)
+          System.loading(false)
+        }
       }
     },
     /**
@@ -314,28 +387,32 @@ const conf = reactive({
               nextTick(() => {
                 obj.data = data
                 obj.show = true
-                if (data.height) {
-                  obj.height = data.height
+
+                const getResData = () => {
+                  obj.updateTop()
+                  conf.scroll.centent.height = 0
+                  Object.keys(conf.scroll.centent.map).forEach((item) => {
+                    conf.scroll.centent.height += conf.scroll.centent.map[item].height
+                  })
                   res({
                     height: obj.height,
                     top: obj.top
                   })
+                }
+                if (data.height) {
+                  obj.height = data.height
+                  getResData()
                 } else {
                   const setHeight = () => {
                     const _dom = document.getElementById(obj.id)
                     if (_dom) {
-                      obj.height = _dom.clientHeight
-                      obj.updateTop()
-                      data.height = obj.height
+                      data.height = _dom.clientHeight
+
+                      obj.height = data.height
+                      //对新数据更新总高度
                       conf.scroll.height += obj.height
-                      conf.scroll.centent.height = 0
-                      Object.keys(conf.scroll.centent.map).forEach((item) => {
-                        conf.scroll.centent.height += conf.scroll.centent.map[item].height
-                      })
-                      res({
-                        height: obj.height,
-                        top: obj.top
-                      })
+
+                      getResData()
                     } else {
                       //如果dom不存在，则在下一帧设置高度
                       timer.once(() => {
