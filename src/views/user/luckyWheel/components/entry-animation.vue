@@ -84,13 +84,13 @@ const conf = reactive({
     start: (step: number) => {
       conf.countdown.value = 3
       timer.clear()
-      // conf.timerId = timer.on(() => {
-      //   if (conf.countdown.value <= 0) {
-      //     conf.steps.value === step && conf.steps.next()
-      //     return
-      //   }
-      //   conf.countdown.value--
-      // }, 1000)
+      conf.timerId = timer.on(() => {
+        if (conf.countdown.value <= 0) {
+          conf.steps.value === step && conf.steps.next()
+          return
+        }
+        conf.countdown.value--
+      }, 1000)
     }
   },
   withdrawalTimes: computed(() => {
@@ -118,7 +118,7 @@ const timer = Scope.Timer()
 
 <template>
   <transition name="fade-zoom-in" mode="out-in">
-    <x-page v-if="show" headerBgColor="transparent" :topfill="false">
+    <x-page v-if="show" headerBgColor="transparent" noFooter :topfill="false">
       <div class="entry-animation-container" :class="{ bg: conf.steps.value === 1 }">
         <div v-if="conf.steps.value === 1" class="receive-view" @click="conf.steps.next">
           <div class="receive">
