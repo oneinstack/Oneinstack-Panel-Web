@@ -133,8 +133,9 @@ const conf = reactive({
         // 更新所有数据
         if (res.length) {
           System.loading(true)
+          let lastDom = {} as any
           for (let i = 0; i < res.length; i++) {
-            await res[i].rander(conf.dataSource[res[i].dataIndex])
+            lastDom = await res[i].rander(conf.dataSource[res[i].dataIndex])
           }
 
           const arr = conf.scroll.centent.getSortArr()
@@ -149,8 +150,7 @@ const conf = reactive({
           nextTick(async () => {
             //将scrollTop移动最新添加的数据位置
             timer.once(() => {
-              const topItem = conf.scroll.centent.findIndex(res.length + conf.scroll.eventIndex)
-              listRef.value.scrollTop = topItem.top
+              listRef.value.scrollTop = lastDom.top + lastDom.height
             }, 200)
           })
           await timer.delay(700)
@@ -174,10 +174,6 @@ const conf = reactive({
     direction: 0,
 
     /**
-     * 触发事件索引
-     */
-    eventIndex: 1,
-    /**
      * 滚动事件
      */
     event: (e: any) => {
@@ -186,8 +182,7 @@ const conf = reactive({
       conf.scroll.lastY = e.target.scrollTop
 
       if (conf.scroll.direction === 1) {
-        const topItem = conf.scroll.centent.findIndex(conf.scroll.eventIndex)
-        if (conf.scroll.lastY < topItem.top) {
+        if (conf.scroll.lastY < 1) {
           //满足触发条件进行加载顶部数据
           FunUtil.throttle(conf.scroll.centent.loadTop, 2000)
         }
@@ -291,7 +286,10 @@ const conf = reactive({
                 obj.show = true
                 if (data.height) {
                   obj.height = data.height
-                  res(true)
+                  res({
+                    height: obj.height,
+                    top: obj.top
+                  })
                 } else {
                   const setHeight = () => {
                     const _dom = document.getElementById(obj.id)
@@ -304,7 +302,10 @@ const conf = reactive({
                       Object.keys(conf.scroll.centent.map).forEach((item) => {
                         conf.scroll.centent.height += conf.scroll.centent.map[item].height
                       })
-                      res(true)
+                      res({
+                        height: obj.height,
+                        top: obj.top
+                      })
                     } else {
                       timer.once(() => {
                         setHeight()
