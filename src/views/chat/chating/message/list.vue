@@ -147,7 +147,6 @@ const conf = reactive({
 
         // 更新所有数据
         if (res.length) {
-          
           //排序保证top存在
           res = res.sort((a, b) => {
             return a.index - b.index
@@ -155,7 +154,7 @@ const conf = reactive({
 
           let lastDom = {} as any
           for (let i = 0; i < res.length; i++) {
-            lastDom = await res[i].render(res[i].data)
+            lastDom = await res[i].render()
           }
           const arr = conf.scroll.centent.getSortArr()
           for (let i = 0; i < arr.length; i++) {
@@ -241,7 +240,7 @@ const conf = reactive({
           //更新底部数据，渲染高度
           let lastHeight = 0
           for (let i = 0; i < res.length; i++) {
-            const lastDom = await res[i].render(conf.dataSource[res[i].dataIndex])
+            const lastDom = await res[i].render()
             lastHeight += lastDom.height
           }
 
@@ -351,6 +350,8 @@ const conf = reactive({
      * 初始化参数
      */
     init: async () => {
+
+      //模拟数据
       const _data = [
         {
           'isme': false,
@@ -365,7 +366,7 @@ const conf = reactive({
 
       _data[0].id = StrUtil.getId()
       _data[0].content += '-0'
-      for (let i = 1; i <= 100; i++) {
+      for (let i = 1; i <= 5; i++) {
         const obj = { ..._data[0] }
         obj.id = StrUtil.getId()
         const num = MathUtil.getRandomInt(1, 3)
@@ -393,7 +394,7 @@ const conf = reactive({
           /**
            * 当前展示的数据下标
            */
-          dataIndex: _dataIndex,
+          dataIndex: _data[_dataIndex] ? _dataIndex : 9999,
           /**
            * 展示数据
            */
@@ -433,13 +434,15 @@ const conf = reactive({
            */
           isRender: false,
           /**
-           * 渲染到页面
+           * 渲染到页面-需要保证obj.data存在
            */
-          render: async (data: any) => {
+          render: async () => {
+            //如果数据未获取到，则不渲染
+            if (!obj.data) return
+
             obj.isRender = true
             return new Promise((res) => {
               nextTick(() => {
-                obj.data = data
                 obj.show = true
 
                 const getResData = () => {
@@ -454,16 +457,16 @@ const conf = reactive({
                     top: obj.top
                   })
                 }
-                if (data.height) {
-                  obj.height = data.height
+                if (obj.data.height) {
+                  obj.height = obj.data.height
                   getResData()
                 } else {
                   const setHeight = () => {
                     const _dom = document.getElementById(obj.id)
                     if (_dom) {
-                      data.height = _dom.clientHeight
+                      obj.data.height = _dom.clientHeight
 
-                      obj.height = data.height
+                      obj.height = obj.data.height
                       //对新数据更新总高度
                       conf.scroll.height += obj.height
 
@@ -501,11 +504,31 @@ const conf = reactive({
         conf.scroll.centent.map[i] = obj
       }
 
+      //对index进行排序，保证存在数据的以0开始
+      const _arr = [] as any[]
       for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
         const obj = conf.scroll.centent.map[i]
-        await obj.render(obj.data)
+        _arr.push(obj)
       }
 
+      //对数据进行排序
+      _arr.sort((a, b) => {
+        return a.dataIndex - b.dataIndex
+      })
+
+      //在渲染数据时，需要保证index是顺序的
+      let _index = 0
+      for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
+        _arr[i].index = _index
+        _index++
+      }
+
+      //渲染数据
+      for (let i = 0; i < conf.scroll.renderMaxLength; i++) {
+        await _arr[i].render()
+      }
+
+      //设置滚动位置到底部
       timer.once(() => {
         conf.scroll.isUser = false
         if (conf.scroll.height > listRef.value.clientHeight) {
