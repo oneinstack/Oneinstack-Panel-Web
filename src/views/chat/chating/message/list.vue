@@ -149,9 +149,10 @@ const conf = reactive({
 
           nextTick(async () => {
             //将scrollTop移动最新添加的数据位置
+            listRef.value.scrollTop = lastDom.top + lastDom.height + 1
             timer.once(() => {
-              listRef.value.scrollTop = lastDom.top + lastDom.height
-            }, 200)
+              listRef.value.scrollTop = lastDom.top + lastDom.height + 1
+            }, 20)
           })
           await timer.delay(700)
           System.loading(false)
@@ -184,14 +185,14 @@ const conf = reactive({
       if (conf.scroll.direction === 1) {
         if (conf.scroll.lastY < 1) {
           //满足触发条件进行加载顶部数据
-          FunUtil.throttle(conf.scroll.centent.loadTop, 2000)
+          FunUtil.throttle(conf.scroll.centent.loadTop, 1000)
         }
       } else if (conf.scroll.direction === -1) {
         const bottomItem = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - conf.scroll.centent.lazyNum)
         const topval = conf.scroll.lastY + listRef.value.clientHeight
         if (topval > bottomItem.top) {
           //满足触发条件进行加载底部数据
-          FunUtil.throttle(conf.scroll.centent.loadBottom, 2000)
+          FunUtil.throttle(conf.scroll.centent.loadBottom, 1000)
         }
       }
     },
@@ -307,6 +308,7 @@ const conf = reactive({
                         top: obj.top
                       })
                     } else {
+                      //如果dom不存在，则在下一帧设置高度
                       timer.once(() => {
                         setHeight()
                       }, 20)
@@ -357,33 +359,9 @@ defineExpose({
   dom: listRef
 })
 
-// const itemRef = ref()
-// const observer = new IntersectionObserver((entries) => {
-//   entries.forEach(async (entry) => {
-//     conf.show = entry.isIntersecting
-//     if (conf.show && conf.height === '80rem') {
-//       conf.height = await FunUtil.lock(() => {
-//         return new Promise((res) => {
-//           nextTick(() => {
-//             res(itemRef.value.clientHeight + 'px')
-//           })
-//         })
-//       })
-//       console.log('conf.height', conf.height)
-//     }
-//   })
-// })
-
-// const init = () => {
-//   observer.observe(itemRef.value as Element)
-// }
-
 onMounted(() => {
   conf.scroll.init()
 })
-// onUnmounted(() => {
-//   observer.disconnect()
-// })
 
 onMounted(() => {})
 </script>
