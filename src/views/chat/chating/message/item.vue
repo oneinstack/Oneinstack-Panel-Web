@@ -1,10 +1,11 @@
 <template>
-  <template v-if="conf.show">
-    <div
-      class="row fit-width"
-      :class="{ reverse: item.isme }"
-      style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
-    >
+  <div
+    ref="itemRef"
+    class="row fit-width"
+    :class="{ reverse: item.isme }"
+    style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
+  >
+    <template v-if="conf.show">
       <img class="face" :src="item.face" />
       <div style="margin: 0 20rem">
         <div
@@ -27,12 +28,14 @@
           </div>
         </div>
       </div>
-    </div>
-  </template>
+    </template>
+  </div>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { Scope } from 'tools-vue3'
+import { onMounted, reactive, ref } from 'vue'
 
+const timer = Scope.Timer()
 defineProps<{
   item: {
     type: string
@@ -46,11 +49,25 @@ defineProps<{
   }
 }>()
 
+const itemRef = ref()
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach((entry) => {
+    conf.show = entry.isIntersecting
+  })
+})
+
+const init = () => {
+  observer.observe(itemRef.value as Element)
+}
 const conf = reactive({
   show: true
 })
 
 onMounted(() => {
+  timer.once(() => {
+    init()
+  }, 50)
 })
 </script>
 <style lang="less" scoped>

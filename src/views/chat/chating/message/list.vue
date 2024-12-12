@@ -12,7 +12,12 @@
           <div
             class="absolute fit-width"
             :id="conf.scroll.centent.map[index].id"
-            :style="{ top: conf.scroll.centent.map[index].top + 'px' }"
+            :style="{
+              top: conf.scroll.centent.map[index].top + 'px',
+              height: conf.scroll.centent.map[index].data.height
+                ? conf.scroll.centent.map[index].data.height + 'px'
+                : undefined
+            }"
             v-if="conf.scroll.centent.map[index].show"
           >
             <Item :item="conf.scroll.centent.map[index].data" />
