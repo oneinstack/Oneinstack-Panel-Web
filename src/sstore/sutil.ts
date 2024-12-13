@@ -72,7 +72,7 @@ export const sutil = reactive({
    * 返回上一页，如果没进行过跳转，进入首页
    */
   pageBack: () => {
-    if (window.history.length > 1 && !window.history.state.back) {
+    if (window.history.length < 2 && !window.history.state.back) {
       System.router.replace('/')
     } else {
       System.router.back()
@@ -553,7 +553,7 @@ export const sutil = reactive({
       const _ddFormat = _formatTime.Format('dd')
       if (_dd == _ddFormat) return _formatTime.Format('hh:mm')
     }
-  
+
     //昨天
     if (diff < 48 * 60 * 60 * 1000) {
       const _yd = new Date(TimeUtil.somedayse(-1)[0])
