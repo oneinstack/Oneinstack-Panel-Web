@@ -44,15 +44,15 @@ export default class cHttpConfig {
           }
         })
         config.param.headers['operationid'] = StrUtil.uuid()
-        csconfig.userInfo.imToken && (config.param.headers.Token = csconfig.userInfo.imToken)
+
+        let token = csconfig.userInfo.imToken
+        if (config.param.url.startsWith('http')) {
+          token = csconfig.userInfo.chatToken
+        }
+        token && (config.param.headers.Token = token)
       },
       after(xhr, config) {
-        const { code } = xhr.data
-        if (code != 200) {
-          error(code, config, xhr)
-          return
-        }
-        funrun(config.data, ['final', 'success', 'complete'], xhr.data, config, xhr)
+        xhr.data = xhr.data.data
       },
       error
     })

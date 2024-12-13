@@ -16,7 +16,7 @@ export const capis = {
   businessReset: (obj?: ApiData) => chttp.post('/account/password/reset', obj),
   businessModify: (obj?: ApiData) => chttp.post('/account/password/change', obj),
   businessInfoUpdate: (obj?: ApiData) => chttp.post('/user/update', obj),
-  businessGetUserInfo: (obj?: ApiData) => chttp.post('/user/find/full', obj),
+  businessGetUserInfo: (obj?: ApiData) => chttp.post(getRU() + '/user/find/full', { userIDs: [obj] }),
   businessSearchUserInfo: (obj?: ApiData) => chttp.post('/user/search/full', obj),
   businessSearchUser: (obj?: ApiData) => chttp.post('/friend/search', obj),
 
