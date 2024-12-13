@@ -9,11 +9,11 @@
         v-if="svalue.showRedBag"
       >
         <div class="redImg">
-          <x-img src="/static/img/redEnvelope/home-red.gif"></x-img>
+          <img src="/static/img/redEnvelope/home-red.gif" />
         </div>
         <div class="name" v-if="conf.showTitle.Redpayout">{{ $t('home.RedEnvelopeRain') }}</div>
         <div class="close-img">
-          <x-img src="/static/img/download-close.png" @click.stop="svalue.showRedBag = false"></x-img>
+          <img src="/static/img/download-close.png" @click.stop="svalue.showRedBag = false" />
         </div>
       </div>
       <!-- 聊天室 -->
@@ -24,7 +24,7 @@
         v-if="sconfig.userInfo && svalue.configv1['im_open']"
         @click="conf.toChat()"
       >
-        <x-img src="/static/images/wx.png"></x-img>
+        <img src="/static/images/wx.png" />
       </div>
       <!-- 客服 -->
       <div
@@ -34,10 +34,10 @@
         @click="conf.handleClickServiceImg()"
         v-if="svalue.showServer"
       >
-        <x-img src="/static/img/service.png"></x-img>
+        <img src="/static/img/service.png" />
         <div class="name" v-if="conf.showTitle.Servicing">{{ $t('home.Servicing') }}</div>
         <div class="close-img">
-          <x-img src="/static/img/download-close.png" @click.stop="svalue.showServer = false"></x-img>
+          <img src="/static/img/download-close.png" @click.stop="svalue.showServer = false" />
         </div>
       </div>
     </div>
@@ -120,6 +120,10 @@ onMounted(() => {
   width: 100%;
   z-index: 99;
   max-width: 500px;
+  img {
+    width: 100%;
+    height: 100%;
+  }
   .fiexd-list {
     position: absolute;
     right: 24rem;
