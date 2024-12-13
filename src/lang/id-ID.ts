@@ -438,6 +438,7 @@ export default {
     1122: 'Kotak surat tidak terikat, tolong ikat kotak surat dulu!', //邮箱未绑定，请先绑定邮箱
     1123: 'Kisah itu harus terdiri dari angka dan huruf dan mungkin berisi lambang itu ._-', //账户由数字和字母组成,可包含符号._-
     1124: 'Nama pengguna berisi 6 sampai 20 karakter', //账户名长度为6-20位
+    1125: 'Gagal memberikan hak istimewa', //授权失败
     1132: 'Pengecualian pengaturan nilai pengalaman', //经验值设置异常
     1133: 'Mengikat IP pengecualian', //绑定IP异常
 
@@ -912,6 +913,8 @@ export default {
     29: 'Bonus deposit', //充值赠送
     30: 'Bonus deposit aktivitas', //活动充值赠送
     31: 'Tugas masuk', //签到活动
+    32: 'Pembatalan pesanan', //注单撤销
+    33: 'Pencabutan rebate', //返点撤销
     97: 'Penyesuaian akuntansi' //调账
   },
 

@@ -69,14 +69,12 @@ watch(
       <div class="tips">
         {{ `${$t('luckyWheel.congratulations')} ${$t('luckyWheel.onWinning')}` }}
         <br />
-        <span :class="{ 'unit': unit.length > 3 }">{{ unit }}</span>
-        {{ amount }}
+        <span :class="{ 'unit': unit.length > 3 }">{{ unit }}</span>{{ amount }}
       </div>
       <div class="content">
         <img class="coin" src="/static/img/luckyWheel/coin.png" />
         <span class="amount">
-          <span :class="{ 'unit': unit.length > 3 }">{{ unit }}</span>
-          {{ amount }}
+          <span :class="{ 'unit': unit.length > 3 }">{{ unit }}</span>{{ amount }}
         </span>
         <div class="light-box coin">
           <img
@@ -177,11 +175,18 @@ watch(
       transform: translateX(-50%);
       font-size: 64rem;
       font-weight: 600;
-      background: linear-gradient(180deg, #ffffff 0%, #fde1ab 100%);
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
-      -webkit-text-stroke: 3rem #ef6c33;
+      // background: linear-gradient(180deg, #ffffff 0%, #fde1ab 100%);
+      // -webkit-background-clip: text;
+      // background-clip: text;
+      // -webkit-text-fill-color: transparent;
+      // -webkit-text-stroke: 3rem #ef6c33;
+      width: 100%;
+      color: #fde1ab;
+      text-shadow:
+        -2rem -2rem 0 #ef6c33,
+        2rem -2rem 0 #ef6c33,
+        -2rem 2rem 0 #ef6c33,
+        2rem 2rem 0 #ef6c33;
 
       .unit {
         margin-right: 8rem;

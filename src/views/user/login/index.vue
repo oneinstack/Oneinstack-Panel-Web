@@ -881,7 +881,6 @@ onMounted(async () => {
     conf.type = routeParams.type
   }
 
-  conf.getAreaCode()
   // conf.getConfig()
   //获取当前用户配置信息
   conf.datas = await svalue.getAppConfiguration()
@@ -1170,6 +1169,7 @@ onMounted(async () => {
 
   .right-btn {
     background: linear-gradient(#eb602d, #ffa64f);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
