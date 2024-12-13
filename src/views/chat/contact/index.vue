@@ -66,6 +66,7 @@ const conf = reactive({
     type: ContactMenuTypes.MyGroup,
     title: i18n.t('chatRoom.my_grps'),
     icon: '/static/img/chat/new_group.png',
+    url: '/chat/groupList',
     badge: 12
   }],
   userList: [{
@@ -82,9 +83,10 @@ const conf = reactive({
     list: ['/1223', '!22', '#33', '%44', '*55', '*66']
   }],
   goPages(url: any,item = null as any) {
-    if(url && url != null) return System.router.push(url)
-
-    if(item.idx < 2) return System.router.push({ path: '/chat/applicationList', query: { type: item.type} })
+    let routeUrl = url || item.url || null
+    if(routeUrl) return System.router.push(routeUrl)
+    
+    System.router.push({ path: '/chat/applicationList', query: { type: item.type} })
   }
 })
 const init = () => {

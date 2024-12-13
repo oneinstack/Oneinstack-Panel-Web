@@ -1242,6 +1242,8 @@ export default {
     add_grp: 'Agregar grupo',
     exist: 'Existe',
     grp: 'Grupo',
+    sgrp: 'grupo',
+    sgrops: 'grupos',
     apply_grp: 'Aplicar para unirse a este grupo',
     qr_code: 'Código QR',
     scan_qr_code: 'Escanea el código QR a continuación',

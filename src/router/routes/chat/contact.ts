@@ -10,5 +10,9 @@ export default [
   {
     path: '/chat/applicationList',
     component: '/chat/contact/applicationList/index'
+  },
+  {
+    path: '/chat/groupList',
+    component: '/chat/contact/groupList/index'
   }
 ]

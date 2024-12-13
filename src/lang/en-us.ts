@@ -1238,6 +1238,8 @@ export default {
     add_grp: 'Add Group',
     exist: 'Exists',
     grp: 'Group',
+    sgrp: 'group',
+    sgrops: 'groups',
     apply_grp: 'Apply to Join This Group',
     qr_code: 'QR Code',
     scan_qr_code: 'Scan the QR Code Below',

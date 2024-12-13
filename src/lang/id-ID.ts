@@ -1241,6 +1241,8 @@ export default {
     add_grp: 'Tambahkan Grup',
     exist: 'Ada',
     grp: 'Grup',
+    sgrp: 'grup',
+    sgrops: 'grup',
     apply_grp: 'Ajukan Permohonan untuk Bergabung dengan Grup Ini',
     qr_code: 'Kode QR',
     scan_qr_code: 'Pindai Kode QR di Bawah',

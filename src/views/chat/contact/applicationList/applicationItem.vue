@@ -42,6 +42,26 @@ const props = defineProps({
 const conf = reactive({
     text: '我是似水流年里去了我是似水流年里去了我是似水流年里去了',
     accessLoading: false,
+    clickItem() {
+      if (showAccept) {
+        // uni.navigateTo({
+        //   url: `/chatRoom/contact/applicationDetails/index?application=${JSON.stringify(
+        //     this.application,
+        //   )}`,
+        // });
+      } else {
+        let sourceID =
+          props.application.groupID ??
+          (props.isRecv
+            ? props.application.fromUserID
+            : props.application.toUserID);
+        let cardType = isGroupApplication ? "groupCard" : "userCard";
+        const url = `/chatRoom/common/${cardType}/index?sourceID=${sourceID}`;
+        // uni.navigateTo({
+        //   url,
+        // });
+      }
+    },
     acceptApplication() {
       conf.accessLoading = true;
       let func;
@@ -144,9 +164,8 @@ const getAvatarUrl = computed(() => {
         padding-right: 30rem;
 
         .left_info {
-            color: #000;
-            font-weight: 600;
-            font-size: 32rem;
+            color: #333;
+            font-size: 30rem;
             width: 100%;
 
             .message {
