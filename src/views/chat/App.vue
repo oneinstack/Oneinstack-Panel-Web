@@ -6,10 +6,9 @@
 <script setup lang="ts">
 import uspage from '@/components/page/uspage'
 import csconfig from '@/modules/chat/sstore/csconfig'
-import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
+import IMSDK from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
-
 
 defineOptions({
   name: 'ChatApp'
@@ -18,18 +17,6 @@ defineOptions({
 const conf = reactive({
   show: false,
   init: async () => {
-    //优先从url中获取
-    const param = System.getRouterParams()
-    let chatInfo = {} as any
-    if (param.url) {
-      chatInfo = param
-      Cookie.set('chatInfo', param, {
-        expire: 3600
-      })
-    } else {
-      chatInfo = Cookie.get('chatInfo') || {}
-    }
-
     //如果cookie有问题，则跳转至首页
     // if (!chatInfo.url) {
     //   System.router.replace('/')
@@ -49,9 +36,28 @@ const conf = reactive({
       }
     })
 
-    csconfig.userInfo = chatInfo
-
     cConfig.init()
+
+    await IMSDK.asyncApi(IMSDK.IMMethods.Login, IMSDK.uuid(), {
+      userID: csconfig.userInfo.userID,
+      token: csconfig.userInfo.imToken,
+      platformID: 5,
+      wsAddr: csconfig.config.wsUrl,
+      apiAddr: csconfig.config.apiUrl
+    })
+      .then((res) => {
+        // initStore()
+        console.log('success', res)
+      })
+      .catch((err) => {
+        // console.log("error", err);
+        // uni.removeStorage({
+        // 	key: "IMToken",
+        // });
+        // uni.removeStorage({
+        // 	key: "BusinessToken",
+        // });
+      })
     conf.show = true
   }
 })

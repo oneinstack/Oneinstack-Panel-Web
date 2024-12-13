@@ -3,5 +3,10 @@ export default {
   /**
    * 接口地址
    */
-  API: 'https://demo.bggame.live'
+  API: 'https://demo.bggame.live',
+
+  /**
+   * 聊天地址
+   */
+  ChatUrl: 'http://18.166.78.82'
 }

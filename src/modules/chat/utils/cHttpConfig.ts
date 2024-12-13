@@ -30,7 +30,7 @@ export default class cHttpConfig {
     }
     const _http = httpBean()
     _http.setConfig({
-      base: csconfig.userInfo.url,
+      base: csconfig.config.apiUrl,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded'
       },
