@@ -22,6 +22,12 @@ export const csconfig = reactive({
       }
     }
     csconfig.userInfo = chatInfo || {}
+    
+    //如果cookie有问题，则跳转至首页
+    // if (!chatInfo.url) {
+    //   System.router.replace('/')
+    //   return
+    // }
   },
   /**
    * 基础配置

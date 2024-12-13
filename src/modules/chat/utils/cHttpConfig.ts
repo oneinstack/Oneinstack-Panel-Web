@@ -32,7 +32,7 @@ export default class cHttpConfig {
     _http.setConfig({
       base: csconfig.config.apiUrl,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded'
+        'Content-Type': 'application/json'
       },
       before(config) {
         config.param.headers = config.param.headers || {}
@@ -43,6 +43,7 @@ export default class cHttpConfig {
             delete config.data[key]
           }
         })
+        config.param.headers['operationid'] = StrUtil.uuid()
         csconfig.userInfo.imToken && (config.param.headers.Token = csconfig.userInfo.imToken)
       },
       after(xhr, config) {

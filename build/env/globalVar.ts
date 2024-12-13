@@ -1,13 +1,13 @@
+import ac from './_ac'
 import cdn from './_cdn'
 import cdnlocal from './_cdnlocal'
 import dev from './_dev'
+import kk from './_kk'
+import ll from './_ll'
 import pro from './_pro'
 import proview from './_proview'
-import _var from './_var'
-import ll from './_ll'
-import ac from './_ac'
-import kk from './_kk'
 import test from './_test'
+import _var from './_var'
 
 const getConf = () => {
   return {
@@ -25,10 +25,11 @@ const getConf = () => {
 
 export const globalVar = (mode: string) => {
   mode = mode == 'production' ? 'pro' : mode
-  const _conf = getConf()[mode]
+  let _conf = getConf()[mode]
   if (!_conf) {
+    console.log(`环境${mode}不存在，确认是否导入或声明环境，使用默认环境dev`)
     mode = 'dev'
-    // throw new Error(`环境${mode}不存在，确认是否导入或声明环境`)
+    _conf = getConf()[mode]
   }
   const env: envType = Object.assign(_conf)
   let res = Object.assign(_var, { env })

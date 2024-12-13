@@ -1,9 +1,11 @@
 import csconfig from './csconfig'
+import csdk from './csdk'
 import csutil from './csutil'
 
 csutil.store = {
   csconfig,
-  csutil
+  csutil,
+  csdk
 }
 
 export const reset = () => {
