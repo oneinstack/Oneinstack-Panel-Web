@@ -25,11 +25,11 @@ const conf = reactive({
 
   // 图片载入成功
   imgLoad(e: any) {
-    // conf.imgLoading = false
+    conf.imgLoading = false
   },
   // 图片载入失败
   imgError(e: any) {
-    // conf.isError = true
+    conf.isError = true
   }
 })
 </script>
