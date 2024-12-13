@@ -72,6 +72,7 @@ import System from '@/utils/System'
 import sapp from '@/sstore/sapp'
 import toolsVue from './com/tools.vue'
 import MessageList from './message/list.vue'
+import csconversation from '@/modules/chat/sstore/csconversation'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
@@ -229,6 +230,8 @@ onMounted(() => {
     }
   })
   conf.chat.getList()
+  console.log('cim---',csconversation.conversationList);
+  
 })
 </script>
 <style lang="less" scoped>

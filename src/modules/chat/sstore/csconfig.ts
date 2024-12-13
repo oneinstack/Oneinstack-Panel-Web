@@ -22,7 +22,7 @@ export const csconfig = reactive({
       }
     }
     csconfig.userInfo = chatInfo || {}
-    
+
     //如果cookie有问题，则跳转至首页
     // if (!chatInfo.url) {
     //   System.router.replace('/')
@@ -51,9 +51,18 @@ export const csconfig = reactive({
    */
   initConfig: (url?: string) => {
     if (!url) url = System.env.ChatUrl
+
+    //#ifvar-dev
+    csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
+    csconfig.config.apiUrl = url + ':10002'
+    csconfig.config.registerUrl = url + ':10008'
+    //#endvar
+
+    //#ifvar-pro
     csconfig.config.wsUrl = url.replace('http', 'ws') + '/ws' //10001
     csconfig.config.apiUrl = url + '/api' //10002
     csconfig.config.registerUrl = url + '/register' //10008
+    //#endvar
   },
   /**
    * 加载配置

@@ -4,6 +4,7 @@ import csconfig from './csconfig'
 import cscontact from './cscontact'
 import csconversation from './csconversation'
 import csuser from './csuser'
+import { conversationSort } from '../utils/cUtil'
 
 export const csdk = reactive({
   Login: async () => {
@@ -373,14 +374,9 @@ export const csdk = reactive({
       // this.$store.commit("conversation/SET_UNREAD_COUNT", data);
     };
     const newConversationHandler = ({ data }:any) => {
-      // if (this.storeIsSyncing) {
-      //   return;
-      // }
-      // const result = [...data, ...this.storeConversationList];
-      // this.$store.commit(
-      //   "conversation/SET_CONVERSATION_LIST",
-      //   conversationSort(result),
-      // );
+      if(csuser.isSyncing) return
+      csconversation.conversationList = [ ...data,...csconversation.conversationList,]
+      conversationSort(csconversation.conversationList)
     };
     const conversationChangedHandler = ({ data }:any) => {
       // if (this.storeIsSyncing) {

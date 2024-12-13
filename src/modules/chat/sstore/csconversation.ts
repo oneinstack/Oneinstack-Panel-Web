@@ -1,7 +1,7 @@
 import IMSDK from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 
-export const conversationState = reactive({
+export const csconversation = reactive({
   conversationList: [] as any[],
   currentConversation: {} as any,
   unReadCount: 0,
@@ -78,4 +78,4 @@ export const conversationState = reactive({
   }
 })
 
-export default conversationState
+export default csconversation
