@@ -126,7 +126,7 @@ const conf = reactive({
     return new Promise((resolve, reject) => {
       System.loading()
       conf.ws = new WebSocketBean({
-        url: `${wsurl}/api/mini/games/redPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
+        url: `${wsurl}/ws/mini/games/redPacketRain/${sconfig.userInfo.token}/${conf.redInfo.id}`,
         onmessage(ev) {
           try {
             let _data = JSON.parse(ev.data)
