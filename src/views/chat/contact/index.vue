@@ -9,15 +9,15 @@
       </div>
     </template>
     <div>
-      <div class="search-box flex flex-center">
-        <van-icon name="search" size="15" color="#B9B9B9" />
-        <span>Search</span>
-      </div>
+      <headSearch />
       <div style="background: #fff;">
         <template v-for="(item, index) in conf.meaus" :key="index">
-          <div class="anchor-item" @click="conf.goPages('/chat/search')">
+          <div class="anchor-item" @click="conf.goPages(null,item)">
             <div class="item-author">
               <img style="width: 100%; height: 100%" :src="item.icon" />
+              <div class="message-count flex flex-center" v-if="item.badge > 0">
+                {{ item.badge < 99 ? item.badge : '99+' }}
+              </div>
             </div>
             <div class="item-name">{{ item.title }}</div>
           </div>
@@ -43,17 +43,30 @@
 import { onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import System from '@/utils/System';
+import headSearch from './headSearch.vue';
+import { ContactMenuTypes } from '@/modules/chat/constant'
 const conf = reactive({
   indexList: [] as any[],
   meaus: [{
     idx: 0,
+    type: ContactMenuTypes.NewFriend,
     title: i18n.t('chatRoom.new_friend'),
-    icon: '/static/img/chat/new_friends.png'
+    icon: '/static/img/chat/new_friends.png',
+    badge: 120
   },
   {
     idx: 1,
+    type: ContactMenuTypes.NewGroup,
     title: i18n.t('chatRoom.new_grp'),
-    icon: '/static/img/chat/new_group.png'
+    icon: '/static/images/contact_new_group.png',
+    badge: 5
+  },
+  {
+    idx: 2,
+    type: ContactMenuTypes.MyGroup,
+    title: i18n.t('chatRoom.my_grps'),
+    icon: '/static/img/chat/new_group.png',
+    badge: 12
   }],
   userList: [{
     index: 'A',
@@ -68,8 +81,10 @@ const conf = reactive({
     index: '#',
     list: ['/1223', '!22', '#33', '%44', '*55', '*66']
   }],
-  goPages(url: string) {
-    System.router.push(url)
+  goPages(url: any,item = null as any) {
+    if(url && url != null) return System.router.push(url)
+
+    if(item.idx < 2) return System.router.push({ path: '/chat/applicationList', query: { type: item.type} })
   }
 })
 const init = () => {
@@ -112,8 +127,21 @@ onMounted(() => {
     width: 76rem;
     height: 76rem;
     border-radius: 8rem;
-    overflow: hidden;
     margin-right: 26rem;
+    position: relative;
+    .message-count {
+      position: absolute;
+      top: 0;
+      right: 0;
+      height: 36rem;
+      background-color: #f45551;
+      border-radius: 18rem;
+      padding: 0 10rem;
+      text-align: center;
+      line-height: 36rem;
+      transform: translate(50%, -50%);
+      color: #fff;
+    }
   }
 
   .item-name {

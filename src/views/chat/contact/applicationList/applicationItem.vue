@@ -1,0 +1,168 @@
+<template>
+    <div class="item">
+        <img class="avatar-img" src="/static/img/home-banner.png" />
+        <div class="item_content">
+            <div class="left_info">
+                <div>{{ getShowName }}似水流年</div>
+                <div class="message">
+                    <van-text-ellipsis rows="1" :content="application.reqMsg || '我是似水流年我是似水流年我是似水流年'" expand-text="展开" />
+                </div>
+            </div>
+            <div class="right_status">
+                <span v-if="!showStateStr">{{ getStateStr }}</span>
+                <span v-if="showGreet" @click.stop="conf.greetToUser" style="color: #07c261;">{{$t('chatRoom.GreetSb')}}</span>
+                <van-button
+                  v-if="showAccept"
+                  type="success"
+                  @click.stop="conf.acceptApplication"
+                  plain
+                  size="mini"
+                  :loading="conf.accessLoading">
+                    {{ $t('chatRoom.Accept') }}
+                </van-button>
+            </div>
+        </div>
+
+    </div>
+</template>
+<script setup lang="ts">
+import i18n from '@/lang';
+import { computed, reactive } from 'vue';
+import IMSDK, { SessionType } from "openim-uniapp-polyfill";
+import System from '@/utils/System';
+const props = defineProps({
+    application: {
+        default: {} as any
+    },
+    isRecv: {
+        default: false
+    }
+})
+
+const conf = reactive({
+    text: '我是似水流年里去了我是似水流年里去了我是似水流年里去了',
+    accessLoading: false,
+    acceptApplication() {
+      conf.accessLoading = true;
+      let func;
+      if (isGroupApplication) {
+        func = IMSDK.asyncApi(
+          IMSDK.IMMethods.AcceptGroupApplication,
+          IMSDK.uuid(),
+          {
+            groupID: props.application.groupID,
+            fromUserID: props.application.userID,
+            handleMsg: "",
+          },
+        );
+      } else {
+        func = IMSDK.asyncApi(
+          IMSDK.IMMethods.AcceptFriendApplication,
+          IMSDK.uuid(),
+          {
+            toUserID: props.application.fromUserID,
+            handleMsg: "",
+          },
+        );
+      }
+      func
+        .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation')))
+        .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
+        .finally(() => (this.accessLoading = false));
+    },
+    greetToUser() {
+    //   navigateToDesignatedConversation(
+    //     props.application[props.isRecv ? "fromUserID" : "toUserID"],
+    //     SessionType.Single,
+    //   ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
+    },
+})
+
+const isGroupApplication = computed(()=> {
+    return props.application.groupID !== undefined;
+})
+const getShowName = computed(() => {
+    if (props.isRecv) {
+        return props.application[
+          isGroupApplication ? "nickname" : "fromNickname"
+        ];
+    }
+    return props.application[
+        isGroupApplication ? "groupName" : "toNickname"
+    ];
+})
+const showGreet = computed(()=> {
+    return !isGroupApplication && props.application.handleResult === 1;
+})
+const showStateStr = computed(() => {
+    if (
+        (props.isRecv && props.application.handleResult === 0) ||
+        showGreet
+    ) {
+        return false;
+    }
+    return true;
+})
+const showAccept = computed(() =>{
+    return props.application.handleResult === 0 && props.isRecv;
+})
+const getStateStr = computed(() =>{
+    if (props.application.handleResult === -1) {
+        return i18n.t('chatRoom.Declined');
+      }
+      if (props.application.handleResult === 0) {
+        return i18n.t('chatRoom.PendingVerification');
+      }
+      return i18n.t('chatRoom.Agreed');
+})
+const getAvatarUrl = computed(() => {
+    if (isGroupApplication) {
+        return props.application.groupFaceURL;
+    }
+    return props.application[props.isRecv ? "fromFaceURL" : "toFaceURL"];
+})
+
+</script>
+<style lang="less" scoped>
+.item {
+    padding: 20rem 0rem 0rem 30rem;
+    display: flex;
+
+    .avatar-img {
+        width: 80rem;
+        height: 80rem;
+        border-radius: 8rem;
+    }
+
+    .item_content {
+        flex: 1;
+        margin-left: 16rem;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 2rem #F6F7FA solid;
+        padding-bottom: 10rem;
+        padding-right: 30rem;
+
+        .left_info {
+            color: #000;
+            font-weight: 600;
+            font-size: 32rem;
+            width: 100%;
+
+            .message {
+                width: 75%;
+                color: #666;
+                font-size: 26rem;
+                margin-top: 2rem;
+                font-weight: normal;
+            }
+        }
+
+        .right_status {
+            flex-shrink: 0;
+            color: #666;
+            font-size: 26rem;
+        }
+    }
+}
+</style>

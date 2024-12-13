@@ -1,0 +1,59 @@
+<template>
+  <div class="search-box flex flex-center" @click="conf.goPages">
+    <van-icon name="search" size="34rem" color="#B9B9B9" />
+    <span>Search</span>
+  </div>
+</template>
+<script setup lang="ts">
+import System from '@/utils/System';
+import { reactive } from 'vue';
+
+const conf = reactive({
+  goPages() {
+    System.router.push('/chat/search')
+  }
+})
+</script>
+<style lang="less" scoped>
+
+.search-box {
+  width: 716rem;
+  height: 68rem;
+  background-color: #ffffff;
+  margin: 0 auto;
+  border-radius: 4rem;
+  margin-bottom: 20rem;
+  flex-shrink: 0;
+
+  span {
+    font-size: 32rem;
+    color: #b9b9b9;
+    margin-left: 16rem;
+  }
+}
+
+.anchor-item {
+  display: flex;
+  align-items: center;
+  border-bottom: 2rem #F6F7FA solid;
+  padding: 20rem 24rem;
+
+  .item-author {
+    width: 76rem;
+    height: 76rem;
+    border-radius: 8rem;
+    overflow: hidden;
+    margin-right: 26rem;
+  }
+
+  .item-name {
+    font-size: 30rem;
+    color: #333333;
+    font-weight: 500;
+  }
+}
+
+::v-deep .van-index-bar__sidebar {
+  position: absolute;
+}
+</style>

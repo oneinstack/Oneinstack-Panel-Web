@@ -6,5 +6,9 @@ export default [
   {
     path: '/chat/search',
     component: '/chat/contact/search/index'
+  },
+  {
+    path: '/chat/applicationList',
+    component: '/chat/contact/applicationList/index'
   }
 ]
