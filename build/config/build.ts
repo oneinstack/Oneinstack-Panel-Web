@@ -11,7 +11,8 @@ const buildArr = [
   'vue+runtime',
   'vue',
   'qrcode',
-  'lottie'
+  'lottie',
+  'open'
 ]
 function extractPackageName(input: string): string | null {
   const packageNameRegex = /^(@?[^@]+(?:\+[^@]+)?)(?:@[\d.]+)?/

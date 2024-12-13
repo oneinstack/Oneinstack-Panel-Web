@@ -12,8 +12,10 @@ export const initLog = () => {
     for (let i = 0; i < args.length; i++) {
       const str = args[i]
       if (typeof str === 'string') {
-        //处理对eval的使用警告
-        if (str.indexOf('Use of eval') !== -1) return
+        const arr = ['Use of eval', 'minification', '::v-deep']
+        for (let i = 0; i < arr.length; i++) {
+          if (str.indexOf(arr[i]) !== -1) return
+        }
       }
     }
     _warn(...args)

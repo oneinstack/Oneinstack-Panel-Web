@@ -17,6 +17,7 @@ defineOptions({
 const conf = reactive({
   show: false,
   init: async () => {
+    // const IMSDK = await System.loadModule('openim-uniapp-polyfill')
     //如果cookie有问题，则跳转至首页
     // if (!chatInfo.url) {
     //   System.router.replace('/')

@@ -27,7 +27,8 @@ export const globalVar = (mode: string) => {
   mode = mode == 'production' ? 'pro' : mode
   const _conf = getConf()[mode]
   if (!_conf) {
-    throw new Error(`环境${mode}不存在，确认是否导入或声明环境`)
+    mode = 'dev'
+    // throw new Error(`环境${mode}不存在，确认是否导入或声明环境`)
   }
   const env: envType = Object.assign(_conf)
   let res = Object.assign(_var, { env })

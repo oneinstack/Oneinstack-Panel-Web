@@ -155,6 +155,9 @@ export default class System {
     },
     'html2canvas': async () => {
       return await import('html2canvas')
+    },
+    'openim-uniapp-polyfill': async () => {
+      return await import('openim-uniapp-polyfill')
     }
   }
 

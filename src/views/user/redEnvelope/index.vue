@@ -147,7 +147,7 @@ const conf = reactive({
           conf.isRedEnvelopeRain = false
           conf.ws = null!
           reject(false)
-        },
+        }
       })
       conf.ws.start()
     })
@@ -191,8 +191,7 @@ const conf = reactive({
     conf.activityProgress = 2
 
     const res = await conf.sendData({
-      type: 'expense',
-      userCoinCode: conf.walletInfo.walletCoin || ''
+      type: 'expense'
     })
     conf.redAmount = res.money
 
@@ -229,7 +228,8 @@ const conf = reactive({
 })
 
 const init = async () => {
-  conf.walletInfo = await svalue.getDefaultWallet()
+  await svalue.getDefaultWallet()
+  conf.walletInfo = sconfig.systemWalletInfo
 }
 
 onBeforeMount(() => {
