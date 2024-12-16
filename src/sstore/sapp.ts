@@ -12,7 +12,7 @@ export const sapp = reactive({
   /**
    * 当前是否在导航页
    */
-  isNav: true,
+  isNav: false,
   /**
    * 临时数据
    */

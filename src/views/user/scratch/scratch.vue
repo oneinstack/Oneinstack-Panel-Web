@@ -149,7 +149,7 @@ const conf = reactive({
 		if (userInfo && userInfo.userId) {
 			System.router.push('/user/scratch/history')
 		} else {
-			System.router.replace('/user/login/login')
+			System.router.replace('/login')
 		}
 	}
 })

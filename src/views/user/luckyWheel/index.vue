@@ -206,7 +206,7 @@ const conf = reactive({
   },
 
   async handleCreateEvent() {
-    if (!sconfig.userInfo) return System.router.replace('/user/login/login')
+    if (!sconfig.userInfo) return System.router.replace('/login')
     const { userImgUrl, userNickname, userId } = sconfig.userInfo
     conf.userInfo.avatarUrl = userImgUrl
     conf.userInfo.nickname = userNickname

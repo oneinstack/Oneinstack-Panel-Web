@@ -239,7 +239,7 @@ const conf = reactive({
     System.toast(i18n.t(`code.${res.code}`) || 'success')
     setTimeout(() => {
       if (conf.typeName == 'Account') {
-        System.router.push('/user/login/login?type=3')
+        System.router.push('/login?type=3')
       } else {
         sutil.pageBack()
       }

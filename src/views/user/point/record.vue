@@ -90,7 +90,7 @@ onMounted(() => {
 	if (conf.userInfo && conf.userInfo.userId) {
 		conf.getPointsPageList()
 	} else {
-		System.router.replace('/user/login/login')
+		System.router.replace('/login')
 	}
 })
 const event = Scope.Event()

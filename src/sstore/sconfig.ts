@@ -86,7 +86,7 @@ export const sconfig = reactive({
     // 是否跳转到登录页
     if (toLogin)
       setTimeout(() => {
-        System.router.push('/user/login/login')
+        System.router.push('/login')
       }, 300)
   },
 

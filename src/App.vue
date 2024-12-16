@@ -28,10 +28,14 @@ CEvent.on(ERouter.browserShow, (isShow) => {
   if (sconfig.userInfo) {
     if (isShow) {
       // 上线
-      apis.backOnline()
+      apis.backOnline({
+        toast: () => {}
+      })
     } else {
       // 下线
-      apis.offline()
+      apis.offline({
+        toast: () => {}
+      })
     }
   }
 })

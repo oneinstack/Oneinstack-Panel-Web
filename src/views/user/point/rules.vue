@@ -36,7 +36,7 @@ onMounted(() => {
 	if (userInfo && userInfo.userId) {
 		conf.getPointsList(userInfo.userId)
 	} else {
-		System.router.replace('/user/login/login')
+		System.router.replace('/login')
 	}
 })
 

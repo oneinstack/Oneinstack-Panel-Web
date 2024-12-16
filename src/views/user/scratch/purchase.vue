@@ -252,7 +252,7 @@ const conf = reactive({
 		if (sconfig.userInfo) {
 			System.router.push('/user/scratch/history')
 		} else {
-			System.router.replace('/user/login/login')
+			System.router.replace('/login')
 		}
 	}
 })
