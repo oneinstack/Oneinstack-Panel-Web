@@ -284,7 +284,7 @@ const conf = reactive({
   async getConsumptionRecords() {
     let info = await svalue.getAppConfiguration()
     conf.isMore = false
-    let addNumType = [1,3,5,6,8,10,12,13,15,20,21,22,23,24,25,26,27,28,29,30,31]
+    let addNumType = [1,3,5,6,8,10,12,13,15,20,21,22,23,24,25,26,27,28,29,30,31,32,33]
     //获取当前钱包的消费记录
     apis.trade({
       coinCode: conf.defaultWalletInfo.walletCoin || conf.defaultWalletInfo.coinCode,
