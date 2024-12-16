@@ -8,7 +8,12 @@ const manager = {
     /**
      * 重新加载当前页面
      */
-    reload: ''
+    reload: '',
+
+    /**
+     * 浏览器显示和隐藏通知
+     */
+    browserShow: ''
   },
   EUser: {
     /**

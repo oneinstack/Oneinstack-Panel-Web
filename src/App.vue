@@ -5,6 +5,7 @@
 
 <script setup lang="ts">
 import { nextTick, onMounted, reactive } from 'vue'
+import { apis } from './api'
 import { ERouter } from './enum/Enum'
 import StatusBarConfig from './utils/StatusBarConfig'
 
@@ -19,6 +20,16 @@ const conf = reactive({
     nextTick(() => {
       conf.show = true
     })
+  }
+})
+
+CEvent.on(ERouter.browserShow, (isShow) => {
+  if (isShow) {
+    // 上线
+    apis.backOnline()
+  } else {
+    // 下线
+    apis.offline()
   }
 })
 

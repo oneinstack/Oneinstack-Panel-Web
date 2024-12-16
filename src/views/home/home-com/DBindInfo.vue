@@ -54,7 +54,6 @@ const conf = reactive({
     let prompt = sstatus.getPrompt('bindDialogInfo')
     if (prompt) return
     const res = await apis.getUserPhone({
-      toLogin: () => false,
       toast: (msg: string) => {}
     })
 

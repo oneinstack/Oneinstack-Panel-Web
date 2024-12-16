@@ -1,5 +1,6 @@
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
+import sutil from '@/sstore/sutil'
 import { Capacitor } from '@capacitor/core'
 import { globalType } from '../../build/env/globalVar'
 import System from './System'
@@ -31,7 +32,7 @@ export default class HttpConfig {
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
       if (code == 401) {
         sconfig.logout()
-        if (config.data.toLogin?.() !== false) {
+        if (!sutil.getStore('sapp').isNav) {
           System.router.replace('/login')
         }
       }
@@ -64,6 +65,7 @@ export default class HttpConfig {
       },
       after(xhr, config) {
         const { code } = xhr.data
+        if (code === undefined) return
         if (code != 200) {
           error(code, config, xhr)
           return

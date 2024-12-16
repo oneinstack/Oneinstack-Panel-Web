@@ -4,6 +4,7 @@
 import { ERouter } from '@/enum/Enum'
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
+import { App } from '@capacitor/app'
 import { watch } from 'vue'
 
 watch(
@@ -17,4 +18,17 @@ watch(
 sapp.addKeyboardEvent()
 // 添加返回事件
 sapp.addBackButton()
+
+//添加页面离开和进入事件
+if (System.isNative) {
+  //处理原生
+  App.addListener('appStateChange', ({ isActive }) => {
+    CEvent.emit(ERouter.browserShow, isActive)
+  })
+} else {
+  //处理浏览器
+  document.addEventListener('visibilitychange', () => {
+    CEvent.emit(ERouter.browserShow, !document.hidden)
+  })
+}
 </script>

@@ -34,11 +34,6 @@ interface ApiData {
     config: callbackConfig<ApiRes>
   ) => void
   /**
-   * 出现401错误时，是否跳转登录页
-   * @returns
-   */
-  toLogin?: () => boolean | void
-  /**
    * 请求完毕后回调
    * @param config
    * @returns

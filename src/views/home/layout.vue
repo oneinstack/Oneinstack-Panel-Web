@@ -4,9 +4,10 @@
 </template>
 <script setup lang="ts">
 import uspage from '@/components/page/uspage'
+import sapp from '@/sstore/sapp'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
-import { reactive } from 'vue'
+import { onMounted, onUnmounted, reactive } from 'vue'
 uspage.setConfig()
 
 defineOptions({
@@ -56,6 +57,14 @@ conf.list.forEach((item, index) => {
   item.icon = `/static/img/icon/${_icon}.png`
   item.iconActive = `/static/img/icon/${_icon}-active.png`
   item.index = index
+})
+
+onMounted(() => {
+  sapp.isNav = true
+})
+
+onUnmounted(() => {
+  sapp.isNav = false
 })
 </script>
 <style lang="less" scoped></style>
