@@ -1,31 +1,36 @@
 import uiVite from 'ui-vite'
 import { App } from 'vue'
+let iconObj = {} as any
+let siconObj = {} as any
 export const install = (app: App) => {
   app.use(uiVite)
+
   VConf.vicon.url = '/static/vicon'
 
+  iconObj = Cookie.get('iconObj') || {}
+  siconObj = Cookie.get('siconObj') || {}
   VConf.vicon.fun.getRes = async (url) => {
-    let _val = Cookie.get(url)
-    return _val || null
+    return iconObj[url]
   }
 
-  VConf.vicon.fun.setRes = (url, content) => {
-    Cookie.set(url, content)
-  }
   VConf.vicon.unit = 'rem'
+  VConf.vicon.fun.setRes = (url, content) => {
+    iconObj[url] = content
+    Cookie.set('iconObj', iconObj)
+  }
 
   VConf.vsicon.url = '/static/vicon/svg'
   VConf.vsicon.lib = ''
+  VConf.vsicon.unit = 'rem'
 
   VConf.vsicon.fun.getRes = async (url) => {
-    let _val = Cookie.get(url)
-    return _val || null
+    return siconObj[url]
   }
 
   VConf.vsicon.fun.setRes = (url, content) => {
-    Cookie.set(url, content)
+    siconObj[url] = content
+    Cookie.set('siconObj', siconObj)
   }
-  VConf.vsicon.unit = 'rem'
 }
 
 export default {
