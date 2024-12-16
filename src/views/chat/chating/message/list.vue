@@ -47,6 +47,13 @@ import Item from './item.vue'
 const timer = Scope.Timer()
 const listRef = ref()
 
+const props = defineProps({
+  /**
+   * 滚动到顶部回调
+   */
+  scrollTop: { default: null as any }
+})
+
 const conf = reactive({
   /**
    * 数据源
@@ -102,11 +109,33 @@ const conf = reactive({
         })
       },
       /**
-       * 获取索引对象
+       * 获取存在的数据列表
+       */
+      getExistArr: () => {
+        return Object.keys(conf.scroll.centent.map).reduce((prev, key) => {
+          if (conf.scroll.centent.map[key].dataIndex !== 9999) {
+            prev.push(conf.scroll.centent.map[key])
+          }
+          return prev
+        }, [] as any[])
+      },
+      /**
+       * 获取未存在数据
+       */
+      getNoData: () => {
+        return Object.keys(conf.scroll.centent.map).reduce((prev, key) => {
+          if (conf.scroll.centent.map[key].dataIndex === 9999) {
+            prev.push(conf.scroll.centent.map[key])
+          }
+          return prev
+        }, [] as any[])
+      },
+      /**
+       * 获取存在数据的索引对象
        */
       findIndex: (index: number) => {
-        const key = Object.keys(conf.scroll.centent.map).findIndex((item) => {
-          return conf.scroll.centent.map[item].index === index
+        const key: any = Object.keys(conf.scroll.centent.map).find((key) => {
+          return conf.scroll.centent.map[key].index === index
         })
         return conf.scroll.centent.map[key]
       },
@@ -118,6 +147,7 @@ const conf = reactive({
        * 加载顶部数据
        */
       loadTop: async () => {
+        await props.scrollTop?.()
         if (conf.scroll.centent.loadStatus) return
         conf.scroll.centent.loadStatus = true
         const arr = [] as any[]
@@ -202,9 +232,17 @@ const conf = reactive({
       loadBottom: async (offset = -2) => {
         if (conf.scroll.centent.loadStatus) return
         conf.scroll.centent.loadStatus = true
-        let arr = [] as any[]
 
-        const itemLast = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
+        let existArr = conf.scroll.centent.getExistArr()
+        const noDataArr = conf.scroll.centent.getNoData()
+        let lastNoData = noDataArr[0]
+
+        //获取存在数据最后一个
+        existArr = existArr.sort((a, b) => {
+          return a.index - b.index
+        })
+        let itemLast = existArr[existArr.length - 1]
+
         if (!itemLast) {
           conf.scroll.centent.loadStatus = false
           return
@@ -212,60 +250,74 @@ const conf = reactive({
 
         const lazyNum = conf.scroll.centent.lazyNum * 2
 
-        // 获取首位替换数据
-        for (let i = 0; i < lazyNum; i++) {
-          arr.push(conf.scroll.centent.findIndex(i))
-        }
-
-        //排序保证取第一位
-        arr = arr.sort((a, b) => {
-          return b.index - a.index
-        })
-
+        let arr = [] as any[]
         let res = [] as any[]
-        // 排序索引
-        let tindex = conf.scroll.renderMaxLength - 1
-        //获取能渲染的数据
-        for (let i = 0; i < lazyNum; i++) {
-          const item = arr[i]
-          const _dataIndex = itemLast.dataIndex + lazyNum - i
-          if (_dataIndex < conf.dataSource.length) {
-            item.dataIndex = _dataIndex
-            item.data = conf.dataSource[_dataIndex]
-            item.index = tindex
-            res.push(item)
-            tindex--
-          }
-        }
 
-        //排序保证top存在
-        res = res.sort((a, b) => {
-          return a.index - b.index
-        })
+        if (!lastNoData) {
+          // 获取首位替换数据
+          for (let i = 0; i < lazyNum; i++) {
+            arr.push(conf.scroll.centent.findIndex(i))
+          }
+
+          //排序保证取第一位
+          arr = arr.sort((a, b) => {
+            return b.index - a.index
+          })
+
+          // 排序索引
+          let tindex = conf.scroll.renderMaxLength - 1
+          //获取能渲染的数据
+          for (let i = 0; i < lazyNum; i++) {
+            const item = arr[i]
+            const _dataIndex = itemLast.dataIndex + lazyNum - i
+            if (_dataIndex < conf.dataSource.length) {
+              item.dataIndex = _dataIndex
+              item.data = conf.dataSource[_dataIndex]
+              item.index = tindex
+              res.push(item)
+              tindex--
+            }
+          }
+
+          //排序保证top存在
+          res = res.sort((a, b) => {
+            return a.index - b.index
+          })
+        } else {
+          //如果渲染数据最后一个未被利用，则获取存在数据最后一个
+          arr.push(lastNoData)
+          lastNoData.dataIndex = itemLast.dataIndex + 1
+          lastNoData.data = conf.dataSource[itemLast.dataIndex + 1]
+          res.push(lastNoData)
+        }
 
         // 更新所有数据
         if (res.length) {
           //更新底部数据，渲染高度
           let lastHeight = 0
+          console.log('cim-res', res)
           for (let i = 0; i < res.length; i++) {
+            console.log('cim-res[i]', i, res[i])
             const lastDom = await res[i].render()
             lastHeight += lastDom.height
           }
-          //排序进行修改索引
-          const arr = conf.scroll.centent.getSortArr()
-          for (let i = 0; i < arr.length; i++) {
-            const _item = arr[i]
-            if (_item.dataIndex <= itemLast.dataIndex) {
-              _item.index -= res.length
+
+          if (!lastNoData) {
+            //排序进行修改索引
+            const arr = conf.scroll.centent.getSortArr()
+            for (let i = 0; i < arr.length; i++) {
+              const _item = arr[i]
+              if (_item.dataIndex <= itemLast.dataIndex) {
+                _item.index -= res.length
+              }
+            }
+
+            //排序进行修改top
+            const arr1 = conf.scroll.centent.getSortArr()
+            for (let i = 0; i < arr1.length; i++) {
+              arr1[i].updateTop()
             }
           }
-
-          //排序进行修改top
-          const arr1 = conf.scroll.centent.getSortArr()
-          for (let i = 0; i < arr1.length; i++) {
-            arr1[i].updateTop()
-          }
-
           conf.scroll.centent.getHeight()
           nextTick(async () => {
             //将scrollTop移动到最新添加的数据位置

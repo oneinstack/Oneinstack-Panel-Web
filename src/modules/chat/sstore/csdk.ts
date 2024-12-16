@@ -409,10 +409,10 @@ export const csdk = reactive({
 
     // conversation
     const totalUnreadCountChangedHandler = ({ data }: any) => {
-      // if (this.storeIsSyncing) {
-      //   return;
-      // }
-      // this.$store.commit("conversation/SET_UNREAD_COUNT", data);
+      if (csuser.isSyncing) {
+        return
+      }
+      csconversation.unReadCount = data
     }
     const newConversationHandler = ({ data }: any) => {
       if (csuser.isSyncing) return

@@ -1,4 +1,4 @@
-import IMSDK, { MessageStatus, MessageType } from 'openim-uniapp-polyfill'
+import IMSDK, { MessageItem, MessageStatus, MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 import { UpdateMessageTypes } from '../constant'
 
@@ -10,7 +10,7 @@ interface MessageState {
 }
 
 export const csmessage = reactive({
-  historyMessageList: [] as any[],
+  historyMessageList: [] as (MessageItem & { isme: boolean })[],
   previewImageList: [] as any[],
   hasMoreMessage: true,
   quoteMessage: undefined,
@@ -66,6 +66,7 @@ export const csmessage = reactive({
         this.historyMessageList[idx] = { ...message }
       } else if (type === UpdateMessageTypes.KeyWords) {
         keyWords.forEach((field: any) => {
+          //@ts-ignore
           this.historyMessageList[idx][field.key] = field.value
         })
       }

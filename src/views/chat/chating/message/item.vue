@@ -7,24 +7,19 @@
     style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
   >
     <template v-if="conf.show">
-      <img class="face" :src="item.face" />
+      <img class="face" :src="item.senderFaceUrl" />
       <div style="margin: 0 20rem">
         <div
-          v-if="item.isGroup && !item.isme"
+          v-if="item.groupID && !item.isme"
           class="row"
           :class="{ reverse: item.isme }"
           style="font-size: 24rem; color: #808080"
         >
-          {{ item.sendnickname }}
+          {{ item.senderNickname }}
         </div>
         <div class="relative">
-          <template v-if="item.type == 'text'">
-            <div class="relative text-box" :class="{ reverse: item.isme }">
-              <div class="absolute text-bg-arrow" :class="{ reverse: !item.isme }"></div>
-              <div v-html="item.content" style="word-break: break-all"></div>
-            </div>
-          </template>
-          <div v-else-if="item.type == 'img'">
+          <ItemText v-if="textRenderTypes.includes(item.contentType)" :item="item" />
+          <div v-else-if="mediaRenderTypes.includes(item.contentType)">
             <img :src="item.content" />
           </div>
         </div>
@@ -33,23 +28,17 @@
   </div>
 </template>
 <script setup lang="ts">
+import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive, ref, watch } from 'vue'
+import ItemText from './item-text.vue'
+const textRenderTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
+const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]
 
 const timer = Scope.Timer()
 const props = defineProps<{
   info: any
-  item: {
-    type: string
-    content: string
-    sendId: string
-    receiveId: string
-    face: string
-    sendnickname: string
-    isme: boolean
-    isGroup: boolean
-    height: number
-  }
+  item: MessageItem & { isme: boolean }
   height: any
 }>()
 
@@ -90,37 +79,5 @@ onMounted(() => {
   width: 80rem;
   height: 80rem;
   border-radius: 8rem;
-}
-
-.text-box {
-  ---text-box-bg: #fff;
-  padding: 20rem 16rem;
-  background-color: var(---text-box-bg);
-  margin: 0 10rem;
-  border-radius: 8rem;
-  max-width: 464rem;
-  font-size: 28rem;
-  color: #333333;
-  &.reverse {
-    ---text-box-bg: #95ec69;
-  }
-}
-
-.text-bg-arrow {
-  top: 0;
-  right: 0;
-  width: 20rem;
-  height: 20rem;
-  background-color: var(---text-box-bg);
-  border-radius: 4rem;
-  margin-top: 30rem;
-  margin-right: -10rem;
-  transform: rotateZ(45deg);
-
-  &.reverse {
-    right: '';
-    left: 0;
-    margin-left: -10rem;
-  }
 }
 </style>

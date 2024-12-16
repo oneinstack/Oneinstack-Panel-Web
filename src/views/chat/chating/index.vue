@@ -1,6 +1,5 @@
 <template>
   <x-page class="chating-box" no-footer log>
-    <x-log />
     <template #title>
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>
@@ -10,7 +9,13 @@
       </div>
     </template>
     <div class="col column relative">
-      <MessageList class="col" style="height: 100%; overflow: auto" ref="chatBoxRef" @click="conf.content.click" />
+      <MessageList
+        class="col"
+        style="height: 100%; overflow: auto"
+        ref="chatBoxRef"
+        :scrollTop="conf.chat.scrollTop"
+        @click="conf.content.click"
+      />
       <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
         <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="56" />
@@ -64,7 +69,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { nextTick, onMounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
@@ -74,6 +79,8 @@ import toolsVue from './com/tools.vue'
 import MessageList from './message/list.vue'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
+import csuser from '@/modules/chat/sstore/csuser'
+import { MessageItem } from 'openim-uniapp-polyfill'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
@@ -175,10 +182,18 @@ const conf = reactive({
     }
   },
   chat: {
+    firstItem: {} as MessageItem,
+    lastItem: {} as MessageItem,
     list: [] as any,
     messageLoadState: {
       lastMinSeq: 0,
       loading: false
+    },
+
+    async scrollTop() {
+      if (!conf.chat.messageLoadState.loading && csmessage.hasMoreMessage) {
+        await conf.chat.loadMessageList(true)
+      }
     },
     async loadMessageList(isLoadMore = false) {
       conf.chat.messageLoadState.loading = true
@@ -193,8 +208,7 @@ const conf = reactive({
       }
       try {
         const { emptyFlag, lastMinSeq } = await csmessage.getHistoryMessageList(options)
-        this.messageLoadState.lastMinSeq = lastMinSeq
-        console.log('cim---this.historyMessageList', csmessage.historyMessageList);
+        conf.chat.messageLoadState.lastMinSeq = lastMinSeq
         if (emptyFlag) {
           console.log('initSuccess')
         }
@@ -206,6 +220,8 @@ const conf = reactive({
       })
     },
     getList: async () => {
+      console.log('csmessage.historyMessageList', csmessage.historyMessageList)
+
       //模拟数据
       const _data = [
         {
@@ -248,9 +264,40 @@ const conf = reactive({
 
       conf.input.message = ''
       inputRef.value.clear(!conf.emoji.show)
-    }
+    },
+    isInit: false
   }
 })
+
+watch(
+  () => csmessage.historyMessageList,
+  () => {
+    if(!csmessage.historyMessageList.length) return
+    console.log('csmessage.historyMessageList', csmessage.historyMessageList)
+    csmessage.historyMessageList.forEach((item) => {
+      item.senderFaceUrl = item.senderFaceUrl || '/static/img/home-banner.png'
+      item.isme = item.sendID === csuser.selfInfo.userID
+    })
+
+    if (!conf.chat.isInit) {
+      conf.chat.list = [...csmessage.historyMessageList]
+      conf.chat.firstItem = csmessage.historyMessageList[0]
+      conf.chat.lastItem = csmessage.historyMessageList[csmessage.historyMessageList.length - 1]
+      chatBoxRef.value.initData(csmessage.historyMessageList)
+      conf.chat.isInit = true
+    } else {
+      const newData = [...csmessage.historyMessageList]
+      const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
+      const lastItemData = newData.slice(lastItem + 1)
+      for (let i = 0; i < lastItemData.length; i++) {
+        console.log('lastItemData[i]',lastItemData[i]);
+        chatBoxRef.value.insertData(lastItemData[i])
+        conf.input.message = ''
+        inputRef.value.clear(!conf.emoji.show)
+      }
+    }
+  }
+)
 
 Scope.setConf(conf)
 onMounted(() => {

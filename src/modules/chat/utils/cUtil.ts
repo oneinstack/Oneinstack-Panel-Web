@@ -38,6 +38,16 @@ export const conversationSort = (conversationList: any[]) => {
 export const formatHyperlink = (nickname: string, currentUserID: string) => {
   return `<a href="${currentUserID}" style="color:#0089FF; text-decoration:none;">${nickname}</a>`
 }
+const regex = /\b(http[s]?:\/\/[^\s]+)\b/g
+export const parseLink = (content: string) => content.replace(regex, (match: string) => formatHyperlink(match, match))
+
+export const parseBr = (content: string) => {
+  if (!content) {
+    return ''
+  }
+  return content.replace(/\n/g, '\\n').trim()
+}
+
 export const parseAt = (atel: any, isParse = false) => {
   let mstr = atel.text
   const pattern = /@\S+\s/g
