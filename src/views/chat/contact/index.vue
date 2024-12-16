@@ -4,36 +4,26 @@
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>
     <template #right>
-      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
+      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="conf.goPages('/chat/add')">
         <img style="width: 44rem;height: 44rem;" src="/static/img/chat/contacts_add.png" />
       </div>
     </template>
     <div>
+      <!-- 搜索 -->
       <headSearch />
+      <!-- 新加、群聊 -->
       <div style="background: #fff;">
         <template v-for="(item, index) in conf.meaus" :key="index">
-          <div class="anchor-item" @click="conf.goPages(null,item)">
-            <div class="item-author">
-              <img style="width: 100%; height: 100%" :src="item.icon" />
-              <div class="message-count flex flex-center" v-if="item.badge > 0">
-                {{ item.badge < 99 ? item.badge : '99+' }}
-              </div>
-            </div>
-            <div class="item-name">{{ item.title }}</div>
-          </div>
+          <userItem :item="item" :lastItem="index == (conf.meaus.length-1)" @click="conf.goPages(null, item)" />
         </template>
       </div>
     </div>
+    <!-- 联系人列表 -->
     <van-index-bar style="background: #FFF;" :index-list="conf.indexList">
       <template v-for="(item, index) in conf.userList" :key="index">
         <van-index-anchor :index="item.index" />
         <template v-for="(user, i2) in item.list" :key="i2">
-          <div class="anchor-item" @click="conf.goPages('/chat/userCard')">
-            <div class="item-author">
-              <img style="width: 100%; height: 100%" src="/static/img/home-banner.png" />
-            </div>
-            <div class="item-name">{{ user }}</div>
-          </div>
+          <userItem :item="user" :lastItem="i2 == (item.list.length-1)" @click="conf.goPages('/chat/userCard')" />
         </template>
       </template>
     </van-index-bar>
@@ -43,7 +33,8 @@
 import { onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import System from '@/utils/System';
-import headSearch from './headSearch.vue';
+import headSearch from './com/headSearch.vue';
+import userItem from './com/userItem.vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'
 const conf = reactive({
   indexList: [] as any[],
@@ -82,15 +73,15 @@ const conf = reactive({
     index: '#',
     list: ['/1223', '!22', '#33', '%44', '*55', '*66']
   }],
-  goPages(url: any,item = null as any) {
+  goPages(url: any, item = null as any) {
     let routeUrl = url || item.url || null
-    if(routeUrl) return System.router.push(routeUrl)
-    
-    System.router.push({ path: '/chat/applicationList', query: { type: item.type} })
+    if (routeUrl) return System.router.push(routeUrl)
+
+    System.router.push({ path: '/chat/applicationList', query: { type: item.type } })
   }
 })
 const init = () => {
-  conf.indexList = conf.userList.map((item:any) => {
+  conf.indexList = conf.userList.map((item: any) => {
     return item.index
   })
 }
@@ -119,40 +110,9 @@ onMounted(() => {
   }
 }
 
-.anchor-item {
-  display: flex;
-  align-items: center;
-  border-bottom: 2rem #F6F7FA solid;
-  padding: 20rem 24rem;
-
-  .item-author {
-    width: 76rem;
-    height: 76rem;
-    border-radius: 8rem;
-    margin-right: 26rem;
-    position: relative;
-    .message-count {
-      position: absolute;
-      top: 0;
-      right: 0;
-      height: 36rem;
-      background-color: #f45551;
-      border-radius: 18rem;
-      padding: 0 10rem;
-      text-align: center;
-      line-height: 36rem;
-      transform: translate(50%, -50%);
-      color: #fff;
-    }
+@media (min-width: 500px) {
+  ::v-deep .van-index-bar__sidebar {
+    left: 700rem;
   }
-
-  .item-name {
-    font-size: 30rem;
-    color: #333333;
-    font-weight: 500;
-  }
-}
-::v-deep .van-index-bar__sidebar{
-  position: absolute;
 }
 </style>

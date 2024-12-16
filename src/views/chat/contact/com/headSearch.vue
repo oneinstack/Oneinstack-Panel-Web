@@ -31,29 +31,4 @@ const conf = reactive({
     margin-left: 16rem;
   }
 }
-
-.anchor-item {
-  display: flex;
-  align-items: center;
-  border-bottom: 2rem #F6F7FA solid;
-  padding: 20rem 24rem;
-
-  .item-author {
-    width: 76rem;
-    height: 76rem;
-    border-radius: 8rem;
-    overflow: hidden;
-    margin-right: 26rem;
-  }
-
-  .item-name {
-    font-size: 30rem;
-    color: #333333;
-    font-weight: 500;
-  }
-}
-
-::v-deep .van-index-bar__sidebar {
-  position: absolute;
-}
 </style>

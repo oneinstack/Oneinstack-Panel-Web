@@ -5,21 +5,25 @@
             <div class="left_info">
                 <div>{{ getShowName }}似水流年</div>
                 <div class="message">
-                    <van-text-ellipsis rows="1" :content="application.reqMsg || '我是似水流年我是似水流年我是似水流年'" expand-text="展开" />
+                    <van-text-ellipsis rows="1" :content="application.reqMsg || '我是似水流年我是似水流年我是似水流年'"
+                        expand-text="展开" />
                 </div>
             </div>
             <div class="right_status">
                 <span v-if="!showStateStr">{{ getStateStr }}</span>
                 <span v-if="showGreet" @click.stop="conf.greetToUser" style="color: #07c261;">{{$t('chatRoom.GreetSb')}}</span>
-                <van-button
-                  v-if="showAccept"
-                  type="success"
-                  @click.stop="conf.acceptApplication"
-                  plain
-                  size="mini"
-                  :loading="conf.accessLoading">
-                    {{ $t('chatRoom.Accept') }}
-                </van-button>
+                <div style="display: flex;align-items: center;">
+                    <van-button
+                     v-if="showAccept"
+                     style="background: #ededed;"
+                     type="success"
+                     @click.stop="conf.acceptApplication"
+                     plain
+                     size="small"
+                     :loading="conf.accessLoading">
+                        {{ isGroupApplication ? $t('chatRoom.Agree') : $t('chatRoom.Accept') }}
+                    </van-button>
+                </div>
             </div>
         </div>
 
@@ -43,75 +47,75 @@ const conf = reactive({
     text: '我是似水流年里去了我是似水流年里去了我是似水流年里去了',
     accessLoading: false,
     clickItem() {
-      if (showAccept) {
-        // uni.navigateTo({
-        //   url: `/chatRoom/contact/applicationDetails/index?application=${JSON.stringify(
-        //     this.application,
-        //   )}`,
-        // });
-      } else {
-        let sourceID =
-          props.application.groupID ??
-          (props.isRecv
-            ? props.application.fromUserID
-            : props.application.toUserID);
-        let cardType = isGroupApplication ? "groupCard" : "userCard";
-        const url = `/chatRoom/common/${cardType}/index?sourceID=${sourceID}`;
-        // uni.navigateTo({
-        //   url,
-        // });
-      }
+        if (showAccept) {
+            // uni.navigateTo({
+            //   url: `/chatRoom/contact/applicationDetails/index?application=${JSON.stringify(
+            //     this.application,
+            //   )}`,
+            // });
+        } else {
+            let sourceID =
+                props.application.groupID ??
+                (props.isRecv
+                    ? props.application.fromUserID
+                    : props.application.toUserID);
+            let cardType = isGroupApplication ? "groupCard" : "userCard";
+            const url = `/chatRoom/common/${cardType}/index?sourceID=${sourceID}`;
+            // uni.navigateTo({
+            //   url,
+            // });
+        }
     },
     acceptApplication() {
-      conf.accessLoading = true;
-      let func;
-      if (isGroupApplication) {
-        func = IMSDK.asyncApi(
-          IMSDK.IMMethods.AcceptGroupApplication,
-          IMSDK.uuid(),
-          {
-            groupID: props.application.groupID,
-            fromUserID: props.application.userID,
-            handleMsg: "",
-          },
-        );
-      } else {
-        func = IMSDK.asyncApi(
-          IMSDK.IMMethods.AcceptFriendApplication,
-          IMSDK.uuid(),
-          {
-            toUserID: props.application.fromUserID,
-            handleMsg: "",
-          },
-        );
-      }
-      func
-        .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation')))
-        .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
-        .finally(() => (this.accessLoading = false));
+        conf.accessLoading = true;
+        let func;
+        if (isGroupApplication) {
+            func = IMSDK.asyncApi(
+                IMSDK.IMMethods.AcceptGroupApplication,
+                IMSDK.uuid(),
+                {
+                    groupID: props.application.groupID,
+                    fromUserID: props.application.userID,
+                    handleMsg: "",
+                },
+            );
+        } else {
+            func = IMSDK.asyncApi(
+                IMSDK.IMMethods.AcceptFriendApplication,
+                IMSDK.uuid(),
+                {
+                    toUserID: props.application.fromUserID,
+                    handleMsg: "",
+                },
+            );
+        }
+        func
+            .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation')))
+            .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
+            .finally(() => (this.accessLoading = false));
     },
     greetToUser() {
-    //   navigateToDesignatedConversation(
-    //     props.application[props.isRecv ? "fromUserID" : "toUserID"],
-    //     SessionType.Single,
-    //   ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
+        //   navigateToDesignatedConversation(
+        //     props.application[props.isRecv ? "fromUserID" : "toUserID"],
+        //     SessionType.Single,
+        //   ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
     },
 })
 
-const isGroupApplication = computed(()=> {
+const isGroupApplication = computed(() => {
     return props.application.groupID !== undefined;
 })
 const getShowName = computed(() => {
     if (props.isRecv) {
         return props.application[
-          isGroupApplication ? "nickname" : "fromNickname"
+            isGroupApplication ? "nickname" : "fromNickname"
         ];
     }
     return props.application[
         isGroupApplication ? "groupName" : "toNickname"
     ];
 })
-const showGreet = computed(()=> {
+const showGreet = computed(() => {
     return !isGroupApplication && props.application.handleResult === 1;
 })
 const showStateStr = computed(() => {
@@ -123,17 +127,17 @@ const showStateStr = computed(() => {
     }
     return true;
 })
-const showAccept = computed(() =>{
+const showAccept = computed(() => {
     return props.application.handleResult === 0 && props.isRecv;
 })
-const getStateStr = computed(() =>{
+const getStateStr = computed(() => {
     if (props.application.handleResult === -1) {
         return i18n.t('chatRoom.Declined');
-      }
-      if (props.application.handleResult === 0) {
+    }
+    if (props.application.handleResult === 0) {
         return i18n.t('chatRoom.PendingVerification');
-      }
-      return i18n.t('chatRoom.Agreed');
+    }
+    return i18n.t('chatRoom.Agreed');
 })
 const getAvatarUrl = computed(() => {
     if (isGroupApplication) {
@@ -183,5 +187,13 @@ const getAvatarUrl = computed(() => {
             font-size: 26rem;
         }
     }
+}
+
+.van-button--success {
+    border: none;
+}
+
+.van-button--small {
+    height: 55rem;
 }
 </style>

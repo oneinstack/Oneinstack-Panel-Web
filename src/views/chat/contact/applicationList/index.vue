@@ -16,7 +16,7 @@
 </template>
 <script setup lang="ts">
 import { useRoute } from 'vue-router';
-import headSearch from '../headSearch.vue';
+import headSearch from '../com/headSearch.vue';
 import applicationItem from './applicationItem.vue';
 import { onMounted, reactive } from 'vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'

@@ -16,7 +16,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import headSearch from '../headSearch.vue';
+import headSearch from '../com/headSearch.vue';
 import groupItem from './groupItem.vue';
 import { onMounted, reactive } from 'vue';
 

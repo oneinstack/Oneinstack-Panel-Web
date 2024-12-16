@@ -14,5 +14,9 @@ export default [
   {
     path: '/chat/groupList',
     component: '/chat/contact/groupList/index'
+  },
+  {
+    path: '/chat/add',
+    component: '/chat/contact/add/index'
   }
 ]
