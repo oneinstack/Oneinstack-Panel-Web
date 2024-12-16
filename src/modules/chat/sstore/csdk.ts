@@ -90,10 +90,10 @@ export const csdk = reactive({
 
     // self
     const selfInfoUpdateHandler = ({ data }: any) => {
-      // this.$store.commit("user/SET_SELF_INFO", {
-      //   ...this.storeSelfInfo,
-      //   ...data,
-      // });
+      csuser.selfInfo = {
+        ...csuser.selfInfo,
+        ...data
+      }
     }
 
     IMSDK.subscribe(IMSDK.IMEvents.OnSelfInfoUpdated, selfInfoUpdateHandler)

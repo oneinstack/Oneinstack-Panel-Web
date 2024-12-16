@@ -101,12 +101,9 @@ const conf = reactive({
       path: '/chat/chating',
       query: item
     })
-  }
-})
-
-watch(
-  () => csconversation.conversationList,
-  () => {
+  },
+  initList: () => {
+    //解析最新消息
     csconversation.conversationList.forEach((item) => {
       let parsedMessage = ''
       try {
@@ -116,7 +113,12 @@ watch(
       item.latestMessage = parsedMessage
     })
   }
-)
+})
+
+watch(() => csconversation.conversationList, conf.initList)
+onMounted(() => {
+  conf.initList()
+})
 </script>
 <style lang="less" scoped>
 .title {
