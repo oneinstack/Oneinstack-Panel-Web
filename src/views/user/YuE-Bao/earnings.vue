@@ -38,7 +38,7 @@
             </div>
           </div>
           <!-- 余额宝收益 记录详情 -->
-          <div class="col" style="overflow: auto">
+          <div class="col" style="overflow: auto" @scroll="conf.moreMessage">
             <div class="winning-box" style="width: 100%" v-if="conf.detailData.length > 0">
               <div class="winning-item" v-for="(item, itemIndex) in conf.detailData" :key="itemIndex">
                 <div class="content">
@@ -64,9 +64,10 @@
                   </div>
                 </div>
               </div>
-              <div v-if="conf.detailData.length > 0" style="margin-bottom: 15rem">
+              <div v-if="conf.isShowMore" style="margin-bottom: 15rem">
                 <x-no-data noicon></x-no-data>
               </div>
+
             </div>
             <x-no-data v-if="conf.detailData.length == 0"></x-no-data>
           </div>
@@ -100,7 +101,7 @@ const conf = reactive({
   isShowDate: false,
   detailData: [] as any[],
   pageNum: 1,
-  pageSize: 10,
+  pageSize: 20,
   total: 0,
   moneyType: null as any,
   typeList: [
@@ -176,13 +177,15 @@ const conf = reactive({
 
     if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isShowMore = true)
   },
-
   // 分页
-  moreMessage() {
-    if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isShowMore = true)
-    conf.pageNum++
-    conf.getData()
-  },
+  moreMessage(event: any) {
+		const { scrollTop, clientHeight, scrollHeight } = event.target;
+		if (scrollTop + clientHeight >= scrollHeight - 5) { // 5是一个缓冲值，避免提前加载
+			if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isShowMore = true)
+			conf.pageNum++
+			conf.getData()
+		}
+	},
 
   //获取余额宝收益信息
   getInfo: async () => {
@@ -238,6 +241,7 @@ const init = async () => {
 onMounted(() => {
   init()
 })
+
 </script>
 
 <style lang="less" scoped>

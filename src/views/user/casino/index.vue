@@ -1,11 +1,11 @@
 <template>
-  <x-page :fixed="false" :bgcolor="'#fffff'">
+  <x-page :fixed="false" :bgcolor="'#fff'">
     <template #title>
       {{ conf.title }}
     </template>
     <template #top>
       <div class="head-type relative">
-        <div class="type-list">
+        <div class="type-list" v-scroll>
           <template v-for="(item, index) in conf.tabs.list" :key="index">
             <div
               class="type-item"
