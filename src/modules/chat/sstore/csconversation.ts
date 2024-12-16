@@ -3,6 +3,7 @@ import { reactive } from 'vue'
 
 export const csconversation = reactive({
   conversationList: [] as any[],
+  cacheConversationList: [] as any[],
   currentConversation: {} as any,
   unReadCount: 0,
   currentGroup: {} as any,

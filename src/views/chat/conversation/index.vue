@@ -13,52 +13,54 @@
         <van-icon name="search" size="15" color="#B9B9B9" />
         <span>{{ $t('chatRoom.search') }}</span>
       </div>
-      <van-swipe-cell v-for="(item, index) in conf.list">
-        <div class="user-item" :class="{ pinned: item.isPinned }" @click="conf.toChating(item)">
-          <div class="row items-center" style="height: 92rem">
-            <div class="relative face-box">
-              <img class="face" :src="item.faceURL" />
-              <div class="message-count flex flex-center" v-if="item.unreadCount > 0">
-                {{ item.unreadCount < 99 ? item.unreadCount : '99+' }}
-              </div>
-            </div>
-            <div class="col">
-              <div class="row" style="width: 44rem; width: 100%">
-                <div class="col" style="font-size: 32rem; color: #333333; font-weight: 500">
-                  {{ item.remark || item.nickname || item.groupName || item.showName }}
+      <template v-if="csconversation.conversationList.length > 0">
+        <van-swipe-cell v-for="(item, index) in csconversation.conversationList">
+          <div class="user-item" :class="{ pinned: item.isPinned }" @click="conf.toChating(item)">
+            <div class="row items-center" style="height: 92rem">
+              <div class="relative face-box">
+                <img class="face" :src="item.faceURL" />
+                <div class="message-count flex flex-center" v-if="item.unreadCount > 0">
+                  {{ item.unreadCount < 99 ? item.unreadCount : '99+' }}
                 </div>
-                <div style="font-size: 24rem; color: #808080">{{ sutil.getTimeTip(item.latestMsgSendTime) }}</div>
               </div>
-              <div class="row ellipsis" style="display: block; font-size: 28rem; color: #b1b1b1">
-                {{ item.latestMsg }}
+              <div class="col">
+                <div class="row" style="width: 44rem; width: 100%">
+                  <div class="col" style="font-size: 32rem; color: #333333; font-weight: 500">
+                    {{ item.remark || item.nickname || item.groupName || item.showName }}
+                  </div>
+                  <div style="font-size: 24rem; color: #808080">{{ sutil.getTimeTip(item.latestMsgSendTime) }}</div>
+                </div>
+                <div class="row ellipsis" style="display: block; font-size: 28rem; color: #b1b1b1">
+                  {{ item.latestMessage }}
+                </div>
               </div>
             </div>
+            <div class="border-bottom" v-if="index !== conf.list.length - 1"></div>
           </div>
-          <div class="border-bottom" v-if="index !== conf.list.length - 1"></div>
-        </div>
-        <template #right>
-          <van-button
-            square
-            type="primary"
-            :text="item.isPinned ? $t('chatRoom.cancel') : $t('chatRoom.pin')"
-            style="height: 100%; width: 180rem"
-            @click="conf.top(item)"
-          />
-          <van-button
-            square
-            type="danger"
-            :text="$t('chatRoom.remove')"
-            style="height: 100%; width: 152rem"
-            @click="conf.delete(item)"
-          />
-        </template>
-      </van-swipe-cell>
+          <template #right>
+            <van-button
+              square
+              type="primary"
+              :text="item.isPinned ? $t('chatRoom.cancel') : $t('chatRoom.pin')"
+              style="height: 100%; width: 180rem"
+              @click="conf.top(item)"
+            />
+            <van-button
+              square
+              type="danger"
+              :text="$t('chatRoom.remove')"
+              style="height: 100%; width: 152rem"
+              @click="conf.delete(item)"
+            />
+          </template>
+        </van-swipe-cell>
+      </template>
       <div class="border-right"></div>
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'
 import {
   ConversationItem,
@@ -69,36 +71,10 @@ import {
   SessionType
 } from 'openim-uniapp-polyfill'
 import System from '@/utils/System'
+import csconversation from '@/modules/chat/sstore/csconversation'
+import { parseMessageByType } from '@/modules/chat/utils/cUtil'
 const conf = reactive({
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
-  getList: async () => {
-    for (let i = 0; i < 30; i++) {
-      conf.list.push({
-        userID: i + '',
-        isPinned: MathUtil.getRandomInt(0, 10) > 9,
-        conversationID: i + '',
-        conversationType: 1 as SessionType,
-        groupID: '',
-        showName: '',
-        faceURL: '/static/img/home-banner.png',
-        recvMsgOpt: 0 as MessageReceiveOptType,
-        groupAtType: 0 as GroupAtType,
-        latestMsg: 'hello-=-------==================' + i * MathUtil.getRandomInt(1, 3000),
-        latestMsgSendTime: new Date().getTime() - MathUtil.getRandomInt(1, 1000000) * 360,
-        draftText: '',
-        draftTextTime: 0,
-        isNotInGroup: false,
-        isPrivateChat: false,
-        attachedInfo: '',
-        ex: '',
-        remark: 'Remark_' + i + '',
-        unreadCount: MathUtil.getRandomInt(0, 200)
-      } as any)
-    }
-
-    conf.listSort()
-    return conf.list
-  },
   listSort: () => {
     const plist = conf.list.filter((i) => i.isPinned)
     const nlist = conf.list.filter((i) => !i.isPinned)
@@ -128,9 +104,19 @@ const conf = reactive({
   }
 })
 
-onMounted(() => {
-  conf.getList()
-})
+watch(
+  () => csconversation.conversationList,
+  () => {
+    csconversation.conversationList.forEach((item) => {
+      let parsedMessage = ''
+      try {
+        if (item.latestMsg !== '') parsedMessage = JSON.parse(item.latestMsg)
+        parsedMessage = parseMessageByType(parsedMessage)
+      } catch (e) {}
+      item.latestMessage = parsedMessage
+    })
+  }
+)
 </script>
 <style lang="less" scoped>
 .title {
