@@ -72,10 +72,10 @@ export const sutil = reactive({
    * 返回上一页，如果没进行过跳转，进入首页
    */
   pageBack: () => {
-    if (window.history.length < 2 && !window.history.state.back) {
-      System.router.replace('/')
-    } else {
+    if (window.history.state.back) {
       System.router.back()
+    } else {
+      System.router.replace('/')
     }
   },
 
