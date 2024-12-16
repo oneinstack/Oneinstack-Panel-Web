@@ -236,11 +236,11 @@ const conf = reactive({
     //开启指定数量宝箱
     open: async (num: number) => {
       if (conf.box.isOpen) return
-      conf.box.isOpen = true
       if (conf.boxtype.item.count < num) {
         System.toast(i18n.t('luckyBox.insufficientQuantity'))
         return
       }
+      conf.box.isOpen = true
       System.loading()
       let { data } = await apis.openTreasureBox({
         boxSize: num,
