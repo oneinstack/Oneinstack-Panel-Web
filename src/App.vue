@@ -7,6 +7,7 @@
 import { nextTick, onMounted, reactive } from 'vue'
 import { apis } from './api'
 import { ERouter } from './enum/Enum'
+import sconfig from './sstore/sconfig'
 import StatusBarConfig from './utils/StatusBarConfig'
 
 defineOptions({
@@ -24,12 +25,14 @@ const conf = reactive({
 })
 
 CEvent.on(ERouter.browserShow, (isShow) => {
-  if (isShow) {
-    // 上线
-    apis.backOnline()
-  } else {
-    // 下线
-    apis.offline()
+  if (sconfig.userInfo) {
+    if (isShow) {
+      // 上线
+      apis.backOnline()
+    } else {
+      // 下线
+      apis.offline()
+    }
   }
 })
 
