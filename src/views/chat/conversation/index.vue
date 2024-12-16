@@ -72,7 +72,7 @@ import {
 } from 'openim-uniapp-polyfill'
 import System from '@/utils/System'
 import csconversation from '@/modules/chat/sstore/csconversation'
-import { parseMessageByType } from '@/modules/chat/utils/cUtil'
+import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
 const conf = reactive({
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
   listSort: () => {
@@ -96,11 +96,7 @@ const conf = reactive({
     conf.list = conf.list.filter((i) => i.conversationID !== item.conversationID)
   },
   toChating: (item: any) => {
-    console.log(item)
-    System.router.push({
-      path: '/chat/chating',
-      query: item
-    })
+    prepareConversationState(item)
   },
   initList: () => {
     //解析最新消息

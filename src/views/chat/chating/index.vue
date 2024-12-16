@@ -64,7 +64,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { nextTick, onMounted, reactive, ref } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import CInput from './com/cinput.vue'
@@ -73,6 +73,7 @@ import sapp from '@/sstore/sapp'
 import toolsVue from './com/tools.vue'
 import MessageList from './message/list.vue'
 import csconversation from '@/modules/chat/sstore/csconversation'
+import csmessage from '@/modules/chat/sstore/csmessage'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
@@ -175,6 +176,35 @@ const conf = reactive({
   },
   chat: {
     list: [] as any,
+    messageLoadState: {
+      lastMinSeq: 0,
+      loading: false
+    },
+    async loadMessageList(isLoadMore = false) {
+      conf.chat.messageLoadState.loading = true
+      const lastMsgID = csmessage.historyMessageList[0]?.clientMsgID
+      const options = {
+        conversationID: csconversation.currentConversation.conversationID,
+        userID: '',
+        groupID: '',
+        count: 20,
+        startClientMsgID: conf.chat.list[0]?.clientMsgID ?? '',
+        lastMinSeq: conf.chat.messageLoadState.lastMinSeq
+      }
+      try {
+        const { emptyFlag, lastMinSeq } = await csmessage.getHistoryMessageList(options)
+        this.messageLoadState.lastMinSeq = lastMinSeq
+        console.log('cim---this.historyMessageList', csmessage.historyMessageList);
+        if (emptyFlag) {
+          console.log('initSuccess')
+        }
+      } catch (e) {
+        console.log(e)
+      }
+      nextTick(function () {
+        conf.chat.messageLoadState.loading = false
+      })
+    },
     getList: async () => {
       //模拟数据
       const _data = [
@@ -229,9 +259,7 @@ onMounted(() => {
       conf.input.click()
     }
   })
-  conf.chat.getList()
-  console.log('cim---',csconversation.conversationList);
-  
+  conf.chat.loadMessageList()
 })
 </script>
 <style lang="less" scoped>

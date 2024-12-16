@@ -1,4 +1,7 @@
-import { MessageType } from 'openim-uniapp-polyfill'
+import System from '@/utils/System'
+import IMSDK, { GroupAtType, MessageType, SessionType } from 'openim-uniapp-polyfill'
+import csconversation from '../sstore/csconversation'
+import csmessage from '../sstore/csmessage'
 import csuser from '../sstore/csuser'
 
 export const filterEmptyValue = (obj: any) => {
@@ -130,4 +133,35 @@ export const parseMessageByType = (pmsg: any, isNotify = false) => {
     default:
       return ''
   }
+}
+
+const nomalTypes = [GroupAtType.AtAll, GroupAtType.AtAllAtMe, GroupAtType.AtMe]
+
+export const markConversationAsRead = (conversation: any, fromChating = false) => {
+  if (conversation.unreadCount !== 0) {
+    IMSDK.asyncApi(IMSDK.IMMethods.MarkConversationMessageAsRead, IMSDK.uuid(), conversation.conversationID)
+  }
+  const isNomalAtType = nomalTypes.includes(conversation.groupAtType)
+  if ((isNomalAtType && !fromChating) || (fromChating && conversation.groupAtType === GroupAtType.AtGroupNotice)) {
+    IMSDK.asyncApi(IMSDK.IMMethods.ResetConversationGroupAtType, IMSDK.uuid(), conversation.conversationID)
+  }
+}
+
+export const prepareConversationState = (conversation: any, back2Tab = false) => {
+  markConversationAsRead(conversation)
+
+  if (conversation.conversationType === SessionType.WorkingGroup) {
+    csconversation.getCurrentGroup(conversation.groupID)
+    csconversation.getCurrentMemberInGroup(conversation.groupID)
+  }
+  csmessage.resetMessageState()
+  csconversation.currentConversation = {
+    ...conversation
+  }
+
+  let url = `/chat/chating?back2Tab=${back2Tab}`
+  if (conversation.conversationType === SessionType.Notification) {
+    url = '/pages/conversation/notifyMessageList/index'
+  }
+  System.router.push(url)
 }

@@ -1,5 +1,6 @@
 import IMSDK from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
+import csuser from './csuser'
 
 export const csconversation = reactive({
   conversationList: [] as any[],
@@ -41,11 +42,11 @@ export const csconversation = reactive({
     }
   },
 
-  async getCurrentMemberInGroup(groupID: string, userID: string) {
+  async getCurrentMemberInGroup(groupID: string) {
     try {
       const { data }: any = await IMSDK.asyncApi(IMSDK.IMMethods.GetSpecifiedGroupMembersInfo, StrUtil.uuid(), {
         groupID,
-        userIDList: [userID]
+        userIDList: [csuser.selfInfo.userID]
       })
       this.currentMemberInGroup = data[0] ?? {}
     } catch (e) {

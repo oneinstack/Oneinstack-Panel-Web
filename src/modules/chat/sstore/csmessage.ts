@@ -9,33 +9,13 @@ interface MessageState {
   quoteMessage?: any
 }
 
-export const csmessage = reactive<
-  MessageState & {
-    getHistoryMessageList: (params: any) => Promise<{ emptyFlag: boolean; lastMinSeq: number }>
-    pushNewPreviewImage: (url: string) => void
-    pushNewMessage: (message: any) => void
-    updateOneMessage: (options: {
-      message: any
-      type?: string
-      keyWords?: { key: string; value: any }[]
-      isSuccess?: boolean
-    }) => void
-    deleteMessages: (messages: any[]) => void
-    resetMessageState: () => void
-    updateMessageNicknameAndFaceUrl: (options: {
-      sendID: string
-      senderFaceUrl: string
-      senderNickname: string
-    }) => void
-    updateQuoteMessageRevoke: (options: { clientMsgID: string }) => void
-  }
->({
-  historyMessageList: [],
-  previewImageList: [],
+export const csmessage = reactive({
+  historyMessageList: [] as any[],
+  previewImageList: [] as any[],
   hasMoreMessage: true,
   quoteMessage: undefined,
 
-  async getHistoryMessageList(params) {
+  async getHistoryMessageList(params: any) {
     let emptyFlag = true
     let lastMinSeq = 0
     try {
@@ -48,6 +28,7 @@ export const csmessage = reactive<
 
       this.historyMessageList = [...messages, ...(isFirstPage ? [] : this.historyMessageList)]
       this.previewImageList = [...imageList, ...(isFirstPage ? [] : this.previewImageList)]
+
       this.hasMoreMessage = !data.isEnd && messages.length === 20
     } catch (e) {
       this.historyMessageList = []
@@ -58,11 +39,11 @@ export const csmessage = reactive<
     }
   },
 
-  pushNewPreviewImage(url) {
+  pushNewPreviewImage(url: string) {
     this.previewImageList = [...this.previewImageList, url]
   },
 
-  pushNewMessage(message) {
+  pushNewMessage(message: any) {
     if (message.contentType === MessageType.PictureMessage && message.status === MessageStatus.Succeed) {
       const imageList = filterPreviewImage([message])
       if (imageList.length > 0) {
@@ -72,7 +53,7 @@ export const csmessage = reactive<
     this.historyMessageList = [...this.historyMessageList, message]
   },
 
-  updateOneMessage({ message, type = UpdateMessageTypes.Overall, keyWords = [], isSuccess = false }) {
+  updateOneMessage({ message, type = UpdateMessageTypes.Overall, keyWords = [], isSuccess = false }: any) {
     const idx = this.historyMessageList.findIndex((msg) => msg.clientMsgID === message.clientMsgID)
     if (idx !== -1) {
       if (type === UpdateMessageTypes.Overall) {
@@ -84,14 +65,14 @@ export const csmessage = reactive<
         }
         this.historyMessageList[idx] = { ...message }
       } else if (type === UpdateMessageTypes.KeyWords) {
-        keyWords.forEach((field) => {
+        keyWords.forEach((field: any) => {
           this.historyMessageList[idx][field.key] = field.value
         })
       }
     }
   },
 
-  deleteMessages(messages) {
+  deleteMessages(messages: any[]) {
     this.historyMessageList = this.historyMessageList.filter(
       (msg) => !messages.some((message) => msg.clientMsgID === message.clientMsgID)
     )
@@ -104,8 +85,8 @@ export const csmessage = reactive<
     this.quoteMessage = undefined
   },
 
-  updateMessageNicknameAndFaceUrl({ sendID, senderFaceUrl, senderNickname }) {
-    this.historyMessageList = this.historyMessageList.map((message) => {
+  updateMessageNicknameAndFaceUrl({ sendID, senderFaceUrl, senderNickname }: any) {
+    this.historyMessageList = this.historyMessageList.map((message: any) => {
       if (message.sendID === sendID) {
         message.senderFaceUrl = senderFaceUrl
         message.senderNickname = senderNickname
@@ -114,8 +95,8 @@ export const csmessage = reactive<
     })
   },
 
-  updateQuoteMessageRevoke({ clientMsgID }) {
-    this.historyMessageList = this.historyMessageList.map((message) => {
+  updateQuoteMessageRevoke({ clientMsgID }: any) {
+    this.historyMessageList = this.historyMessageList.map((message: any) => {
       if (
         message.contentType === MessageType.QuoteMessage &&
         message.quoteElem?.quoteMessage?.clientMsgID === clientMsgID
