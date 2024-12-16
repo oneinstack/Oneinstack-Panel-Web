@@ -149,12 +149,11 @@ const conf = reactive({
     System.loading()
     const { code } = await apis.submit({
       ...obj,
-      complete: () => {
+      final: () => {
         System.loading(false)
       }
     })
 
-    System.toast(i18n.t(`code.${code}`), 'success')
     setTimeout(() => {
       conf.changeBack(code)
       conf.getInfo()

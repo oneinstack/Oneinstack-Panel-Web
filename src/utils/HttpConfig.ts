@@ -68,7 +68,7 @@ export default class HttpConfig {
         if (code === undefined) return
         if (code != 200) {
           error(code, config, xhr)
-          return
+          throw new Error(code)
         }
         funrun(config.data, ['final', 'success', 'complete'], xhr.data, config, xhr)
       },
