@@ -190,17 +190,26 @@ const conf = reactive({
       lastMinSeq: 0,
       loading: false
     },
-
+    /**
+     * 滚动到顶部事件通知
+     */
     async scrollTop() {
       return new Promise(async (resolve) => {
+        System.loading()
+        //等待数据处理完毕
         event.once('scrollTopFinish', () => {
+          System.loading(false)
           resolve(true)
         })
         let l = csmessage.historyMessageList.length
         if (!conf.chat.messageLoadState.loading && csmessage.hasMoreMessage) {
           await conf.chat.loadMessageList(true)
         }
-        if (l === csmessage.historyMessageList.length) resolve(true)
+        //如果数据没有变化，则数据处理完毕
+        if (l === csmessage.historyMessageList.length) {
+          System.loading(false)
+          resolve(true)
+        }
       })
     },
     async loadMessageList(isLoadMore = false) {
@@ -288,8 +297,6 @@ watch(
       item.isme = item.sendID === csuser.selfInfo.userID
     })
 
-    console.log('cim', 'csmessage.historyMessageList', csmessage.historyMessageList)
-
     if (conf.chat.isInit) {
       const newData = [...csmessage.historyMessageList]
       const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
@@ -297,13 +304,16 @@ watch(
       const lastItemData = newData.slice(lastItem + 1)
       const firstItemData = newData.slice(0, firstItem)
       if (lastItemData.length > 0) {
+        //向尾部插入数据
         conf.chat.lastItem = lastItemData[lastItemData.length - 1]
         for (let i = 0; i < lastItemData.length; i++) {
           await chatBoxRef.value.insertData(lastItemData[i])
         }
       } else {
+        //向头部插入数据
         conf.chat.firstItem = firstItemData[0]
         await chatBoxRef.value.unshiftData(firstItemData)
+        //刷新顶部才会向头部插入数据，通知数据处理完毕
         event.emit('scrollTopFinish')
       }
     } else {
