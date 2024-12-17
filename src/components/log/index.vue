@@ -1,9 +1,14 @@
 <template>
-  <div class="log-box" v-if="conf.show">
+  <div
+    class="log-box"
+    v-if="conf.show"
+    :style="{ width: conf.scale.width, height: conf.scale.height }"
+    @click="conf.scale.change"
+  >
     <div>
-      <div class="log-item" v-for="(item, index) in conf.list" :key="item">
+      <div class="log-item" v-for="(item, index) in conf.list">
         <div v-if="index < max">
-          {{ item }}
+          <span :style="{ color: item.color }">{{ item.content }}</span>
         </div>
       </div>
     </div>
@@ -17,16 +22,45 @@ const props = defineProps({
   name: { default: 'cim' }
 })
 const conf = reactive({
-  list: [] as string[],
+  list: [] as { content: string; color: string }[],
   show: false,
+  scale: {
+    show: false,
+    change: () => {
+      conf.scale.show = !conf.scale.show
+      conf.scale.width = conf.scale.show ? '100vw' : '100rem'
+      conf.scale.height = conf.scale.show ? 'max-content' : '100rem'
+    },
+    width: '100rem' as any,
+    height: '100rem' as any
+  },
   //#ifvar-dev
   init: () => {
     const _log = console.log
     console.log = (...args: any[]) => {
-      if (args[0].startsWith(props.name)) {
-        conf.list.unshift(args.join(' '))
-      }
       _log(...args)
+      if (args[0].startsWith(props.name)) {
+        let color = `#${Math.floor(Math.random() * 16777215).toString(16)}`
+        if (
+          color
+            .slice(1)
+            .split('')
+            .every((item) => parseInt(item) > 100)
+        ) {
+          color = '#000000'
+        }
+        conf.list.unshift({
+          content: args
+            .map((item) => {
+              if (typeof item === 'object' && item !== null) {
+                return JSON.stringify(item)
+              }
+              return item
+            })
+            .join(' '),
+          color: color
+        })
+      }
     }
     conf.show = true
   }
@@ -45,10 +79,9 @@ onMounted(() => {
   z-index: 9999;
   bottom: 50vh;
   right: 0;
-  width: 400rem;
-  height: max-content;
-  max-height: 400rem;
-  background-color: rgba(0, 0, 0, 0.3);
+  max-height: 40vh;
+  background-color: rgba(255, 255, 255, 0.8);
+  overflow: auto;
 }
 //#endvar
 </style>
