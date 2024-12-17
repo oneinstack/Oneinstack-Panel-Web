@@ -361,7 +361,10 @@ export default {
     cancle: 'रद्द करें',
     noMore: 'कोई और डेटा नहीं है',
     UploadPictureFailed: 'छवि अपलोड असफल',
-    shakeTip: 'कृपया सदैव क्लिक नहीं करें'
+    shakeTip: 'कृपया सदैव क्लिक नहीं करें',
+    noNetWork: 'नेटवर्क विघटन',
+    pefresh: 'पुनः लोड',
+
   },
   version: {
     title: 'अपडेट करें',

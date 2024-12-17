@@ -360,7 +360,10 @@ export default {
     cancle: 'Batal',
     noMore: 'Tidak ada data lagi',
     UploadPictureFailed: 'Mengunggah gambar gagal',
-    shakeTip: 'Tolong jangan terus mengklik'
+    shakeTip: 'Tolong jangan terus mengklik',
+    noNetWork: 'Gangguan jaringan',
+    pefresh: 'Segarkan',
+
   },
   version: {
     title: 'Perbaruan',

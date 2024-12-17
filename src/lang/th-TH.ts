@@ -359,7 +359,10 @@ export default {
     cancle: 'ยกเลิก',
     noMore: 'ไม่มีข้อมูลเพิ่มเติม',
     UploadPictureFailed: 'การอัปโหลดรูปภาพล้มเหลว',
-    shakeTip: 'กรุณาอย่าคลิกต่อเนื่อง'
+    shakeTip: 'กรุณาอย่าคลิกต่อเนื่อง',
+    noNetWork: 'การขัดจังหวะเครือข่าย',
+    pefresh: 'รีเฟรช',
+
   },
   version: {
     title: 'อัพเดต',

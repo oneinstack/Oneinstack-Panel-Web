@@ -361,7 +361,10 @@ export default {
     cancle: 'Cancelar',
     noMore: 'No hay más datos',
     UploadPictureFailed: 'Fallo en la carga de la imagen',
-    shakeTip: 'Por favor, no haga clic continuamente'
+    shakeTip: 'Por favor, no haga clic continuamente',
+    noNetWork: 'Interrupción de red',
+    pefresh: 'Actualizar'
+
   },
   version: {
     title: 'Actualización',

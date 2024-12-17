@@ -27,6 +27,9 @@ export default class cHttpConfig {
           System.router.replace('/login')
         }
       }
+      if (code == 502) {
+        System.router.push('/user/network')
+      }
     }
     const _http = httpBean()
     _http.setConfig({

@@ -214,5 +214,9 @@ export default [
   {
     path: '/user/redEnvelope/index',
     component: '/user/redEnvelope/index'
+  },
+  {
+    path: '/user/network',
+    component: '/user/network/network'
   }
 ]

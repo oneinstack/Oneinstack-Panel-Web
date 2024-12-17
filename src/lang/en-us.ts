@@ -356,7 +356,9 @@ export default {
     cancle: 'Cancle',
     noMore: 'No more data',
     UploadPictureFailed: 'Upload picture failed',
-    shakeTip: 'Please do not click continuously'
+    shakeTip: 'Please do not click continuously',
+    noNetWork: 'NetWork interruption',
+    pefresh: 'Pefresh',
   },
   version: {
     title: 'Update',

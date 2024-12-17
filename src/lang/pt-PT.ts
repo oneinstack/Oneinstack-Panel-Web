@@ -360,7 +360,9 @@ export default {
     cancle: 'Cancelar',
     noMore: 'Sem mais dados',
     UploadPictureFailed: 'O envio da imagem falhou',
-    shakeTip: 'Por favor, não clique continuamente'
+    shakeTip: 'Por favor, não clique continuamente',
+    noNetWork: 'Interrupção de rede',
+    pefresh: 'Atualizar',
   },
   version: {
     title: 'Actualizar',
