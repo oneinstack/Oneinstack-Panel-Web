@@ -80,7 +80,7 @@ import MessageList from './message/list.vue'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
 import csuser from '@/modules/chat/sstore/csuser'
-import { MessageItem } from 'openim-uniapp-polyfill'
+import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
@@ -253,12 +253,14 @@ const conf = reactive({
     send: () => {
       const newData = {
         isme: MathUtil.getRandomInt(1, 10) > 5,
-        isGroup: MathUtil.getRandomInt(1, 10) > 5,
-        sendnickname: 'Test',
-        face: '/static/img/home-banner.png',
-        content: inputRef.value.getMessage(),
-        type: 'text'
-      }
+        groupID: MathUtil.getRandomInt(1, 10) > 5 ? '1':'',
+        senderNickname: 'Test',
+        senderFaceUrl: '/static/img/home-banner.png',
+        contentType:MessageType.TextMessage,
+        textElem: {
+          content:inputRef.value.getMessage()
+        }
+      } as (MessageItem & { isme: boolean })
 
       chatBoxRef.value.insertData(newData)
 
@@ -289,11 +291,9 @@ watch(
       const newData = [...csmessage.historyMessageList]
       const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
       const lastItemData = newData.slice(lastItem + 1)
+      conf.chat.lastItem = lastItemData[lastItemData.length - 1]
       for (let i = 0; i < lastItemData.length; i++) {
-        console.log('lastItemData[i]',lastItemData[i]);
         chatBoxRef.value.insertData(lastItemData[i])
-        conf.input.message = ''
-        inputRef.value.clear(!conf.emoji.show)
       }
     }
   }
