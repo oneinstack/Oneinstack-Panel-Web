@@ -1,39 +1,33 @@
 <template>
     <div class="item">
-        <img class="avatar-img" src="/static/img/home-banner.png" />
+        <img class="avatar-img" :src="getAvatarUrl" />
         <div class="item_content">
             <div class="left_info">
-                <div>{{ getShowName }}似水流年</div>
+                <div>{{ getShowName }}</div>
                 <div class="message">
-                    <van-text-ellipsis rows="1" :content="application.reqMsg || '我是似水流年我是似水流年我是似水流年'"
-                        expand-text="展开" />
+                    <van-text-ellipsis rows="1" :content="application.reqMsg || ''" expand-text="展开" />
                 </div>
             </div>
             <div class="right_status">
-                <span v-if="!showStateStr">{{ getStateStr }}</span>
-                <span v-if="showGreet" @click.stop="conf.greetToUser" style="color: #07c261;">{{$t('chatRoom.GreetSb')}}</span>
+                <span v-if="showStateStr">{{ getStateStr }}</span>
+                <span v-if="showGreet" @click.stop="conf.greetToUser" style="color: #07c261;">{{ $t('chatRoom.GreetSb')
+                    }}</span>
                 <div style="display: flex;align-items: center;">
-                    <van-button
-                     v-if="showAccept"
-                     style="background: #ededed;"
-                     type="success"
-                     @click.stop="conf.acceptApplication"
-                     plain
-                     size="small"
-                     :loading="conf.accessLoading">
+                    <van-button v-if="showAccept" style="background: #ededed;" type="success"
+                        @click.stop="conf.acceptApplication" plain size="small" :loading="conf.accessLoading">
                         {{ isGroupApplication ? $t('chatRoom.Agree') : $t('chatRoom.Accept') }}
                     </van-button>
                 </div>
             </div>
         </div>
-
     </div>
 </template>
 <script setup lang="ts">
 import i18n from '@/lang';
-import { computed, reactive } from 'vue';
+import { computed, onMounted, reactive } from 'vue';
 import IMSDK, { SessionType } from "openim-uniapp-polyfill";
 import System from '@/utils/System';
+import cscontact from '@/modules/chat/sstore/cscontact';
 const props = defineProps({
     application: {
         default: {} as any
@@ -44,7 +38,6 @@ const props = defineProps({
 })
 
 const conf = reactive({
-    text: '我是似水流年里去了我是似水流年里去了我是似水流年里去了',
     accessLoading: false,
     clickItem() {
         if (showAccept) {
@@ -59,7 +52,7 @@ const conf = reactive({
                 (props.isRecv
                     ? props.application.fromUserID
                     : props.application.toUserID);
-            let cardType = isGroupApplication ? "groupCard" : "userCard";
+            let cardType = isGroupApplication.value ? "groupCard" : "userCard";
             const url = `/chatRoom/common/${cardType}/index?sourceID=${sourceID}`;
             // uni.navigateTo({
             //   url,
@@ -69,7 +62,7 @@ const conf = reactive({
     acceptApplication() {
         conf.accessLoading = true;
         let func;
-        if (isGroupApplication) {
+        if (isGroupApplication.value) {
             func = IMSDK.asyncApi(
                 IMSDK.IMMethods.AcceptGroupApplication,
                 IMSDK.uuid(),
@@ -90,7 +83,7 @@ const conf = reactive({
             );
         }
         func
-            .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation')))
+            .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation'),'success'))
             .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
             .finally(() => (this.accessLoading = false));
     },
@@ -108,15 +101,15 @@ const isGroupApplication = computed(() => {
 const getShowName = computed(() => {
     if (props.isRecv) {
         return props.application[
-            isGroupApplication ? "nickname" : "fromNickname"
+            isGroupApplication.value ? "nickname" : "fromNickname"
         ];
     }
     return props.application[
-        isGroupApplication ? "groupName" : "toNickname"
+        isGroupApplication.value ? "groupName" : "toNickname"
     ];
 })
 const showGreet = computed(() => {
-    return !isGroupApplication && props.application.handleResult === 1;
+    return !isGroupApplication.value && props.application.handleResult === 1;
 })
 const showStateStr = computed(() => {
     if (
@@ -140,12 +133,14 @@ const getStateStr = computed(() => {
     return i18n.t('chatRoom.Agreed');
 })
 const getAvatarUrl = computed(() => {
-    if (isGroupApplication) {
+    if (isGroupApplication.value) {
         return props.application.groupFaceURL;
     }
     return props.application[props.isRecv ? "fromFaceURL" : "toFaceURL"];
 })
-
+onMounted(() => {
+    console.log(cscontact.recvFriendApplications);
+})
 </script>
 <style lang="less" scoped>
 .item {

@@ -17,7 +17,7 @@ export const capis = {
   businessModify: (obj?: ApiData) => chttp.post('/account/password/change', obj),
   businessInfoUpdate: (obj?: ApiData) => chttp.post('/user/update', obj),
   businessGetUserInfo: (obj?: ApiData) => chttp.post(getRU() + '/user/find/full', { userIDs: [obj] }),
-  businessSearchUserInfo: (obj?: ApiData) => chttp.post('/user/search/full', obj),
+  businessSearchUserInfo: (obj?: ApiData) => chttp.post(getRU() + '/user/search/full', obj),
   businessSearchUser: (obj?: ApiData) => chttp.post('/friend/search', obj),
 
   // ===========  file  ===========

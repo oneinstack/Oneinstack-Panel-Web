@@ -32,6 +32,10 @@
         <img style="width: 34rem; height: 34rem;margin-right: 16rem;" src="/static/img/chat/video.svg" />
         <span>Voice or Video Call</span>
       </div>
+      <div class="other-item">
+        <img style="width: 34rem; height: 34rem;margin-right: 16rem;" src="/static/img/chat/video.svg" />
+        <span>{{ $t('chatRoom.add') }}</span>
+      </div>
     </div>
   </x-page>
 </template>

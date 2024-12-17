@@ -19,59 +19,48 @@
       </div>
     </div>
     <!-- 联系人列表 -->
-    <van-index-bar style="background: #FFF;" :index-list="conf.indexList">
-      <template v-for="(item, index) in conf.userList" :key="index">
-        <van-index-anchor :index="item.index" />
-        <template v-for="(user, i2) in item.list" :key="i2">
-          <userItem :item="user" :lastItem="i2 == (item.list.length-1)" @click="conf.goPages('/chat/userCard')" />
+    <van-index-bar style="background: #FFF;height: 100%;" :index-list="getIndexData.indexList">
+      <template v-for="(item, index) in getIndexData.dataList" :key="index">
+        <van-index-anchor :index="getIndexData.indexList[index]" />
+        <template v-for="(user, i2) in item" :key="i2">
+          <userItem :item="user" :lastItem="i2 == (item.length-1)" @click="conf.goPages('/chat/userCard')" />
         </template>
       </template>
     </van-index-bar>
   </x-page>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import System from '@/utils/System';
 import headSearch from './com/headSearch.vue';
 import userItem from './com/userItem.vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'
+import cscontact from '@/modules/chat/sstore/cscontact'
+import { formatChooseData } from '@/modules/chat/utils/common';
 const conf = reactive({
   indexList: [] as any[],
   meaus: [{
     idx: 0,
     type: ContactMenuTypes.NewFriend,
     title: i18n.t('chatRoom.new_friend'),
-    icon: '/static/img/chat/new_friends.png',
-    badge: 120
+    faceURL: '/static/img/chat/new_friends.png',
+    badge: cscontact.unHandleFriendApplicationNum
   },
   {
     idx: 1,
     type: ContactMenuTypes.NewGroup,
     title: i18n.t('chatRoom.new_grp'),
-    icon: '/static/images/contact_new_group.png',
-    badge: 5
+    faceURL: '/static/images/contact_new_group.png',
+    badge: cscontact.unHandleGroupApplicationNum
   },
   {
     idx: 2,
     type: ContactMenuTypes.MyGroup,
     title: i18n.t('chatRoom.my_grps'),
-    icon: '/static/img/chat/new_group.png',
+    faceURL: '/static/img/chat/new_group.png',
     url: '/chat/groupList',
-    badge: 12
-  }],
-  userList: [{
-    index: 'A',
-    list: ['a11', 'a22', 'a33', 'a44', 'a55', 'a66']
-  }, {
-    index: 'B',
-    list: ['b11', 'b22', 'b33', 'b44', 'b55', 'b66']
-  }, {
-    index: 'C',
-    list: ['c11', 'c22', 'c33', 'c44', 'c55', 'c66']
-  }, {
-    index: '#',
-    list: ['/1223', '!22', '#33', '%44', '*55', '*66']
+    badge: 0
   }],
   goPages(url: any, item = null as any) {
     let routeUrl = url || item.url || null
@@ -80,13 +69,18 @@ const conf = reactive({
     System.router.push({ path: '/chat/applicationList', query: { type: item.type } })
   }
 })
-const init = () => {
-  conf.indexList = conf.userList.map((item: any) => {
-    return item.index
-  })
-}
+
+const getIndexData = computed(() =>{
+  return formatChooseData(cscontact.friendList)
+})
+
 onMounted(() => {
-  init()
+  console.log(cscontact.unHandleFriendApplicationNum);
+  console.log(cscontact.recvFriendApplications);
+  
+  // console.log('666501');
+  // let a = formatChooseData(cscontact.friendList)
+  // console.log(a);
 })
 </script>
 <style lang="less" scoped>

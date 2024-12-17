@@ -1,12 +1,12 @@
 <template>
   <div class="anchor-item" @click="emit('click')">
     <div class="item-author">
-      <img style="width: 100%; height: 100%;border-radius: 8rem;" :src="item.icon ? item.icon : '/static/img/home-banner.png'" />
+      <img style="width: 100%; height: 100%;border-radius: 8rem;" :src="item.faceURL ? item.faceURL : '/static/img/home-banner.png'" />
       <div class="message-count flex flex-center" v-if="item.badge && item.badge > 0">
         {{ item.badge < 99 ? item.badge: '99+' }}
       </div>
     </div>
-    <div class="item-name">{{ item.title || item }}</div>
+    <div class="item-name">{{ item.nickname || item.title }}</div>
     <div class="b-border" :style="{left: lastItem ? '24rem' : '116rem'}" v-if="showBodder"></div>
   </div>
 </template>
@@ -47,14 +47,15 @@ const emit = defineEmits(['click'])
       position: absolute;
       top: 5rem;
       right: 0;
-      height: 36rem;
+      height: 34rem;
       background-color: #f45551;
       border-radius: 18rem;
-      padding: 0 10rem;
+      padding: 0 16rem;
       text-align: center;
-      line-height: 36rem;
+      line-height: 34rem;
       transform: translate(50%, -50%);
       color: #fff;
+      font-size: 24rem;
     }
   }
 

@@ -23,7 +23,7 @@ export const cscontact = reactive({
           offset,
           count
         })
-        friendInfoList = [...friendInfoList, ...data.map((item: any) => item.friendInfo)]
+        friendInfoList = [...friendInfoList, ...data]
         offset += count
         if (data.length < count) break
         initialFetch = false
@@ -74,6 +74,9 @@ export const cscontact = reactive({
         count: 1000
       })
       cscontact.recvFriendApplications = data
+      cscontact.unHandleFriendApplicationNum = data.filter(
+        (application:any) =>
+          application.handleResult === 0 ).length;
     } catch (error) {
       console.error('getRecvFriendApplications error', error)
     }
@@ -98,6 +101,10 @@ export const cscontact = reactive({
         count: 1000
       })
       cscontact.recvGroupApplications = data
+      cscontact.unHandleGroupApplicationNum = data.filter(
+        (application:any) =>
+          application.handleResult === 0
+      ).length;
     } catch (error) {
       console.error('getRecvGroupApplications error', error)
     }

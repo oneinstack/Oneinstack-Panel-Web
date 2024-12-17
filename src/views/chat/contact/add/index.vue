@@ -26,6 +26,8 @@ import IMSDK from "openim-uniapp-polyfill";
 import sutil from '@/sstore/sutil';
 import i18n from '@/lang';
 import System from '@/utils/System';
+import cscontact from '@/modules/chat/sstore/cscontact';
+import { capis } from '@/modules/chat/api';
 
 const inputRef = ref<any>()
 const conf = reactive({
@@ -33,64 +35,73 @@ const conf = reactive({
   keyword: '',
   empty: false,
   async startSearch() {
-    conf.empty = true;
-    // if (!conf.keyword) return;
-    // System.loading()
-    // try {
-      // if (this.isSearchGroup) {
-        // let info = this.$store.getters.storeGroupList.find(
-        //   (item) => item.groupID === this.keyword,
-        // );
-        // if (!info) {
-        //   const { data } = await IMSDK.asyncApi(
-        //     IMSDK.IMMethods.GetSpecifiedGroupsInfo,
-        //     IMSDK.uuid(),
-        //     [this.keyword],
-        //   );
-        //   info = data[0];
-        // }
-        // if (info) {
-        //   System.router.push(`/chat/userCard?sourceInfo=${JSON.stringify(
-        //       info
-        //     ))
-      //   } else {
-      //     conf.empty = true;
-      //   }
-      // } else {
-        // let info = this.$store.getters.storeFriendList.find(
-        //   (item) => item.userID === this.keyword,
-        // );
-        // if (!info) {
-        //   const { total, users } = await businessSearchUserInfo(this.keyword);
-        //   if (total > 0) {
-        //     const { data } = await IMSDK.asyncApi(
-        //       'getUsersInfoWithCache',
-        //       IMSDK.uuid(),
-        //       { userIDList: [users[0].userID] },
-        //     );
-        //     const imData = data[0]?.friendInfo ?? data[0]?.publicInfo ?? {};
+    if (!conf.keyword) return;
+    System.loading()
+    try {
+      if (conf.isSearchGroup) {
+        let info = cscontact.groupList.find(
+          (item) => item.groupID === this.keyword,
+        );
+        if (!info) {
+          const { data } : any = await IMSDK.asyncApi(
+            IMSDK.IMMethods.GetSpecifiedGroupsInfo,
+            IMSDK.uuid(),
+            [this.keyword],
+          );
+          info = data[0];
+        }
+        if (info) {
+          // uni.navigateTo({
+          //   url: `/pages/common/groupCard/index?sourceInfo=${JSON.stringify(
+          //     info,
+          //   )}`,
+          // });
+        } else {
+          this.empty = true;
+        }
+      } else {
+        let info = cscontact.friendList.find(
+          (item) => item.userID === this.keyword,
+        );
+        if (!info) {
+          const { total, users } = await capis.businessSearchUserInfo(
+            {
+              keyword: conf.keyword,
+              pagination: {
+                pageNumber: 1,
+                showNumber: 10,
+              },
+            }
+          );
+          if (total > 0) {
+            const { data } :any = await IMSDK.asyncApi(
+              IMSDK.IMMethods.GetUsersInfo,
+              IMSDK.uuid(),
+              [users[0].userID],
+            );
+            const imData = data[0];
 
-        //     info = {
-        //       ...imData,
-        //       ...users[0],
-        //     };
-        //   }
-        // }
-        // if (info) {
-        //   uni.navigateTo({
-        //     url: `/chatRoom/common/userCard/index?sourceInfo=${JSON.stringify(
-        //       info,
-        //     )}`,
-        //   });
-        // } else {
-        //   conf.empty = true;
-        // }
-    //   }
-    // } catch (e) {
-    //   //TODO handle the exception
-    // }
-    // System.loading(false)
-  }
+            info = {
+              ...imData,
+              ...users[0],
+            };
+          }
+        }
+        if (info) {
+          // uni.navigateTo({
+          //   url: `/pages/common/userCard/index?sourceInfo=${JSON.stringify(
+          //     info,
+          //   )}`,
+          // });
+        } else {
+          conf.empty = true;
+        }
+      }
+    } catch (e) {
+      //TODO handle the exception
+    }
+    System.loading(false)
+  },
 })
 
 const getPlaceholder = computed(() => {
