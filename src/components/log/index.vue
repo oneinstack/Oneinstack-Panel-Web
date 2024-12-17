@@ -12,8 +12,9 @@
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
 
-defineProps({
-  max: { default: 10 }
+const props = defineProps({
+  max: { default: 10 },
+  name: { default: 't' }
 })
 const conf = reactive({
   list: [] as string[],
@@ -22,7 +23,9 @@ const conf = reactive({
   init: () => {
     const _log = console.log
     console.log = (...args: any[]) => {
-      conf.list.unshift(args.join(' '))
+      if (args[0].startsWith(props.name)) {
+        conf.list.unshift(args.join(' '))
+      }
       _log(...args)
     }
     conf.show = true

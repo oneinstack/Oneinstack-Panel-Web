@@ -1,5 +1,6 @@
 <template>
   <x-page class="chating-box" no-footer log>
+    <x-log />
     <template #title>
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>
@@ -89,7 +90,7 @@ const conf = reactive({
   /**
    * 返回事件函数id
    */
-  funId: '_chat_content',
+  funId: '_chat_content' + StrUtil.getId(),
   input: {
     message: '',
     isNull: () => {
@@ -253,14 +254,14 @@ const conf = reactive({
     send: () => {
       const newData = {
         isme: MathUtil.getRandomInt(1, 10) > 5,
-        groupID: MathUtil.getRandomInt(1, 10) > 5 ? '1':'',
+        groupID: MathUtil.getRandomInt(1, 10) > 5 ? '1' : '',
         senderNickname: 'Test',
         senderFaceUrl: '/static/img/home-banner.png',
-        contentType:MessageType.TextMessage,
+        contentType: MessageType.TextMessage,
         textElem: {
-          content:inputRef.value.getMessage()
+          content: inputRef.value.getMessage()
         }
-      } as (MessageItem & { isme: boolean })
+      } as MessageItem & { isme: boolean }
 
       chatBoxRef.value.insertData(newData)
 
@@ -273,28 +274,27 @@ const conf = reactive({
 
 watch(
   () => csmessage.historyMessageList,
-  () => {
-    if(!csmessage.historyMessageList.length) return
-    console.log('csmessage.historyMessageList', csmessage.historyMessageList)
+  async () => {
+    if (!csmessage.historyMessageList.length) return
     csmessage.historyMessageList.forEach((item) => {
       item.senderFaceUrl = item.senderFaceUrl || '/static/img/home-banner.png'
       item.isme = item.sendID === csuser.selfInfo.userID
     })
 
-    if (!conf.chat.isInit) {
-      conf.chat.list = [...csmessage.historyMessageList]
-      conf.chat.firstItem = csmessage.historyMessageList[0]
-      conf.chat.lastItem = csmessage.historyMessageList[csmessage.historyMessageList.length - 1]
-      chatBoxRef.value.initData(csmessage.historyMessageList)
-      conf.chat.isInit = true
-    } else {
+    if (conf.chat.isInit) {
       const newData = [...csmessage.historyMessageList]
       const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
       const lastItemData = newData.slice(lastItem + 1)
       conf.chat.lastItem = lastItemData[lastItemData.length - 1]
       for (let i = 0; i < lastItemData.length; i++) {
-        chatBoxRef.value.insertData(lastItemData[i])
+        await chatBoxRef.value.insertData(lastItemData[i])
       }
+    } else {
+      conf.chat.isInit = true
+      conf.chat.list = [...csmessage.historyMessageList]
+      conf.chat.firstItem = csmessage.historyMessageList[0]
+      conf.chat.lastItem = csmessage.historyMessageList[csmessage.historyMessageList.length - 1]
+      await chatBoxRef.value.initData(csmessage.historyMessageList)
     }
   }
 )
