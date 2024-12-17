@@ -597,7 +597,19 @@ defineExpose({
     conf.scroll.init()
   },
   /**
-   * 插入数据
+   * 从前面插入数据
+   * @param data 数据
+   */
+  unshiftData: async (data: any[]) => {
+    conf.dataSource.unshift(...data)
+    const existArr = conf.scroll.centent.getExistArr()
+    for (let i = 0; i < existArr.length; i++) {
+      existArr[i].dataIndex = existArr[i].dataIndex + data.length
+      existArr[i].data = conf.dataSource[existArr[i].dataIndex]
+    }
+  },
+  /**
+   * 从后面插入数据
    * @param data 数据
    */
   insertData: async (data: any) => {

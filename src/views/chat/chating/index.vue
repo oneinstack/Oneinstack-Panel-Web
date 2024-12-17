@@ -192,9 +192,16 @@ const conf = reactive({
     },
 
     async scrollTop() {
-      if (!conf.chat.messageLoadState.loading && csmessage.hasMoreMessage) {
-        await conf.chat.loadMessageList(true)
-      }
+      return new Promise(async (resolve) => {
+        event.once('scrollTopFinish', () => {
+          resolve(true)
+        })
+        let l = csmessage.historyMessageList.length
+        if (!conf.chat.messageLoadState.loading && csmessage.hasMoreMessage) {
+          await conf.chat.loadMessageList(true)
+        }
+        if (l === csmessage.historyMessageList.length) resolve(true)
+      })
     },
     async loadMessageList(isLoadMore = false) {
       conf.chat.messageLoadState.loading = true
@@ -281,13 +288,23 @@ watch(
       item.isme = item.sendID === csuser.selfInfo.userID
     })
 
+    console.log('cim', 'csmessage.historyMessageList', csmessage.historyMessageList)
+
     if (conf.chat.isInit) {
       const newData = [...csmessage.historyMessageList]
       const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
+      const firstItem = newData.findIndex((item) => item.clientMsgID === conf.chat.firstItem.clientMsgID)
       const lastItemData = newData.slice(lastItem + 1)
-      conf.chat.lastItem = lastItemData[lastItemData.length - 1]
-      for (let i = 0; i < lastItemData.length; i++) {
-        await chatBoxRef.value.insertData(lastItemData[i])
+      const firstItemData = newData.slice(0, firstItem)
+      if (lastItemData.length > 0) {
+        conf.chat.lastItem = lastItemData[lastItemData.length - 1]
+        for (let i = 0; i < lastItemData.length; i++) {
+          await chatBoxRef.value.insertData(lastItemData[i])
+        }
+      } else {
+        conf.chat.firstItem = firstItemData[0]
+        await chatBoxRef.value.unshiftData(firstItemData)
+        event.emit('scrollTopFinish')
       }
     } else {
       conf.chat.isInit = true
