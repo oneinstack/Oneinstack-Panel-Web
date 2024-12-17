@@ -29,7 +29,7 @@ export const uspage = reactive({
    * 恢复到默认
    */
   setConfig: (conf: any = defaultConf) => {
-    const newConf = ObjectUtil.deepMerge(defaultConf, conf)
+    const newConf = ObjectUtil.deepMerge({ ...defaultConf }, { ...conf })
     Object.keys(newConf).forEach((key) => {
       //@ts-ignore
       uspage[key] = newConf[key]
