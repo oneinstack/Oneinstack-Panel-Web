@@ -284,11 +284,12 @@ const conf = reactive({
             return a.index - b.index
           })
         } else {
-          //如果渲染数据最后一个未被利用，则获取存在数据最后一个
-          arr.push(lastNoData)
-          lastNoData.dataIndex = itemLast.dataIndex + 1
-          lastNoData.data = conf.dataSource[itemLast.dataIndex + 1]
-          res.push(lastNoData)
+          //如果存在未渲染数据，说明进入此方法的是新增数据，使用一个进行渲染即可
+          if (conf.dataSource[itemLast.dataIndex + 1]) {
+            lastNoData.dataIndex = itemLast.dataIndex + 1
+            lastNoData.data = conf.dataSource[itemLast.dataIndex + 1]
+            res.push(lastNoData)
+          }
         }
 
         // 更新所有数据

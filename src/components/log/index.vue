@@ -14,7 +14,7 @@ import { onMounted, reactive } from 'vue'
 
 const props = defineProps({
   max: { default: 10 },
-  name: { default: 't' }
+  name: { default: 'cim' }
 })
 const conf = reactive({
   list: [] as string[],
