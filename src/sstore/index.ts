@@ -1,4 +1,5 @@
 import System from '@/utils/System'
+import { sapp } from './sapp'
 import { sbet } from './sbet'
 import { sconfig } from './sconfig'
 import { shome } from './shome'
@@ -9,7 +10,7 @@ import { stween } from './stween'
 import { sutil } from './sutil'
 import { svalue } from './svalue'
 import { svf } from './svf'
-import sweb from './sweb'
+import { sweb } from './sweb'
 
 sutil.store = {
   shome,
@@ -22,7 +23,8 @@ sutil.store = {
   sstatus,
   sbet,
   sshake,
-  sweb
+  sweb,
+  sapp
 }
 
 export const reset = () => {
