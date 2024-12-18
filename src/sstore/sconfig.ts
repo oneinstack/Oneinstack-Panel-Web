@@ -23,6 +23,7 @@ export const sconfig = reactive({
 
     System.loading(true)
     let { data: info } = await apis.getToken({
+      platform:5,
       final(status, config, xhr) {
         System.loading(false)
       }

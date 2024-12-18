@@ -7,8 +7,8 @@
       <template v-for="(item, index) in conf.list">
         <div
           class="flex items-center relative ad-item"
-          @touchstart="item.active = true"
-          @mousedown="item.active = true"
+          @touchstart="conf.mouseDown(item)"
+          @mousedown="conf.mouseDown(item)"
           @click="item.fun(item)"
           :class="{ active: item.active, top: index == 0, bottom: index == conf.list.length - 1 }"
         >
@@ -68,7 +68,17 @@ const conf = reactive({
         console.log('add contacts')
       }
     }
-  ]
+  ],
+  mouseDown: (item: any) => {
+    item.active = true
+    const fun = () => {
+      item.active = false
+      document.removeEventListener('mouseup', fun)
+      document.removeEventListener('touchend', fun)
+    }
+    document.addEventListener('mouseup', fun)
+    document.addEventListener('touchend', fun)
+  }
 })
 </script>
 <style lang="less" scoped>
