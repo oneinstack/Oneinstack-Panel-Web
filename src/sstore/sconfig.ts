@@ -22,7 +22,11 @@ export const sconfig = reactive({
     }
 
     System.loading(true)
-    let { data: info } = await apis.getToken()
+    let { data: info } = await apis.getToken({
+      final(status, config, xhr) {
+        System.loading(false)
+      }
+    })
     let urlStr = info.url.replace(/\s+/g, '')
     let urlList = urlStr.split(',')
 
@@ -39,7 +43,9 @@ export const sconfig = reactive({
       })
     }
 
+    System.loading(true)
     let resultUrl = await getFastUrl(urlList)
+    System.loading(false)
 
     console.log('info', info)
 

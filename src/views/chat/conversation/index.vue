@@ -4,8 +4,9 @@
       <span class="title">{{ $t('chatRoom.messages') }}</span>
     </template>
     <template #right>
-      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
+      <div class="flex flex-center relatvie" style="width: 86rem; height: 100%" @click="conf.addDialog.show = true">
         <van-icon name="add-o" size="44rem" color="#333333" />
+        <addDialog v-model:show="conf.addDialog.show" />
       </div>
     </template>
     <div class="relative">
@@ -30,9 +31,11 @@
                   </div>
                   <div style="font-size: 24rem; color: #808080">{{ sutil.getTimeTip(item.latestMsgSendTime) }}</div>
                 </div>
-                <div class="row ellipsis" style="display: block; font-size: 28rem; color: #b1b1b1">
-                  {{ item.latestMessage }}
-                </div>
+                <div
+                  v-html="item.latestMessage"
+                  class="row ellipsis"
+                  style="display: block; font-size: 28rem; color: #b1b1b1"
+                ></div>
               </div>
             </div>
             <div class="border-bottom" v-if="index !== conf.list.length - 1"></div>
@@ -60,19 +63,12 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive, watch } from 'vue'
-import sutil from '../../../sstore/sutil'
-import {
-  ConversationItem,
-  FriendUserItem,
-  GroupAtType,
-  GroupItem,
-  MessageReceiveOptType,
-  SessionType
-} from 'openim-uniapp-polyfill'
-import System from '@/utils/System'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
+import { ConversationItem, FriendUserItem, GroupItem } from 'openim-uniapp-polyfill'
+import { onMounted, reactive, watch } from 'vue'
+import sutil from '../../../sstore/sutil'
+import addDialog from './components/addDialog.vue'
 const conf = reactive({
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
   listSort: () => {
@@ -108,6 +104,9 @@ const conf = reactive({
       } catch (e) {}
       item.latestMessage = parsedMessage
     })
+  },
+  addDialog: {
+    show: false
   }
 })
 
