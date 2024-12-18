@@ -9,8 +9,9 @@ import { ERouter } from '@/enum/Enum'
 import { initApp } from '@/modules/chat/sstore'
 import csopemim from '@/modules/chat/sstore/csdk'
 import cConfig from '@chat/utils/cConfig'
+import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive } from 'vue'
+import { onMounted, onUnmounted, reactive } from 'vue'
 
 defineOptions({
   name: 'ChatApp'
@@ -53,6 +54,10 @@ event.on(ERouter.change, (path: string) => {
 onMounted(() => {
   conf.init()
   conf.setConfig()
+})
+
+onUnmounted(() => {
+  IMSDK.asyncApi(IMMethods.Logout, IMSDK.uuid())
 })
 </script>
 <style lang="less" scoped>

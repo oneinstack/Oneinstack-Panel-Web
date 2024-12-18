@@ -10,6 +10,7 @@ import csmessage from './csmessage'
 import csuser from './csuser'
 
 export const csdk = reactive({
+  init: false,
   Login: async () => {
     console.log('开始登录', csconfig.userInfo.userID)
     await IMSDK.asyncApi(IMSDK.IMMethods.Login, IMSDK.uuid(), {
@@ -25,6 +26,8 @@ export const csdk = reactive({
       .catch((err) => {
         console.log('登录失败-error', err)
       })
+    if (csdk.init) return
+    csdk.init = true
     csdk.setGlobalIMlistener()
     csdk.initStore()
   },
