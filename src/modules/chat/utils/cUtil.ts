@@ -175,3 +175,11 @@ export const prepareConversationState = (conversation: any, back2Tab = false) =>
   }
   System.router.push(url)
 }
+
+export const offlinePushInfo = {
+  title: 'you have a new message',
+  desc: 'you have a new message',
+  ex: '',
+  iOSPushSound: '',
+  iOSBadgeCount: true
+}

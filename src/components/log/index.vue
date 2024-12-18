@@ -7,7 +7,8 @@
   >
     <div>
       <div class="log-item" v-for="(item, index) in conf.list">
-        <div v-if="index < max">
+        <div class="row" v-if="index < max">
+          <div style="width: 108rem">{{ item.time }}：</div>
           <span :style="{ color: item.color }">{{ item.content }}</span>
         </div>
       </div>
@@ -22,7 +23,7 @@ const props = defineProps({
   name: { default: 'cim' }
 })
 const conf = reactive({
-  list: [] as { content: string; color: string }[],
+  list: [] as { content: string; color: string; time: string }[],
   show: false,
   scale: {
     show: false,
@@ -39,7 +40,7 @@ const conf = reactive({
     const _log = console.log
     console.log = (...args: any[]) => {
       _log(...args)
-      if (args[0].startsWith(props.name)) {
+      if (args[0]?.startsWith?.(props.name)) {
         let color = `#${Math.floor(Math.random() * 16777215).toString(16)}`
         if (
           color
@@ -49,6 +50,7 @@ const conf = reactive({
         ) {
           color = '#000000'
         }
+        args = args.slice(1)
         conf.list.unshift({
           content: args
             .map((item) => {
@@ -58,7 +60,8 @@ const conf = reactive({
               return item
             })
             .join(' '),
-          color: color
+          color: color,
+          time: new Date().Format('hh:mm:ss')
         })
       }
     }
@@ -80,8 +83,13 @@ onMounted(() => {
   bottom: 50vh;
   right: 0;
   max-height: 40vh;
+  min-height: 100rem;
+  min-width: 100rem;
   background-color: rgba(255, 255, 255, 0.8);
   overflow: auto;
+}
+.log-item {
+  min-width: 100vw;
 }
 //#endvar
 </style>
