@@ -18,8 +18,8 @@
     <div class="head">
       <x-statusbar />
       <div style="height: 578rem; position: relative">
-        <div class="stting" @click.stop="conf.changeOutPopup" v-if="sconfig.userInfo">
-          <img class="setting-img" src="/static/img/quit-new.png" />
+        <div class="stting" @click.stop="conf.pageToSettings">
+          <VSIcon class="setting-img" lib="blue" name="settings" :size="52" />
         </div>
         <div class="user-content">
           <div class="user" @click="conf.goLogin('/user/personal/personal')">
@@ -358,8 +358,8 @@ const conf = reactive({
     item.func && item.func()
   },
 
-  changeOutPopup() {
-    conf.outPopup = true
+  pageToSettings() {
+    System.router.push('/user/setting/setting')
   },
   async changeLang(item: any) {
     conf.language = item.id
@@ -494,14 +494,9 @@ onMounted(() => init())
 
   .stting {
     position: absolute;
-    top: 120rem;
+    top: 90rem;
     right: 46rem;
     z-index: 2;
-
-    .setting-img {
-      width: 38rem;
-      height: 36rem;
-    }
   }
 
   .user-content {
