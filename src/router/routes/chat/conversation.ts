@@ -1,11 +1,11 @@
 export default [
   {
-    path: '/chat/settings/friend',
-    component: '/chat/conversation/settings/friend'
+    path: '/chat/details/friend',
+    component: '/chat/conversation/details/friend'
   },
   {
-    path: '/chat/settings/group',
-    component: '/chat/conversation/settings/group'
+    path: '/chat/details/group',
+    component: '/chat/conversation/details/group'
   },
   {
     path: '/chat/redPacket/send',

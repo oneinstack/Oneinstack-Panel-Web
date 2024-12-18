@@ -4,6 +4,14 @@ export default [
     component: '/chat/contact/userCard/index'
   },
   {
+    path: '/chat/userCard/setting',
+    component: '/chat/contact/userCard/setting'
+  },
+  {
+    path: '/chat/userCard/notes',
+    component: '/chat/contact/userCard/notes'
+  },
+  {
     path: '/chat/search',
     component: '/chat/contact/search/index'
   },

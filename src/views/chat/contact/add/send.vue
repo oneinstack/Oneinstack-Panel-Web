@@ -73,7 +73,7 @@ onMounted(() => {
 
   if (info) {
     conf.userInfo = JSON.parse(info)
-    conf.reason = 'I am' + conf.userInfo.nickname
+    conf.reason = 'I am ' + conf.userInfo.nickname
     conf.sessionType = conf.userInfo.sessionType ?? 0;
   }
 })

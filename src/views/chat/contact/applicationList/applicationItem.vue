@@ -28,6 +28,7 @@ import { computed, onMounted, reactive } from 'vue';
 import IMSDK, { SessionType } from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import cscontact from '@/modules/chat/sstore/cscontact';
+import { navigateToDesignatedConversation } from '@/modules/chat/utils/cUtil';
 const props = defineProps({
     application: {
         default: {} as any
@@ -83,15 +84,18 @@ const conf = reactive({
             );
         }
         func
-            .then(() => System.toast(i18n.t('chatRoom.SuccessfulOperation'),'success'))
+            .then(() => {
+                System.toast(i18n.t('chatRoom.SuccessfulOperation'), 'success')
+                props.application.handleResult = 1
+            })
             .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
             .finally(() => (this.accessLoading = false));
     },
     greetToUser() {
-        //   navigateToDesignatedConversation(
-        //     props.application[props.isRecv ? "fromUserID" : "toUserID"],
-        //     SessionType.Single,
-        //   ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
+        navigateToDesignatedConversation(
+            props.application[props.isRecv ? "fromUserID" : "toUserID"],
+            SessionType.Single,
+        ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
     },
 })
 

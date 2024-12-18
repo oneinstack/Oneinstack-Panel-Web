@@ -4,13 +4,13 @@
       <span class="head-title">Chat details</span>
     </template>
     <div class="user">
-      <div class="info">
-        <img src="/static/img/home-banner.png" />
-        <van-text-ellipsis :content="'input dield input'" />
+      <div class="info" @click="conf.toUserCard">
+        <img :src="csconversation.currentConversation.faceURL" />
+        <van-text-ellipsis :content="csconversation.currentConversation.showName" />
       </div>
       <img style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" />
     </div>
-    <div class="edit flex-b-c">
+    <!-- <div class="edit flex-b-c">
       <div class="title">Search chat history</div>
       <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
@@ -34,15 +34,24 @@
     </div>
     <div class="edit">
       <div class="title">Clear Chat History</div>
-    </div>
+    </div> -->
   </x-page>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
+import csconversation from '@/modules/chat/sstore/csconversation';
+import System from '@/utils/System';
+import { onMounted, reactive } from 'vue'
 const conf = reactive({
   muteChecked: false,
   topChecked: true,
-  alertChecked: false
+  alertChecked: false,
+  toUserCard() {
+    System.router.push(`/chat/userCard?sourceID=${csconversation.currentConversation.userID}`)
+  },
+})
+onMounted(() => {
+  console.log(csconversation.currentConversation);
+
 })
 </script>
 <style lang="less" scoped>
@@ -55,6 +64,7 @@ const conf = reactive({
     width: 96rem;
     color: #999;
     font-size: 22rem;
+    text-align: center;
   }
 
   img {

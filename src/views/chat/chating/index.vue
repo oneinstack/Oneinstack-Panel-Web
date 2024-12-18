@@ -8,7 +8,7 @@
       </span>
     </template>
     <template #right>
-      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
+      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="conf.goSetting">
         <van-icon name="ellipsis" size="48rem" color="#666" />
       </div>
     </template>
@@ -247,8 +247,13 @@ const conf = reactive({
       inputRef.value.clear(!conf.emoji.show)
       csmessage.sendMessage(message)
     },
-
     isInit: false
+  },
+  goSetting() {
+    const url = csconversation.currentConversation.conversationType == SessionType.Single
+      ? "/chat/details/friend"
+      : "/chat/details/group";
+    System.router.push(url)
   }
 })
 

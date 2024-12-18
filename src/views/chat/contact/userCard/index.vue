@@ -1,7 +1,7 @@
 <template>
   <x-page headerBgColor="#fff">
-    <template #right>
-      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
+    <template #right v-if="isFriend">
+      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="conf.toMoreInfo('setting')">
         <van-icon name="ellipsis" size="44rem" color="#666" />
       </div>
     </template>
@@ -19,8 +19,8 @@
           <!-- <div>Area: China</div> -->
         </div>
       </div>
-      <div class="edit" v-if="isFriend">
-        <div class="title">Edit Contact</div>
+      <div class="edit" v-if="isFriend" @click="conf.toMoreInfo('notes')">
+        <div class="title">{{ $t('chatRoom.set_note') }}</div>
         <van-icon name="arrow" size="34rem" color="#B8B8B8" />
       </div>
     </div>
@@ -32,7 +32,7 @@
       <div class="other-item" @click="conf.toAddFriend" v-if="!isFriend && !conf.disableAdd && !isSelf">
         <span>Add to Contacts</span>
       </div>
-      <div class="other-item" v-else>
+      <div class="other-item" v-else @click="conf.toDesignatedConversation">
         <img style="width: 30rem; height: 30rem;margin-right: 16rem;" src="/static/img/chat/message.svg" />
         <span>Messages</span>
       </div>
@@ -52,6 +52,8 @@ import csconversation from '@/modules/chat/sstore/csconversation';
 import csuser from '@/modules/chat/sstore/csuser';
 import cscontact from '@/modules/chat/sstore/cscontact';
 import System from '@/utils/System';
+import { navigateToDesignatedConversation } from '@/modules/chat/utils/cUtil';
+import i18n from '@/lang';
 const conf = reactive({
   isLoading: false,
   sourceID: '',
@@ -154,11 +156,23 @@ const conf = reactive({
       conf.groupMemberInfoChangeHandler,
     );
   },
-  toAddFriend() { 
-    let info = { isGroup: false, sourceID: conf.sourceID, isScan: false, notNeedVerification: false,nickname: csuser.selfInfo.nickname }
+  toAddFriend() {
+    let info = { isGroup: false, sourceID: conf.sourceID, isScan: false, notNeedVerification: false, nickname: csuser.selfInfo.nickname }
     System.router.push(`/chat/add/send?info=${JSON.stringify(
       info,
     )}`)
+  },
+  toMoreInfo(url:any) {
+    System.router.push(`/chat/userCard/${url}?isRemark=true&sourceInfo=${JSON.stringify(
+      conf.sourceUserInfo,
+    )}`)
+  },
+  toDesignatedConversation() {
+    navigateToDesignatedConversation(
+      conf.sourceID,
+      SessionType.Single,
+      conf.memberInfo !== null,
+    ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
   },
 })
 const getShowName = computed(() => {
