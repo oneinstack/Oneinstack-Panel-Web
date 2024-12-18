@@ -5,7 +5,7 @@
     </template>
     <template #right>
       <div class="flex flex-center" style="width: 86rem; height: 100%" @click="">
-        <van-icon name="add-o" size="22" color="#333333" />
+        <van-icon name="add-o" size="44rem" color="#333333" />
       </div>
     </template>
     <div class="relative">

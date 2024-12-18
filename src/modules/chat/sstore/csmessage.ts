@@ -1,6 +1,8 @@
-import IMSDK, { MessageItem, MessageStatus, MessageType } from 'openim-uniapp-polyfill'
+import IMSDK, { IMMethods, MessageItem, MessageStatus, MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 import { UpdateMessageTypes } from '../constant'
+import { offlinePushInfo } from '../utils/cUtil'
+import csconversation from './csconversation'
 
 interface MessageState {
   historyMessageList: any[]
@@ -115,6 +117,51 @@ export const csmessage = reactive({
       }
       return message
     })
+  },
+  /**
+   * 创建文本消息
+   * @param content 消息内容
+   * @returns 消息对象
+   */
+  createTextMessage: async (content: string) => {
+    return await IMSDK.asyncApi(IMMethods.CreateTextMessage, IMSDK.uuid(), content)
+  },
+  /**
+   * 发送消息到当前会话对象
+   * @param message
+   */
+  sendMessage: async (message: MessageItem) => {
+    csmessage.pushNewMessage(message)
+    IMSDK.asyncApi(IMMethods.SendMessage, IMSDK.uuid(), {
+      recvID: csconversation.currentConversation.userID,
+      groupID: csconversation.currentConversation.groupID,
+      message,
+      offlinePushInfo
+    })
+      .then(({ data }: any) => {
+        csmessage.updateOneMessage({
+          message: data,
+          isSuccess: true
+        })
+        console.log('cim', '发送成功')
+      })
+      .catch(({ data, errCode, errMsg }: any) => {
+        console.log('cim', '发送失败')
+        csmessage.updateOneMessage({
+          message: data,
+          type: UpdateMessageTypes.KeyWords,
+          keyWords: [
+            {
+              key: 'status',
+              value: MessageStatus.Failed
+            },
+            {
+              key: 'errCode',
+              value: errCode
+            }
+          ]
+        })
+      })
   }
 })
 

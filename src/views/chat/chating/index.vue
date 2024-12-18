@@ -84,16 +84,11 @@ import MessageList from './message/list.vue'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
 import csuser from '@/modules/chat/sstore/csuser'
-import { IMMethods, MessageItem, MessageStatus, MessageType, SessionType } from 'openim-uniapp-polyfill'
-import IMSDK from 'openim-uniapp-polyfill'
-import { offlinePushInfo } from '@/modules/chat/utils/cUtil'
-import { UpdateMessageTypes } from '@/modules/chat/constant'
+import { MessageItem, SessionType } from 'openim-uniapp-polyfill'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
 const timer = Scope.Timer()
-
-const needClearTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
 
 const conf = reactive({
   /**
@@ -276,55 +271,13 @@ const conf = reactive({
       conf.chat.list = _data
       chatBoxRef.value.initData(_data)
     },
-    createTextMessage: async (content: string) => {
-      let message = await IMSDK.asyncApi(IMMethods.CreateTextMessage, IMSDK.uuid(), content)
-      return message
-    },
     send: async () => {
-      const message: any = await conf.chat.createTextMessage(inputRef.value.getMessage())
-      conf.chat.sendMessage(message)
+      const message: any = await csmessage.createTextMessage(inputRef.value.getMessage())
+      conf.input.message = ''
+      inputRef.value.clear(!conf.emoji.show)
+      csmessage.sendMessage(message)
     },
 
-    sendMessage: async (message: MessageItem) => {
-      csmessage.pushNewMessage(message)
-      if (needClearTypes.includes(message.contentType)) {
-        conf.input.message = ''
-        inputRef.value.clear(!conf.emoji.show)
-      }
-      IMSDK.asyncApi(IMMethods.SendMessage, IMSDK.uuid(), {
-        recvID: csconversation.currentConversation.userID,
-        groupID: csconversation.currentConversation.groupID,
-        message,
-        offlinePushInfo
-      })
-        .then(({ data }: any) => {
-          csmessage.updateOneMessage({
-            message: data,
-            isSuccess: true
-          })
-          console.log('cim', '发送成功')
-        })
-        .catch(({ data, errCode, errMsg }: any) => {
-          console.log('cim', '发送失败')
-          csmessage.updateOneMessage({
-            message: data,
-            type: UpdateMessageTypes.KeyWords,
-            keyWords: [
-              {
-                key: 'status',
-                value: MessageStatus.Failed
-              },
-              {
-                key: 'errCode',
-                value: errCode
-              }
-            ]
-          })
-        })
-      // if (this.storeQuoteMessage) {
-      //   this.$store.commit("message/SET_QUOTE_MESSAGE", undefined);
-      // }
-    },
     isInit: false
   }
 })
