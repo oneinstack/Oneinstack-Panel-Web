@@ -13,9 +13,9 @@ export default class cConfig {
     cHttpConfig.init()
 
     const data = await capis.businessLogin({
-      'phoneNumber': '15519686068',
+      'phoneNumber': '13111111234',
       'areaCode': '+86',
-      'password': 'c6bd6cd028502d6e1f6f4fe21c7d53b9',
+      'password': 'c82aef8ec4e9c18ca54745ebfa472b6e',
       'platform': 5
     })
 
