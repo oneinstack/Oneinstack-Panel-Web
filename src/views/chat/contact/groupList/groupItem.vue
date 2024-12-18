@@ -1,24 +1,23 @@
 <template>
-    <div class="item">
-        <img class="avatar-img" src="/static/img/home-banner.png" />
-        <div class="name">似水流</div>
+    <div class="item" @click="conf.goChat">
+        <img class="avatar-img" :src="groupInfo.faceURL" />
+        <div class="name">{{ groupInfo.groupName }}</div>
     </div>
 </template>
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import System from '@/utils/System';
+import { reactive } from 'vue';
 const props = defineProps({
-    application: {
+    groupInfo: {
         default: {} as any
-    },
-    isRecv: {
-        default: false
     }
 })
 
 const conf = reactive({
-    
+    goChat() {
+        System.router.push('/chat/chating?back2Tab=false')
+    }
 })
-
 
 </script>
 <style lang="less" scoped>

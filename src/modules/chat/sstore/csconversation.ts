@@ -9,6 +9,7 @@ export const csconversation = reactive({
   unReadCount: 0,
   currentGroup: {} as any,
   currentMemberInGroup: {} as any,
+  groupMemberList: [] as any[],
 
   async getConversationList(isFirstPage = true) {
     try {
