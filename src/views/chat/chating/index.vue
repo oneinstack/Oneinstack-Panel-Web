@@ -133,6 +133,7 @@ const conf = reactive({
   },
   content: {
     toBottom: async (ani = false, time = 0) => {
+      chatBoxRef.value.showLastData()
       timer.once(() => {
         chatBoxRef.value.toBottom(ani)
       }, time)
@@ -239,37 +240,6 @@ const conf = reactive({
       nextTick(function () {
         conf.chat.messageLoadState.loading = false
       })
-    },
-    getList: async () => {
-      console.log('csmessage.historyMessageList', csmessage.historyMessageList)
-
-      //模拟数据
-      const _data = [
-        {
-          'isme': false,
-          'isGroup': false,
-          'sendnickname': 'Test',
-          'face': '/static/img/home-banner.png',
-          'content':
-            '<img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);"><img src="/static/chat/emoji/86.png" width="18rem" height="18rem" style="vertical-align: middle;transform: translateY(-3rem);">',
-          'type': 'text'
-        }
-      ] as any
-
-      _data[0].id = StrUtil.getId()
-      _data[0].content += '-0'
-      for (let i = 1; i <= 50; i++) {
-        const obj = { ..._data[0] }
-        obj.id = StrUtil.getId()
-        const num = MathUtil.getRandomInt(1, 3)
-        obj.content += '-' + i
-        for (let j = 0; j < num; j++) {
-          obj.content += obj.content
-        }
-        _data.push(obj)
-      }
-      conf.chat.list = _data
-      chatBoxRef.value.initData(_data)
     },
     send: async () => {
       const message: any = await csmessage.createTextMessage(inputRef.value.getMessage())

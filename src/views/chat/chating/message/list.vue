@@ -147,9 +147,18 @@ const conf = reactive({
        * 加载顶部数据
        */
       loadTop: async () => {
-        await props.scrollTop?.()
         if (conf.scroll.centent.loadStatus) return
         conf.scroll.centent.loadStatus = true
+        
+        const existArr = conf.scroll.centent.getExistArr()
+        existArr.sort((a, b) => {
+          return b.dataIndex - a.dataIndex
+        })
+        //当显示数据为顶部最后一条数据时，触发加载数据
+        if (existArr[existArr.length - 1].dataIndex === 0) {
+          await props.scrollTop?.()
+        }
+        
         const arr = [] as any[]
 
         const item0 = conf.scroll.centent.findIndex(0)
@@ -619,6 +628,23 @@ defineExpose({
       timer.once(() => {
         conf.scroll.toBottom(true)
       }, 80)
+    }
+  },
+  /**
+   * 显示最底部的数据
+   */
+  showLastData: () => {
+    const existArr = conf.scroll.centent.getExistArr()
+    existArr.sort((a, b) => {
+      return a.dataIndex - b.dataIndex
+    })
+    const minIndex = conf.dataSource.length - existArr.length
+    if (!minIndex) return
+    let eIndex = existArr.length - 1
+    for (let i = conf.dataSource.length - 1; i >= minIndex; i--) {
+      existArr[eIndex].data = conf.dataSource[i]
+      existArr[eIndex].dataIndex = i
+      eIndex--
     }
   }
 })
