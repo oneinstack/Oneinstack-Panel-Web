@@ -223,4 +223,13 @@ export default class System {
     document.body.removeChild(tempLink)
     window.URL.revokeObjectURL(content)
   }
+
+  /**
+   * 切换主题
+   * @param theme 
+   */
+  static setTheme = (theme: string) => {
+    Cookie.set('pageTheme', theme)
+    window.location.reload()
+  }
 }
