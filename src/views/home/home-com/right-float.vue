@@ -22,7 +22,7 @@
         :class="{ 'hide': conf.isScroll }"
         style="transition-delay: 0.2s"
         v-if="sconfig.userInfo && svalue.configv1['im_open']"
-        @click="conf.toChat()"
+        @click="sconfig.toChat()"
       >
         <img src="/static/images/wx.png" />
       </div>
@@ -83,10 +83,6 @@ const conf = reactive({
     } else {
       System.toast(i18n.t('redEnvelopeModule.notStarted'))
     }
-  },
-  async toChat() {
-    System.router.push(`/chat`)
-    // sconfig.toChat()
   },
   // 客服
   async handleClickServiceImg() {
