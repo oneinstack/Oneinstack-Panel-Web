@@ -8,6 +8,7 @@ import uspage from '@/components/page/uspage'
 import { ERouter } from '@/enum/Enum'
 import { initApp } from '@/modules/chat/sstore'
 import csopemim from '@/modules/chat/sstore/csdk'
+import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
 import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
@@ -52,6 +53,7 @@ event.on(ERouter.change, (path: string) => {
 })
 
 onMounted(() => {
+  System.loading(false)
   conf.init()
   conf.setConfig()
 })
