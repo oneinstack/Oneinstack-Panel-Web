@@ -3,10 +3,14 @@
     <div class="head-fixd" v-if="conf.isHeadFixed">
       <x-statusbar />
       <div class="head-user" @click="conf.goLogin('/user/personal/personal')">
-        <img class="head-img" :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
-            ? sconfig.userInfo.userImgUrl
-            : '/static/img/default-header.png'
-          " />
+        <img
+          class="head-img"
+          :src="
+            sconfig.userInfo && sconfig.userInfo.userImgUrl
+              ? sconfig.userInfo.userImgUrl
+              : '/static/img/default-header.png'
+          "
+        />
         <span v-if="sconfig.userInfo">
           {{
             sconfig.userInfo.userNickname || sconfig.userInfo.userName || sconfig.userInfo.email || $t('me.userName')
@@ -17,15 +21,18 @@
     </div>
     <div class="head">
       <x-statusbar />
-      <div style="height: 578rem; position: relative">
+      <div style="height: 670rem; position: relative">
         <div class="stting" @click.stop="conf.pageToSettings">
           <VSIcon class="setting-img" lib="blue" name="settings" :size="52" />
         </div>
         <div class="user-content">
           <div class="user" @click="conf.goLogin('/user/personal/personal')">
             <div class="user-avatar">
-              <img class="avatar-img" :src="sconfig.userInfo.userImgUrl"
-                v-if="sconfig.userInfo && sconfig.userInfo.userImgUrl" />
+              <img
+                class="avatar-img"
+                :src="sconfig.userInfo.userImgUrl"
+                v-if="sconfig.userInfo && sconfig.userInfo.userImgUrl"
+              />
               <img class="avatar-img" src="/static/img/default-header.png" v-else />
             </div>
             <div class="user-info" v-if="sconfig.userInfo">
@@ -40,8 +47,12 @@
                 </span>
 
                 <span class="vip-icon">
-                  <img class="vip2" :src="'/static/img/VIP/v' + conf.userVipLevel + '.png'" mode="widthFix"
-                    style="width: 80rem !important" />
+                  <img
+                    class="vip2"
+                    :src="'/static/img/VIP/v' + conf.userVipLevel + '.png'"
+                    mode="widthFix"
+                    style="width: 80rem !important"
+                  />
                 </span>
               </div>
               <div class="uid">UID:{{ sconfig.userInfo.uid || '******' }}</div>
@@ -52,49 +63,56 @@
             </div>
           </div>
           <div class="grade">
-            <div class="grade-img"></div>
             <div class="grade-info">
-              <div class="level">
-                <div class="left-content">
-                  <div class="left-total">{{ $t('wallet.topTitle') }}:</div>
-                  <div class="left-icon">
-                    <div>
-                      <div style="height: 8px" v-if="!conf.openEye"></div>
-                      {{
-                        conf.openEye
-                          ? conf.defaultCoin.coinSymbol + sutil.dataHandling(conf.total_money)
-                          : conf.str_money
-                      }}
-                    </div>
-                    <img v-if="!conf.openEye && sconfig.userInfo" @click.prevent="conf.handleEyeClick()" class="eye-img"
-                      src="/static/img/color_open_eye.png" />
-                    <img v-if="conf.openEye && sconfig.userInfo" @click.prevent="conf.handleEyeClick()" class="eye-img"
-                      src="/static/img/color_close_eye.png" />
-                  </div>
+              <div class="left-content">
+                <div class="left-total">
+                  {{ $t('wallet.topTitle') }}
+                  <VSIcon
+                    v-if="sconfig.userInfo"
+                    class="eye-img"
+                    lib="blue"
+                    :color="['#979797']"
+                    :name="conf.openEye ? 'eye-open' : 'eye-close'"
+                    :size="40"
+                    @click.prevent="conf.handleEyeClick()"
+                  />
                 </div>
-                <div class="select" style="justify-content: center;
-                align-items: center;" v-if="conf.coinLosding && sconfig.userInfo">
-                  <van-loading type="spinner" />
+                <div class="left-icon">
+                  {{
+                    conf.openEye
+                      ? `${conf.defaultCoin.coinSymbol} ${sutil.dataHandling(conf.total_money)}`
+                      : conf.str_money
+                  }}
                 </div>
-                <div class="select" v-else>
-                  <div class="select-item" @click="conf.handleCilckImg('Recharge', $event)">
-                    <img src="/static/img/wallet/recharge-new.png" />
-                    <span>{{ $t('wallet.Recharge') }}</span>
-                  </div>
-                  <!-- 推广用户不可提现 -->
-                  <div class="select-item" @click="conf.handleCilckImg('Withdraw', $event)">
-                    <img src="/static/img/wallet/withdraw-new.png" />
-                    <span>{{ $t('wallet.Withdrawal') }}</span>
-                  </div>
-                  <div class="select-item" @click="conf.handleCilckImg('Remittance', $event)"
-                    v-if="conf.userWalletList.length > 1">
-                    <img src="/static/img/wallet/remittance-new.png" />
-                    <span>{{ $t('wallet.Remittance') }}</span>
-                  </div>
-                  <div class="select-item" @click="conf.handleCilckImg('CentralWallet', $event)">
-                    <img src="/static/img/wallet/center-new.png" />
-                    <span>{{ $t('wallet.central') }}</span>
-                  </div>
+              </div>
+              <div
+                class="select"
+                style="justify-content: center; align-items: center"
+                v-if="conf.coinLosding && sconfig.userInfo"
+              >
+                <van-loading type="spinner" />
+              </div>
+              <div class="select" v-else>
+                <div class="select-item" @click="conf.handleCilckImg('Recharge', $event)">
+                  <img src="/static/theme/blue/recharge.webp" />
+                  <span>{{ $t('wallet.Recharge') }}</span>
+                </div>
+                <!-- 推广用户不可提现 -->
+                <div class="select-item" @click="conf.handleCilckImg('Withdraw', $event)">
+                  <img src="/static/theme/blue/withdrawal.webp" />
+                  <span>{{ $t('wallet.Withdrawal') }}</span>
+                </div>
+                <div
+                  class="select-item"
+                  @click="conf.handleCilckImg('Remittance', $event)"
+                  v-if="conf.userWalletList.length > 1"
+                >
+                  <img src="/static/theme/blue/remittance.webp" />
+                  <span>{{ $t('wallet.Remittance') }}</span>
+                </div>
+                <div class="select-item" @click="conf.handleCilckImg('CentralWallet', $event)">
+                  <img src="/static/theme/blue/central.webp" />
+                  <span>{{ $t('wallet.central') }}</span>
                 </div>
               </div>
             </div>
@@ -105,18 +123,27 @@
     <!-- 银行卡绑定提示框-->
     <cuModal :showNumberBox="conf.showNumberBox" @handleCloseBindDialog="conf.handleCloseBindDialog" />
     <div class="menu-list">
-      <div class="menu-item">
-        <div v-for="(item, index) of conf.menu1" :key="index">
-          <van-cell is-link @click="conf.handle(item)"
-            v-if="typeof item.isShow === 'function' ? item.isShow() : item.isShow">
+      <div
+        v-for="(category, index) in conf.menu1"
+        :key="index"
+        :style="index === conf.menu1.length - 1 && 'margin-top: 32rem'"
+        class="menu-item"
+      >
+        <div v-for="item of category" :key="item.name">
+          <van-cell
+            is-link
+            center
+            @click="conf.handle(item)"
+            v-if="typeof item.isShow === 'function' ? item.isShow() : item.isShow"
+          >
             <!-- 使用 title 插槽来自定义标题 -->
             <template #icon>
               <div class="flex items-center">
-                <img class="menu-icon" :src="item.leftImg" />
+                <VSIcon lib="blue" class="menu-icon" :name="item.icon" :size="64" />
               </div>
             </template>
             <template #title>
-              <span>{{ item.name.indexOf('me.') > -1 ? $t(item.name) : item.name }}</span>
+              <span class="menu-item-title">{{ item.name.indexOf('me.') > -1 ? $t(item.name) : item.name }}</span>
             </template>
           </van-cell>
         </div>
@@ -270,6 +297,7 @@ const conf = reactive({
       addArr.push({
         name: info.app_name + ' fortune',
         leftImg: '/static/img/YuE-bao.png',
+        icon: 'fortune',
         new: false,
         url: '/user/YuE-Bao/yueBao',
         isShow: conf.needLoginShow
@@ -277,80 +305,91 @@ const conf = reactive({
     }
 
     conf.menu1 = [
-      ...addArr,
-      {
-        // name: 'Third party placing',
-        name: 'me.casinoBets',
-        leftImg: '/static/img/Third-party-placing.png',
-        new: false,
-        url: '/user/me/thirdPartyPlacing',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.History',
-        leftImg: '/static/img/result-history-new.png',
-        new: false,
-        url: '/user/me/resultHistory',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Agency',
-        leftImg: '/static/img/me-active-new.png',
-        new: false,
-        url: '/user/invite/index',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Bets',
-        leftImg: '/static/img/money-new.png',
-        new: false,
-        url: '/user/myBet/index',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Sratch',
-        leftImg: '/static/img/sratch-history-new.png',
-        new: false,
-        url: '/user/scratch/history',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Transactions',
-        leftImg: '/static/img/transactions-new2.png',
-        new: false,
-        url: '/user/me/myTransactions',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.bankCrad',
-        leftImg: '/static/img/back-card-new.png',
-        new: false,
-        url: '/user/me/BankCard',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Password',
-        leftImg: '/static/img/password-new.png',
-        new: false,
-        url: '/user/Password/Change',
-        isShow: conf.needLoginShow
-      },
-      {
-        name: 'me.Languages',
-        leftImg: '/static/img/languages-new.png',
-        new: false,
-        func: () => {
-          conf.langPopup = true
+      [
+        ...addArr,
+        {
+          // name: 'Third party placing',
+          name: 'me.casinoBets',
+          leftImg: '/static/img/Third-party-placing.png',
+          icon: 'casino-bets',
+          new: false,
+          url: '/user/me/thirdPartyPlacing',
+          isShow: conf.needLoginShow
         },
-        isShow: true
-      },
-      {
-        name: 'me.setting',
-        leftImg: '/static/img/setting-new.png',
-        new: false,
-        url: '/user/setting/setting',
-        isShow: true
-      }
+        {
+          name: 'me.History',
+          leftImg: '/static/img/result-history-new.png',
+          icon: 'result-history',
+          new: false,
+          url: '/user/me/resultHistory',
+          isShow: conf.needLoginShow
+        },
+        {
+          name: 'me.Agency',
+          leftImg: '/static/img/me-active-new.png',
+          icon: 'agency-center',
+          new: false,
+          url: '/user/invite/index',
+          isShow: conf.needLoginShow
+        }
+      ],
+      [
+        {
+          name: 'me.Bets',
+          leftImg: '/static/img/money-new.png',
+          icon: 'my-bets',
+          new: false,
+          url: '/user/myBet/index',
+          isShow: conf.needLoginShow
+        },
+        {
+          name: 'me.Sratch',
+          leftImg: '/static/img/sratch-history-new.png',
+          icon: 'scratch-off-records',
+          new: false,
+          url: '/user/scratch/history',
+          isShow: conf.needLoginShow
+        },
+        {
+          name: 'me.Transactions',
+          leftImg: '/static/img/transactions-new2.png',
+          icon: 'my-transactions',
+          new: false,
+          url: '/user/me/myTransactions',
+          isShow: conf.needLoginShow
+        },
+        {
+          name: 'me.bankCrad',
+          leftImg: '/static/img/back-card-new.png',
+          icon: 'payment-methods',
+          new: false,
+          url: '/user/me/BankCard',
+          isShow: conf.needLoginShow
+        }
+      ]
+      // {
+      //   name: 'me.Password',
+      //   leftImg: '/static/img/password-new.png',
+      //   new: false,
+      //   url: '/user/Password/Change',
+      //   isShow: conf.needLoginShow
+      // },
+      // {
+      //   name: 'me.Languages',
+      //   leftImg: '/static/img/languages-new.png',
+      //   new: false,
+      //   func: () => {
+      //     conf.langPopup = true
+      //   },
+      //   isShow: true
+      // },
+      // {
+      //   name: 'me.setting',
+      //   leftImg: '/static/img/setting-new.png',
+      //   new: false,
+      //   url: '/user/setting/setting',
+      //   isShow: true
+      // }
     ]
   },
   handle(item: any) {
@@ -394,7 +433,6 @@ const conf = reactive({
   },
   //获取用户钱包列表
   async getWalletList(arr: any) {
-
     let wlist = await svalue.getWalletlist()
     conf.userWalletList = wlist
     conf.coinLosding = false
@@ -405,7 +443,6 @@ const conf = reactive({
     }
     let newArr = wlist || []
     arr?.forEach((item: any) => {
-
       let index = newArr?.findIndex((into: any) => into.walletCoin == item.coinCode)
       if (index != -1) {
         newArr[index].coinTousdt = item.coinTousdt
@@ -478,7 +515,19 @@ onMounted(() => init())
 .head {
   width: 100%;
   position: relative;
-  background: linear-gradient(#eb602d 0%, #f68740 51%, rgba(255, 166, 79, 0) 100%);
+  background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 510rem;
+    height: 510rem;
+    background: url('/static/theme/blue/bg-square.webp') no-repeat center center;
+    background-size: cover;
+    transform: rotate(-15deg);
+  }
 
   .head-bg {
     position: absolute;
@@ -581,105 +630,87 @@ onMounted(() => init())
       left: 30rem;
       right: 30rem;
       bottom: 15rem;
-      height: 280rem;
+      height: 364rem;
       z-index: 2;
-
-      .grade-img {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background: #fff;
-        border-radius: 10rem;
-      }
+      border-radius: 20rem;
+      overflow: hidden;
 
       .grade-info {
-        position: absolute;
-        width: 100%;
         height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: linear-gradient(180deg, #e2f0ff 0%, #ffffff 75.69%, #ffffff 100%);
 
-        .current {
-          position: absolute;
-          right: calc(19% - 54rem);
-          width: 120rem;
-          height: 120rem;
-          top: 50rem;
-          color: #f6f9ff;
-          font-size: 62rem;
-          font-weight: 400;
+        .left-content {
+          height: 164rem;
+          border-bottom: 1px solid #ffffff;
+          padding: 32rem 40rem 20rem;
+          position: relative;
+
+          &::after {
+            content: '';
+            position: absolute;
+            width: 342rem;
+            height: 232rem;
+            right: 0;
+            top: 0;
+            background-image: url('/static/theme/blue/card-decorate.svg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+          }
+
+          .left-total {
+            font-weight: 600;
+            margin-right: 15rem;
+            font-family: PingFang SC;
+            font-weight: 100;
+            font-size: 28rem;
+            color: #979797;
+            display: flex;
+            align-items: center;
+          }
+
+          .left-icon {
+            height: 80rem;
+            line-height: 80rem;
+            font-family: PingFang SC;
+            font-size: 48rem;
+            font-weight: 600;
+            color: #006fff;
+          }
+
+          .eye-img {
+            margin-left: 10rem;
+          }
+        }
+
+        .select {
+          padding: 20rem 40rem;
+          width: 100%;
           display: flex;
-          justify-content: center;
-          align-items: center;
-        }
 
-        .currentbig {
-          font-size: 54rem;
-        }
-
-        .level {
-          .left-content {
-            height: 100rem;
-            padding: 0rem 30rem;
-            background: linear-gradient(#eb602d 0%, #ffa64f 100%);
-            background-clip: text;
-            -webkit-background-clip: text;
-            /*将设置的背景颜色限制在文字中*/
-            -webkit-text-fill-color: transparent;
-            /*给文字设置成透明*/
+          .select-item {
+            flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: all 0.3s linear;
 
-            .left-total {
-              font-size: 35rem;
-              font-weight: 600;
-              margin-right: 15rem;
+            img {
+              width: 120rem;
+              height: 120rem;
             }
 
-            .left-icon {
-              font-size: 35rem;
-              font-weight: 600;
-              display: flex;
-              align-items: center;
-              justify-content: left;
-
-              .eye-img {
-                margin-left: 10rem;
-                width: 28rem;
-                height: 20rem;
-              }
-            }
-          }
-
-          .select {
-            height: 180rem;
-            width: 100%;
-            background: transparent;
-            border-radius: 16rem;
-            display: flex;
-            background: #fffbf5;
-
-            .select-item {
-              flex: 1;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              flex-direction: column;
+            span {
+              color: #979797;
+              font-size: 24rem;
+              letter-spacing: -0.3px;
               flex-shrink: 0;
-              transition: all 0.3s linear;
-
-              img {
-                width: 52rem;
-                height: 52rem;
-              }
-
-              span {
-                color: #be720f;
-                font-size: 25rem;
-                font-weight: 600;
-                letter-spacing: -0.3px;
-                margin-top: 16rem;
-                flex-shrink: 0;
-              }
+              font-family: PingFang SC;
             }
           }
         }
@@ -731,11 +762,18 @@ onMounted(() => init())
   background: #fff;
   border-radius: 10rem;
   overflow: hidden;
+
+  &-title {
+    font-family: PingFang SC;
+    font-size: 32rem;
+    font-weight: 500;
+    color: #333333;
+  }
 }
 
 .menu-icon {
-  width: 32rem;
-  height: 32rem;
+  width: 64rem;
+  height: 64rem;
   margin-right: 42rem;
 }
 

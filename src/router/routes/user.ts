@@ -4,6 +4,10 @@ export default [
     component: '/user/setting/setting'
   },
   {
+    path: '/user/about/about',
+    component: '/user/about/about'
+  },
+  {
     path: '/user/sign/sign',
     component: '/user/sign/sign'
   },

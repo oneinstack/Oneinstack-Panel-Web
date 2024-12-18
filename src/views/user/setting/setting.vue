@@ -3,40 +3,74 @@
     <template #title>
       {{ $t('me.setting') }}
     </template>
-    <div class="head-logo">
-      <img :src="conf.logoImg" />
-      <div class="about">
-        <span>{{ conf.appName }}</span>
-        <span>{{ $t('version.version') }}：{{ conf.version_number }}</span>
-      </div>
-    </div>
-    <div class="edition" @click="conf.autoUpdate" hover-class="bg-hover">
-      <div>{{ $t('version.versionUpdate') }}</div>
-      <div class="right">
-        <span>{{ conf.edit }}</span>
-        <img class="right-img" src="/static/img/rig-icon.png" />
-      </div>
-    </div>
-    <div class="set-list">
-      <div class="set-item" @click="conf.outPopup = true">
-        <div class="name">{{ $t('me.gamemethod') }}</div>
-        <div class="item-right">
-          <img class="right-img" src="/static/img/rig-icon.png" />
+    <div class="menu-list">
+      <div
+        v-for="(category, index) in conf.menu1"
+        :key="index"
+        class="menu-item"
+        :style="index === conf.menu1.length - 1 && { marginTop: '32rem' }"
+      >
+        <div v-for="item of category" :key="item.name">
+          <van-cell
+            is-link
+            @click="conf.handle(item)"
+            v-if="typeof item.isShow === 'function' ? item.isShow() : item.isShow"
+          >
+            <template #title>
+              <span class="menu-item-title">{{ item.name.indexOf('me.') > -1 ? $t(item.name) : item.name }}</span>
+            </template>
+          </van-cell>
         </div>
       </div>
     </div>
+
+    <!-- 多语言和主题弹框 -->
+    <van-popup class="popup-bottom-center" v-model:show="conf.popup.show" position="bottom">
+      <div v-if="conf.popup.type == 'lang'" class="lang-select">
+        <div class="select-title">
+          <span>{{ $t('me.switchLanguage') }}</span>
+          <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" />
+        </div>
+        <div class="lang-list">
+          <div v-for="item of conf.langArr" :key="item.id">
+            <div class="lang-item" @click="conf.changeLang(item)">
+              <div class="lang-left">
+                <img class="left-img" :src="`/static/img/me/${item.id}.png`" />
+                <span>{{ item.name }}</span>
+              </div>
+              <img class="select-img" v-if="conf.language == item.id" src="/static/img/selected.webp" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div v-else-if="conf.popup.type == 'theme'" class="lang-select">
+        <div class="select-title">
+          <span>{{ $t('me.Theme') }}</span>
+          <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" />
+        </div>
+        <div class="lang-list">
+          <div v-for="item of conf.themeArr" :key="item.id">
+            <div
+              class="lang-item"
+              :style="item.id == conf.currentTheme && { backgroundColor: item.bg }"
+              @click="conf.changeTheme(item)"
+            >
+              <div class="lang-left" :style="item.id == conf.currentTheme && { color: item.color }">
+                <span>{{ $t(item.name) }}</span>
+              </div>
+              <VSIcon v-if="item.id == conf.currentTheme" :color="[item.color]" lib="blue" name="nike" :size="20" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </van-popup>
+
+    <!-- 退出登录弹框 -->
     <van-popup class="popup-bottom-center" v-model:show="conf.outPopup" position="bottom">
       <div class="out-popup">
-        <div class="out-line" @click="conf.chageGameType(0)">
-          <div>{{ $t('me.defaultMethod') }}</div>
-          <img v-if="conf.gameType == 0" class="select-img" src="/static/img/selected.webp" />
-        </div>
-        <div class="out-line" @click="conf.chageGameType(1)">
-          <div>{{ $t('me.newWindow') }}</div>
-          <img v-if="conf.gameType == 1" class="select-img" src="/static/img/selected.webp" />
-        </div>
+        <div class="out-line" @click="conf.goOutLogin">{{ $t('me.logOut') }}</div>
         <div style="height: 20rem; background: #f6f6f6"></div>
-        <div class="out-line" @click="conf.outPopup = false" style="justify-content: center">{{ $t('me.cancle') }}</div>
+        <div class="out-line" @click="conf.outPopup = false">{{ $t('me.cancle') }}</div>
       </div>
     </van-popup>
   </x-page>
@@ -44,143 +78,205 @@
 
 <script lang="ts" setup>
 import i18n from '@/lang'
-import { svalue } from '@/sstore/svalue'
+import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
-import { onMounted, reactive } from 'vue'
+import { reactive } from 'vue'
+
 const conf = reactive({
-  outPopup: false,
-  gameType: 0,
-
-  version_number: '1.0.0',
-  edit: '',
-  version: '',
-  moreShow: false,
-  appName: '',
-  logoImg: '',
-
-  // 获取logo 名称
-  async getConfiguration() {
-    let appConfig = await svalue.getAppConfiguration()
-
-    conf.logoImg = appConfig.app_logo
-    conf.appName = appConfig.app_name
-  },
-  autoUpdate() {
-    setTimeout(() => {
-      let oVersion = conf.version_number.split('.').join('')
-      if (Cookie.get('version') > oVersion) {
-        conf.edit = i18n.t('version.subTitle')
-        Cookie.remove('version')
-      } else {
-        conf.edit = i18n.t('version.noNew')
-        System.toast(i18n.t('version.noNew'))
-        Cookie.remove('version')
+  language: Cookie.get('language') || 'en-us',
+  menu1: [
+    [
+      {
+        name: 'me.Password',
+        new: false,
+        url: '/user/Password/Change',
+        isShow: () => conf.needLoginShow()
+      },
+      {
+        name: 'me.Theme',
+        new: false,
+        func: () => {
+          conf.popup.open('theme')
+        },
+        isShow: true
+      },
+      {
+        name: 'me.Languages',
+        new: false,
+        func: () => {
+          conf.popup.open('lang')
+        },
+        isShow: true
+      },
+      {
+        name: 'me.AboutUs',
+        new: false,
+        url: '/user/about/about',
+        isShow: true
       }
-    }, 1000)
+    ],
+    [
+      {
+        name: 'me.logOut',
+        new: false,
+        func: () => {
+          conf.outPopup = true
+        },
+        isShow: true
+      }
+    ]
+  ],
+  langArr: [
+    {
+      name: 'English',
+      id: 'en-us'
+    },
+    {
+      name: 'हिंदी',
+      id: 'hi-IN'
+    },
+    {
+      name: 'ภาษาไทย',
+      id: 'th-TH'
+    },
+    {
+      name: 'Indonesia',
+      id: 'id-ID'
+    },
+    {
+      name: 'Português',
+      id: 'pt-PT'
+    },
+    {
+      name: 'Español',
+      id: 'es-ES'
+    }
+  ],
+  currentTheme: Cookie.get('pageTheme') || '',
+  themeArr: [
+    {
+      name: 'me.defaultTheme',
+      id: '',
+      bg: '#FFF2E9',
+      color: '#FF7502'
+    },
+    {
+      name: 'me.blueTheme',
+      id: 'blue',
+      bg: '#E6F2FF',
+      color: '#006FFF'
+    }
+  ],
+  popup: {
+    type: 'lang' as 'theme' | 'lang',
+    show: false,
+    data: [] as any[],
+    open: (type: 'theme' | 'lang') => {
+      conf.popup.type = type
+      conf.popup.data = type == 'theme' ? conf.themeArr : conf.langArr
+      conf.popup.show = true
+    },
+    close: () => {
+      conf.popup.show = false
+    }
   },
-  chageGameType(num: number) {
-    conf.gameType = num
+  outPopup: false,
+  total_money: 0,
+  needLoginShow: () => sconfig.userInfo,
+  handle(item: any) {
+    item.url && System.router.push(item.url)
+    item.func && item.func()
+  },
+  async changeLang(item: any) {
+    conf.language = item.id
+    System.loading()
+    await i18n.setLang(item.id)
+    System.loading(false)
+    conf.popup.close()
+  },
+  changeTheme(item: any) {
+    System.setTheme(item.id)
+    conf.popup.close()
+  },
+  async goOutLogin() {
+    sconfig.logout()
     conf.outPopup = false
-    Cookie.set('gameMethod', num)
+    conf.total_money = 0
+    System.toast('out success', 'success')
   }
-})
-const init = async () => {
-  conf.getConfiguration()
-}
-onMounted(() => {
-  init()
 })
 </script>
 
 <style lang="less" scoped>
-.head-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 450rem;
+.menu-list {
+  padding: 32rem;
+  position: relative;
+}
 
-  img {
-    width: 185rem;
-    height: 185rem;
-    background: #ffffff;
-    border-radius: 15rem;
-  }
-  .about {
-    margin-top: 20rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    span:first-of-type {
-      font-size: 30rem;
-      font-weight: 600;
-    }
-    span:last-of-type {
-      font-size: 26rem;
-      margin-top: 10rem;
-    }
-  }
+.menu-item {
+  background: #fff;
+  border-radius: 10rem;
+  overflow: hidden;
 }
-.edition {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #ffffff;
-  padding: 0rem 30rem;
-  height: 110rem;
-  font-size: 30rem;
-  .right {
-    display: flex;
-    align-items: center;
-    text:first-of-type {
-      font-size: 26rem;
-      margin-right: 20rem;
-    }
-  }
-}
-.set-list {
-  margin-top: 20rem;
-  .set-item {
-    background: #fff;
+
+.lang-select {
+  background: #fff;
+  padding: 40rem;
+
+  .select-title {
+    color: rgb(37, 37, 41);
+    font-size: 30rem;
+    font-weight: bold;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 25rem;
-    .name {
-      color: rgb(69, 69, 77);
-      font-size: 30rem;
+
+    .close-img {
+      width: 48rem;
+      height: 48rem;
     }
-    .item-right {
+  }
+
+  .lang-list {
+    margin-top: 24rem;
+
+    .lang-item {
+      margin-top: 24rem;
+      padding: 24rem;
       display: flex;
       align-items: center;
-      font-size: 27rem;
-      color: gray;
-      .right-name {
-        margin-right: 10rem;
+      justify-content: space-between;
+      background-color: rgb(246, 247, 250);
+
+      .lang-left {
+        display: flex;
+        align-items: center;
+        color: #999999;
+
+        .left-img {
+          width: 45rem;
+          height: 45rem;
+          margin-right: 15rem;
+        }
+      }
+
+      .select-img {
+        width: 24rem;
+        height: 24rem;
       }
     }
   }
 }
-.right-img {
-  width: 16rem;
-  height: 26rem;
-}
+
 .out-popup {
   font-size: 40rem;
   font-weight: 500;
   background: #ffffff;
 
   .out-line {
-    padding: 0 24rem;
     line-height: 120rem;
     border-bottom: 1rem solid #eee;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .select-img {
-      width: 24rem;
-      height: 24rem;
-    }
+    text-align: center;
   }
 }
 </style>
