@@ -23,7 +23,7 @@
       <template v-for="(item, index) in getIndexData.dataList" :key="index">
         <van-index-anchor :index="getIndexData.indexList[index]" />
         <template v-for="(user, i2) in item" :key="i2">
-          <userItem :item="user" :lastItem="i2 == (item.length-1)" @click="conf.goPages('/chat/userCard')" />
+          <userItem :item="user" :lastItem="i2 == (item.length-1)" @click="conf.goPages(`/chat/userCard?sourceID=${user.userID}`)" />
         </template>
       </template>
     </van-index-bar>
@@ -37,7 +37,7 @@ import headSearch from './com/headSearch.vue';
 import userItem from './com/userItem.vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'
 import cscontact from '@/modules/chat/sstore/cscontact'
-import { formatChooseData } from '@/modules/chat/utils/common';
+import { formatChooseData } from '@/modules/chat/utils/cUtil';
 const conf = reactive({
   indexList: [] as any[],
   meaus: [{

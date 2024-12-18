@@ -88,11 +88,9 @@ const conf = reactive({
           }
         }
         if (info) {
-          // uni.navigateTo({
-          //   url: `/pages/common/userCard/index?sourceInfo=${JSON.stringify(
-          //     info,
-          //   )}`,
-          // });
+          System.router.push(`/chat/userCard?sourceInfo=${JSON.stringify(
+              info,
+            )}`)
         } else {
           conf.empty = true;
         }
