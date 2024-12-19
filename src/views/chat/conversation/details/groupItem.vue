@@ -3,11 +3,10 @@
     <div class="user-list">
       <template v-for="item in groupMemberList" :key="item.userID">
         <div class="info" @click="conf.goPages(`/chat/userCard?sourceID=${item.userID}`)">
-          <img :src="item.faceURL" />
-          <van-text-ellipsis :content="item.nickname" />
+          <personItem :person="item" />
         </div>
       </template>
-      <img src="/static/img/chat/setting_add.svg" />
+      <img src="/static/img/chat/setting_add.svg" @click="conf.goPages(`/chat/contactChoose?groupID=${groupID}`)" />
     </div>
     <div class="more flex-center" v-if="groupMemberList.length>19">
       <span>View more group members</span>
@@ -16,6 +15,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import personItem from '../../contact/com/personItem.vue';
 import System from '@/utils/System';
 import { reactive } from 'vue';
 
@@ -50,14 +50,8 @@ const conf = reactive({
 
     .info {
       width: 15%;
-      color: #999;
-      font-size: 22rem;
       margin-right: 6.25%;
       margin-bottom: 20rem;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
 
       &:nth-child(5n + 5) {
         margin-right: 0rem;

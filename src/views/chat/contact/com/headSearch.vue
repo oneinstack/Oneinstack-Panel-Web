@@ -8,8 +8,17 @@
 import System from '@/utils/System';
 import { reactive } from 'vue';
 
+const props = defineProps({
+  customClick: {
+    default: false
+  }
+})
+
+const emit = defineEmits(['click'])
+
 const conf = reactive({
   goPages() {
+    if(props.customClick) return emit('click')
     System.router.push('/chat/search')
   }
 })

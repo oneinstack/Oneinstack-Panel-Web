@@ -8,11 +8,12 @@
         <img :src="csconversation.currentConversation.faceURL" />
         <van-text-ellipsis :content="csconversation.currentConversation.showName" />
       </div>
-      <img style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" />
+      <img style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" @click="conf.toGroup" />
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
+import cscontact from '@/modules/chat/sstore/cscontact';
 import csconversation from '@/modules/chat/sstore/csconversation';
 import System from '@/utils/System';
 import { onMounted, reactive } from 'vue'
@@ -23,6 +24,17 @@ const conf = reactive({
   toUserCard() {
     System.router.push(`/chat/userCard?sourceID=${csconversation.currentConversation.userID}`)
   },
+  toGroup() {
+    cscontact.getCheckedList = []
+    let info = {
+      userID: csconversation.currentConversation.userID,
+      faceURL: csconversation.currentConversation.faceURL,
+      nickname: csconversation.currentConversation.showName,
+    }
+    System.router.push(`/chat/createGroup?sourceInfo=${JSON.stringify(
+      info,
+    )}`)
+  }
 })
 onMounted(() => {
   console.log(csconversation.currentConversation);

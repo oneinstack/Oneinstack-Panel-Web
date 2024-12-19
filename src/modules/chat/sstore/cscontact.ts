@@ -5,6 +5,7 @@ export const cscontact = reactive({
   friendList: [] as any[],
   blackList: [] as any[],
   groupList: [] as any[],
+  getCheckedList: [] as any[],
   recvFriendApplications: [] as any[],
   sentFriendApplications: [] as any[],
   recvGroupApplications: [] as any[],
