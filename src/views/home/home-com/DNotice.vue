@@ -67,9 +67,17 @@ const conf = reactive({
   SystemBulletinDialogArr: [] as any[],
   isOpenSystemBulletinDialog: false,
   isNoPromptBulletin: false,
+  openItem:{
+    fun:()=>{
+      conf.isOpenSystemBulletinDialog = true
+    },
+    level:2,
+    isRun:false
+  },
   //关闭当前系统公告弹窗
   handleCloseSystemBulletinDialog() {
     conf.isOpenSystemBulletinDialog = false
+    mconf.dialog.runNext(conf.openItem)
     let obj = {
       noPrompt: conf.isNoPromptBulletin
     }
@@ -95,7 +103,8 @@ onMounted(() => {
 
   if (conf.SystemBulletinDialogArr.length) {
     let bulletin = sstatus.getPrompt('bulletinDialogInfo')
-    conf.isOpenSystemBulletinDialog = !bulletin
+    conf.openItem.isRun = !bulletin
+    mconf.dialog.insert(conf.openItem)
   }
 
   conf.SystemBulletinContentObj = conf.SystemBulletinDialogArr[0] || {}

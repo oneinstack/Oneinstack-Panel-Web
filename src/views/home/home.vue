@@ -258,6 +258,32 @@ const conf = reactive({
       item.coinSymbol = _coinSymbol
     })
     conf.virtualData = res.data
+  },
+  dialog: {
+    count:3,
+    countList:[] as {fun:any;level:number;isRun:boolean; next:any;id:string}[],
+    insert:(item:any)=>{
+      item.id = StrUtil.getId()
+
+      conf.dialog.countList.push(item)
+
+      if(conf.dialog.countList.length == conf.dialog.count){
+        conf.dialog.run()
+      }
+    },
+    run:()=>{
+      conf.dialog.countList = conf.dialog.countList.filter(v=>v.isRun)
+      
+      conf.dialog.countList.sort((a:any,b:any)=>a.level - b.level)
+      for(let i = 0;i<conf.dialog.countList.length;i++){
+        conf.dialog.countList[i].next = conf.dialog.countList[i+1]
+      }
+      conf.dialog.countList[0].fun()
+    },
+    runNext:(item:any)=>{
+      conf.dialog.countList.remove(v=>v.id == item.id)
+      item.next?.fun()
+    }
   }
 })
 

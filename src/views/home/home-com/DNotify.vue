@@ -31,15 +31,24 @@ import { apis } from '@/api'
 import sstatus from '@/sstore/sstatus'
 import sweb from '@/sstore/sweb';
 import System from '@/utils/System'
+import { Scope } from 'tools-vue3';
 import { onMounted, reactive } from 'vue'
+const mconf = Scope.getConf()
 const conf = reactive({
   showPopNotify: false,
   title: '',
   isNoPromptPop: false,
   notifyList: [] as any[],
+  openItem:{
+    fun:()=>{
+      conf.showPopNotify = true
+    },
+    level:1,
+    isRun:false
+  },
   close() {
     conf.showPopNotify = false
-    conf.showPopNotify = false
+    mconf.dialog.runNext(conf.openItem)
     let obj = {
       noPrompt: conf.isNoPromptPop
     }
@@ -62,7 +71,8 @@ const conf = reactive({
       return item.activityType == 3
     })
     if (conf.notifyList.length > 0) {
-      conf.showPopNotify = !popNotify
+      conf.openItem.isRun = !popNotify
+      mconf.dialog.insert(conf.openItem)
     }
   }
 })
