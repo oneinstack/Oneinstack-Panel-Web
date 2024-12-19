@@ -12,7 +12,12 @@
               >
                 <div class="column flex-center">
                   <div class="flex items-center">
-                    <VSIcon :name="`${item.name == conf.activeItem.name ? item.iconActive : item.icon}`" :size="44" />
+                    <VSIcon
+                      lib="wx"
+                      :name="`${item.name == conf.activeItem.name ? item.iconActive : item.icon}`"
+                      :size="44"
+                      :color="item.name == conf.activeItem.name ? item.iconActiveColor : item.iconColor"
+                    />
                   </div>
                   <div class="tabbar-item-text">
                     {{ item.name }}
@@ -36,7 +41,7 @@ import { onMounted, reactive } from 'vue'
 const event = Scope.Event()
 const props = defineProps({
   list: {
-    default: [] as { path: string; icon: string; iconActive: string; auth: boolean; index: number; name: string }[]
+    default: [] as any[]
   }
 })
 const emit = defineEmits(['change'])

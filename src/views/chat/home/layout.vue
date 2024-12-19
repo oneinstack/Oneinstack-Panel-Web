@@ -16,22 +16,24 @@ const conf = reactive({
   list: [
     {
       path: '/chat/conversation',
-      icon: 'chat',
+      icon: 'bubble_circle_regular',
+      iconActive: 'bubble_circle_filled',
+      iconColor: ['#868686'],
+      iconActiveColor: ['#07c261'],
       name: i18n.t('chatRoom.messages')
     },
     {
       path: '/chat/contact',
-      icon: 'chat-user',
+      icon: 'person_list_regular',
+      iconActive: 'person_list_filled',
+      iconColor: ['#868686'],
+      iconActiveColor: ['#07c261'],
       name: i18n.t('chatRoom.contact')
     }
   ] as any[],
   change: (item: any) => {
     System.router.replace(item.path)
   }
-})
-conf.list.forEach((item, index) => {
-  item.iconActive = item.icon + '-active'
-  item.index = index
 })
 </script>
 <style lang="less" scoped></style>
