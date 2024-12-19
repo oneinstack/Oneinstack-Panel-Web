@@ -2,7 +2,7 @@ import System from '@/utils/System'
 import { reactive } from 'vue'
 
 export const csconfig = reactive({
-  userInfo: {} as cConfigParam,
+  userInfo: null! as cConfigParam,
   /**
    * 设置用户信息
    * @param userInfo 用户信息
@@ -24,10 +24,17 @@ export const csconfig = reactive({
     csconfig.userInfo = chatInfo || {}
 
     //如果cookie有问题，则跳转至首页
-    // if (!chatInfo.url) {
-    //   System.router.replace('/')
-    //   return
-    // }
+    if (!chatInfo.url) {
+      System.router.replace('/')
+      return
+    }
+  },
+  clearUserInfo: () => {
+    csconfig.userInfo = null!
+    Cookie.set('chatInfo', '', {
+      expire: 1
+    })
+    System.router.replace('/')
   },
   /**
    * 基础配置
@@ -51,18 +58,20 @@ export const csconfig = reactive({
    */
   initConfig: (url?: string) => {
     if (!url) url = System.env.ChatUrl
+    const ipReg = /\d{1,3}\.\d{1,3}/g
+    if (ipReg.test(url)) {
+      csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
+      csconfig.config.apiUrl = url + ':10002'
+      csconfig.config.registerUrl = url + ':10008'
+    } else {
+      csconfig.config.wsUrl = url.replace('http', 'ws') + '/ws' //10001
+      csconfig.config.apiUrl = url + '/api' //10002
+      csconfig.config.registerUrl = url + '/register' //10008
+    }
 
-    //#ifvar-dev
-    csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
-    csconfig.config.apiUrl = url + ':10002'
-    csconfig.config.registerUrl = url + ':10008'
-    //#endvar
-
-    //#ifvar-pro
-    csconfig.config.wsUrl = url.replace('http', 'ws') + '/ws' //10001
-    csconfig.config.apiUrl = url + '/api' //10002
-    csconfig.config.registerUrl = url + '/register' //10008
-    //#endvar
+    if (location.protocol !== 'https:') {
+      csconfig.config.wsUrl = csconfig.config.wsUrl.replace('wss', 'ws')
+    }
   },
   /**
    * 加载配置

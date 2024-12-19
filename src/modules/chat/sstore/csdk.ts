@@ -1,7 +1,9 @@
+import i18n from '@/lang'
 import System from '@/utils/System'
 import IMSDK, { MessageReceiveOptType, MessageType, SessionType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 import { PageEvents } from '../constant'
+import cConfig from '../utils/cConfig'
 import { conversationSort } from '../utils/cUtil'
 import csconfig from './csconfig'
 import cscontact from './cscontact'
@@ -25,6 +27,13 @@ export const csdk = reactive({
       })
       .catch((err) => {
         console.log('登录失败-error', err)
+        System.toast(i18n.t('code.401'))
+        csconfig.clearUserInfo()
+        csdk.init = true
+        cConfig.isInit = false
+        setTimeout(() => {
+          csdk.init = false
+        }, 100)
       })
     if (csdk.init) return
     csdk.init = true

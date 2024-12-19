@@ -7,7 +7,7 @@
 import uspage from '@/components/page/uspage'
 import { ERouter } from '@/enum/Enum'
 import { initApp } from '@/modules/chat/sstore'
-import csopemim from '@/modules/chat/sstore/csdk'
+import csdk from '@/modules/chat/sstore/csdk'
 import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
 import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
@@ -25,8 +25,7 @@ const conf = reactive({
     await initApp()
 
     await cConfig.init()
-    await csopemim.Login()
-    // conf.setGlobalIMlistener()
+    await csdk.Login()
 
     conf.show = true
   },

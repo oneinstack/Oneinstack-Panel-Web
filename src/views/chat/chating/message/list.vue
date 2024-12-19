@@ -87,9 +87,11 @@ const conf = reactive({
        */
       height: 0,
       getHeight: () => {
-        const item = conf.scroll.centent.findIndex(conf.scroll.renderMaxLength - 1)
-        if (!item) return
-        conf.scroll.centent.height = item.top + item.height
+        const arr = conf.scroll.centent.getExistArr()
+        if (!arr.length) return
+        for (let i = 0; i < arr.length; i++) {
+          conf.scroll.centent.height += arr[i].height + arr[i].top
+        }
       },
       /**
        * 渲染对象
@@ -149,7 +151,7 @@ const conf = reactive({
       loadTop: async () => {
         if (conf.scroll.centent.loadStatus) return
         conf.scroll.centent.loadStatus = true
-        
+
         const existArr = conf.scroll.centent.getExistArr()
         existArr.sort((a, b) => {
           return b.dataIndex - a.dataIndex
@@ -158,7 +160,7 @@ const conf = reactive({
         if (existArr[existArr.length - 1].dataIndex === 0) {
           await props.scrollTop?.()
         }
-        
+
         const arr = [] as any[]
 
         const item0 = conf.scroll.centent.findIndex(0)
