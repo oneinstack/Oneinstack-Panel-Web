@@ -58,7 +58,7 @@ export const csconfig = reactive({
    */
   initConfig: (url?: string) => {
     if (!url) url = System.env.ChatUrl
-    const ipReg = /^(\d{1,3}\.){3}\d{1,3}$/
+    const ipReg = /\d{1,3}\.\d{1,3}/g
     if (ipReg.test(url)) {
       csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
       csconfig.config.apiUrl = url + ':10002'
