@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --force --mode dev",
     "ll": "vite --force --mode ll",
+    "lq": "vite --force --mode lq",
     "ac": "vite --force --mode ac",
     "kk": "vite --force --mode kk",
     "test": "vite --force --mode test",
