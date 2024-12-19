@@ -2,7 +2,7 @@ import System from '@/utils/System'
 import { reactive } from 'vue'
 
 export const csconfig = reactive({
-  userInfo: {} as cConfigParam,
+  userInfo: null! as cConfigParam,
   /**
    * 设置用户信息
    * @param userInfo 用户信息
@@ -24,10 +24,10 @@ export const csconfig = reactive({
     csconfig.userInfo = chatInfo || {}
 
     //如果cookie有问题，则跳转至首页
-    // if (!chatInfo.url) {
-    //   System.router.replace('/')
-    //   return
-    // }
+    if (!chatInfo.url) {
+      System.router.replace('/')
+      return
+    }
   },
   /**
    * 基础配置
