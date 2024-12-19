@@ -273,15 +273,14 @@ const conf = reactive({
     },
     run:()=>{
       conf.dialog.countList = conf.dialog.countList.filter(v=>v.isRun)
-      
       conf.dialog.countList.sort((a:any,b:any)=>a.level - b.level)
       for(let i = 0;i<conf.dialog.countList.length;i++){
         conf.dialog.countList[i].next = conf.dialog.countList[i+1]
       }
       conf.dialog.countList[0].fun()
+      conf.dialog.countList= []
     },
     runNext:(item:any)=>{
-      conf.dialog.countList.remove(v=>v.id == item.id)
       item.next?.fun()
     }
   }

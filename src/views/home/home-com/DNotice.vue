@@ -127,6 +127,7 @@ onMounted(() => {
     border-radius: 40rem;
     width: 560rem;
     box-shadow: 0 2rem 10rem #fffbf5;
+    animation: fadeIn 1s 1 alternate;
 
     .cu-bar {
       height: 70rem;
@@ -263,5 +264,17 @@ onMounted(() => {
 .right-btn {
   background: linear-gradient(#ffa64f, #eb602d) !important;
   color: #fff;
+}
+
+/* 定义动画 */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 </style>

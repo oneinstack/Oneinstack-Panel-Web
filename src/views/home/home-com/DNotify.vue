@@ -43,7 +43,7 @@ const conf = reactive({
     fun:()=>{
       conf.showPopNotify = true
     },
-    level:1,
+    level:3,
     isRun:false
   },
   close() {
@@ -196,11 +196,7 @@ onMounted(() => {
 @keyframes fadeIn {
   0% {
     opacity: 0;
-    transform: scale(0.33);
-  }
-  50% {
-    opacity: 0.5;
-    transform: scale(0.66);
+    transform: scale(0);
   }
   100% {
     opacity: 1;
@@ -210,6 +206,6 @@ onMounted(() => {
 
 /* 应用动画到图片 */
 .open-image {
-  animation: fadeIn 1s; /* 动画名称，持续时间，重复次数 */
+  animation: fadeIn 1s 1 alternate;
 }
 </style>

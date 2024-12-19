@@ -55,7 +55,7 @@ const conf = reactive({
     fun:()=>{
       conf.showNumberBox = true
     },
-    level:3,
+    level:1,
     isRun:false
   },
   getUserPhone: async () => {
@@ -105,6 +105,7 @@ onMounted(() => {
     border-radius: 40rem;
     width: 560rem;
     box-shadow: 0 2rem 10rem #fffbf5;
+    animation: fadeIn 1s 1 alternate;
 
     .cu-bar {
       height: 70rem;
@@ -198,6 +199,18 @@ onMounted(() => {
     font-size: 24rem;
     white-space: pre-wrap;
     overflow-wrap: break-word;
+  }
+}
+
+/* 定义动画 */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 </style>
