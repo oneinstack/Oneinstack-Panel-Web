@@ -73,18 +73,20 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { nextTick, onMounted, reactive, ref, watch } from 'vue'
-import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
-import CInput from './com/cinput.vue'
-import System from '@/utils/System'
-import sapp from '@/sstore/sapp'
-import toolsVue from './com/tools.vue'
-import MessageList from './message/list.vue'
+import { noticeMessageTypes } from '@/modules/chat/constant'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
 import csuser from '@/modules/chat/sstore/csuser'
+import { tipMessaggeFormat } from '@/modules/chat/utils/cUtil'
+import sapp from '@/sstore/sapp'
+import System from '@/utils/System'
 import { MessageItem, SessionType } from 'openim-uniapp-polyfill'
+import { Scope } from 'tools-vue3'
+import { nextTick, onMounted, reactive, ref, watch } from 'vue'
+import CInput from './com/cinput.vue'
+import toolsVue from './com/tools.vue'
+import MessageList from './message/list.vue'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)
@@ -250,9 +252,10 @@ const conf = reactive({
     isInit: false
   },
   goSetting() {
-    const url = csconversation.currentConversation.conversationType == SessionType.Single
-      ? "/chat/details/friend"
-      : "/chat/details/group";
+    const url =
+      csconversation.currentConversation.conversationType == SessionType.Single
+        ? '/chat/details/friend'
+        : '/chat/details/group'
     System.router.push(url)
   }
 })
@@ -264,6 +267,11 @@ watch(
     csmessage.historyMessageList.forEach((item) => {
       item.senderFaceUrl = item.senderFaceUrl || '/static/img/home-banner.png'
       item.isme = item.sendID === csuser.selfInfo.userID
+
+      // 通知内容
+      const isNoticeMessage = noticeMessageTypes.includes(item.contentType)
+      item.noticeContent = !isNoticeMessage ? '' : tipMessaggeFormat(item, csuser.selfInfo.userID)
+      
     })
 
     if (conf.chat.isInit) {

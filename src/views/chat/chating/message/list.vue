@@ -89,8 +89,10 @@ const conf = reactive({
       getHeight: () => {
         const arr = conf.scroll.centent.getExistArr()
         if (!arr.length) return
+        arr.sort((a, b) => a.top - b.top)
+        conf.scroll.centent.height = arr[0].top
         for (let i = 0; i < arr.length; i++) {
-          conf.scroll.centent.height += arr[i].height + arr[i].top
+          conf.scroll.centent.height += arr[i].height
         }
       },
       /**

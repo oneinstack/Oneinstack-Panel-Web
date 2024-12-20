@@ -12,7 +12,7 @@ interface MessageState {
 }
 
 export const csmessage = reactive({
-  historyMessageList: [] as (MessageItem & { isme: boolean })[],
+  historyMessageList: [] as (MessageItem & { isme: boolean;noticeContent:string })[],
   previewImageList: [] as any[],
   hasMoreMessage: true,
   quoteMessage: undefined,

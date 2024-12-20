@@ -6,7 +6,7 @@
     :style="{ height: height ? height + 'px' : undefined }"
     style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
   >
-    <template v-if="conf.show">
+    <template v-if="conf.show && !item.noticeContent">
       <img class="face" :src="item.senderFaceUrl" />
       <div style="margin: 0 20rem">
         <div
@@ -25,6 +25,9 @@
         </div>
       </div>
     </template>
+    <template v-else-if="conf.show">
+      <div class="row flex-center fit-width" v-html="item.noticeContent"></div>
+    </template>
   </div>
 </template>
 <script setup lang="ts">
@@ -38,7 +41,7 @@ const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]
 const timer = Scope.Timer()
 const props = defineProps<{
   info: any
-  item: MessageItem & { isme: boolean }
+  item: MessageItem & { isme: boolean; noticeContent: string }
   height: any
 }>()
 

@@ -313,3 +313,87 @@ export const offlinePushInfo = {
   iOSPushSound: '',
   iOSBadgeCount: true
 }
+
+export const tipMessaggeFormat = (msg:any, currentUserID:any) => {
+  const getName = (user:any) =>
+    user.userID === currentUserID ? "你" : user.nickname;
+
+  const getUserID = (user:any) => user.userID;
+
+  const parseInfo = (user:any) => formatHyperlink(getName(user), getUserID(user));
+
+  switch (msg.contentType) {
+    case MessageType.FriendAdded:
+      return `你们已经是好友了~`;
+    case MessageType.GroupCreated:
+      const groupCreatedDetail = JSON.parse(msg.notificationElem.detail);
+      const groupCreatedUser = groupCreatedDetail.opUser;
+      return `${parseInfo(groupCreatedUser)}创建了群聊`;
+    case MessageType.GroupInfoUpdated:
+      const groupUpdateDetail = JSON.parse(msg.notificationElem.detail);
+      const groupUpdateUser = groupUpdateDetail.opUser;
+      let updateFiled = "群设置";
+      if (groupUpdateDetail.group.groupName) {
+        updateFiled = `群名称为 ${groupUpdateDetail.group.groupName}`;
+      }
+      if (groupUpdateDetail.group.faceURL) {
+        updateFiled = "群头像";
+      }
+      if (groupUpdateDetail.group.introduction) {
+        updateFiled = "群介绍";
+      }
+      return `${parseInfo(groupUpdateUser)}修改了${updateFiled}`;
+    case MessageType.GroupOwnerTransferred:
+      const transferDetails = JSON.parse(msg.notificationElem.detail);
+      const transferOpUser = transferDetails.opUser;
+      const newOwner = transferDetails.newGroupOwner;
+      return `${parseInfo(transferOpUser)}转让群主给${parseInfo(newOwner)}`;
+    case MessageType.MemberQuit:
+      const quitDetails = JSON.parse(msg.notificationElem.detail);
+      const quitUser = quitDetails.quitUser;
+      return `${parseInfo(quitUser)}退出了群组`;
+    case MessageType.MemberInvited:
+      const inviteDetails = JSON.parse(msg.notificationElem.detail);
+      const inviteOpUser = inviteDetails.opUser;
+      const invitedUserList = inviteDetails.invitedUserList ?? [];
+      let inviteStr = "";
+      invitedUserList.find(
+        (user:any, idx:any) => (inviteStr += parseInfo(user) + "、") && idx > 3,
+      );
+      inviteStr = inviteStr.slice(0, -1);
+      return `${parseInfo(inviteOpUser)} 邀请了${inviteStr}${
+        invitedUserList.length > 3 ? "..." : ""
+      }加入群聊`;
+    case MessageType.MemberKicked:
+      const kickDetails = JSON.parse(msg.notificationElem.detail);
+      const kickOpUser = kickDetails.opUser;
+      const kickdUserList = kickDetails.kickedUserList ?? [];
+      let kickStr = "";
+      kickdUserList.find(
+        (user:any, idx:any) => (kickStr += parseInfo(user) + "、") && idx > 3,
+      );
+      kickStr = kickStr.slice(0, -1);
+      return `${parseInfo(kickOpUser)} 踢出了${kickStr}${
+        kickdUserList.length > 3 ? "..." : ""
+      }`;
+    case MessageType.MemberEnter:
+      const enterDetails = JSON.parse(msg.notificationElem.detail);
+      const enterUser = enterDetails.entrantUser;
+      return `${parseInfo(enterUser)}加入了群聊`;
+    case MessageType.GroupDismissed:
+      const dismissDetails = JSON.parse(msg.notificationElem.detail);
+      const dismissUser = dismissDetails.opUser;
+      return `${parseInfo(dismissUser)}解散了群聊`;
+    case MessageType.GroupNameUpdated:
+      const groupNameUpdateDetail = JSON.parse(msg.notificationElem.detail);
+      const groupNameUpdateUser = groupNameUpdateDetail.opUser;
+      return `${parseInfo(groupNameUpdateUser)}修改了群名称为${
+        groupNameUpdateDetail.group.groupName
+      }`;
+    case MessageType.OANotification:
+      const customNoti = JSON.parse(msg.notificationElem.detail);
+      return customNoti.text;
+    default:
+      return "";
+  }
+};
