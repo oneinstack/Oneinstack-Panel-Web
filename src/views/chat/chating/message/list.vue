@@ -90,10 +90,8 @@ const conf = reactive({
         const arr = conf.scroll.centent.getExistArr()
         if (!arr.length) return
         arr.sort((a, b) => a.top - b.top)
-        conf.scroll.centent.height = arr[0].top
-        for (let i = 0; i < arr.length; i++) {
-          conf.scroll.centent.height += arr[i].height
-        }
+        const endItem = arr[arr.length - 1]
+        conf.scroll.centent.height = endItem.top + endItem.height
       },
       /**
        * 渲染对象
