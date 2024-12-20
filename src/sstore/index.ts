@@ -11,6 +11,7 @@ import { sutil } from './sutil'
 import { svalue } from './svalue'
 import { svf } from './svf'
 import { sweb } from './sweb'
+import { stheme } from './stheme'
 
 sutil.store = {
   shome,
@@ -24,7 +25,8 @@ sutil.store = {
   sbet,
   sshake,
   sweb,
-  sapp
+  sapp,
+  stheme
 }
 
 export const reset = () => {
