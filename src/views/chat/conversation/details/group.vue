@@ -4,9 +4,13 @@
       <span class="head-title">Chat Messages</span>
     </template>
     <!-- 成员列表 -->
-    <groupItem :groupID="csconversation.currentConversation.groupID"
-      :memberCount="csconversation.currentGroup.memberCount" :isNomal="!isAdmin && !isOwner"
-      :groupMemberList="conf.groupMemberList" />
+    <groupItem
+      :groupID="csconversation.currentConversation.groupID"
+      :memberCount="csconversation.currentGroup.memberCount"
+      :isNomal="!isAdmin && !isOwner"
+      :groupMemberList="conf.groupMemberList"
+      @click="conf.kickMember"
+    />
 
     <!-- 名称公告 -->
     <div class="m-t20">
@@ -37,10 +41,14 @@
         {{ getConfirmContent }}
       </div>
     </van-dialog>
+    <van-popup class="popup-bottom-center" :show="conf.selectShow" position="bottom">
+      <moveGroup :groupMemberList="conf.groupMemberList" :type="conf.type" @cancle="conf.closeMember" />
+    </van-popup>
   </x-page>
 </template>
 <script setup lang="ts">
-import groupItem from './groupItem.vue';
+import groupItem from "./com/groupItem.vue";
+import moveGroup from "./com/moveGroup.vue";
 import IMSDK, {
   GroupMemberRole,
   IMMethods,
@@ -49,6 +57,7 @@ import csconversation from '@/modules/chat/sstore/csconversation';
 import { computed, onMounted, reactive } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
+import { GroupMemberListTypes } from "@/modules/chat/constant";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -60,6 +69,8 @@ const conf = reactive({
   showConfirm: false,
   confirmType: null as any,
   groupMemberList: [] as any[],
+  selectShow: false,
+  type: '',
   getGroupMemberList() {
     IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
       groupID: csconversation.currentConversation.groupID,
@@ -104,6 +115,16 @@ const conf = reactive({
       .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
       .finally(() => (conf.confirmType = null));
   },
+  kickMember() {
+    conf.type = GroupMemberListTypes.Kickout
+    conf.selectShow = true
+  },
+  closeMember(e:any) {
+    console.log(e);
+    
+    conf.selectShow = false
+    if(e == 2) conf.getGroupMemberList()
+  }
 })
 const isOwner = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Owner;
@@ -124,7 +145,6 @@ const getConfirmContent = computed(() => {
 onMounted(() => {
   conf.groupMemberList = csconversation.groupMemberList
   conf.getGroupMemberList()
-
 })
 </script>
 <style lang="less" scoped>

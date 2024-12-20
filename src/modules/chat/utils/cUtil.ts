@@ -300,11 +300,10 @@ export const formatChooseData = (data: any, key = 'nickname') => {
   }
 }
 
-export const toastWithCallback = (message:any, callBack:any, duration = 1000) => {
-  System.toast(message,"success")
+export const toastWithCallback = (message:any, callBack:any,type:any = "success", duration = 1000) => {
+  System.toast(message,type)
   setTimeout(callBack, duration);
 };
-
 
 export const offlinePushInfo = {
   title: 'you have a new message',

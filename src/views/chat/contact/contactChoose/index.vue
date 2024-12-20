@@ -18,7 +18,7 @@ import listSearch from './listSearch.vue';
 import contactList from './contactList.vue';
 import chooseFooter from './chooseFooter.vue';
 import cscontact from '@/modules/chat/sstore/cscontact';
-import { formatChooseData } from '@/modules/chat/utils/cUtil';
+import { formatChooseData, toastWithCallback } from '@/modules/chat/utils/cUtil';
 import IMSDK, {
   GroupStatus,
   IMMethods,
@@ -28,6 +28,7 @@ import IMSDK, {
 import System from '@/utils/System';
 import { ContactChooseTypes } from '@/modules/chat/constant';
 import sutil from '@/sstore/sutil';
+import i18n from '@/lang';
 
 const conf = reactive({
   keyword: '',
@@ -50,7 +51,6 @@ const conf = reactive({
   },
   checkDisabledUser() {
     const friendIDList = cscontact.friendList.map((friend) => friend.userID);
-    console.log('5555');
     IMSDK.asyncApi(
       //@ts-ignore
       "getUsersInGroup",
@@ -60,19 +60,31 @@ const conf = reactive({
         userIDList: friendIDList,
       },
     ).then(({ data }: any) => {
-
-      console.log('6666601');
-      console.log(data);
-      conf.disabledUserIDList = data;
+      if (data.length == undefined) data = [data + '']
+      conf.disabledUserIDList = data
     });
   },
   confirm() {
     console.log(getCheckedInfo.value);
-    
+
     if (conf.type === ContactChooseTypes.GetList) {
       cscontact.getCheckedList = getCheckedInfo.value
       sutil.pageBack()
       return;
+    }
+    if (conf.type === ContactChooseTypes.Invite) {
+      System.loading()
+      IMSDK.asyncApi(IMSDK.IMMethods.InviteUserToGroup, IMSDK.uuid(), {
+        groupID: conf.groupID,
+        reason: '',
+        userIDList: getCheckedInfo.value.map((user:any) => user.userID)
+      })
+        .then(() => {
+          toastWithCallback(i18n.t('chatRoom.op_success'), () => sutil.pageBack())
+        })
+        .catch(() => toastWithCallback(i18n.t('chatRoom.op_failed'),()=>{},"error"))
+        .finally(() => { System.loading(false) })
+      return
     }
   }
 })
@@ -120,14 +132,13 @@ const getCheckedInfo = computed(() => {
   return [...checkedFriends, ...checkedGroups, ...checkedConversation];
 })
 onMounted(() => {
-  const { groupID,type,checkedUserIDList } = System.getRouterParams()
+  const { groupID, type, checkedUserIDList } = System.getRouterParams()
   conf.groupID = groupID
+  conf.checkDisabledUser()
   conf.type = type
   conf.checkedUserIDList = checkedUserIDList
     ? JSON.parse(checkedUserIDList)
     : []
-  conf.checkDisabledUser()
-
 })
 </script>
 <style lang="less" scoped>

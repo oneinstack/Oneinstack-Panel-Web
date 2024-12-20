@@ -1,13 +1,17 @@
 <template>
-  <div class="anchor-item" @click="emit('click')">
+  <div class="anchor-item" @click="conf.changeUser">
+    <!-- 禁止选择 -->
     <div class="item-disabled" v-show="disabled"></div>
+    <!-- 选择 -->
     <div class="check" :class="{'active': checked || disabled}" v-if="checkVisible">
       <van-icon name="success" color="#fff" size="25rem" />
     </div>
+    <!-- 个人信息 -->
     <div class="user-info">
       <div class="item-author">
-        <img style="width: 100%; height: 100%;border-radius: 8rem;"
-          :src="item.faceURL ? item.faceURL : '/static/img/home-banner.png'" />
+        <div style="width: 100%; height: 100%;border-radius: 8rem;overflow: hidden;">
+          <headImg class="face" :src="item.faceURL" />
+        </div>
         <div class="message-count flex flex-center" v-if="item.badge && item.badge > 0">
           {{ item.badge < 99 ? item.badge : '99+' }} </div>
         </div>
@@ -17,6 +21,9 @@
     </div>
 </template>
 <script setup lang="ts">
+import { reactive } from 'vue';
+import headImg from '../../components/head.vue';
+
 const props = defineProps({
   // 用户信息
   item: {
@@ -46,12 +53,19 @@ const props = defineProps({
 
 const emit = defineEmits(['click'])
 
+const conf = reactive({
+  changeUser(){
+    if(props.disabled) return
+    emit('click')
+  }
+})
+
 </script>
 <style lang="less" scoped>
 .anchor-item {
   display: flex;
   align-items: center;
-  padding: 0 24rem;
+  padding-left: 24rem;
   position: relative;
 
   .check{
@@ -120,6 +134,6 @@ const emit = defineEmits(['click'])
   z-index: 2;
   background: #fff;
   backdrop-filter: blur(20px);
-  opacity: 0.4;
+  opacity: 0.5;
 }
 </style>

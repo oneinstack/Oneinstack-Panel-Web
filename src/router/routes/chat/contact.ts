@@ -38,5 +38,9 @@ export default [
   {
     path: '/chat/createGroup',
     component: '/chat/contact/createGroup/index'
+  },
+  {
+    path: '/chat/groupMemberList',
+    component: '/chat/contact/groupMemberList/index'
   }
 ]

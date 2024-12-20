@@ -1,10 +1,13 @@
 <template>
   <div class="person">
-    <img :style="{width: imgW+'rem',height: imgW+'rem'}" :src="person.faceURL" />
+    <div :style="{ width: imgW + 'rem', height: imgW + 'rem' }" style="border-radius: 8rem;overflow: hidden;">
+      <headImg class="face" :src="person.faceURL" />
+    </div>
     <van-text-ellipsis v-if="showName" :content="person.nickname" />
   </div>
 </template>
 <script setup lang="ts">
+import headImg from '../../components/head.vue';
 const props = defineProps({
   person: {
     default: {} as any

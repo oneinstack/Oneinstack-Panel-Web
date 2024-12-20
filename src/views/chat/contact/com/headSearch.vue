@@ -1,7 +1,9 @@
 <template>
-  <div class="search-box flex flex-center" @click="conf.goPages">
-    <van-icon name="search" size="34rem" color="#B9B9B9" />
-    <span>Search</span>
+  <div class="search">
+    <div class="search-box flex flex-center" @click="conf.goPages">
+      <van-icon name="search" size="34rem" color="#B9B9B9" />
+      <span>Search</span>
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -18,20 +20,20 @@ const emit = defineEmits(['click'])
 
 const conf = reactive({
   goPages() {
-    if(props.customClick) return emit('click')
+    if (props.customClick) return emit('click')
     System.router.push('/chat/search')
   }
 })
 </script>
 <style lang="less" scoped>
-
+.search{
+  padding: 0 20rem 20rem;
+  background: #efefef;
+}
 .search-box {
-  width: 716rem;
   height: 68rem;
   background-color: #ffffff;
-  margin: 0 auto;
   border-radius: 4rem;
-  margin-bottom: 20rem;
   flex-shrink: 0;
 
   span {
