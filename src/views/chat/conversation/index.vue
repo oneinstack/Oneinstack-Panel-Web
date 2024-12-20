@@ -65,7 +65,7 @@
 <script setup lang="ts">
 import csconversation from '@/modules/chat/sstore/csconversation'
 import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
-import headImg from '@/views/components/head.vue'
+import headImg from '../components/head.vue'
 import { ConversationItem, FriendUserItem, GroupItem } from 'openim-uniapp-polyfill'
 import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'

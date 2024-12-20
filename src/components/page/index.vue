@@ -46,12 +46,11 @@
 </template>
 <script setup lang="ts">
 import { EPage } from '@/enum/Enum'
-import sconfig from '@/sstore/sconfig'
+import sapp from '@/sstore/sapp'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
-import { onBeforeMount, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { onBeforeMount, onMounted, reactive, ref } from 'vue'
 import uspage from './uspage'
-import sapp from '@/sstore/sapp'
 const props = defineProps({
   /**
    * 是否固定header，默认true
@@ -205,10 +204,6 @@ onBeforeMount(() => {
 
 onMounted(() => {
   System.loading(false)
-})
-
-onBeforeUnmount(() => {
-  sconfig.img.clear()
 })
 </script>
 <style lang="less" scoped>

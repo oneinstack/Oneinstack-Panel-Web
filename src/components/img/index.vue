@@ -4,7 +4,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import sconfig from '@/sstore/sconfig'
+import { Scope } from 'tools-vue3'
 import { onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import uximg from '.'
 const props = defineProps({
@@ -16,23 +16,39 @@ const props = defineProps({
   extensions: { default: undefined as any as any[] },
   styles: { default: {} as any },
   classs: { default: '' as any },
-  zIndex: { default: undefined as any },
-  cache: { default: false }
+  zIndex: { default: 0 as any },
+  cache: { default: false },
+  timeout: { default: 10000 }
 })
 
 const emit = defineEmits(['load', 'error'])
 const imgRef = ref<HTMLImageElement>()
+const timer = Scope.Timer()
 
 const config = reactive({
   img: null as HTMLImageElement | null,
   loadId: null as any,
-  load: () => {
+  loadEnd: false,
+  errorFun: () => {
+    if (config.loadEnd) return
+    config.loadEnd = true
+    emit('error')
+    uximg.errorCache[props.src] = true
+    timer.once(() => {
+      delete uximg.errorCache[props.src]
+    }, 10000)
+  },
+  loadimg: null as any,
+  load: async () => {
+    //如果已经加载过，加载过就删除
     if (config.loadId) {
       if (config.img) {
         imgRef.value?.removeChild(config.img)
         config.img = null
       }
     }
+
+    //如果缓存有，直接使用缓存
     if (props.cache !== false) {
       const _img = uximg.cache[props.src]
       if (_img) {
@@ -43,33 +59,64 @@ const config = reactive({
         return
       }
     }
-    const loadId = StrUtil.getId()
-    config.loadId = loadId
-    sconfig.img.getLoadPro((resolve: any) => {
-      DomUtil.loadImage({
-        url: props.src,
-        extensions: props.extensions,
-        base64: props.base64,
-        timeout: 5000,
-        load: (img) => {
-          if (props.cache !== false) {
-            uximg.cache[props.src] = img
-          }
-          if (loadId !== config.loadId) return
-          emit('load')
-          img.id = 'x_img_' + config.loadId
-          imgRef.value?.appendChild(img)
-          config.img = img
-          config.setStyle()
-          resolve(true)
-        },
-        error: () => {
-          if (loadId !== config.loadId) return
-          emit('error')
-          resolve(false)
-        }
-      })
-    }, props.zIndex)
+
+    //如果缓存有，直接使用跳过加载
+    if (uximg.errorCache[props.src]) {
+      config.errorFun()
+      return
+    }
+
+    //创建加载img的任务
+    let isLoad = false
+    const task = {
+      action: () => {
+        return new Promise((_resolve, _reject) => {
+          config.loadimg = DomUtil.loadImage({
+            url: props.src,
+            extensions: props.extensions,
+            base64: props.base64,
+            timeout: props.timeout,
+            load: (img) => {
+              if (isLoad) return
+              isLoad = true
+              if (props.cache !== false) {
+                uximg.cache[props.src] = img
+              }
+              _resolve(img)
+            },
+            error: () => {
+              if (isLoad) return
+              isLoad = true
+              _resolve(false)
+            }
+          })
+          timer.once(() => {
+            if (isLoad) return
+            isLoad = true
+            config.loadimg?.abort()
+            task.abort()
+            _resolve(false)
+          }, props.timeout)
+        })
+      },
+      zIndex: props.zIndex,
+      url: props.src,
+      abort: null as any
+    }
+    const _img: any = await uximg.task.create(task)
+
+    config.loadId = StrUtil.getId()
+    //如果加载成功，添加到dom，并设置样式
+    if (_img) {
+      _img.id = 'x_img_' + config.loadId
+      imgRef.value?.appendChild(_img)
+      config.img = _img
+      config.setStyle()
+      emit('load')
+    } else {
+      //如果加载失败，设置错误回调
+      config.errorFun()
+    }
   },
   defaultStyle: {
     height: '100%',
@@ -131,6 +178,7 @@ const init = () => {
 onMounted(init)
 onUnmounted(() => {
   observer.disconnect()
+  config.loadimg?.abort()
 })
 </script>
 <style lang="less" scoped>

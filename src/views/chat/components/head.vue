@@ -10,6 +10,8 @@
       @load="conf.imgLoad"
       @error="conf.imgError"
       :zIndex="zIndex"
+      cache
+      :timeout="2000"
     ></x-img>
   </div>
 </template>
@@ -29,9 +31,11 @@ const conf = reactive({
   isError: false,
   imgLoad(e: any) {
     conf.imgLoading = false
+    console.log('cim','imgLoad', conf.imgLoading)
   },
   imgError(e: any) {
     conf.isError = true
+    console.log('cim', 'imgError', conf.isError)
   }
 })
 </script>

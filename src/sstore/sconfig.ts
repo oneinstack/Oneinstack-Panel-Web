@@ -23,7 +23,7 @@ export const sconfig = reactive({
 
     System.loading(true)
     let { data: info } = await apis.getToken({
-      platform:5,
+      platform: 5,
       final(status, config, xhr) {
         System.loading(false)
       }
@@ -118,55 +118,6 @@ export const sconfig = reactive({
       sconfig.localTime = Date.now()
     }
     return sconfig.systemTime + (new Date().getTime() - sconfig.localTime)
-  },
-
-  img: {
-    loadEnum: 'imgLoad_',
-    zIndexList: [] as any[],
-    max: 4, //同屏最大加载数，控制即使没有做懒加载，也不会同时加载太多图片
-    loadPro: {} as any,
-    eventList: [] as any[],
-    getLoadPro: (fun: (resolve: (value: boolean) => void) => void, zIndex?: any) => {
-      const getPro = (_index: number) => {
-        sconfig.img.loadPro[_index] = new Promise((_resolve) => {
-          fun((value: boolean) => {
-            sconfig.img.loadPro[_index] = null
-            _resolve(value)
-            for (let j = 0; j < sconfig.img.zIndexList.length; j++) {
-              CEvent.emit(sconfig.img.loadEnum + sconfig.img.zIndexList[j])
-            }
-          })
-        })
-        return sconfig.img.loadPro[_index]
-      }
-      for (let i = 0; i < sconfig.img.max; i++) {
-        if (!sconfig.img.loadPro[i]) return getPro(i)
-      }
-      if (!zIndex) zIndex = 0
-      zIndex = Number(zIndex)
-
-      //当出现zIndex大于0时，每个优先级使用max个
-      if (zIndex > 0) {
-        for (let i = sconfig.img.max * zIndex; i < sconfig.img.max * (zIndex + 1); i++) {
-          if (!sconfig.img.loadPro[i]) return getPro(i)
-        }
-      }
-
-      sconfig.img.zIndexList.push(zIndex)
-      sconfig.img.zIndexList = sconfig.img.zIndexList.toSet()
-      sconfig.img.zIndexList.sort((a, b) => b - a)
-
-      const eid = CEvent.once(sconfig.img.loadEnum + zIndex, () => {
-        sconfig.img.eventList.remove((v) => v == eid)
-        sconfig.img.getLoadPro(fun, zIndex)
-      })
-      sconfig.img.eventList.push(eid)
-    },
-    clear: () => {
-      CEvent.off(...sconfig.img.eventList)
-      sconfig.img.loadPro = {}
-      sconfig.img.zIndexList = []
-    }
   }
 })
 
