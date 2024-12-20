@@ -1,0 +1,37 @@
+<template>
+  <div class="relative fit">
+    <div class="absolute fit flex flex-center" style="background: #f5f5f7" v-if="conf.imgLoading">
+      <VSIcon v-if="conf.isError" lib="wx" name="icon_outlined_collect_personal" size="60" :color="['#b3b3b3']" />
+    </div>
+    <x-img
+      class="relative fit"
+      :src="src"
+      lazy-load
+      @load="conf.imgLoad"
+      @error="conf.imgError"
+      :zIndex="zIndex"
+    ></x-img>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { reactive } from 'vue'
+defineProps({
+  src: {
+    default: ''
+  },
+  zIndex: {
+    default: undefined as any
+  }
+})
+const conf = reactive({
+  imgLoading: true,
+  isError: false,
+  imgLoad(e: any) {
+    conf.imgLoading = false
+  },
+  imgError(e: any) {
+    conf.isError = true
+  }
+})
+</script>

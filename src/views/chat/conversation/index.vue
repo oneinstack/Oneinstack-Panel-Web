@@ -19,7 +19,7 @@
           <div class="user-item" :class="{ pinned: item.isPinned }" @click="conf.toChating(item)">
             <div class="row items-center" style="height: 92rem">
               <div class="relative face-box">
-                <img class="face" :src="item.faceURL" />
+                <headImg class="face" :src="item.faceURL" />
                 <div class="message-count flex flex-center" v-if="item.unreadCount > 0">
                   {{ item.unreadCount < 99 ? item.unreadCount : '99+' }}
                 </div>
@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import csconversation from '@/modules/chat/sstore/csconversation'
 import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
+import headImg from '@/views/components/head.vue'
 import { ConversationItem, FriendUserItem, GroupItem } from 'openim-uniapp-polyfill'
 import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'
@@ -171,6 +172,7 @@ onMounted(() => {
     height: 100%;
     border-radius: 8rem;
     object-fit: cover;
+    overflow: hidden;
   }
   .message-count {
     position: absolute;
