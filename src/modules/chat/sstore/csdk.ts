@@ -14,6 +14,19 @@ import csuser from './csuser'
 export const csdk = reactive({
   init: false,
   Login: async () => {
+    const fail = () => {
+      System.toast(i18n.t('code.401'))
+      csconfig.clearUserInfo()
+      csdk.init = true
+      cConfig.isInit = false
+      setTimeout(() => {
+        csdk.init = false
+      }, 100)
+    }
+    if (!csconfig.userInfo?.userID) {
+      fail()
+      return
+    }
     console.log('开始登录', csconfig.userInfo.userID)
     await IMSDK.asyncApi(IMSDK.IMMethods.Login, IMSDK.uuid(), {
       userID: csconfig.userInfo.userID,
@@ -27,13 +40,7 @@ export const csdk = reactive({
       })
       .catch((err) => {
         console.log('登录失败-error', err)
-        System.toast(i18n.t('code.401'))
-        csconfig.clearUserInfo()
-        csdk.init = true
-        cConfig.isInit = false
-        setTimeout(() => {
-          csdk.init = false
-        }, 100)
+        fail()
       })
     if (csdk.init) return
     csdk.init = true
