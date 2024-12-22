@@ -4,24 +4,20 @@
       <span class="head-title">Chat Messages</span>
     </template>
     <!-- 成员列表 -->
-    <groupItem
-      :groupID="csconversation.currentConversation.groupID"
+    <groupItem :groupID="csconversation.currentConversation.groupID"
       :memberCount="csconversation.currentGroup.memberCount"
-      :isNomal="!isAdmin && !isOwner"
-      :groupMemberList="conf.groupMemberList"
-      @click="conf.kickMember"
-    />
+      :groupMemberList="conf.groupMemberList" @updteMember="conf.getGroupMemberList"  />
 
-    <!-- 名称公告 -->
+    <!-- 名称 -->
     <div class="m-t20">
-      <div class="edit border_b flex-b-c">
+      <div class="edit border_b flex-b-c" @click="conf.updateGroup('updateGroupNickname')">
         <div class="title">Group Name</div>
         <div class="more flex-center">
           <span>{{ csconversation.currentConversation.showName }}</span>
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
-      <div class="edit flex-b-c" style="margin-top: 0;">
+      <div class="edit flex-b-c" style="margin-top: 0;" @click="conf.updateGroup('groupQrCode')">
         <div class="title">Group QR code</div>
         <div class="more flex-center">
           <img style="width: 30rem;height: 30rem;" src="/static/images/group_setting_qrcode.png" />
@@ -35,29 +31,26 @@
           ? $t('chatRoom.dissolve_grp') : $t('chatRoom.exit_grp') }}
       </div>
     </div>
-    <van-dialog :show="conf.confirmType !== null" title="" show-cancel-button :confirmButtonText="$t('chatRoom.confirm')"
-      :cancelButtonText="$t('chat.cancle')" @cancel="conf.confirmType = null" @confirm="conf.confirmDel">
+    <van-dialog :show="conf.confirmType !== null" title="" show-cancel-button
+      :confirmButtonText="$t('chatRoom.confirm')" :cancelButtonText="$t('chat.cancle')"
+      @cancel="conf.confirmType = null" @confirm="conf.confirmDel">
       <div style="padding: 40rem;">
         {{ getConfirmContent }}
       </div>
     </van-dialog>
-    <van-popup class="popup-bottom-center" :show="conf.selectShow" position="bottom">
-      <moveGroup :groupMemberList="conf.groupMemberList" :type="conf.type" @cancle="conf.closeMember" />
-    </van-popup>
   </x-page>
 </template>
 <script setup lang="ts">
 import groupItem from "./com/groupItem.vue";
-import moveGroup from "./com/moveGroup.vue";
 import IMSDK, {
   GroupMemberRole,
   IMMethods,
 } from "openim-uniapp-polyfill";
 import csconversation from '@/modules/chat/sstore/csconversation';
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
-import { GroupMemberListTypes } from "@/modules/chat/constant";
+import { ContactChooseTypes, GroupMemberListTypes } from "@/modules/chat/constant";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -65,12 +58,14 @@ const ConfirmTypes = {
   Quit: 'Quit'
 }
 
+const inviteRefs = ref<any>()
 const conf = reactive({
   showConfirm: false,
   confirmType: null as any,
   groupMemberList: [] as any[],
   selectShow: false,
   type: '',
+  inviteShow: false,
   getGroupMemberList() {
     IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
       groupID: csconversation.currentConversation.groupID,
@@ -90,7 +85,7 @@ const conf = reactive({
       });
   },
   confirmDel() {
-    let funcName:any = "";
+    let funcName: any = "";
     let sourceID = csconversation.currentConversation.groupID;
     if (conf.confirmType === ConfirmTypes.Quit) {
       funcName = IMSDK.IMMethods.QuitGroup;
@@ -100,7 +95,7 @@ const conf = reactive({
     }
     IMSDK.asyncApi(funcName, IMSDK.uuid(), sourceID)
       .then(() => {
-        System.toast(i18n.t('chatRoom.op_success'),"success")
+        System.toast(i18n.t('chatRoom.op_success'), "success")
         if (conf.confirmType === ConfirmTypes.Clear) {
           // this.$store.commit("message/SET_HISTORY_MESSAGE_LIST", []);
           // this.$store.commit("message/SET_PREVIEW_IMAGE_LIST", []);
@@ -115,16 +110,28 @@ const conf = reactive({
       .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
       .finally(() => (conf.confirmType = null));
   },
-  kickMember() {
+  kickMember(e:any) {
+    if(e == 'invite') {
+      inviteRefs.value?.initDisabledUser()
+      conf.type = ContactChooseTypes.Invite
+      conf.inviteShow = true
+      return
+    }
     conf.type = GroupMemberListTypes.Kickout
     conf.selectShow = true
   },
-  closeMember(e:any) {
-    console.log(e);
-    
-    conf.selectShow = false
-    if(e == 2) conf.getGroupMemberList()
+  updateGroup(url: string) {
+    const { showName, groupID, faceURL } = csconversation.currentConversation
+    const info = {
+      showName,
+      groupID,
+      faceURL
+    }
+    System.router.push(`/chat/${url}?groupInfo=${JSON.stringify(
+      info,
+    )}`)
   }
+
 })
 const isOwner = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Owner;

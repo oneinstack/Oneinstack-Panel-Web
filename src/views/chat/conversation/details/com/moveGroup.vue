@@ -42,7 +42,7 @@
   </van-dialog>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import userItem from '@/views/chat/contact/com/userItem.vue';
 import personItem from '@/views/chat/contact/com/personItem.vue';
 import sutil from '@/sstore/sutil';
@@ -96,6 +96,7 @@ const conf = reactive({
   },
   cancle(type = 1) {
     conf.chooseUser = []
+    conf.checkedIDList = []
     emit('cancle',type)
   },
   finish(){
@@ -147,11 +148,6 @@ const getChooseData = computed(() => {
     )
   }
   return props.groupMemberList
-})
-
-onMounted(() => {
-  console.log(props.groupMemberList);
-  console.log(props.type);
 })
 </script>
 <style lang="less" scoped>

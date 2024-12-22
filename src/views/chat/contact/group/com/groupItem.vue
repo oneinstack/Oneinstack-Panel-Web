@@ -1,11 +1,14 @@
 <template>
     <div class="item" @click="conf.goChat">
-        <img class="avatar-img" :src="groupInfo.faceURL" />
+        <div class="avatar-img">
+            <headImg class="face" :src="groupInfo.faceURL" />
+        </div>
         <div class="name">{{ groupInfo.groupName }}</div>
     </div>
 </template>
 <script setup lang="ts">
 import System from '@/utils/System';
+import headImg from '@/views/chat/components/head.vue';
 import { reactive } from 'vue';
 const props = defineProps({
     groupInfo: {
@@ -31,6 +34,7 @@ const conf = reactive({
         width: 80rem;
         height: 80rem;
         border-radius: 8rem;
+        overflow: hidden;
     }
 
     .name {

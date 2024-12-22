@@ -186,7 +186,7 @@ export default class System {
           windowWidth: param.windowWidth,
           windowHeight: param.windowHeight,
           useCORS: true,
-          backgroundColor: '#ffffff00'
+          backgroundColor: '#ffffff'
         }).then(function (canvas: any) {
           let imgUrl = canvas.toDataURL('image/png')
           resolve(imgUrl)

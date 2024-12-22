@@ -21,7 +21,7 @@ export default [
   },
   {
     path: '/chat/groupList',
-    component: '/chat/contact/groupList/index'
+    component: '/chat/contact/group/list'
   },
   {
     path: '/chat/add',
@@ -37,10 +37,18 @@ export default [
   },
   {
     path: '/chat/createGroup',
-    component: '/chat/contact/createGroup/index'
+    component: '/chat/contact/group/create'
   },
   {
     path: '/chat/groupMemberList',
-    component: '/chat/contact/groupMemberList/index'
+    component: '/chat/contact/group/memberList'
+  },
+  {
+    path: '/chat/updateGroupNickname',
+    component: '/chat/contact/group/updateName'
+  },
+  {
+    path: '/chat/groupQrCode',
+    component: '/chat/contact/group/groupQrCode'
   }
 ]

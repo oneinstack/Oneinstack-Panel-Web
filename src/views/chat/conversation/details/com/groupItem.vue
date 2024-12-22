@@ -6,41 +6,52 @@
           <personItem :person="item" />
         </div>
       </template>
-      <img src="/static/img/chat/setting_add.svg" @click="conf.goPages(`/chat/contactChoose??type=${ContactChooseTypes.Invite}&groupID=${groupID}`)" />
-      <img  v-if="isAdmin || isOwner" :style="{'margin-left': groupMemberList.length % 5 == 4 ? 0 : '6.25%'}" src="/static/img/chat/minus.png" @click="emit('click')" />
+      <!-- <img src="/static/img/chat/setting_add.svg" @click="conf.goPages(`/chat/contactChoose?type=${ContactChooseTypes.Invite}&groupID=${groupID}`)" /> -->
+      <img src="/static/img/chat/setting_add.svg" @click="conf.change('invite')" />
+      <img v-if="isAdmin || isOwner" :style="{ 'margin-left': groupMemberList.length % 5 == 4 ? 0 : '6.25%' }"
+        src="/static/img/chat/minus.png" @click="conf.change('move')" />
     </div>
-    <div class="more flex-center" @click="conf.goPages('/chat/groupMemberList')" v-if="isMore && groupMemberList.length>1">
+    <div class="more flex-center" @click="conf.goPages('/chat/groupMemberList?groupID='+groupID)"
+      v-if="isMore && groupMemberList.length > 19">
       <span>View more group members</span>
       <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
   </div>
+  <!-- 移除群成员 -->
+  <van-popup class="popup-bottom-center" :show="conf.selectShow" position="bottom">
+    <moveGroup :groupMemberList="groupMemberList" :type="conf.type" @cancle="conf.updteMember" />
+  </van-popup>
+  <!-- 邀请群成员 -->
+  <van-popup class="popup-bottom-center" :show="conf.inviteShow" position="bottom">
+    <inviteGroup ref="inviteRefs" :type="conf.type"
+      :groupID="groupID" @cancle="conf.updteMember" />
+  </van-popup>
 </template>
 <script setup lang="ts">
-import { ContactChooseTypes } from '@/modules/chat/constant';
 import personItem from '@/views/chat/contact/com/personItem.vue';
 import System from '@/utils/System';
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { GroupMemberRole } from 'openim-uniapp-polyfill';
 import csconversation from '@/modules/chat/sstore/csconversation';
+import { ContactChooseTypes, GroupMemberListTypes } from '@/modules/chat/constant';
+import moveGroup from './moveGroup.vue';
+import inviteGroup from './inviteGroup.vue';
 
 const props = defineProps({
-  groupID:{
+  groupID: {
     default: ''
   },
   memberCount: {
     default: 0
   },
-  isNomal: {
-    default: false
-  },
   groupMemberList: {
     default: [] as any[]
   },
-  isMore:{
+  isMore: {
     default: true
   }
 })
-const emit = defineEmits(['click'])
+const emit = defineEmits(['updteMember'])
 
 const isOwner = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Owner;
@@ -49,8 +60,32 @@ const isAdmin = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Admin;
 })
 
+const showMore = computed(() => {
+  if(isAdmin || isOwner) return props.groupMemberList.length > 18
+  return props.groupMemberList.length > 19
+})
+
+const inviteRefs = ref<any>()
 const conf = reactive({
-  goPages(url:any) {
+  type: '',
+  inviteShow: false,
+  selectShow: false,
+  change(e:any) {
+    if(e == 'invite') {
+      inviteRefs.value?.initDisabledUser()
+      conf.type = ContactChooseTypes.Invite
+      conf.inviteShow = true
+      return
+    }
+    conf.type = GroupMemberListTypes.Kickout
+    conf.selectShow = true
+  },
+  updteMember(e:any) {
+    conf.selectShow = false
+    conf.inviteShow = false
+    if (e == 2) emit('updteMember',e)
+  },
+  goPages(url: any) {
     System.router.push(url)
   }
 })

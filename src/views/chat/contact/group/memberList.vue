@@ -6,7 +6,7 @@
     <headSearch />
     <div>
       <div style="height: calc(100vh - 165rem);">
-        <groupItem :isMore="false" :groupMemberList="conf.groupMemberList" />
+        <groupItem :groupID="conf.groupID" :isMore="false" :groupMemberList="conf.groupMemberList" @updteMember="conf.getGroupMemberList" />
       </div>
     </div>
   </x-page>
@@ -16,26 +16,33 @@ import { capis } from '@/modules/chat/api';
 import { onMounted, reactive } from 'vue';
 import headSearch from '../com/headSearch.vue';
 import groupItem from '../../conversation/details/com/groupItem.vue';
+import System from '@/utils/System';
 
 const conf = reactive({
   groupMemberList: [] as any[],
-  total: 0
+  total: 0,
+  groupID: '',
+  async getGroupMemberList() {
+    const { members, total } = await capis.getGroupMemberList(
+      {
+        filter: 0,
+        groupID: conf.groupID,
+        keyword: "",
+        pagination: {
+          pageNumber: 1,
+          showNumber: 50,
+        },
+      }
+    );
+    conf.groupMemberList = members
+    conf.total = total
+  }
 })
 
 onMounted(async () => {
-  const { members,total } = await capis.getGroupMemberList(
-    {
-      filter: 0,
-      groupID:"1888222333",
-      keyword:"",
-      pagination: {
-        pageNumber: 1,
-        showNumber: 50,
-      },
-    }
-  );
-  conf.groupMemberList = members
-  conf.total = total
+  const { groupID } = System.getRouterParams()
+  conf.groupID = groupID
+  conf.getGroupMemberList()
 });
 </script>
 <style lang="less" scoped>

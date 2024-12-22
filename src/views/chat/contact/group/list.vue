@@ -18,7 +18,7 @@
 <script setup lang="ts">
 import cscontact from '@/modules/chat/sstore/cscontact';
 import headSearch from '../com/headSearch.vue';
-import groupItem from './groupItem.vue';
+import groupItem from './com/groupItem.vue';
 import { onMounted, reactive } from 'vue';
 
 const conf = reactive({
