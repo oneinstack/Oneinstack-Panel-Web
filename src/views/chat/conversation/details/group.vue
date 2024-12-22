@@ -25,6 +25,14 @@
         </div>
       </div>
     </div>
+    <div class="m-t20">
+      <div class="edit border_b flex-b-c" @click="conf.updateGroup('setMute')">
+        <div class="title">Group mute</div>
+        <div class="more flex-center">
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
+        </div>
+      </div>
+    </div>
     <div class="edit flex-center" @click="() => (conf.confirmType = isOwner ? 'Dismiss' : 'Quit')">
       <div class="title" style="color: #f45551;">{{
         isOwner
@@ -66,6 +74,7 @@ const conf = reactive({
   selectShow: false,
   type: '',
   inviteShow: false,
+  showMute: false,
   getGroupMemberList() {
     IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
       groupID: csconversation.currentConversation.groupID,
@@ -121,6 +130,8 @@ const conf = reactive({
     conf.selectShow = true
   },
   updateGroup(url: string) {
+    console.log( csconversation.currentConversation);
+    
     const { showName, groupID, faceURL } = csconversation.currentConversation
     const info = {
       showName,
@@ -131,7 +142,6 @@ const conf = reactive({
       info,
     )}`)
   }
-
 })
 const isOwner = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Owner;

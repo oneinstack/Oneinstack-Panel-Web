@@ -50,5 +50,9 @@ export default [
   {
     path: '/chat/groupQrCode',
     component: '/chat/contact/group/groupQrCode'
+  },
+  {
+    path: '/chat/setMute',
+    component: '/chat/contact/group/setMute'
   }
 ]
