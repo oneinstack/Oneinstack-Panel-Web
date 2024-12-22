@@ -3,7 +3,7 @@
     <!-- 禁止选择 -->
     <div class="item-disabled" v-show="disabled"></div>
     <!-- 选择 -->
-    <div class="check" :class="{'active': checked || disabled}" v-if="checkVisible">
+    <div class="check" :class="{ 'active': checked || disabled }" v-if="checkVisible">
       <van-icon name="success" color="#fff" size="25rem" />
     </div>
     <!-- 个人信息 -->
@@ -13,12 +13,16 @@
           <headImg class="face" :src="item.faceURL" />
         </div>
         <div class="message-count flex flex-center" v-if="item.badge && item.badge > 0">
-          {{ item.badge < 99 ? item.badge : '99+' }} </div>
+          {{ item.badge < 99 ? item.badge : '99+' }}
         </div>
-        <div class="item-name">{{ item.nickname || item.title }}</div>
-        <div class="b-border" :style="{ left: lastItem ? '24rem' : '116rem' }" v-if="showBodder"></div>
       </div>
+      <div class="item-name">{{ item.nickname || item.title }}</div>
+      <div style="flex: 1;text-align: right;padding-right: 20rem;" v-if="single">
+        <van-icon color="#07c261" size="30rem" name="success" />
+      </div>
+      <div class="b-border" :style="{ left: lastItem ? '24rem' : '116rem' }" v-if="showBodder"></div>
     </div>
+  </div>
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue';
@@ -48,14 +52,18 @@ const props = defineProps({
   // 是否显示选择功能
   checkVisible: {
     default: false
+  },
+  // 选择单个
+  single: {
+    default: false
   }
 })
 
 const emit = defineEmits(['click'])
 
 const conf = reactive({
-  changeUser(){
-    if(props.disabled) return
+  changeUser() {
+    if (props.disabled) return
     emit('click')
   }
 })
@@ -68,7 +76,7 @@ const conf = reactive({
   padding-left: 24rem;
   position: relative;
 
-  .check{
+  .check {
     border-radius: 50%;
     width: 36rem;
     height: 36rem;
@@ -78,12 +86,14 @@ const conf = reactive({
     align-items: center;
     justify-content: center;
     padding-top: 4rem;
-    &.active{
+
+    &.active {
       background: #07c261;
       border-color: #07c261;
     }
   }
-  .user-info{
+
+  .user-info {
     display: flex;
     align-items: center;
     position: relative;
@@ -128,7 +138,8 @@ const conf = reactive({
     right: 0;
   }
 }
-.item-disabled{
+
+.item-disabled {
   position: absolute;
   inset: 0;
   z-index: 2;

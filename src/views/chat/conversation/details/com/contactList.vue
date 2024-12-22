@@ -8,8 +8,8 @@
         :lastItem="i2 == (item.length - 1)"
         :checked="checkedIDList.includes(user.userID)"
         :disabled="disabledIDList.includes(user.userID)"
-        
-        :checkVisible="true"
+        :single="singleId == user.userID"
+        :checkVisible="checkVisible"
         @click="emit('updateCheck',user)"
       />
       </template>
@@ -28,6 +28,13 @@ const props = defineProps({
   disabledIDList: {
     default: [] as any[]
   },
+  checkVisible: {
+    default: true
+  },
+  // 选择单个
+  singleId: {
+    default: ''
+  }
 })
 const emit = defineEmits(['updateCheck'])
 </script>

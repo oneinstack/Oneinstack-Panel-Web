@@ -5,8 +5,8 @@
     </template>
     <!-- 成员列表 -->
     <groupItem :groupID="csconversation.currentConversation.groupID"
-      :memberCount="csconversation.currentGroup.memberCount"
-      :groupMemberList="conf.groupMemberList" @updteMember="conf.getGroupMemberList"  />
+      :memberCount="csconversation.currentGroup.memberCount" :groupMemberList="conf.groupMemberList"
+      @updteMember="conf.getGroupMemberList" />
 
     <!-- 名称 -->
     <div class="m-t20">
@@ -25,9 +25,15 @@
         </div>
       </div>
     </div>
-    <div class="m-t20">
+    <div class="m-t20" v-if="isAdmin || isOwner">
       <div class="edit border_b flex-b-c" @click="conf.updateGroup('setMute')">
         <div class="title">Group mute</div>
+        <div class="more flex-center">
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
+        </div>
+      </div>
+      <div class="edit border_b flex-b-c" @click="conf.transShow = true" v-if="isOwner">
+        <div class="title">Group owner transfer</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
@@ -39,6 +45,7 @@
           ? $t('chatRoom.dissolve_grp') : $t('chatRoom.exit_grp') }}
       </div>
     </div>
+    <!-- 解散、退出群聊提示 -->
     <van-dialog :show="conf.confirmType !== null" title="" show-cancel-button
       :confirmButtonText="$t('chatRoom.confirm')" :cancelButtonText="$t('chat.cancle')"
       @cancel="conf.confirmType = null" @confirm="conf.confirmDel">
@@ -46,10 +53,15 @@
         {{ getConfirmContent }}
       </div>
     </van-dialog>
+    <!-- 群主转让 -->
+    <van-popup class="popup-bottom-center" :show="conf.transShow" position="bottom">
+      <transferGroup :groupMemberList="conf.groupMemberList" :type="conf.type" @cancle="conf.cancle" />
+    </van-popup>
   </x-page>
 </template>
 <script setup lang="ts">
 import groupItem from "./com/groupItem.vue";
+import transferGroup from "./com/transferGroup.vue";
 import IMSDK, {
   GroupMemberRole,
   IMMethods,
@@ -59,6 +71,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
 import { ContactChooseTypes, GroupMemberListTypes } from "@/modules/chat/constant";
+import conversation from "@/router/routes/chat/conversation";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -71,10 +84,8 @@ const conf = reactive({
   showConfirm: false,
   confirmType: null as any,
   groupMemberList: [] as any[],
-  selectShow: false,
+  transShow: false,
   type: '',
-  inviteShow: false,
-  showMute: false,
   getGroupMemberList() {
     IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
       groupID: csconversation.currentConversation.groupID,
@@ -119,19 +130,7 @@ const conf = reactive({
       .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
       .finally(() => (conf.confirmType = null));
   },
-  kickMember(e:any) {
-    if(e == 'invite') {
-      inviteRefs.value?.initDisabledUser()
-      conf.type = ContactChooseTypes.Invite
-      conf.inviteShow = true
-      return
-    }
-    conf.type = GroupMemberListTypes.Kickout
-    conf.selectShow = true
-  },
   updateGroup(url: string) {
-    console.log( csconversation.currentConversation);
-    
     const { showName, groupID, faceURL } = csconversation.currentConversation
     const info = {
       showName,
@@ -141,6 +140,10 @@ const conf = reactive({
     System.router.push(`/chat/${url}?groupInfo=${JSON.stringify(
       info,
     )}`)
+  },
+  cancle(e:any) {
+    conf.transShow = false
+    if(e == 2) csconversation.currentMemberInGroup.roleLevel = 20
   }
 })
 const isOwner = computed(() => {

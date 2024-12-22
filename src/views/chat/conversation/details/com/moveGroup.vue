@@ -35,9 +35,7 @@
   <van-dialog :show="conf.showConfirmModal" title="" show-cancel-button :confirmButtonText="$t('chatRoom.confirm')"
     :cancelButtonText="$t('chat.cancle')" @cancel="conf.showConfirmModal = false" @confirm="conf.confirmMove">
     <div style="padding: 40rem;">
-      {{ !isRemove
-          ? `${$t('chatRoom.confirm_rm')}?`
-          : `${$t('chatRoom.confirm_transfer')}${conf.chooseUser[0].nickname}?` }}
+      {{ `${$t('chatRoom.confirm_rm')}?` }}
     </div>
   </van-dialog>
 </template>
