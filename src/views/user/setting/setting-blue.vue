@@ -38,7 +38,7 @@
                 <img class="left-img" :src="`/static/img/me/${item.id}.png`" />
                 <span>{{ item.name }}</span>
               </div>
-              <img class="select-img" v-if="conf.language == item.id" src="/static/img/selected.webp" />
+              <VSIcon v-if="item.id == conf.language" class="select-img" lib="blue" name="j-blue" :size="20" />
             </div>
           </div>
         </div>
@@ -58,7 +58,7 @@
               <div class="lang-left" :style="item.id == conf.currentTheme && { color: item.color }">
                 <span>{{ $t(item.name) }}</span>
               </div>
-              <VSIcon v-if="item.id == conf.currentTheme" :color="[item.color]" lib="blue" name="nike" :size="20" />
+              <VSIcon v-if="item.id == conf.currentTheme" lib="blue" name="j-blue" :size="20" />
             </div>
           </div>
         </div>
@@ -91,7 +91,7 @@ const conf = reactive({
         name: 'me.Password',
         new: false,
         url: '/user/Password/Change',
-        isShow: () => conf.needLoginShow()
+        isShow: () => sconfig.userInfo
       },
       {
         name: 'me.Theme',
@@ -123,7 +123,7 @@ const conf = reactive({
         func: () => {
           conf.outPopup = true
         },
-        isShow: true
+        isShow: () => sconfig.userInfo
       }
     ]
   ],
@@ -183,7 +183,6 @@ const conf = reactive({
   },
   outPopup: false,
   total_money: 0,
-  needLoginShow: () => sconfig.userInfo,
   handle(item: any) {
     item.url && System.router.push(item.url)
     item.func && item.func()
@@ -204,6 +203,7 @@ const conf = reactive({
     conf.outPopup = false
     conf.total_money = 0
     System.toast('out success', 'success')
+    setTimeout(() => System.router.replace('/'), 2000)
   }
 })
 </script>
