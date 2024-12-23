@@ -86,9 +86,9 @@
                 </div>
               </div>
               <div
-                class="select"
-                style="justify-content: center; align-items: center"
                 v-if="conf.coinLosding && sconfig.userInfo"
+                class="select justify-center items-center"
+                style="height: 100%;"
               >
                 <van-loading type="spinner" />
               </div>
@@ -542,9 +542,14 @@ onMounted(() => init())
   }
 
   .stting {
+    width: 88rem;
+    height: 88rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: absolute;
-    top: 90rem;
-    right: 46rem;
+    top: 70rem;
+    right: 40rem;
     z-index: 2;
   }
 
@@ -555,6 +560,7 @@ onMounted(() => init())
     width: 100%;
 
     .user {
+      width: 60%;
       display: flex;
       align-items: center;
       margin-left: 30rem;

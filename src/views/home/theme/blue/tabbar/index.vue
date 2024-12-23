@@ -1,26 +1,24 @@
 <template>
   <div class="tarbar-foot">
     <div style="transform: translateY(-100%)">
-      <div>
-        <div class="tabbar">
-          <div class="tabbar__list">
-            <div
-              v-for="(item, index) in conf.tabbar"
-              :key="index"
-              :id="`tabbar_item_${index}`"
-              class="tabbar__item"
-              :class="{ 'tabbar__item--active': index == conf.currentTabbarIndex }"
-              @click="conf.clickItem(item)"
-            >
-              <div class="tabbar__item__icon">
-                <VSIcon lib="blue" :name="index == conf.currentTabbarIndex ? item.iconActive : item.icon" :size="88" />
-              </div>
-              <span class="tabbar__item__text">{{ item.text }}</span>
+      <div class="tabbar">
+        <div class="tabbar__list">
+          <div
+            v-for="(item, index) in conf.tabbar"
+            :key="index"
+            :id="`tabbar_item_${index}`"
+            class="tabbar__item"
+            :class="{ 'tabbar__item--active': index == conf.currentTabbarIndex }"
+            @click="conf.clickItem(item)"
+          >
+            <div class="tabbar__item__icon">
+              <VSIcon lib="blue" :name="index == conf.currentTabbarIndex ? item.iconActive : item.icon" :size="88" />
             </div>
+            <span class="tabbar__item__text">{{ item.text }}</span>
           </div>
         </div>
-        <x-navigationbar />
       </div>
+      <x-navigationbar />
     </div>
   </div>
 </template>
@@ -88,7 +86,7 @@ onMounted(() => {
       height: 100%;
       display: flex;
       flex-flow: column nowrap;
-      justify-content: flex-start;
+      justify-content: center;
       align-items: center;
       position: relative;
 
@@ -98,8 +96,8 @@ onMounted(() => {
       }
 
       &__text {
-        position: absolute;
-        top: 50%;
+        position: relative;
+        top: -12rem;
         transition: color 0.25s;
       }
     }
