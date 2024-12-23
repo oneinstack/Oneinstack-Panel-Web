@@ -83,7 +83,9 @@ import { stheme } from '@/sstore/stheme'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { reactive } from 'vue'
+import { Scope } from 'tools-vue3'
 
+const timer = Scope.Timer()
 const conf = reactive({
   language: Cookie.get('language') || 'en-us',
   menu1: [
@@ -204,7 +206,7 @@ const conf = reactive({
     conf.outPopup = false
     conf.total_money = 0
     System.toast('out success', 'success')
-    setTimeout(() => sutil.pageBack(), 2000)
+    timer.once(() => sutil.pageBack(), 2000)
   }
 })
 </script>
