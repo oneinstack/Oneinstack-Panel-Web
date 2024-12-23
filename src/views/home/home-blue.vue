@@ -76,10 +76,10 @@ import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive, ref } from 'vue'
-import DBindInfo from './home-com/DBindInfo.vue'
-import DGameTip from './home-com/DGameTip.vue'
-import DNotice from './home-com/DNotice.vue'
-import DNotify from './home-com/DNotify.vue'
+import DBindInfo from './theme/blue/home-com/DBindInfo.vue'
+import DGameTip from './theme/blue/home-com/DGameTip.vue'
+import DNotice from './theme/blue/home-com/DNotice.vue'
+import DNotify from './theme/blue/home-com/DNotify.vue'
 import lotteryItem from './home-com/lotteryItem.vue'
 import rightFloat from './home-com/right-float.vue'
 import scratchImg from './home-com/scratch-img.vue'
@@ -348,6 +348,12 @@ onMounted(() => {
         border-radius: 4rem;
       }
     }
+  }
+
+  :deep(img) {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 381/224;
   }
 }
 
