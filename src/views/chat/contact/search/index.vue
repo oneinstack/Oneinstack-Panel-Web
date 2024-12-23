@@ -7,19 +7,21 @@
         <div class="btn flex flex-center" @click="conf.searchFriend">Search</div>
       </div>
     </template>
-    <div class="content" v-if="conf.searchResults.length">
+    <div class="content" v-if="getFriend.length">
       <div class="title">{{$t('chatRoom.my_friends')}}</div>
-      <template v-for="(user,index) in conf.searchResults" :key="user">
-        <userItem :item="user" :showBodder="index != conf.searchResults.length-1" />
+      <template v-for="(user,index) in getFriend" :key="user">
+        <userItem :item="user" :showBodder="index != getFriend.length-1" @click="conf.goPages(`/chat/userCard?sourceID=${user.userID}`)" />
       </template>
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
 import sutil from '@/sstore/sutil';
-import { nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import IMSDK from "openim-uniapp-polyfill";
 import userItem from '../com/userItem.vue';
+import cscontact from '@/modules/chat/sstore/cscontact';
+import System from '@/utils/System';
 
 const inputRef = ref<any>()
 const conf = reactive({
@@ -27,22 +29,37 @@ const conf = reactive({
   keyword: '',
   searchResults: [] as any[],
   searchFriend() {
-    conf.searchResults.unshift(conf.keyword)
+    return 
     const options = {
       keywordList: [conf.keyword],
       isSearchUserID: false,
       isSearchNickname: true,
       isSearchRemark: true,
     };
-    IMSDK.asyncApi(IMSDK.IMMethods.SearchFriends, IMSDK.uuid(), options).then(
-      ({ data }: any) => {
-        conf.searchResults = data;
-      },
-    );
+    IMSDK.asyncApi(IMSDK.IMMethods.SearchFriends, IMSDK.uuid(), options)
+      .then((data) => {
+        console.log(data);
+      })
+      .catch((e) => console.log(e))
   },
+  goPages(url:any) {
+    System.router.push(url)
+  }
+})
+
+const getFriend = computed(() => {
+  if (conf.keyword) {
+    return cscontact.friendList.filter(
+      (friend) =>
+        friend.nickname.includes(conf.keyword)
+    )
+  }
+  return []
 })
 
 onMounted(() => {
+  console.log(cscontact.friendList);
+  
   // 如果是移动端，可能还需要触发输入法打开
   nextTick(() => {
     inputRef.value?.focus()

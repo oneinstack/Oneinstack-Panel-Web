@@ -1,6 +1,8 @@
 <template>
     <div class="item">
-        <img class="avatar-img" :src="getAvatarUrl" />
+        <div class="avatar-img">
+            <headImg :src="getAvatarUrl" />
+        </div>
         <div class="item_content">
             <div class="left_info">
                 <div>{{ getShowName }}</div>
@@ -28,6 +30,7 @@ import { computed, onMounted, reactive } from 'vue';
 import IMSDK, { SessionType } from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import cscontact from '@/modules/chat/sstore/cscontact';
+import headImg from '../../components/head.vue';
 import { navigateToDesignatedConversation } from '@/modules/chat/utils/cUtil';
 const props = defineProps({
     application: {
@@ -155,6 +158,7 @@ onMounted(() => {
         width: 80rem;
         height: 80rem;
         border-radius: 8rem;
+        overflow: hidden;
     }
 
     .item_content {

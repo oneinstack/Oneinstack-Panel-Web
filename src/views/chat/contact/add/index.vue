@@ -51,11 +51,9 @@ const conf = reactive({
           info = data[0];
         }
         if (info) {
-          // uni.navigateTo({
-          //   url: `/pages/common/groupCard/index?sourceInfo=${JSON.stringify(
-          //     info,
-          //   )}`,
-          // });
+          System.router.push(`/chat/groupCard?sourceInfo=${JSON.stringify(
+            info,
+          )}`)
         } else {
           this.empty = true;
         }
@@ -106,6 +104,8 @@ const getPlaceholder = computed(() => {
   return conf.isSearchGroup ? i18n.t('chatRoom.enter_grp') + " ID " : i18n.t('chatRoom.search') + " ID " + i18n.t('chatRoom.or_phone_add');
 })
 onMounted(() => {
+  const { type } = System.getRouterParams()
+  if(type) conf.isSearchGroup = type == 'group'
   nextTick(() => {
     inputRef.value?.focus()
   })

@@ -3,7 +3,7 @@
     <template #title>
       <span class="title">{{ conf.isGroup ? $t('chatRoom.new_grp_chat') : $t('chatRoom.new_friend') }}</span>
     </template>
-    <headSearch />
+    <headSearch :type="conf.isGroup ? 'group' : 'friend'" />
     <div class="content">
       <template v-for="item in getRecvRenderData" :key="item">
         <applicationItem :isRecv="true" :application="item"></applicationItem>
@@ -15,15 +15,15 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
 import headSearch from '../com/headSearch.vue';
 import applicationItem from './applicationItem.vue';
 import { computed, onMounted, reactive } from 'vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'
 import cscontact from '@/modules/chat/sstore/cscontact';
+import System from '@/utils/System';
 
 const conf = reactive({
-  isGroup: false
+  isGroup: false,
 })
 const getRecvRenderData = computed(() => {
     const tmpList = conf.isGroup
@@ -32,9 +32,8 @@ const getRecvRenderData = computed(() => {
     tmpList.sort((a:any, b:any) => (a.handleResult === 0 ? -1 : 1));
     return tmpList
 })
-const route = useRoute()
 onMounted(() => {
-	const { type } = route.query;
+	const { type } = System.getRouterParams();
   conf.isGroup = type === ContactMenuTypes.NewGroup;
   console.log(conf.isGroup);
   

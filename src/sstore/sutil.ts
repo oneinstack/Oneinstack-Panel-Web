@@ -279,6 +279,7 @@ export const sutil = reactive({
     let minute = ('0' + date.getMinutes()).slice(-2)
     let sechond = ('0' + date.getSeconds()).slice(-2)
     if (type == 2) return hour + ':' + minute + ':' + sechond
+    if (type == 3) return year + '-' + moth + '-' + day
     return year + '-' + moth + '-' + day + '  ' + hour + ':' + minute + ':' + sechond
   },
 

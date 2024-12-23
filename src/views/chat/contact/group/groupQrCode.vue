@@ -6,6 +6,7 @@
         <div class="name">
           group chat: {{ conf.sourceInfo.showName }}
         </div>
+        <div class="groupId" @click="conf.handleCopy">groupID: {{ conf.sourceInfo.groupID }}</div>
         <qrcode-vue :value="conf.qrLink" :size="150" />
       </div>
       <div class="save" @click="conf.exportCardAsImage">Save Picture</div>
@@ -17,6 +18,7 @@ import QrcodeVue from 'qrcode.vue'
 import System from '@/utils/System';
 import { onMounted, reactive } from 'vue';
 import { AddGroupQrCodePrefix } from '@/modules/chat/constant';
+import i18n from '@/lang';
 
 
 const conf = reactive({
@@ -37,7 +39,12 @@ const conf = reactive({
     System.loading(false)
     if (uri) System.toast('Successfully saved to : ' + uri, 'success', 5000)
     else System.toast('Successfully saved', 'success')
-  }
+  },
+  //复制groupId
+  handleCopy() {
+    StrUtil.copyText(conf.sourceInfo.groupID)
+    System.toast(i18n.t('invite.CopySuccessful'), 'success')
+  },
 })
 
 onMounted(() => {
@@ -72,7 +79,12 @@ onMounted(() => {
   }
   .name{
     font-size: 32rem;
-    margin: 20rem 30rem 40rem;
+    margin: 20rem 30rem 30rem;
+  }
+  .groupId{
+    font-size: 30rem;
+    margin-bottom: 40rem;
+    color: #5B6983;
   }
 }
 .save{

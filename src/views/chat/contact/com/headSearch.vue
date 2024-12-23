@@ -13,6 +13,9 @@ import { reactive } from 'vue';
 const props = defineProps({
   customClick: {
     default: false
+  },
+  type: {
+    default: ''
   }
 })
 
@@ -21,6 +24,7 @@ const emit = defineEmits(['click'])
 const conf = reactive({
   goPages() {
     if (props.customClick) return emit('click')
+    if(props.type) return System.router.push('/chat/add?type=' + props.type)
     System.router.push('/chat/search')
   }
 })

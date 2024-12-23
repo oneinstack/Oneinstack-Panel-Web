@@ -3,13 +3,15 @@
     <template #title>
       <span class="title">{{ $t('chatRoom.my_grps') }}</span>
     </template>
-    <headSearch />
+    <headSearch v-if="!conf.isFocus && !conf.keyword" :customClick="true" @click="conf.changeFocus" />
+    <van-search v-else ref="inputRef" class="input" :autofocus="conf.isFocus" @blur="conf.isFocus = false" v-model="conf.keyword"
+      :placeholder="$t('chatRoom.search')" />
     <div class="content">
-      <template v-for="item in cscontact.groupList" :key="item.groupID">
+      <template v-for="item in getGroupList" :key="item.groupID">
         <groupItem :groupInfo="item"></groupItem>
       </template>
-      <div class="group_num">{{ cscontact.groupList.length }} {{ $t('chatRoom.sgrops') }}</div>
-      <div style="padding-top: 120rem;" v-if="!cscontact.groupList.length">
+      <div class="group_num" v-if="getGroupList.length">{{ getGroupList.length }} {{ $t('chatRoom.sgrops') }}</div>
+      <div style="padding-top: 120rem;" v-if="!getGroupList.length">
         <x-no-data></x-no-data>
       </div>
     </div>
@@ -19,12 +21,31 @@
 import cscontact from '@/modules/chat/sstore/cscontact';
 import headSearch from '../com/headSearch.vue';
 import groupItem from './com/groupItem.vue';
-import { onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 
+const inputRef = ref<any>()
 const conf = reactive({
-  isGroup: false
+  isGroup: false,
+  isFocus: false,
+  keyword: '',
+  changeFocus() {
+    conf.isFocus = true
+    setTimeout(()=> {
+      inputRef.value?.focus()
+    },100)
+  }
+})
+const getGroupList = computed(() => {
+  if (conf.keyword) {
+    return cscontact.groupList.filter(
+      (friend) =>
+        friend.groupName.includes(conf.keyword)
+    )
+  }
+  return cscontact.groupList
 })
 onMounted(() => {
+  
 })
 </script>
 <style lang="less" scoped>
@@ -32,14 +53,27 @@ onMounted(() => {
   font-size: 32rem;
   color: #000;
 }
-.content{
+
+.content {
   background: #fff;
   height: 100%;
-  .group_num{
+
+  .group_num {
     color: #999;
     font-size: 28rem;
     text-align: center;
     margin-top: 20rem;
   }
+}
+
+.input {
+  height: 68rem;
+  margin: 0rem 20rem 20rem;
+  border-radius: 4rem;
+}
+
+::v-deep .van-search__content {
+  background: #fff;
+  padding: 0;
 }
 </style>

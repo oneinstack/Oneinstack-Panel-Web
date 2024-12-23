@@ -58,5 +58,9 @@ export default [
   {
     path: '/chat/setAdmin',
     component: '/chat/contact/group/setAdmin'
+  },
+  {
+    path: '/chat/groupCard',
+    component: '/chat/contact/group/card'
   }
 ]

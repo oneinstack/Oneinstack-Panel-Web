@@ -57,7 +57,7 @@ const conf = reactive({
           }
         }, 1000);
       })
-      .catch((err) => {
+      .catch((err:any) => {
         console.log('55555');
         
         console.log(err);
@@ -66,9 +66,9 @@ const conf = reactive({
   },
 })
 
-const route = useRoute()
+
 onMounted(() => {
-  const { info }: any = route.query
+  const { info }: any = System.getRouterParams()
   console.log(info);
 
   if (info) {
@@ -104,15 +104,13 @@ onMounted(() => {
 }
 
 .btn {
-  position: fixed;
-  bottom: 80rem;
-  left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
+  margin-top: 120rem;
 
   button {
-    width: 320rem;
+    width: 60%;
   }
 }
 </style>
