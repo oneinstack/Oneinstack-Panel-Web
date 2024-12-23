@@ -1,22 +1,16 @@
 <template>
-  <lazy-component>
-    <van-image
-      style="width: 100%; height: 100%"
-      :src="src"
-      :fit="fit"
-      @error="$emit('error')"
-      @load="$emit('load')"
-      lazy-load
-    >
-      <template #error></template>
-      <template #loading></template>
-    </van-image>
-  </lazy-component>
+  <van-image :src="src" :fit="fit" @error="$emit('error')" @load="$emit('load')" :lazy-load="lazyLoad">
+    <template #error></template>
+    <template #loading></template>
+  </van-image>
 </template>
 <script setup lang="ts">
 defineProps({
   src: { default: '' },
-  fit: { default: 'fill' as any }
+  fit: { default: 'fill' as any },
+  lazyLoad: {
+    default: true
+  }
 })
 </script>
 
