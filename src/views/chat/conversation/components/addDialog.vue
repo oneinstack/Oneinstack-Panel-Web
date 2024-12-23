@@ -23,6 +23,7 @@
   </transition>
 </template>
 <script setup lang="ts">
+import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { reactive, watch } from 'vue'
 
@@ -57,6 +58,7 @@ const conf = reactive({
       fun: (item: any) => {
         item.active = false
         console.log('new chat')
+        System.router.push(`/chat/createGroup`)
       }
     },
     {
@@ -65,7 +67,7 @@ const conf = reactive({
       active: false,
       fun: (item: any) => {
         item.active = false
-        console.log('add contacts')
+        System.router.push(`/chat/add`)
       }
     }
   ],
