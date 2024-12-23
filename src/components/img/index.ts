@@ -52,7 +52,7 @@ const uximg = reactive({
             findItem.proresolve(false)
           }
           const res = await findItem.pro
-          findItem.success(res)
+          param.success(res)
           return
         }
       }

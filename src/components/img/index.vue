@@ -12,13 +12,13 @@ const props = defineProps({
     default: true
   },
   src: { default: '' },
-  base64: { default: false },
+  base64: { default: true },
   extensions: { default: undefined as any as any[] },
   styles: { default: {} as any },
   classs: { default: '' as any },
   zIndex: { default: 0 as any },
   cache: { default: false },
-  timeout: { default: 10000 }
+  timeout: { default: 30000 }
 })
 
 const emit = defineEmits(['load', 'error'])
@@ -50,8 +50,10 @@ const config = reactive({
 
     //如果缓存有，直接使用缓存
     if (props.cache !== false) {
-      const _img = uximg.cache[props.src]
-      if (_img) {
+      const _res = uximg.cache[props.src]
+      if (_res) {
+        const _img = new Image()
+        _img.src = _res
         emit('load')
         imgRef.value?.appendChild(_img)
         config.img = _img
@@ -76,13 +78,13 @@ const config = reactive({
             extensions: props.extensions,
             base64: props.base64,
             timeout: props.timeout,
-            load: (img) => {
+            load: (img, res) => {
               if (isLoad) return
               isLoad = true
               if (props.cache !== false) {
-                uximg.cache[props.src] = img
+                uximg.cache[props.src] = res.dataBase64
               }
-              _resolve(img)
+              _resolve(res.dataBase64)
             },
             error: () => {
               if (isLoad) return
@@ -103,11 +105,14 @@ const config = reactive({
       url: props.src,
       abort: null as any
     }
-    const _img: any = await uximg.task.create(task)
+    const res: any = await uximg.task.create(task)
 
     config.loadId = StrUtil.getId()
+
     //如果加载成功，添加到dom，并设置样式
-    if (_img) {
+    if (res) {
+      const _img = new Image()
+      _img.src = res
       _img.id = 'x_img_' + config.loadId
       imgRef.value?.appendChild(_img)
       config.img = _img
