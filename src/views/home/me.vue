@@ -3,10 +3,14 @@
     <div class="head-fixd" v-if="conf.isHeadFixed">
       <x-statusbar />
       <div class="head-user" @click="conf.goLogin('/user/personal/personal')">
-        <img class="head-img" :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
-            ? sconfig.userInfo.userImgUrl
-            : '/static/img/default-header.png'
-          " />
+        <img
+          class="head-img"
+          :src="
+            sconfig.userInfo && sconfig.userInfo.userImgUrl
+              ? sconfig.userInfo.userImgUrl
+              : '/static/img/default-header.png'
+          "
+        />
         <span v-if="sconfig.userInfo">
           {{
             sconfig.userInfo.userNickname || sconfig.userInfo.userName || sconfig.userInfo.email || $t('me.userName')
@@ -24,8 +28,11 @@
         <div class="user-content">
           <div class="user" @click="conf.goLogin('/user/personal/personal')">
             <div class="user-avatar">
-              <img class="avatar-img" :src="sconfig.userInfo.userImgUrl"
-                v-if="sconfig.userInfo && sconfig.userInfo.userImgUrl" />
+              <img
+                class="avatar-img"
+                :src="sconfig.userInfo.userImgUrl"
+                v-if="sconfig.userInfo && sconfig.userInfo.userImgUrl"
+              />
               <img class="avatar-img" src="/static/img/default-header.png" v-else />
             </div>
             <div class="user-info" v-if="sconfig.userInfo">
@@ -40,8 +47,12 @@
                 </span>
 
                 <span class="vip-icon">
-                  <img class="vip2" :src="'/static/img/VIP/v' + conf.userVipLevel + '.png'" mode="widthFix"
-                    style="width: 80rem !important" />
+                  <img
+                    class="vip2"
+                    :src="'/static/img/VIP/v' + conf.userVipLevel + '.png'"
+                    mode="widthFix"
+                    style="width: 80rem !important"
+                  />
                 </span>
               </div>
               <div class="uid">UID:{{ sconfig.userInfo.uid || '******' }}</div>
@@ -66,14 +77,25 @@
                           : conf.str_money
                       }}
                     </div>
-                    <img v-if="!conf.openEye && sconfig.userInfo" @click.prevent="conf.handleEyeClick()" class="eye-img"
-                      src="/static/img/color_open_eye.png" />
-                    <img v-if="conf.openEye && sconfig.userInfo" @click.prevent="conf.handleEyeClick()" class="eye-img"
-                      src="/static/img/color_close_eye.png" />
+                    <img
+                      v-if="!conf.openEye && sconfig.userInfo"
+                      @click.prevent="conf.handleEyeClick()"
+                      class="eye-img"
+                      src="/static/img/color_open_eye.png"
+                    />
+                    <img
+                      v-if="conf.openEye && sconfig.userInfo"
+                      @click.prevent="conf.handleEyeClick()"
+                      class="eye-img"
+                      src="/static/img/color_close_eye.png"
+                    />
                   </div>
                 </div>
-                <div class="select" style="justify-content: center;
-                align-items: center;" v-if="conf.coinLosding && sconfig.userInfo">
+                <div
+                  class="select"
+                  style="justify-content: center; align-items: center"
+                  v-if="conf.coinLosding && sconfig.userInfo"
+                >
                   <van-loading type="spinner" />
                 </div>
                 <div class="select" v-else>
@@ -86,8 +108,11 @@
                     <img src="/static/img/wallet/withdraw-new.png" />
                     <span>{{ $t('wallet.Withdrawal') }}</span>
                   </div>
-                  <div class="select-item" @click="conf.handleCilckImg('Remittance', $event)"
-                    v-if="conf.userWalletList.length > 1">
+                  <div
+                    class="select-item"
+                    @click="conf.handleCilckImg('Remittance', $event)"
+                    v-if="conf.userWalletList.length > 1"
+                  >
                     <img src="/static/img/wallet/remittance-new.png" />
                     <span>{{ $t('wallet.Remittance') }}</span>
                   </div>
@@ -107,8 +132,11 @@
     <div class="menu-list">
       <div class="menu-item">
         <div v-for="(item, index) of conf.menu1" :key="index">
-          <van-cell is-link @click="conf.handle(item)"
-            v-if="typeof item.isShow === 'function' ? item.isShow() : item.isShow">
+          <van-cell
+            is-link
+            @click="conf.handle(item)"
+            v-if="typeof item.isShow === 'function' ? item.isShow() : item.isShow"
+          >
             <!-- 使用 title 插槽来自定义标题 -->
             <template #icon>
               <div class="flex items-center">
@@ -394,7 +422,6 @@ const conf = reactive({
   },
   //获取用户钱包列表
   async getWalletList(arr: any) {
-
     let wlist = await svalue.getWalletlist()
     conf.userWalletList = wlist
     conf.coinLosding = false
@@ -405,7 +432,6 @@ const conf = reactive({
     }
     let newArr = wlist || []
     arr?.forEach((item: any) => {
-
       let index = newArr?.findIndex((into: any) => into.walletCoin == item.coinCode)
       if (index != -1) {
         newArr[index].coinTousdt = item.coinTousdt
@@ -493,9 +519,14 @@ onMounted(() => init())
   }
 
   .stting {
+    width: 88rem;
+    height: 88rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     position: absolute;
-    top: 90rem;
-    right: 46rem;
+    top: 70rem;
+    right: 40rem;
     z-index: 2;
   }
 
@@ -506,6 +537,7 @@ onMounted(() => init())
     width: 100%;
 
     .user {
+      width: 60%;
       display: flex;
       align-items: center;
       margin-left: 30rem;
