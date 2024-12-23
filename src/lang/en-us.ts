@@ -1274,7 +1274,7 @@ export default {
     my_req: 'My Requests',
     create_grp_chat: 'Create Group Chat',
     full_use: 'Full Use',
-    ask_admin: 'Ask an administrator or team member for the ID',
+    ask_admin: 'Ask team member for the ID',
     scan_card: 'Scan QR Code Business Card',
     by_phone: 'By Phone Number',
     search_add: 'Search and Add',

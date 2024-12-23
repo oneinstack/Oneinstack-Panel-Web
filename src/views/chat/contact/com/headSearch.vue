@@ -2,11 +2,12 @@
   <div class="search">
     <div class="search-box flex flex-center" @click="conf.goPages">
       <van-icon name="search" size="34rem" color="#B9B9B9" />
-      <span>Search</span>
+      <span>{{ name }}</span>
     </div>
   </div>
 </template>
 <script setup lang="ts">
+import i18n from '@/lang';
 import System from '@/utils/System';
 import { reactive } from 'vue';
 
@@ -16,6 +17,9 @@ const props = defineProps({
   },
   type: {
     default: ''
+  },
+  name: {
+    default: i18n.t('chatRoom.search')
   }
 })
 

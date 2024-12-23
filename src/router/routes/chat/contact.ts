@@ -32,6 +32,10 @@ export default [
     component: '/chat/contact/add/send'
   },
   {
+    path: '/chat/add/list',
+    component: '/chat/contact/add/list'
+  },
+  {
     path: '/chat/contactChoose',
     component: '/chat/contact/contactChoose/index'
   },

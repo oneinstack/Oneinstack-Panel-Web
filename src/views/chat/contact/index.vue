@@ -4,7 +4,7 @@
       <span class="title">{{ $t('chatRoom.contacts') }}</span>
     </template>
     <template #right>
-      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="conf.goPages('/chat/add')">
+      <div class="flex flex-center" style="width: 86rem; height: 100%" @click="conf.goPages('/chat/add/list')">
         <img style="width: 44rem;height: 44rem;" src="/static/img/chat/contacts_add.png" />
       </div>
     </template>
