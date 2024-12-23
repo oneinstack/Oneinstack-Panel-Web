@@ -4,7 +4,7 @@
       <x-statusbar />
       <div class="head-cont">
         <div class="cancle" @click="conf.cancle()">cancle</div>
-        <div class="title">{{ $t('chatRoom.rm_grp_mem') }}</div>
+        <div class="title">{{ type=='SetAdmin'? 'Select group members' :  $t('chatRoom.rm_grp_mem') }}</div>
         <div class="finsh" :class="{ 'active': conf.chooseUser.length }" @click="conf.finish">finish</div>
       </div>
     </div>
@@ -21,13 +21,10 @@
     <!-- 群成员列表 -->
     <div class="group-content">
       <template v-for="(user, i2) in getChooseData" :key="user.userID">
-        <userItem
-          :item="user"
-          :lastItem="i2 == (getChooseData.length - 1)"
-          :checked="conf.checkedIDList.includes(user.userID)"
-          :checkVisible="true"
-          @click="conf.updateCheckedUser(user)"
-        />
+        <userItem :item="user" :lastItem="i2 == (getChooseData.length - 1)"
+          :disabled="disabled && user.roleLevel >=50"
+          :checked="conf.checkedIDList.includes(user.userID)" :checkVisible="true"
+          @click="conf.updateCheckedUser(user)" v-if="user.roleLevel != GroupMemberRole.Owner" />
       </template>
     </div>
   </div>
@@ -55,6 +52,9 @@ const props = defineProps({
   },
   type: {
     default: null as any
+  },
+  disabled: {
+    default: false
   }
 })
 
@@ -82,7 +82,7 @@ const conf = reactive({
       conf.leftTop(1)
     }
   },
-  leftTop(num:any) {
+  leftTop(num: any) {
     if (conf.chooseUser.length < 5) return
     setTimeout(() => {
       let scrollLeft = (conf.chooseUser.length - 4) * sutil.rem2px(100) * num
@@ -90,48 +90,55 @@ const conf = reactive({
         left: scrollLeft,
         behavior: 'smooth'
       })
-    },100)
+    }, 100)
   },
   cancle(type = 1) {
     conf.chooseUser = []
     conf.checkedIDList = []
-    emit('cancle',type)
+    emit('cancle', type)
   },
-  finish(){
-    if(conf.chooseUser.length) {
+  finish() {
+    if (conf.chooseUser.length) {
+      if (props.type == 'SetAdmin') {
+        let arr = conf.chooseUser
+        conf.chooseUser = []
+        conf.checkedIDList = []
+        emit('cancle', arr)
+        return
+      }
       conf.showConfirmModal = true
     }
   },
   confirmMove() {
-      let func:any = () => {};
-      System.loading()
-      if (props.type === GroupMemberListTypes.Kickout) {
-        func = IMSDK.asyncApi(IMSDK.IMMethods.KickGroupMember, IMSDK.uuid(), {
+    let func: any = () => { };
+    System.loading()
+    if (props.type === GroupMemberListTypes.Kickout) {
+      func = IMSDK.asyncApi(IMSDK.IMMethods.KickGroupMember, IMSDK.uuid(), {
+        groupID: conf.chooseUser[0].groupID,
+        reason: "",
+        userIDList: conf.chooseUser.map((member) => member.userID),
+      });
+    } else {
+      func = IMSDK.asyncApi(
+        IMSDK.IMMethods.TransferGroupOwner,
+        IMSDK.uuid(),
+        {
           groupID: conf.chooseUser[0].groupID,
-          reason: "",
-          userIDList: conf.chooseUser.map((member) => member.userID),
-        });
-      } else {
-        func = IMSDK.asyncApi(
-          IMSDK.IMMethods.TransferGroupOwner,
-          IMSDK.uuid(),
-          {
-            groupID: conf.chooseUser[0].groupID,
-            newOwnerUserID: conf.chooseUser[0].userID,
-          },
-        );
-      }
-      func
-        .then(() => {
-          conf.showConfirmModal = false
-          System.toast(i18n.t('chatRoom.op_success'),"success");
-          setTimeout(() => {
-            conf.cancle(2)
-          },1000)
-        })
-        .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
-        .finally(() => (System.loading(false)));
-    },
+          newOwnerUserID: conf.chooseUser[0].userID,
+        },
+      );
+    }
+    func
+      .then(() => {
+        conf.showConfirmModal = false
+        System.toast(i18n.t('chatRoom.op_success'), "success");
+        setTimeout(() => {
+          conf.cancle(2)
+        }, 1000)
+      })
+      .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
+      .finally(() => (System.loading(false)));
+  },
 })
 
 const isRemove = computed(() => {
@@ -142,7 +149,7 @@ const getChooseData = computed(() => {
   if (conf.keyword) {
     return props.groupMemberList.filter(
       (friend) =>
-          friend.nickname.includes(conf.keyword)
+        friend.nickname.includes(conf.keyword)
     )
   }
   return props.groupMemberList
@@ -171,8 +178,8 @@ const getChooseData = computed(() => {
     position: relative;
     z-index: 9;
   }
-  
-  .title{
+
+  .title {
     font-size: 32rem;
     color: #000;
 

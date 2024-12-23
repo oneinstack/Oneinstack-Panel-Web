@@ -30,7 +30,7 @@ const conf = reactive({
         keyword: "",
         pagination: {
           pageNumber: 1,
-          showNumber: 50,
+          showNumber: 500,
         },
       }
     );

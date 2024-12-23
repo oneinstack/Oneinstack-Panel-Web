@@ -26,14 +26,23 @@
       </div>
     </div>
     <div class="m-t20" v-if="isAdmin || isOwner">
+      <!-- 全员禁言 -->
       <div class="edit border_b flex-b-c" @click="conf.updateGroup('setMute')">
         <div class="title">Group mute</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
+      <!-- 群主转让 -->
       <div class="edit border_b flex-b-c" @click="conf.transShow = true" v-if="isOwner">
         <div class="title">Group owner transfer</div>
+        <div class="more flex-center">
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
+        </div>
+      </div>
+      <!-- 群管理员 -->
+      <div class="edit border_b flex-b-c" @click="conf.updateGroup('setAdmin')" v-if="isOwner">
+        <div class="title">Group administrator</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
@@ -70,8 +79,6 @@ import csconversation from '@/modules/chat/sstore/csconversation';
 import { computed, onMounted, reactive, ref } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
-import { ContactChooseTypes, GroupMemberListTypes } from "@/modules/chat/constant";
-import conversation from "@/router/routes/chat/conversation";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -91,12 +98,9 @@ const conf = reactive({
       groupID: csconversation.currentConversation.groupID,
       filter: 0,
       offset: 0,
-      count: !isAdmin && !isOwner ? 9 : 8,
+      count: 500,
     })
       .then(({ data }: any) => {
-        console.log('6666');
-
-        console.log(data);
         conf.groupMemberList = [...data];
         csconversation.groupMemberList = conf.groupMemberList
       })

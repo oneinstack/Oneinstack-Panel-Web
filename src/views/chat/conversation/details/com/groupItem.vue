@@ -1,7 +1,7 @@
 <template>
   <div class="user">
     <div class="user-list">
-      <template v-for="item in groupMemberList" :key="item.userID">
+      <template v-for="item in getGroupMemberList" :key="item.userID">
         <div class="info" @click="conf.goPages(`/chat/userCard?sourceID=${item.userID}`)">
           <personItem :person="item" />
         </div>
@@ -12,7 +12,7 @@
         src="/static/img/chat/minus.png" @click="conf.change('move')" />
     </div>
     <div class="more flex-center" @click="conf.goPages('/chat/groupMemberList?groupID='+groupID)"
-      v-if="isMore && groupMemberList.length > 19">
+      v-if="isMore && showMore">
       <span>View more group members</span>
       <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
@@ -61,8 +61,16 @@ const isAdmin = computed(() => {
 })
 
 const showMore = computed(() => {
-  if(isAdmin || isOwner) return props.groupMemberList.length > 18
+  if(isAdmin.value || isOwner.value) return props.groupMemberList.length > 18
   return props.groupMemberList.length > 19
+})
+
+const getGroupMemberList = computed(() => {
+  if(!props.isMore) return props.groupMemberList
+  if(isAdmin.value || isOwner.value) return props.groupMemberList.slice(0,18)
+  console.log('5555');
+  
+  return props.groupMemberList.slice(0,19)
 })
 
 const inviteRefs = ref<any>()
@@ -98,6 +106,7 @@ const conf = reactive({
   .user-list {
     display: flex;
     flex-wrap: wrap;
+    margin-bottom: 20rem;
 
     .info {
       width: 15%;

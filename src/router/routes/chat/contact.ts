@@ -54,5 +54,9 @@ export default [
   {
     path: '/chat/setMute',
     component: '/chat/contact/group/setMute'
+  },
+  {
+    path: '/chat/setAdmin',
+    component: '/chat/contact/group/setAdmin'
   }
 ]
