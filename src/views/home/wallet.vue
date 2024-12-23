@@ -1,9 +1,9 @@
 <template>
   <x-page no-header tabbar>
     <template #top>
-      <x-statusbar />
+      <x-statusbar background="#eb602d"/>
       <div class="w-head">
-        <img class="head-bg" src="/static/img/wallet/topBackground.png" />
+        <img class="head-bg" src="/static/img/wallet/topBackground.png"/>
         <!-- 总金额和通知 -->
         <div class="head-info">
           <div class="l-content">
@@ -121,6 +121,7 @@ import cuModal from "./components/cuModal.vue"
 import swiperWallet from "./components/swiperWallet.vue"
 import { Scope } from 'tools-vue3';
 import { EPage } from '@/enum/Enum';
+
 const conf = reactive({
   openEye: 'open',
   total_money: 0,
