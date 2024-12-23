@@ -6,6 +6,7 @@ import sutil from '@/sstore/sutil'
 import { apis } from '@/api'
 import sshake from '@/sstore/sshake'
 import sapp from '@/sstore/sapp'
+import stheme from '@/sstore/stheme'
 
 const conf = reactive({
   formData: {
@@ -563,7 +564,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page bgcolor="#fff" no-footer :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>{{ conf.titleName }}</template>
     <!-- content -->
     <div class="content-view">
@@ -903,7 +904,7 @@ onMounted(() => {
   .sumit-btn {
     text-align: center;
     width: 100% !important;
-    background-color: #f17638;
+    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
     color: #fff;
     border-radius: 50rem;
     padding: 20rem;
@@ -1048,7 +1049,7 @@ onMounted(() => {
   width: 280rem;
   height: 280rem;
   border-radius: 20rem;
-  background-color: #fffbf5;
+  background-color: #F6F7FA;
   font-size: 40rem;
   color: #00000010;
   text-align: center;
@@ -1070,7 +1071,7 @@ input::placeholder,
   // background: #F17638;
   // color: #fff;
   background: #fffbf5;
-  background: linear-gradient(#eb602d, #ffa64f);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -1093,7 +1094,7 @@ input::placeholder,
     .input {
       width: 100%;
       border-radius: 10rem;
-      background: #fffbf5;
+      background: #F6F7FA;
       height: 72rem;
       padding: 16rem 22rem;
       color: #000;
@@ -1145,7 +1146,7 @@ input::placeholder,
       // border-radius: 24rem;
       // border: 1rem solid rgb(0, 0, 0);
       // border-color: #FFD8BA !important;
-      background: linear-gradient(to right, #eb602d, #ffa64f);
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -1162,7 +1163,7 @@ input::placeholder,
 
       .input1 {
         border-radius: 10rem;
-        background: #fffbf5;
+        background: #F6F7FA;
         height: 72rem;
         padding: 16rem 22rem;
         color: #000;
@@ -1174,7 +1175,7 @@ input::placeholder,
       width: 78%;
       height: 72rem;
       margin-top: 20rem;
-      background: #fffbf5;
+      background: #F6F7FA;
 
       .input2 {
         border-radius: 0rem 10rem 10rem 0rem;
