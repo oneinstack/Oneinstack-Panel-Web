@@ -5,6 +5,7 @@ import sapp from '@/sstore/sapp'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { computed, onMounted, reactive } from 'vue'
+import stheme from '@/sstore/stheme'
 
 const conf = reactive({
   bankCardList: [
@@ -180,7 +181,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>{{ $t('bankCradModule.titleName') }}</template>
     <!-- content -->
     <div class="content-view">
@@ -237,7 +238,7 @@ onMounted(() => {
 
       <!-- 删除提示框 -->
       <van-popup v-model:show="conf.modalShow" class="cu-modal-x">
-        <div class="padding-xl" style="padding: 50rem; text-align: center;">
+        <div class="padding-xl" style="padding: 50rem; text-align: center">
           <div style="font-size: 36rem; opacity: 0.8; color: #828282">{{ $t('bankCradModule.deleteTip') }}</div>
         </div>
         <!-- btns -->
@@ -444,7 +445,7 @@ onMounted(() => {
 .left-btn,
 .right-btn {
   text-align: center;
-  background-color: #f17638;
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   color: #fff;
   border-radius: 80rem;
   font-size: 26rem;
@@ -456,8 +457,7 @@ onMounted(() => {
 }
 
 .left-btn {
-  background-color: #fff2df;
-  color: #000000;
-  opacity: 0.7;
+  background: #E6F2FF;
+  color: #006FFF;
 }
 </style>
