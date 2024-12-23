@@ -79,6 +79,7 @@
 <script lang="ts" setup>
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
+import sutil from '@/sstore/sutil';
 import System from '@/utils/System'
 import { reactive } from 'vue'
 
@@ -202,7 +203,7 @@ const conf = reactive({
     conf.outPopup = false
     conf.total_money = 0
     System.toast('out success', 'success')
-    setTimeout(() => System.router.replace('/'), 2000)
+    setTimeout(() => sutil.pageBack(), 2000)
   }
 })
 </script>

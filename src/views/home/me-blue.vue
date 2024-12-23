@@ -189,7 +189,7 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
-import CuModal from './components/cuModal.vue'
+import CuModal from './theme/blue/components/cuModal.vue'
 
 const conf = reactive({
   isHeadFixed: false,

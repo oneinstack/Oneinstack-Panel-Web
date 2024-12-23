@@ -119,7 +119,7 @@
   import i18n from '@/lang';
   import { onMounted, reactive } from 'vue'
   import addWallet from "./components/addWallet-blue.vue"
-  import cuModal from "./components/cuModal.vue"
+  import cuModal from "./theme/blue/components/cuModal.vue"
   import swiperWalletBlue from "./components/swiperWallet.vue"
   import { Scope } from 'tools-vue3';
   import { EPage } from '@/enum/Enum';
