@@ -53,8 +53,14 @@ event.on(ERouter.change, (path: string) => {
 
 onMounted(() => {
   System.loading(false)
+
   conf.init()
   conf.setConfig()
+
+  const _path = System.getRouterPath()
+  if (_path != '/chat/conversation') {
+    System.router.replace('/chat/conversation')
+  }
 })
 
 onUnmounted(() => {
