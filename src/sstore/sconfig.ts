@@ -2,6 +2,7 @@ import { apis } from '@/api/index'
 import System from '@/utils/System'
 import { reactive } from 'vue'
 import { sutil } from './sutil'
+import cConfig from '@/modules/chat/utils/cConfig'
 
 export const sconfig = reactive({
   load: () => {
@@ -86,6 +87,9 @@ export const sconfig = reactive({
     Cookie.clear()
     sutil.reset()
     sconfig.userInfo = null as any
+
+    //清理信息
+    cConfig.isInit = false
 
     // 下线
     apis.offline()

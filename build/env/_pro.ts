@@ -5,5 +5,5 @@ export default {
   /**
    * 聊天地址
    */
-  ChatUrl: 'https://im.bggame.live'
+  ChatUrl: 'https://18.166.78.82'
 }
