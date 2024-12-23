@@ -29,6 +29,20 @@ export default class StatusBarConfig {
    * 获取状态栏高度
    */
   static async getStatusHeight() {
+    const setHeight = async (_height: number) => {
+      StatusBarConfig.statusHeight = _height
+      Cookie.set('statusHeight', _height)
+      document.documentElement.style.setProperty('--status-bar-height', `${_height}px`)
+      await StatusBar.setOverlaysWebView({
+        overlay: true
+      })
+    }
+
+    if (StatusBarConfig.statusHeight > 0) {
+      setHeight(StatusBarConfig.statusHeight)
+      return
+    }
+
     const getSafeArea = async () => {
       await StatusBar.setOverlaysWebView({
         overlay: false
@@ -40,14 +54,12 @@ export default class StatusBarConfig {
         overlay: true
       })
       await Timer.delay(20)
-      const currentHeight = document.documentElement.clientHeight
-      const safeArea = Math.abs(currentHeight - initialHeight)
+      const safeArea = Math.abs(document.documentElement.clientHeight - initialHeight)
       return safeArea
     }
     const _statusHeight = await getSafeArea()
     if (_statusHeight > 0) {
-      StatusBarConfig.statusHeight = _statusHeight
-      Cookie.set('statusHeight', _statusHeight)
+      setHeight(_statusHeight)
     }
   }
 
@@ -55,20 +67,27 @@ export default class StatusBarConfig {
   static bottomBarHeight = 0
 
   static async getBottomBarHeight() {
+    const setHeight = async (_height: number) => {
+      StatusBarConfig.bottomBarHeight = _height
+      Cookie.set('bottomBarHeight', _height)
+      document.documentElement.style.setProperty('--navigation-bar-height', `${_height}px`)
+
+      await NavigationBar.setTransparency({
+        isTransparent: true
+      })
+      await NavigationBar.show()
+    }
+    if (StatusBarConfig.bottomBarHeight > 0) {
+      setHeight(StatusBarConfig.bottomBarHeight)
+      return
+    }
     let initialHeight = document.documentElement.clientHeight
-    sapp.app.height
     await NavigationBar.hide()
     await Timer.delay(20)
     const _maxHeight = document.documentElement.clientHeight
     initialHeight = _maxHeight - initialHeight
     if (initialHeight > 0) {
-      StatusBarConfig.bottomBarHeight = initialHeight
-      Cookie.set('bottomBarHeight', initialHeight)
-      document.documentElement.style.setProperty('--navigation-bar-height', `${StatusBarConfig.bottomBarHeight}px`)
+      setHeight(initialHeight)
     }
-    await NavigationBar.setTransparency({
-      isTransparent: true
-    })
-    await NavigationBar.show()
   }
 }
