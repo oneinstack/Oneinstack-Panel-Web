@@ -1,7 +1,11 @@
 <template>
   <x-page :fixed="false" no-footer>
     <template #title>
-      {{ $t('invite.SubordinateUser') }}
+      {{
+        conf.saveInfo.userName
+          ? conf.saveInfo.userName + ' - ' + $t('agencyCenterModule.level') + conf.saveInfo.level
+          : $t('invite.SubordinateUser')
+      }}
     </template>
 
     <template #top>
@@ -76,7 +80,8 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, watch } from 'vue'
+
 const event = Scope.Event()
 const conf = reactive({
   search: {
@@ -94,6 +99,7 @@ const conf = reactive({
     { name: 'Level4', value: '4', isCheck: false }
   ],
   userInfo: {} as any,
+  saveInfo: {} as any,
   isLoading: false,
   defaultCoin: {} as any, //接口返回默认币种钱包
 
@@ -105,7 +111,7 @@ const conf = reactive({
       current: conf.pageNum,
       search: conf.search.keyword,
       size: conf.pageSize,
-      userId: conf.userInfo.userId,
+      userId: conf.saveInfo.userId || conf.userInfo.userId,
       complete: () => {
         System.loading(false)
         conf.isLoading = true
@@ -162,7 +168,7 @@ const conf = reactive({
       level: Number(conf.search.level) + 1
     }
     if (conf.search.level != '4') {
-      System.router.push('/user/me/nextLevelAgent?obj=' + JSON.stringify(newObj))
+      System.router.push('/user/me/agencyCenter?obj=' + JSON.stringify(newObj))
     }
   },
 
@@ -172,7 +178,36 @@ const conf = reactive({
   }
 })
 
+watch(
+  () => System.getRouterParams(),
+  (newVal) => {
+    const { obj } = newVal
+    conf.saveInfo = obj ? JSON.parse(obj) : {}
+    conf.levelList?.forEach((item) => {
+      item.isCheck = false
+      if (!conf.saveInfo.level) {
+        conf.levelList[0].isCheck = true
+        conf.search.level = '1'
+      } else if (Number(item.value) == conf.saveInfo.level) {
+        item.isCheck = true
+      }
+    })
+    conf.detailData = []
+    conf.getData()
+  }
+)
+
 const init = async () => {
+  const { obj } = System.getRouterParams()
+  if (obj) {
+    conf.saveInfo = JSON.parse(obj)
+    conf.levelList?.forEach((item) => {
+      item.isCheck = false
+      if (Number(item.value) == conf.saveInfo.level) {
+        item.isCheck = true
+      }
+    })
+  }
   conf.userInfo = sconfig.userInfo
   await svalue.getCoinlist()
   conf.defaultCoin = svalue.coinlist.find((item) => item.isDefault)

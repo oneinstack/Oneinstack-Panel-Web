@@ -539,6 +539,7 @@ export default {
 
     2001: 'El juego no existe', // 游戏不存在
     2002: 'Los registros de ventas no existen', // 销售记录不存在
+    2003: 'Canjeado o Expirado', // 已兑奖或已过期
     2102: 'Límite de retiro insuficiente en la plataforma', // 平台提现额度不足
 
     8000: 'Anomalía tripartita', // 三方异常

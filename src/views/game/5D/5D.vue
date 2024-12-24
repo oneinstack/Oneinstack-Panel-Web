@@ -5,7 +5,7 @@
 		:openLockCountdown="conf.openLockCountdown">
 		<!-- 下注弹框自定义显示列表 -->
 		<template v-slot:bet>
-			<div class="row items-center" style="align-items: start;">
+			<div class="row items-center">
 				<div class="select-bet-type">{{ conf.selectBetType }}</div>
 				<template v-for="item in conf.betTypeArr" :key="item">
 					<div class="bet-type flex-center" :class="[`num_${item}`]">{{ item }}</div>

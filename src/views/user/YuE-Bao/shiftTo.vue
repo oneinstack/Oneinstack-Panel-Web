@@ -121,6 +121,11 @@ const conf = reactive({
 
     let infoTip = '',
       isShowTip = false
+
+    if(!money){
+      isShowTip = true
+      infoTip = i18n.t('common.PleaseEnter')
+    }
     if (parseFloat(conf.changeMoney) == 0 && !conf.active) {
       isShowTip = true
       infoTip = i18n.t('yueb.tip1')
@@ -153,7 +158,8 @@ const conf = reactive({
         System.loading(false)
       }
     })
-
+    System.toast(i18n.t(`code.${code}`),'success')
+    
     setTimeout(() => {
       conf.changeBack(code)
       conf.getInfo()
@@ -199,7 +205,9 @@ const conf = reactive({
   },
 
   //返回
-  changeBack(code: string) {},
+  changeBack(code: string) {
+    conf.changeMoney = ''
+  },
   // full按钮
   setMoney() {
     if (conf.active == 0) {
