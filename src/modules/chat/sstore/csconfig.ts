@@ -69,9 +69,7 @@ export const csconfig = reactive({
       csconfig.config.registerUrl = url + '/register' //10008
     }
 
-    if (location.protocol !== 'https:') {
-      csconfig.config.wsUrl = csconfig.config.wsUrl.replace('wss', 'ws')
-    }
+    if (System.isNative) csconfig.config.wsUrl = csconfig.config.wsUrl.replace('wss', 'ws')
   },
   /**
    * 加载配置

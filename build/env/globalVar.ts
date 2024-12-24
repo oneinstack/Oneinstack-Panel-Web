@@ -9,6 +9,7 @@ import pro from './_pro'
 import proview from './_proview'
 import test from './_test'
 import _var from './_var'
+import h5 from './_h5'
 
 const getConf = () => {
   return {
@@ -21,7 +22,8 @@ const getConf = () => {
     ac,
     kk,
     test,
-    lq
+    lq,
+    h5
   } as any
 }
 

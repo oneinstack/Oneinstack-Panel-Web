@@ -4,12 +4,15 @@ export const install = (app: App) => {
   /** 清除cookie并保存需要保存的cookie */
   const clearAndSaveCookie = (_cookie: any, clearFun: Function) => {
     const noVlearValue = {
+      'statusHeight': '',
+      'bottomBarHeight': '',
+      
       'bulletinDialogInfo': '',
       'bindDialogInfo': '',
       'PopNotifyDialogInfo': '',
       'signReminder': '',
       'gameMethod': '',
-      'apiurl': ''
+      'apiurl': '',
     } as any
     Object.keys(noVlearValue).forEach((key) => {
       let item = _cookie.get(key) || ''

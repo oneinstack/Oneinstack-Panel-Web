@@ -4,7 +4,7 @@ export default {
   /**
    * 安卓打包环境
    */
-  API: 'https://demo.bggame.live',
+  API: '/',
   
   /**
    * 聊天地址
