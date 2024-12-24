@@ -150,9 +150,6 @@ onMounted(() => {
   padding: 0rem 10rem;
 }
 .title {
-  color: #000;
-  font-size: 16px;
   font-weight: 500;
-  opacity: 0.7;
 }
 </style>
