@@ -80,10 +80,8 @@ const conf = reactive({
     const res = await System.getImgPic({
       id: 'card' + swiperInstance.value.realIndex
     })
-    const uri = await System.download(res, Date.now() + '.png')
+    await System.download(res, Date.now() + '.png')
     System.loading(false)
-    if (uri) System.toast('Successfully saved to : ' + uri, 'success', 5000)
-    else System.toast('Successfully saved', 'success')
   }
 })
 

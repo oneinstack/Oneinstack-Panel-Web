@@ -17,7 +17,7 @@
       <template v-slot:index></template>
       <template v-slot:cover>
         <div class="row justify-end fit-width" style="margin-bottom: 10rem; padding: 0 10rem">
-          <div class="flex flex-center bottom-box">
+          <div class="flex flex-center bottom-box" @click="conf.image.download">
             <VSIcon lib="wx" name="download_filled" size="32" :color="['#fff']" style="transform: translateY(-2rem)" />
           </div>
         </div>
@@ -28,7 +28,9 @@
 </template>
 <script setup lang="ts">
 import csmessage from '@/modules/chat/sstore/csmessage'
+import { getFileType } from '@/modules/chat/utils/cUtil'
 import sapp from '@/sstore/sapp'
+import System from '@/utils/System'
 import { MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 const props = defineProps<{
@@ -44,12 +46,18 @@ const conf = reactive({
       show: false,
       index: 0,
       images: [] as string[],
-      onChange(e: any) {
-      },
+      onChange(e: any) {},
       beforeClose() {
         delete sapp.backbtn.funMap[conf.funId]
         conf.image.preview.show = false
       }
+    },
+    download: async () => {
+      const url = csmessage.previewImageList[conf.image.preview.index]
+      const fileName = getFileType(url)
+      System.loading()
+      await System.download(url, Date.now() + '.' + fileName)
+      System.loading(false)
     }
   },
   isVideo() {

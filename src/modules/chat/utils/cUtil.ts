@@ -400,5 +400,5 @@ export const tipMessaggeFormat = (msg:any, currentUserID:any) => {
 
 export const getFileType = (name:any) => {
   const idx = name.lastIndexOf(".");
-  return name.slice(idx + 1);
+  return name.slice(idx + 1).split('?')[0];
 };

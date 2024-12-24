@@ -200,7 +200,7 @@ export default class System {
   /**
    *  下载文件
    */
-  static async download(content: string, name: string = 'download.png', toast = true) {
+  static async download(content: string, name: string = 'download.png', toast = true): Promise<any> {
     if (System.isNative) {
       const res1 = await Filesystem.stat({ path: 'app', directory: Directory.Documents })
       if (!res1?.ctime) await Filesystem.mkdir({ path: 'app', directory: Directory.Documents })
@@ -214,13 +214,16 @@ export default class System {
       }
       return res.uri
     }
+    if (content.startsWith('http')) {
+      const res = await fetch(content)
+      const blob = await res.blob()
+      content = URL.createObjectURL(blob)
+    }
     const tempLink = document.createElement('a')
     tempLink.style.display = 'none'
     tempLink.href = content
     tempLink.setAttribute('download', name)
-    if (typeof tempLink.download === 'undefined') {
-      tempLink.setAttribute('target', '_blank')
-    }
+    tempLink.setAttribute('target', '_blank')
     document.body.appendChild(tempLink)
     tempLink.click()
     document.body.removeChild(tempLink)
