@@ -204,6 +204,10 @@ export default [
     component: '/user/me/agencyCenter'
   },
   {
+    path: '/user/me/agentView',
+    component: '/user/me/agentView'
+  },
+  {
     path: '/user/me/myCommission',
     component: '/user/me/myCommission'
   },
