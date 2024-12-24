@@ -129,7 +129,6 @@ const conf = reactive({
     })
 
     csconversation.conversationList.sort((a, b) => b.isPinned - a.isPinned)
-    console.log('cim', csconversation.conversationList)
     conf.listSort()
   },
   addDialog: {
