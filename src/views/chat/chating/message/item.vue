@@ -21,9 +21,8 @@
         </div>
         <div class="relative">
           <ItemText v-if="textRenderTypes.includes(item.contentType)" :item="item" />
-          <div v-else-if="mediaRenderTypes.includes(item.contentType)">
-            <headImg :src="item.content" />
-          </div>
+          <ItemMedia v-else-if="mediaRenderTypes.includes(item.contentType)" :item="item" />
+          <div v-else>未知的消息类型</div>
         </div>
       </div>
     </template>
@@ -37,6 +36,7 @@ import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive, ref, watch } from 'vue'
 import headImg from '../../components/headImg.vue'
+import ItemMedia from './item-media.vue'
 import ItemText from './item-text.vue'
 const textRenderTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
 const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]

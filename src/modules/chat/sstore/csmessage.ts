@@ -1,7 +1,7 @@
 import IMSDK, { IMMethods, MessageItem, MessageStatus, MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 import { UpdateMessageTypes } from '../constant'
-import { offlinePushInfo } from '../utils/cUtil'
+import { getFileType, offlinePushInfo } from '../utils/cUtil'
 import csconversation from './csconversation'
 
 interface MessageState {
@@ -125,6 +125,35 @@ export const csmessage = reactive({
    */
   createTextMessage: async (content: string) => {
     return await IMSDK.asyncApi(IMMethods.CreateTextMessage, IMSDK.uuid(), content)
+  },
+  /**
+   * 创建图片消息
+   * @param file 图片文件
+   * @returns 消息对象
+   */
+  createImageMessage: async (file: any) => {
+    const baseInfo = {
+      uuid: IMSDK.uuid(),
+      type: getFileType(file.name),
+      size: file.size,
+      width: file.width,
+      height: file.height,
+      url: file
+    }
+    const options = {
+      sourcePicture: baseInfo,
+      bigPicture: baseInfo,
+      snapshotPicture: baseInfo,
+      sourcePath: '',
+      file: file
+    }
+    const { data }: any = await IMSDK.asyncApi(
+      //@ts-ignore
+      'createImageMessageByFile',
+      IMSDK.uuid(),
+      options
+    )
+    return data
   },
   /**
    * 发送消息到当前会话对象
