@@ -2,7 +2,7 @@ export default {
   pro: 'build',
 
   /**
-   * 安卓打包环境
+   * 原生打包环境
    */
   API: 'https://demo.bggame.live',
   

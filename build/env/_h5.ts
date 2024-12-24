@@ -2,7 +2,7 @@ export default {
   pro: 'build',
 
   /**
-   * 安卓打包环境
+   * h5打包环境
    */
   API: '/',
   
