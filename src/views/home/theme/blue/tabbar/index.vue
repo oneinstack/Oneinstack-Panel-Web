@@ -1,6 +1,6 @@
 <template>
   <div class="tarbar-foot">
-    <div style="transform: translateY(-100%)">
+    <div style="transform: translateY(-100%); background-color: #ffffff">
       <div class="tabbar">
         <div class="tabbar__list">
           <div
@@ -73,7 +73,18 @@ onMounted(() => {
   // left: 0;
   background-color: #ffffff;
   position: relative;
-  box-shadow: 0px -2px 6px 0px #0000000d;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+    box-shadow: 0 -2px 6px 0px #0000000d;
+    background-color: transparent;
+    z-index: -1;
+  }
 
   &__list {
     width: 100%;
