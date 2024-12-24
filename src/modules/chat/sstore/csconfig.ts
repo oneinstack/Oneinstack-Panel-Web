@@ -58,18 +58,12 @@ export const csconfig = reactive({
    */
   initConfig: (url?: string) => {
     if (!url) url = System.env.ChatUrl
-    const ipReg = /\d{1,3}\.\d{1,3}/g
-    if (ipReg.test(url)) {
-      csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
-      csconfig.config.apiUrl = url + ':10002'
-      csconfig.config.registerUrl = url + ':10008'
-    } else {
-      csconfig.config.wsUrl = url.replace('http', 'ws') + '/ws' //10001
-      csconfig.config.apiUrl = url + '/api' //10002
-      csconfig.config.registerUrl = url + '/register' //10008
-    }
 
-    if (System.isNative) csconfig.config.wsUrl = csconfig.config.wsUrl.replace('wss', 'ws')
+    csconfig.config.wsUrl = url.replace('http', 'ws') + ':10001'
+    csconfig.config.apiUrl = url + ':10002'
+    csconfig.config.registerUrl = url + ':10008'
+
+    csconfig.config.wsUrl = csconfig.config.wsUrl.replace('wss', 'ws')
   },
   /**
    * 加载配置
