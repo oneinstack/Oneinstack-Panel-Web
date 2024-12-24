@@ -171,7 +171,7 @@
 								<div class="btn-item"
 									@click="conf.changeBet(conf.odds.num_small_status, 'color-blue.png', 'num_small', 'colorNum', 'SMALL')"
 									:class="{ 'disabled': conf.odds.nums_10_status == 0 }">
-									<div class="btn-bg color-bule" :class="{ 'colorBtn': conf.colorBtnNum == 10 }">
+									<div class="btn-bg color-bule" :class="{ 'colorBtn': conf.colorBtnNum == 'SMALL' }">
 										SMALL
 									</div>
 								</div>
@@ -211,7 +211,7 @@
 									@click="conf.changeBet(conf.odds.num_big_status, 'color-red.webp', 'num_big', 'colorNum', 'BIG')"
 									:class="{ 'disabled': conf.odds.nums_11_status == 0 }">
 									<div class="btn-bg color-btn-big color-big"
-										:class="{ 'colorBtn': conf.colorBtnNum == 11 }">
+										:class="{ 'colorBtn': conf.colorBtnNum == 'BIG' }">
 										BIG
 									</div>
 								</div>
@@ -646,7 +646,7 @@ const conf = reactive({
 			betExpect: conf.currentOpen.openExpect,
 			betOpenId: conf.currentOpen.lotteryOpenId,
 			lotteryId: conf.currentOpen.lotteryId,
-			lotteryOddsId: conf.colorItem.oddsId,
+			// lotteryOddsId: conf.colorItem.oddsId,
 			multiple: 1,
 			nums: 1,
 			supplement: 0,

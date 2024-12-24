@@ -531,10 +531,9 @@ const conf = reactive({
 
 	//输入下注金额
 	handleEnterBetAmount(e: any) {
-		let val = e.detail.value
+		let val = conf.BettingAmount + ''
 		if (val.length > 1 && val[0] === '0' && val[1] !== '.') {
-			e.detail.value = val[0]
-			val = val[0]
+			val = val.substring(1)
 		}
 		val = val.replace(/[^\d.]/g, "")
 			.replace(/^(\-)*(\d+)\.(\d{4}).*$/, '$1$2.$3')
@@ -545,7 +544,7 @@ const conf = reactive({
 			.replace('.', '$#$').replace(/\./g, '').replace('$#$', '.');
 		const decimalIndex = val.indexOf('.');
 		if (decimalIndex !== -1) {
-			val = val.substr(0, decimalIndex) + '.' + val.substr(decimalIndex).replace('.', '');
+			val = val.substring(0, decimalIndex) + '.' + val.substring(decimalIndex).replace('.', '');
 		}
 		conf.BettingAmount = val
 		conf.BettingAmount && (conf.handleBetMoney())

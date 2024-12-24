@@ -534,6 +534,7 @@ export default {
 
     2001: 'The game does not exist', // 游戏不存在
     2002: 'Sales records do not exist', // 销售记录不存在
+    2003: 'Redeemed or Expired', // 已兑奖或已过期
     2102: 'Insufficient withdrawal limit on the platform', // 平台提现额度不足
 
     8000: 'Tripartite anomaly', //三方异常

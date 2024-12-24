@@ -538,6 +538,7 @@ export default {
 
     2001: 'Permainan tidak ada', // 游戏不存在
     2002: 'Catatan penjualan tidak ada', // 销售记录不存在
+    2003: 'Ditukar atau Kedaluwarsa', // 已兑奖或已过期
     2102: 'Batas pengeluaran tak cukup di peron', // 平台提现额度不足
 
     8000: 'Tiga anomali', //三方异常

@@ -648,7 +648,7 @@ const conf = reactive({
 			betExpect: conf.currentOpen.openExpect,
 			betOpenId: conf.currentOpen.lotteryOpenId,
 			lotteryId: conf.currentOpen.lotteryId,
-			lotteryOddsId: conf.addsItem.oddsId,
+			// lotteryOddsId: conf.addsItem.oddsId,
 			multiple: 1,
 			nums: 1,
 			supplement: 0,
