@@ -6,7 +6,7 @@ const prizePool = Math.floor(Math.random() * 1000000000).toString()
 const rollingTextInstance = ref<RollingTextInstance[]>([])
 
 onMounted(() => {
-  rollingTextInstance.value.forEach(({ start, duration }, index) => {
+  rollingTextInstance.value.reverse().forEach(({ start, duration }, index) => {
     setTimeout(() => start(), duration * 250 * index)
   })
 })
@@ -20,7 +20,9 @@ onMounted(() => {
           :ref="(el) => rollingTextInstance.push(el as RollingTextInstance)"
           class="rolling-text"
           :auto-start="false"
-          :start-num="123"
+          :start-num="0"
+          stop-order="rtl"
+          :height="24"
           :target-num="Number(prizePool.slice(index * 3, index * 3 + 3))"
         />
         <div v-if="index === 0" class="split-comma" />
@@ -79,16 +81,11 @@ onMounted(() => {
     --van-rolling-text-item-border-radius: 6rem;
     --van-rolling-text-item-width: 30rem;
     :deep(.van-rolling-text-item--down) {
-      height: 44rem !important;
       box-shadow:
         0 0.5px 0 0 #add6ff,
         0 1px 0 0 #0545d9;
       transform-style: preserve-3d;
       transform: rotateX(15deg);
-
-      .van-rolling-text-item__item {
-        line-height: 44rem !important;
-      }
     }
   }
 }
