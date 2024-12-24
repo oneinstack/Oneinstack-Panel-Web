@@ -7,7 +7,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import headImg from '../../components/head.vue';
+import headImg from '../../components/headImg.vue';
 const props = defineProps({
   person: {
     default: {} as any

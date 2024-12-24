@@ -45,7 +45,7 @@
 </template>
 <script setup lang="ts">
 import cscontact from '@/modules/chat/sstore/cscontact';
-import headImg from '../../components/head.vue';
+import headImg from '../../components/headImg.vue';
 import System from '@/utils/System';
 import { computed, onMounted, reactive } from 'vue';
 import IMSDK, {

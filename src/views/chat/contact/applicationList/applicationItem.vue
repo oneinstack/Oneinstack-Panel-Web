@@ -30,7 +30,7 @@ import { computed, onMounted, reactive } from 'vue';
 import IMSDK, { SessionType } from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import cscontact from '@/modules/chat/sstore/cscontact';
-import headImg from '../../components/head.vue';
+import headImg from '../../components/headImg.vue';
 import { navigateToDesignatedConversation } from '@/modules/chat/utils/cUtil';
 const props = defineProps({
     application: {

@@ -8,7 +8,7 @@
 </template>
 <script setup lang="ts">
 import System from '@/utils/System';
-import headImg from '@/views/chat/components/head.vue';
+import headImg from '@/views/chat/components/headImg.vue';
 import { reactive } from 'vue';
 const props = defineProps({
     groupInfo: {

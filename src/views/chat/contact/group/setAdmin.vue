@@ -47,7 +47,7 @@
 </template>
 <script setup lang="ts">
 import moveGroup from '../../conversation/details/com/moveGroup.vue';
-import headImg from '../../components/head.vue';
+import headImg from '../../components/headImg.vue';
 import System from '@/utils/System';
 import { computed, onMounted, reactive } from 'vue';
 import IMSDK, {

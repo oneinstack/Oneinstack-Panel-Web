@@ -36,7 +36,7 @@
 import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive, ref, watch } from 'vue'
-import headImg from '../../components/head.vue'
+import headImg from '../../components/headImg.vue'
 import ItemText from './item-text.vue'
 const textRenderTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
 const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]

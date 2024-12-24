@@ -26,7 +26,7 @@
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue';
-import headImg from '../../components/head.vue';
+import headImg from '../../components/headImg.vue';
 
 const props = defineProps({
   // 用户信息
