@@ -32,7 +32,14 @@
         </div>
         <div class="col input-box" :class="{ 'disabled': conf.getPlaceholder() }">
           <div class="relative">
-            <div class="absolute flex flex-center fit">{{ conf.getPlaceholder() }}</div>
+            <div
+              class="absolute flex flex-center fit"
+              :style="{
+                pointerEvents: conf.getPlaceholder() ? 'auto' : 'none'
+              }"
+            >
+              {{ conf.getPlaceholder() }}
+            </div>
             <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.chat.send" />
           </div>
         </div>
@@ -151,6 +158,7 @@ const conf = reactive({
       }, time)
     },
     click: () => {
+      delete sapp.backbtn.funMap[conf.funId]
       conf.emoji.show = false
       conf.tools.show = false
     }

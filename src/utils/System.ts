@@ -200,7 +200,7 @@ export default class System {
   /**
    *  下载文件
    */
-  static async download(content: string, name: string = 'download.png') {
+  static async download(content: string, name: string = 'download.png', toast = true) {
     if (System.isNative) {
       const res1 = await Filesystem.stat({ path: 'app', directory: Directory.Documents })
       if (!res1?.ctime) await Filesystem.mkdir({ path: 'app', directory: Directory.Documents })
@@ -209,6 +209,9 @@ export default class System {
         data: content,
         directory: Directory.Documents
       })
+      if (toast) {
+        System.toast('Successfully saved to : ' + res.uri, 'success', 5000)
+      }
       return res.uri
     }
     const tempLink = document.createElement('a')
@@ -222,11 +225,15 @@ export default class System {
     tempLink.click()
     document.body.removeChild(tempLink)
     window.URL.revokeObjectURL(content)
+
+    if (toast) {
+      System.toast('Successfully saved', 'success')
+    }
   }
 
   /**
    * 切换主题
-   * @param theme 
+   * @param theme
    */
   static setTheme = (theme: string) => {
     Cookie.set('pageTheme', theme)
