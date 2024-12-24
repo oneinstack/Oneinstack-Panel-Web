@@ -8,6 +8,7 @@
     <x-img :src="conf.getImgUrl(item)" @load="$emit('load')" />
     <van-image-preview
       v-model:show="conf.image.preview.show"
+      :start-position="conf.image.preview.index"
       :images="conf.image.preview.images"
       @change="conf.image.preview.onChange"
       @beforeClose="conf.image.preview.beforeClose"
@@ -26,6 +27,7 @@
   </div>
 </template>
 <script setup lang="ts">
+import csmessage from '@/modules/chat/sstore/csmessage'
 import sapp from '@/sstore/sapp'
 import { MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
@@ -43,7 +45,6 @@ const conf = reactive({
       index: 0,
       images: [] as string[],
       onChange(e: any) {
-        console.log('cim---onChange', e)
       },
       beforeClose() {
         delete sapp.backbtn.funMap[conf.funId]
@@ -76,13 +77,14 @@ const conf = reactive({
     return (imageHeight || 0) > 120 ? 120 : imageHeight
   },
   clickItem(item: any) {
-    console.log('cim---clickItem', item)
     conf.image.preview.show = true
     sapp.backbtn.funMap[conf.funId] = () => {
       conf.image.preview.show = false
     }
     const url = conf.getImgUrl(item)
-    conf.image.preview.images = [url, url, url, url]
+    conf.image.preview.images = csmessage.previewImageList
+    const _index = csmessage.previewImageList.findIndex((item: any) => item === url)
+    conf.image.preview.index = _index
   }
 })
 </script>
