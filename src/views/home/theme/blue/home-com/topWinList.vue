@@ -58,15 +58,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { Scope } from 'tools-vue3'
-import { onMounted, reactive } from 'vue'
-const mconf = Scope.getConf()
-const conf = reactive({
-  todayWinnerInfoList: [] as any[]
-})
-onMounted(() => {
-  conf.todayWinnerInfoList = mconf.virtualData['0'] || []
-})
+import { index } from '@/views/home/home-com/topWinList'
+
+const conf = index()
 </script>
 <style lang="less" scoped>
 /*================ 前五排行榜 ================*/

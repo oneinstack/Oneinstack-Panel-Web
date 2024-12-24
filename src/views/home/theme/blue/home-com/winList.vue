@@ -35,40 +35,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import sutil from '@/sstore/sutil'
-import { Scope } from 'tools-vue3'
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
+import { index } from '@/views/home/home-com/winList'
 import WinLoop from './winLoop.vue'
-const mconf = Scope.getConf()
-const conf = reactive({
-  winnerInfoVoListInit: [] as any[],
-  boxHeight: 5,
-  winSlateNum: sutil.rem2px(120),
-  show: false,
+import { onMounted, onUnmounted, ref } from 'vue'
 
-  //排行榜
-  async getReception() {
-    let datas = mconf.virtualData || {}
-    conf.winnerInfoVoListInit = datas['10'] || []
-    let imgArr = [
-      '/static/theme/blue/3D.webp',
-      '/static/theme/blue/Color.webp',
-      '/static/theme/blue/Satta.webp',
-      '/static/theme/blue/5D.webp',
-      '/static/theme/blue/PK10.webp',
-      '/static/theme/blue/TRX.webp'
-    ]
-    let array = ['3D', 'CO', 'SA', '5D', 'PK', 'Tr']
-    conf.winnerInfoVoListInit.forEach((item) => {
-      const name = item.name.slice(1, 3)
-      let randomIndex = array.indexOf(name)
-      if (randomIndex == -1) randomIndex = 0
-      item.winImg = imgArr[randomIndex]
-    })
+const conf = index('blue')
 
-    conf.boxHeight = conf.winnerInfoVoListInit.length >= 5 ? 5 : conf.winnerInfoVoListInit.length
-  }
-})
 const winListRef = ref<HTMLElement | null>(null)
 const winLoopRef = ref<any>(null)
 const observer = new IntersectionObserver((entries) => {
