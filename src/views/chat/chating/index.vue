@@ -20,12 +20,21 @@
         :scrollTop="conf.chat.scrollTop"
         @click="conf.content.click"
       />
-      <div class="row items-end chat-bottom" :style="{ borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none' }">
+      <div
+        class="row items-end chat-bottom"
+        :style="{
+          borderBottom: conf.emoji.show ? '1rem solid #d3d3d3' : 'none',
+          pointerEvents: conf.getPlaceholder() ? 'none' : 'auto'
+        }"
+      >
         <div class="flex flex-center" style="height: 72rem">
           <VSIcon name="chat-yy" :size="56" />
         </div>
-        <div class="col input-box">
-          <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.chat.send" />
+        <div class="col input-box" :class="{ 'disabled': conf.getPlaceholder() }">
+          <div class="relative">
+            <div class="absolute flex flex-center fit">{{ conf.getPlaceholder() }}</div>
+            <CInput ref="inputRef" @click="conf.input.click" v-model="conf.input.message" @enter="conf.chat.send" />
+          </div>
         </div>
         <div class="flex flex-center" style="height: 72rem; gap: 10rem">
           <VSIcon name="chat-keybord" :size="56" @click="conf.input.focus" v-if="conf.emoji.show" />
@@ -75,13 +84,14 @@
 <script setup lang="ts">
 import { EPage } from '@/enum/Enum'
 import { noticeMessageTypes } from '@/modules/chat/constant'
+import cscontact from '@/modules/chat/sstore/cscontact'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
 import csuser from '@/modules/chat/sstore/csuser'
 import { tipMessaggeFormat } from '@/modules/chat/utils/cUtil'
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
-import { MessageItem, SessionType } from 'openim-uniapp-polyfill'
+import { GroupMemberRole, GroupStatus, MessageItem, SessionType } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
 import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import CInput from './com/cinput.vue'
@@ -257,6 +267,37 @@ const conf = reactive({
         ? '/chat/details/friend'
         : '/chat/details/group'
     System.router.push(url)
+  },
+  /**
+   * 设置额外数据
+   */
+  setItem: (item: (typeof csmessage.historyMessageList)[0]) => {
+    item.senderFaceUrl = item.senderFaceUrl || '/static/img/home-banner.png'
+    item.isme = item.sendID === csuser.selfInfo.userID
+
+    // 通知内容
+    const isNoticeMessage = noticeMessageTypes.includes(item.contentType)
+    item.noticeContent = !isNoticeMessage ? '' : tipMessaggeFormat(item, csuser.selfInfo.userID)
+  },
+  getPlaceholder: () => {
+    const isSingle = csconversation.currentConversation.conversationType === SessionType.Single
+    if (!isSingle && csconversation.currentGroup.status === GroupStatus.Muted) {
+      return csconversation.currentMemberInGroup.roleLevel !== GroupMemberRole.Nomal ? '' : '群主或管理员已开启全体禁言'
+    }
+    if (
+      !isSingle &&
+      (csconversation.currentGroup.status === GroupStatus.Dismissed ||
+        csconversation.currentMemberInGroup.groupID !== csconversation.currentGroup.groupID)
+    ) {
+      return '您已不在该群组'
+    }
+    if (!isSingle && csconversation.currentMemberInGroup.muteEndTime > Date.now()) {
+      return `你已被禁言`
+    }
+    if (isSingle && cscontact.blackList.find((black) => black.userID === csconversation.currentConversation.userID)) {
+      return '对方已被拉入黑名单'
+    }
+    return ''
   }
 })
 
@@ -264,15 +305,8 @@ watch(
   () => csmessage.historyMessageList,
   async () => {
     if (!csmessage.historyMessageList.length) return
-    csmessage.historyMessageList.forEach((item) => {
-      item.senderFaceUrl = item.senderFaceUrl || '/static/img/home-banner.png'
-      item.isme = item.sendID === csuser.selfInfo.userID
-
-      // 通知内容
-      const isNoticeMessage = noticeMessageTypes.includes(item.contentType)
-      item.noticeContent = !isNoticeMessage ? '' : tipMessaggeFormat(item, csuser.selfInfo.userID)
-      
-    })
+    //设置额外数据
+    csmessage.historyMessageList.forEach((item) => conf.setItem(item))
 
     if (conf.chat.isInit) {
       const newData = [...csmessage.historyMessageList]
@@ -342,6 +376,9 @@ onMounted(() => {
     height: 100%;
     border: none;
     outline: none;
+  }
+  &.disabled {
+    background-color: #dedede;
   }
 }
 
