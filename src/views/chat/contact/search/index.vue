@@ -51,7 +51,7 @@ const getFriend = computed(() => {
   if (conf.keyword) {
     return cscontact.friendList.filter(
       (friend) =>
-        friend.nickname.includes(conf.keyword)
+        friend.nickname.includes(conf.keyword) || friend.remark.includes(conf.keyword)
     )
   }
   return []

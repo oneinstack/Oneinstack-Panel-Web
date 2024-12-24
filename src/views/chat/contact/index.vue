@@ -74,13 +74,14 @@ const getIndexData = computed(() =>{
   return formatChooseData(cscontact.friendList)
 })
 
+
 onMounted(() => {
   console.log(cscontact.unHandleFriendApplicationNum);
   console.log(cscontact.recvFriendApplications);
   
-  // console.log('666501');
+  console.log('666501');
   // let a = formatChooseData(cscontact.friendList)
-  // console.log(a);
+  console.log(cscontact.friendList);
 })
 </script>
 <style lang="less" scoped>

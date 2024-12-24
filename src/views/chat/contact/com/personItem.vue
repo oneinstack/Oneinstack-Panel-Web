@@ -3,7 +3,7 @@
     <div :style="{ width: imgW + 'rem', height: imgW + 'rem' }" style="border-radius: 8rem;overflow: hidden;">
       <headImg class="face" :src="person.faceURL" />
     </div>
-    <van-text-ellipsis v-if="showName" :content="person.nickname" />
+    <van-text-ellipsis v-if="showName" :content="person.remark || person.nickname" />
   </div>
 </template>
 <script setup lang="ts">

@@ -79,6 +79,8 @@ import csconversation from '@/modules/chat/sstore/csconversation';
 import { computed, onMounted, reactive, ref } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
+import { capis } from "@/modules/chat/api";
+import { log } from "node:console";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -101,13 +103,32 @@ const conf = reactive({
       count: 500,
     })
       .then(({ data }: any) => {
+        console.log('8888');
+        console.log(data);
         conf.groupMemberList = [...data];
         csconversation.groupMemberList = conf.groupMemberList
       })
       .catch((err: any) => {
         console.log(err);
+        conf.reqGroupMemberList()
       });
   },
+  async reqGroupMemberList() {
+    const { members } = await capis.getGroupMemberList(
+      {
+        filter: 0,
+        groupID: csconversation.currentConversation.groupID,
+        keyword: "",
+        pagination: {
+          pageNumber: 1,
+          showNumber: 500,
+        },
+      }
+    );
+    conf.groupMemberList = [...members];
+    csconversation.groupMemberList = conf.groupMemberList
+  },
+
   confirmDel() {
     let funcName: any = "";
     let sourceID = csconversation.currentConversation.groupID;
@@ -167,7 +188,15 @@ const getConfirmContent = computed(() => {
 })
 
 onMounted(() => {
-  conf.groupMemberList = csconversation.groupMemberList
+  console.log('666668.');
+  console.log(csconversation.currentConversation.groupID);
+  console.log(csconversation.groupMemberList);
+  
+  let list = csconversation.groupMemberList
+  if(list.length && list[0].groupID == csconversation.currentConversation.groupID) {
+    conf.groupMemberList = csconversation.groupMemberList
+  }
+  
   conf.getGroupMemberList()
 })
 </script>

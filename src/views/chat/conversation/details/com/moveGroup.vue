@@ -20,12 +20,19 @@
     </div>
     <!-- 群成员列表 -->
     <div class="group-content">
-      <template v-for="(user, i2) in getChooseData" :key="user.userID">
-        <userItem :item="user" :lastItem="i2 == (getChooseData.length - 1)"
-          :disabled="disabled && user.roleLevel >=50"
-          :checked="conf.checkedIDList.includes(user.userID)" :checkVisible="true"
-          @click="conf.updateCheckedUser(user)" v-if="user.roleLevel != GroupMemberRole.Owner" />
+      <van-index-bar z-index="3" :index-list="getChooseData.indexList">
+      <template v-for="(item, index) in getChooseData.dataList" :key="index">
+        <van-index-anchor :index="getChooseData.indexList[index]" />
+        <template v-for="(user, i2) in item" :key="i2">
+          <userItem
+            :item="user"
+            :lastItem="i2 == (item.length - 1)"
+            :disabled="disabled && user.roleLevel >=50"
+            :checked="conf.checkedIDList.includes(user.userID)" :checkVisible="true"
+            @click="conf.updateCheckedUser(user)" v-if="user.roleLevel != GroupMemberRole.Owner" />
+        </template>
       </template>
+    </van-index-bar>
     </div>
   </div>
   <!-- 移除提示框 -->
@@ -45,6 +52,7 @@ import { GroupMemberListTypes } from '@/modules/chat/constant';
 import IMSDK, { AllowType, GroupMemberRole } from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import i18n from '@/lang';
+import { formatChooseData } from '@/modules/chat/utils/cUtil';
 
 const props = defineProps({
   groupMemberList: {
@@ -145,14 +153,28 @@ const isRemove = computed(() => {
   return props.type === GroupMemberListTypes.Kickout;
 })
 
+// const getChooseData = computed(() => {
+//   if (conf.keyword) {
+//     return props.groupMemberList.filter(
+//       (friend) =>
+//         friend.nickname.includes(conf.keyword)
+//     )
+//   }
+//   return props.groupMemberList
+// })
 const getChooseData = computed(() => {
   if (conf.keyword) {
-    return props.groupMemberList.filter(
-      (friend) =>
-        friend.nickname.includes(conf.keyword)
-    )
+    return {
+      indexList: ["#"],
+      dataList: [
+        props.groupMemberList.filter(
+          (friend) =>
+            friend.nickname.includes(conf.keyword)
+        ),
+      ],
+    };
   }
-  return props.groupMemberList
+  return formatChooseData(props.groupMemberList);
 })
 </script>
 <style lang="less" scoped>

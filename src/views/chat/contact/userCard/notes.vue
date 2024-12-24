@@ -2,8 +2,8 @@
   <x-page headerBgColor="#fff" :bgcolor="'#fff'" :showBack="false">
     <template #title>
       <div class="head-cont">
-        <div class="cancle" @click.stop="conf.back">cancle</div>
-        <div class="finsh" :class="{'active': conf.isActive}" @click="conf.saveOrCopy">{{ getConfirmText }}</div>
+        <div class="cancle" @click.stop="sutil.pageBack()">cancle</div>
+        <div class="finsh" :class="{ 'active': conf.isActive }" @click="conf.saveOrCopy">finish</div>
       </div>
     </template>
     <div class="head-title">
@@ -23,6 +23,9 @@ import { computed, onMounted, reactive } from 'vue'
 import { useRoute } from "vue-router";
 import sutil from "@/sstore/sutil";
 import csuser from "@/modules/chat/sstore/csuser";
+import { capis } from "@/modules/chat/api";
+import cscontact from "@/modules/chat/sstore/cscontact";
+
 const conf = reactive({
   sourceInfo: {} as any,
   content: '',
@@ -30,28 +33,31 @@ const conf = reactive({
   isSelfNickname: false,
   isActive: false,
   async saveOrCopy() {
-    if(!conf.isActive) return
+    if (!conf.isActive) return
     if (conf.isRemark) {
       System.loading()
-      console.log(conf.sourceInfo.userID);
-      console.log(conf.content);
-      IMSDK.asyncApi(IMSDK.IMMethods.SetFriendRemark, IMSDK.uuid(), {
-        toUserID: conf.sourceInfo.userID,
+      capis.updateFriends({
+        friendUserIDs: [conf.sourceInfo.userID],
         remark: conf.content,
+        ownerUserID: csuser.selfInfo.userID,
       })
-        .then(() => {
+        .then((res) => {
+          cscontact.friendList.filter((item) => {
+            if (item.userID == conf.sourceInfo.userID) {
+              item.remark = conf.content
+            }
+          })
           System.toast(i18n.t('chatRoom.set_success'), "success")
-          setTimeout(() => sutil.pageBack(), 1000);
+          setTimeout(() => sutil.pageBack(), 300);
         })
         .catch((error) => {
-          console.log(error);
           System.toast(i18n.t('chatRoom.set_failed'))
         })
         .finally(() => (System.loading(false)));
     } else if (conf.isSelfNickname) {
       System.loading()
       try {
-        await businessInfoUpdate({
+        await capis.businessInfoUpdate({
           userID: conf.sourceInfo.userID,
           nickname: conf.content,
         });
@@ -68,11 +74,8 @@ const conf = reactive({
       System.toast(i18n.t('invite.CopySuccessful'), 'success')
     }
   },
-  input(e:any) {
+  input(e: any) {
     conf.isActive = true
-  },
-  back() {
-    sutil.pageBack()
   }
 })
 const getTitle = computed(() => {
@@ -89,24 +92,25 @@ const getConfirmText = computed(() => {
 })
 const route = useRoute()
 onMounted(() => {
-  const { isRemark, isSelfNickname, sourceInfo }: any = route.query
+  const { isRemark, isSelfNickname, sourceInfo }: any = System.getRouterParams()
   if (sourceInfo) {
     conf.sourceInfo = JSON.parse(sourceInfo)
     console.log(conf.sourceInfo);
   }
   conf.isRemark = !!isRemark;
   if (conf.isRemark) {
-    conf.content = conf.sourceInfo.remark || conf.sourceInfo.nickname;
+    conf.content = conf.sourceInfo.nickname;
+    cscontact.friendList.filter((item) => {
+      if (item.userID == conf.sourceInfo.userID) {
+        if(item.remark) conf.content = item.remark
+      }
+    })
   }
   conf.isSelfNickname = !!isSelfNickname;
   if (conf.isSelfNickname) {
     conf.content = conf.sourceInfo.nickname;
   }
 })
-
-function businessInfoUpdate(arg0: { userID: any; nickname: string; }) {
-  throw new Error("Function not implemented.");
-}
 </script>
 <style lang="less" scoped>
 .head-cont {
@@ -117,7 +121,7 @@ function businessInfoUpdate(arg0: { userID: any; nickname: string; }) {
   padding: 0 30rem 0rem 10rem;
   font-size: 28rem;
 
-  .cancle{
+  .cancle {
     padding: 10rem 20rem;
     position: relative;
     z-index: 9;

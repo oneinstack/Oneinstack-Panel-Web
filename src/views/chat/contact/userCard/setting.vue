@@ -36,6 +36,7 @@ import System from '@/utils/System';
 import { computed, onMounted, reactive } from 'vue'
 import { useRoute } from "vue-router";
 import cscontact from "@/modules/chat/sstore/cscontact";
+import sutil from "@/sstore/sutil";
 const conf = reactive({
   showConfirm: false,
   sourceInfo: {} as any,
@@ -56,7 +57,12 @@ const conf = reactive({
       IMSDK.uuid(),
       conf.sourceInfo.userID,
     )
-      .then(() => System.toast(i18n.t('chatRoom.op_success'), 'success'))
+      .then(() => {
+        System.toast(i18n.t('chatRoom.op_success'), 'success')
+        console.log('666');
+        
+        setTimeout(() => sutil.pageBack(), 1000);
+      })
       .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
       .finally(() => (conf.showConfirm = false));
   },

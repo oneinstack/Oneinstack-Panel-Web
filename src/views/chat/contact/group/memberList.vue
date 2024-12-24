@@ -17,6 +17,7 @@ import { onMounted, reactive } from 'vue';
 import headSearch from '../com/headSearch.vue';
 import groupItem from '../../conversation/details/com/groupItem.vue';
 import System from '@/utils/System';
+import csconversation from '@/modules/chat/sstore/csconversation';
 
 const conf = reactive({
   groupMemberList: [] as any[],
@@ -42,6 +43,10 @@ const conf = reactive({
 onMounted(async () => {
   const { groupID } = System.getRouterParams()
   conf.groupID = groupID
+  let list = csconversation.groupMemberList
+  if(list.length && list[0].groupID == groupID) {
+    conf.groupMemberList = csconversation.groupMemberList
+  }
   conf.getGroupMemberList()
 });
 </script>

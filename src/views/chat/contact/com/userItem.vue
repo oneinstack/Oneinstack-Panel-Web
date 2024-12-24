@@ -16,7 +16,7 @@
           {{ item.badge < 99 ? item.badge : '99+' }}
         </div>
       </div>
-      <div class="item-name">{{ item.nickname || item.title }}</div>
+      <div class="item-name">{{ item.remark || item.nickname || item.title }}</div>
       <div style="flex: 1;text-align: right;padding-right: 20rem;" v-if="single">
         <van-icon color="#07c261" size="30rem" name="success" />
       </div>

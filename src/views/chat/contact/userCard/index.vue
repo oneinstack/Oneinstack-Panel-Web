@@ -14,7 +14,7 @@
             <img style="width: 26rem; height: 26rem;margin-left: 10rem;"
               :src="`/static/img/chat/sex_${conf.sourceUserInfo.gender}.svg`" v-if="conf.sourceUserInfo.gender" />
           </div>
-          <!-- <div>nickName: {{ getShowName }}</div> -->
+          <div v-if="conf.sourceUserInfo.remark">nickName: {{ conf.sourceUserInfo.nickname }}</div>
           <div>Uid: {{ conf.sourceUserInfo.userID }}</div>
           <!-- <div>Area: China</div> -->
         </div>
@@ -88,11 +88,23 @@ const conf = reactive({
         //   IMSDK.uuid(),
         //   { userIDList: [conf.sourceID] },
         // );
+        // console.log('6666');
+        // console.log(data);
+        
+        
         // const imData = data[0]?.friendInfo ?? data[0]?.publicInfo ?? {};
         // info = {
         //   ...imData,
         //   ...users[0],
         // };
+        cscontact.friendList.filter((item) => {
+          if (item.userID == conf.sourceID) {
+            info = {
+              ...users[0],
+              ...item
+            };
+          }
+        })
       }
     } catch (e) {
       info = {};
@@ -176,11 +188,10 @@ const conf = reactive({
   },
 })
 const getShowName = computed(() => {
-  let suffix = "";
   if (conf.sourceUserInfo.remark) {
-    suffix = `(${conf.sourceUserInfo.remark})`;
+    return conf.sourceUserInfo.remark
   }
-  return conf.sourceUserInfo.nickname + suffix;
+  return conf.sourceUserInfo.nickname
 })
 const isFriend = computed(() => {
   return (
@@ -229,8 +240,8 @@ onMounted(() => {
     }
 
     .info {
-      font-size: 21rem;
-      color: #999;
+      font-size: 24rem;
+      color: #666;
       margin-left: 30rem;
 
       .nickname {
@@ -239,7 +250,7 @@ onMounted(() => {
         color: #000;
         display: flex;
         align-items: center;
-        margin-bottom: 6rem;
+        margin-bottom: 4rem;
       }
     }
   }

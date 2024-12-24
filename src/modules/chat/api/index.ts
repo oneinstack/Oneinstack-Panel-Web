@@ -25,5 +25,7 @@ export const capis = {
   completeFormData: (obj?: ApiData) => chttp.post('/object/complete_form_data', obj),
 
   // ===========  other  ===========
-  getGroupMemberList: (obj?: ApiData) => chttp.post('/group/get_group_member_list', obj)
+  getGroupMemberList: (obj?: ApiData) => chttp.post('/group/get_group_member_list', obj),
+  updateFriends: (obj?: ApiData) => chttp.post('/friend/update_friends', obj),
+  getUsersInfo: (obj?: ApiData) => chttp.post('/user/get_users_info', obj)
 }
