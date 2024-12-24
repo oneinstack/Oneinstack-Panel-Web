@@ -80,7 +80,7 @@ const conf = reactive({
     const res = await System.getImgPic({
       id: 'card' + swiperInstance.value.realIndex
     })
-    await System.download(res, Date.now() + '.png')
+    await System.download(res)
     System.loading(false)
   }
 })

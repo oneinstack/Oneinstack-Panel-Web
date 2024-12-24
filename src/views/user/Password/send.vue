@@ -68,9 +68,9 @@
 			
 			//数据提交
 			handleDataSubmit(){
-				uni.navigateTo({
-				    url: '/user/Password/modify?hasOldPassword=' + false
-				})
+				// uni.navigateTo({
+				//     url: '/user/Password/modify?hasOldPassword=' + false
+				// })
 			},
 
 		},

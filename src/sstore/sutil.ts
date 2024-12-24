@@ -569,6 +569,10 @@ export const sutil = reactive({
     if (_year == _yearFormat) return _formatTime.Format('MM/dd')
 
     return _formatTime.Format('MM/dd/yyyy')
+  },
+  getFileType: (name: any) => {
+    const idx = name.lastIndexOf('.')
+    return name.slice(idx + 1).split('?')[0]
   }
 })
 

@@ -5,6 +5,7 @@ import { Directory, Filesystem } from '@capacitor/filesystem'
 import { getPlatforms } from '@ionic/vue'
 import { Router } from 'vue-router'
 import { globalType } from '../../build/env/globalVar'
+import sutil from '@/sstore/sutil'
 
 export default class System {
   /** 是否是原生 */
@@ -200,7 +201,52 @@ export default class System {
   /**
    *  下载文件
    */
-  static async download(content: string, name: string = 'download.png', toast = true): Promise<any> {
+  static async download(
+    param:
+      | string
+      | {
+          /**
+           * 下载地址或者文件内容
+           */
+          content: string
+          /**
+           * 文件名，包含后缀，默认自动生成时间戳加文件类型
+           */
+          name?: string
+          /**
+           * 是否显示提示
+           */
+          toast?: boolean
+        }
+  ): Promise<any> {
+    if (typeof param === 'string') {
+      param = { content: param }
+    }
+    let { content, name, toast = true } = param
+    if (!name) {
+      const getDataType = (ctx: string) => {
+        const res = ctx.match(/^data:(.*);base64,(.*)$/)
+        if (res) return res[1].split('/').pop()
+        return 'png'
+      }
+      name = Date.now() + '.' + (content.startsWith('http') ? sutil.getFileType(content) : getDataType(content))
+    }
+    if (content.startsWith('http')) {
+      if (System.isNative) {
+        const res = await Filesystem.downloadFile({
+          url: content,
+          path: 'app/' + name,
+          directory: Directory.Documents
+        })
+        if (toast) {
+          System.toast('Successfully saved to : ' + res.path, 'success', 5000)
+        }
+        return res.path
+      }
+      const res = await fetch(content)
+      const blob = await res.blob()
+      content = URL.createObjectURL(blob)
+    }
     if (System.isNative) {
       const res1 = await Filesystem.stat({ path: 'app', directory: Directory.Documents })
       if (!res1?.ctime) await Filesystem.mkdir({ path: 'app', directory: Directory.Documents })
@@ -213,11 +259,6 @@ export default class System {
         System.toast('Successfully saved to : ' + res.uri, 'success', 5000)
       }
       return res.uri
-    }
-    if (content.startsWith('http')) {
-      const res = await fetch(content)
-      const blob = await res.blob()
-      content = URL.createObjectURL(blob)
     }
     const tempLink = document.createElement('a')
     tempLink.style.display = 'none'

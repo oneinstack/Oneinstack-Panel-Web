@@ -1,7 +1,8 @@
+import sutil from '@/sstore/sutil'
 import IMSDK, { IMMethods, MessageItem, MessageStatus, MessageType } from 'openim-uniapp-polyfill'
 import { reactive } from 'vue'
 import { UpdateMessageTypes } from '../constant'
-import { getFileType, offlinePushInfo } from '../utils/cUtil'
+import { offlinePushInfo } from '../utils/cUtil'
 import csconversation from './csconversation'
 
 interface MessageState {
@@ -134,7 +135,7 @@ export const csmessage = reactive({
   createImageMessage: async (file: any) => {
     const baseInfo = {
       uuid: IMSDK.uuid(),
-      type: getFileType(file.name),
+      type: sutil.getFileType(file.name),
       size: file.size,
       width: file.width,
       height: file.height,

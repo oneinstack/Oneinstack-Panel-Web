@@ -28,7 +28,6 @@
 </template>
 <script setup lang="ts">
 import csmessage from '@/modules/chat/sstore/csmessage'
-import { getFileType } from '@/modules/chat/utils/cUtil'
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
 import { MessageType } from 'openim-uniapp-polyfill'
@@ -54,9 +53,8 @@ const conf = reactive({
     },
     download: async () => {
       const url = csmessage.previewImageList[conf.image.preview.index]
-      const fileName = getFileType(url)
       System.loading()
-      await System.download(url, Date.now() + '.' + fileName)
+      await System.download(url)
       System.loading(false)
     }
   },

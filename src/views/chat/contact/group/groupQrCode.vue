@@ -35,7 +35,7 @@ const conf = reactive({
     const res = await System.getImgPic({
       id: 'groupCode'
     })
-    await System.download(res, Date.now() + '.png')
+    await System.download(res)
     System.loading(false)
   },
   //复制groupId
