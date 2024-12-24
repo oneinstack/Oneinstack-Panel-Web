@@ -1,6 +1,6 @@
 <template>
   <div style="width: 100%; height: 100%; position: relative">
-    <x-img class="load-img" :src="src" lazy-load @load="conf.imgLoad" @error="conf.imgError" :zIndex="zIndex"></x-img>
+    <x-img class="load-img" :src="src" @load="conf.imgLoad" @error="conf.imgError" ></x-img>
     <!-- 图片加载动画 -->
     <div class="load-content" v-if="conf.imgLoading">
       <img v-if="conf.isError" class="fail-img" mode="heightFix" src="./fail-img.png" />
@@ -15,9 +15,6 @@ defineProps({
   src: {
     default: ''
   },
-  zIndex: {
-    default: undefined as any
-  }
 })
 const conf = reactive({
   imgLoading: true,

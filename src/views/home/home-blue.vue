@@ -5,7 +5,7 @@
       <div class="banner" v-if="conf.swiperList.length > 0">
         <van-swipe class="banner-list" indicator-dots :autoplay="3000" indicator-color="#ffffff">
           <van-swipe-item class="banner-item" v-for="(item, index) in conf.swiperList" :key="index">
-            <x-img zIndex="2" class="banner-img" :src="item.coverUrl" />
+            <x-img class="banner-img" :src="item.coverUrl" />
           </van-swipe-item>
         </van-swipe>
       </div>

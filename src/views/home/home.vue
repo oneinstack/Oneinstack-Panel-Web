@@ -25,7 +25,7 @@
           indicator-active-color="#eb602d"
         >
           <van-swipe-item class="banner-item" v-for="(item, index) in conf.swiperList" :key="index">
-            <x-img zIndex="2" class="banner-img" :src="item.coverUrl" />
+            <x-img class="banner-img" :src="item.coverUrl" />
           </van-swipe-item>
         </van-swipe>
       </div>

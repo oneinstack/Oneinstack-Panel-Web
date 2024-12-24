@@ -5,7 +5,7 @@
   >
     <div class="item-animate-img">
       <div class="lottery-item-img2" @click="$emit('clickItem')">
-        <x-load-img zIndex="1" :src="item.lotteryTypeVO.imgUrl"></x-load-img>
+        <x-load-img :src="item.lotteryTypeVO.imgUrl"></x-load-img>
       </div>
     </div>
     <div

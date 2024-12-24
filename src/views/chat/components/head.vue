@@ -6,12 +6,8 @@
     <x-img
       class="relative fit"
       :src="src"
-      lazy-load
       @load="conf.imgLoad"
       @error="conf.imgError"
-      :zIndex="zIndex"
-      cache
-      :timeout="5000"
     ></x-img>
   </div>
 </template>
@@ -22,9 +18,6 @@ defineProps({
   src: {
     default: ''
   },
-  zIndex: {
-    default: undefined as any
-  }
 })
 const conf = reactive({
   imgLoading: true,

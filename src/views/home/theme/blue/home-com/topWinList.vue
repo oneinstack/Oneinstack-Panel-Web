@@ -20,7 +20,7 @@
         <div class="item" style="order: 1; top: -30px" v-if="conf.todayWinnerInfoList[1]">
           <div style="background: url(static/img/home/border2.png) center center / 100% 100% no-repeat">
             <div class="avatar">
-              <x-img zIndex="1" :src="conf.todayWinnerInfoList[1].imgUrl" />
+              <x-img :src="conf.todayWinnerInfoList[1].imgUrl" />
             </div>
           </div>
           <div class="crown-body">
@@ -33,7 +33,7 @@
         <div class="item" style="order: 3; top: -30px" v-if="conf.todayWinnerInfoList[2]">
           <div style="background: url(static/img/home/border3.png) center center / 100% 100% no-repeat">
             <div class="avatar">
-              <x-img zIndex="1" :src="conf.todayWinnerInfoList[2].imgUrl" />
+              <x-img :src="conf.todayWinnerInfoList[2].imgUrl" />
             </div>
           </div>
           <div class="crown-body">
@@ -48,7 +48,7 @@
         <div class="item" v-for="(item, index) in conf.todayWinnerInfoList.slice(3, 5)">
           <span class="left-rank">{{ index + 4 }}</span>
           <div class="avatar">
-            <x-img zIndex="1" :src="item.userImgUrl" />
+            <x-img :src="item.userImgUrl" />
           </div>
           <span class="middle-name">{{ item.userName.slice(0, 2) }}****{{ item.userName.slice(-2) }}</span>
           <span class="right-box">{{ item.coinSymbol + item.betPrizeMoney }}</span>

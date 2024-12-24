@@ -16,7 +16,7 @@
           >
             <div class="item-img">
               <div class="avatar" v-if="conf.show">
-                <x-img :lazyLoad="false" zIndex="1" :src="conf.winnerInfoVoListInit[num]?.imgUrl" />
+                <x-img :lazyLoad="false" :src="conf.winnerInfoVoListInit[num]?.imgUrl" />
               </div>
             </div>
             <div class="item-info">
