@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import csconversation from '@/modules/chat/sstore/csconversation'
 import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
+import System from '@/utils/System'
 import IMSDK, { ConversationItem, FriendUserItem, GroupItem } from 'openim-uniapp-polyfill'
 import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'
@@ -85,12 +86,21 @@ const conf = reactive({
 
     conf.list = [...plist, ...nlist]
   },
-  top: (item: any) => {
-    item.isPinned = !item.isPinned
-    conf.listSort()
+  top: async (item: any) => {
+    IMSDK.asyncApi(IMSDK.IMMethods.PinConversation, IMSDK.uuid(), {
+      conversationID: item.conversationID,
+      isPinned: !item.isPinned
+    })
+      .then(() => {
+        item.isPinned = !item.isPinned
+        conf.listSort()
+      })
+      .catch(() => System.toast('置顶失败'))
   },
   delete: (item: any) => {
-    conf.list = conf.list.filter((i) => i.conversationID !== item.conversationID)
+    IMSDK.asyncApi(IMSDK.IMMethods.DeleteConversationAndDeleteAllMsg, IMSDK.uuid(), item.conversationID)
+      .then(() => csconversation.delConversationByCID(item.conversationID))
+      .catch(() => System.toast('移除失败'))
   },
   toChating: (item: any) => {
     prepareConversationState(item)
@@ -117,6 +127,10 @@ const conf = reactive({
         })
       }
     })
+
+    csconversation.conversationList.sort((a, b) => b.isPinned - a.isPinned)
+    console.log('cim', csconversation.conversationList)
+    conf.listSort()
   },
   addDialog: {
     show: false
