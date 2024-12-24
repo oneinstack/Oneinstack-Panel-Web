@@ -36,40 +36,12 @@
   </div>
 </template>
 <script setup lang="ts">
-import sutil from '@/sstore/sutil'
-import { Scope } from 'tools-vue3'
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import WinLoop from './winLoop.vue'
-const mconf = Scope.getConf()
-const conf = reactive({
-  winnerInfoVoListInit: [] as any[],
-  boxHeight: 5,
-  winSlateNum: sutil.rem2px(120),
-  show: false,
+import { index } from './winList'
+import { onMounted, onUnmounted, ref } from 'vue'
 
-  //排行榜
-  async getReception() {
-    let datas = mconf.virtualData || {}
-    conf.winnerInfoVoListInit = datas['10'] || []
-    let imgArr = [
-      '/static/img/game/3D.png',
-      '/static/img/game/color.png',
-      '/static/img/game/satta.png',
-      '/static/img/game/5D.png',
-      '/static/img/game/PK10.png',
-      '/static/img/game/TRX.png'
-    ]
-    let array = ['3D', 'CO', 'SA', '5D', 'PK', 'Tr']
-    conf.winnerInfoVoListInit.forEach((item) => {
-      const name = item.name.slice(1, 3)
-      let randomIndex = array.indexOf(name)
-      if (randomIndex == -1) randomIndex = 0
-      item.winImg = imgArr[randomIndex]
-    })
+const conf = index()
 
-    conf.boxHeight = conf.winnerInfoVoListInit.length >= 5 ? 5 : conf.winnerInfoVoListInit.length
-  }
-})
 const winListRef = ref<HTMLElement | null>(null)
 const winLoopRef = ref<any>(null)
 const observer = new IntersectionObserver((entries) => {

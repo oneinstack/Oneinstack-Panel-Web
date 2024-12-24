@@ -6,7 +6,7 @@ const prizePool = Math.floor(Math.random() * 1000000000).toString()
 const rollingTextInstance = ref<RollingTextInstance[]>([])
 
 onMounted(() => {
-  rollingTextInstance.value.reverse().forEach(({ start, duration }, index) => {
+  rollingTextInstance.value.forEach(({ start, duration }, index) => {
     setTimeout(() => start(), duration * 250 * index)
   })
 })
@@ -17,7 +17,7 @@ onMounted(() => {
     <div class="prize-pool-content">
       <template v-for="(_, index) in 3">
         <van-rolling-text
-          :ref="(el) => rollingTextInstance.push(el as RollingTextInstance)"
+          :ref="(el) => rollingTextInstance.unshift(el as RollingTextInstance)"
           class="rolling-text"
           :auto-start="false"
           :start-num="0"
