@@ -88,7 +88,7 @@
               <div
                 v-if="conf.coinLosding && sconfig.userInfo"
                 class="select justify-center items-center"
-                style="height: 100%;"
+                style="height: 100%"
               >
                 <van-loading type="spinner" />
               </div>
@@ -181,7 +181,7 @@
   </x-page>
 </template>
 <script lang="ts" setup>
-import CuModal from './components/cuModal.vue'
+import CuModal from './theme/blue/components/cuModal.vue'
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import { index } from './me'
