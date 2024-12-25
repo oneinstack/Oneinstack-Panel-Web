@@ -194,8 +194,13 @@ export const sutil = reactive({
   // 数据处理
   dataHandling: (amount: number | string, fixed = 4, endFixed?: number) => {
     if (StrUtil.isNull(amount)) amount = '0'
-    let unit = ''
+    let unit = '',
+      isNegative = false
     amount = parseFloat(amount.toString()) || 0
+    if (amount < 0) {
+      isNegative = true
+      amount = Math.abs(amount)
+    }
     if (amount < 10000) {
     } else if (amount < 1000000) {
       // 如果金额在10,000到1,000,000之间，则显示为xxxx.xxW（万）
@@ -224,6 +229,7 @@ export const sutil = reactive({
       }
     }
     amount = decimalPart ? `${integerPart}.${decimalPart}` : integerPart
+    if (isNegative) amount = '-' + amount
     return amount + unit
   },
 
