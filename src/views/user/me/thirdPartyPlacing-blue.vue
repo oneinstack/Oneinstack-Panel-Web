@@ -1,5 +1,5 @@
 <template>
-  <x-page no-footer :fixed="false">
+  <x-page no-footer :fixed="false" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>{{ $t('me.casinoBets') }}</template>
     <!-- tab -->
     <template #top>
@@ -114,6 +114,7 @@
 
 <script setup lang="ts">
 import { index } from './thirdPartyPlacing'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>
@@ -134,13 +135,13 @@ const conf = index()
     .type-list {
       display: flex;
       height: 60rem;
-      // background: #FFF6E6;
+      // background: #E6F2FF;
       color: #000000;
       font-weight: bold;
       border-radius: 10rem;
 
       .type-item {
-        background: #fff6e6;
+        background: #f9f9f9;
         // width: 148rem;
         width: 220rem;
         display: flex;
@@ -150,7 +151,7 @@ const conf = index()
 
       .type-active {
         border-radius: 10rem;
-        background: #ffa64f;
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         color: #fff;
       }
     }
@@ -176,7 +177,8 @@ const conf = index()
     }
 
     .time-active {
-      background: #fff6e6;
+      background: #e6f2ff;
+      color: #006fff;
     }
   }
 }
