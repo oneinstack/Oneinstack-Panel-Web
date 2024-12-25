@@ -62,7 +62,7 @@
 </template>
 <script lang="ts" setup>
 import { ref } from 'vue'
-import chooseTree from './chooseTree.vue'
+import chooseTree from './chooseTree-blue.vue'
 import { index } from './chooseTop'
 
 const emit = defineEmits(['confirm'])
@@ -112,7 +112,8 @@ defineExpose({
     color: #646464;
     font-size: 26rem;
     &.active {
-      background-color: #fff6e6;
+      background-color: #E6F2FF;
+      color: #006FFF;
     }
   }
 }
@@ -128,13 +129,13 @@ defineExpose({
 .text-color-1 {
   font-size: 32rem;
   font-weight: 600;
-  background-image: -webkit-linear-gradient(90deg, #eb602d 0%, #ffa64f 100%);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 80rem;
 }
 .text-color-item {
-  background-image: -webkit-linear-gradient(90deg, #ff7502 0%, #fc9b01 100%);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

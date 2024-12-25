@@ -82,12 +82,13 @@ defineExpose({
   color: #646464;
   font-size: 26rem;
   &.active {
-    background-color: #fff6e6;
+    background-color: #E6F2FF;
+    color: #006FFF;
   }
 }
 
 .color-active {
-  background-image: -webkit-linear-gradient(90deg, #ff7502 0%, #fc9b01 100%);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
