@@ -319,13 +319,27 @@ export const csdk = reactive({
       // });
     }
     const friendAddedHandler = ({ data }: any) => {
-      // this.pushNewFriend(data);
+      const tmpList = [...cscontact.friendList];
+      const idx = tmpList.findIndex((item) => item.userID === data.userID);
+      if (idx === -1) {
+        cscontact.friendList = [...tmpList, data]
+      }
     }
     const friendDeletedHander = ({ data }: any) => {
-      // this.updateFriendInfo({
-      //   friendInfo: data,
-      //   isRemove: true,
-      // });
+      let isRemove = true
+      const tmpList = [...cscontact.friendList];
+      const idx = tmpList.findIndex((item) => item.userID === data.userID);
+
+      if (idx !== -1) {
+        if (isRemove) {
+          tmpList.splice(idx, 1);
+        } else {
+          tmpList[idx] = {
+            ...data,
+          };
+        }
+        cscontact.friendList = tmpList
+      }
     }
 
     IMSDK.subscribe(IMSDK.IMEvents.OnFriendInfoChanged, friendInfoChangeHandler)
@@ -348,18 +362,43 @@ export const csdk = reactive({
 
     // group
     const joinedGroupAddedHandler = ({ data }: any) => {
-      // this.pushNewGroup(data);
+      const tmpList = [...cscontact.groupList];
+      const idx = tmpList.findIndex((item) => item.groupID === data.groupID);
+      if (idx === -1) {
+        cscontact.groupList = [...tmpList, data]
+      }
     }
     const joinedGroupDeletedHandler = ({ data }: any) => {
-      // this.updateGroupInfo({
-      //   groupInfo: data,
-      //   isRemove: true,
-      // });
+      const tmpList = [...cscontact.groupList];
+      const idx = tmpList.findIndex((item) => item.groupID === data.groupID);
+
+      if (csconversation.currentGroup.groupID === data.groupID) {
+        csconversation.currentGroup = {
+          ...data,
+        };
+      }
+
+      if (idx !== -1) {
+        tmpList.splice(idx, 1);
+        cscontact.groupList = [...tmpList];
+      }
     }
     const groupInfoChangedHandler = ({ data }: any) => {
-      // this.updateGroupInfo({
-      //   groupInfo: data,
-      // });
+      const tmpList = [...cscontact.groupList];
+      const idx = tmpList.findIndex((item) => item.groupID === data.groupID);
+
+      if (csconversation.currentGroup.groupID === data.groupID) {
+        csconversation.currentGroup = {
+          ...data,
+        };
+      }
+
+      if (idx !== -1) {
+        tmpList[idx] = {
+          ...data,
+        };
+        cscontact.groupList = [...tmpList];
+      }
     }
     const groupMemberInfoChangedHandler = ({ data }: any) => {
       // if (data.groupID === this.storeCurrentConversation?.groupID) {
@@ -379,44 +418,100 @@ export const csdk = reactive({
 
     // application
     const friendApplicationNumHandler = ({ data }: any) => {
-      // const isRecv = data.toUserID === this.storeCurrentUserID;
-      // if (isRecv) {
-      //   this.pushNewRecvFriendApplition(data);
-      // } else {
-      //   this.pushNewSentFriendApplition(data);
-      // }
+      const isRecv = data.toUserID === csuser.selfInfo.userID;
+      if (isRecv) {
+        const tmpList = [...cscontact.recvFriendApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.fromUserID === data.fromUserID,
+        );
+        if (idx !== -1) {
+          tmpList.splice(idx, 1);
+        }
+        cscontact.recvFriendApplications = [...tmpList, data]
+      } else {
+        const tmpList = [...cscontact.sentFriendApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.toUserID === data.toUserID,
+        );
+        if (idx !== -1) {
+          tmpList.splice(idx, 1);
+        }
+        cscontact.sentFriendApplications = [...tmpList, data]
+      }
     }
     const friendApplicationAccessHandler = ({ data }: any) => {
-      // const isRecv = data.toUserID === this.storeCurrentUserID;
-      // if (isRecv) {
-      //   this.updateRecvFriendApplition({
-      //     application: data,
-      //   });
-      // } else {
-      //   this.updateSentFriendApplition({
-      //     application: data,
-      //   });
-      // }
+      const isRecv = data.toUserID === csuser.selfInfo.userID;
+      if (isRecv) {
+        const tmpList = [...cscontact.recvFriendApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.fromUserID === data.fromUserID,
+        );
+
+        if (idx !== -1) {
+          tmpList[idx] = {
+            ...data,
+          };
+          cscontact.recvFriendApplications = [...tmpList]
+        }
+      } else {
+        const tmpList = [...cscontact.sentFriendApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.toUserID === data.toUserID,
+        );
+
+        if (idx !== -1) {
+          tmpList[idx] = {
+            ...data,
+          };
+          cscontact.sentFriendApplications = [...tmpList];
+        }
+      }
     }
     const groupApplicationNumHandler = ({ data }: any) => {
-      // const isRecv = data.userID !== this.storeCurrentUserID;
-      // if (isRecv) {
-      //   this.pushNewRecvGroupApplition(data);
-      // } else {
-      //   this.pushNewSentGroupApplition(data);
-      // }
+      const isRecv = data.userID !== csuser.selfInfo.userID;
+      if (isRecv) {
+        const tmpList = [...cscontact.recvGroupApplications];
+        const idx = tmpList.findIndex((item) => item.userID === data.userID);
+        if (idx !== -1) {
+          tmpList.splice(idx, 1);
+        }
+        cscontact.recvGroupApplications = [...tmpList, data];
+      } else {
+        const tmpList = [...cscontact.sentGroupApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.groupID === data.groupID,
+        );
+        if (idx !== -1) {
+          tmpList.splice(idx, 1);
+        }
+        cscontact.sentGroupApplications = [...tmpList, data];
+      }
     }
     const groupApplicationAccessHandler = ({ data }: any) => {
-      // const isRecv = data.userID !== this.storeCurrentUserID;
-      // if (isRecv) {
-      //   this.updateRecvGroupApplition({
-      //     application: data,
-      //   });
-      // } else {
-      //   this.updateSentGroupApplition({
-      //     application: data,
-      //   });
-      // }
+      const isRecv = data.userID !== csuser.selfInfo.userID;
+      if (isRecv) {
+        const tmpList = [...cscontact.recvGroupApplications];
+        const idx = tmpList.findIndex((item) => item.userID === data.userID);
+
+        if (idx !== -1) {
+          tmpList[idx] = {
+            ...data,
+          };
+          cscontact.recvGroupApplications = [...tmpList];
+        }
+      } else {
+        const tmpList = [...cscontact.sentGroupApplications];
+        const idx = tmpList.findIndex(
+          (item) => item.groupID === data.groupID,
+        );
+
+        if (idx !== -1) {
+          tmpList[idx] = {
+            ...data,
+          };
+          cscontact.sentGroupApplications = [...tmpList];
+        }
+      }
     }
 
     IMSDK.subscribe(IMSDK.IMEvents.OnFriendApplicationAdded, friendApplicationNumHandler)

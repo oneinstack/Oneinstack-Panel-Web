@@ -30,7 +30,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import i18n from '@/lang'
 import System from '@/utils/System';
 import headSearch from './com/headSearch.vue';
@@ -38,6 +38,8 @@ import userItem from './com/userItem.vue';
 import { ContactMenuTypes } from '@/modules/chat/constant'
 import cscontact from '@/modules/chat/sstore/cscontact'
 import { formatChooseData } from '@/modules/chat/utils/cUtil';
+import csuser from '@/modules/chat/sstore/csuser';
+
 const conf = reactive({
   indexList: [] as any[],
   meaus: [{
@@ -67,12 +69,41 @@ const conf = reactive({
     if (routeUrl) return System.router.push(routeUrl)
 
     System.router.push({ path: '/chat/applicationList', query: { type: item.type } })
+  },
+  handleApplicationNum() {
+    console.log('888802');
+    
+    if (!csuser.selfInfo.userID) return;
+    let friendApplicationNum = cscontact.recvFriendApplications.filter(
+          (application:any) =>
+            application.handleResult === 0 ).length;
+    conf.meaus[0].badge = friendApplicationNum;
+    let groupApplicationNum = cscontact.recvGroupApplications.filter(
+        (application:any) =>
+          application.handleResult === 0
+      ).length;
+      conf.meaus[1].badge = groupApplicationNum;
   }
 })
 
 const getIndexData = computed(() =>{
   return formatChooseData(cscontact.friendList)
 })
+
+const contactBadgeRely = computed(() =>{
+  return {
+    recvFriendApplications: cscontact.recvFriendApplications,
+    recvGroupApplications: cscontact.recvGroupApplications
+  };
+})
+
+watch(
+	() => contactBadgeRely.value,
+	(val: any) => {
+		conf.handleApplicationNum()
+	},
+	{ immediate: true,deep: true }
+)
 
 
 onMounted(() => {

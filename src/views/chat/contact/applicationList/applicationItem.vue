@@ -92,7 +92,7 @@ const conf = reactive({
                 props.application.handleResult = 1
             })
             .catch(() => System.toast(i18n.t('chatRoom.OperationFailure')))
-            .finally(() => (this.accessLoading = false));
+            .finally(() => (conf.accessLoading = false));
     },
     greetToUser() {
         navigateToDesignatedConversation(

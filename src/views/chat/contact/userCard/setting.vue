@@ -18,8 +18,8 @@
       </div>
     </div>
 
-    <div class="edit flex-center">
-      <div class="title" style="color: #f45551;" @click="conf.showConfirm = true">{{ $t('chatRoom.remove_friend') }}
+    <div class="edit flex-center" @click="conf.showConfirm = true">
+      <div class="title" style="color: #f45551;">{{ $t('chatRoom.remove_friend') }}
       </div>
     </div>
     <van-dialog :show="conf.showConfirm" title="" show-cancel-button :confirmButtonText="$t('chatRoom.confirm')"
