@@ -1,5 +1,5 @@
 <template>
-  <x-page no-footer :fixed="false">
+  <x-page no-footer :fixed="false" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>{{ $t('me.Transactions') }}</template>
     <!-- header -->
     <template #top>
@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { index } from './myTransactions'
+import { stheme } from '@/sstore/stheme'
 
 const { conf, sutil } = index()
 </script>
@@ -97,7 +98,8 @@ const { conf, sutil } = index()
     }
 
     .times-times.checked {
-      background-color: #fff6e6;
+      background-color: #E6F2FF;
+      color: #006FFF;
     }
   }
 }
