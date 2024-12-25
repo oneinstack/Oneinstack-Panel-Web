@@ -1,5 +1,5 @@
 <template>
-  <x-page :fixed="false">
+  <x-page :fixed="false" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('me.History') }}
     </template>
@@ -333,9 +333,9 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { index } from './resultHistory'
+import stheme from '@/sstore/stheme'
 
 const typeRefs = ref<any>()
-
 const conf = index(typeRefs)
 </script>
 
@@ -350,12 +350,12 @@ const conf = index(typeRefs)
 
   .tabs-type {
     display: flex;
-    background: #fff6e6;
+    background: #F6F7FA;
 
     .type-list {
       display: flex;
       height: 60rem;
-      background: #fff6e6;
+      background: #F6F7FA;
       color: #000000;
       font-weight: bold;
       border-radius: 10rem;
@@ -369,7 +369,7 @@ const conf = index(typeRefs)
 
       .type-active {
         border-radius: 10rem;
-        background: #ffa64f;
+        background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
         color: #fff;
       }
     }
@@ -397,7 +397,7 @@ const conf = index(typeRefs)
     }
 
     .time-active {
-      background: #fff6e6;
+      background: #E6F2FF;
     }
   }
 }
@@ -410,11 +410,11 @@ const conf = index(typeRefs)
   .result-title {
     display: flex;
     padding: 0rem 24rem;
-    background: #ffecc7;
+    background: #58a5ff;
 
     div {
       font-size: 24rem;
-      color: #45454d;
+      color: #ffffff;
       padding: 20rem 0rem;
       display: flex;
       justify-content: center;
@@ -515,7 +515,7 @@ const conf = index(typeRefs)
           justify-content: center;
           margin-left: 2rem;
 
-          span {
+          text {
             color: #252529;
             font-weight: 700;
             font-size: 24rem;
@@ -524,7 +524,7 @@ const conf = index(typeRefs)
       }
 
       &:nth-child(2n) {
-        background: #fffbf5;
+        background: #e6f2ff;
       }
 
       .purchase-num {
