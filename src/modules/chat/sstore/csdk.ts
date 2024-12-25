@@ -348,13 +348,20 @@ export const csdk = reactive({
 
     // blacklist
     const blackAddedHandler = ({ data }: any) => {
-      // this.pushNewBlack(data);
+      const tmpList = [...cscontact.blackList];
+      const idx = tmpList.findIndex((item) => item.userID === data.userID);
+      if (idx === -1) {
+        cscontact.blackList = [...tmpList, data];
+      }
     }
     const blackDeletedHandler = ({ data }: any) => {
-      // this.updateBlackInfo({
-      //   blackInfo: data,
-      //   isRemove: true,
-      // });
+      const tmpList = [...cscontact.blackList];
+      const idx = tmpList.findIndex((item) => item.userID === data.userID);
+
+      if (idx !== -1) {
+        tmpList.splice(idx, 1);
+        cscontact.blackList = [...tmpList];
+      }
     }
 
     IMSDK.subscribe(IMSDK.IMEvents.OnBlackAdded, blackAddedHandler)

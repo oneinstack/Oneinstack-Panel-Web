@@ -42,14 +42,22 @@ const conf = reactive({
   sourceInfo: {} as any,
   blackLoading: false,
   change(isBlack: any) {
-    console.log(isBlack);
+    System.loading()
     conf.blackLoading = true;
     const funcName = isBlack
       ? IMSDK.IMMethods.AddBlack
       : IMSDK.IMMethods.RemoveBlack;
-    IMSDK.asyncApi(funcName, IMSDK.uuid(), conf.sourceInfo.userID)
+    const options = isBlack ? { toUserID: conf.sourceInfo.userID } : conf.sourceInfo.userID
+    IMSDK.asyncApi(funcName, IMSDK.uuid(), options)
+      .then(() => {
+          System.toast(i18n.t('chatRoom.op_success'), 'success') 
+          setTimeout(() => sutil.pageBack(), 1000);
+        })
       .catch((err: any) => System.toast(i18n.t('chatRoom.op_failed')))
-      .finally(() => (conf.blackLoading = false));
+      .finally(() => {
+        conf.blackLoading = false
+        System.loading(false)
+      });
   },
   confirmRemove() {
     IMSDK.asyncApi(
@@ -85,8 +93,11 @@ onMounted(() => {
   if (sourceInfo) {
     conf.sourceInfo = JSON.parse(sourceInfo)
     console.log(conf.sourceInfo);
-
   }
+  console.log('6666');
+  
+  console.log(cscontact.blackList);
+  
 })
 </script>
 <style lang="less" scoped>
