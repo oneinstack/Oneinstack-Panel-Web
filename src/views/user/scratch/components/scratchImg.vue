@@ -1,7 +1,7 @@
 <template>
 	<div class="scratch-img-box">
 		<div class="scratch-img">
-			<x-load-img :imgUrl="item.scratchTicketImgurl"></x-load-img>
+			<x-load-img :src="item.scratchTicketImgurl"></x-load-img>
 		</div>
 		<div class="scratch-txt" :style="{ 'padding': paddingNum + 'rem' }">
 			<div class="name" :style="{ 'font-size': (paddingNum + 5) + 'rem' }">{{ item.scratchTicketShowname }}</div>

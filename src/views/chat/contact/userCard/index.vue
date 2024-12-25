@@ -15,7 +15,7 @@
               :src="`/static/img/chat/sex_${conf.sourceUserInfo.gender}.svg`" v-if="conf.sourceUserInfo.gender" />
           </div>
           <div v-if="conf.sourceUserInfo.remark">nickName: {{ conf.sourceUserInfo.nickname }}</div>
-          <div>Uid: {{ conf.sourceUserInfo.userID }}</div>
+          <div @click="conf.handleCopy">Uid: {{ conf.sourceUserInfo.userID }}</div>
           <!-- <div>Area: China</div> -->
         </div>
       </div>
@@ -185,6 +185,11 @@ const conf = reactive({
       SessionType.Single,
       conf.memberInfo !== null,
     ).catch(() => System.toast(i18n.t('chatRoom.DescriptionFailed')));
+  },
+  //复制userID
+  handleCopy() {
+    StrUtil.copyText(conf.sourceUserInfo.userID)
+    System.toast(i18n.t('invite.CopySuccessful'), 'success')
   },
 })
 const getShowName = computed(() => {

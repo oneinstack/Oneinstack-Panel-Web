@@ -76,11 +76,10 @@ import IMSDK, {
   IMMethods,
 } from "openim-uniapp-polyfill";
 import csconversation from '@/modules/chat/sstore/csconversation';
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
 import { capis } from "@/modules/chat/api";
-import { log } from "node:console";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -88,45 +87,61 @@ const ConfirmTypes = {
   Quit: 'Quit'
 }
 
-const inviteRefs = ref<any>()
 const conf = reactive({
   showConfirm: false,
   confirmType: null as any,
   groupMemberList: [] as any[],
   transShow: false,
   type: '',
+  total: 0,
+  pageNum: 1,
+  pageSize: 500,
   getGroupMemberList() {
+    conf.pageNum = 1
     IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
       groupID: csconversation.currentConversation.groupID,
       filter: 0,
       offset: 0,
-      count: 500,
+      count: conf.pageSize,
     })
       .then(({ data }: any) => {
-        console.log('8888');
         console.log(data);
+        
         conf.groupMemberList = [...data];
         csconversation.groupMemberList = conf.groupMemberList
+        if(conf.groupMemberList.length == 500) {
+          conf.pageNum++
+          conf.reqGroupMemberList()
+        }
       })
       .catch((err: any) => {
-        console.log(err);
         conf.reqGroupMemberList()
       });
   },
   async reqGroupMemberList() {
-    const { members } = await capis.getGroupMemberList(
+    const { members, total } = await capis.getGroupMemberList(
       {
         filter: 0,
         groupID: csconversation.currentConversation.groupID,
         keyword: "",
         pagination: {
-          pageNumber: 1,
-          showNumber: 500,
+          pageNumber: conf.pageNum,
+          showNumber: conf.pageSize,
         },
       }
     );
-    conf.groupMemberList = [...members];
+    if( conf.pageNum == 1) conf.groupMemberList = [...members];
+    // 获取列表全部数据
+    if( conf.pageNum > 1) conf.groupMemberList = [...csconversation.groupMemberList,...members];
     csconversation.groupMemberList = conf.groupMemberList
+    conf.total = total
+    conf.moreMessage()
+  },
+
+  moreMessage() { 
+    if (conf.pageSize * conf.pageNum >= conf.total) return  
+    conf.pageNum++
+    conf.reqGroupMemberList()
   },
 
   confirmDel() {
@@ -188,10 +203,6 @@ const getConfirmContent = computed(() => {
 })
 
 onMounted(() => {
-  console.log('666668.');
-  console.log(csconversation.currentConversation.groupID);
-  console.log(csconversation.groupMemberList);
-  
   let list = csconversation.groupMemberList
   if(list.length && list[0].groupID == csconversation.currentConversation.groupID) {
     conf.groupMemberList = csconversation.groupMemberList
