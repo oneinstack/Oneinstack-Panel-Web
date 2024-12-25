@@ -1,5 +1,5 @@
 <template>
-  <x-page bgcolor="#ffffff">
+  <x-page :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('yueb.IncomeRule') }}
     </template>
@@ -8,6 +8,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme';
 import { index } from './yebContent'
 
 const conf = index()

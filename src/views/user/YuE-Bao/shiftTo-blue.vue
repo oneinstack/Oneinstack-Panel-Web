@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ conf.appInfo.app_name + ' fortune' }}
     </template>
@@ -66,6 +66,7 @@
 </template>
 
 <script lang="ts" setup>
+import stheme from '@/sstore/stheme'
 import { index } from './shiftTo'
 
 const { conf, sutil } = index()
@@ -95,8 +96,8 @@ const { conf, sutil } = index()
   }
 
   .item.active {
-    border-bottom: 2px solid #f5843e;
-    color: #f5843e;
+    border-bottom: 2px solid #006fff;
+    color: #006fff;
     transition: 0.2s;
   }
 }
@@ -126,7 +127,7 @@ const { conf, sutil } = index()
     }
 
     .number {
-      color: #f5843e;
+      color: #006fff;
       font-size: 48rem;
       word-wrap: break-word;
       padding: 0 8rem;
@@ -189,7 +190,7 @@ const { conf, sutil } = index()
     }
 
     input {
-      background-color: #fff6e6;
+      background-color: #F6F7FA;
       height: 70rem;
       border-radius: 10rem;
       width: 82%;
@@ -198,7 +199,7 @@ const { conf, sutil } = index()
     }
 
     .full {
-      color: #f5843e;
+      color: #006fff;
     }
   }
 
@@ -227,7 +228,7 @@ const { conf, sutil } = index()
 .verify {
   width: 80%;
   height: 80rem;
-  background: linear-gradient(to bottom, #eb602d, #ffa64f);
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   color: #fff;
   font-size: 38rem;
   border-radius: 50rem;

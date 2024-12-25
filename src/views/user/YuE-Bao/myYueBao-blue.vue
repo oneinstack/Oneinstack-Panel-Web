@@ -15,7 +15,7 @@
             {{ conf.tableData.totalBalance || '0.0000' }}
           </div>
         </div>
-        <img class="bg" src="/static/img/yeb-bg.png" mode="" />
+        <img class="bg" src="/static/theme/blue/yeb-bg.webp" mode="" />
       </div>
       <div class="box col">
         <div class="box-content column fit-height no-wrap">
@@ -38,7 +38,7 @@
               <div class="nav-item time" @click="conf.handleOpenDate">
                 {{ conf.selectDateStr }}
                 <div class="down-arrow">
-                  <img class="down-img" src="/static/img/to-Bottom.png" />
+                  <VSIcon lib="blue" name="arrow-down" :size="24" />
                 </div>
               </div>
             </div>
@@ -163,7 +163,7 @@ const { conf, sutil } = index()
 
       .total {
         font-size: 48rem;
-        color: #fc9b01;
+        color: #006fff;
       }
 
       .center {
@@ -242,7 +242,7 @@ const { conf, sutil } = index()
           min-width: 140rem;
           height: 62rem;
           border: 1px solid #ffa64f;
-          color: #fc9b01;
+          color: #006fff;
           border-radius: 10rem;
           padding: 0 7rem;
           display: flex;
@@ -282,16 +282,16 @@ const { conf, sutil } = index()
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fff6e6;
-            color: #fc9b01;
+            background-color: #f6f7fa;
+            color: #646464;
             width: 30%;
             font-size: 32rem;
             margin-left: 20rem;
             border-radius: 10rem;
 
             &.active {
-              background: #f6843f;
-              color: #fff;
+              background: #e6f2ff;
+              color: #006fff;
             }
           }
         }
@@ -313,14 +313,14 @@ const { conf, sutil } = index()
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #fff6e6;
-          color: #fc9b01;
+          background-color: #f6f7fa;
+          color: #646464;
           width: 30%;
           margin-left: 20rem;
 
           &.active {
-            background: #f6843f;
-            color: #fff;
+            background: #e6f2ff;
+            color: #006fff;
           }
         }
       }
@@ -415,5 +415,11 @@ const { conf, sutil } = index()
     font-size: 24rem;
     color: #707070;
   }
+}
+
+:deep(.van-popup .btn-view .right-btn) {
+  background: linear-gradient(#006FFF, #087BFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 </style>

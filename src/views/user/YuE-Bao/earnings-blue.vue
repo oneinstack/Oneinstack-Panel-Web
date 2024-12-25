@@ -1,21 +1,21 @@
 <template>
   <x-page headerBgColor="transparent" topfill noFooter>
     <template #title>
-      {{ $t('yueb.Mybalance') }}
+      {{ $t('yueb.EarningsLog') }}
     </template>
     <div class="myYueBao-box column fit-height">
       <div class="yeb-top">
         <div class="card">
-          <div class="title">{{ $t('yueb.TotalAmount') }}</div>
+          <div class="title">{{ $t('yueb.Totalearnings') }}</div>
           <div class="total" @click="conf.showMoneyBox = !conf.showMoneyBox">
-            {{ (conf.tableData.coinSymbol || '') + sutil.dataHandling(conf.tableData.totalBalance, 4, 4) }}
+            {{ (conf.tableData.coinSymbol || '') + sutil.dataHandling(conf.tableData.totalIncome, 4, 4) }}
           </div>
           <div class="moneyBox" v-if="conf.showMoneyBox">
             <div class="triangle"></div>
             {{ conf.tableData.totalBalance || '0.0000' }}
           </div>
         </div>
-        <img class="bg" src="/static/img/yeb-bg.png" mode="" />
+        <img class="bg" src="/static/theme/blue/yeb-bg.webp" mode="" />
       </div>
       <div class="box col">
         <div class="box-content column fit-height no-wrap">
@@ -24,27 +24,21 @@
             <!-- 搜索栏 -->
             <div class="nav-list">
               <div class="btn-list">
-                <template v-for="(item, index) in conf.typeList" :key="index">
-                  <div
-                    class="select-item"
-                    :class="{ 'active': conf.selectTypeObj.value == item.value }"
-                    @click="conf.handleSelectType(item)"
-                  >
-                    {{ item.name }}
-                  </div>
-                </template>
+                <div>
+                  {{ $t('yueb.Earnings') }}
+                </div>
               </div>
 
               <div class="nav-item time" @click="conf.handleOpenDate">
                 {{ conf.selectDateStr }}
                 <div class="down-arrow">
-                  <img class="down-img" src="/static/img/to-Bottom.png" />
+                  <VSIcon lib="blue" name="arrow-down" :size="24" />
                 </div>
               </div>
             </div>
           </div>
           <!-- 余额宝收益 记录详情 -->
-          <div class="col" style="overflow: auto">
+          <div class="col" style="overflow: auto" @scroll="conf.moreMessage">
             <div class="winning-box" style="width: 100%" v-if="conf.detailData.length > 0">
               <div class="winning-item" v-for="(item, itemIndex) in conf.detailData" :key="itemIndex">
                 <div class="content">
@@ -70,7 +64,7 @@
                   </div>
                 </div>
               </div>
-              <div v-if="conf.detailData.length > 0" style="margin-bottom: 15rem">
+              <div v-if="conf.isShowMore" style="margin-bottom: 15rem">
                 <x-no-data noicon></x-no-data>
               </div>
             </div>
@@ -90,7 +84,7 @@
 
 <script lang="ts" setup>
 import dataTimePicker from './components/ch-datetime-picker.vue'
-import { index } from './myYueBao'
+import { index } from './earnings'
 
 const { conf, sutil } = index()
 </script>
@@ -163,7 +157,7 @@ const { conf, sutil } = index()
 
       .total {
         font-size: 48rem;
-        color: #fc9b01;
+        color: #006fff;
       }
 
       .center {
@@ -238,11 +232,12 @@ const { conf, sutil } = index()
         padding: 0rem 30rem;
         height: 120rem;
         border-bottom: 1rem solid #f6f7fa;
+        font-size: 28rem;
         .nav-item {
           min-width: 140rem;
           height: 62rem;
           border: 1px solid #ffa64f;
-          color: #fc9b01;
+          color: #006fff;
           border-radius: 10rem;
           padding: 0 7rem;
           display: flex;
@@ -282,16 +277,16 @@ const { conf, sutil } = index()
             display: flex;
             align-items: center;
             justify-content: center;
-            background-color: #fff6e6;
-            color: #fc9b01;
+            background-color: #f6f7fa;
+            color: #646464;
             width: 30%;
             font-size: 32rem;
             margin-left: 20rem;
             border-radius: 10rem;
 
             &.active {
-              background: #f6843f;
-              color: #fff;
+              background: #e6f2ff;
+              color: #006fff;
             }
           }
         }
@@ -313,14 +308,14 @@ const { conf, sutil } = index()
           display: flex;
           align-items: center;
           justify-content: center;
-          background-color: #fff6e6;
-          color: #fc9b01;
+          background-color: #f6f7fa;
+          color: #646464;
           width: 30%;
           margin-left: 20rem;
 
           &.active {
-            background: #f6843f;
-            color: #fff;
+            background: #e6f2ff;
+            color: #006fff;
           }
         }
       }
@@ -415,5 +410,11 @@ const { conf, sutil } = index()
     font-size: 24rem;
     color: #707070;
   }
+}
+
+:deep(.van-popup .btn-view .right-btn) {
+  background: linear-gradient(#006fff, #087bff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 </style>

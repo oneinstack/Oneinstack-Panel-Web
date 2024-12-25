@@ -7,7 +7,9 @@
     <div class="yueBao-box">
       <x-statusbar header />
       <div class="yeb-log">
-        <img class="log" src="/static/img/yeb-log.png" mode="" />
+        <div class="log">
+          <VSIcon lib="blue" name="fortune" :size="108" />
+        </div>
         <div class="">{{ conf.appInfo.app_name }} fortune</div>
       </div>
       <div class="yeb-content">
@@ -58,7 +60,19 @@ const conf = index()
 <style lang="less" scoped>
 .yueBao-box {
   height: 100%;
-  background: linear-gradient(to bottom, #f07336 40%, #fff);
+  background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 510rem;
+    height: 510rem;
+    background: url('/static/theme/blue/bg-square.webp') no-repeat center center;
+    background-size: cover;
+    z-index: 1;
+  }
 
   .yeb-log {
     height: 280rem;
@@ -69,11 +83,18 @@ const conf = index()
     align-items: center;
     font-size: 48rem;
     color: #fff;
+    position: relative;
+    z-index: 2;
 
     .log {
       width: 108rem;
       height: 108rem;
       margin: 50rem 0 30rem;
+      background-color: #fff;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
   }
 
@@ -86,6 +107,8 @@ const conf = index()
     flex-direction: column;
     align-items: center;
     padding-top: 60rem;
+    position: relative;
+    z-index: 2;
 
     .title {
       font-size: 36rem;
@@ -166,12 +189,13 @@ const conf = index()
       }
 
       .out {
-        background-color: #fff6e6;
-        color: #f6843f;
+        background-color: #e6f2ff;
+        color: #006fff;
       }
 
       .to {
-        background-color: #f6843f;
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
+        color: #ffffff;
       }
     }
 
