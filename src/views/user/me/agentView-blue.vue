@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { index } from './agentView'
+import { stheme } from '@/sstore/stheme'
 
 const conf = index()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>{{ $t('agencyCenterModule.FindTitle') }}</template>
     <!-- 搜索栏 -->
     <div class="search">
@@ -85,7 +86,7 @@ const conf = index()
   justify-content: space-between;
   flex-wrap: wrap;
   font-weight: 500;
-  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 160%);
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   padding: 50rem 30rem;
 
   .left-view,
@@ -206,7 +207,7 @@ const conf = index()
   }
 
   .right-btn {
-    background: linear-gradient(#eb602d, #ffa64f);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
