@@ -1,5 +1,5 @@
 <template>
-  <x-page :fixed="false" no-footer>
+  <x-page :fixed="false" no-footer :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{
         conf.saveInfo.userName
@@ -74,6 +74,7 @@
 </template>
 <script lang="ts" setup>
 import { index } from './agencyCenter'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>
@@ -115,15 +116,16 @@ const conf = index()
     height: 52rem;
     line-height: 52rem;
     width: 164rem;
-    background: #f9f9f9;
-    color: #000000;
+    background: #f6f7fa;
+    color: #646464;
     text-align: center;
     line-height: 52rem;
     font-size: 28rem;
     border-radius: 10rem;
     .checked {
       border-radius: 5px;
-      background: #fff6e6;
+      background: #e6f2ff;
+      color: #006fff;
     }
   }
 }
@@ -207,7 +209,7 @@ const conf = index()
         font-size: 26rem;
         font-weight: 600;
         .value {
-          background: linear-gradient(to bottom, #eb602d, #ffa64f);
+          background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
           -webkit-background-clip: text; /* 使用-webkit-前缀兼容部分浏览器 */
           background-clip: text;
           color: transparent;
@@ -231,8 +233,8 @@ const conf = index()
 }
 
 .bg-green {
-  box-shadow: 3px 3px 4px rgba(255, 166, 79, 0.2) !important;
-  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 160%) !important;
+  box-shadow: 3px 3px 4px rgba(0, 11, 125, 0.2) !important;
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%) !important;
 }
 
 .cuIcon-search {

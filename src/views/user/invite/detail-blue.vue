@@ -1,5 +1,5 @@
 <template>
-  <x-page noFooter :topfill="false">
+  <x-page noFooter :topfill="false" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       <div class="title" :class="{ small: conf.title.length > 20 }">{{ conf.title }}</div>
     </template>
@@ -28,9 +28,10 @@
 </template>
 
 <script lang="ts" setup>
-import detailCard from './components/detail-card.vue'
-import selectPopup from './components/select-popup.vue'
+import detailCard from './theme/blue/components/detail-card.vue'
+import selectPopup from './theme/blue/components/select-popup.vue'
 import { index } from './detail'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>

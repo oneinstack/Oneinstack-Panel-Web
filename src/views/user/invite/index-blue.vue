@@ -39,18 +39,18 @@
 
             <div class="select-block">
               <div class="select-item" @click="conf.handleCopyCode">
-                <img class="img" src="/static/img/invite.png" mode="" />
+                <img class="img" src="/static/theme/blue/invite.png" mode="" />
                 <div class="text">
                   <span>{{ $t('invite.CopyInvitationCode') }}: {{ conf.userInfo?.userInvitationCode || '' }}</span>
                   <img class="copy-img" src="/static/img/copyImg.png" />
                 </div>
               </div>
               <div class="select-item" @click="conf.handleIntoPage('/user/me/agencyCenter')">
-                <img class="img" src="/static/img/me-active-new.png" mode="" />
+                <img class="img" src="/static/theme/blue/me-active-new.png" mode="" />
                 <span>{{ $t('invite.SubordinateUser') }}</span>
               </div>
               <div class="select-item" @click="conf.handleIntoPage('/user/me/myCommission')">
-                <img class="img" src="/static/img/commission-new.png" mode="" />
+                <img class="img" src="/static/theme/blue/commission-new.png" mode="" />
                 <span>{{ $t('me.Commission') }}</span>
               </div>
             </div>
@@ -66,8 +66,8 @@
   </x-page>
 </template>
 <script lang="ts" setup>
-import contentBlock from './components/content-block.vue'
-import searchBlock from './components/search-block.vue'
+import contentBlock from './theme/blue/components/content-block.vue'
+import searchBlock from './theme/blue/components/search-block.vue'
 import { index } from './index'
 
 const conf = index()
@@ -76,12 +76,26 @@ const conf = index()
 <style lang="less" scoped>
 .invite-container {
   height: max-content;
-  background: linear-gradient(to bottom, #eb602d 0%, #ffa64f 50%, #f6f7fa 100%);
+  background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 510rem;
+    height: 510rem;
+    background: url('/static/theme/blue/bg-square.webp') no-repeat center center;
+    background-size: cover;
+    z-index: 1;
+  }
 }
 
 .content-box {
   height: max-content;
   width: 100%;
+  position: relative;
+  z-index: 2;
 
   .top-content {
     // position: absolute;
@@ -141,7 +155,7 @@ const conf = index()
   .btn-view {
     margin-top: 30rem;
     width: calc(100% - 60rem);
-    background: linear-gradient(180deg, #eb602d 0%, #ffa64f 160%);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     border-radius: 82rem;
     text-align: center;
     color: #fff;

@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('me.Commission') }}
     </template>
@@ -32,6 +32,7 @@
 
 <script lang="ts" setup>
 import { index } from './myCommission'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>

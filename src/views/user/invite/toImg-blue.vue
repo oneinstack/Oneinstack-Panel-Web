@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('tabble.invite') }}
     </template>
@@ -56,6 +56,7 @@ import { EffectCoverflow } from 'swiper/modules'
 import { Swiper, SwiperSlide } from 'swiper/vue'
 import { ref } from 'vue'
 import { index } from './toImg'
+import stheme from '@/sstore/stheme'
 
 const swiperInstance = ref(null as any)
 const conf = index(swiperInstance)
@@ -126,7 +127,7 @@ const conf = index(swiperInstance)
 .btn-view {
   margin-top: 30rem;
   width: calc(100% - 60rem);
-  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 160%);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   border-radius: 82rem;
   text-align: center;
   color: #fff;
@@ -143,13 +144,13 @@ const conf = index(swiperInstance)
   background: #fff;
   border-radius: 82rem;
   text-align: center;
-  color: #eb602d;
+  color: #006FFF;
   font-weight: 500;
   font-size: 40rem;
   height: 100rem;
   line-height: 100rem;
   margin-left: 30rem;
-  border: 2rem solid #eb602d;
+  border: 2rem solid #006FFF;
 }
 
 .bottom-code {
