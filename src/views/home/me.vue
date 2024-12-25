@@ -49,7 +49,7 @@
                 <span class="vip-icon">
                   <img
                     class="vip2"
-                    :src="'/static/img/VIP/v' + conf.userVipLevel + '.png'"
+                    :src="'/static/img/VIP/v' + conf.userVipLevel + '.svg'"
                     mode="widthFix"
                     style="width: 80rem !important"
                   />

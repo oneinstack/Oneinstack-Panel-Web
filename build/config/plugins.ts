@@ -1,5 +1,4 @@
 import { VantResolver } from '@vant/auto-import-resolver'
-import legacy from '@vitejs/plugin-legacy'
 import vue from '@vitejs/plugin-vue'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -49,7 +48,6 @@ export const getPlugins = (env: globalType) => {
         gzipSize: true,
         brotliSize: true
       }) as any,
-      legacy(),
       androidSSL(),
       {
         name: 'end',
