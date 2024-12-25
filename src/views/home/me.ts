@@ -108,7 +108,7 @@ export const index = () => {
 
     needLoginShow: () => sconfig.userInfo,
     async initData() {
-      let info = await svalue.getAppConfiguration()
+      let info = await svalue.getAppConfiguration(true)
       let addArr = []
       if (info.yeb) {
         addArr.push({

@@ -8,7 +8,7 @@
       <!-- 头部 -->
       <div class="head">
         <div class="head-daily">
-          <x-img classs="logo-img" :src="conf.logoImg" />
+          <img class="logo-img" :src="svalue.configv1.app_logo" />
           <div class="head-rank" @click="conf.handleClickServiceImg">
             <img class="rank-img" src="/static/img/customer-service-new.png" />
           </div>
@@ -144,8 +144,6 @@ const timer = Scope.Timer()
 const DGameTipRef = ref<any>(null)
 const conf = reactive({
   showDNotice: false,
-  logoImg: '',
-  appName: '',
   downloadUrl: '',
   language: '',
   localGameArr: [] as any[],
@@ -190,9 +188,7 @@ const conf = reactive({
 
   // 获取logo 名称
   async getConfiguration() {
-    let appConfig = await svalue.getAppConfiguration()
-    conf.logoImg = appConfig.app_logo
-    conf.appName = appConfig.app_name
+    let appConfig = await svalue.getAppConfiguration(true)
     Cookie.set('appConfiguration', appConfig)
     if (System.platform == 'ios') {
       conf.downloadUrl = appConfig.app_iosurl

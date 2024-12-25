@@ -3,7 +3,7 @@
     <div class="main" :style="{ paddingTop: `${StatusBarConfig.statusHeight}px` }">
       <div class="head">
         <div class="head-daily">
-          <img class="logo-img" :src="conf.logoImg" />
+          <img class="logo-img" :src="svalue.configv1.app_logo" />
           <div class="head-rank" @click="conf.handleClickServiceImg">
             <img class="rank-img" src="/static/img/customer-service-new.png" />
           </div>
