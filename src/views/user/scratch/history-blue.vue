@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :bgcolor="'#eff1f5'">
+  <x-page :no-footer="true" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('scratch.scratch') }}
     </template>
@@ -14,20 +14,20 @@
       <div class="top-content">
         <div class="class-num">
           <div class="class-item" :class="conf.clickTab == '0' ? 'activeTab' : ''" @click="conf.handleTabClick('0')">
-            <div class="name">{{ $t('scratch.drawn') }}</div>
             <div class="num">{{ conf.statistics.drawn }}</div>
+            <div class="name">{{ $t('scratch.drawn') }}</div>
           </div>
           <div class="class-item" :class="conf.clickTab == '1' ? 'activeTab' : ''" @click="conf.handleTabClick('1')">
-            <div class="name">{{ $t('scratch.winning') }}</div>
             <div class="num">{{ conf.statistics.winning }}</div>
+            <div class="name">{{ $t('scratch.winning') }}</div>
           </div>
           <div class="class-item" :class="conf.clickTab == '2' ? 'activeTab' : ''" @click="conf.handleTabClick('2')">
-            <div class="name">{{ $t('scratch.losing') }}</div>
             <div class="num">{{ conf.statistics.lose }}</div>
+            <div class="name">{{ $t('scratch.losing') }}</div>
           </div>
           <div class="class-item" :class="conf.clickTab == '-1' ? 'activeTab' : ''" @click="conf.handleTabClick('-1')">
-            <div class="name">{{ $t('scratch.expired') }}</div>
             <div class="num">{{ conf.statistics.expired }}</div>
+            <div class="name">{{ $t('scratch.expired') }}</div>
           </div>
         </div>
         <div class="line">
@@ -135,6 +135,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme'
 import { index } from './history'
 
 const conf = index()
@@ -161,7 +162,6 @@ const conf = index()
 .top-select {
   margin: 20rem 10rem;
   border-radius: 10rem;
-  background: #fff5e3;
   display: flex;
   flex-direction: column;
   height: calc(100% - 144rem);
@@ -171,6 +171,8 @@ const conf = index()
     display: flex;
     justify-content: space-between;
     margin: 0rem 10rem;
+    background-color: #FFFFFF;
+    border-radius: 12rem;
 
     .class-item {
       flex: 1;
@@ -180,6 +182,7 @@ const conf = index()
       align-items: center;
       font-weight: 700rem;
       font-size: 30rem;
+      color: #999999;
 
       .num {
         color: #000;
@@ -207,7 +210,6 @@ const conf = index()
     }
 
     .centre {
-      background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(217, 217, 217, 0) 100%);
       height: 26rem;
       flex: 1;
     }
@@ -440,8 +442,8 @@ const conf = index()
   width: 176rem;
   height: 36rem;
   font-size: 16rem;
-  background: linear-gradient(to right, #ffffff, #ffe0ca);
-  color: #ff7502;
+  background: linear-gradient(-90deg, #e6f2ff 0%, #ffffff 100%);
+  color: #006FFF;
   border-top-right-radius: 16rem;
 }
 </style>
