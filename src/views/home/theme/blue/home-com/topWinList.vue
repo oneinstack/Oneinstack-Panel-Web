@@ -48,7 +48,7 @@
         <div class="item" v-for="(item, index) in conf.todayWinnerInfoList.slice(3, 5)">
           <span class="left-rank">{{ index + 4 }}</span>
           <div class="avatar">
-            <x-img :src="item.userImgUrl" />
+            <x-img :src="item.imgUrl" />
           </div>
           <span class="middle-name">{{ item.userName.slice(0, 2) }}****{{ item.userName.slice(-2) }}</span>
           <span class="right-box">{{ item.coinSymbol + item.betPrizeMoney }}</span>
@@ -117,6 +117,7 @@ const conf = index()
           height: 80rem;
           margin-right: 13rem;
           border-radius: 50%;
+          overflow: hidden;
         }
 
         .left-rank {
