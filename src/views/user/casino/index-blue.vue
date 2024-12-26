@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import DGameTip from '../../home/home-com/DGameTip.vue'
+import DGameTip from '@/views/home/theme/blue/home-com/DGameTip.vue'
 import { index } from './index'
 import stheme from '@/sstore/stheme';
 
