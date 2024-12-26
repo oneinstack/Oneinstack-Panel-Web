@@ -10,16 +10,18 @@
       </div>
       <img style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" @click="conf.toGroup" />
     </div>
+    <conversationSetting />
   </x-page>
 </template>
 <script setup lang="ts">
 import cscontact from '@/modules/chat/sstore/cscontact';
 import csconversation from '@/modules/chat/sstore/csconversation';
+import conversationSetting from './com/conversationSetting.vue';
 import System from '@/utils/System';
-import { onMounted, reactive } from 'vue'
+import { reactive } from 'vue'
 const conf = reactive({
   muteChecked: false,
-  topChecked: true,
+  isPinned: false,
   alertChecked: false,
   toUserCard() {
     System.router.push(`/chat/userCard?sourceID=${csconversation.currentConversation.userID}`)
@@ -35,10 +37,6 @@ const conf = reactive({
       info,
     )}`)
   }
-})
-onMounted(() => {
-  console.log(csconversation.currentConversation);
-
 })
 </script>
 <style lang="less" scoped>

@@ -48,6 +48,7 @@
         </div>
       </div>
     </div>
+    <conversationSetting />
     <div class="edit flex-center" @click="() => (conf.confirmType = isOwner ? 'Dismiss' : 'Quit')">
       <div class="title" style="color: #f45551;">{{
         isOwner
@@ -71,6 +72,7 @@
 <script setup lang="ts">
 import groupItem from "./com/groupItem.vue";
 import transferGroup from "./com/transferGroup.vue";
+import conversationSetting from "./com/conversationSetting.vue";
 import IMSDK, {
   GroupMemberRole,
   IMMethods,

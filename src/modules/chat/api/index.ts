@@ -24,8 +24,8 @@ export const capis = {
   initiateFormData: (obj?: ApiData) => chttp.post('/object/initiate_form_data', obj),
   completeFormData: (obj?: ApiData) => chttp.post('/object/complete_form_data', obj),
 
-  // ===========  other  ===========
-  getGroupMemberList: (obj?: ApiData) => chttp.post('/group/get_group_member_list', obj),
-  updateFriends: (obj?: ApiData) => chttp.post('/friend/update_friends', obj),
-  getUsersInfo: (obj?: ApiData) => chttp.post('/user/get_users_info', obj)
+  // ===========  other(均为IMSDK暂未提供方法或方法不能请求，故改用接口请求)  ===========
+  getGroupMemberList: (obj?: ApiData) => chttp.post('/group/get_group_member_list', obj), //获取群聊成员列表
+  updateFriends: (obj?: ApiData) => chttp.post('/friend/update_friends', obj), // 修改好友信息
+  setConversations: (obj?: ApiData) => chttp.post('/conversation/set_conversations', obj) // 设置会话，置顶等
 }
