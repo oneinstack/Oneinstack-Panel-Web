@@ -152,7 +152,7 @@ const conf = reactive({
   },
   content: {
     toBottom: async (ani = false, time = 0) => {
-      chatBoxRef.value.showLastData()
+      chatBoxRef.value.toBottom(ani)
       timer.once(() => {
         chatBoxRef.value.toBottom(ani)
       }, time)
@@ -262,10 +262,14 @@ const conf = reactive({
       })
     },
     send: async () => {
-      const message: any = await csmessage.createTextMessage(inputRef.value.getMessage())
-      conf.input.message = ''
-      inputRef.value.clear(!conf.emoji.show)
-      csmessage.sendMessage(message)
+      FunUtil.throttle(async () => {
+        const _msg = inputRef.value.getMessage()
+        if (StrUtil.isNull(_msg)) return
+        const message: any = await csmessage.createTextMessage(_msg)
+        conf.input.message = ''
+        inputRef.value.clear(!conf.emoji.show)
+        csmessage.sendMessage(message)
+      }, 300)
     },
     isInit: false
   },
@@ -315,33 +319,11 @@ watch(
     if (!csmessage.historyMessageList.length) return
     //设置额外数据
     csmessage.historyMessageList.forEach((item) => conf.setItem(item))
-
-    if (conf.chat.isInit) {
-      const newData = [...csmessage.historyMessageList]
-      const lastItem = newData.findIndex((item) => item.clientMsgID === conf.chat.lastItem.clientMsgID)
-      const firstItem = newData.findIndex((item) => item.clientMsgID === conf.chat.firstItem.clientMsgID)
-      const lastItemData = newData.slice(lastItem + 1)
-      const firstItemData = newData.slice(0, firstItem)
-      if (lastItemData.length > 0) {
-        //向尾部插入数据
-        conf.chat.lastItem = lastItemData[lastItemData.length - 1]
-        for (let i = 0; i < lastItemData.length; i++) {
-          await chatBoxRef.value.insertData(lastItemData[i])
-        }
-      } else {
-        //向头部插入数据
-        conf.chat.firstItem = firstItemData[0]
-        await chatBoxRef.value.unshiftData(firstItemData)
-        //刷新顶部才会向头部插入数据，通知数据处理完毕
-        event.emit('scrollTopFinish')
-      }
-    } else {
-      conf.chat.isInit = true
-      conf.chat.list = [...csmessage.historyMessageList]
-      conf.chat.firstItem = csmessage.historyMessageList[0]
-      conf.chat.lastItem = csmessage.historyMessageList[csmessage.historyMessageList.length - 1]
-      await chatBoxRef.value.initData(csmessage.historyMessageList)
-    }
+    event.emit('scrollTopFinish')
+    chatBoxRef.value.init()
+    FunUtil.debounce(() => {
+      chatBoxRef.value.newMessage()
+    }, 500)
   }
 )
 

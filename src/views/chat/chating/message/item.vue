@@ -1,12 +1,6 @@
 <template>
-  <div
-    ref="itemRef"
-    class="row fit-width"
-    :class="{ reverse: item.isme }"
-    :style="{ height: height ? height + 'px' : undefined }"
-    style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem"
-  >
-    <template v-if="conf.show && !item.noticeContent">
+  <div class="row fit-width" :class="{ reverse: item.isme }" style="padding: 0rem 32rem 30rem 32rem; min-height: 80rem">
+    <template v-if="!item.noticeContent">
       <div class="face">
         <headImg :src="item.senderFaceUrl" />
       </div>
@@ -26,58 +20,21 @@
         </div>
       </div>
     </template>
-    <template v-else-if="conf.show">
+    <template v-else>
       <div class="row flex-center fit-width" v-html="item.noticeContent"></div>
     </template>
   </div>
 </template>
 <script setup lang="ts">
 import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
-import { Scope } from 'tools-vue3'
-import { onMounted, reactive, ref, watch } from 'vue'
 import headImg from '../../components/headImg.vue'
 import ItemMedia from './item-media.vue'
 import ItemText from './item-text.vue'
 const textRenderTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
 const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]
-const timer = Scope.Timer()
-const props = defineProps<{
-  info: any
+defineProps<{
   item: MessageItem & { isme: boolean; noticeContent: string }
-  height: any
 }>()
-
-watch(
-  () => props.info.isRender,
-  () => {
-    if (props.info.isRender) {
-      conf.show = true
-    }
-  }
-)
-
-const itemRef = ref()
-
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (!props.info.isRender) {
-      conf.show = entry.isIntersecting
-    }
-  })
-})
-
-const init = () => {
-  observer.observe(itemRef.value as Element)
-}
-const conf = reactive({
-  show: true
-})
-
-onMounted(() => {
-  timer.once(() => {
-    init()
-  }, 100)
-})
 </script>
 <style lang="less" scoped>
 .face {

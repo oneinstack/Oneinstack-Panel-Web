@@ -53,6 +53,7 @@ export const csmessage = reactive({
         this.previewImageList = [...this.previewImageList, ...imageList]
       }
     }
+    message.isme = true
     this.historyMessageList = [...this.historyMessageList, message]
   },
 
