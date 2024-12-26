@@ -9,11 +9,19 @@
         </van-uploader>
         <div class="flex flex-center" style="font-size: 20rem; margin-top: 10rem">{{ i18n.t('chatRoom.album') }}</div>
       </div>
-      <div>
+      <div @click="conf.toPage('/chat/redPacket/send')">
         <div class="tools-item flex flex-center">
-          <VSIcon name="tools-camera" :size="56" />
+          <VSIcon name="tools-pack" :size="56" />
         </div>
-        <div class="flex flex-center" style="font-size: 20rem; margin-top: 10rem">{{ i18n.t('chatRoom.shoot') }}</div>
+        <div class="flex flex-center" style="font-size: 20rem; margin-top: 10rem">{{ i18n.t('chatRoom.rpkt') }}</div>
+      </div>
+      <div @click="conf.toPage('/chat/betRecord')">
+        <div class="tools-item flex flex-center">
+          <VSIcon name="tools-record" :size="56" />
+        </div>
+        <div class="flex flex-center" style="font-size: 20rem; margin-top: 10rem">
+          {{ i18n.t('chatRoom.ShareBet') }}
+        </div>
       </div>
     </div>
   </div>
@@ -35,34 +43,10 @@ const conf = reactive({
       csmessage.sendMessage(res)
     }
   },
-  list: [
-    {
-      name: i18n.t('chatRoom.album'),
-      icon: 'tools-img',
-      fun: () => {}
-    },
-    {
-      name: i18n.t('chatRoom.shoot'),
-      icon: 'tools-camera',
-      fun: () => {}
-    },
-    {
-      name: i18n.t('chatRoom.rpkt'),
-      icon: 'tools-pack',
-      fun: () => {
-        mconf.tools.close()
-        System.router.push('/chat/redPacket/send')
-      }
-    },
-    {
-      name: i18n.t('chatRoom.ShareBet'),
-      icon: 'tools-record',
-      fun: () => {
-        mconf.tools.close()
-        System.router.push('/chat/betRecord')
-      }
-    }
-  ]
+  toPage: (url: string) => {
+    mconf.tools.close()
+    System.router.push(url)
+  }
 })
 </script>
 <style lang="less" scoped>
