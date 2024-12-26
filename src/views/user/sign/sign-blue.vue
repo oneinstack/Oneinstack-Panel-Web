@@ -1,5 +1,5 @@
 <template>
-	<x-page :no-footer="true" :headerBgColor="conf.bgcolor" :topfill="false">
+	<x-page :no-footer="true" :topfill="false" headerBgColor="transparent">
 		<template #title>
 			{{ $t('point.signIn') }}
 		</template>
@@ -7,7 +7,7 @@
 			<x-statusbar header />
 			<div class="sign-bg">
 				<div class="sign-img">
-					<img src="/static/img/sign/calendar.png" />
+					<img src="/static/theme/blue/calendar.webp" />
 				</div>
 				<div class="tips">
 					<div class="surprise">{{ $t('signInModule.SurpriseBenefit') }}</div>
@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import { index } from './sign'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>
@@ -74,7 +75,7 @@ const conf = index()
 <style lang="less" scoped>
 
 .mian {
-	background: linear-gradient(119deg, #ED6731 -0.53%, #FFA64F 94.28%);
+	background: linear-gradient(to right, rgb(0, 111, 255) 0%, rgb(16, 127, 253) 100%);
 }
 
 .sign-bg {
@@ -82,11 +83,11 @@ const conf = index()
 	position: relative;
 
 	.sign-img {
-		width: 350rem;
-		height: 350rem;
+		width: 212rem;
+		height: 256rem;
 		position: absolute;
-		right: 0rem;
-		top: -50rem;
+		left: 490rem;
+		top: -30rem;
 
 		img {
 			width: 100%;
@@ -136,15 +137,16 @@ const conf = index()
 			height: 55rem;
 			width: 13rem;
 			border-radius: 22rem;
-			background: #FEDBAC;
+			background: #8FA9FF;
 		}
 	}
 
 	.sign-box {
 		border-radius: 42rem;
-		background: linear-gradient(180deg, #FCFBE8 -6.45%, #FFF 29.03%);
-		box-shadow: 0px 4px 10px 0px rgba(255, 166, 79, 0.20);
+		background: linear-gradient(360deg, #FFFFFF 85%, #D1DFFF 100%);
 		padding: 60rem 48rem;
+		box-shadow: 0px 4px 10px 0px #4F81FF26;
+
 
 		.title {
 			color: #4C3629;
@@ -161,7 +163,7 @@ const conf = index()
 			.time-item {
 				border-radius: 22rem;
 				opacity: 0.9004;
-				background: #FFF1DE;
+				background: #E6F2FF;
 				// width: 184rem;
 				width: 31%;
 				height: 212rem;
@@ -171,7 +173,7 @@ const conf = index()
 				justify-content: space-between;
 				align-items: center;
 				margin-bottom: 20rem;
-				color: #C6924D;
+				color: #087BFF;
 
 				// &:hover{
 				// 	box-shadow: 0 2rem 20rem #FD7334;
@@ -219,15 +221,15 @@ const conf = index()
 				}
 
 				&.active {
-					background: linear-gradient(180deg, #FD7334 0%, #FF9F4C 100%);
-					color: #FFF;
+					background: linear-gradient(109.77deg, #087BFF 4.47%, #0645D9 138.81%);
+					color: #fff;
 				}
 
 			}
 
 			.has-box-hadow {
 				&:hover {
-					box-shadow: 0 2rem 20rem #FD7334;
+					box-shadow: 0 2rem 20rem #087BFF;
 				}
 			}
 
@@ -235,7 +237,7 @@ const conf = index()
 
 		.sign-in {
 			height: 100rem;
-			background: linear-gradient(180deg, #EB602D 0%, #FFA64F 100%);
+			background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
 			border-radius: 74rem;
 			color: #FFF;
 			font-size: 48rem;
