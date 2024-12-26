@@ -1,5 +1,5 @@
 <template>
-	<x-page noFooter :bgcolor="'#f6f7fa'">
+	<x-page noFooter :bgcolor="'#f6f7fa'" :headerBgColor="stheme.theme.blue.headerBgColor()">
 		<template #title>
 			{{ $t('signInModule.promotions') }}
 		</template>
@@ -17,6 +17,7 @@
 <script setup lang="ts">
 import sconfig from '@/sstore/sconfig';
 import { index } from './detail'
+import stheme from '@/sstore/stheme'
 
 const conf = index()
 </script>
@@ -47,7 +48,7 @@ const conf = index()
 
 			.btn {
 				padding: 14rem 30rem;
-				background-image: linear-gradient(#FFA64F, #EB602D);
+                background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
 				border-radius: 56rem;
 				font-size: 36rem;
 				color: #FFF;

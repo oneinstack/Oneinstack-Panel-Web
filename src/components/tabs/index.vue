@@ -5,7 +5,7 @@
       style="--color1: #ff7502; --color2: #fc9b01"
       v-for="item in list"
       @click="conf.clickItem(item)"
-      :class="[item.value === active ? 'text-c1' : '']"
+      :class="[item.value === active ? (conf.theme == 'blue' ? 'text-c2' : 'text-c1') : '']"
     >
       {{ item.label }}
     </div>
@@ -38,6 +38,7 @@ const props = defineProps({
 })
 const emit = defineEmits(['update:active', 'change'])
 const conf = reactive({
+  theme: Cookie.get('pageTheme'),
   line: {
     width: 0,
     widthRem: 0,
