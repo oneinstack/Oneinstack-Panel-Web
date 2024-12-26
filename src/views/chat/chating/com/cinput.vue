@@ -7,12 +7,14 @@
     @keydown="conf.enter"
     @input="messageInput"
     @paste="handlePaste"
+    @blur="conf.blur"
     :inputmode="conf.inputmode"
+    @click="conf.blur"
   ></div>
 </template>
 <script setup lang="ts">
 import System from '@/utils/System'
-import { reactive, ref } from 'vue'
+import { nextTick, reactive, ref } from 'vue'
 
 defineProps<{
   modelValue: string
@@ -30,6 +32,10 @@ const conf = reactive({
       e.preventDefault()
       emit('enter', getMessage())
     }
+  },
+  blur: () => {
+    messageInputDom.value.removeAttribute('readonly') // 移除 readonly
+    conf.inputmode = undefined
   }
 })
 
@@ -116,21 +122,26 @@ const messageInputDom = ref()
 
 // 没有键盘的聚焦
 const focusWithoutKeyboard = (element: HTMLElement) => {
-  element.setAttribute('readonly', 'true') // 临时设置为 readonly
+  element.setAttribute('readonly', 'true')
   conf.inputmode = 'none'
-  element.focus() // 聚焦元素
-  setTimeout(() => {
-    element.removeAttribute('readonly') // 移除 readonly
-    conf.inputmode = undefined
-  }, 100) // 延迟一定时间后恢复正常状态
+  return new Promise((resolve) => {
+    nextTick(() => {
+      element.focus()
+      if (System.platform !== 'ios') {
+        setTimeout(() => {
+          element.removeAttribute('readonly')
+          conf.inputmode = undefined
+        }, 300)
+      }
+      resolve(true)
+    })
+  })
 }
 
 // 选择的emoji
-const insertEmoji = (url: string, size: string = '18rem') => {
-  // 没有焦点就获取输入框焦点
+const insertEmoji = async (url: string, size: string = '18rem') => {
   if (document.activeElement != messageInputDom.value) {
-    // messageInputDom.value.focus()
-    focusWithoutKeyboard(messageInputDom.value)
+    await focusWithoutKeyboard(messageInputDom.value)
   }
   let emojiImg = `<img src="${url}" width="${size}" height="${size}" style="vertical-align: middle;transform: translateY(-3rem);">`
   document.execCommand('insertHTML', false, emojiImg)
