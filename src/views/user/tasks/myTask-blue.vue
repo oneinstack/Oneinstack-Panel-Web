@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :fixed="false" :bgcolor="'#F1F1F1'">
+  <x-page :no-footer="true" :fixed="false" :bgcolor="'#F1F1F1'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('task.mytask') }}
     </template>
@@ -87,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme'
 import loading from './components/loading.vue'
 import { index } from './myTask'
 
@@ -111,7 +112,7 @@ const { conf, sutil } = index()
     }
 
     .type-active {
-      background: linear-gradient(180deg, #eb602d 0%, #f5843e 52.5%, #fb9948 73%, #fb9948 80.5%, #ffa64f 98.5%);
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
       background-clip: text;
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -120,7 +121,7 @@ const { conf, sutil } = index()
 
   .trend-line {
     height: 4rem;
-    background: linear-gradient(180deg, #eb602d 0%, #f5843e 52.5%, #fb9948 73%, #fb9948 80.5%, #ffa64f 98.5%);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   }
 }
 
@@ -279,7 +280,7 @@ const { conf, sutil } = index()
       }
 
       span {
-        color: #ff8e18;
+        color: #006FFF;
         font-size: 25rem;
       }
 
@@ -303,7 +304,7 @@ const { conf, sutil } = index()
       top: -40rem;
       width: 80rem;
       height: 80rem;
-      background: #fff2e9;
+      background: #E6F2FF;
       transform: rotate(45deg);
 
       .state-img {

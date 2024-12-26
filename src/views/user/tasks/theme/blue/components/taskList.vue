@@ -43,7 +43,7 @@
 					<img class="state-img" src="/static/img/task/task-1.png" />
 				</div>
 				<div class="right-top" v-else-if="conf.getDeposit(item.deposit)">
-					<img class="state-img" src="/static/img/task/task-deposit.png" />
+					<img class="state-img" src="/static/theme/blue/task-deposit.webp" />
 				</div>
 			</div>
 		</template>
@@ -195,8 +195,8 @@ const conf = reactive({
 
 			.collect-btn {
 				padding: 8rem 24rem;
-				color: #FC9B01;
-				background: #FFF2E9;
+				color: #006FFF;
+				background: #E6F2FF;
 				border-radius: 24rem;
 				font-size: 25rem;
 			}
@@ -259,7 +259,7 @@ const conf = reactive({
 			}
 
 			span {
-				color: #FF8E18;
+				color: #006FFF;
 				font-size: 24rem;
 			}
 		}
@@ -270,7 +270,7 @@ const conf = reactive({
 			top: -40rem;
 			width: 80rem;
 			height: 80rem;
-			background: #FFF2E9;
+			background: #E6F2FF;
 			transform: rotate(45deg);
 
 			.state-img {
