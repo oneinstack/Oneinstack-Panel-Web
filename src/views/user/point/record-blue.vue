@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :bgcolor="'#FFFFFF'">
+  <x-page :no-footer="true" :bgcolor="'#FFFFFF'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('point.pointRecord') }}
     </template>
@@ -25,6 +25,7 @@
 <script setup lang="ts">
 import loading from '../tasks/components/loading.vue'
 import { index } from './record'
+import stheme from '@/sstore/stheme'
 
 const { conf, sutil } = index()
 </script>

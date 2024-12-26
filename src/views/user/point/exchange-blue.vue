@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :bgcolor="'#FFFFFF'">
+  <x-page :no-footer="true" :bgcolor="'#FFFFFF'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('point.exchangeRecord') }}
     </template>
@@ -22,6 +22,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme';
 import loading from '../tasks/components/loading.vue'
 import { index } from './exchange'
 

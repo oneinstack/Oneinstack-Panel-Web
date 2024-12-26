@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true">
+  <x-page :no-footer="true" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('point.pointsRules') }}
     </template>
@@ -10,6 +10,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme';
 import { index } from './rules'
 
 const conf = index()

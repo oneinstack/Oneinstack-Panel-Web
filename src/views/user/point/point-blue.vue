@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :headerBgColor="'#EE7331'">
+  <x-page :no-footer="true" :headerBgColor="'#006FFF'">
     <template #title>
       {{ $t('point.pointsMall') }}
     </template>
@@ -41,12 +41,12 @@
           </div>
           <div class="footer-type">
             <div class="see-type" @click="conf.goPage('/user/point/record')">
-              <img class="see-img" src="/static/img/point/point-record.png" />
+              <img class="see-img" src="/static/theme/blue/point-record.webp" />
               <div class="see-name">{{ $t('point.pointRecord') }}</div>
             </div>
             <div class="line"></div>
             <div class="see-type" @click="conf.goPage('/user/point/exchange')">
-              <img class="see-img" src="/static/img/point/exchange-record.png" />
+              <img class="see-img" src="/static/theme/blue/exchange-record.webp" />
               <div class="see-name">{{ $t('point.exchangeRecord') }}</div>
             </div>
           </div>
@@ -108,8 +108,8 @@
 
 <script setup lang="ts">
 import loading from '../tasks/components/loading.vue'
-import notice from './components/notice.vue'
-import changePop from './components/changePop.vue'
+import notice from './theme/blue/components/notice.vue'
+import changePop from './theme/blue/components/changePop.vue'
 import { index } from './point'
 import { ref } from 'vue'
 
@@ -121,7 +121,7 @@ const { conf, sutil } = index(changeRef)
 .head {
   position: relative;
   top: -2rem;
-  background: linear-gradient(180.23deg, #ee7331 0.2%, rgba(246, 135, 64, 0.99) 51.49%, rgba(255, 166, 79, 0) 90%);
+  background: linear-gradient(180.23deg, #006fff 0.2%, rgba(8, 123, 255, 0.99) 51.49%, rgba(255, 166, 79, 0) 90%);
 }
 
 .head-content {
@@ -174,14 +174,14 @@ const { conf, sutil } = index(changeRef)
     padding: 30rem;
     border-radius: 10rem;
     background-size: 100% 100%;
-    background-image: url('/static/img/point/point-bg.png');
+    background-image: url('/static/theme/blue/point-bg.webp');
     font-size: 28rem;
 
     .top-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #ffd5ba;
+      border-bottom: 1px solid #bad0ff;
       padding-bottom: 20rem;
 
       .point-title {
@@ -232,8 +232,8 @@ const { conf, sutil } = index(changeRef)
       }
 
       .win {
-        background: linear-gradient(180deg, #ffffff 0%, #ffd2b4 100%);
-        color: #fc9b01;
+        background: linear-gradient(180deg, #ffffff 0%, #bad0ff 100%);
+        color: #006fff;
         padding: 8rem 15rem;
         font-size: 25rem;
         border-radius: 20rem;
@@ -261,7 +261,7 @@ const { conf, sutil } = index(changeRef)
         }
 
         .see-name {
-          color: #a23d00;
+          color: #0020a2;
           font-size: 28rem;
           margin-left: 20rem;
         }
@@ -270,7 +270,7 @@ const { conf, sutil } = index(changeRef)
       .line {
         width: 1rem;
         height: 40rem;
-        background: #ffd5ba;
+        background: #bad0ff;
         margin: 0 10rem;
       }
     }
@@ -309,7 +309,7 @@ const { conf, sutil } = index(changeRef)
       left: 2rem;
       right: -2rem;
       bottom: 12rem;
-      background: linear-gradient(328.56deg, #ff7502 18.81%, #fc9b01 77.66%);
+      background: linear-gradient(328.56deg, #006fff 5.72%, #087bff 86.61%);
       height: 2px;
       z-index: 1;
       border-radius: 1px;
@@ -395,7 +395,7 @@ const { conf, sutil } = index(changeRef)
           }
 
           .point-num {
-            color: #fc9b01;
+            color: #006fff;
             margin-left: 10rem;
           }
         }
@@ -408,8 +408,8 @@ const { conf, sutil } = index(changeRef)
       }
 
       .right-btn {
-        color: #ff7502;
-        background: #fff2e9;
+        color: #006fff;
+        background: #e6f2ff;
         font-size: 24rem;
         padding: 5rem 15rem;
         border-radius: 20rem;

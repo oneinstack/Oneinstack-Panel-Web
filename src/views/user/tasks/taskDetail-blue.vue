@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('task.taskDetail') }}
     </template>
@@ -18,6 +18,7 @@
   </x-page>
 </template>
 <script setup lang="ts">
+import stheme from '@/sstore/stheme'
 import { index } from './taskDetail'
 
 const conf = index()
@@ -43,7 +44,7 @@ const conf = index()
       }
 
       .Deposit {
-        background: linear-gradient(328.56deg, #ff7502 18.81%, #fc9b01 77.66%);
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -59,7 +60,7 @@ const conf = index()
 
       .btn {
         padding: 14rem 30rem;
-        background-image: linear-gradient(#ffa64f, #eb602d);
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         border-radius: 56rem;
         font-size: 36rem;
         color: #fff;

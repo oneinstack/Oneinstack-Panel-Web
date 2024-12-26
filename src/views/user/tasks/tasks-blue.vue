@@ -1,5 +1,5 @@
 <template>
-  <x-page no-footer :bgcolor="'#f1f1f1'" :headerBgColor="conf.bgcolor" :topfill="false">
+  <x-page no-footer :bgcolor="'#f1f1f1'" header-bg-color="transparent" :topfill="false">
     <template #title>
       {{ $t('task.Task') }}
     </template>
@@ -26,7 +26,7 @@
             <img src="/static/img/task/black-arrow.png" />
           </div>
           <div class="ponints-mall items-center" @click.stop="conf.goPage('/user/point/point')" v-if="conf.showMall">
-            <img class="points-mall-img" src="/static/img/task/points-mall.png" />
+            <img class="points-mall-img" src="/static/theme/blue/points-mall.webp" />
             <span>{{ $t('point.pointsMall') }}</span>
           </div>
         </div>
@@ -45,7 +45,7 @@
               <span>{{ $t('point.SignReminder') }}</span>
               <van-switch
                 v-model="conf.checked"
-                active-color="#FFA64F"
+                active-color="#006FFF"
                 style="transform: scale(0.7)"
                 @change="conf.switch1Change"
               />
@@ -90,7 +90,7 @@
                   <img
                     class="task-sign-img"
                     v-if="conf.getIsPoint(item.num, item.moon, item.year)"
-                    src="/static/img/task/task-sign.png"
+                    src="/static/theme/blue/task-sign.webp"
                   />
                   <div class="time-img" v-else>
                     <img class="day-point-img" src="/static/img/task/day-point.png" />
@@ -112,7 +112,7 @@
                   <img
                     class="task-sign-img"
                     v-else-if="conf.getIsPoint(item.num, item.moon, item.year)"
-                    src="/static/img/task/task-sign.png"
+                    src="/static/theme/blue/task-sign.webp"
                   />
                   <!-- 未签到 -->
                   <div class="miss" v-else>{{ $t('point.miss') }}</div>
@@ -170,10 +170,10 @@
 </template>
 
 <script setup lang="ts">
-import taskList from './components/taskList.vue'
+import taskList from './theme/blue/components/taskList.vue'
 import loading from './components/loading.vue'
 import signRemind from './components/signRemind.vue'
-import signPop from './components/signPop.vue'
+import signPop from './theme/blue/components/signPop.vue'
 import { ref } from 'vue'
 import { index } from './tasks'
 
@@ -196,7 +196,7 @@ const conf = index(signPopRefs)
   position: relative;
   width: 100%;
   background-size: 100% 100%;
-  background-image: url('/static/img/task/task-bg.png');
+  background-image: url('/static/theme/blue/task-bg.webp');
 }
 
 .flex-center {
@@ -227,7 +227,7 @@ const conf = index(signPopRefs)
     align-items: center;
 
     span {
-      color: #ff7502;
+      color: #006fff;
       font-size: 32rem;
       margin-right: 10rem;
     }
@@ -242,7 +242,7 @@ const conf = index(signPopRefs)
   .ponints-mall {
     padding: 12rem 20rem;
     border-radius: 40rem;
-    background: linear-gradient(328.56deg, #fc9b01 18.81%, #ff7502 77.66%);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     color: #fff;
     font-size: 25rem;
 
@@ -258,7 +258,7 @@ const conf = index(signPopRefs)
   padding: 20rem 20rem 40rem;
   border-radius: 12rem;
   margin-top: 40rem;
-  background: linear-gradient(179.55deg, #ffffff 86.08%, #fe9f61 218.09%);
+  background: linear-gradient(179.55deg, #ffffff 86.08%, #c6e1ff 218.09%);
 
   .title-left {
     display: flex;
@@ -266,7 +266,7 @@ const conf = index(signPopRefs)
     font-size: 26rem;
 
     span {
-      color: #ff7502;
+      color: #006fff;
       margin: 0 8rem;
     }
 
@@ -375,11 +375,11 @@ const conf = index(signPopRefs)
     }
 
     .time-active {
-      background: #fff3eb;
-      border: 1px solid #fc9b01;
+      background: #e6f2ff;
+      border: 1px solid #006fff;
 
       .day-today {
-        background: linear-gradient(180deg, #fc9b01 0%, #ff7502 100%);
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         color: #fff;
         font-size: 20rem;
         width: 100%;
@@ -414,8 +414,8 @@ const conf = index(signPopRefs)
   }
 
   .sign-btn {
-    background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
-    box-shadow: 4px 4px 8px 0px #ff8d444d;
+    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+    box-shadow: 4px 4px 8px 0px #0779FF4D;
     height: 80rem;
     color: #fff;
     border-radius: 40rem;

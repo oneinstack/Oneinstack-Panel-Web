@@ -1,7 +1,7 @@
 <template>
   <div class="change-box" v-if="conf.show">
     <div class="change-content">
-      <img class="change-pop-img" src="/static/img/point/change-pop.png" />
+      <img class="change-pop-img" src="/static/theme/blue/change-pop.webp" />
       <img class="close-img" src="/static/img/point/close.png" @click="conf.closePop" />
       <div class="top-bg"></div>
       <div class="content">
@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { index } from './changePop'
+import { index } from '@/views/user/point/components/changePop'
 
 const emit = defineEmits(['submit'])
 
@@ -77,7 +77,7 @@ defineExpose({ showPop })
       top: 0;
       height: 140rem;
       z-index: 0;
-      background: linear-gradient(180deg, #ffddbe 0%, rgba(255, 255, 255, 0) 100%);
+      background: linear-gradient(180deg, #c6e1ff 0%, rgba(255, 255, 255, 0) 100%);
       border-radius: 30rem;
     }
 
@@ -105,7 +105,7 @@ defineExpose({ showPop })
     }
 
     .pop-title {
-      background: linear-gradient(328.56deg, #ff7502 18.81%, #fc9b01 77.66%);
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -151,7 +151,7 @@ defineExpose({ showPop })
 
       .num-input {
         width: 100rem;
-        color: #ff7502;
+        color: #006FFF;
         font-size: 25rem;
         height: 100%;
         text-align: center;
@@ -164,14 +164,15 @@ defineExpose({ showPop })
       margin: 30rem 0rem 40rem;
 
       .btn {
-        background: #fff2df;
+        background: #E6F2FF;
+        color: #006FFF;
         padding: 10rem 25rem;
         border-radius: 36rem;
         font-size: 22rem;
       }
 
       .confirm {
-        background: linear-gradient(328.56deg, #ff7502 18.81%, #fc9b01 77.66%);
+        background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
         color: #fff;
         margin-left: 80rem;
       }
