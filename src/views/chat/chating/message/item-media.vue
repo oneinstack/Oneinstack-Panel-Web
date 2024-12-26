@@ -5,7 +5,7 @@
     :class="{ reverse: item.isme }"
     :style="{ height: conf.maxHeight(item) + 'px' }"
   >
-    <x-img :src="conf.getImgUrl(item)" @load="$emit('load')" />
+    <x-img width="auto" :src="conf.getImgUrl(item)" @load="$emit('load')" />
     <van-image-preview
       v-model:show="conf.image.preview.show"
       :start-position="conf.image.preview.index"
@@ -100,6 +100,9 @@ const conf = reactive({
   border-radius: 8rem;
   overflow: hidden;
   max-width: 464rem;
+  :deep(img) {
+    width: auto !important;
+  }
 }
 
 .bottom-box {
