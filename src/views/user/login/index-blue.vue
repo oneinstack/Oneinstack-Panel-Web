@@ -147,7 +147,7 @@
                 v-if="conf.selectIndex !== 1"
                 class="foot-img"
                 :class="conf.footClick == 1 ? 'footClickStyle' : ''"
-                src="/static/img/foot-user.png"
+                src="/static/theme/blue/foot-user.png"
                 mode=""
                 @click="conf.handleTabChange(1)"
                 @touchstart="conf.handleMenuTouchstart(1)"
@@ -157,7 +157,7 @@
                 v-if="conf.selectIndex !== 2 && conf.isEmail"
                 class="foot-img"
                 :class="conf.footClick == 2 ? 'footClickStyle' : ''"
-                src="/static/img/foot-email.png"
+                src="/static/theme/blue/foot-email.png"
                 mode=""
                 @click="conf.handleTabChange(2)"
                 @touchstart="conf.handleMenuTouchstart(2)"
@@ -167,7 +167,7 @@
                 v-if="conf.selectIndex !== 3 && conf.isOpenPhoneRegistration"
                 class="foot-img"
                 :class="conf.footClick == 3 ? 'footClickStyle' : ''"
-                src="/static/img/foot-phone.png"
+                src="/static/theme/blue/foot-phone.png"
                 mode=""
                 @click="conf.handleTabChange(3)"
                 @touchstart="conf.handleMenuTouchstart(3)"
@@ -267,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import BgImg from './components/bgImg.vue'
+import BgImg from './theme/blue/components/bgImg.vue'
 import { index } from './index'
 
 const { conf, System } = index()
@@ -282,7 +282,9 @@ const { conf, System } = index()
   position: relative;
 }
 .loginBox {
-  padding-top: 100rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100%;
   position: relative;
 
@@ -318,6 +320,7 @@ const { conf, System } = index()
     }
 
     .otp {
+      margin-top: 80rem;
       .otp-item {
         height: 88rem;
         // border-bottom: 2rem solid rgb(220, 220, 229);
@@ -326,7 +329,7 @@ const { conf, System } = index()
         align-items: center;
         // margin-top: 24rem;
         border-radius: 80rem;
-        background: #ffffff30;
+        background: #ffffff40;
         padding: 0rem 32rem;
         margin-bottom: 38rem;
 
@@ -390,10 +393,10 @@ const { conf, System } = index()
 
           // width: 100rem;
           padding: 0 10rem;
-          color: #ff7502;
+          color: #006FFF;
           border-radius: 35rem;
-          border: 2rem solid #f5813d;
-          box-shadow: #ffa64f 0px 2rem 2rem 0px;
+          border: 2rem solid #006FFF;
+          box-shadow: #006FFF 0px 2rem 2rem 0px;
         }
 
         .eye-img {
@@ -405,8 +408,8 @@ const { conf, System } = index()
 
     .login-btn {
       width: 100%;
-      margin: 62rem 0rem 0;
-      height: 80rem;
+      margin: 120rem 0rem 0;
+      height: 96rem;
       border-radius: 48rem;
 
       font-size: 28rem;
@@ -414,7 +417,7 @@ const { conf, System } = index()
       display: flex;
       justify-content: center;
       align-items: center;
-      background-image: linear-gradient(#ffa64f, #eb602d);
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
     }
 
     .visitor-btn {
@@ -434,7 +437,7 @@ const { conf, System } = index()
       font-size: 28rem;
 
       div {
-        color: #ff7502;
+        color: #006FFF;
         font-weight: bold;
         margin-left: 8rem;
       }
@@ -452,7 +455,7 @@ const { conf, System } = index()
 
 .foot {
   position: absolute;
-  bottom: 0;
+  bottom: 25rem;
   left: 0;
   width: 100%;
   text-align: center;
@@ -523,7 +526,7 @@ const { conf, System } = index()
   }
 
   .right-btn {
-    background: linear-gradient(#eb602d, #ffa64f);
+    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
