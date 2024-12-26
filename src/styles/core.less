@@ -3,7 +3,6 @@ html {
   margin: 0;
   padding: 0;
   overscroll-behavior: none;
-  z-index: -1000;
   position: absolute;
   width: 100vw;
 }
@@ -32,11 +31,12 @@ html {
   left: 0;
   width: 200vw;
   height: 200vh;
-  z-index: -999;
   pointer-events: none;
 }
 
-#app {
+#app {    
+  position: absolute;
+  z-index: 1;
   height: var(--height);
   position: relative;
   display: flex;
