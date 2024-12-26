@@ -1,5 +1,5 @@
 <template>
-  <x-page :fixed="false" :bgcolor="'#fff'">
+  <x-page :fixed="false" :bgcolor="'#fff'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ conf.title }}
     </template>
@@ -51,8 +51,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import DGameTip from '../../home/home-com/DGameTip.vue'
+import DGameTip from '@/views/home/theme/blue/home-com/DGameTip.vue'
 import { index } from './index'
+import stheme from '@/sstore/stheme';
 
 const DGameTipRef = ref<any>(null)
 
@@ -64,13 +65,14 @@ const conf = index(DGameTipRef)
   width: 100%;
 }
 .head-type {
-  padding: 10rem 20rem;
-  height: 132rem;
+  padding: 32rem 20rem 20rem;
+  height: 180rem;
 }
 .type-list {
   display: flex;
   position: absolute;
   width: 710rem;
+  height: 100%;
   overflow-x: auto;
   .type-item {
     display: flex;
@@ -78,10 +80,13 @@ const conf = index(DGameTipRef)
     justify-content: space-between;
     align-items: center;
     margin-right: 15rem;
-    background: #fff6e6;
+    border: 0.5px solid #E2E6EC;
+    box-shadow: 0px 2px 6px 0px #0000001A;
+    background: #fff;
     padding: 5rem 0rem 10rem;
     border-radius: 10rem;
-    width: 120rem;
+    width: 108rem;
+    height: 128rem;
     flex-shrink: 0;
     font-size: 28rem;
     box-sizing: border-box;
@@ -95,13 +100,13 @@ const conf = index(DGameTipRef)
       flex-shrink: 0;
     }
     &.type-active {
-      background: #ffa64f;
+      background: linear-gradient(112.71deg, #2974ED 4.28%, #0645D9 67.56%);
       color: #fff;
     }
   }
 }
 .sign-box {
-  padding: 20rem 20rem 0rem 20rem;
+  padding: 0 20rem 0rem 20rem;
   background: #ffffff;
 
   .time-list {

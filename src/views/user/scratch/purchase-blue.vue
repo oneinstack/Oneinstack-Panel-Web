@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :bgcolor="'#eff1f5'">
+  <x-page :no-footer="true" :bgcolor="'#eff1f5'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('scratch.scratch') }}
     </template>
@@ -57,9 +57,10 @@
 import showModal from './components/showModal.vue'
 import scratchImg from './components/scratchImg.vue'
 import { index } from './purchase'
+import stheme from '@/sstore/stheme'
 import { ref } from 'vue'
 
-const modalRefs = ref<any>(null)
+const modalRefs = ref<any>()
 const conf = index(modalRefs)
 </script>
 
@@ -257,6 +258,18 @@ const conf = index(modalRefs)
         justify-content: center;
         align-items: center;
       }
+    }
+  }
+}
+
+:deep(.modal) {
+  .btn-item {
+    background: #E6F2FF !important;
+    color: #006FFF !important;
+
+    &.sure {
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%) !important;
+      color: #fff !important;
     }
   }
 }

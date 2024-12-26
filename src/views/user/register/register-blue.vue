@@ -126,14 +126,9 @@
             </div>
           </div>
           <div class="check">
-            <img
-              v-if="!conf.checkedAge"
-              @click="conf.checkedAge = !conf.checkedAge"
-              class="check-img"
-              src="/static/img/uncheck.png"
-            />
-            <img v-else @click="conf.checkedAge = !conf.checkedAge" class="check-img" src="/static/img/check.png" />
-            <span style="color: #fff">{{ $t('login.confirmChcek') }}</span>
+            <van-checkbox v-model="conf.checkedAge" icon-size="40rem" shape="square" @change="conf.checkedAge = $event">
+              <span style="color: #fff">{{ $t('login.confirmChcek') }}</span>
+            </van-checkbox>
           </div>
           <div class="login-btn" @click="conf.passwordRegister" v-if="conf.selectIndex == 1">
             {{ $t('login.register') }}
@@ -248,7 +243,7 @@
                   v-if="conf.selectIndex !== 1"
                   class="foot-img"
                   :class="conf.footClick == 1 ? 'footClickStyle' : ''"
-                  src="/static/img/foot-user.png"
+                  src="/static/theme/blue/foot-user.png"
                   mode=""
                   @click="conf.handleTabChange(1)"
                   @touchstart="conf.handleMenuTouchstart(1)"
@@ -258,7 +253,7 @@
                   v-if="conf.isEmail && conf.selectIndex !== 2"
                   class="foot-img"
                   :class="conf.footClick == 2 ? 'footClickStyle' : ''"
-                  src="/static/img/foot-email.png"
+                  src="/static/theme/blue/foot-email.png"
                   mode=""
                   @click="conf.handleTabChange(2)"
                   @touchstart="conf.handleMenuTouchstart(2)"
@@ -268,7 +263,7 @@
                   v-if="conf.isOpenPhoneRegistration && conf.selectIndex !== 3"
                   class="foot-img"
                   :class="conf.footClick == 3 ? 'footClickStyle' : ''"
-                  src="/static/img/foot-phone.png"
+                  src="/static/theme/blue/foot-phone.png"
                   mode=""
                   @click="conf.handleTabChange(3)"
                   @touchstart="conf.handleMenuTouchstart(3)"
@@ -298,7 +293,7 @@
 
 <script lang="ts" setup>
 import { index } from './register'
-import BgImg from '@/views/user/login/components/bgImg.vue'
+import BgImg from '@/views/user/login/theme/blue/components/bgImg.vue'
 
 const { System, conf } = index()
 </script>
@@ -312,7 +307,9 @@ const { System, conf } = index()
   position: relative;
 }
 .loginBox {
-  padding-top: 100rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   height: 100%;
   position: relative;
 
@@ -419,10 +416,10 @@ const { System, conf } = index()
           text-align: center;
           // width: 100rem;
           padding: 0 10rem;
-          color: #ff7502;
+          color: #006FFF;
           border-radius: 35rem;
-          border: 2rem solid #f5813d;
-          box-shadow: #ffa64f 0px 2rem 2rem 0px;
+          border: 2rem solid #006FFF;
+          box-shadow: #006FFF 0px 2rem 2rem 0px;
         }
 
         .eye-img {
@@ -436,6 +433,12 @@ const { System, conf } = index()
       display: flex;
       align-items: center;
       margin: 0rem 0rem 10rem;
+      --van-checkbox-border-color: #006fff;
+
+      :deep(.van-checkbox__icon .van-icon) {
+        border-radius: 4rem;
+        border-width: 4rem;
+      }
 
       .check-img {
         width: 40rem;
@@ -453,7 +456,7 @@ const { System, conf } = index()
 
     .login-btn {
       margin: 40rem 0rem 0;
-      height: 80rem;
+      height: 96rem;
       border-radius: 48rem;
 
       font-size: 28rem;
@@ -461,7 +464,7 @@ const { System, conf } = index()
       display: flex;
       justify-content: center;
       align-items: center;
-      background-image: linear-gradient(#ffa64f, #eb602d);
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     }
 
     .tip {
@@ -473,7 +476,7 @@ const { System, conf } = index()
       font-size: 28rem;
 
       div {
-        color: #ff7502;
+        color: #006fff;
         font-weight: bold;
         margin-left: 8rem;
       }
@@ -559,7 +562,7 @@ const { System, conf } = index()
   }
 
   .right-btn {
-    background: linear-gradient(#eb602d, #ffa64f);
+    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }

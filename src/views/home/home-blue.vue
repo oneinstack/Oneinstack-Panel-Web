@@ -135,7 +135,7 @@ const conf = reactive({
   language: '',
   localGameArr: [] as DataItem[],
   scratchList: [] as DataItem[],
-  thirdGamesList: {} as { [key: string]: DataItem[] },
+  thirdGamesList: {} as { [key: string]: { data: DataItem[]; showMore: boolean } },
   redpacketList: [] as any[],
   swiperList: [] as any[],
   dataList: [] as DataItem[],
@@ -157,18 +157,25 @@ const conf = reactive({
   },
   //获取三方游戏列表
   async getThirdGameList(typeCode: string) {
-    if (conf.thirdGamesList[typeCode]) return (conf.dataList = conf.thirdGamesList[typeCode])
+    if (conf.thirdGamesList[typeCode]) {
+      conf.showMore = conf.thirdGamesList[typeCode].showMore
+      conf.dataList = conf.thirdGamesList[typeCode].data
+      return
+    }
     const res = await apis.getThirdGameList({
       deviceType: 1, //邮箱验证码
       typeCode
     })
     conf.showMore = res.data.length > 6
-    conf.thirdGamesList[typeCode] = (res.data.slice(0, 6) as any[]).map<DataItem>((item: any) => ({
-      id: item.gameCode,
-      imgUrl: item.imgUrl,
-      ...item
-    }))
-    conf.dataList = conf.thirdGamesList[typeCode]
+    conf.thirdGamesList[typeCode] = {
+      data: (res.data.slice(0, 6) as any[]).map<DataItem>((item: any) => ({
+        id: item.gameCode,
+        imgUrl: item.imgUrl,
+        ...item
+      })),
+      showMore: conf.showMore
+    }
+    conf.dataList = conf.thirdGamesList[typeCode].data
   },
   //click游戏提示
   handleClickGameTip(item: any) {

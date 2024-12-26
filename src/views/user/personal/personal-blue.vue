@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('user.personal') }}
     </template>
@@ -8,7 +8,7 @@
       <div class="pictures-img">
         <van-uploader :after-read="conf.chooseFile">
           <img class="head" :src="conf.userImgUrl ? conf.userImgUrl : '/static/img/default-header.png'" />
-          <img class="camera-img" src="/static/img/camera.png" />
+          <img class="camera-img" src="/static/theme/blue/camera.png" />
         </van-uploader>
       </div>
     </div>
@@ -33,6 +33,7 @@
 </template>
 
 <script lang="ts" setup>
+import stheme from '@/sstore/stheme';
 import { index } from './personal'
 
 const conf = index()
@@ -90,7 +91,7 @@ const conf = index()
 .save-btn {
   margin: 180rem 30rem 0rem;
   height: 90rem;
-  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
   border-radius: 50rem;
   display: flex;
   justify-content: center;

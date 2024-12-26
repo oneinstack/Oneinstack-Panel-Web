@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :bgcolor="'#eff1f5'">
+  <x-page :no-footer="true" :bgcolor="'#eff1f5'" :header-bg-color="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('scratch.scratch') }}
     </template>
@@ -17,7 +17,7 @@
       <div class="nav-title">
         <div class="offs">{{ $t('scratch.scratchOffs') }}</div>
         <div class="history" @click="conf.goHisTory">
-          <img class="history-img" src="/static/img/history.png" />
+          <VSIcon lib="blue" name="scratch-off-records" :size="56" />
           <span>{{ $t('scratch.history') }}</span>
         </div>
       </div>
@@ -39,8 +39,8 @@
         <div class="select-item" :class="{ 'active': conf.priceType == 0 }" @click="conf.changeType(0)">
           {{ $t('scratch.prizeAmount') }}
           <div class="select-img">
-            <div class="select-up" :style="{ background: conf.prizeAsc == 1 ? '#CF0000' : '' }"></div>
-            <div class="select-down" :style="{ background: conf.prizeAsc == 0 ? '#CF0000' : '' }"></div>
+            <div class="select-up" :style="{ background: conf.prizeAsc == 1 ? '#006FFF' : '' }"></div>
+            <div class="select-down" :style="{ background: conf.prizeAsc == 0 ? '#006FFF' : '' }"></div>
           </div>
         </div>
         <div
@@ -51,8 +51,8 @@
         >
           {{ $t('scratch.price') }}
           <div class="select-img">
-            <div class="select-up" :style="{ background: conf.priceAsc == 1 ? '#CF0000' : '' }"></div>
-            <div class="select-down" :style="{ background: conf.priceAsc == 0 ? '#CF0000' : '' }"></div>
+            <div class="select-up" :style="{ background: conf.priceAsc == 1 ? '#006FFF' : '' }"></div>
+            <div class="select-down" :style="{ background: conf.priceAsc == 0 ? '#006FFF' : '' }"></div>
           </div>
         </div>
       </div>
@@ -85,6 +85,7 @@
 </template>
 
 <script setup lang="ts">
+import stheme from '@/sstore/stheme'
 import scratchImg from './components/scratchImg.vue'
 import { index } from './scratch'
 
@@ -120,11 +121,10 @@ const conf = index()
   position: sticky;
   top: 105rem;
   left: 0;
-  background: #fff;
   padding: 22rem 0rem;
   z-index: 1;
   border-radius: 10rem 10rem 0px 0px;
-  background: linear-gradient(180deg, #fff0d9 0%, rgba(255, 255, 255, 1) 33.85%);
+  background: linear-gradient(180deg, #c6e1ff 0%, rgba(255, 255, 255, 0.8) 33.85%);
 
   .nav-title {
     border-radius: 12rem 12rem 0 0;
@@ -136,13 +136,13 @@ const conf = index()
     align-items: center;
 
     .offs {
-      color: #cf0000;
+      color: #006fff;
       font-weight: 800;
       font-size: 32rem;
     }
 
     .history {
-      color: #eb602d;
+      color: #006fff;
       font-weight: 600;
       font-size: 24rem;
       display: flex;
@@ -174,7 +174,7 @@ const conf = index()
     align-items: center;
 
     .num-item {
-      background: #ffe8c0;
+      background: #E6F2FF;
       font-weight: 500;
       flex: 1;
       display: flex;
@@ -184,7 +184,7 @@ const conf = index()
 
       &.num-active {
         height: 58rem;
-        background: #cf0000;
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         border-radius: 8rem;
         font-weight: 700;
         color: #fff;
@@ -232,14 +232,14 @@ const conf = index()
       }
 
       &.active {
-        border: 2rem solid #cf0000;
+        border: 2rem solid #006FFF;
       }
     }
   }
 }
 
 .scratch {
-  background: linear-gradient(180deg, #fff0d9 0%, rgba(255, 255, 255, 0) 33.85%);
+  background: linear-gradient(180deg, #C6E1FF 0%, rgba(255, 255, 255, 0) 33.85%);
   padding-bottom: 80rem;
 
   .scratch-title {
