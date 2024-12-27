@@ -133,7 +133,7 @@ import chat from "./chat-blue.vue"
 import bigTime from "../components/bigTime-blue.vue"
 import order from "./order.vue"
 import { index } from "./ts/winGo"  
-const conf = index()
+const {conf,gameBoxRefs} = index()
 </script>
 
 <style lang="less" scoped>

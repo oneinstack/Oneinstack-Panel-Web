@@ -4,8 +4,8 @@ import { apis } from '@/api';
 import i18n from '@/lang';
 import System from '@/utils/System';
 import sutil from '@/sstore/sutil';
-const gameBoxRefs = ref<any>()
 export const index = () => {
+    const gameBoxRefs = ref<any>()
     const conf = reactive({
         hours: '00',	//倒计时 - 时
         minutes: '00',	//倒计时 - 分
@@ -561,5 +561,5 @@ export const index = () => {
         conf.scollTimer = null;
     })
     
-    return conf
+    return {conf,gameBoxRefs}
 }
