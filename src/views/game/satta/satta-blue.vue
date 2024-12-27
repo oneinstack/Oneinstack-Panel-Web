@@ -1,5 +1,5 @@
 <template>
-  <x-page :noFooter="true" :headerBgColor="'linear-gradient(180deg, #EB602D 0%, #FFA64F 160%)'">
+  <x-page :noFooter="true" :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       <div class="head-title" @click="conf.handleOpenGameTypeDialog">
         <span>{{ conf.gameType }}</span>
@@ -48,7 +48,7 @@
           </div>
         </div>
         <div class="order-left" @click="conf.handleMyOrderdiv">
-          <img class="order-arrow" src="/static/img/order-arrow-left.png" />
+          <img class="order-arrow" src="/static/theme/blue/order-arrow-left.png" />
         </div>
       </div>
       <div class="main">
@@ -93,10 +93,11 @@
                 </template>
               </div>
               <div class="show" v-if="conf.typeIndex == 1">
-                <img
+                <VSIcon
                   :class="conf.selectShow ? 'show-icon active' : 'show-icon'"
-                  src="/static/img/games-left.png"
-                  mode=""
+                  lib="blue"
+                  name="arrow-down"
+                  :size="32"
                   @click="conf.changeShow"
                 />
               </div>
@@ -246,6 +247,7 @@
 import order from './order.vue'
 import { ref } from 'vue'
 import { index } from './satta'
+import stheme from '@/sstore/stheme'
 
 const orderRefs = ref<any>()
 const selectRefs = ref<any>()
@@ -286,7 +288,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
 
 .top-content {
   height: 112rem;
-  background: #fff1ce;
+  background: #e6f2ff;
   display: flex;
   position: relative;
 
@@ -388,13 +390,14 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
   flex: 1;
   display: flex;
   overflow-y: scroll;
+  background-color: #ffffff;
 
   .btn-list {
     overflow-y: scroll;
 
     .btn-item {
-      background: #f2f4fa;
-      color: #000;
+      background: #f6f7fa;
+      color: #646464;
       width: 180rem;
       display: flex;
       flex-direction: column;
@@ -408,13 +411,8 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
       padding: 5rem 0rem;
 
       &.btn-active {
-        border-color: #ffd8ba;
-        background: #fffbf5;
-        // color: #F5843F;
-        background: linear-gradient(#eb602d, #ffa64f);
-        background-clip: text !important;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #006fff;
+        background: #e6f2ff;
       }
 
       .odes {
@@ -440,12 +438,11 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
       .show-icon {
         width: 20rem;
         height: 32rem;
-        transform: rotate(-90deg);
         transition: 0.5s;
       }
 
       .show-icon.active {
-        transform: rotate(90deg);
+        transform: rotate(180deg);
       }
 
       margin-bottom: 20rem;
@@ -469,7 +466,8 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
           width: 60rem;
           height: 60rem;
           flex-shrink: 0;
-          background: #fde1ab;
+          background: linear-gradient(142.21deg, #dfedff 14.37%, #9ec9ff 88.03%);
+          box-shadow: 0px 0px 2.14px 0px #ffffff40 inset;
           border-radius: 50%;
           display: flex;
           justify-content: center;
@@ -479,7 +477,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
           font-weight: 700;
 
           span {
-            background: linear-gradient(#eb602d, #ffa64f);
+            background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
             background-clip: text !important;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -540,7 +538,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
   // right: 0;
   position: relative;
   width: 100%;
-  background: #fff5e3;
+  background: #f6f7fa;
   max-width: 500px;
   margin: 0 auto;
   flex-shrink: 0;
@@ -601,7 +599,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
 
   .bet-select {
     height: 110rem;
-    background: #fff1ce;
+    background: #e6f2ff;
     display: flex;
     justify-content: space-between;
     border-top: 1rem solid rgba(0, 0, 0, 0.08);
@@ -742,8 +740,8 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
       .time-item {
         width: 22%;
         height: 50rem;
-        background: #fff6e6;
-        color: #000;
+        background: #F6F7FA;
+        color: #646464;
         display: flex;
         justify-content: center;
         align-items: center;
@@ -756,8 +754,8 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
         }
 
         &.time-active {
-          background: linear-gradient(#eb602d, #ffa64f);
-          color: #fff;
+          background: #E6F2FF;
+          color: #006FFF;
         }
       }
     }
@@ -825,7 +823,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
         }
 
         &:nth-child(2n + 1) {
-          background: #fffbf5;
+          background: #E6F2FF;
         }
       }
 
@@ -975,7 +973,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
 }
 
 .topBtn {
-  color: #f56900 !important;
+  color: #006fff !important;
   margin-left: 18rem;
 }
 

@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page :headerBgColor="stheme.theme.blue.headerBgColor()">
     <template #title>
       {{ $t('me.Bets') }}
     </template>
@@ -164,6 +164,7 @@
 import betCode from './betCode.vue'
 import openCode from './openCode.vue'
 import { index } from './detail'
+import stheme from '@/sstore/stheme';
 
 const conf = index()
 </script>
