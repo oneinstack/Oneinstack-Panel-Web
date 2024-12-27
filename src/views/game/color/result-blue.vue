@@ -228,11 +228,11 @@ defineExpose({
       justify-content: space-between;
       // padding: 0rem 16rem;
       padding-left: 16rem;
-      background: #d0d3dc;
+      background: #58a5ff;
 
       div {
         font-size: 24rem;
-        color: #45454d;
+        color: #ffffff;
         padding: 16rem 0rem;
         display: flex;
         justify-content: center;
@@ -333,7 +333,7 @@ defineExpose({
         }
 
         &:nth-child(2n) {
-          background: #e9ecf5;
+          background: #e6f2ff;
         }
       }
     }

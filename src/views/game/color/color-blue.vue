@@ -1,5 +1,11 @@
 <template>
-  <x-page :noFooter="true" :fixed="false" ref="colorRefs" :bgcolor="conf.categoryIndex == 1 ? '#A6B4BD' : '#f5f5fa'">
+  <x-page
+    :noFooter="true"
+    :fixed="false"
+    ref="colorRefs"
+    :bgcolor="conf.categoryIndex == 1 ? '#A6B4BD' : '#f5f5fa'"
+    :header-bg-color="stheme.theme.blue.headerBgColor()"
+  >
     <template #title>
       <div v-if="conf.tabIndex / 1000 / 60 >= 1">
         {{ $t('game.color') }}-{{ conf.tabIndex / 1000 / 60 || '' }}
@@ -322,13 +328,14 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import betPopup from '../components/betPopup.vue'
+import betPopup from '../components/betPopup-blue.vue'
 import timePopup from '../components/timePopup.vue'
 import gameLoop from '../components/gameLoop.vue'
 import rule from '../components/gameRule.vue'
-import result from './result.vue'
+import result from './result-blue.vue'
 import order from './order.vue'
 import { index } from './color'
+import stheme from '@/sstore/stheme'
 
 const resultRefs = ref<any>()
 const colorRefs = ref<any>()
@@ -355,7 +362,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
   align-items: center;
   padding: 0rem 24rem;
   height: 80rem;
-  background: #fff9ed;
+  background: #e6f2ff;
   width: 100%;
 
   .tip-icon {
@@ -394,7 +401,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fffef8;
+  background: #f8fbff;
   width: 100%;
 
   .game-title {
@@ -412,7 +419,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
 
   .game-banner {
     flex: 1;
-    background: #b0aea0;
+    background: #00000010;
     border-radius: 12rem;
     margin-left: 60rem;
     height: 75rem;
@@ -490,9 +497,10 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
     content: '';
     width: 50%;
     height: 8rem;
-    background: #d90000;
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     bottom: 5rem;
     left: 25%;
+    border-radius: 20rem;
   }
 }
 
@@ -633,7 +641,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
 
         .bar-active {
           height: 100%;
-          background: #d90000;
+          background: linear-gradient(93.51deg, #0060dd 5.72%, #087bff 86.61%);
         }
       }
 
@@ -855,7 +863,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
 
         .printer1 {
           // width: 100%;
-          background: #fffef8;
+          background: #f8fbff;
           border-radius: 10rem;
           position: absolute;
           left: 30rem;
@@ -875,7 +883,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
             position: relative;
             left: 0;
             right: 0;
-            background: #fffef8;
+            background: #f8fbff;
             border-radius: 10rem;
 
             .printer-back {
@@ -894,7 +902,7 @@ const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
               }
 
               .back-title {
-                color: #e20000;
+                color: #006fff;
                 font-weight: 600;
                 font-family: PingFang SC;
                 font-size: 150rem;
