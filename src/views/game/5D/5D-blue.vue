@@ -133,12 +133,12 @@
 	</gameBox>
 </template>
 <script setup lang="ts">
-import gameBox from '../components/gameBox.vue'
+import gameBox from '../components/gameBox-blue.vue'
 import gameLoading from "../components/gameLoading.vue"
-import cpage from '../components/gamePage.vue'
+import cpage from '../components/gamePage-blue.vue'
 import rule from "../components/gameRule.vue"
-import result from './result.vue'
-import chat from './chat.vue'
+import result from './result-blue.vue'
+import chat from './chat-blue.vue'
 import order from './order.vue'
 import { index } from './ts/5D'
 
@@ -191,7 +191,7 @@ page {
 .red-bg {
 	border: none;
 	color: #fff;
-	background: #F6843F;
+	background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
 }
 
 .flex-center {
@@ -300,7 +300,10 @@ page {
 
 			.division {
 				margin-left: 10rem;
-				color: #F6843F;
+				background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
+				-webkit-background-clip: text;
+				background-clip: text;
+				color: transparent;
 				font-size: 52rem;
 			}
 		}
@@ -438,7 +441,7 @@ page {
 		}
 
 		&.type-active {
-			background: linear-gradient(90deg, #F6843F, #FEA14D);
+			background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
 
 			&::after {
 				background: radial-gradient(circle at 100% 0, rgba(204, 0, 0, 0) 0.26667rem, #FEA14D 0.29333rem);
@@ -587,7 +590,7 @@ page {
 
 			&.type-active {
 				color: #ffffff;
-				background: linear-gradient(180deg, #F6843F 0%, #FEA14D 100%);
+                background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
 			}
 		}
 
@@ -657,8 +660,8 @@ page {
 }
 
 .active_number {
-	border: 2rem solid #F88c43;
-	background: #FEC74810;
+	border: 2rem solid #087BFF;
+	background: #E6F2FF;
 	color: #FEC748 !important;
 	border-radius: 16rem;
 	padding: 18rem 0rem !important;

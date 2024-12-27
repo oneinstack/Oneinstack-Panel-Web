@@ -1,5 +1,5 @@
 <template>
-	<div class="c-head-main" style="background: linear-gradient(180deg, #EB602D 0%, #FFA64F 160%)">
+	<div class="c-head-main">
 		<div :style="{ height: `${StatusBarConfig.statusHeight}px` }"></div>
 		<div class="c-head-nav">
 			<div class="back" @click="conf.goBack">
@@ -76,7 +76,7 @@
 </template>
 <script setup lang="ts">
 import gameBet from './gameBet.vue';
-import betPopup from "./betPopup.vue"
+import betPopup from "./betPopup-blue.vue"
 import { svalue } from "@/sstore/svalue"
 import { onMounted, reactive, watch } from 'vue';
 import sconfig from '@/sstore/sconfig';
@@ -326,6 +326,7 @@ onMounted(() => {
 		color: #fff;
 		z-index: 99;
 		position: fixed;
+        background: url(/static/theme/blue/bg-square.webp) 336rem -104rem / 523rem no-repeat, linear-gradient(to right, rgb(0, 111, 255) 0%, rgb(16, 127, 253) 100%);
 	}
 
 	&-nav {
@@ -418,12 +419,13 @@ onMounted(() => {
 		}
 
 		&.tab-active {
-			border: 1px solid #F88c43;
-			background: linear-gradient(180deg, #FFA64F 0%, #fff 90.5%);
-			color: #F88c43 !important;
+			border: 1px solid #77AAFF;
+            background: linear-gradient(#336cff 0%, #336cfffc 51%, rgba(255, 166, 79, 0) 100%);
+            // background: linear-gradient(180.23deg, rgba(51, 108, 255, 0.99) 0.2%, rgba(51, 108, 255, 0) 99.8%);
+			color: #FFF !important;
 
 			.icon {
-				background: url(/static/img/game/time_cur.png) no-repeat;
+				background: url(/static/theme/blue/time_nor.webp) no-repeat;
 				background-size: 100%;
 			}
 		}
@@ -435,7 +437,7 @@ onMounted(() => {
 	align-items: center;
 	padding: 0rem 24rem;
 	height: 80rem;
-	background: #FFF9ED;
+	background: #E6F2FF;
 
 	.tip-icon {
 		width: 32rem;
