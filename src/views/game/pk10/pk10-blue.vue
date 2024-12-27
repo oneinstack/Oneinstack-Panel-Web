@@ -150,13 +150,13 @@
   </gameBox>
 </template>
 <script setup lang="ts">
-import gameBox from '../components/gameBox.vue'
-import cpage from './cpage.vue'
+import gameBox from '../components/gameBox-blue.vue'
+import cpage from './cpage-blue.vue'
 import gameLoading from '../components/gameLoading.vue'
 import ctime from '../components/downTime.vue'
 import cgame from './game.vue'
-import bigTime from '../components/bigTime.vue'
-import history from './gameHistory.vue'
+import bigTime from '../components/bigTime-blue.vue'
+import history from './gameHistory-blue.vue'
 import order from './order.vue'
 import { index } from './pk10'
 import { ref } from 'vue'
@@ -187,7 +187,7 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
 .time-box {
   width: 100%;
   height: 190rem;
-  background: url(/static/img/game/pk10/diban.png) no-repeat;
+  background: url(/static/theme/blue/diban.webp) no-repeat;
   background-size: 100% 100%;
   padding: 42rem 36rem;
   color: #fff;
@@ -220,12 +220,12 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
   border-radius: 30rem;
   height: 60rem;
   padding: 0 20rem;
-  border: 1px solid #f88c43;
-  color: #f6843f;
+  background: #F6F7FA;
+  color: #646464;
 
   &.active {
-    background: #f6843f;
-    color: #ffffff;
+    background: #E6F2FF;
+    color: #006FFF;
   }
 }
 
@@ -240,8 +240,8 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
   border: 1rem solid #d61f2400;
 
   &.active {
-    background: #fef4eb;
-    border: 1rem solid #f6843f;
+    background: #E6F2FF;
+    border: 1rem solid #006FFF;
   }
 
   .ball {
@@ -425,7 +425,7 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
 
       &.type-active {
         color: #ffffff;
-        background: linear-gradient(180deg, #f6843f 0%, #fea14d 100%);
+        background: #006FFF;
       }
     }
   }
