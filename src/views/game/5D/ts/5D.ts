@@ -4,9 +4,8 @@ import System from '@/utils/System';
 import { svalue } from '@/sstore/svalue';
 import sutil from '@/sstore/sutil';
 
-const gameBoxRefs = ref<any>()
-
 export const index = () => {
+    const gameBoxRefs = ref<any>()
     const conf = reactive({
         bet: {
             open: () => {
@@ -598,5 +597,5 @@ export const index = () => {
         }
         conf.getLotteryList(0)
     })
-	return conf
+	return {conf,gameBoxRefs}
 };

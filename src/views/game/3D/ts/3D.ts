@@ -526,5 +526,5 @@ export const index = () => {
             conf.timer = null;
         }
     })
-	return conf
+	return {conf,resultRefs,analyzeRefs,orderRefs}
 }

@@ -204,7 +204,7 @@ import sutil from '@/sstore/sutil';
 import { index } from './ts/3D';
 import stheme from '@/sstore/stheme'
 
-const conf = index()
+const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 </script>
 
 <style lang="less" scoped>

@@ -201,7 +201,7 @@ import gameLoop from '../components/gameLoop.vue';
 import sutil from '@/sstore/sutil';
 import { index } from './ts/3D';
 
-const conf = index()
+const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 </script>
 
 <style lang="less" scoped>
