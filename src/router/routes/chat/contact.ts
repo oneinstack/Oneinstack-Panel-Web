@@ -66,5 +66,9 @@ export default [
   {
     path: '/chat/groupCard',
     component: '/chat/contact/group/card'
+  },
+  {
+    path: '/chat/groupNotice',
+    component: '/chat/contact/group/notice'
   }
 ]

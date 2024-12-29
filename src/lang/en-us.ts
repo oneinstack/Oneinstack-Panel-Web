@@ -416,6 +416,7 @@ export default {
 
     500: 'Server exception', // 服务器异常
     502: 'Server exception', // 服务器异常
+    504: 'Server exception', // 服务器异常
 
     1101: 'Account or password error', // 账号或密码错误
     1102: 'The username cannot be empty', // 用户名不能为空

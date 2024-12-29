@@ -419,6 +419,7 @@ export default {
 
     500: 'Exceção do servidor', // 服务器异常
     502: 'Kesalahan server', // 服务器异常
+    504: 'Server exception', // 服务器异常
 
     1101: 'Erro de conta ou senha', // 账号或密码错误
     1102: 'O nome de usuário não pode estar vazio', // 用户名不能为空

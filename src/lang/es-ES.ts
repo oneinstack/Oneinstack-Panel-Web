@@ -421,6 +421,7 @@ export default {
 
     500: 'Excepción del servidor', // 服务器异常
     502: 'Excepción del servidor', // 服务器异常
+    504: 'Server exception', // 服务器异常
 
     1101: 'Error en la cuenta o la contraseña', // 账号或密码错误
     1102: 'El nombre de usuario no puede estar vacío', // 用户名不能为空
