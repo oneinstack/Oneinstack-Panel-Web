@@ -420,6 +420,7 @@ export default {
 
     500: 'Kesalahan server', // 服务器异常
     502: 'Kesalahan server', // 服务器异常
+    504: 'Server exception', // 服务器异常
 
     1101: 'Kesalahan akun atau kata sandi', // 账号或密码错误
     1102: 'Nama pengguna harus diisi', // 用户名不能为空

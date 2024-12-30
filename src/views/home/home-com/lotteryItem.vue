@@ -16,12 +16,13 @@
     <div
       v-if="ani"
       class="line-two"
-      :style="{ backgroundImage: `conic-gradient(transparent, transparent, transparent, ${conf.color2})` }"
+      :style="{ backgroundImage: `conic-gradient(transparent, transparent, transparent, ${lineColor})`,width: size + 'rem',height: size + 'rem' }"
     ></div>
   </div>
 </template>
 <script lang="ts" setup>
 import { reactive } from 'vue'
+
 const conf = reactive({
   color1: '',
   color2: ''
@@ -33,6 +34,12 @@ defineProps({
   },
   item: {
     default: {} as any
+  },
+  lineColor: {
+    default: '#eb7941'
+  },
+  size: {
+    default: 340
   }
 })
 </script>

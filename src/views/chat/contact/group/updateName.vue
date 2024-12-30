@@ -17,16 +17,9 @@
   </x-page>
 </template>
 <script setup lang="ts">
-import { ContactChooseTypes } from '@/modules/chat/constant';
 import System from '@/utils/System';
 import { onMounted, reactive } from 'vue';
-import IMSDK, {
-  GroupType,
-  IMMethods,
-  SessionType,
-} from "openim-uniapp-polyfill";
-import { navigateToDesignatedConversation, toastWithCallback } from '@/modules/chat/utils/cUtil';
-import { apis } from '@/api';
+import IMSDK from "openim-uniapp-polyfill";
 import i18n from '@/lang';
 import sutil from '@/sstore/sutil';
 
@@ -40,7 +33,7 @@ const conf = reactive({
     let func;
     func = IMSDK.asyncApi(IMSDK.IMMethods.SetGroupInfo, IMSDK.uuid(), {
       groupID: conf.sourceInfo.groupID,
-      groupName: this.groupName,
+      groupName: conf.groupName,
     });
 
     func

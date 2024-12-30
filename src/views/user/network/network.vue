@@ -12,7 +12,6 @@
 import { apis } from '@/api';
 import sutil from '@/sstore/sutil';
 import System from '@/utils/System';
-import { onMounted } from 'vue';
 
 const getBackOnline = () => {
 	System.loading()
@@ -27,9 +26,6 @@ const getBackOnline = () => {
 		}
 	});
 }
-onMounted(() => {
-	getBackOnline()
-})
 </script>
 
 <style lang="less" scoped>

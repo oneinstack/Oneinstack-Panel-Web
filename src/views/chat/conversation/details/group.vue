@@ -8,23 +8,35 @@
       :memberCount="csconversation.currentGroup.memberCount" :groupMemberList="conf.groupMemberList"
       @updteMember="conf.getGroupMemberList" />
 
-    <!-- 名称 -->
+    <!-- 名称公告 -->
     <div class="m-t20">
-      <div class="edit border_b flex-b-c" @click="conf.updateGroup('updateGroupNickname')">
+      <div class="edit border_b flex-b-c" @click="conf.updateGroup('updateGroupNickname',2)">
         <div class="title">Group Name</div>
         <div class="more flex-center">
           <span>{{ csconversation.currentConversation.showName }}</span>
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
-      <div class="edit flex-b-c" style="margin-top: 0;" @click="conf.updateGroup('groupQrCode')">
+      <div class="edit flex-b-c border_b" style="margin-top: 0;" @click="conf.updateGroup('groupQrCode')">
         <div class="title">Group QR code</div>
         <div class="more flex-center">
           <img style="width: 30rem;height: 30rem;" src="/static/images/group_setting_qrcode.png" />
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
+      <div class="edit" :class="{'flex-b-c': !csconversation.currentGroup.notification}" style="margin-top: 0;" @click="conf.toNotice">
+        <div class="title">Group Notice</div> 
+        <div class="more flex-b" v-if="csconversation.currentGroup.notification">
+          <span>{{ csconversation.currentGroup.notification }}</span>
+          <van-icon style="margin-top: -4rem;" name="arrow" size="30rem" color="#B8B8B8" />
+        </div>
+        <div class="more flex-center" v-else>
+          <span v-if="isAdmin || isOwner">not set</span>
+          <van-icon name="arrow" size="30rem" color="#B8B8B8" />
+        </div>
+      </div>
     </div>
+
     <div class="m-t20" v-if="isAdmin || isOwner">
       <!-- 全员禁言 -->
       <div class="edit border_b flex-b-c" @click="conf.updateGroup('setMute')">
@@ -82,6 +94,8 @@ import { computed, onMounted, reactive } from 'vue'
 import i18n from '@/lang';
 import System from '@/utils/System';
 import { capis } from "@/modules/chat/api";
+import { showDialog } from "vant";
+import { log } from "node:console";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -172,7 +186,16 @@ const conf = reactive({
       .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
       .finally(() => (conf.confirmType = null));
   },
-  updateGroup(url: string) {
+  updateGroup(url: string,type = 1) {
+    if(type == 2 && isNomal.value) {
+      showDialog({
+        confirmButtonText: i18n.t('chatRoom.confirm'),
+        message: 'Only the group owner and administrator can edit'
+      }).then(() => {
+        // on close
+      });
+      return
+    }
     const { showName, groupID, faceURL } = csconversation.currentConversation
     const info = {
       showName,
@@ -182,6 +205,12 @@ const conf = reactive({
     System.router.push(`/chat/${url}?groupInfo=${JSON.stringify(
       info,
     )}`)
+  },
+  toNotice() {
+    if(csconversation.currentGroup.notification) {
+      return System.router.push('/chat/groupNotice')
+    }
+    conf.updateGroup('groupNotice',2)
   },
   cancle(e:any) {
     conf.transShow = false
@@ -194,6 +223,9 @@ const isOwner = computed(() => {
 const isAdmin = computed(() => {
   return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Admin;
 })
+const isNomal = computed(() => {
+  return csconversation.currentMemberInGroup.roleLevel === GroupMemberRole.Nomal;
+})
 const getConfirmContent = computed(() => {
   if (conf.confirmType === ConfirmTypes.Quit) {
     return i18n.t('chatRoom.confirm_exit') + '?'
@@ -205,6 +237,8 @@ const getConfirmContent = computed(() => {
 })
 
 onMounted(() => {
+  console.log(csconversation.currentGroup);
+  
   let list = csconversation.groupMemberList
   if(list.length && list[0].groupID == csconversation.currentConversation.groupID) {
     conf.groupMemberList = csconversation.groupMemberList
