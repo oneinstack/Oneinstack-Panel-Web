@@ -39,9 +39,6 @@
         </div>
       </div>
     </div>
-    <slot name="bottom">
-      <x-navigationbar />
-    </slot>
   </div>
 </template>
 <script setup lang="ts">

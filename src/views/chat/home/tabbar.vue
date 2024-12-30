@@ -27,7 +27,6 @@
             </template>
           </div>
         </div>
-        <x-navigationbar />
       </div>
     </div>
   </div>

@@ -21,7 +21,6 @@
             <VSIcon lib="wx" name="download_filled" size="32" :color="['#fff']" style="transform: translateY(-2rem)" />
           </div>
         </div>
-        <x-navigationbar />
       </template>
     </van-image-preview>
   </div>
