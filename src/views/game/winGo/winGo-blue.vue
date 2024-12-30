@@ -144,7 +144,7 @@ const {conf,gameBoxRefs} = index()
 }
 
 .ct-bs {
-	height: 48rem;
+	height: 54rem;
 	padding: 0 20rem;
 	color: #fff;
 	border-radius: 10rem;
@@ -288,7 +288,7 @@ const {conf,gameBoxRefs} = index()
 }
 
 .qkball_rv {
-	background: url(/static/img/game/twgo/n0_bg.png) !important;
+	background: url(/static/img/game/twgo/n0_bg.png) no-repeat !important;
 	background-size: 100% !important;
 
 	.txt {
@@ -300,7 +300,7 @@ const {conf,gameBoxRefs} = index()
 }
 
 .qkball_g {
-	background: url(/static/img/game/twgo/green_bg.png) !important;
+	background: url(/static/img/game/twgo/green_bg.png) no-repeat !important;
 	background-size: 100% !important;
 
 	.txt {
@@ -309,7 +309,7 @@ const {conf,gameBoxRefs} = index()
 }
 
 .qkball_gv {
-	background: url(/static/img/game/twgo/n5_bg.png) !important;
+	background: url(/static/img/game/twgo/n5_bg.png) no-repeat !important;
 	background-size: 100% !important;
 
 	.txt {
@@ -321,7 +321,7 @@ const {conf,gameBoxRefs} = index()
 }
 
 .qkball_r {
-	background: url(/static/img/game/twgo/red_bg.png) !important;
+	background: url(/static/img/game/twgo/red_bg.png) no-repeat !important;
 	background-size: 100% !important;
 
 	.txt {

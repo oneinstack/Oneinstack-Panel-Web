@@ -25,7 +25,7 @@
           <template #list="{ row }">
             <div v-for="item in row.data" :key="item.id">
               <div v-if="conf.currentCategoryId === 'lottery'">
-                <lotteryItem style="height: 350rem" :item="item" @clickItem="conf.handleIntoLocalGame(item, 0)" />
+                <lotteryItem style="height: 350rem" :size='440' lineColor="#006fff" :item="item" @clickItem="conf.handleIntoLocalGame(item, 0)" />
               </div>
               <div
                 v-else-if="conf.currentCategoryId === 'scratch'"

@@ -37,7 +37,7 @@ export default class HttpConfig {
           System.router.replace('/login')
         }
       }
-      if (code>=500 && code<600) {
+      if (code>500 && code<600) {
         System.router.push('/user/network')
       }
     }
