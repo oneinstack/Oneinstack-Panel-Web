@@ -34,7 +34,6 @@ const props = defineProps({
     default: 'no-method'
   }
 })
-console.log('uscom.noData.theme',uscom.noData.theme);
 
 const conf = reactive({
   theme: {
