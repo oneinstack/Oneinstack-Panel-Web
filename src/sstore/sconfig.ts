@@ -83,6 +83,9 @@ export const sconfig = reactive({
    * 退出登录
    */
   logout(toLogin = false) {
+    // 下线
+    apis.offline()
+
     // 清空token
     Cookie.clear()
     sutil.reset()
@@ -91,8 +94,6 @@ export const sconfig = reactive({
     //清理信息
     cConfig.isInit = false
 
-    // 下线
-    apis.offline()
 
     // 是否跳转到登录页
     if (toLogin)
