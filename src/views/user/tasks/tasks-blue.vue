@@ -159,7 +159,7 @@
           v-if="conf.defalutWallet && conf.taskList.length"
         ></task-list>
         <loading v-if="!conf.taskList.length && (conf.taskLoading || !conf.defalutWallet)"></loading>
-        <x-no-data v-if="!conf.taskLoading && !conf.taskList.length"/>
+        <x-no-data v-if="!conf.taskLoading && !conf.taskList.length" />
       </div>
     </div>
     <sign-pop ref="signPopRefs"></sign-pop>
@@ -169,7 +169,7 @@
 <script setup lang="ts">
 import taskList from './theme/blue/components/taskList.vue'
 import loading from './components/loading.vue'
-import signRemind from './components/signRemind.vue'
+import signRemind from '@/views/user/tasks/theme/blue/components/signRemind.vue'
 import signPop from './theme/blue/components/signPop.vue'
 import { ref } from 'vue'
 import { index } from './tasks'
@@ -425,5 +425,4 @@ const conf = index({ signPopRefs })
     box-shadow: none;
   }
 }
-
 </style>

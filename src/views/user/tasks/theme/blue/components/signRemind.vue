@@ -72,7 +72,7 @@ const props = defineProps({
     width: 720rem;
     height: 200rem;
     border-radius: 24rem;
-    background-image: url('/static/img/luckyWheel/withdraw-people-card.png');
+    background-image: url('/static/theme/blue/withdraw-people-card.webp');
     background-size: contain;
     box-shadow: 0px 2px 6px 0px #0000001a;
   }
@@ -88,7 +88,7 @@ const props = defineProps({
     font-weight: 800;
     line-height: 68rem;
     color: #fff;
-    text-shadow: 1px 1px 2px #ff4f0d;
+    text-shadow: 1px 1px 2px 0px #0D39FF;
   }
 
   .desc {
@@ -99,7 +99,7 @@ const props = defineProps({
     font-weight: 600;
     line-height: 42rem;
     text-align: center;
-    color: #cd5e2c;
+    color: #2C4FCD;
   }
 }
 </style>
