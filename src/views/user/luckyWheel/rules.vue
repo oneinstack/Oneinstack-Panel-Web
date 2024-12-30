@@ -73,10 +73,7 @@ onMounted(() => {
           </view>
         </template>
         <template v-else>
-          <div v-if="!conf.tabsData.length" class="flex flex-center" style="height: 1000rem; color: #fe7501">
-            <img src="/static/img/wallet/no-method.png" style="width: 100%" />
-            <span>{{ $t('user.noMore') }}</span>
-          </div>
+          <x-no-data v-if="!conf.tabsData.length"/>
           <div v-for="(item, index) in conf.tabsData" :key="index" class="list-row">
             <div class="flex items-center">
               <img v-if="item.avatar" :src="item.avatar" alt="" class="avatar" />

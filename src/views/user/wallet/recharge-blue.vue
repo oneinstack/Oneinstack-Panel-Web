@@ -55,10 +55,7 @@
                     </div>
                   </div>
                 </div>
-                <div class="not-method" v-if="!conf.payMentLoading && !conf.paymentList.length">
-                  <img mode="heightFix" src="/static/theme/blue/no-method.webp" />
-                  <span>{{ $t('wallet.notRecharge') }}</span>
-                </div>
+                <x-no-data v-if="!conf.payMentLoading && !conf.paymentList.length"/>
                 <div v-else>
                   <!-- 支付方式 == ONLINE => 选择厂商 -->
                   <template v-if="conf.formData.payMethodCode == 'ONLINE_PAYMENT'">

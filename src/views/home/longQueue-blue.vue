@@ -32,7 +32,7 @@ const conf = index()
                 <div style="font-size: 32rem; font-weight: 600">{{ item.lotteryName }}</div>
                 <div class="row no-wrap">
                   <div style="color: #999999">{{ item.betExpect }}</div>
-                  <div style="color: #fc9b01; margin-left: 20rem">
+                  <div style="color: #006fff; margin-left: 20rem">
                     {{
                       item.countDown[3] > 0 ? `${item.countDown[0]}:${item.countDown[1]}:${item.countDown[2]}` : 'Drawing'
                     }}
@@ -45,7 +45,7 @@ const conf = index()
                   <div class="border-4" :class="[`${item.betConent}`]">
                     <div style="margin: 0 8rem">{{ item.betConent }}</div>
                   </div>
-                  <div class="border-4" style="background: linear-gradient(180deg, #ff7502 0%, #fc9b01 160%)">
+                  <div class="border-4" style="background: linear-gradient(180deg, #006fff 0%, #E6F2FF 160%)">
                     <div style="margin: 0 8rem">{{ $t('LongQueue.Issue') }} {{ item.longCount }}</div>
                   </div>
                 </div>
@@ -150,7 +150,7 @@ const conf = index()
     }
   
     .active {
-      background: linear-gradient(180deg, #ffa54f 0%, #ec622e 160%);
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   
       .text {
         color: #ffffff;

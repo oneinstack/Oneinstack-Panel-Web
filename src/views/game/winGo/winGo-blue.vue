@@ -175,7 +175,6 @@ const {conf,gameBoxRefs} = index()
 
 		.result-item {
 			position: relative;
-
 		}
 
 		.result-text {
@@ -183,11 +182,12 @@ const {conf,gameBoxRefs} = index()
 			top: 32rem;
 			left: 34rem;
 			font-size: 45rem;
-			color: #E6F2FF;
+			color: #58A5FF;
+			font-weight: 500;
 		}
 
 		.openCodeText {
-			color: #58A5FF  !important;
+			color: #E6F2FF  !important;
 		}
 	}
 }

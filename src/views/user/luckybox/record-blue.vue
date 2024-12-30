@@ -12,13 +12,7 @@
           lineColor="linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%)"
         />
       </template>
-      <div
-        v-if="!conf.record.loading && conf.record.list.length === 0"
-        class="flex column flex-center"
-      >
-        <img mode="heightFix" src="/static/theme/blue/no-method.webp" />
-        <span class="no-data">{{ $t('user.noMore') }}</span>
-      </div>
+      <x-no-data v-if="!conf.record.loading && conf.record.list.length === 0"/>
       <div class="content column" style="padding: 20rem 32rem; gap: 20rem">
         <div v-for="item in conf.record.list" :key="item.id">
           <RecordCard :item="item" />

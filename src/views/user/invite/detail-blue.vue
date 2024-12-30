@@ -20,7 +20,7 @@
           <detailCard :data="conf.transformData(item, conf.queryParams.type)" style="margin: 20rem 0" />
         </div>
         <div v-if="!conf.list.length && !conf.loading" class="flex flex-center fit">
-          <x-no-data theme="no-method" />
+          <x-no-data />
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 <template>
-  <div class="no-data" :style="{ 'padding-top': noicon === false ? top : 0 + 'rem' }">
+  <div class="no-data" :style="{ 'padding-top':  top + 'rem' }">
     <img
       v-if="noicon === false"
       class="no-data-img"
@@ -24,24 +24,20 @@ defineProps({
    * 图标距离顶部距离，默认120
    */
   top: {
-    default: 120
+    default: 60
   },
   /**
    * 主题no-method、no-data，默认no-data
    */
   theme: {
-    default: 'no-data' as 'no-data' | 'no-method'
+    default: 'no-method'
   }
 })
 const conf = reactive({
   theme: {
-    'no-data': {
-      src: '/static/img/no-data.webp',
-      height: 280
-    },
     'no-method': {
       src: '/static/img/wallet/no-method.png',
-      height: 410
+      height: 320
     }
   } as any
 })

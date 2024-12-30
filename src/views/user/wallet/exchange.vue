@@ -455,6 +455,7 @@ const conf = index()
 }
 
 .cu-dialog {
+  max-width: 750rem !important;
   width: 90%;
   border-radius: 50rem;
   box-shadow: 0 2rem 20rem #fffbf5;

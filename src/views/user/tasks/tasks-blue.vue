@@ -159,10 +159,7 @@
           v-if="conf.defalutWallet && conf.taskList.length"
         ></task-list>
         <loading v-if="!conf.taskList.length && (conf.taskLoading || !conf.defalutWallet)"></loading>
-        <div class="no-task" v-if="!conf.taskLoading && !conf.taskList.length">
-          <img class="no-task-img" mode="widthFix" src="/static/img/task/not-data.png" />
-          <div class="no-txt">{{ $t('point.noTasks') }}</div>
-        </div>
+        <x-no-data v-if="!conf.taskLoading && !conf.taskList.length"/>
       </div>
     </div>
     <sign-pop ref="signPopRefs"></sign-pop>
@@ -429,17 +426,4 @@ const conf = index(signPopRefs)
   }
 }
 
-.no-task {
-  text-align: center;
-  margin-top: 60rem;
-
-  .no-task-img {
-    height: 180rem;
-  }
-
-  .no-txt {
-    font-size: 26rem;
-    color: #707070;
-  }
-}
 </style>
