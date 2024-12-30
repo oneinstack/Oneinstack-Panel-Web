@@ -78,7 +78,6 @@ const conf = index()
 
 <style scoped lang="less">
 .content-view {
-  overflow: hidden;
   width: 100%;
   padding: 30rem;
 

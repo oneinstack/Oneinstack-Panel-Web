@@ -421,7 +421,7 @@ export default {
 
     500: 'सर्वर अपवाद', // 服务器异常
     502: 'सर्वर अपवाद', // 服务器异常
-    504: 'Server exception', // 服务器异常
+    504: 'समय सीमा समाप्त', // 请求超时
 
     1101: 'खाता या पासवर्ड में त्रुटि', // 账号或密码错误
     1102: 'यूजरनेम खाली नहीं हो सकता', // 用户名不能为空
@@ -1510,7 +1510,43 @@ export default {
     DownloadFailure: 'डाउनलोड विफल',
     FailedObtainPersonal: 'व्यक्तिगत जानकारी प्राप्त करने में विफल',
     RecentlyUsed: 'हाल ही में उपयोग किया',
-    AllStickers: 'सभी स्टिकर्स'
+    AllStickers: 'सभी स्टिकर्स',
+    addContacts: 'संपर्कों में जोड़ें',
+    finish: 'समाप्त करें',
+    notes: 'नोट्स',
+    myAccount: 'मेरा खाता संख्या',
+    account: 'खाता',
+    chatMessages: 'चैट संदेश',
+    groupName: 'समूह का नाम',
+    GroupCode: 'समूह का क्यूआर कोड',
+    groupNotice: 'समूह सूचना',
+    notSet: 'सेट नहीं किया गया',
+    groupMute: 'समूह म्यूट',
+    groupTransfer: 'समूह मालिक स्थानांतरण',
+    groupAdministrator: 'समूह प्रशासक',
+    stickyTop: 'शीर्ष पर चिपकाएं',
+    clearHistory: 'चैट इतिहास साफ़ करें',
+    groupChat: 'समूह चैट',
+    savePicture: 'चित्र सहेजें',
+    edit: 'संपादित करें',
+    groupCanEdit: 'केवल समूह के मालिक और व्यवस्थापक संपादित कर सकते हैं',
+    inputNotice: 'इनपुट सूचना',
+    editing: 'संपादन',
+    quit: 'बाहर जाएं',
+    exitEdit: 'क्या आप इस संपादन से बाहर निकलना चाहते हैं?',
+    confirmNotification: 'समूह सूचना जारी करने की पुष्टि करें',
+    clearNotification: 'समूह सूचना को साफ़ करने की पुष्टि करें',
+    allMute: 'सभी सदस्य म्यूट',
+    muteTips: 'जब सभी सदस्य म्यूट होते हैं, तो केवल समूह मालिक और व्यवस्थापक बोल सकते हैं',
+    viewMoreMembers: 'अधिक समूह सदस्य देखें',
+    selectMaster: 'समूह मालिक चुनें',
+    chatDetails: 'चैट विवरण',
+    administratorTips1: 'व्यवस्थापक समूह मालिक को समूह चैट प्रबंधित करने में मदद कर सकते हैं और समूह के सदस्यों को हटा सकते हैं',
+    administratorTips2: 'केवल समूह का मालिक व्यवस्थापक सेट कर सकता है और समूह चैट समाप्त कर सकता है',
+    addMembers: 'सदस्यों को जोड़ें',
+    removeAdministrator: 'व्यवस्थापक को हटाने की पुष्टि करें',
+    administrativeRights: 'प्रशासनिक अधिकार हटाएं',
+    selectMembers: 'समूह सदस्य चुनें',
   },
   uView: {
     modal: {

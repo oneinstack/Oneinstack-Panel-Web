@@ -2,7 +2,7 @@
   <div class="user">
     <div class="user-list">
       <template v-for="item in getGroupMemberList" :key="item.userID">
-        <div class="info" @click="conf.goPages(`/chat/userCard?sourceID=${item.userID}`)">
+        <div class="info" @click="conf.goUserCard(item)">
           <personItem :person="item" />
         </div>
       </template>
@@ -13,7 +13,7 @@
     </div>
     <div class="more flex-center" @click="conf.goPages('/chat/groupMemberList?groupID='+groupID)"
       v-if="isMore && showMore">
-      <span>View more group members</span>
+      <span>{{ $t('chatRoom.viewMoreMembers') }}</span>
       <van-icon name="arrow" size="30rem" color="#B8B8B8" />
     </div>
   </div>
@@ -68,7 +68,6 @@ const showMore = computed(() => {
 const getGroupMemberList = computed(() => {
   if(!props.isMore) return props.groupMemberList
   if(isAdmin.value || isOwner.value) return props.groupMemberList.slice(0,18)
-  console.log('5555');
   
   return props.groupMemberList.slice(0,19)
 })
@@ -95,6 +94,14 @@ const conf = reactive({
   },
   goPages(url: any) {
     System.router.push(url)
+  },
+  goUserCard(member: any) {
+    const memberInfo = JSON.stringify({
+      roleLevel: member.roleLevel,
+      joinTime: member.joinTime,
+      joinSource: member.joinSource
+    })
+    System.router.push(`/chat/userCard?sourceID=${member.userID}&memberInfo=${memberInfo}`)
   }
 })
 </script>

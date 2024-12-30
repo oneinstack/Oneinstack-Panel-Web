@@ -1,20 +1,17 @@
 <template>
   <x-page :headerBgColor="'#fff'">
     <template #title>
-      <span class="title">Group mute</span>
+      <span class="title">{{$t('chatRoom.groupMute')}}</span>
     </template>
     <div class="edit border_b flex-b-c">
-      <div class="title">All Members Mute</div>
+      <div class="title">{{$t('chatRoom.allMute')}}</div>
       <van-switch v-model="conf.showMute" size="33rem" @change="conf.changeMute" active-color="#07c261"
         inactive-color="#dfdddd" />
     </div>
-    <div class="tips">After all members are muted, only the group owner and administrator are allowed to speak</div>
+    <div class="tips">{{$t('chatRoom.muteTips')}}</div>
   </x-page>
 </template>
 <script setup lang="ts">
-import cscontact from '@/modules/chat/sstore/cscontact';
-import headSearch from '../com/headSearch.vue';
-import groupItem from './com/groupItem.vue';
 import { onMounted, reactive } from 'vue';
 import csconversation from '@/modules/chat/sstore/csconversation';
 import IMSDK, {
@@ -51,7 +48,6 @@ const conf = reactive({
   }
 })
 onMounted(() => {
-  console.log(csconversation.currentGroup);
   conf.showMute = csconversation.currentGroup.status == GroupStatus.Muted
 })
 </script>

@@ -2,15 +2,15 @@
   <x-page headerBgColor="#fff" :bgcolor="'#fff'" :showBack="false">
     <template #title>
       <div class="head-cont">
-        <div class="cancle" @click.stop="sutil.pageBack()">cancle</div>
-        <div class="finsh" :class="{ 'active': conf.isActive }" @click="conf.saveOrCopy">finish</div>
+        <div class="cancle" @click.stop="sutil.pageBack()">{{ $t('chatRoom.cancel') }}</div>
+        <div class="finsh" :class="{ 'active': conf.isActive }" @click="conf.saveOrCopy">{{ $t('chatRoom.finish') }}</div>
       </div>
     </template>
     <div class="head-title">
       {{ getTitle }}
     </div>
     <div class="content">
-      <div class="title">notes</div>
+      <div class="title">{{ $t('chatRoom.notes') }}</div>
       <input class="input" v-model="conf.content" :placeholder="$t('chatRoom.enter_content')" @input="conf.input" />
     </div>
   </x-page>

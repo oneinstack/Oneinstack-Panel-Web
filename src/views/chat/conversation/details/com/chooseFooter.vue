@@ -10,7 +10,7 @@
           <div></div>
         </div>
       </div>
-      <div class="finsh" :class="{ 'active': chooseUser.length }" @click="conf.confirm">finish</div>
+      <div class="finsh" :class="{ 'active': chooseUser.length }" @click="conf.confirm">{{$t('chatRoom.finish')}}</div>
     </div>
   </div>
   <div>

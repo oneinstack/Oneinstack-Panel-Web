@@ -11,6 +11,7 @@
         :single="singleId == user.userID"
         :checkVisible="checkVisible"
         @click="emit('updateCheck',user)"
+        v-if="user.roleLevel != GroupMemberRole.Owner"
       />
       </template>
     </template>
@@ -18,6 +19,7 @@
 </template>
 <script setup lang="ts">
 import userItem from '@/views/chat/contact/com/userItem.vue';
+import { GroupMemberRole } from "openim-uniapp-polyfill";
 const props = defineProps({
   getChooseData: {
     default: {} as any

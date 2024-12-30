@@ -3,7 +3,7 @@
     <template #title>
       <div class="head-search">
         <van-search ref="inputRef" class="input" autofocus v-model="conf.keyword" :placeholder="getPlaceholder" />
-        <div class="btn flex flex-center" @click="sutil.pageBack">Cancel</div>
+        <div class="btn flex flex-center" @click="sutil.pageBack">{{ $t('chatRoom.cancel') }}</div>
       </div>
     </template>
     <div class="content" v-if="!conf.empty">

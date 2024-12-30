@@ -1,10 +1,10 @@
 <template>
   <x-page noFooter>
     <template #title>
-      <span class="title">Add friends</span>
+      <span class="title">{{ $t('chatRoom.add_friend') }}</span>
     </template>
-    <headSearch :type="'friend'" name="ID/Account" />
-    <div class="account">My account number: {{ csuser.selfInfo.nickname }}</div>
+    <headSearch :type="'friend'" :name="`ID/${$t('chatRoom.account')}`" />
+    <div class="account">{{ $t('chatRoom.myAccount') }}: {{ csuser.selfInfo.nickname }}</div>
     <div class="list">
       <div class="list-item" v-for="(item, index) in conf.typeList" :key="index" @click="conf.goPages(item.type)">
         <img class="img" :src="item.icon" />

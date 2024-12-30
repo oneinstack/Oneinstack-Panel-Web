@@ -14,7 +14,7 @@
             <img style="width: 26rem; height: 26rem;margin-left: 10rem;"
               :src="`/static/img/chat/sex_${conf.sourceUserInfo.gender}.svg`" v-if="conf.sourceUserInfo.gender" />
           </div>
-          <div v-if="conf.sourceUserInfo.remark">nickName: {{ conf.sourceUserInfo.nickname }}</div>
+          <div v-if="conf.sourceUserInfo.remark">{{ $t('chatRoom.nickname') }}: {{ conf.sourceUserInfo.nickname }}</div>
           <div @click="conf.handleCopy">Uid: {{ conf.sourceUserInfo.userID }}</div>
           <!-- <div>Area: China</div> -->
         </div>
@@ -24,17 +24,27 @@
         <van-icon name="arrow" size="34rem" color="#B8B8B8" />
       </div>
     </div>
+    <div class="other" v-if="conf.memberInfo.joinTime && showGroup">
+      <div class="edit">
+        <div class="title">{{ $t('chatRoom.join_time') }}</div>
+        <div class="txt">{{ sutil.getTimeFormat(conf.memberInfo.joinTime,3) }}</div>
+      </div>
+      <div class="edit">
+        <div class="title">{{ $t('chatRoom.join_method') }}</div>
+        <div class="txt">{{ getJoinSource }}</div>
+      </div>
+    </div>
     <div class="other">
       <!-- <div class="other-item">
         <img style="width: 34rem; height: 34rem;margin-right: 16rem;" src="/static/img/chat/video.svg" />
         <span>Voice or Video Call</span>
       </div> -->
       <div class="other-item" @click="conf.toAddFriend" v-if="!isFriend && !conf.disableAdd && !isSelf">
-        <span>Add to Contacts</span>
+        <span>{{ $t('chatRoom.addContacts') }}</span>
       </div>
       <div class="other-item" v-else @click="conf.toDesignatedConversation">
         <img style="width: 30rem; height: 30rem;margin-right: 16rem;" src="/static/img/chat/message.svg" />
-        <span>Messages</span>
+        <span>{{ $t('chatRoom.messages') }}</span>
       </div>
     </div>
   </x-page>
@@ -54,11 +64,13 @@ import cscontact from '@/modules/chat/sstore/cscontact';
 import System from '@/utils/System';
 import { navigateToDesignatedConversation } from '@/modules/chat/utils/cUtil';
 import i18n from '@/lang';
+import sutil from '@/sstore/sutil';
+import { log } from 'node:console';
 const conf = reactive({
   isLoading: false,
   sourceID: '',
   sourceUserInfo: {} as any,
-  memberInfo: null as any,
+  memberInfo: {} as any,
   switchLoading: false,
   showSetRole: false,
   showSetMuteMember: false,
@@ -208,9 +220,28 @@ const isFriend = computed(() => {
 const isSelf = computed(() => {
   return conf.sourceID === csuser.selfInfo.userID;
 })
-const route = useRoute()
+const getJoinSource = computed(() => {
+  if (!conf.memberInfo) {
+    return ''
+  }
+
+  switch (conf.memberInfo.joinSource) {
+    case GroupJoinSource.Invitation:
+      return i18n.t('chatRoom.invite_group')
+    case GroupJoinSource.QrCode:
+      return i18n.t('chatRoom.scan_code_join')
+    case GroupJoinSource.Search:
+      return i18n.t('chatRoom.search_join')
+    default:
+      return '-'
+  }
+})
+
+const showGroup = computed(() => {
+  return conf.memberInfo.roleLevel != GroupMemberRole.Owner
+})
 onMounted(() => {
-  const { sourceID, sourceInfo, memberInfo, disableAdd }: any = route.query
+  const { sourceID, sourceInfo, memberInfo, disableAdd } = System.getRouterParams()
   conf.disableAdd = disableAdd ? JSON.parse(disableAdd) : false
   if (sourceID) {
     conf.sourceID = sourceID
@@ -224,7 +255,7 @@ onMounted(() => {
   }
   if (memberInfo) {
     conf.memberInfo = JSON.parse(memberInfo)
-    conf.checkCurrentMember()
+    // conf.checkCurrentMember()
   }
   conf.setIMListener()
 })
@@ -259,20 +290,6 @@ onMounted(() => {
       }
     }
   }
-
-  .edit {
-    padding: 24rem 20rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-top: 2rem solid #F6F7FA;
-
-    .title {
-      font-size: 28rem;
-      font-weight: 500;
-      color: #000;
-    }
-  }
 }
 
 .other {
@@ -291,6 +308,26 @@ onMounted(() => {
     &:not(:last-of-type) {
       border-bottom: 2rem solid #F6F7FA;
     }
+  }
+}
+
+.edit {
+  padding: 24rem 20rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 2rem solid #F6F7FA;
+
+  .title {
+    font-size: 28rem;
+    font-weight: 500;
+    color: #000;
+    min-width: 160rem;
+    margin-right: 20rem;
+  }
+  .txt{
+    flex: 1;
+    color: grey;
   }
 }
 </style>

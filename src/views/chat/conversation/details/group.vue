@@ -1,7 +1,7 @@
 <template>
   <x-page headerBgColor="#fff">
     <template #title>
-      <span class="head-title">Chat Messages</span>
+      <span class="head-title">{{ $t('chatRoom.chatMessages') }}</span>
     </template>
     <!-- 成员列表 -->
     <groupItem :groupID="csconversation.currentConversation.groupID"
@@ -11,27 +11,27 @@
     <!-- 名称公告 -->
     <div class="m-t20">
       <div class="edit border_b flex-b-c" @click="conf.updateGroup('updateGroupNickname',2)">
-        <div class="title">Group Name</div>
+        <div class="title">{{ $t('chatRoom.groupName') }}</div>
         <div class="more flex-center">
           <span>{{ csconversation.currentConversation.showName }}</span>
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <div class="edit flex-b-c border_b" style="margin-top: 0;" @click="conf.updateGroup('groupQrCode')">
-        <div class="title">Group QR code</div>
+        <div class="title">{{ $t('chatRoom.GroupCode') }}</div>
         <div class="more flex-center">
           <img style="width: 30rem;height: 30rem;" src="/static/images/group_setting_qrcode.png" />
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <div class="edit" :class="{'flex-b-c': !csconversation.currentGroup.notification}" style="margin-top: 0;" @click="conf.toNotice">
-        <div class="title">Group Notice</div> 
+        <div class="title">{{ $t('chatRoom.groupNotice') }}</div> 
         <div class="more flex-b" v-if="csconversation.currentGroup.notification">
           <span>{{ csconversation.currentGroup.notification }}</span>
           <van-icon style="margin-top: -4rem;" name="arrow" size="30rem" color="#B8B8B8" />
         </div>
         <div class="more flex-center" v-else>
-          <span v-if="isAdmin || isOwner">not set</span>
+          <span v-if="isAdmin || isOwner">{{ $t('chatRoom.notSet') }}</span>
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
@@ -40,21 +40,21 @@
     <div class="m-t20" v-if="isAdmin || isOwner">
       <!-- 全员禁言 -->
       <div class="edit border_b flex-b-c" @click="conf.updateGroup('setMute')">
-        <div class="title">Group mute</div>
+        <div class="title">{{ $t('chatRoom.groupMute') }}</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <!-- 群主转让 -->
       <div class="edit border_b flex-b-c" @click="conf.transShow = true" v-if="isOwner">
-        <div class="title">Group owner transfer</div>
+        <div class="title">{{ $t('chatRoom.groupTransfer') }}</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
       </div>
       <!-- 群管理员 -->
-      <div class="edit border_b flex-b-c" @click="conf.updateGroup('setAdmin')" v-if="isOwner">
-        <div class="title">Group administrator</div>
+      <div class="edit border_b flex-b-c" @click="conf.updateGroup('setAdmin')"  v-if="isOwner">
+        <div class="title">{{ $t('chatRoom.groupAdministrator') }}</div>
         <div class="more flex-center">
           <van-icon name="arrow" size="30rem" color="#B8B8B8" />
         </div>
@@ -95,7 +95,6 @@ import i18n from '@/lang';
 import System from '@/utils/System';
 import { capis } from "@/modules/chat/api";
 import { showDialog } from "vant";
-import { log } from "node:console";
 
 const ConfirmTypes = {
   Clear: 'Clear',
@@ -190,7 +189,7 @@ const conf = reactive({
     if(type == 2 && isNomal.value) {
       showDialog({
         confirmButtonText: i18n.t('chatRoom.confirm'),
-        message: 'Only the group owner and administrator can edit'
+        message: i18n.t('chatRoom.groupCanEdit')
       }).then(() => {
         // on close
       });
@@ -237,8 +236,6 @@ const getConfirmContent = computed(() => {
 })
 
 onMounted(() => {
-  console.log(csconversation.currentGroup);
-  
   let list = csconversation.groupMemberList
   if(list.length && list[0].groupID == csconversation.currentConversation.groupID) {
     conf.groupMemberList = csconversation.groupMemberList

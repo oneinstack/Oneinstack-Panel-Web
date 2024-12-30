@@ -7,19 +7,19 @@
     </div> -->
     <!-- 置顶聊天 -->
     <div class="edit border_b flex-b-c" @click="conf.updatePinned(2)">
-      <div class="title">Sticky on Top</div>
+      <div class="title">{{ $t('chatRoom.stickyTop') }}</div>
       <van-switch v-model="conf.isPinned" size="33rem" active-color="#07c261" inactive-color="#dfdddd" />
     </div>
   </div>
   <!-- 清空聊天记录 -->
   <div class="edit" @click="conf.cearShow = true">
-    <div class="title">Clear Chat History</div>
+    <div class="title">{{ $t('chatRoom.clearHistory') }}</div>
   </div>
   <!-- 清除聊天记录确认框 -->
   <van-popup class="popup-bottom-center" :show="conf.cearShow" position="bottom" borderRadius='10' :round="true"
     @close="conf.cearShow = false">
     <div class="out-popup">
-      <div class="out-line out-sure" @click="conf.clearHistory">Clear Chat History</div>
+      <div class="out-line out-sure" @click="conf.clearHistory">{{ $t('chatRoom.clearHistory') }}</div>
       <div style="height: 20rem; background: #f6f6f6"></div>
       <div class="out-line" @click="conf.cearShow = false">{{ $t('me.cancle') }}</div>
     </div>

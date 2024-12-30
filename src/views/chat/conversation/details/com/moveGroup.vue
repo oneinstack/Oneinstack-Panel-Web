@@ -3,9 +3,9 @@
     <div>
       <x-statusbar />
       <div class="head-cont">
-        <div class="cancle" @click="conf.cancle()">cancle</div>
-        <div class="title">{{ type=='SetAdmin'? 'Select group members' :  $t('chatRoom.rm_grp_mem') }}</div>
-        <div class="finsh" :class="{ 'active': conf.chooseUser.length }" @click="conf.finish">finish</div>
+        <div class="cancle" @click="conf.cancle()">{{$t('chatRoom.cancel')}}</div>
+        <div class="title">{{ type=='SetAdmin'? $t('chatRoom.selectMembers') :  $t('chatRoom.rm_grp_mem') }}</div>
+        <div class="finsh" :class="{ 'active': conf.chooseUser.length }" @click="conf.finish">{{$t('chatRoom.finish')}}</div>
       </div>
     </div>
     <!-- 选中、搜索框 -->

@@ -27,15 +27,9 @@ import contactList from './contactList.vue';
 import chooseFooter from './chooseFooter.vue';
 import cscontact from '@/modules/chat/sstore/cscontact';
 import { formatChooseData, toastWithCallback } from '@/modules/chat/utils/cUtil';
-import IMSDK, {
-  GroupStatus,
-  IMMethods,
-  SessionType,
-  MessageStatus,
-} from "openim-uniapp-polyfill";
+import IMSDK from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import { ContactChooseTypes } from '@/modules/chat/constant';
-import sutil from '@/sstore/sutil';
 import i18n from '@/lang';
 
 const props = defineProps({

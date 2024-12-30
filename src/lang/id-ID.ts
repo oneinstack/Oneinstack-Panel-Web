@@ -420,7 +420,7 @@ export default {
 
     500: 'Kesalahan server', // 服务器异常
     502: 'Kesalahan server', // 服务器异常
-    504: 'Server exception', // 服务器异常
+    504: 'Waktu Permintaan Habis', // 请求超时
 
     1101: 'Kesalahan akun atau kata sandi', // 账号或密码错误
     1102: 'Nama pengguna harus diisi', // 用户名不能为空
@@ -1509,7 +1509,43 @@ export default {
     DownloadFailure: 'Gagal Mengunduh',
     FailedObtainPersonal: 'Gagal Mendapatkan Informasi Pribadi',
     RecentlyUsed: 'Sedang Digunakan',
-    AllStickers: 'Semua Stiker'
+    AllStickers: 'Semua Stiker',
+    addContacts: 'Tambahkan ke Kontak',
+    finish: 'Selesai',
+    notes: 'Catatan',
+    myAccount: 'Nomor akun saya',
+    account: 'Akun',
+    chatMessages: 'Pesan Chat',
+    groupName: 'Nama Grup',
+    GroupCode: 'Kode QR Grup',
+    groupNotice: 'Pemberitahuan Grup',
+    notSet: 'belum disetel',
+    groupMute: 'Membisukan Grup',
+    groupTransfer: 'Transfer Kepemilikan Grup',
+    groupAdministrator: 'Administrator Grup',
+    stickyTop: 'Tempel di Atas',
+    clearHistory: 'Hapus Riwayat Chat',
+    groupChat: 'Chat Grup',
+    savePicture: 'Simpan Gambar',
+    edit: 'Edit',
+    groupCanEdit: 'Hanya pemilik grup dan administrator yang dapat mengedit',
+    inputNotice: 'Pemberitahuan input',
+    editing: 'Sedang Mengedit',
+    quit: 'Keluar',
+    exitEdit: 'Keluar dari pengeditan ini?',
+    confirmNotification: 'Konfirmasi untuk melepaskan pemberitahuan grup',
+    clearNotification: 'Konfirmasi untuk menghapus pemberitahuan grup',
+    allMute: 'Bisukan Semua Anggota',
+    muteTips: 'Setelah semua anggota dibisukan, hanya pemilik grup dan administrator yang bisa berbicara',
+    viewMoreMembers: 'Lihat lebih banyak anggota grup',
+    selectMaster: 'Pilih pemilik grup',
+    chatDetails: 'Detail Chat',
+    administratorTips1: 'Administrator dapat membantu pemilik grup untuk mengelola chat grup dan memiliki kemampuan untuk menghapus anggota grup',
+    administratorTips2: 'Hanya pemilik grup yang memiliki kemampuan untuk mengatur administrator dan menghapus chat grup',
+    addMembers: 'Tambahkan Anggota',
+    removeAdministrator: 'Konfirmasi untuk menghapus administrator',
+    administrativeRights: 'Hapus hak administratif',
+    selectMembers: 'Pilih anggota grup'
   },
   uView: {
     modal: {

@@ -1,16 +1,14 @@
 <template>
   <x-page :bgcolor="'#fff'" :header-bg-color="'#fff'">
-    <div class="head-title">
-      Group Administrator
-    </div>
+    <div class="head-title">{{$t('chatRoom.groupAdministrator')}}</div>
     <div class="tips">
       <div class="item">
         <div class="left-q"><div></div></div>
-        <div>The administrator can assist the group master to manage the group chat and has the ability to remove group members</div>
+        <div>{{$t('chatRoom.administratorTips1')}}</div>
       </div>
       <div class="item">
         <div class="left-q"><div></div></div>
-        <div>Only the group owner has the ability to set up administrators and dismiss group chats</div>
+        <div>{{$t('chatRoom.administratorTips2')}}</div>
       </div>
     </div>
     <div class="group-admin">
@@ -19,13 +17,13 @@
           <headImg :src="item.faceURL" />
         </div>
         <div class="nickname">{{ item.nickname }}</div>
-        <div class="move" @click="conf.changeItem(item)">remove</div>
+        <div class="move" @click="conf.changeItem(item)">{{$t('chatRoom.remove')}}</div>
       </div>
       <div class="admin-item add" @click="conf.selectShow = true">
         <div class="img">
           <van-icon size="36rem" name="add-o" />
         </div>
-        <div class="nickname">Add Members</div>
+        <div class="nickname">{{$t('chatRoom.addMembers')}}</div>
       </div>
     </div>
     <!-- 选择用户 -->
@@ -37,8 +35,8 @@
     <van-popup class="popup-bottom-center" :show="conf.moveShow" position="bottom" borderRadius='10' :round="true"
       @close="conf.moveShow = false">
       <div class="out-popup">
-        <div class="out-line out-tip">Confirm to remove administrator {{ conf.selectAdmin.nickname }}</div>
-        <div class="out-line out-sure" @click="conf.moveAdmin">Remove administrative rights</div>
+        <div class="out-line out-tip">{{$t('chatRoom.removeAdministrator')}} {{ conf.selectAdmin.nickname }}</div>
+        <div class="out-line out-sure" @click="conf.moveAdmin">{{$t('chatRoom.administrativeRights')}}</div>
         <div style="height: 20rem; background: #f6f6f6"></div>
         <div class="out-line" @click="conf.moveShow = false">{{ $t('me.cancle') }}</div>
       </div>

@@ -5,13 +5,13 @@
       <div class="head-cont">
         <div class="cancle" @click="conf.cancle">
           <van-icon class="back-img" name="arrow-left" color="#000" size="42rem" v-if="conf.notification" />
-          <span v-else>cancel</span>
+          <span v-else>{{$t('chatRoom.cancel')}}</span>
         </div>
-        <div class="title">Group Notice</div>
+        <div class="title">{{$t('chatRoom.groupNotice')}}</div>
         <div v-if="isNomal"></div>
-        <div v-else-if="conf.notification && !conf.showEdit" @click="conf.changeEdit">Edit</div>
+        <div v-else-if="conf.notification && !conf.showEdit" @click="conf.changeEdit">{{$t('chatRoom.edit')}}</div>
         <div class="finsh" v-else :class="{ 'active': conf.keyword != conf.notification }" @click="conf.comfirmUpdate">
-          finish</div>
+          {{$t('chatRoom.finish')}}</div>
       </div>
     </div>
 
@@ -26,12 +26,12 @@
             <div class="time">{{ conf.updateTime }}</div>
           </div>
         </div>
-        <textarea ref="inputRef" v-model="conf.keyword" class="textarea" placeholder="input notice"
+        <textarea ref="inputRef" v-model="conf.keyword" class="textarea" :placeholder="$t('chatRoom.inputNotice')"
           :disabled="!conf.showEdit" style="opacity: 1 !important;"></textarea>
       </div>
       <div class="tips" v-if="isNomal">
         <div class="line"></div>
-        <span>Only the group owner and administrator can edit</span>
+        <span>{{$t('chatRoom.groupCanEdit')}}</span>
         <div class="line"></div>
       </div>
     </div>
@@ -83,10 +83,10 @@ const conf = reactive({
   cancle() {
     if (conf.keyword == conf.notification) return sutil.pageBack()
     showDialog({
-      confirmButtonText: 'Editing',
+      confirmButtonText: i18n.t('chatRoom.editing'),
       showCancelButton: true,
-      cancelButtonText: 'quit',
-      message: 'Exit this edit?',
+      cancelButtonText: i18n.t('chatRoom.quit'),
+      message: i18n.t('chatRoom.exitEdit'),
     }).then(() => {
       conf.changeEdit()
     })
@@ -96,7 +96,7 @@ const conf = reactive({
   },
   comfirmUpdate() {
     if (conf.keyword == conf.notification) return
-    const message = conf.keyword ? 'Confirm the release of group notification' : 'Confirm to clear the group notification'
+    const message = conf.keyword ? i18n.t('chatRoom.confirmNotification') : i18n.t('chatRoom.clearNotification')
     showDialog({
       confirmButtonText: i18n.t('chatRoom.confirm'),
       showCancelButton: true,

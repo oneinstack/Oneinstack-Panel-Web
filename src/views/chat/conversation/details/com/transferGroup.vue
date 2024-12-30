@@ -3,9 +3,10 @@
     <div>
       <x-statusbar />
       <div class="head-cont">
-        <div class="cancle" @click="conf.cancle()">cancle</div>
-        <div class="title">Select group master</div>
-        <div class="finsh" :class="{ 'active': conf.transferInfo.userID }" @click="conf.confirm">finish</div>
+        <div class="cancle" @click="conf.cancle()">{{ $t('chatRoom.cancel') }}</div>
+        <div class="title">{{ $t('chatRoom.selectMaster') }}</div>
+        <div class="finsh" :class="{ 'active': conf.transferInfo.userID }" @click="conf.confirm">
+          {{ $t('chatRoom.finish') }}</div>
       </div>
     </div>
     <!-- 选中、搜索框 -->
@@ -15,34 +16,26 @@
 
     <!-- 联系人列表 -->
     <div style="position: relative;flex: 1;overflow-y: auto;background: #fff;">
-      <contactList :checkVisible="false" :getChooseData="getChooseData" 
-        @updateCheck="conf.updateCheckedUser" :singleId="conf.transferInfo.userID" />
+      <contactList :checkVisible="false" :getChooseData="getChooseData" @updateCheck="conf.updateCheckedUser"
+        :singleId="conf.transferInfo.userID" />
     </div>
 
-    <!-- 移除提示框 -->
+    <!-- 确认群主转让提示框 -->
     <van-dialog :show="conf.showConfirmModal" title="" show-cancel-button :confirmButtonText="$t('chatRoom.confirm')"
-      :cancelButtonText="$t('chat.cancle')" @cancel="conf.showConfirmModal = false" @confirm="conf.confirmMove">
+      :cancelButtonText="$t('chat.cancle')" @cancel="conf.showConfirmModal = false" @confirm="conf.confirmTransfer">
       <div style="padding: 40rem;">
-        {{ `${$t('chatRoom.confirm_transfer')}${conf.transferInfo.nickname}?`}}
+        {{ `${$t('chatRoom.confirm_transfer')}${conf.transferInfo.nickname}?` }}
       </div>
     </van-dialog>
   </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
-import listSearch from './listSearch.vue';
+import { computed, reactive } from 'vue';
 import contactList from './contactList.vue';
-import cscontact from '@/modules/chat/sstore/cscontact';
-import { formatChooseData, toastWithCallback } from '@/modules/chat/utils/cUtil';
-import IMSDK, {
-  GroupStatus,
-  IMMethods,
-  SessionType,
-  MessageStatus,
-} from "openim-uniapp-polyfill";
+import { formatChooseData } from '@/modules/chat/utils/cUtil';
+import IMSDK from "openim-uniapp-polyfill";
 import System from '@/utils/System';
 import { ContactChooseTypes } from '@/modules/chat/constant';
-import sutil from '@/sstore/sutil';
 import i18n from '@/lang';
 
 const props = defineProps({
@@ -61,53 +54,53 @@ const conf = reactive({
   keyword: '',
   showConfirmModal: false,
   transferInfo: {} as any,
+  // 成员选择
   updateCheckedUser(user: any) {
     conf.transferInfo = user
   },
-  confirmMove() {
-    console.log(conf.transferInfo.groupID);
-    console.log(conf.transferInfo.userID);
-    
-      let func:any = () => {};
-      System.loading()
-      func = IMSDK.asyncApi(
-        IMSDK.IMMethods.TransferGroupOwner,
-        IMSDK.uuid(),
-        {
-          groupID: conf.transferInfo.groupID,
-          newOwnerUserID: conf.transferInfo.userID,
-        },
-      );
-      func
-        .then(() => {
-          conf.showConfirmModal = false
-          System.toast(i18n.t('chatRoom.op_success'),"success");
-          setTimeout(() => {
-            conf.cancle(2)
-          },1000)
-        })
-        .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
-        .finally(() => (System.loading(false)));
-    },
+  // 群主转让
+  confirmTransfer() {
+    let func: any = () => { };
+    System.loading()
+    func = IMSDK.asyncApi(
+      IMSDK.IMMethods.TransferGroupOwner,
+      IMSDK.uuid(),
+      {
+        groupID: conf.transferInfo.groupID,
+        newOwnerUserID: conf.transferInfo.userID,
+      },
+    );
+    func
+      .then(() => {
+        conf.showConfirmModal = false
+        System.toast(i18n.t('chatRoom.op_success'), "success");
+        setTimeout(() => {
+          conf.cancle(2)
+        }, 1000)
+      })
+      .catch(() => System.toast(i18n.t('chatRoom.op_failed')))
+      .finally(() => (System.loading(false)));
+  },
+  // 确认弹框
   confirm() {
-    if(!conf.transferInfo.userID) return
+    if (!conf.transferInfo.userID) return
     conf.showConfirmModal = true
   },
+  // 取消返回
   cancle(type = 1) {
-    console.log(conf.transferInfo);
-    
+    conf.transferInfo = {}
     emit('cancle', type)
   }
 })
+// 获取成员列表
 const getChooseData = computed(() => {
   if (conf.keyword) {
     return {
       indexList: ["#"],
       dataList: [
-      props.groupMemberList.filter(
+        props.groupMemberList.filter(
           (friend) =>
-            friend.nickname.includes(conf.keyword) ||
-            friend.remark.includes(conf.keyword),
+            friend.nickname.includes(conf.keyword)
         ),
       ],
     };

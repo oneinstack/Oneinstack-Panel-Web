@@ -4,12 +4,12 @@
       <div class="header" id="groupCode">
         <img class="faceImg" :src="conf.sourceInfo.faceURL || '/static/images/contact_new_group.png'" />
         <div class="name">
-          group chat: {{ conf.sourceInfo.showName }}
+          {{$t('chatRoom.groupChat')}}: {{ conf.sourceInfo.showName }}
         </div>
-        <div class="groupId" @click="conf.handleCopy">groupID: {{ conf.sourceInfo.groupID }}</div>
+        <div class="groupId" @click="conf.handleCopy"> {{$t('chatRoom.group')}}ID: {{ conf.sourceInfo.groupID }}</div>
         <qrcode-vue :value="conf.qrLink" :size="150" />
       </div>
-      <div class="save" @click="conf.exportCardAsImage">Save Picture</div>
+      <div class="save" @click="conf.exportCardAsImage">{{$t('chatRoom.savePicture')}}</div>
     </div>
   </x-page>
 </template>

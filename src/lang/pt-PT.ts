@@ -419,7 +419,7 @@ export default {
 
     500: 'Exceção do servidor', // 服务器异常
     502: 'Kesalahan server', // 服务器异常
-    504: 'Server exception', // 服务器异常
+    504: 'Tempo de solicitação esgotado', // 请求超时
 
     1101: 'Erro de conta ou senha', // 账号或密码错误
     1102: 'O nome de usuário não pode estar vazio', // 用户名不能为空
@@ -1507,7 +1507,43 @@ export default {
     DownloadFailure: 'Falha ao Baixar',
     FailedObtainPersonal: 'Falha ao Obter Informações Pessoais',
     RecentlyUsed: 'Usado recentemente',
-    AllStickers: 'Todos os Sticker'
+    AllStickers: 'Todos os Sticker',
+    addContacts: 'Adicionar aos contatos',
+    finish: 'Finalizar',
+    notes: 'Notas',
+    myAccount: 'Meu número de conta',
+    account: 'Conta',
+    chatMessages: 'Mensagens de chat',
+    groupName: 'Nome do grupo',
+    GroupCode: 'Código QR do grupo',
+    groupNotice: 'Aviso do grupo',
+    notSet: 'não definido',
+    groupMute: 'Silenciar grupo',
+    groupTransfer: 'Transferir proprietário do grupo',
+    groupAdministrator: 'Administrador do grupo',
+    stickyTop: 'Fixar no topo',
+    clearHistory: 'Limpar histórico de chat',
+    groupChat: 'Chat de grupo',
+    savePicture: 'Salvar imagem',
+    edit: 'Editar',
+    groupCanEdit: 'Somente o proprietário do grupo e administradores podem editar',
+    inputNotice: 'Aviso de entrada',
+    editing: 'Editando',
+    quit: 'Sair',
+    exitEdit: 'Sair desta edição?',
+    confirmNotification: 'Confirmar a liberação da notificação do grupo',
+    clearNotification: 'Confirmar para limpar a notificação do grupo',
+    allMute: 'Silenciar todos os membros',
+    muteTips: 'Após silenciar todos os membros, somente o proprietário do grupo e administradores podem falar',
+    viewMoreMembers: 'Ver mais membros do grupo',
+    selectMaster: 'Selecionar proprietário do grupo',
+    chatDetails: 'Detalhes do chat',
+    administratorTips1: 'O administrador pode ajudar o proprietário do grupo a gerenciar o chat e tem a capacidade de remover membros do grupo',
+    administratorTips2: 'Somente o proprietário do grupo pode configurar administradores e dissolver chats do grupo',
+    addMembers: 'Adicionar membros',
+    removeAdministrator: 'Confirmar para remover administrador',
+    administrativeRights: 'Remover direitos administrativos',
+    selectMembers: 'Selecionar membros do grupo',
   },
   uView: {
     modal: {

@@ -1,7 +1,7 @@
 <template>
   <x-page>
     <template #title>
-      <span class="head-title">Chat details</span>
+      <span class="head-title">{{ $t('chatRoom.chatDetails') }}</span>
     </template>
     <div class="user">
       <div class="info" @click="conf.toUserCard">

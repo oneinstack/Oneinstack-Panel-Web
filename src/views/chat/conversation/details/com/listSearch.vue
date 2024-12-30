@@ -1,13 +1,13 @@
 <template>
   <div>
-    <headSearch :customClick="true" @click="conf.isFocus = true" v-if="!chooseUser.length && !conf.isFocus" />
+    <headSearch :customClick="true" @click="conf.changeFocus" v-if="!chooseUser.length && !conf.isFocus" />
     <div class="list" v-else>
       <div class="user" v-scroll ref="leftRefs">
         <div class="info" v-for="item in chooseUser" :key="item.userID">
           <personItem :showName="false" :imgW="86" :person="item" />
         </div>
       </div>
-      <van-search class="input" :autofocus="conf.isFocus" @blur="conf.isFocus = false" v-model="conf.value"
+      <van-search class="input" ref="inputRef" @blur="conf.isFocus = false" v-model="conf.value"
         @update:model-value="conf.changeInput" :placeholder="$t('chatRoom.search')" />
     </div>
   </div>
@@ -24,11 +24,18 @@ const props = defineProps({
 })
 const emit = defineEmits(['change'])
 const leftRefs = ref<any>()
+  const inputRef = ref<any>()
 const conf = reactive({
   value: '',
   isFocus: false,
   changeInput(e: any) {
     emit('change', e)
+  },
+  changeFocus() {
+    conf.isFocus = true
+    setTimeout(()=> {
+      inputRef.value?.focus()
+    },100)
   },
   leftTop() {
     if (props.chooseUser.length < 5) return

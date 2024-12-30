@@ -416,7 +416,7 @@ export default {
 
     500: 'Server exception', // 服务器异常
     502: 'Server exception', // 服务器异常
-    504: 'Server exception', // 服务器异常
+    504: 'Request Timeout', // 请求超时
 
     1101: 'Account or password error', // 账号或密码错误
     1102: 'The username cannot be empty', // 用户名不能为空
@@ -1505,7 +1505,43 @@ export default {
     DownloadFailure: 'Download Failed',
     FailedObtainPersonal: 'Failed to Obtain Personal Information',
     RecentlyUsed: 'Recently Used',
-    AllStickers: 'All Stickers'
+    AllStickers: 'All Stickers',
+    addContacts: 'Add to Contacts',
+    finish: 'Finish',
+    notes: 'Notes',
+    myAccount: 'My account number',
+    account: 'Account',
+    chatMessages: 'Chat Messages',
+    groupName: 'Group Name',
+    GroupCode: 'Group QR Code',
+    groupNotice: 'Group Notice',
+    notSet: 'not set',
+    groupMute: 'Group Mute',
+    groupTransfer: 'Group Owner Transfer',
+    groupAdministrator: 'Group Administrator',
+    stickyTop: 'Sticky On Top',
+    clearHistory: 'Clear Chat History',
+    groupChat:'Group Chat',
+    savePicture: 'Save Picture',
+    edit: 'Edit',
+    groupCanEdit: 'Only the group owner and administrator can edit',
+    inputNotice: 'input notice',
+    editing: 'Editing',
+    quit: 'Quit',
+    exitEdit: 'Exit this edit?',
+    confirmNotification: 'Confirm the release of group notification',
+    clearNotification: 'Confirm to clear the group notification',
+    allMute: 'All Members Mute',
+    muteTips: 'After all members are muted, only the group owner and administrator are allowed to speak',
+    viewMoreMembers:'View more group members',
+    selectMaster: 'Select group master',
+    chatDetails: 'Chat details',
+    administratorTips1: 'The administrator can assist the group master to manage the group chat and has the ability to remove group members',
+    administratorTips2: 'Only the group owner has the ability to set up administrators and dismiss group chats',
+    addMembers: 'Add Members',
+    removeAdministrator: 'Confirm to remove administrator',
+    administrativeRights: 'Remove administrative rights',
+    selectMembers: 'Select group members',
   },
   uView: {
     modal: {
