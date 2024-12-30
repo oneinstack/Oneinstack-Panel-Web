@@ -1,11 +1,12 @@
 import { loading } from '@/components/loading/loading'
 import { toast } from '@/components/toast/toast'
+import sutil from '@/sstore/sutil'
 import { Capacitor } from '@capacitor/core'
 import { Directory, Filesystem } from '@capacitor/filesystem'
+import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 import { getPlatforms } from '@ionic/vue'
 import { Router } from 'vue-router'
 import { globalType } from '../../build/env/globalVar'
-import sutil from '@/sstore/sutil'
 
 export default class System {
   /** 是否是原生 */
@@ -282,5 +283,17 @@ export default class System {
   static setTheme = (theme: string) => {
     Cookie.set('pageTheme', theme)
     window.location.reload()
+  }
+
+  /**
+   * 设置导航栏颜色
+   * @param color
+   */
+  static setNavigationBarColor = (color: string) => {
+    if (System.isNative) {
+      NavigationBar.setColor({
+        color: color
+      })
+    }
   }
 }

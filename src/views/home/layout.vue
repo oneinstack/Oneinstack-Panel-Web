@@ -8,7 +8,6 @@ import { ERouter } from '@/enum/Enum'
 import sapp from '@/sstore/sapp'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
-import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 import { Scope } from 'tools-vue3'
 import { onMounted, onUnmounted, reactive } from 'vue'
 defineOptions({
@@ -71,9 +70,7 @@ event.on(ERouter.change, (path: string) => {
 onMounted(() => {
   sapp.isNav = true
   uspage.setConfig()
-  NavigationBar.setColor({
-    color: '#ffffff'
-  })
+  System.setNavigationBarColor('#ffffff')
 })
 
 onUnmounted(() => {

@@ -10,7 +10,6 @@ import { initApp } from '@/modules/chat/sstore'
 import csdk from '@/modules/chat/sstore/csdk'
 import System from '@/utils/System'
 import cConfig from '@chat/utils/cConfig'
-import { NavigationBar } from '@hugotomazi/capacitor-navigation-bar'
 import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
 import { Scope } from 'tools-vue3'
 import { onMounted, onUnmounted, reactive } from 'vue'
@@ -44,9 +43,7 @@ const conf = reactive({
       }
     })
 
-    NavigationBar.setColor({
-      color: '#efefef'
-    })
+    System.setNavigationBarColor('#efefef')
   }
 })
 

@@ -5,13 +5,13 @@
 <script setup lang="ts">
 import uspage from '@/components/page/uspage'
 import { ERouter } from '@/enum/Enum'
+import i18n from '@/lang'
 import sapp from '@/sstore/sapp'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { onMounted, onUnmounted, reactive } from 'vue'
-import tabbar from './theme/blue/tabbar/index.vue';
-import i18n from '@/lang'
+import tabbar from './theme/blue/tabbar/index.vue'
 
 defineOptions({
   name: 'Home'
@@ -77,6 +77,7 @@ event.on(ERouter.change, (path: string) => {
 onMounted(() => {
   sapp.isNav = true
   uspage.setConfig()
+  System.setNavigationBarColor('#ffffff')
 })
 
 onUnmounted(() => {
