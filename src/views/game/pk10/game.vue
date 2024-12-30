@@ -1,9 +1,9 @@
 <template>
-  <div class="container" style="transform-origin: left top" :style="{ transform: `scale(${scale})` }">
+  <div class="container" style="transform-origin: left top" :style="{ transform: `scale(${conf.scale})` }">
     <div class="header">
       <div class="logo">{{ title }}</div>
       <div class="position">
-        <template v-for="item in numlist">
+        <template v-for="item in conf.numlist">
           <div class="positm" :class="['num' + item.num]"></div>
         </template>
       </div>
@@ -305,366 +305,364 @@
       </cview>
     </div>
     <div class="resultpage page2" style="display: block; position: absolute"
-      :style="{ bottom: isEnd ? '0px' : '9999px' }">
+      :style="{ bottom: conf.isEnd ? '0px' : '9999px' }">
       <cview name="result1">
-        <div v-if="isEnd" class="resultitm result1" id="result1"> <img src="/static/zhibo/pk/img/result1.png"
+        <div v-if="conf.isEnd" class="resultitm result1" id="result1"> <img src="/static/zhibo/pk/img/result1.png"
             style="width: 226px; height: 177px" /></div>
       </cview>
       <cview name="result2">
-        <div v-if="isEnd" class="resultitm result2" id="result2"> <img src="/static/zhibo/pk/img/result2.png"
+        <div v-if="conf.isEnd" class="resultitm result2" id="result2"> <img src="/static/zhibo/pk/img/result2.png"
             style="width: 258px; height: 139px" /></div>
       </cview>
       <cview name="result3">
-        <div v-if="isEnd" class="resultitm result3" id="result3"> <img src="/static/zhibo/pk/img/result3.png"
+        <div v-if="conf.isEnd" class="resultitm result3" id="result3"> <img src="/static/zhibo/pk/img/result3.png"
             style="width: 173px; height: 112px" /></div>
       </cview>
       <div class="resultitm resultcar2" id="resultcar2" style="left: 81px; top: 287px">
         <cview name="rcar1">
-          <div v-if="isEnd && numlist[1]" class="rcar" :class="['rcar' + numlist[1].num]"></div>
+          <div v-if="conf.isEnd && conf.numlist[1]" class="rcar" :class="['rcar' + conf.numlist[1].num]"></div>
         </cview>
       </div>
       <div class="resultitm resultcar3" id="resultcar3" style="left: 859px; top: 291px">
         <cview name="rcar3">
-          <div v-if="isEnd && numlist[2]" class="rcar" :class="['rcar' + numlist[2].num]"></div>
+          <div v-if="conf.isEnd && conf.numlist[2]" class="rcar" :class="['rcar' + conf.numlist[2].num]"></div>
         </cview>
       </div>
       <div class="resultitm resultcar1" id="resultcar1" style="left: 395px; top: 328px">
         <cview name="rcar2">
-          <div v-if="isEnd && numlist[0]" class="rcar" :class="['rcar' + numlist[0].num]"></div>
+          <div v-if="conf.isEnd && conf.numlist[0]" class="rcar" :class="['rcar' + conf.numlist[0].num]"></div>
         </cview>
       </div>
     </div>
   </div>
 </template>
-<script>
+<script setup lang="ts">
 import { Scope } from 'tools-vue3';
 import { stween } from '@/sstore/stween';
 import cview from './cview.vue'
-export default {
-  components: { cview },
-  props: {
-    issue: {
-      type: String,
-      default: ''
-    },
-    title: {
-      type: String,
-      default: ''
-    },
-    width: {
-      type: Number,
-      default: 1334
-    }
-  },
-  data() {
-    return {
-      scale: 1,
+import { onMounted, reactive, watch } from 'vue';
+import { log } from 'util';
 
-      isStart: false,
-      isEnd: false,
-      numlist: [],
-      setList(arr) {
-        const sorts = [10, 9, 8]
-        this.numlist = arr.map((item, i) => {
-          return {
-            num: item,
-            sort: sorts[i]
-          }
-        })
-      },
-      startCountdown() {
-        return new Promise((res) => {
-          const options = {
-            opacity: 1,
-            time: 1000
-          }
-          stween.to('redlight', options)
-          stween.to('yellowlight', {
-            ...options,
-            delay: 1000
-          })
-          stween.to('greenlight', {
-            ...options,
-            delay: 2000,
-            final() {
-              stween.set(['trafficlight'], {
-                opacity: 0
-              })
-              res(true)
-            }
-          })
-        })
-      },
-      init(res) {
-        stween.set(['redlight', 'greenlight', 'yellowlight'], {
-          opacity: 0
-        })
-        stween.set(['trafficlight', 'roadstart'], {
-          opacity: 1
-        })
-        stween.set(['roadstart'], {
-          x: 0
-        })
-        for (let i = 1; i < 11; i++) {
-          stween.set([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`], {
+const props = defineProps({
+  issue: {
+    type: String,
+    default: ''
+  },
+  title: {
+    type: String,
+    default: ''
+  },
+  width: {
+    type: Number,
+    default: 1334
+  }
+})
+
+const timer = Scope.Timer()
+
+const conf = reactive({
+  scale: 1,
+
+  isStart: false,
+  isEnd: false,
+  numlist: [] as any[],
+  setList(arr:any) {
+    const sorts = [10, 9, 8]
+    conf.numlist = arr.map((item:any, i:any) => {
+      return {
+        num: item,
+        sort: sorts[i]
+      }
+    })
+  },
+  startCountdown() {
+    return new Promise((res) => {
+      const options = {
+        opacity: 1,
+        time: 1000
+      }
+      stween.to('redlight', options)
+      stween.to('yellowlight', {
+        ...options,
+        delay: 1000
+      })
+      stween.to('greenlight', {
+        ...options,
+        delay: 2000,
+        final() {
+          stween.set(['trafficlight'], {
             opacity: 0
           })
+          res(true)
+        }
+      })
+    })
+  },
+  init(res:any) {
+    stween.set(['redlight', 'greenlight', 'yellowlight'], {
+      opacity: 0
+    })
+    stween.set(['trafficlight', 'roadstart'], {
+      opacity: 1
+    })
+    stween.set(['roadstart'], {
+      x: 0
+    })
+    for (let i = 1; i < 11; i++) {
+      stween.set([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`], {
+        opacity: 0
+      })
 
-          stween.set('car' + i, {
+      stween.set('car' + i, {
+        x: 0
+      })
+    }
+
+    conf.numlist = res
+  },
+  async start() {
+    console.log('55889977');
+
+    await conf.startCountdown()
+    conf.isStart = true
+    //背景
+    const loopBg = () => {
+      stween.to('scenaryitm', {
+        x: 1334,
+        time: 20000,
+        final() {
+          stween.set('scenaryitm', {
             x: 0
           })
-        }
-
-        this.numlist = res
-      },
-      async start() {
-        await this.startCountdown()
-        const _this = this
-        _this.isStart = true
-        //背景
-        const loopBg = () => {
-          stween.to('scenaryitm', {
-            x: 1334,
-            time: 20000,
-            final() {
-              stween.set('scenaryitm', {
-                x: 0
-              })
-              if (_this.isStart) {
-                loopBg()
-              }
-            }
-          })
-        }
-        loopBg()
-
-        //路障
-        stween.to(['roadstart'], {
-          x: 400,
-          time: 600,
-          final() {
-            stween.set('roadstart', {
-              x: -2000,
-            })
-          }
-        })
-
-        //路面
-        const loopRoad = () => {
-          stween.to('roaditm', {
-            x: 1200,
-            time: 400,
-            final() {
-              stween.set('roaditm', {
-                x: 0
-              })
-              if (_this.isStart) {
-                loopRoad()
-              }
-            }
-          })
-        }
-        loopRoad()
-
-        _this.carInfo.x = {}
-
-        //车辆行驶
-        const _final = (i) => {
-          if (i === 10) {
-            if (_this.stopFun) {
-              _this.stopFun()
-              _this.stopFun = null
-            } else if (_this.isStart) {
-              _this.loopCar(_this.getRandomCarArr(), _final)
-            }
+          if (conf.isStart) {
+            loopBg()
           }
         }
-        _this.loopCar(_this.getRandomCarArr(), _final)
-      },
-      carInfo: {
-        x: {}
-      },
-      getRandomCarArr() {
-        const arr = []
-        for (let i = 1; i < 11; i++) {
-          arr.push(MathUtil.getRandomInt(100, 700))
-        }
-        return arr
-      },
-      loopCar(res, final, forceup) {
-        this.numlist = []
-        for (let i = 1; i < 11; i++) {
-          const x = res[i - 1]
-          if (!this.carInfo.x[i]) this.carInfo.x[i] = 0
-          const up = this.carInfo.x[i] < x
-          this.carInfo.x[i] = x
-          this.numlist.push({
-            num: i,
-            sort: x
-          })
-          stween.to('car' + i, {
-            x: -x,
-            time: 1000,
-            final() {
-              if (final) {
-                final(i)
-              }
-            }
-          })
-          stween.set([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`], {
-            opacity: forceup ? 1 : up ? 1 : 0
-          })
-        }
-        this.numlist = this.numlist.sort((a, b) => b.sort - a.sort)
-      },
-      /**
-       * 冲线钩子
-       */
-      stopFun: null,
-      /**
-       * 执行生成结果，进行冲线
-       * @param res -数组：[1,2,3]
-       */
-      async stop(res) {
-        const _this = this
-        const _arr = _this.getRandomCarArr()
-        for (let i = 0; i < res.length; i++) {
-          _arr[res[i] - 1] = 950 - i * 50 - MathUtil.getRandomInt(0, 30)
-        }
+      })
+    }
+    loopBg()
+
+    //路障
+    stween.to(['roadstart'], {
+      x: 400,
+      time: 600,
+      final() {
         stween.set('roadstart', {
-          x: -1334
+          x: -2000,
         })
-        _this.stopFun = () => {
-          stween.to('roadstart', {
-            x: -800,
-            time: 1000
+      }
+    })
+
+    //路面
+    const loopRoad = () => {
+      stween.to('roaditm', {
+        x: 1200,
+        time: 400,
+        final() {
+          stween.set('roaditm', {
+            x: 0
           })
-          _this.loopCar(
-            _arr,
-            (i) => {
-              if (i === 10) {
-                _this.isStart = false
-                stween.pause(['scenaryitm', 'roaditm'])
-
-                _this.timer.once(() => {
-                  //移出屏幕外面
-                  for (let i = 1; i < 11; i++) {
-                    stween.to('car' + i, {
-                      x: -(this.carInfo.x[i] + 1334),
-                      time: 1000,
-                      final() {
-                        if (i === 10) {
-                          _this.showWin()
-                        }
-                      }
-                    })
-                  }
-                }, 1000)
-              }
-            },
-            true
-          )
-        }
-      },
-
-      /**
-       * 结算画面
-       */
-      showWin() {
-        const _this = this
-        _this.isEnd = true
-        stween.set(['rcar1', 'rcar2', 'rcar3', 'result1', 'result2', 'result3'], {
-          opacity: 0
-        })
-        stween.set(['rcar1', 'rcar2', 'rcar3'], {
-          x: 40,
-          y: -40
-        })
-
-        _this.numlist = _this.numlist.slice(0, 3)
-        _this.init([..._this.numlist])
-
-        _this.timer.once(() => {
-          const options1 = {
-            x: 0,
-            y: 0,
-            opacity: 1,
-            time: 600
+          if (conf.isStart) {
+            loopRoad()
           }
-          stween.to('rcar2', {
-            ...options1
-          })
-          stween.to('rcar1', {
-            ...options1,
-            delay: 600
-          })
-          stween.to('rcar3', {
-            ...options1,
-            delay: 1200
-          })
-
-          const options2 = {
-            opacity: 1,
-            time: 600
-          }
-          stween.to('result1', {
-            ...options2
-          })
-          stween.to('result2', {
-            ...options2,
-            delay: 600
-          })
-          stween.to('result3', {
-            ...options2,
-            delay: 1200,
-            final() {
-              _this.timer.once(() => {
-                _this.isEnd = false
-              }, 1000)
-            }
-          })
-        }, 500)
-      },
-      /**
-       * 重置为一开始
-       */
-      reset() {
-        stween.kill(['redlight', 'greenlight', 'yellowlight', 'trafficlight', 'roadstart', 'scenaryitm', 'roaditm', 'rcar1', 'rcar2', 'rcar3', 'result1', 'result2', 'result3'])
-        for (let i = 1; i < 11; i++) {
-          stween.kill([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`, 'car' + i])
         }
-        this.timer.clear()
-        this.isEnd = false
-        this.isStart = false
-        this.init([])
+      })
+    }
+    loopRoad()
+
+    conf.carInfo.x = {}
+
+    //车辆行驶
+    const _final = (i:any) => {
+      if (i === 10) {
+        if (conf.stopFun) {
+          conf.stopFun()
+          conf.stopFun = null
+        } else if (conf.isStart) {
+          conf.loopCar(conf.getRandomCarArr(), _final,'')
+        }
       }
     }
+    conf.loopCar(conf.getRandomCarArr(), _final,'')
   },
-  created() {
-    this.event = Scope.Event()
-    this.timer = Scope.Timer()
-    this.numlist = this.getRandomCarArr()
-    // this.scale = uni.upx2px(this.width) / 1334
-    this.scale = this.$props.width / 1334
+  carInfo: {
+    x: {}
+  } as any,
+  getRandomCarArr() {
+    const arr = []
+    for (let i = 1; i < 11; i++) {
+      arr.push(MathUtil.getRandomInt(100, 700))
+    }
+    return arr
   },
-  mounted() {
-    this.init([])
+  loopCar(res:any, final:any, forceup:any) {
+    conf.numlist = []
+    for (let i = 1; i < 11; i++) {
+      const x = res[i - 1]
+      if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
+      const up = conf.carInfo.x[i] < x
+      conf.carInfo.x[i] = x
+      conf.numlist.push({
+        num: i,
+        sort: x
+      })
+      stween.to('car' + i, {
+        x: -x,
+        time: 1000,
+        final() {
+          if (final) {
+            final(i)
+          }
+        }
+      })
+      stween.set([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`], {
+        opacity: forceup ? 1 : up ? 1 : 0
+      })
+    }
+    conf.numlist = conf.numlist.sort((a, b) => b.sort - a.sort)
   },
-  watch: {
-    width: {
-      handler(newValue, oldValue) {
-        this.scale = newValue / 1334
-      },
-      deep: true // 深度监听父组件传过来width变化
+  /**
+   * 冲线钩子
+   */
+  stopFun: null as any,
+  /**
+   * 执行生成结果，进行冲线
+   * @param res -数组：[1,2,3]
+   */
+  async stop(res:any) {
+    const _arr = conf.getRandomCarArr()
+    for (let i = 0; i < res.length; i++) {
+      _arr[res[i] - 1] = 950 - i * 50 - MathUtil.getRandomInt(0, 30)
+    }
+    stween.set('roadstart', {
+      x: -1334
+    })
+    conf.stopFun = () => {
+      stween.to('roadstart', {
+        x: -800,
+        time: 1000
+      })
+      conf.loopCar(
+        _arr,
+        (i:any) => {
+          if (i === 10) {
+            conf.isStart = false
+            stween.pause(['scenaryitm', 'roaditm'])
+
+            timer.once(() => {
+              //移出屏幕外面
+              for (let i = 1; i < 11; i++) {
+                stween.to('car' + i, {
+                  x: -(conf.carInfo.x[i] + 1334),
+                  time: 1000,
+                  final() {
+                    if (i === 10) {
+                      conf.showWin()
+                    }
+                  }
+                })
+              }
+            }, 1000)
+          }
+        },
+        true
+      )
     }
   },
 
-  onLoad(option) { },
-  onShow() { },
-  onHide() { },
-  onUnload() { },
-  methods: {}
-}
+  /**
+   * 结算画面
+   */
+  showWin() {
+    conf.isEnd = true
+    stween.set(['rcar1', 'rcar2', 'rcar3', 'result1', 'result2', 'result3'], {
+      opacity: 0
+    })
+    stween.set(['rcar1', 'rcar2', 'rcar3'], {
+      x: 40,
+      y: -40
+    })
+
+    conf.numlist = conf.numlist.slice(0, 3)
+    conf.init([...conf.numlist])
+
+    timer.once(() => {
+      const options1 = {
+        x: 0,
+        y: 0,
+        opacity: 1,
+        time: 600
+      }
+      stween.to('rcar2', {
+        ...options1
+      })
+      stween.to('rcar1', {
+        ...options1,
+        delay: 600
+      })
+      stween.to('rcar3', {
+        ...options1,
+        delay: 1200
+      })
+
+      const options2 = {
+        opacity: 1,
+        time: 600
+      }
+      stween.to('result1', {
+        ...options2
+      })
+      stween.to('result2', {
+        ...options2,
+        delay: 600
+      })
+      stween.to('result3', {
+        ...options2,
+        delay: 1200,
+        final() {
+          timer.once(() => {
+            conf.isEnd = false
+          }, 1000)
+        }
+      })
+    }, 500)
+  },
+  /**
+   * 重置为一开始
+   */
+  reset() {
+    stween.kill(['redlight', 'greenlight', 'yellowlight', 'trafficlight', 'roadstart', 'scenaryitm', 'roaditm', 'rcar1', 'rcar2', 'rcar3', 'result1', 'result2', 'result3'])
+    for (let i = 1; i < 11; i++) {
+      stween.kill([`flame${i}`, `wind${i}`, `wheel${i}b`, `wheel${i}a`, 'car' + i])
+    }
+    timer.clear()
+    conf.isEnd = false
+    conf.isStart = false
+    conf.init([])
+  }
+})
+watch(
+  () => props.width,
+  (newVal) => {
+    conf.scale = newVal / 1334
+  },
+  {
+    deep: true // 深度监听父组件传过来对象变化
+  }
+)
+// 暴露方法
+defineExpose({
+  reset: conf.reset,
+  start: conf.start,
+  stop: conf.stop,
+  setList: conf.setList
+})
+onMounted(() => {
+  conf.numlist = conf.getRandomCarArr()
+    // conf.scale = uni.upx2px(conf.width) / 1334
+    conf.scale = props.width / 1334
+  conf.init([])
+})
 </script>
 
 <style lang="less" scoped>
@@ -769,11 +767,13 @@ export default {
   top: 0px;
   left: -1334px;
 }
-.scenaryitm-img{
+
+.scenaryitm-img {
   background: url('/static/zhibo/pk/img/scenery.jpg') no-repeat;
   width: 2668px;
   height: 119px;
 }
+
 .road {
   height: 540px;
   position: relative;
@@ -793,11 +793,13 @@ export default {
   top: 0;
   left: -1300px;
 }
-.roaditm-img{
+
+.roaditm-img {
   background: url('/static/zhibo/pk/img/road.jpg') no-repeat 100%/100%;
   width: 2660px;
   height: 540px;
 }
+
 .flag {
   position: absolute;
   bottom: 0;
