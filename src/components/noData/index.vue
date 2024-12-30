@@ -1,5 +1,5 @@
 <template>
-  <div class="no-data" :style="{ 'padding-top':  top + 'rem' }">
+  <div class="no-data" :style="{ 'padding-top': top + 'rem' }">
     <img
       v-if="noicon === false"
       class="no-data-img"
@@ -12,8 +12,9 @@
 
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { uscom } from '../uscom'
 
-defineProps({
+const props = defineProps({
   /**
    * 是否不显示图标，默认显示
    */
@@ -33,10 +34,12 @@ defineProps({
     default: 'no-method'
   }
 })
+console.log('uscom.noData.theme',uscom.noData.theme);
+
 const conf = reactive({
   theme: {
     'no-method': {
-      src: '/static/img/wallet/no-method.png',
+      src: uscom.noData.theme[props.theme].src,
       height: 320
     }
   } as any

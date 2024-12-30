@@ -3,7 +3,7 @@ export default {
   /**
    * 接口地址
    */
-  API: 'https://demo.bggame.live',
+  API: 'http://192.168.31.50',
 
   /**
    * 聊天地址

@@ -7,6 +7,7 @@ import HttpConfig from './HttpConfig'
 import StatusBarConfig from './StatusBarConfig'
 import System from './System'
 import { UpdateVersion } from './UpdateVersion'
+import Components from '@/components'
 export default class Config {
   /**
    * 初始化
@@ -31,6 +32,12 @@ export default class Config {
     // 初始化http
     HttpConfig.init(System.env)
 
+    // 初始化应用数据
+    initApp()
+
+    // 初始化组件
+    app.use(Components)
+
     // 初始化路由
     const router = initRouter()
     app.use(router)
@@ -39,8 +46,6 @@ export default class Config {
       H5Util.rem()
       // 检查更新
       await UpdateVersion()
-      // 初始化应用数据
-      initApp()
       // 初始化完成
       app.mount('#app')
     })
