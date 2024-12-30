@@ -85,7 +85,7 @@ export const sapp = reactive({
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty(
         '--height',
-        `${sapp.app.height - sapp.keyboard.height + StatusBarConfig.bottomBarHeight}px`
+        `${sapp.app.height - sapp.keyboard.height}px`
       )
     }, 100)
   },

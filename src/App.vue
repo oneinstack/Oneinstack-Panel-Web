@@ -4,11 +4,10 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, reactive } from 'vue'
+import { nextTick, reactive } from 'vue'
 import { apis } from './api'
 import { ERouter } from './enum/Enum'
 import sconfig from './sstore/sconfig'
-import StatusBarConfig from './utils/StatusBarConfig'
 
 defineOptions({
   name: 'App'
@@ -38,10 +37,6 @@ CEvent.on(ERouter.browserShow, (isShow) => {
       })
     }
   }
-})
-
-onMounted(() => {
-  document.documentElement.style.setProperty('--navigation-bar-height', `${StatusBarConfig.bottomBarHeight}px`)
 })
 
 CEvent.on(ERouter.reload, conf.reload)

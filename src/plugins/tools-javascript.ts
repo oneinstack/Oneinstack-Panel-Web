@@ -5,7 +5,6 @@ export const install = (app: App) => {
   const clearAndSaveCookie = (_cookie: any, clearFun: Function) => {
     const noVlearValue = {
       'statusHeight': '',
-      'bottomBarHeight': '',
       
       'bulletinDialogInfo': '',
       'bindDialogInfo': '',
