@@ -112,9 +112,10 @@ import notice from './components/notice.vue'
 import changePop from './components/changePop.vue'
 import { index } from './point'
 import { ref } from 'vue'
+import sutil from '@/sstore/sutil'
 
 const changeRef = ref<any>()
-const { conf, sutil } = index(changeRef)
+const conf = index({ changeRef })
 </script>
 
 <style lang="less" scoped>

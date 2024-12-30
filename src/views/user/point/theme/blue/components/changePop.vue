@@ -37,16 +37,9 @@ import { index } from '@/views/user/point/components/changePop'
 
 const emit = defineEmits(['submit'])
 
-const conf = index(emit)
+const conf = index({ emit })
 
-const showPop = (e: any) => {
-  conf.num = 1
-  conf.vipLevel = e.vipLevel
-  conf.imgUrl = e.url
-  conf.userVipLevel = e.userVipLevel + ''
-  conf.show = e.show
-}
-defineExpose({ showPop })
+defineExpose({ showPop: conf.showPop })
 </script>
 
 <style lang="less" scoped>
@@ -105,7 +98,7 @@ defineExpose({ showPop })
     }
 
     .pop-title {
-      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
@@ -151,7 +144,7 @@ defineExpose({ showPop })
 
       .num-input {
         width: 100rem;
-        color: #006FFF;
+        color: #006fff;
         font-size: 25rem;
         height: 100%;
         text-align: center;
@@ -164,15 +157,15 @@ defineExpose({ showPop })
       margin: 30rem 0rem 40rem;
 
       .btn {
-        background: #E6F2FF;
-        color: #006FFF;
+        background: #e6f2ff;
+        color: #006fff;
         padding: 10rem 25rem;
         border-radius: 36rem;
         font-size: 22rem;
       }
 
       .confirm {
-        background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         color: #fff;
         margin-left: 80rem;
       }

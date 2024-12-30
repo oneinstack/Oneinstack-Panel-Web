@@ -329,12 +329,13 @@ import rule from '../components/gameRule.vue'
 import result from './result.vue'
 import order from './order.vue'
 import { index } from './color'
+import sutil from '@/sstore/sutil'
 
 const resultRefs = ref<any>()
 const colorRefs = ref<any>()
 const tabsRefs = ref<any>()
 
-const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
+const conf = index({ resultRefs, colorRefs, tabsRefs })
 </script>
 
 <style lang="less" scoped>

@@ -434,8 +434,8 @@ const conf = index()
 .activeTab .num {
   // background: #000 !important;
   // color: #FDE63E !important;
-  background: #ffa64f !important;
-  color: #fff !important;
+  background: #E6F2FF !important;
+  color: #006FFF !important;
 }
 
 .source-text {

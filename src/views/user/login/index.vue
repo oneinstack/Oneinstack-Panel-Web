@@ -269,8 +269,9 @@
 <script setup lang="ts">
 import BgImg from './components/bgImg.vue'
 import { index } from './index'
+import System from '@/utils/System'
 
-const { conf, System } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>

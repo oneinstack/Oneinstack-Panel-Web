@@ -1,7 +1,6 @@
 import { apis } from '@/api'
 import { EPage } from '@/enum/Enum'
 import i18n from '@/lang'
-import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
@@ -186,8 +185,5 @@ export const index = () => {
     conf.moreMessage()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

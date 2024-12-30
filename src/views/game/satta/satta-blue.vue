@@ -149,7 +149,7 @@
               <img
                 v-if="svalue.configv1['im_open']"
                 class="share-img"
-                :class="{ 'disabled': !canShare }"
+                :class="{ 'disabled': !conf.canShare }"
                 style="margin-right: 24rem; width: 47rem; height: 35rem"
                 src="/static/img/share.png"
                 @click="conf.handleClickShare"
@@ -247,12 +247,14 @@
 import order from './order.vue'
 import { ref } from 'vue'
 import { index } from './satta'
+import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue'
 import stheme from '@/sstore/stheme'
 
 const orderRefs = ref<any>()
 const selectRefs = ref<any>()
 
-const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
+const conf = index({ orderRefs, selectRefs })
 </script>
 
 <style lang="less" scoped>
@@ -703,7 +705,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
     }
 
     .right-btn {
-      background: linear-gradient(#eb602d, #ffa64f);
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
       width: 270rem;
       color: #fff;
       display: flex;
@@ -740,7 +742,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
       .time-item {
         width: 22%;
         height: 50rem;
-        background: #F6F7FA;
+        background: #f6f7fa;
         color: #646464;
         display: flex;
         justify-content: center;
@@ -754,8 +756,8 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
         }
 
         &.time-active {
-          background: #E6F2FF;
-          color: #006FFF;
+          background: #e6f2ff;
+          color: #006fff;
         }
       }
     }
@@ -823,7 +825,7 @@ const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
         }
 
         &:nth-child(2n + 1) {
-          background: #E6F2FF;
+          background: #e6f2ff;
         }
       }
 

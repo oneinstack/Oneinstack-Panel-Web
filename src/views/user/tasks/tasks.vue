@@ -178,7 +178,7 @@ import { ref } from 'vue'
 import { index } from './tasks'
 
 const signPopRefs = ref<any>()
-const conf = index(signPopRefs)
+const conf = index({ signPopRefs })
 </script>
 
 <style lang="less" scoped>

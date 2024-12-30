@@ -7,7 +7,7 @@ import sbet from '@/sstore/sbet'
 import { svalue } from '@/sstore/svalue'
 import sstatus from '@/sstore/sstatus'
 
-export const index = ([resultRefs, colorRefs, tabsRefs]: any) => {
+export const index = ({ resultRefs, colorRefs, tabsRefs }: any) => {
   const conf = reactive({
     colorNum: 0,
     autoplay: true,
@@ -444,8 +444,5 @@ export const index = ([resultRefs, colorRefs, tabsRefs]: any) => {
     }
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

@@ -133,7 +133,7 @@ import openCode from './openCode.vue'
 import { index } from './index'
 
 const chooseRef = ref()
-const conf = index(chooseRef)
+const conf = index({ chooseRef })
 </script>
 
 <style lang="less" scoped>

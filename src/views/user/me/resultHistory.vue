@@ -336,7 +336,7 @@ import { index } from './resultHistory'
 
 const typeRefs = ref<any>()
 
-const conf = index(typeRefs)
+const conf = index({ typeRefs })
 </script>
 
 <style lang="less" scoped>

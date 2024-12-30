@@ -68,8 +68,9 @@
 <script lang="ts" setup>
 import stheme from '@/sstore/stheme'
 import { index } from './shiftTo'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -190,7 +191,7 @@ const { conf, sutil } = index()
     }
 
     input {
-      background-color: #F6F7FA;
+      background-color: #f6f7fa;
       height: 70rem;
       border-radius: 10rem;
       width: 82%;

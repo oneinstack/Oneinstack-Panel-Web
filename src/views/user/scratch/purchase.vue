@@ -60,7 +60,7 @@ import { index } from './purchase'
 import { ref } from 'vue'
 
 const modalRefs = ref<any>(null)
-const conf = index(modalRefs)
+const conf = index({ modalRefs })
 </script>
 
 <style lang="less" scoped>

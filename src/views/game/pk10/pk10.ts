@@ -6,7 +6,7 @@ import { onBeforeMount, onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import { apis } from '@/api'
 
-export const index = ([cgamebox, cgameRef, gameBoxRefs]: any) => {
+export const index = ({ cgamebox, cgameRef, gameBoxRefs }: any) => {
   const conf = reactive({
     isClickPage: false,
     loading: false,

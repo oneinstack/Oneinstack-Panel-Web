@@ -134,7 +134,7 @@ import { index } from './index'
 import stheme from '@/sstore/stheme'
 
 const chooseRef = ref()
-const conf = index(chooseRef)
+const conf = index({ chooseRef })
 </script>
 
 <style lang="less" scoped>

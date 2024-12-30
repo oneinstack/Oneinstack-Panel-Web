@@ -67,8 +67,9 @@
 
 <script lang="ts" setup>
 import { index } from './shiftTo'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>

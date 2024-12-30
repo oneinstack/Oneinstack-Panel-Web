@@ -2,7 +2,6 @@ import { onMounted, reactive } from 'vue'
 import { svalue } from '@/sstore/svalue'
 import i18n from '@/lang'
 import { apis } from '@/api'
-import sutil from '@/sstore/sutil'
 
 export const index = () => {
   const conf = reactive({
@@ -87,8 +86,5 @@ export const index = () => {
     conf.getTaskRecord()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

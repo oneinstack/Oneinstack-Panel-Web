@@ -56,7 +56,7 @@ import { index } from './index'
 
 const DGameTipRef = ref<any>(null)
 
-const conf = index(DGameTipRef)
+const conf = index({ DGameTipRef })
 </script>
 
 <style scoped lang="less">

@@ -70,7 +70,7 @@ const emit = defineEmits(['confirm'])
 const lotteryTypeRef = ref()
 const betTimeRef = ref()
 
-const conf = index(emit, [lotteryTypeRef, betTimeRef])
+const conf = index({ emit, lotteryTypeRef, betTimeRef })
 
 defineExpose({
   getList: conf.getList
@@ -112,8 +112,8 @@ defineExpose({
     color: #646464;
     font-size: 26rem;
     &.active {
-      background-color: #E6F2FF;
-      color: #006FFF;
+      background-color: #e6f2ff;
+      color: #006fff;
     }
   }
 }
@@ -129,13 +129,13 @@ defineExpose({
 .text-color-1 {
   font-size: 32rem;
   font-weight: 600;
-  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 80rem;
 }
 .text-color-item {
-  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

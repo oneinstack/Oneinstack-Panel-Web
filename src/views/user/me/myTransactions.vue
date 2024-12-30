@@ -69,8 +69,9 @@
 
 <script setup lang="ts">
 import { index } from './myTransactions'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>

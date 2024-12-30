@@ -336,12 +336,13 @@ import result from './result-blue.vue'
 import order from './order.vue'
 import { index } from './color'
 import stheme from '@/sstore/stheme'
+import sutil from '@/sstore/sutil'
 
 const resultRefs = ref<any>()
 const colorRefs = ref<any>()
 const tabsRefs = ref<any>()
 
-const { conf, sutil } = index([resultRefs, colorRefs, tabsRefs])
+const conf = index({ resultRefs, colorRefs, tabsRefs })
 </script>
 
 <style lang="less" scoped>

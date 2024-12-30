@@ -175,7 +175,7 @@ import { ref } from 'vue'
 import { index } from './tasks'
 
 const signPopRefs = ref<any>()
-const conf = index(signPopRefs)
+const conf = index({ signPopRefs })
 </script>
 
 <style lang="less" scoped>
@@ -411,8 +411,8 @@ const conf = index(signPopRefs)
   }
 
   .sign-btn {
-    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
-    box-shadow: 4px 4px 8px 0px #0779FF4D;
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
+    box-shadow: 4px 4px 8px 0px #0779ff4d;
     height: 80rem;
     color: #fff;
     border-radius: 40rem;

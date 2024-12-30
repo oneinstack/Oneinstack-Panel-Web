@@ -25,8 +25,9 @@
 <script setup lang="ts">
 import loading from '../tasks/components/loading.vue'
 import { index } from './record'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>

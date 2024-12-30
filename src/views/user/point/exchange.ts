@@ -2,7 +2,6 @@ import { onMounted, reactive } from 'vue'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 import { apis } from '@/api'
-import sutil from '@/sstore/sutil'
 
 export const index = () => {
   const conf = reactive({
@@ -45,8 +44,5 @@ export const index = () => {
     conf.moreMessage()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

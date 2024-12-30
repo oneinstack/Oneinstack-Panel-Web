@@ -1,6 +1,7 @@
-import { reactive } from 'vue'
+import i18n from '@/lang'
+import { onBeforeMount, reactive } from 'vue'
 
-export const index = (emit: any) => {
+export const index = ({ emit, props }: any) => {
   const conf = reactive({
     _key: '',
     _label: '',
@@ -82,6 +83,17 @@ export const index = (emit: any) => {
         }
       }
       conf.confirm()
+    }
+  })
+
+  onBeforeMount(() => {
+    conf._key = props.field.key
+    conf._label = props.field.label
+    conf._children = props.field.children
+
+    conf.options.allType = {
+      [conf._key]: undefined,
+      [conf._label]: i18n.t('yueb.All')
     }
   })
 

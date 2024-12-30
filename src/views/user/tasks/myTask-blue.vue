@@ -90,8 +90,9 @@
 import stheme from '@/sstore/stheme'
 import loading from './components/loading.vue'
 import { index } from './myTask'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -280,7 +281,7 @@ const { conf, sutil } = index()
       }
 
       span {
-        color: #006FFF;
+        color: #006fff;
         font-size: 25rem;
       }
 
@@ -304,7 +305,7 @@ const { conf, sutil } = index()
       top: -40rem;
       width: 80rem;
       height: 80rem;
-      background: #E6F2FF;
+      background: #e6f2ff;
       transform: rotate(45deg);
 
       .state-img {

@@ -2,7 +2,7 @@ import i18n from '@/lang'
 import System from '@/utils/System'
 import { nextTick, reactive } from 'vue'
 
-export const index = (emit: any) => {
+export const index = ({ emit }: any) => {
   const conf = reactive({
     num: 1,
     show: false,
@@ -60,6 +60,13 @@ export const index = (emit: any) => {
         if (inputNum > 10) return (conf.num = 10)
         conf.num = inputval
       })
+    },
+    showPop(e: any) {
+      conf.num = 1
+      conf.vipLevel = e.vipLevel
+      conf.imgUrl = e.url
+      conf.userVipLevel = e.userVipLevel + ''
+      conf.show = e.show
     }
   })
 

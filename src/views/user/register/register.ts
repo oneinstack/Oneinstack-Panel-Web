@@ -636,8 +636,5 @@ export const index = () => {
     }
   })
 
-  return {
-    System,
-    conf
-  }
+  return conf
 }

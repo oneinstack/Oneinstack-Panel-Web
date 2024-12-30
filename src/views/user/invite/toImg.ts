@@ -3,7 +3,7 @@ import { sconfig } from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
 
-export const index = (swiperInstance: any) => {
+export const index = ({ swiperInstance }: any) => {
   const conf = reactive({
     InvitationCode: '',
     qrcode: '', //二维码的内容链接

@@ -1,12 +1,12 @@
-import { apis } from '@/api';
-import i18n from '@/lang';
-import sconfig from '@/sstore/sconfig';
-import System from '@/utils/System';
-import sutil from '@/sstore/sutil';
-import { svalue } from '@/sstore/svalue';
-import { computed, onMounted, onUnmounted, reactive } from 'vue';
+import { apis } from '@/api'
+import i18n from '@/lang'
+import sconfig from '@/sstore/sconfig'
+import System from '@/utils/System'
+import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue'
+import { computed, onMounted, onUnmounted, reactive } from 'vue'
 
-export const index = ([orderRefs, selectRefs]: any) => {
+export const index = ({ orderRefs, selectRefs }: any) => {
   const conf = reactive({
     walletMoney: '-',
     seleceNumArr: [] as any[],
@@ -564,10 +564,11 @@ export const index = ([orderRefs, selectRefs]: any) => {
       Cookie.set('betRecord', JSON.stringify(obj))
 
       await sconfig.toChat('/chat/betRecordForward')
-    }
-  })
-  const canShare = computed(() => {
-    return !conf.betClose && conf.betArr.length && conf.BettingNumber && conf.BettingAmount
+    },
+
+    canShare: computed<any>(() => {
+      return !conf.betClose && conf.betArr.length && conf.BettingNumber && conf.BettingAmount
+    })
   })
   onMounted(() => {
     // 获取钱包
@@ -589,10 +590,5 @@ export const index = ([orderRefs, selectRefs]: any) => {
     }
   })
 
-  return {
-    conf,
-    canShare,
-		sutil,
-		svalue
-  }
+  return conf
 }

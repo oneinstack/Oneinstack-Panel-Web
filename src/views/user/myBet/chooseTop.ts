@@ -3,7 +3,7 @@ import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { reactive } from 'vue'
 
-export const index = (emit: any, [lotteryTypeRef, betTimeRef]: any) => {
+export const index = ({ emit, lotteryTypeRef, betTimeRef }: any) => {
   const conf = reactive({
     lottery: {
       type: {} as any,

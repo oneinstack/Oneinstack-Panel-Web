@@ -157,8 +157,5 @@ export const index = () => {
     init()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

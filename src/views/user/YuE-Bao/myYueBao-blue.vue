@@ -91,8 +91,9 @@
 <script lang="ts" setup>
 import dataTimePicker from './components/ch-datetime-picker.vue'
 import { index } from './myYueBao'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -418,7 +419,7 @@ const { conf, sutil } = index()
 }
 
 :deep(.van-popup .btn-view .right-btn) {
-  background: linear-gradient(#006FFF, #087BFF);
+  background: linear-gradient(#006fff, #087bff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }

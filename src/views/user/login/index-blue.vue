@@ -269,8 +269,9 @@
 <script setup lang="ts">
 import BgImg from './theme/blue/components/bgImg.vue'
 import { index } from './index'
+import System from '@/utils/System'
 
-const { conf, System } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -393,10 +394,10 @@ const { conf, System } = index()
 
           // width: 100rem;
           padding: 0 10rem;
-          color: #006FFF;
+          color: #006fff;
           border-radius: 35rem;
-          border: 2rem solid #006FFF;
-          box-shadow: #006FFF 0px 2rem 2rem 0px;
+          border: 2rem solid #006fff;
+          box-shadow: #006fff 0px 2rem 2rem 0px;
         }
 
         .eye-img {
@@ -417,7 +418,7 @@ const { conf, System } = index()
       display: flex;
       justify-content: center;
       align-items: center;
-      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     }
 
     .visitor-btn {
@@ -437,7 +438,7 @@ const { conf, System } = index()
       font-size: 28rem;
 
       div {
-        color: #006FFF;
+        color: #006fff;
         font-weight: bold;
         margin-left: 8rem;
       }
@@ -526,7 +527,7 @@ const { conf, System } = index()
   }
 
   .right-btn {
-    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;

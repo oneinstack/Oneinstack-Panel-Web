@@ -53,11 +53,11 @@
 import { ref } from 'vue'
 import DGameTip from '@/views/home/theme/blue/home-com/DGameTip.vue'
 import { index } from './index'
-import stheme from '@/sstore/stheme';
+import stheme from '@/sstore/stheme'
 
 const DGameTipRef = ref<any>(null)
 
-const conf = index(DGameTipRef)
+const conf = index({ DGameTipRef })
 </script>
 
 <style scoped lang="less">
@@ -80,8 +80,8 @@ const conf = index(DGameTipRef)
     justify-content: space-between;
     align-items: center;
     margin-right: 15rem;
-    border: 0.5px solid #E2E6EC;
-    box-shadow: 0px 2px 6px 0px #0000001A;
+    border: 0.5px solid #e2e6ec;
+    box-shadow: 0px 2px 6px 0px #0000001a;
     background: #fff;
     padding: 5rem 0rem 10rem;
     border-radius: 10rem;
@@ -100,7 +100,7 @@ const conf = index(DGameTipRef)
       flex-shrink: 0;
     }
     &.type-active {
-      background: linear-gradient(112.71deg, #2974ED 4.28%, #0645D9 67.56%);
+      background: linear-gradient(112.71deg, #2974ed 4.28%, #0645d9 67.56%);
       color: #fff;
     }
   }

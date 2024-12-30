@@ -37,16 +37,9 @@ import { index } from './changePop'
 
 const emit = defineEmits(['submit'])
 
-const conf = index(emit)
+const conf = index({ emit })
 
-const showPop = (e: any) => {
-  conf.num = 1
-  conf.vipLevel = e.vipLevel
-  conf.imgUrl = e.url
-  conf.userVipLevel = e.userVipLevel + ''
-  conf.show = e.show
-}
-defineExpose({ showPop })
+defineExpose({ showPop: conf.showPop })
 </script>
 
 <style lang="less" scoped>

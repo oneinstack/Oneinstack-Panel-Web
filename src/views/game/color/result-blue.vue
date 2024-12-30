@@ -100,11 +100,11 @@ const props = defineProps({
 })
 const tabRrfs = ref<any>()
 
-const { conf, initResult } = index(props, tabRrfs)
+const conf = index({ props, tabRrfs })
 
 // 暴露方法
 defineExpose({
-  initResult
+  initResult: conf.initResult
 })
 </script>
 

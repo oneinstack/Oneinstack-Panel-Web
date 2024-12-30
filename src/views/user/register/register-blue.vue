@@ -294,8 +294,9 @@
 <script lang="ts" setup>
 import { index } from './register'
 import BgImg from '@/views/user/login/theme/blue/components/bgImg.vue'
+import System from '@/utils/System'
 
-const { System, conf } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -416,10 +417,10 @@ const { System, conf } = index()
           text-align: center;
           // width: 100rem;
           padding: 0 10rem;
-          color: #006FFF;
+          color: #006fff;
           border-radius: 35rem;
-          border: 2rem solid #006FFF;
-          box-shadow: #006FFF 0px 2rem 2rem 0px;
+          border: 2rem solid #006fff;
+          box-shadow: #006fff 0px 2rem 2rem 0px;
         }
 
         .eye-img {
@@ -562,7 +563,7 @@ const { System, conf } = index()
   }
 
   .right-btn {
-    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+    background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }

@@ -148,7 +148,7 @@
               <img
                 v-if="svalue.configv1['im_open']"
                 class="share-img"
-                :class="{ 'disabled': !canShare }"
+                :class="{ 'disabled': !conf.canShare }"
                 style="margin-right: 24rem; width: 47rem; height: 35rem"
                 src="/static/img/share.png"
                 @click="conf.handleClickShare"
@@ -246,11 +246,13 @@
 import order from './order.vue'
 import { ref } from 'vue'
 import { index } from './satta'
+import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue'
 
 const orderRefs = ref<any>()
 const selectRefs = ref<any>()
 
-const { conf, canShare, sutil, svalue } = index([orderRefs, selectRefs])
+const conf = index({ orderRefs, selectRefs })
 </script>
 
 <style lang="less" scoped>

@@ -7,7 +7,7 @@ import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
 import { apis } from '../../../api/index'
 
-export const index = (chooseRef: any) => {
+export const index = ({ chooseRef }: any) => {
   const event = Scope.Event()
 
   const conf = reactive({

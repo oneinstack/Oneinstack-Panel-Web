@@ -7,7 +7,7 @@ import i18n from '@/lang'
 import { apis } from '@/api'
 import { useRoute } from 'vue-router'
 
-export const index = (modalRefs: any) => {
+export const index = ({ modalRefs }: any) => {
   const conf = reactive({
     scratch: {} as any,
     coinSymbol: '',

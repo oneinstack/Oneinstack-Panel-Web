@@ -1,7 +1,6 @@
 import { apis } from '@/api'
 import i18n from '@/lang'
 import { sconfig } from '@/sstore/sconfig'
-import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { svf } from '@/sstore/svf'
 import System from '@/utils/System'
@@ -178,8 +177,5 @@ export const index = () => {
     init()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

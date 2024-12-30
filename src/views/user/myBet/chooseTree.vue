@@ -30,8 +30,6 @@
   </div>
 </template>
 <script lang="ts" setup>
-import i18n from '@/lang'
-import { onBeforeMount } from 'vue'
 import { index } from './chooseTree'
 
 const props = defineProps({
@@ -50,17 +48,8 @@ const props = defineProps({
 })
 const emit = defineEmits(['confirm'])
 
-const conf = index(emit)
-onBeforeMount(() => {
-  conf._key = props.field.key
-  conf._label = props.field.label
-  conf._children = props.field.children
+const conf = index({ emit, props })
 
-  conf.options.allType = {
-    [conf._key]: undefined,
-    [conf._label]: i18n.t('yueb.All')
-  }
-})
 defineExpose({
   reset: conf.reset,
   confirm: conf.confirm,

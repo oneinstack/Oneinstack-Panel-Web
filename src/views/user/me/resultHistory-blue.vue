@@ -336,7 +336,7 @@ import { index } from './resultHistory'
 import stheme from '@/sstore/stheme'
 
 const typeRefs = ref<any>()
-const conf = index(typeRefs)
+const conf = index({ typeRefs })
 </script>
 
 <style lang="less" scoped>
@@ -350,12 +350,12 @@ const conf = index(typeRefs)
 
   .tabs-type {
     display: flex;
-    background: #F6F7FA;
+    background: #f6f7fa;
 
     .type-list {
       display: flex;
       height: 60rem;
-      background: #F6F7FA;
+      background: #f6f7fa;
       color: #000000;
       font-weight: bold;
       border-radius: 10rem;
@@ -369,7 +369,7 @@ const conf = index(typeRefs)
 
       .type-active {
         border-radius: 10rem;
-        background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+        background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
         color: #fff;
       }
     }
@@ -397,7 +397,7 @@ const conf = index(typeRefs)
     }
 
     .time-active {
-      background: #E6F2FF;
+      background: #e6f2ff;
     }
   }
 }

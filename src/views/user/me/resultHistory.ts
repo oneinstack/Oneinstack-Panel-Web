@@ -3,7 +3,7 @@ import { sstatus } from '@/sstore/sstatus'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
 
-export const index = (typeRefs: any) => {
+export const index = ({ typeRefs }: any) => {
   const conf = reactive({
     lotteryId: '',
     lotteryList: [] as any[],

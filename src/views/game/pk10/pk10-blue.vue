@@ -164,7 +164,7 @@ import { ref } from 'vue'
 const cgamebox = ref<any>()
 const cgameRef = ref<any>()
 const gameBoxRefs = ref<any>()
-const conf = index([cgamebox, cgameRef, gameBoxRefs])
+const conf = index({ cgamebox, cgameRef, gameBoxRefs })
 </script>
 
 <style lang="less" scoped>
@@ -220,12 +220,12 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
   border-radius: 30rem;
   height: 60rem;
   padding: 0 20rem;
-  background: #F6F7FA;
+  background: #f6f7fa;
   color: #646464;
 
   &.active {
-    background: #E6F2FF;
-    color: #006FFF;
+    background: #e6f2ff;
+    color: #006fff;
   }
 }
 
@@ -240,8 +240,8 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
   border: 1rem solid #d61f2400;
 
   &.active {
-    background: #E6F2FF;
-    border: 1rem solid #006FFF;
+    background: #e6f2ff;
+    border: 1rem solid #006fff;
   }
 
   .ball {
@@ -425,7 +425,7 @@ const conf = index([cgamebox, cgameRef, gameBoxRefs])
 
       &.type-active {
         color: #ffffff;
-        background: #006FFF;
+        background: #006fff;
       }
     }
   }

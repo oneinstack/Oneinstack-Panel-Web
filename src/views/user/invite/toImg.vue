@@ -58,7 +58,7 @@ import { ref } from 'vue'
 import { index } from './toImg'
 
 const swiperInstance = ref(null as any)
-const conf = index(swiperInstance)
+const conf = index({ swiperInstance })
 </script>
 
 <style lang="less" scoped>

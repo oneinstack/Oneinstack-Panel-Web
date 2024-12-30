@@ -3,7 +3,7 @@ import { sstatus } from '@/sstore/sstatus'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
 
-export const index = (props: any, tabRrfs: any) => {
+export const index = ({ props, tabRrfs }: any) => {
   const conf = reactive({
     tabIndex: 1,
     lotteryId: '',
@@ -44,37 +44,37 @@ export const index = (props: any, tabRrfs: any) => {
       if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isTips = true)
       conf.pageNum++
       conf.getLotteryResult(props.tabs[conf.index].id)
+    },
+    initResult(e: any) {
+      console.log(e)
+
+      let lotteryId = props.tabs[conf.index].id
+      if (e != lotteryId) return
+      System.loading()
+      apis.lotteryOpenResult({
+        current: 1,
+        size: 10,
+        lotteryId,
+        success: (res: any) => {
+          let datas = res.data.records
+          if (conf.resultList[0].openExpect != datas[0].openExpect) {
+            conf.resultList.unshift(datas[0])
+            conf.resultList.pop()
+          }
+          let index = conf.resultList.findIndex((item: any) => !item.openCode)
+          if (index != -1) {
+            let openExpect = conf.resultList[index]?.openExpect
+            let newIndex = datas.findIndex((item: any) => item.openExpect == openExpect)
+            conf.resultList[index].openCode = datas[newIndex].openCode
+          }
+          conf.total = res.data.total
+        },
+        final: () => {
+          System.loading(false)
+        }
+      })
     }
   })
-  const initResult = (e: any) => {
-    console.log(e)
-
-    let lotteryId = props.tabs[conf.index].id
-    if (e != lotteryId) return
-    System.loading()
-    apis.lotteryOpenResult({
-      current: 1,
-      size: 10,
-      lotteryId,
-      success: (res: any) => {
-        let datas = res.data.records
-        if (conf.resultList[0].openExpect != datas[0].openExpect) {
-          conf.resultList.unshift(datas[0])
-          conf.resultList.pop()
-        }
-        let index = conf.resultList.findIndex((item: any) => !item.openCode)
-        if (index != -1) {
-          let openExpect = conf.resultList[index]?.openExpect
-          let newIndex = datas.findIndex((item: any) => item.openExpect == openExpect)
-          conf.resultList[index].openCode = datas[newIndex].openCode
-        }
-        conf.total = res.data.total
-      },
-      final: () => {
-        System.loading(false)
-      }
-    })
-  }
 
   onMounted(() => {
     if (props.selectIndexId) {
@@ -87,8 +87,5 @@ export const index = (props: any, tabRrfs: any) => {
     }
   })
 
-  return {
-    conf,
-    initResult
-  }
+  return conf
 }

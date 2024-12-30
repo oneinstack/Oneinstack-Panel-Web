@@ -6,7 +6,7 @@ import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { nextTick, onMounted, reactive } from 'vue'
 
-export const index = (DGameTipRef: any) => {
+export const index = ({ DGameTipRef }: any) => {
   const event = Scope.Event()
 
   const conf = reactive({

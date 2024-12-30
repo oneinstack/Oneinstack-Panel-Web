@@ -70,7 +70,7 @@ const emit = defineEmits(['confirm'])
 const lotteryTypeRef = ref()
 const betTimeRef = ref()
 
-const conf = index(emit, [lotteryTypeRef, betTimeRef])
+const conf = index({ emit, lotteryTypeRef, betTimeRef })
 
 defineExpose({
   getList: conf.getList

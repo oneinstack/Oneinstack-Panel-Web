@@ -7,7 +7,7 @@ import i18n from '@/lang'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 
-export const index = (signPopRefs: any) => {
+export const index = ({ signPopRefs }: any) => {
   const conf = reactive({
     bgcolor: '',
     isHeadFixed: false,

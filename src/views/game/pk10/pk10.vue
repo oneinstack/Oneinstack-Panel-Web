@@ -164,7 +164,7 @@ import { ref } from 'vue'
 const cgamebox = ref<any>()
 const cgameRef = ref<any>()
 const gameBoxRefs = ref<any>()
-const conf = index([cgamebox, cgameRef, gameBoxRefs])
+const conf = index({ cgamebox, cgameRef, gameBoxRefs })
 </script>
 
 <style lang="less" scoped>

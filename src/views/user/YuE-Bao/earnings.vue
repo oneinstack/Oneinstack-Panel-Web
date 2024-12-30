@@ -85,8 +85,9 @@
 <script lang="ts" setup>
 import dataTimePicker from './components/ch-datetime-picker.vue'
 import { index } from './earnings'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>

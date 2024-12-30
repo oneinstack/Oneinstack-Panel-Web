@@ -70,8 +70,9 @@
 <script setup lang="ts">
 import { index } from './myTransactions'
 import { stheme } from '@/sstore/stheme'
+import sutil from '@/sstore/sutil'
 
-const { conf, sutil } = index()
+const conf = index()
 </script>
 
 <style lang="less" scoped>
@@ -98,8 +99,8 @@ const { conf, sutil } = index()
     }
 
     .times-times.checked {
-      background-color: #E6F2FF;
-      color: #006FFF;
+      background-color: #e6f2ff;
+      color: #006fff;
     }
   }
 }

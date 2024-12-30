@@ -61,7 +61,7 @@ import stheme from '@/sstore/stheme'
 import { ref } from 'vue'
 
 const modalRefs = ref<any>()
-const conf = index(modalRefs)
+const conf = index({ modalRefs })
 </script>
 
 <style lang="less" scoped>
@@ -264,11 +264,11 @@ const conf = index(modalRefs)
 
 :deep(.modal) {
   .btn-item {
-    background: #E6F2FF !important;
-    color: #006FFF !important;
+    background: #e6f2ff !important;
+    color: #006fff !important;
 
     &.sure {
-      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%) !important;
+      background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%) !important;
       color: #fff !important;
     }
   }

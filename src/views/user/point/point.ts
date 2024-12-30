@@ -4,11 +4,10 @@ import { onMounted, reactive } from 'vue'
 import i18n from '@/lang'
 import { apis } from '@/api'
 import System from '@/utils/System'
-import sutil from '@/sstore/sutil'
 import { Scope } from 'tools-vue3'
 import { EPage } from '@/enum/Enum'
 
-export const index = (changeRef: any) => {
+export const index = ({ changeRef }: any) => {
   const conf = reactive({
     pointList: [] as any[],
     typeList: [
@@ -139,8 +138,5 @@ export const index = (changeRef: any) => {
     conf.moreMessage()
   })
 
-  return {
-    conf,
-    sutil
-  }
+  return conf
 }

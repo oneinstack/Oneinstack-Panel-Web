@@ -59,7 +59,7 @@ import { index } from './toImg'
 import stheme from '@/sstore/stheme'
 
 const swiperInstance = ref(null as any)
-const conf = index(swiperInstance)
+const conf = index({ swiperInstance })
 </script>
 
 <style lang="less" scoped>
@@ -127,7 +127,7 @@ const conf = index(swiperInstance)
 .btn-view {
   margin-top: 30rem;
   width: calc(100% - 60rem);
-  background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+  background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
   border-radius: 82rem;
   text-align: center;
   color: #fff;
@@ -144,13 +144,13 @@ const conf = index(swiperInstance)
   background: #fff;
   border-radius: 82rem;
   text-align: center;
-  color: #006FFF;
+  color: #006fff;
   font-weight: 500;
   font-size: 40rem;
   height: 100rem;
   line-height: 100rem;
   margin-left: 30rem;
-  border: 2rem solid #006FFF;
+  border: 2rem solid #006fff;
 }
 
 .bottom-code {
