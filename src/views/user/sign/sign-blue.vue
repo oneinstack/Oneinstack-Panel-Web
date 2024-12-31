@@ -84,10 +84,10 @@ const conf = index()
 
 	.sign-img {
 		width: 212rem;
-		height: 256rem;
+		height: auto;
 		position: absolute;
 		left: 490rem;
-		top: -30rem;
+		top: 20rem;
 
 		img {
 			width: 100%;

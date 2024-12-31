@@ -1,5 +1,5 @@
 <template>
-	<x-page :no-footer="true" :headerBgColor="conf.bgcolor" :topfill="false">
+	<x-page :no-footer="true" headerBgColor="transparent" :topfill="false">
 		<template #title>
 			{{ $t('point.signIn') }}
 		</template>
@@ -7,7 +7,7 @@
 			<x-statusbar header />
 			<div class="sign-bg">
 				<div class="sign-img">
-					<img src="/static/img/sign/calendar.png" />
+					<img mode="widthFix" src="/static/img/sign/calendar.png" />
 				</div>
 				<div class="tips">
 					<div class="surprise">{{ $t('signInModule.SurpriseBenefit') }}</div>

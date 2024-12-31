@@ -36,7 +36,7 @@ const conf = index()
             style="height: 74rem; --time-rotate360: 2s"
             :class="[item.loading ? 'rotate360' : '']"
           >
-            <img src="/static/theme/blue/refresh.png" style="width: 40rem; height: 40rem" />
+            <img src="/static/theme/blue/refresh.png" mode="widthFix" style="width: 40rem;" />
           </div>
           <div class="column justify-center no-wrap" v-else style="height: 74rem">
             <div class="item-monry">

@@ -25,6 +25,7 @@ const conf = index()
                 <div style="display: flex; align-items: center; justify-items: center">
                   <!-- <img :src="firstSelectInfo.nationalFlag" style="width:40rem;height: 40rem;" v-if="firstSelectInfo.nationalFlag" /> -->
                   <img class="imageLog" src="/static/img/bugo.png" mode="" v-if="conf.firstSelectInfo.code == 'BUGO'" />
+                  <img class="imageLog" src="/static/theme/blue/Current.svg" mode="" v-else-if="conf.firstSelectInfo.code == 'Current'" />
                   <img
                     class="imageLog"
                     :src="'/static/img/centerWallet/' + conf.firstSelectInfo.code + '.png'"
@@ -185,10 +186,14 @@ const conf = index()
                   />
                   <template v-else>
                     <img
-                      v-if="conf.secondSelectInfo.code"
+                      v-if="conf.secondSelectInfo.code == 'Current'"
+                      class="imageLog"
+                      src="/static/theme/blue/Current.svg"
+                    />
+                    <img
+                      v-else
                       class="imageLog"
                       :src="'/static/img/centerWallet/' + conf.secondSelectInfo.code + '.png'"
-                      mode=""
                     />
                   </template>
                   <span style="margin-left: 10rem; font-size: 40rem; color: #000000; opacity: 0.7; font-weight: 600">
