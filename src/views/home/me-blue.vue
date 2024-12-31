@@ -122,7 +122,7 @@
     </div>
     <!-- 银行卡绑定提示框-->
     <cuModal :showNumberBox="conf.showNumberBox" @handleCloseBindDialog="conf.handleCloseBindDialog" />
-    <div class="menu-list">
+    <div v-if="conf.needLoginShow()" class="menu-list">
       <div
         v-for="(category, index) in conf.menu1"
         :key="index"
@@ -473,15 +473,23 @@ const conf = index()
 }
 
 .menu-item {
+  padding: 20rem 0;
   background: #fff;
   border-radius: 10rem;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 16rem;
 
   &-title {
     font-family: PingFang SC;
-    font-size: 32rem;
+    font-size: 26rem;
     font-weight: 500;
     color: #333333;
+  }
+
+  .van-cell {
+    height: 72rem;
   }
 }
 
