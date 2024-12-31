@@ -10,7 +10,7 @@
 		<div class="result-list">
 			<template v-for="(item, index) in conf.resultList" :key="index">
 				<div class="result-ltem" v-if="item.openCode">
-					<div style="width: 28%;word-break:break-all;font-size: 28rem;">{{ item.openExpect }}</div>
+					<div style="width: 28%;word-break:break-all;font-size: 27rem;">{{ item.openExpect }}</div>
 					<div style="width: 31%;" class="share-point">
 						<img class="point-img" :src="'/static/img/share-' + conf.getNum(item, 0) + '.webp'" />
 						<img class="point-img" :src="'/static/img/share-' + conf.getNum(item, 1) + '.webp'" />
@@ -34,7 +34,7 @@
 					</div>
 				</div>
 				<div class="result-ltem" v-else>
-					<div style="width: 27%;word-break:break-all;font-size: 28rem;">{{ item.openExpect }}</div>
+					<div style="width: 28%;word-break:break-all;font-size: 27rem;">{{ item.openExpect }}</div>
 					<div style="width: 31%;" class="share-point">
 						<img class="point-img" src="/static/img/share-0.webp" />
 						<img class="point-img" src="/static/img/share-0.webp" />
@@ -49,7 +49,7 @@
 					<div style="width: 14%;display: flex;justify-content: center;">
 						<div class="img" style="text-align: center;">-</div>
 					</div>
-					<div style="width: 17%;display: flex;justify-content: center;">
+					<div style="width: 16%;display: flex;justify-content: center;">
 						<div class="img" style="text-align: center;">-</div>
 					</div>
 				</div>

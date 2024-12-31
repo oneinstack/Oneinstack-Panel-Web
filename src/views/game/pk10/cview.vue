@@ -1,51 +1,43 @@
 <template>
   <div
     :style="{
-      opacity: opacity,
-      transform: `translate(${x}px,${y}px) scale(${(scale ? scale : scaleX) || 1},${(scale ? scale : scaleY) || 1}) rotateZ(${(rotate ? rotate : rotateZ) || 0}deg)`
+      opacity: conf.opacity,
+      transform: `translate(${conf.x}px,${conf.y}px) scale(${(conf.scale ? conf.scale : conf.scaleX) || 1},${(conf.scale ? conf.scale : conf.scaleY) || 1}) rotateZ(${(conf.rotate ? conf.rotate : conf.rotateZ) || 0}deg)`
     }"
   >
     <slot></slot>
   </div>
 </template>
-<script>
+<script setup lang="ts">
 import { stween } from '@/sstore/stween'
 import { Scope } from 'tools-vue3';
-export default {
-  components: {},
-  props: {
-    name: {
-      type: String,
-      default: ''
-    }
-  },
-  data() {
-    return {
-      id: '',
-      x: 1,
-      y: 1,
-      opacity: 1,
-      scale: undefined,
-      scaleX: undefined,
-      scaleY: undefined,
-      rotate: undefined,
-      rotateX: undefined,
-      rotateY: undefined,
-      rotateZ: undefined
-    }
-  },
-  created() {
-    this.event = Scope.Event()
-    this.timer = Scope.Timer()
-    this.id = StrUtil.getId()
-    stween.sprite.add(this)
-  },
-  mounted() {},
-  onLoad(option) {},
-  onShow() {},
-  onHide() {},
-  onUnload() {},
-  methods: {}
-}
+import { onMounted, reactive } from 'vue';
+
+const props = defineProps({
+  name: {
+    type: String,
+    default: ''
+  }
+})
+
+const conf = reactive({
+  name: props.name,
+  id: '',
+  x: 1,
+  y: 1,
+  opacity: 1,
+  scale: undefined,
+  scaleX: undefined,
+  scaleY: undefined,
+  rotate: undefined,
+  rotateX: undefined,
+  rotateY: undefined,
+  rotateZ: undefined
+})
+
+onMounted(() => {
+  conf.id = StrUtil.getId()
+  stween.sprite.add(conf)
+})
 </script>
 <style lang="less"></style>

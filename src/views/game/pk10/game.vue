@@ -795,9 +795,10 @@ onMounted(() => {
 }
 
 .roaditm-img {
-  background: url('/static/zhibo/pk/img/road.jpg') no-repeat 100%/100%;
+  background: url('/static/zhibo/pk/img/road.jpg') no-repeat;
   width: 2660px;
   height: 540px;
+  background-size: 100% 100%;
 }
 
 .flag {
@@ -1051,7 +1052,7 @@ onMounted(() => {
 
 .currentdraw {
   position: absolute;
-  left: 1040px;
+  left: 1025px;
   top: 39px;
   font-size: 34px;
   width: 255px;
