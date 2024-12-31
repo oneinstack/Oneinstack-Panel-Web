@@ -1,6 +1,6 @@
 <template>
   <x-page no-header tabbar>
-    <div>
+    <div style="background: linear-gradient(180deg, #ffffff 0%, #fbfbfb 100%)">
       <!-- 轮播图 -->
       <div class="banner" v-if="conf.swiperList.length > 0">
         <van-swipe class="banner-list" indicator-dots :autoplay="3000" indicator-color="#ffffff">
@@ -25,7 +25,13 @@
           <template #list="{ row }">
             <div v-for="item in row.data" :key="item.id">
               <div v-if="conf.currentCategoryId === 'lottery'">
-                <lotteryItem style="height: 350rem" :size='440' lineColor="#006fff" :item="item" @clickItem="conf.handleIntoLocalGame(item, 0)" />
+                <lotteryItem
+                  style="height: 350rem"
+                  :size="440"
+                  lineColor="#006fff"
+                  :item="item"
+                  @clickItem="conf.handleIntoLocalGame(item, 0)"
+                />
               </div>
               <div
                 v-else-if="conf.currentCategoryId === 'scratch'"

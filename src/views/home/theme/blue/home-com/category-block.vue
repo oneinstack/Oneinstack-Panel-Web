@@ -41,10 +41,6 @@ defineSlots<Slots>()
 
 const conf = reactive({
   currentCategoryId: props.categoryList[props.defaultSelectIndex].id,
-  reCategoryList: props.categoryList.map((item) => ({
-    ...item,
-    animationDuration: Math.random() * 10 + 5
-  })),
 
   handleSelectCategory: (id: string | number) => {
     if (id === conf.currentCategoryId) return
@@ -58,7 +54,7 @@ const conf = reactive({
   <div class="category-block-container">
     <div class="category-side-list">
       <div
-        v-for="category in conf.reCategoryList"
+        v-for="category in categoryList"
         :key="category.id"
         class="category-side-item"
         :class="{ active: conf.currentCategoryId === category.id }"
@@ -67,8 +63,8 @@ const conf = reactive({
         <div class="category-side-item-icon">
           <div
             class="rotate-circle"
-            :style="{
-              animationDuration: category.animationDuration / (conf.currentCategoryId === category.id ? 8 : 1) + 's'
+            :class="{
+              playing: conf.currentCategoryId === category.id
             }"
           />
           <VSIcon lib="blue" :name="category.icon" :size="64" />
@@ -171,13 +167,18 @@ const conf = reactive({
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          animation: rotate linear infinite;
+          animation: rotate 2s linear infinite;
+          animation-play-state: paused;
+
+          &.playing {
+            animation-play-state: running;
+          }
 
           &::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 0;
+            right: 0;
             width: 8rem;
             height: 8rem;
             background: linear-gradient(146.31deg, #2ec9ff 17.5%, #26a6ff 82.5%);
