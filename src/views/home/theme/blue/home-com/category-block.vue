@@ -67,7 +67,13 @@ const conf = reactive({
               playing: conf.currentCategoryId === category.id
             }"
           />
-          <VSIcon lib="blue" :name="category.icon" :size="64" />
+          <img
+            :src="`/static/theme/blue/${category.icon}${conf.currentCategoryId === category.id ? '-active' : ''}.webp`"
+            alt=""
+            :class="{
+              scaleIn: conf.currentCategoryId === category.id
+            }"
+          />
         </div>
         <span>{{ category.name }}</span>
       </div>
@@ -147,11 +153,37 @@ const conf = reactive({
       }
 
       &-icon {
-        width: 64rem;
-        height: 64rem;
+        width: 48rem;
+        height: 48rem;
         margin-bottom: 8rem;
         position: relative;
         z-index: 2;
+        border: 1rem solid #ffffff;
+        background-color: #ffffff;
+        border-radius: 50%;
+        box-shadow:
+          0 2rem 8rem 0 #b4c6ffcc,
+          0 -2rem 4rem 0 #b9e9ff,
+          -4rem -8rem 8rem 0 #cbe1ff99 inset;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        img {
+          width: 90%;
+          height: 90%;
+          animation: 0.5s ease-in-out;
+
+          &.scaleIn {
+            animation-name: scaleIn;
+          }
+        }
+
+        @keyframes scaleIn {
+          0% {
+            transform: scale(0);
+          }
+        }
 
         @keyframes rotate {
           100% {
