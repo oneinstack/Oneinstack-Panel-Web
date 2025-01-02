@@ -96,7 +96,7 @@ export const index = () => {
     getTWoFiexd(num: string) {
       if (!num) return ''
       let number = parseFloat(num)
-      return number.toFixed(2)
+      return sutil.dataHandling(number.toFixed(2))
     }
   })
 
