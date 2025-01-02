@@ -323,8 +323,7 @@ nextTick(() => {
 .scratch-box {
 	position: relative;
 	height: 735rem;
-	width: calc(100% - 30rem);
-	border-radius: 30rem 30rem 0rem 0rem;
+	width: 100%;
 	padding: 0rem 15rem;
 	overflow: hidden;
 }
@@ -332,8 +331,8 @@ nextTick(() => {
 .scratch {
 	position: absolute;
 	height: 100%;
-	width: calc(100% - 30rem);
-	left: 15rem;
+	width: 100%;
+	left: 0;
 
 	.scratch-bg {
 		width: 100%;
