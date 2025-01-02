@@ -19,7 +19,11 @@
         <div class="reward-img-wrap">
           <img v-if="item.coinCode !== 'USDT'" :src="`/static/img/luckybox/${rewardImg}.png`" class="reward-img" />
           <img v-else :src="`/static/img/luckybox/cash-usdt.png`" class="reward-img" />
-          <div v-if="item.rewardType === 0 && item.coinCode !== 'USDT'" class="reward-unit">
+          <div
+            v-if="item.rewardType === 0 && item.coinCode !== 'USDT'"
+            class="reward-unit"
+            :class="{ small: item.coinCode.length > 1 }"
+          >
             {{ item.coinSymbol }}
           </div>
         </div>
@@ -143,7 +147,7 @@ const rewardImg = computed(() => {
       }
 
       &-unit {
-        font-size: 18rem;
+        font-size: 20rem;
         font-weight: 600;
         position: absolute;
         top: 48%;
@@ -152,7 +156,7 @@ const rewardImg = computed(() => {
         color: #fa9e3e;
 
         &.small {
-          font-size: 15rem;
+          font-size: 14rem;
         }
       }
     }

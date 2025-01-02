@@ -17,9 +17,18 @@
       <div class="receive-time">{{ item.receiveTime }}</div>
       <div v-if="item.isOpen && item.reward" class="reward">
         <div class="reward-img-wrap">
-          <img v-if="item.coinCode !== 'USDT'" :src="`/static/img/luckybox/${rewardImg}.png`" class="reward-img" />
+          <img
+            v-if="item.coinCode !== 'USDT'"
+            :src="`/static/img/luckybox/${rewardImg}.png`"
+            class="reward-img"
+            :class="{ small: item.coinCode.length > 1 }"
+          />
           <img v-else :src="`/static/img/luckybox/cash-usdt.png`" class="reward-img" />
-          <div v-if="item.rewardType === 0 && item.coinCode !== 'USDT'" class="reward-unit">
+          <div
+            v-if="item.rewardType === 0 && item.coinCode !== 'USDT'"
+            class="reward-unit"
+            :class="{ small: item.coinCode.length > 1 }"
+          >
             {{ item.coinSymbol }}
           </div>
         </div>
@@ -152,7 +161,7 @@ const rewardImg = computed(() => {
         color: #fa9e3e;
 
         &.small {
-          font-size: 15rem;
+          font-size: 14rem;
         }
       }
     }
