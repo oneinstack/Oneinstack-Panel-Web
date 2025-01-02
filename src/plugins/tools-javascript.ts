@@ -12,6 +12,7 @@ export const install = (app: App) => {
       'signReminder': '',
       'gameMethod': '',
       'apiurl': '',
+      'pageTheme': '',
     } as any
     Object.keys(noVlearValue).forEach((key) => {
       let item = _cookie.get(key) || ''

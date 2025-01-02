@@ -411,20 +411,8 @@ onMounted(() => {
       background-size: contain;
       background-position: center;
       background-repeat: no-repeat; /* 设置自定义图片路径 */
-      animation: animateBask 3s linear infinite;
+      background-image: url('/static/img/home/mask-btn1.png');
     }
-    @keyframes animateBask {
-      0% {
-        background-image: url('/static/img/home/mask-btn2.png');
-      }
-      50% {
-        background-image: url('/static/img/home/mask-btn1.png');
-      }
-      100% {
-        background-image: url('/static/img/home/mask-btn2.png');
-      }
-    }
-
     .right-img {
       width: 52rem;
       height: 52rem;
