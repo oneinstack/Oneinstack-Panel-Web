@@ -260,7 +260,7 @@ const conf = index()
       height: 334rem;
       width: 100%;
       background: #ffffff;
-      border-radius: 16rem;
+      border-radius: 32rem 32rem 0 0;
       display: flex;
 
       .select-item {
