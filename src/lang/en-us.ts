@@ -579,9 +579,9 @@ export default {
     2402: 'Treasure chest record does not exist', //宝箱记录不存在
     2601: 'The exchange content does not exist', // 兑换内容不存在
     2602: 'Insufficient points', // 积分不足
-    2604: 'Point sign-in is not in progress', // 积分签到未进行中
+    2604: 'Point check-in is not in progress', // 积分签到未进行中
     2605: 'I have already signed in today', // 积分已签到
-    3001: 'Sign-in is not allowed', // 不允许签到
+    3001: 'Check-in is not allowed', // 不允许签到
     3002: 'Lucky wheel is not allowed', // 不允幸运大转盘
     3003: 'USDT withdrawal is not allowed', // 不允许usdt提现
     3004: 'USDT recharge is not allowed', // 不允许usdt充值
@@ -640,7 +640,7 @@ export default {
     dailyRewards: 'Check in daily to get a lot of rewards',
     go: 'Go',
     join: 'Join',
-    titleName: 'Sign-in',
+    titleName: 'Check-in',
     SurpriseBenefit: 'Surprise benefit',
     Continuous: 'Continuous check-in courtesy',
     row: ' in a row',
