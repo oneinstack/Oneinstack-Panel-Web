@@ -916,7 +916,7 @@ export default {
     28: 'Lucky box', //宝箱
     29: 'Recharge bonus', //充值赠送
     30: 'Activity recharge bonus', //活动充值赠送
-    31: 'Sign in activity', //签到活动
+    31: 'Check in activity', //签到活动
     32: 'Order cancellation', //注单撤销
     33: 'Rebate revocation', //返点撤销
     97: 'Account adjustment' //调账
