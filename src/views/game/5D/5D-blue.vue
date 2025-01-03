@@ -607,6 +607,7 @@ const conf = index({ gameBoxRefs })
   bottom: 0;
   background: rgba(0, 0, 0, 0.6);
   z-index: 9;
+  height: 90%;
 
   .big-down-time {
     display: flex;
