@@ -5,6 +5,7 @@ import System from '@/utils/System'
 import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ERouter } from '@/enum/Enum'
 
 export const index = ({ orderRefs, selectRefs }: any) => {
   const conf = reactive({
@@ -167,12 +168,14 @@ export const index = ({ orderRefs, selectRefs }: any) => {
     },
 
     // 获取玩法类型
-    getLotteryList(index: any) {
+    getLotteryList() {
       apis.lotteryList({
         success: (res: any) => {
           let datas = res.data
           let newIndex = datas.findIndex((item: any) => item.lotteryTypeVO.lotteryTypeCode == 'SATTA_KING')
           conf.gameTypeArr = datas[newIndex].lotteryVOList || []
+          const params = System.getRouterParams()
+          const index = params.id ? conf.gameTypeArr.findIndex((item: any) => item.id == params.id) : 0
           conf.gameType = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
           conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
           conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown //锁定倒计时
@@ -353,31 +356,9 @@ export const index = ({ orderRefs, selectRefs }: any) => {
     },
 
     //玩法类型change
-    handleGameChange(obj: any) {
-      conf.openLockCountdown = obj.openLockCountdown //锁定倒计时
-      conf.gameType = obj.lotteryShowname
-      conf.gameTypeId = obj.id
-      conf.lotteryId = obj.id
-      conf.typeShow = false
-      conf.betArr = []
-      conf.betStr = ''
-      conf.betStrNum = ''
-      conf.BettingAmount = ''
-      conf.BettingNumber = 1
-      conf.betNum = 0
-      if (conf.hasResultTimer) {
-        clearInterval(conf.hasResultTimer)
-        conf.hasResultTimer = null
-      }
-      if (conf.openCodeTimer) {
-        clearTimeout(conf.openCodeTimer)
-        conf.openCodeTimer = null
-      }
-      if (conf.countdownTime) {
-        clearTimeout(conf.countdownTime)
-        conf.countdownTime = null
-      }
-      conf.getLotteryOpen('load')
+    async handleGameChange(obj: any) {
+      await System.router.replace(`/game/Satta/Satta?id=${obj.id}`)
+      CEvent.emit(ERouter.reload)
     },
 
     //关闭my order
@@ -573,7 +554,8 @@ export const index = ({ orderRefs, selectRefs }: any) => {
   onMounted(() => {
     // 获取钱包
     conf.getWalletMoney(1)
-    conf.getLotteryList(0)
+
+    conf.getLotteryList()
   })
   onUnmounted(() => {
     if (conf.hasResultTimer) {
