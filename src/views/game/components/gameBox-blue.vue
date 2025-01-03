@@ -28,7 +28,7 @@
 		<div class="absolute" style="width: 750rem; height: 100%">
 			<x-statusbar />
 			<div style="height: 104rem"></div>
-			<div class="flex justify-center" style="background: #f5f0f0;height: 100%;">
+			<div class="flex justify-center" style="height: 100%;">
 				<div style="width: 100%; max-width: 500px">
 					<div class="tip">
 						<img class="tip-icon" src="/static/img/Frame.png" />

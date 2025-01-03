@@ -141,16 +141,14 @@ import result from './result.vue'
 import chat from './chat.vue'
 import order from './order.vue'
 import { index } from './ts/5D'
+import { ref } from 'vue'
 
-const {conf,gameBoxRefs} = index()
+const gameBoxRefs = ref<any>()
+
+const conf = index({ gameBoxRefs })
 </script>
 
 <style lang="less" scoped>
-page {
-	background: #f5f0f0;
-	margin: 0 auto;
-}
-
 .select-bet-type {
 	margin: 0 12rem 0 8rem;
 	color: #0074ff;
