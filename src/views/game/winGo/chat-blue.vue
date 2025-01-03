@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref } from 'vue';
 
 const props = defineProps({
 	chartDataList: {
@@ -75,13 +75,9 @@ const conf = reactive({
 		conf.showLine = true
 	}
 })
-watch(
-	() => props.chartDataList,
-	(val: any) => {
-		conf.getNodesInfo()
-	},
-	{ deep: true }
-)
+onMounted(() => {
+	conf.getNodesInfo()
+})
 </script>
 
 <style lang="less" scoped>

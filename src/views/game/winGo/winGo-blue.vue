@@ -112,7 +112,7 @@
 
 			</div>
 			<result v-if="conf.tabType == 1" ref="resultRfes" :resultList="conf.resultList"></result>
-			<chat v-if="conf.tabType == 2" :chartDataList="conf.chartDataList"></chat>
+			<chat v-if="conf.tabType == 2" :key="conf.comKey" :chartDataList="conf.chartDataList"></chat>
 			<order v-if="conf.tabType == 3" :orderDataList="conf.orderDataList" :isClickPage="conf.isClickPage"
 				@handleClickOrderPage="conf.handleClickOrderPage"></order>
 			<rule v-if="conf.tabType == 4" :list="conf.lotteryRuleurl"></rule>

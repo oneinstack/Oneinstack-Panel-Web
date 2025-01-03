@@ -157,6 +157,7 @@
       <result v-if="conf.tabType == 1" :resultList="conf.resultList"></result>
       <chat
         v-else-if="conf.tabType == 2"
+		:key="conf.comKey"
         :chartDataList="conf.chartDataList"
         :selectBetIndex="conf.selectBetIndex"
       ></chat>

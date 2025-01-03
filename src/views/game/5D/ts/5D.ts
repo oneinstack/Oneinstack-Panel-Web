@@ -91,6 +91,7 @@ export const index = ({ gameBoxRefs }: any) => {
 
     countdownDialogTime: 10,
     bigDownShow: false,
+    comKey: 0,
 
     // 开奖结果信息
     resultInfoObj: {
@@ -440,6 +441,7 @@ export const index = ({ gameBoxRefs }: any) => {
           conf.pageObj.page = datas.current
           conf.pageObj.total = datas.total
           conf.pageObj.pageTotal = Math.ceil(datas.total / conf.pageObj.size)
+          conf.comKey++
           conf.chartDataList = conf.resultList.filter((item: any) => {
             return item.openCode
           })

@@ -130,6 +130,7 @@ export const index = () => {
         gameType: '',
         gameTypeId: '',
         chartDataList: [] as any[],
+        comKey: 0,
         //获取玩法类型
         getLotteryList(index: any) {
             //清空倒计时定时器
@@ -378,6 +379,7 @@ export const index = () => {
         //获取result数据
         getLotteryResult() {
             // System.loading()
+            // conf.chartDataList = []
             apis.lotteryOpenResult({
                 current: conf.resultPageNum,
                 size: conf.resultPageSize,
@@ -395,6 +397,7 @@ export const index = () => {
                     conf.pageObj.page = datas.current
                     conf.pageObj.total = datas.total
                     conf.pageObj.pageTotal = Math.ceil(datas.total / conf.pageObj.size)
+                    conf.comKey++
                     conf.chartDataList = conf.resultList.filter((item: any) => { return item.openCode })
                 },
                 final: () => {

@@ -5,7 +5,7 @@
 				<div class="d5-period flex-center">{{ $t('game.drawID') }}</div>
 				<div class="d5-result flex-center">{{ $t('game.number') }}</div>
 			</div>
-			<template v-for="(item, index) in chartDataList" :key="index">
+			<template v-for="(item, index) in chartDataList" :key="item.openTime">
 				<div class="d5-history-num flex-bw">
 					<div class="d5-period-num flex-center">
 						<div class="period">{{ item.openExpect }}</div>
@@ -44,7 +44,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
+import { onMounted, reactive, ref, watch } from 'vue';
 
 const props = defineProps({
 	chartDataList: {
@@ -75,13 +75,9 @@ const conf = reactive({
 		conf.showLine = true
 	}
 })
-watch(
-	() => props.chartDataList,
-	(val: any) => {
-		conf.getNodesInfo()
-	},
-	{ deep: true }
-)
+onMounted(() => {
+	conf.getNodesInfo()
+})
 </script>
 
 <style lang="less" scoped>

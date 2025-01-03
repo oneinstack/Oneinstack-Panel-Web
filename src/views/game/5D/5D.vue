@@ -117,7 +117,7 @@
 					@click="conf.handleSelctTabChange(3, null)">{{ $t('game.myOrder') }}</div>
 			</div>
 			<result v-if="conf.tabType == 1" :resultList="conf.resultList"></result>
-			<chat v-else-if="conf.tabType == 2" :chartDataList="conf.chartDataList"
+			<chat v-else-if="conf.tabType == 2" :key="conf.comKey" :chartDataList="conf.chartDataList"
 				:selectBetIndex="conf.selectBetIndex">
 			</chat>
 			<order v-if="conf.tabType == 3" :orderDataList="conf.orderDataList" :isClickPage="conf.isClickPage"

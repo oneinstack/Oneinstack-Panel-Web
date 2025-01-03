@@ -78,20 +78,6 @@ const conf = reactive({
 		conf.showLine = true
 	}
 })
-watch(
-	() => props.chartDataList,
-	(val: any) => {
-		conf.getNodesInfo()
-	},
-	{ deep: true }
-)
-// watch(
-// 	() => props.selectBetIndex,
-// 	(val: any) => {
-// 		conf.getNodesInfo()
-// 	},
-// 	{ deep: true }
-// )
 onMounted(() => {
 	conf.getNodesInfo()
 })
