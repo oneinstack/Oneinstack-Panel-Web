@@ -13,7 +13,7 @@
     <div class="main-img">
       <img src="/static/img/home-banner.png" />
     </div>
-    <div class="nav-list-box">
+    <div class="nav-list-box" :style="conf.sTop">
       <div class="nav-title">
         <div class="offs">{{ $t('scratch.scratchOffs') }}</div>
         <div class="history" @click="conf.goHisTory">
@@ -118,7 +118,7 @@ const conf = index()
 
 .nav-list-box {
   position: sticky;
-  top: 105rem;
+  top: var(--sTop);
   left: 0;
   background: #fff;
   padding: 22rem 0rem;

@@ -459,8 +459,9 @@ onMounted(() => {
     .scratch-item {
       width: 48%;
       height: 210rem;
-      border-radius: 20rem;
+      border-radius: 16rem;
       margin-bottom: 20rem;
+      overflow: hidden;
     }
   }
 }

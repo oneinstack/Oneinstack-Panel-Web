@@ -14,7 +14,7 @@
       <div class="main-img">
         <scratch-img :paddingNum="62" :item="conf.scratch" v-if="conf.scratch.scratchTicketShowname"></scratch-img>
       </div>
-      <div class="nav-box-list">
+      <div class="nav-box-list" :style="conf.sTop">
         <div class="nav-content">
           <div class="nav-left">
             <div class="power">{{ conf.scratch.scratchTicketShowname }}</div>
@@ -92,7 +92,7 @@ const conf = index({ modalRefs })
 .nav-box-list {
   position: sticky;
   z-index: 1;
-  top: 104rem;
+  top: var(--sTop);
   left: 0;
   background: #fff;
   padding: 22rem 0rem;

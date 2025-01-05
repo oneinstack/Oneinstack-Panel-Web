@@ -6,6 +6,7 @@ import System from '@/utils/System'
 import i18n from '@/lang'
 import { apis } from '@/api'
 import { useRoute } from 'vue-router'
+import StatusBarConfig from '@/utils/StatusBarConfig'
 
 export const index = ({ modalRefs }: any) => {
   const conf = reactive({
@@ -19,6 +20,7 @@ export const index = ({ modalRefs }: any) => {
     coinlistArr: [] as any[],
     walletMoney: '-',
     defaultWalletInfo: {} as any,
+    sTop: '--sTop: 104rem',
     getDefaultCoin(obj: any) {
       conf.currentWalletInfo = obj
       conf.coinSymbol = obj.coinSymbol || ''
@@ -210,6 +212,7 @@ export const index = ({ modalRefs }: any) => {
   })
   const route = useRoute()
   onMounted(async () => {
+    conf.sTop = `--sTop:${(sutil.rem2px(104) + StatusBarConfig.statusHeight)}px`
     if (Cookie.get('scratch')) {
       Cookie.remove('scratch')
     }

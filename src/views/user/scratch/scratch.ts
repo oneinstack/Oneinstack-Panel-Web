@@ -4,6 +4,7 @@ import System from '@/utils/System'
 import { apis } from '@/api'
 import sutil from '@/sstore/sutil'
 import sconfig from '@/sstore/sconfig'
+import StatusBarConfig from '@/utils/StatusBarConfig'
 
 export const index = () => {
   const conf = reactive({
@@ -17,6 +18,7 @@ export const index = () => {
     defaultCoin: {} as any,
     defaultWalletInfo: {} as any,
     walletMoney: '-',
+    sTop: '--sTop: 104rem',
     goPurchase(item: any) {
       System.router.push('/user/scratch/purchase?id=' + item.id)
     },
@@ -82,6 +84,9 @@ export const index = () => {
     }
   })
   onMounted(async () => {
+    conf.sTop = `--sTop:${(sutil.rem2px(104) + StatusBarConfig.statusHeight)}px`
+    console.log(conf.sTop);
+    
     let coinlist = await svalue.getCoinlist()
     conf.defaultCoin = coinlist.find((item: any) => item.isDefault)
 
