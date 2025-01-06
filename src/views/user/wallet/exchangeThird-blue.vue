@@ -135,12 +135,12 @@ const conf = index()
                 height: 100rem;
                 line-height: 100rem;
                 position: relative;
-                border: 1px solid #ddd;
+                border: 2rem solid #ddd;
               "
               :style="{
                 'background-color':
                   conf.firstSelectInfo.code == 'Current' ? '#f5f5f5 !important' : ' #F6F7FA !important',
-                'border': conf.firstSelectInfo.code == 'Current' ? '1px solid #ddd' : ''
+                'border': conf.firstSelectInfo.code == 'Current' ? '2rem solid #ddd' : ''
               }"
             >
               <input
@@ -294,7 +294,7 @@ const conf = index()
               :style="{
                 'background-color':
                   conf.secondSelectInfo.code == 'Current' ? '#f5f5f5 !important' : ' #F6F7FA !important',
-                'border': conf.secondSelectInfo.code == 'Current' ? '1px solid #ddd' : ''
+                'border': conf.secondSelectInfo.code == 'Current' ? '2rem solid #ddd' : ''
               }"
             >
               <input
@@ -523,7 +523,7 @@ const conf = index()
     justify-content: space-between;
     align-items: center;
     height: 96rem;
-    border-bottom: 1px solid #f9fafc;
+    border-bottom: 2rem solid #f9fafc;
 
     .left-user {
       display: flex;
@@ -597,7 +597,7 @@ const conf = index()
 
 .cu-modal {
   width: 100%;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 }
 

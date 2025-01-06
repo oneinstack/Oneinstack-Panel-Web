@@ -96,7 +96,7 @@ watch(
     min-width: 66rem;
     height: 66rem;
     border-radius: 50%;
-    border: 1px solid #fff;
+    border: 2rem solid #fff;
     background-color: lightgray;
   }
 

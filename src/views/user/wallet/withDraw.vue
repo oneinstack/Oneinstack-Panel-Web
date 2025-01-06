@@ -291,7 +291,7 @@ const conf = index()
   .title {
     width: 100% !important;
     color: #000000;
-    font-size: 22px;
+    font-size: 40rem;
     font-weight: 600;
     opacity: 0.7;
     height: 100rem;
@@ -317,7 +317,7 @@ const conf = index()
     border-radius: 10rem;
 
     .checked {
-      border-radius: 5px;
+      border-radius: 10rem;
       background: #fff6e6;
     }
   }
@@ -491,7 +491,7 @@ const conf = index()
       justify-content: space-between;
       align-items: center;
       height: 96rem;
-      border-bottom: 1px solid #f9fafc;
+      border-bottom: 2rem solid #f9fafc;
 
       // margin-bottom: 20rem;
       .left-view {

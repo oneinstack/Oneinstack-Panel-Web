@@ -350,7 +350,7 @@ onMounted(async () => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	max-width: 500px;
+	max-width: 750rem;
 	margin: 0 auto;
 
 	.tip-box {
@@ -410,10 +410,10 @@ onMounted(async () => {
 			display: flex;
 			justify-content: center;
 			align-items: center;
-			padding: 4px 8px;
-			border-radius: 4px;
+			padding: 8rem 16rem;
+			border-radius: 8rem;
 			background-color: rgba(0, 0, 0, 0);
-			border: 1px solid rgb(187, 187, 197);
+			border: 2rem solid rgb(187, 187, 197);
 			z-index: 8;
 			font-size: 24rem;
 			color: rgb(37, 37, 41);
@@ -551,7 +551,7 @@ onMounted(async () => {
 			font-weight: 700;
 			border-radius: 95rem;
 			background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
-			box-shadow: 0 1px 0 0 rgba(255, 255, 255, .2) inset, 0 1px 7rem 0 rgba(0, 0, 0, .25);
+			box-shadow: 0 2rem 0 0 rgba(255, 255, 255, .2) inset, 0 2rem 7rem 0 rgba(0, 0, 0, .25);
 		}
 	}
 

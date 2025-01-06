@@ -98,7 +98,7 @@ const conf = index()
     justify-content: space-between;
     align-items: center;
     height: 96rem;
-    border-bottom: 1px solid #f9fafc;
+    border-bottom: 2rem solid #f9fafc;
     .left-view {
       display: flex;
       align-items: center;

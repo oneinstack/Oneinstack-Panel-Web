@@ -233,7 +233,7 @@ const conf = index()
     font-size: 32rem;
     min-height: 60rem;
     width: 100%;
-    border-bottom: #dcdcdc 1px dashed;
+    border-bottom: #dcdcdc 2rem dashed;
     align-items: self-start;
 
     // justify-content: flex-start !important;

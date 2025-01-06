@@ -211,7 +211,7 @@ onMounted(() => {
   .more {
     background: #fff;
     border-radius: 20rem;
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 8rem 8rem;
+    box-shadow: rgba(0, 0, 0, 0.1) 0rem 8rem 8rem;
     margin-top: 25rem;
     .more-btn {
       height: 78rem;

@@ -1,7 +1,7 @@
 <template>
   <transition name="fade">
     <div class="absolute ad-box" v-if="show">
-      <div class="relative" style="height: 0px; width: 100%">
+      <div class="relative" style="height: 0rem; width: 100%">
         <div class="absolute ad-point" :class="{ active: conf.list[0].active }"></div>
       </div>
       <template v-for="(item, index) in conf.list">

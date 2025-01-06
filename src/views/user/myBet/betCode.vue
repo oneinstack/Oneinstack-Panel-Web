@@ -148,7 +148,7 @@ defineProps({
   }
   .text-clip {
     background: linear-gradient(90deg, var(--color-c1) 0%, var(--color-c2) 100%);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
   }
 
   .text-clip-w {
@@ -160,9 +160,9 @@ defineProps({
 
   .type {
     color: #5bcdff;
-    font-size: 13px;
+    font-size: 26rem;
     font-weight: 700;
-    margin-right: 2px;
+    margin-right: 4rem;
   }
 
   .p-val {

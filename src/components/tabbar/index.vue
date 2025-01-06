@@ -72,7 +72,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .tarbar-foot {
   position: fixed;
-  height: 0px;
+  height: 0rem;
   bottom: 0;
   width: 750rem;
   margin: 0 auto;
@@ -140,7 +140,7 @@ onMounted(() => {
       .tabbar__item__icon {
         background: #ffffff;
         transform: translateY(-64rem);
-        box-shadow: 0px -2px 10px 0px #00000014;
+        box-shadow: 0rem -4rem 20rem 0rem #00000014;
       }
 
       .tabbar__item__text {

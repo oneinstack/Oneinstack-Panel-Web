@@ -104,7 +104,7 @@ onMounted(() => {
     min-height: 1148rem;
     max-height: 1300rem;
     border-radius: 20rem;
-    box-shadow: 4rem 4rem 12rem 0px #0000001a;
+    box-shadow: 4rem 4rem 12rem 0rem #0000001a;
     overflow: auto;
 
     .list-row {
@@ -112,7 +112,7 @@ onMounted(() => {
       justify-content: space-between;
       align-items: center;
       height: 108rem;
-      border-bottom: 1px solid #f6f7fa;
+      border-bottom: 2rem solid #f6f7fa;
 
       .avatar {
         width: 80rem;
@@ -145,17 +145,17 @@ onMounted(() => {
 
 .rule {
   .title {
-    font-size: 36rpx;
+    font-size: 36rem;
     font-weight: 600;
-    margin-bottom: 20rpx;
+    margin-bottom: 20rem;
   }
 
   .desc {
-    font-size: 28rpx;
+    font-size: 28rem;
   }
 }
 
 ::v-deep(.unit) {
-  font-size: 20rpx;
+  font-size: 20rem;
 }
 </style>

@@ -373,7 +373,7 @@ const conf = index({ signPopRefs })
 
     .time-active {
       background: #e6f2ff;
-      border: 1px solid #006fff;
+      border: 2rem solid #006fff;
 
       .day-today {
         background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
@@ -412,7 +412,7 @@ const conf = index({ signPopRefs })
 
   .sign-btn {
     background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%);
-    box-shadow: 4px 4px 8px 0px #0779ff4d;
+    box-shadow: 8rem 8rem 16rem 0rem #0779ff4d;
     height: 80rem;
     color: #fff;
     border-radius: 40rem;

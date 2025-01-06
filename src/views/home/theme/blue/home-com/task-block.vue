@@ -39,7 +39,7 @@
       font-weight: bold;
       padding-bottom: 25rem;
       padding-left: 64rem;
-      text-shadow: 1.02px 1.02px 2.03px #0647da;
+      text-shadow: 2.04rem 2.04rem 4.06rem #0647da;
 
       .txt2 {
         font-size: 22rem;

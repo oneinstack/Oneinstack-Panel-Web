@@ -527,7 +527,7 @@ conf.handleCreateEvent()
       font-size: 20rem;
       font-weight: 600;
       line-height: 40rem;
-      border: 1px solid #fff1b9;
+      border: 2rem solid #fff1b9;
       color: #fff1b9;
       border-radius: 40rem;
     }
@@ -546,7 +546,7 @@ conf.handleCreateEvent()
     height: 112rem;
     border-radius: 100rem;
     background: linear-gradient(to bottom, #ffd914 60%, #fffce6 100%);
-    border: 3px solid #ffd914;
+    border: 6rem solid #ffd914;
     font-size: 40rem;
     font-weight: 600;
     line-height: 112rem;
@@ -557,7 +557,7 @@ conf.handleCreateEvent()
     align-items: center;
     animation: ani 2s infinite alternate;
     box-shadow:
-      8rem 8rem 20rem 0px #eb380040,
+      8rem 8rem 20rem 0rem #eb380040,
       0 20rem 20rem 0 #ffffff inset;
     position: relative;
 
@@ -600,7 +600,7 @@ conf.handleCreateEvent()
   .overlay-content {
     margin: 0 auto;
     width: 100%;
-    max-width: 500px;
+    max-width: 750rem;
     height: 100%;
     display: flex;
     flex-flow: column nowrap;

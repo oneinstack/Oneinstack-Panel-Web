@@ -82,8 +82,8 @@ onMounted(() => {
     --van-rolling-text-item-width: 30rem;
     :deep(.van-rolling-text-item--down) {
       box-shadow:
-        0 0.5px 0 0 #add6ff,
-        0 1px 0 0 #0545d9;
+        0 1rem 0 0 #add6ff,
+        0 2rem 0 0 #0545d9;
       transform-style: preserve-3d;
       transform: rotateX(15deg);
     }

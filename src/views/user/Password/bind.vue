@@ -172,7 +172,7 @@ const conf = index()
     justify-content: space-between;
     align-items: center;
     height: 96rem;
-    border-bottom: 1px solid #f9fafc;
+    border-bottom: 2rem solid #f9fafc;
     .left-view {
       display: flex;
       align-items: center;
@@ -271,6 +271,7 @@ const conf = index()
   background: linear-gradient(#eb602d, #ffa64f);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .input-box {
@@ -321,6 +322,7 @@ const conf = index()
       background: linear-gradient(to right, #eb602d, #ffa64f);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      background-clip: text;
       top: calc(50% - 28rem);
       text-align: center;
       padding: 8rem 15rem;
@@ -337,6 +339,7 @@ const conf = index()
       // border-color: #FFD8BA !important;
       background: linear-gradient(to right, #eb602d, #ffa64f);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
       top: calc(50% - 20rem);
       text-align: center;
@@ -435,6 +438,7 @@ const conf = index()
     background: linear-gradient(#eb602d, #ffa64f);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 .item {

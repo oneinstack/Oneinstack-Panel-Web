@@ -29,7 +29,7 @@
 			<x-statusbar />
 			<div style="height: 104rem"></div>
 			<div class="flex justify-center" style="height: 100%;">
-				<div style="width: 100%; max-width: 500px">
+				<div style="width: 100%; max-width: 750rem">
 					<div class="tip">
 						<img class="tip-icon" src="/static/img/Frame.png" />
 						<div style="width: 100%;overflow: hidden;">
@@ -418,7 +418,7 @@ onMounted(() => {
 		}
 
 		&.tab-active {
-			border: 1px solid #F88c43;
+			border: 2rem solid #F88c43;
 			background: linear-gradient(180deg, #FFA64F 0%, #fff 90.5%);
 			color: #F88c43 !important;
 

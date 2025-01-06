@@ -72,8 +72,8 @@ const conf = reactive({
 			display: flex;
 			justify-content: flex-end;
 			.close-img{
-				width: 10px;
-				height: 10px;
+				width: 20rem;
+				height: 20rem;
 				margin-top: 30rem;
 				margin-right: 40rem;
 			}

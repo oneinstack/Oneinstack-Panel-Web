@@ -162,7 +162,7 @@ const isReceive = reactive({
     height: 92rem;
     border-radius: 96rem;
     background: linear-gradient(180deg, #ffecd7 0%, #ffc97e 51.14%, #fff8f0 100%);
-    box-shadow: 2px 4px 4px 0px #0000001a;
+    box-shadow: 4rem 8rem 8rem 0rem #0000001a;
     font-size: 32rem;
     font-weight: 600;
     text-align: center;

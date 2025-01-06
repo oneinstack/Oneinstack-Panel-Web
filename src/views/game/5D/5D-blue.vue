@@ -206,7 +206,7 @@ const conf = index({ gameBoxRefs })
 .select-bet-type {
   margin: 0 12rem 0 8rem;
   color: #0074ff;
-  font-size: 20px;
+  font-size: 40rem;
 }
 
 .bet-type {
@@ -334,7 +334,7 @@ const conf = index({ gameBoxRefs })
       font-size: 32rem;
       display: grid;
       grid-auto-flow: column;
-      gap: 8px;
+      gap: 16rem;
     }
 
     .down-time {
@@ -367,7 +367,7 @@ const conf = index({ gameBoxRefs })
 }
 
 .slot-inner {
-  width: 300px;
+  width: 600rem;
   padding: 15rem;
   background: #f6843f;
   display: flex;
@@ -380,21 +380,21 @@ const conf = index({ gameBoxRefs })
 
     .inrow {
       width: 100%;
-      padding: 5px;
+      padding: 10rem;
       background: #fea14d;
-      border-radius: 2px;
+      border-radius: 4rem;
       display: flex;
 
       .dataOne {
         // width: 100%;
         flex: 1;
-        height: 65px;
-        margin-right: 6px;
+        height: 130rem;
+        margin-right: 12rem;
         text-align: center;
         background: #333;
         color: rgba(0, 0, 0, 0.4);
         border-radius: 0.10667rem;
-        padding: 3px;
+        padding: 6rem;
 
         .dataBoc {
           background: #e1e1ec;
@@ -402,7 +402,7 @@ const conf = index({ gameBoxRefs })
           color: rgba(0, 0, 0, 0.4);
           width: 100%;
           aspect-ratio: 1;
-          font-size: 28px;
+          font-size: 52rem;
 
           &.dataBoc-active {
             background: #f6843f;
@@ -411,7 +411,7 @@ const conf = index({ gameBoxRefs })
         }
 
         &:last-of-type {
-          margin-right: 0px;
+          margin-right: 0rem;
         }
       }
     }
@@ -441,25 +441,25 @@ const conf = index({ gameBoxRefs })
 .dataNums:after,
 .dataNums:before {
   position: absolute;
-  top: calc(50% - 7px);
+  top: calc(50% - 14rem);
   width: 0;
   height: 0;
-  border-top: 6px solid transparent;
-  border-bottom: 6px solid transparent;
+  border-top: 12rem solid transparent;
+  border-bottom: 12rem solid transparent;
   content: '';
   z-index: 3;
 }
 
 .dataNums:before {
-  left: 12px;
-  border-right: 19px solid transparent;
-  border-left: 19px solid #fea14d;
+  left: 24rem;
+  border-right: 38rem solid transparent;
+  border-left: 38rem solid #fea14d;
 }
 
 .dataNums:after {
-  right: 12px;
-  border-left: 19px solid transparent;
-  border-right: 19px solid #fea14d;
+  right: 24rem;
+  border-left: 38rem solid transparent;
+  border-right: 38rem solid #fea14d;
 }
 
 .bet-select-box {
@@ -530,22 +530,22 @@ const conf = index({ gameBoxRefs })
 
 .num_Big {
   background: linear-gradient(90deg, #fd0261 0%, #ff8a96 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_Small {
   background: linear-gradient(90deg, #00bdff 0%, #5bcdff 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_Odd {
   background: linear-gradient(90deg, #00be50 0%, #9bdf00 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_Even {
   background: linear-gradient(90deg, #ff9000 0%, #ffd000 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .d5-bet-num {
@@ -692,22 +692,22 @@ const conf = index({ gameBoxRefs })
 
 .num_green {
   background: linear-gradient(90deg, #00be50 0%, #9bdf00 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_red {
   background: linear-gradient(90deg, #fd0261 0%, #ff8a96 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_blue {
   background: linear-gradient(90deg, #00bdff 0%, #5bcdff 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_yellow {
   background: linear-gradient(90deg, #ff9000 0%, #ffd000 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .active_number {

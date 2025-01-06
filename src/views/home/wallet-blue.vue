@@ -241,13 +241,13 @@ const conf = index()
 
       .badge {
         position: absolute;
-        top: -5px;
+        top: -10rem;
         background: #dd514c;
-        height: 15px;
-        padding: 0 5px;
+        height: 30rem;
+        padding: 0 10rem;
         color: #fff;
-        border-radius: 8px;
-        font-size: 11px;
+        border-radius: 16rem;
+        font-size: 22rem;
       }
     }
   }
@@ -317,7 +317,7 @@ const conf = index()
     justify-content: space-between;
     align-items: center;
     height: 112rem;
-    border-bottom: 3px solid #f9fafc;
+    border-bottom: 6rem solid #f9fafc;
 
     .left-user {
       display: flex;

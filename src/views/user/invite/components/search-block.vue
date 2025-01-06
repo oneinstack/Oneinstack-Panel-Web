@@ -176,14 +176,14 @@ export default {
 
 .slide-top-enter,
 .slide-top-leave-to {
-  transform: translateY(20px);
+  transform: translateY(40rem);
   opacity: 0;
 }
 
 .search-view {
   padding: 32rem 12rem;
   height: 112rem;
-  border-bottom: 1px solid #f6f7fa;
+  border-bottom: 2rem solid #f6f7fa;
   font-family: PingFang SC;
   display: flex;
   justify-content: space-between;
@@ -256,7 +256,7 @@ export default {
   .search-type {
     padding-bottom: 20rem;
     margin-bottom: 20rem;
-    border-bottom: 1px solid #f6f7fa;
+    border-bottom: 2rem solid #f6f7fa;
   }
 
   .search-content {
@@ -269,14 +269,14 @@ export default {
       font-size: 28rem;
       width: 32%;
       height: 76rem;
-      border: 1px solid transparent;
+      border: 2rem solid transparent;
       border-radius: 8rem;
       background-color: #f9f9f9;
       text-align: center;
       line-height: 76rem;
 
       &.active {
-        border: 1px solid #ff7502;
+        border: 2rem solid #ff7502;
         background-color: #fff2e9;
         color: #ff7502;
       }

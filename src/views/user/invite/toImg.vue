@@ -110,7 +110,7 @@ const conf = index({ swiperInstance })
   -webkit-transform: scale(0.9);
   transform: scale(0.9);
   // border-radius: 20rem;
-  width: calc(120px + 40rem);
+  width: 256rem;
   position: absolute;
   bottom: 15rem;
   // margin-left: calc(50% - 60px - 20rem);

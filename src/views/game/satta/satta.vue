@@ -295,7 +295,7 @@ const conf = index({ orderRefs, selectRefs })
   .left-result {
     flex: 1;
     padding: 10rem 20rem;
-    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    border-right: 2rem solid rgba(0, 0, 0, 0.08);
 
     .open-number {
       color: #000;
@@ -373,8 +373,8 @@ const conf = index({ orderRefs, selectRefs })
     align-items: center;
 
     .order-arrow {
-      width: 12px;
-      height: 24px;
+      width: 24rem;
+      height: 48rem;
     }
   }
 }
@@ -489,7 +489,7 @@ const conf = index({ orderRefs, selectRefs })
 
           &.select-active {
             background: linear-gradient(0deg, #fb0823 85%, #e2061f 100%);
-            box-shadow: 0px 4rem 12rem rgba(0, 0, 0, 0.4);
+            box-shadow: 0rem 4rem 12rem rgba(0, 0, 0, 0.4);
 
             span {
               background: #fff;
@@ -506,22 +506,22 @@ const conf = index({ orderRefs, selectRefs })
       position: relative;
       width: 0;
       height: 0;
-      border-left: 25px solid transparent;
-      border-right: 25px solid transparent;
-      border-top: 50px solid black;
+      border-left: 50rem solid transparent;
+      border-right: 50rem solid transparent;
+      border-top: 100rem solid black;
       /* 改变颜色可以改变箭头颜色 */
     }
 
     .arrow-down:after {
       content: '';
       position: absolute;
-      left: -50px;
-      top: -100px;
+      left: -100rem;
+      top: -200rem;
       width: 0;
       height: 0;
-      border-left: 50px solid transparent;
-      border-right: 50px solid transparent;
-      border-top: 90px solid white;
+      border-left: 100rem solid transparent;
+      border-right: 100rem solid transparent;
+      border-top: 180rem solid white;
       /* 改变颜色可以改变箭头背景颜色 */
     }
   }
@@ -543,7 +543,7 @@ const conf = index({ orderRefs, selectRefs })
   position: relative;
   width: 100%;
   background: #fff5e3;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
   flex-shrink: 0;
 
@@ -625,7 +625,7 @@ const conf = index({ orderRefs, selectRefs })
         overflow: hidden;
         // background-color: greenyellow;
 
-        // box-shadow: inset -10px 0 10px -10px rgba(18, 21, 38, 0.3);
+        // box-shadow: inset -20rem 0 20rem -20rem rgba(18, 21, 38, 0.3);
         .scorll-num-width {
           width: 90%;
         }
@@ -639,8 +639,6 @@ const conf = index({ orderRefs, selectRefs })
           display: flex;
           justify-content: center;
           align-items: center;
-          // box-shadow: -10px 0 10px -10px rgba(18, 21, 38, 0.6);
-          // box-shadow: -6rem 0 15rem 5rem rgba(18, 21, 38, 0.6);
           box-shadow: -15rem 0 10rem -2rem rgba(0, 0, 0, 0.4);
 
           position: absolute;
@@ -676,8 +674,8 @@ const conf = index({ orderRefs, selectRefs })
           height: 46rem;
           display: flex;
           align-items: center;
-          // box-shadow: inset -10px 0 10px -10px rgba(18, 21, 38, 0.3); // flex-shrink:;
-          // box-shadow: 10px 0 10px -10px rgba(0, 0, 0, 0.5);
+          // box-shadow: inset -20rem 0 20rem -20rem rgba(18, 21, 38, 0.3); // flex-shrink:;
+          // box-shadow: 20rem 0 20rem -20rem rgba(0, 0, 0, 0.5);
 
           .select_item {
             width: 36rem;
@@ -727,7 +725,7 @@ const conf = index({ orderRefs, selectRefs })
   bottom: 0;
   z-index: 10;
   background-color: rgba(0, 0, 0, 0.5);
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 
   .type-contnet {
@@ -775,7 +773,7 @@ const conf = index({ orderRefs, selectRefs })
   z-index: 100;
   z-index: 10;
   background-color: rgba(0, 0, 0, 0.5);
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 
   .result-content {
@@ -854,7 +852,7 @@ const conf = index({ orderRefs, selectRefs })
   padding: 24rem;
 
   .more-btn {
-    box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+    box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
     border-radius: 2.13333vw;
     height: 78rem;
     display: flex;
@@ -897,7 +895,7 @@ const conf = index({ orderRefs, selectRefs })
 }
 
 .modal-content {
-  padding: 20px;
+  padding: 40rem;
 }
 
 .disabled {

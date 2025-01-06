@@ -53,7 +53,7 @@ defineExpose({ showPop: conf.showPop })
   align-items: center;
   justify-content: center;
   background-color: rgba(0, 0, 0, 0.3);
-  max-width: 500px;
+  max-width: 750rem;
   z-index: 9999;
 
   .change-content {

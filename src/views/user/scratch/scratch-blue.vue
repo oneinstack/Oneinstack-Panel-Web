@@ -123,7 +123,7 @@ const conf = index()
   left: 0;
   padding: 22rem 0rem;
   z-index: 8;
-  border-radius: 10rem 10rem 0px 0px;
+  border-radius: 10rem 10rem 0rem 0rem;
   background: linear-gradient(180deg, #c6e1ff 0%, rgba(255, 255, 255, 1) 33.85%);
 
   .nav-title {
@@ -271,7 +271,7 @@ const conf = index()
       width: 48%;
       border-radius: 10rem;
       background: #fff;
-      box-shadow: 4rem 4rem 8rem 0px rgba(0, 0, 0, 0.05);
+      box-shadow: 4rem 4rem 8rem 0rem rgba(0, 0, 0, 0.05);
       padding: 12rem;
       margin-top: 24rem;
 

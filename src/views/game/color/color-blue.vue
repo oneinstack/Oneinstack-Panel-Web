@@ -292,7 +292,7 @@
                       </div>
                     </div>
                   </template>
-                  <div id="last-msg-item" style="height: 1px"></div>
+                  <div id="last-msg-item" style="height: 1rem"></div>
                 </div>
               </div>
               <img class="roll-bottom" src="/static/img/roll-bottom.png" />
@@ -535,8 +535,8 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
         // background: #FFF;
         background: #becbd2;
         box-shadow:
-          4rem 4rem 7.6rem 0px rgba(0, 0, 0, 0.1),
-          -4px -4px 7.6rem 0px rgba(255, 255, 255, 0.2);
+          4rem 4rem 7.6rem 0rem rgba(0, 0, 0, 0.1),
+          -8rem -8rem 7.6rem 0rem rgba(255, 255, 255, 0.2);
         border-radius: 8rem;
         height: 84rem;
         padding: 0rem 24rem;
@@ -563,8 +563,8 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
           border-top: 4rem solid #a6b4bd;
           background: #d8e3e8;
           box-shadow:
-            4rem 4rem 7.6rem 0px rgba(0, 0, 0, 0.1) inset,
-            -4rem -4rem 7.6rem 0px rgba(255, 255, 255, 0.2) inset;
+            4rem 4rem 7.6rem 0rem rgba(0, 0, 0, 0.1) inset,
+            -4rem -4rem 7.6rem 0rem rgba(255, 255, 255, 0.2) inset;
         }
       }
     }
@@ -623,8 +623,8 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
           border-radius: 10rem;
           background: #677a84;
           box-shadow:
-            2px 2px 4px 0px rgba(0, 0, 0, 0.25) inset,
-            -2px -2px 4px 0px rgba(255, 255, 255, 0.1) inset;
+            4rem 4rem 8rem 0rem rgba(0, 0, 0, 0.25) inset,
+            -4rem -4rem 8rem 0rem rgba(255, 255, 255, 0.1) inset;
           padding: 14rem 0rem;
           color: #fff;
           font-size: 26rem;
@@ -669,7 +669,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
             padding: 0rem 10rem;
 
             .bg-color {
-              border: 1px solid rgba(255, 255, 255, 0.22);
+              border: 2rem solid rgba(255, 255, 255, 0.22);
               background: linear-gradient(180deg, #32c94a 0%, #1d9f32 100%);
               box-shadow: 0 12rem #18982c;
               border-radius: 16rem;
@@ -688,13 +688,13 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
             }
 
             .color-purple {
-              border: 1px solid rgba(255, 255, 255, 0.29);
+              border: 2rem solid rgba(255, 255, 255, 0.29);
               background: linear-gradient(180deg, #9154ea 0%, #7027d6 100%);
               box-shadow: 0 12rem #7922e7;
             }
 
             .color-red {
-              border: 1px solid rgba(255, 255, 255, 0.26);
+              border: 2rem solid rgba(255, 255, 255, 0.26);
               background: linear-gradient(180deg, #d90029 0%, #be0505 100%);
               box-shadow: 0 12rem #bb1212;
             }
@@ -736,7 +736,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
           justify-content: center;
 
           .btn-bg {
-            border: 1px solid rgba(255, 255, 255, 0.26);
+            border: 2rem solid rgba(255, 255, 255, 0.26);
             background: linear-gradient(180deg, #d90029 0%, #cb0b0b 51.5%, #9154ea 53.59%, #7027d6 100%);
             box-shadow: 0 12rem #4e00b1;
             width: 80%;
@@ -777,7 +777,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
           }
 
           .color-btn-big {
-            border: 1px solid rgba(255, 255, 255, 0.26);
+            border: 2rem solid rgba(255, 255, 255, 0.26);
             background: linear-gradient(180deg, #ea6332 0%, #eb602d 100%);
             box-shadow: 0 12rem #d4572a;
           }
@@ -838,7 +838,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
       height: 128rem;
       border-radius: 15rem;
       background: linear-gradient(180deg, #4b5961 0%, #80929c 100%);
-      box-shadow: -1px 4rem #ffffff40;
+      box-shadow: -2rem 4rem #ffffff40;
       margin-top: 26rem;
       position: relative;
 
@@ -875,7 +875,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
 
           .dashed {
             width: 100%;
-            border: 1px dashed #62737b;
+            border: 2rem dashed #62737b;
             // margin-top: 56rem;
           }
 
@@ -972,7 +972,7 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
   .bottom-container-line {
     height: 24rem;
     width: 100%;
-    border-top: 1px solid rgba(255, 255, 255, 0.65);
+    border-top: 2rem solid rgba(255, 255, 255, 0.65);
     background: linear-gradient(180deg, #acc3d1 0%, #96a6b0 100%);
   }
 }

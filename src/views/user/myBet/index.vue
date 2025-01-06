@@ -148,8 +148,8 @@ const conf = index({ chooseRef })
   font-size: 24rem;
 }
 .order-icon {
-  width: 13px;
-  height: 13px;
+  width: 26rem;
+  height: 26rem;
 }
 
 .top12 {

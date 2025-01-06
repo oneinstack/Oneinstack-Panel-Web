@@ -214,7 +214,7 @@ const conf = reactive({
     .times {
       height: 48rem;
       line-height: 24rem;
-      border: 1px solid #fff1b9;
+      border: 2rem solid #fff1b9;
       border-radius: 48rem;
       padding: 8rem 12rem;
       position: absolute;

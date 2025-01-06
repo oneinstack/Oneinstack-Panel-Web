@@ -100,7 +100,7 @@ const conf = index({ modalRefs })
   padding: 22rem 0rem;
   z-index: 1;
   border-radius: 0rem 0rem 20rem 20rem;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.06);
+  box-shadow: 0rem 8rem 8rem 0rem rgba(0, 0, 0, 0.06);
 
   .nav-content {
     padding: 26rem 62rem;
@@ -141,7 +141,7 @@ const conf = index({ modalRefs })
   margin: 20rem 10rem;
   border-radius: 10rem;
   background: #fff;
-  box-shadow: 0px 8rem 8rem 0px rgba(0, 0, 0, 0.06);
+  box-shadow: 0rem 8rem 8rem 0rem rgba(0, 0, 0, 0.06);
   padding: 32rem;
   font-size: 28rem;
 
@@ -215,7 +215,7 @@ const conf = index({ modalRefs })
   bottom: 0;
   left: 0;
   right: 0;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0rem auto;
 
   .btn-content {

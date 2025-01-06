@@ -69,10 +69,10 @@ onMounted(() => {
       transform: skew(-15deg);
       font-weight: 800;
       text-shadow:
-        -1px -1px 0 #6b5a30,
-        1px -1px 0 #6b5a30,
-        -1px 1px 0 #6b5a30,
-        1px 1px 0 #6b5a30;
+        -2rem -2rem 0 #6b5a30,
+        2rem -2rem 0 #6b5a30,
+        -2rem 2rem 0 #6b5a30,
+        2rem 2rem 0 #6b5a30;
     }
   }
 }

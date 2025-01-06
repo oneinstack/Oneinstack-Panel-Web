@@ -68,7 +68,7 @@ const isGroup = (type:any) => {
       padding: 16rem 0;
       display: flex;
       align-items: center;
-      // border-bottom: 1px solid #f2f2f2;
+      // border-bottom: 2rem solid #f2f2f2;
 
       &::after {
         content: "";

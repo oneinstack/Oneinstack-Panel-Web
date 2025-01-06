@@ -135,7 +135,7 @@ const activeFilter:any = computed(() => {
 		left: 50%;
 		transform: translateX(-50%);
 		width: 95%;
-		height: 1px;
+		height: 2rem;
 		background-color: #eee;
 	}
 

@@ -473,7 +473,7 @@ init()
   .record-btn {
     width: 88rem;
     height: 88rem;
-    box-shadow: 0 0 4px 4px #ffffff33 inset;
+    box-shadow: 0 0 8rem 8rem #ffffff33 inset;
     border-radius: 50%;
     position: relative;
     .gap {
@@ -483,7 +483,7 @@ init()
       height: 32rem;
       border-radius: 4rem;
       background: linear-gradient(293.08deg, #ff8d5c 14.94%, #fc112a 85.06%);
-      border: 1px solid #fffdf1;
+      border: 2rem solid #fffdf1;
       font-size: 18rem;
       font-weight: 500;
       color: #fff;
@@ -548,7 +548,7 @@ init()
     background-image: url('/static/img/luckybox/dizuo.webp');
   }
   .ani-1 {
-    box-shadow: #ffeeb2cc 2px -1px 20px 20px;
+    box-shadow: #ffeeb2cc 4rem -2rem 40rem 40rem;
     transform: scale(7, 6) translateY(-10rem);
   }
 }
@@ -589,7 +589,7 @@ init()
     width: 112rem;
     height: 112rem;
     border-radius: 6rem;
-    border: 1px solid #ffffff;
+    border: 2rem solid #ffffff;
 
     &-unit {
       font-size: 28rem;
@@ -645,7 +645,7 @@ init()
   }
   .t-box {
     transform: rotateZ(10deg) skewY(350deg);
-    box-shadow: inset -4px -4px 2px #ffffff40;
+    box-shadow: inset -8rem -8rem 4rem #ffffff40;
     border-radius: 6rem;
   }
   .t1 {

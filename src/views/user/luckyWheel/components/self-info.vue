@@ -52,7 +52,7 @@ conf.init()
     background-color: lightgray;
 
     &.border {
-      border: 2px solid #fff;
+      border: 4rem solid #fff;
     }
   }
 

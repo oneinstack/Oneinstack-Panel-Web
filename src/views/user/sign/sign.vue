@@ -143,7 +143,7 @@ const conf = index()
 	.sign-box {
 		border-radius: 42rem;
 		background: linear-gradient(180deg, #FCFBE8 -6.45%, #FFF 29.03%);
-		box-shadow: 0px 4px 10px 0px rgba(255, 166, 79, 0.20);
+		box-shadow: 0rem 8rem 20rem 0rem rgba(255, 166, 79, 0.20);
 		padding: 60rem 48rem;
 
 		.title {

@@ -64,7 +64,7 @@ defineExpose({
 	padding: 66rem 65rem 72rem;
 	border-radius: 40rem;
 	background: #FFF;
-	box-shadow: 10px 10px 20px 0px rgba(255, 255, 255, 0.25), -10px -10px 20px 0px rgba(255, 255, 255, 0.25);
+	box-shadow: 20rem 20rem 40rem 0rem rgba(255, 255, 255, 0.25), -20rem -20rem 40rem 0rem rgba(255, 255, 255, 0.25);
 
 	.title {
 		font-weight: 600;

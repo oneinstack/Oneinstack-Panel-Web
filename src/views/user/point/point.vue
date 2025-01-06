@@ -171,7 +171,7 @@ const conf = index({ changeRef })
 
   .head-point {
     margin-top: 10rem;
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8rem);
     padding: 30rem;
     border-radius: 10rem;
     background-size: 100% 100%;
@@ -182,7 +182,7 @@ const conf = index({ changeRef })
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid #ffd5ba;
+      border-bottom: 2rem solid #ffd5ba;
       padding-bottom: 20rem;
 
       .point-title {
@@ -311,9 +311,9 @@ const conf = index({ changeRef })
       right: -2rem;
       bottom: 12rem;
       background: linear-gradient(328.56deg, #ff7502 18.81%, #fc9b01 77.66%);
-      height: 2px;
+      height: 4rem;
       z-index: 1;
-      border-radius: 1px;
+      border-radius: 2rem;
     }
   }
 }
@@ -361,7 +361,7 @@ const conf = index({ changeRef })
       align-items: center;
 
       .left-around {
-        width: 10px;
+        width: 20rem;
         height: 18rem;
         background: #eff1f5;
         border-radius: 18rem;
@@ -374,7 +374,7 @@ const conf = index({ changeRef })
       }
 
       .centre {
-        border: 1px dashed #efefef;
+        border: 2rem dashed #efefef;
         flex: 1;
       }
     }

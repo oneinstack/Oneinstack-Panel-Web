@@ -176,7 +176,7 @@ onMounted(() => {
 				height: 2rem;
 				box-sizing: border-box;
 				transform-origin: left center;
-				margin-top: -1px;
+				margin-top: -2rem;
 				pointer-events: none;
 				z-index: 1;
 			}
@@ -200,21 +200,21 @@ onMounted(() => {
 
 .num_green {
 	background: linear-gradient(90deg, #00be50 0%, #9bdf00 100%);
-	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+	box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_red {
 	background: linear-gradient(90deg, #fd0261 0%, #ff8a96 100%);
-	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+	box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_blue {
 	background: linear-gradient(90deg, #00bdff 0%, #5bcdff 100%);
-	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+	box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .num_yellow {
 	background: linear-gradient(90deg, #ff9000 0%, #ffd000 100%);
-	box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+	box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 </style>

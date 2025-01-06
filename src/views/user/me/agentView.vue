@@ -172,7 +172,7 @@ const conf = index()
   height: 556rem;
   border-radius: 40rem 40rem 0rem 0rem !important;
   background: #fff;
-  max-width: 500px;
+  max-width: 750rem;
 }
 .padding-xl {
   padding: 0rem;
@@ -209,6 +209,7 @@ const conf = index()
     background: linear-gradient(#eb602d, #ffa64f);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
+    background-clip: text;
   }
 }
 .picker-view {

@@ -115,7 +115,7 @@ onMounted(() => {
   bottom: 0rem;
   width: 100%;
   z-index: 99;
-  max-width: 500px;
+  max-width: 750rem;
   img {
     width: 100%;
     height: 100%;

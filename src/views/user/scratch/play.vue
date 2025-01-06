@@ -471,7 +471,7 @@ nextTick(() => {
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	max-width: 500px;
+	max-width: 750rem;
 	z-index: 1000;
 
 	.win-money {
@@ -542,7 +542,7 @@ nextTick(() => {
 	position: fixed;
 	top: 0rem;
 	width: 100%;
-	max-width: 500px;
+	max-width: 750rem;
 	background: red;
 }
 
@@ -552,7 +552,7 @@ nextTick(() => {
 	top: 250rem;
 
 	.float-content {
-		border-radius: 40rem 0px 0px 40rem;
+		border-radius: 40rem 0rem 0rem 40rem;
 		background: #FE4834;
 		// height: 69px;
 		color: #FFF;

@@ -60,7 +60,7 @@ onMounted(() => {
 <style lang="less" scoped>
 .tarbar-foot {
   position: fixed;
-  height: 0px;
+  height: 0rem;
   bottom: 0;
   width: 750rem;
   margin: 0 auto;
@@ -80,7 +80,7 @@ onMounted(() => {
     left: 0;
     width: 100%;
     height: 10%;
-    box-shadow: 0 -2px 6px 0px #0000000d;
+    box-shadow: 0 -4rem 12rem 0rem #0000000d;
     background-color: transparent;
     z-index: -1;
   }

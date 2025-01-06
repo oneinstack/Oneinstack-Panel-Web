@@ -69,7 +69,7 @@ radomNum.set()
     border-radius: 24rem;
     background-image: url('/static/img/luckyWheel/withdraw-people-card.png');
     background-size: contain;
-    box-shadow: 0px 2px 6px 0px #0000001a;
+    box-shadow: 0rem 4rem 12rem 0rem #0000001a;
   }
 
   .title {
@@ -83,7 +83,7 @@ radomNum.set()
     font-weight: 800;
     line-height: 68rem;
     color: #fff;
-    text-shadow: 1px 1px 2px #ff4f0d;
+    text-shadow: 2rem 2rem 4rem #ff4f0d;
   }
 
   .desc {

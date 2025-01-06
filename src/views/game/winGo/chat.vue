@@ -215,7 +215,7 @@ onMounted(() => {
 				height: 4rem;
 				box-sizing: border-box;
 				transform-origin: left center;
-				margin-top: -1px;
+				margin-top: -2rem;
 				pointer-events: none;
 				z-index: 1;
 			}
@@ -237,12 +237,12 @@ onMounted(() => {
 
 		.active_blue {
 			background: linear-gradient(90deg, #00BDFF 0%, #5BCDFF 100%);
-			box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+			box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 		}
 
 		.active_yellow {
 			background: linear-gradient(90deg, #FF9000 0%, #FFD000 100%);
-			box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+			box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 		}
 	}
 }

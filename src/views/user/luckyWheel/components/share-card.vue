@@ -102,7 +102,7 @@ async function hanldeCopyLink() {
     margin-top: 36rem;
     height: 88rem;
     border-radius: 74rem;
-    border: 1px solid #ff7502;
+    border: 2rem solid #ff7502;
     color: #ff7502;
     font-size: 40rem;
     font-weight: 500;

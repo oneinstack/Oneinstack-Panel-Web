@@ -122,7 +122,7 @@ const conf = reactive({
       align-items: center;
       justify-content: center;
       border: 1rem solid #e2e6ec;
-      box-shadow: 0px 2px 6px 0px #0000001a;
+      box-shadow: 0rem 4rem 12rem 0rem #0000001a;
       background-color: #ffffff;
       background-size: 100% 350%;
       transition: all 0.5s;
@@ -265,7 +265,7 @@ const conf = reactive({
       height: 76rem;
       border-radius: 12rem;
       background-color: #ffffff;
-      box-shadow: 1.61px 1.61px 3.23px 0px #0000001a;
+      box-shadow: 3.12rem 3.12rem 6.46rem 0rem #0000001a;
       font-family: PingFang SC;
       font-size: 22rem;
       font-weight: 600;

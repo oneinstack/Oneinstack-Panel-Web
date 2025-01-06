@@ -89,7 +89,7 @@
 	background: #fff;
 
 	.content-view{
-		padding: 30rpx;
+		padding: 30rem;
 		width: 100%;
 		font-weight: 500;
 		color: #000000;
@@ -97,11 +97,11 @@
 			text-align: center;
 			color:#828282;
 			font-weight: 500;
-			font-size: 32rpx;
-			padding: 20rpx 30rpx;
+			font-size: 32rem;
+			padding: 20rem 30rem;
 			
 			.into-text{
-				margin: 0px 15rpx;
+				margin: 0rem 15rem;
 				background: linear-gradient(to bottom, #EB602D, #FFA64F);
 				-webkit-background-clip: text; /* 使用-webkit-前缀兼容部分浏览器 */
 				background-clip: text;
@@ -112,60 +112,60 @@
 		
 		.phone-view{
 			color: #000;
-			font-size: 40rpx;
+			font-size: 40rem;
 			font-weight: 500;
 			text-align: center;
-			margin-top: 30rpx;
+			margin-top: 30rem;
 		}
 		
 		.title{
-			margin-top: 50rpx;;
-			font-size: 32rpx;
+			margin-top: 50rem;;
+			font-size: 32rem;
 			font-weight: 500;
 			opacity: 0.7;
 		    color: #000000;
-		    padding: 20rpx 30rpx;
+		    padding: 20rem 30rem;
 		}
 		
 		.cu-form-group,.uni-input-wrapper,.uni-input-placeholder{
 		    background: #FFFBF5;
-		    border-radius: 10rpx;
-			min-height: 72rpx !important;
-		    height: 72rpx !important;
-			line-height: 72rpx !important;
+		    border-radius: 10rem;
+			min-height: 72rem !important;
+		    height: 72rem !important;
+			line-height: 72rem !important;
 			color:#A8A8A8;
 			opacity: 0.7;
 			font-weight: 500;
-			font-size: 24rpx;
+			font-size: 24rem;
 		}
 		
 		
 		.countdown-view{
 			color: #A8A8A8;
-			margin-top: 20rpx;
-			font-size: 20rpx;
+			margin-top: 20rem;
+			font-size: 20rem;
 			font-weight: 500;
 			opacity: 0.7;
-			padding: 20rpx 30rpx;
+			padding: 20rem 30rem;
 			
 			.number{
 				color: #4D4D4D;
-				margin: 0rpx 15rpx;
+				margin: 0rem 15rem;
 			}
 		}
 		
 		.btn-view{
-			margin-top: 150rpx;
-			width: calc(100% - 60rpx);
+			margin-top: 150rem;
+			width: calc(100% - 60rem);
 			background: linear-gradient(180deg, #EB602D 0%, #FFA64F 160%);
-			border-radius: 82rpx;
+			border-radius: 82rem;
 			text-align: center;
 			color: #fff;
 			font-weight: 500;
-			font-size: 40rpx;
-			height: 100rpx;
-			line-height: 100rpx;
-			margin-left: 30rpx;
+			font-size: 40rem;
+			height: 100rem;
+			line-height: 100rem;
+			margin-left: 30rem;
 		}
 		
 		

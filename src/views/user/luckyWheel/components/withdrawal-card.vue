@@ -102,7 +102,7 @@ defineProps<Props>()
 
       .row {
         height: 76rem;
-        border-bottom: 1px solid #f1f1f1;
+        border-bottom: 2rem solid #f1f1f1;
         display: flex;
         justify-content: space-between;
         align-items: center;

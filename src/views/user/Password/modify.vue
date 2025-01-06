@@ -208,7 +208,7 @@ const conf = index()
 
 .cu-modal {
   width: 100%;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 }
 </style>

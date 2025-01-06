@@ -556,7 +556,7 @@ const conf = index({ typeRefs })
       padding: 24rem;
 
       .more-btn {
-        box-shadow: rgba(0, 0, 0, 0.1) 0px 8rem 8rem;
+        box-shadow: rgba(0, 0, 0, 0.1) 0rem 8rem 8rem;
         border-radius: 16rem;
         height: 78rem;
         display: flex;
@@ -588,12 +588,12 @@ const conf = index({ typeRefs })
 
   .active_blue {
     background: linear-gradient(90deg, #00bdff 0%, #5bcdff 100%);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
   }
 
   .active_yellow {
     background: linear-gradient(90deg, #ff9000 0%, #ffd000 100%);
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
   }
 
   .win-go-sum {
@@ -681,27 +681,27 @@ const conf = index({ typeRefs })
 
 .qkball_green {
   background: linear-gradient(90deg, #00be50 0%, #9bdf00 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .qkball_red {
   background: linear-gradient(90deg, #fd0261 0%, #ff8a96 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .qkball_blue {
   background: linear-gradient(90deg, #00bdff 0%, #5bcdff 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .qkball_yellow {
   background: linear-gradient(90deg, #ff9000 0%, #ffd000 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 .qkball_violet {
   background: linear-gradient(90deg, #480ac5 0%, #b36ff8 100%);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: 0rem 0rem 20rem 0rem rgba(0, 0, 0, 0.15);
 }
 
 //pk10

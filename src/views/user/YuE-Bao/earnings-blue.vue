@@ -104,7 +104,7 @@ const conf = index()
     border-radius: 10rem;
     left: 50%;
     top: 88%;
-    box-shadow: 0px 0px 6px #ccc;
+    box-shadow: 0rem 0rem 12rem #ccc;
     font-size: 23rem;
   }
 
@@ -114,13 +114,13 @@ const conf = index()
     top: -7rem;
     left: 25%;
     width: 0;
-    height: 0px;
+    height: 0rem;
     content: '';
     border-style: solid;
-    border-width: 4px;
+    border-width: 8rem;
     border-color: #fff #fff transparent transparent;
     transform: rotate(-45deg);
-    box-shadow: 1px -1px 2px #dfdcdc;
+    box-shadow: 2rem -2rem 4rem #dfdcdc;
   }
 
   .yeb-top {
@@ -237,7 +237,7 @@ const conf = index()
         .nav-item {
           min-width: 140rem;
           height: 62rem;
-          border: 1px solid #ffa64f;
+          border: 2rem solid #ffa64f;
           color: #006fff;
           border-radius: 10rem;
           padding: 0 7rem;
@@ -331,7 +331,7 @@ const conf = index()
   background: #fff;
   .winning-item {
     height: 128rem;
-    border-bottom: 3px solid #f9fafc;
+    border-bottom: 6rem solid #f9fafc;
   }
   .content {
     display: flex;
@@ -389,7 +389,7 @@ const conf = index()
     background: #fff;
     padding: 24rem 24rem 24rem;
     .more-btn {
-      box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+      box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
       border-radius: 2.13333vw;
       height: 78rem;
       display: flex;
@@ -417,5 +417,6 @@ const conf = index()
   background: linear-gradient(#006fff, #087bff);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 </style>

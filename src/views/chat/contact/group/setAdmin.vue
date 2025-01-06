@@ -133,8 +133,8 @@ onMounted(() => {
       margin-right: 16rem;
       margin-top: 15rem;
       div{
-        width: 4px;
-        height: 4px;
+        width: 8rem;
+        height: 8rem;
         border-radius: 50%;
         background: #000;
       }

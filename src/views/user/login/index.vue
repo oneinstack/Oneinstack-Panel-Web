@@ -375,7 +375,7 @@ const conf = index()
 
         .code {
           // border-radius: 8rem;
-          // box-shadow: rgb(173, 179, 200) 0px 4rem 2rem 0px;
+          // box-shadow: rgb(173, 179, 200) 0rem 4rem 2rem 0rem;
           // background-image: linear-gradient(rgba(242, 246, 255, 0.7), rgba(223, 227, 237, 0.7));
           // padding: 16rem 24rem;
           color: rgb(132, 132, 144);
@@ -394,7 +394,7 @@ const conf = index()
           color: #ff7502;
           border-radius: 35rem;
           border: 2rem solid #f5813d;
-          box-shadow: #ffa64f 0px 2rem 2rem 0px;
+          box-shadow: #ffa64f 0rem 2rem 2rem 0rem;
         }
 
         .eye-img {
@@ -458,7 +458,7 @@ const conf = index()
   width: 100%;
   text-align: center;
   // margin-top: 96rem;
-  max-width: 500px;
+  max-width: 750rem;
 
   .foot-title {
     color: #fff;
@@ -473,7 +473,7 @@ const conf = index()
       content: '';
       background-color: #ffffff80;
       width: 160rem;
-      height: 1px;
+      height: 2rem;
     }
 
     span {
@@ -488,7 +488,7 @@ const conf = index()
   }
 
   .foot-item {
-    height: calc(200rem - 20px);
+    height: calc(200rem - 40rem);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -502,7 +502,7 @@ const conf = index()
 .cu-dialog {
   // height: 356rem;
   border-radius: 40rem 40rem 0rem 0rem !important;
-  max-width: 500px !important;
+  max-width: 750rem !important;
   margin: 0 auto;
 }
 
@@ -561,7 +561,7 @@ const conf = index()
     background-color: #fff;
     // width: 560rem;
     width: 100%;
-    max-width: 500px;
+    max-width: 750rem;
     margin: auto;
 
     .cu-bar {

@@ -262,7 +262,7 @@ onUnmounted(() => {
       height: 100%;
       position: absolute;
       z-index: 99;
-      filter: drop-shadow(0px 10px 20px rgba(0, 0, 0, 0.25));
+      filter: drop-shadow(0rem 20rem 40rem rgba(0, 0, 0, 0.25));
     }
   }
 
@@ -362,7 +362,7 @@ onUnmounted(() => {
       z-index: 99;
       position: absolute;
       left: 0;
-      filter: drop-shadow(0px -10px 20px rgba(0, 0, 0, 0.25));
+      filter: drop-shadow(0rem -20rem 40rem rgba(0, 0, 0, 0.25));
     }
 
     .btn-view {

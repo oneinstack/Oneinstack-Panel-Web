@@ -97,7 +97,7 @@ const conf = index()
   }
 
   .item.active {
-    border-bottom: 2px solid #006fff;
+    border-bottom: 4rem solid #006fff;
     color: #006fff;
     transition: 0.2s;
   }
@@ -135,7 +135,7 @@ const conf = index()
     }
 
     .left {
-      border-right: 1px solid #dcdcdc;
+      border-right: 2rem solid #dcdcdc;
     }
 
     .moneyBox {
@@ -148,7 +148,7 @@ const conf = index()
       border-radius: 10rem;
       left: 50%;
       top: 110%;
-      box-shadow: 0px 0px 6px #ccc;
+      box-shadow: 0rem 0rem 12rem #ccc;
       font-size: 23rem;
     }
 
@@ -158,13 +158,13 @@ const conf = index()
       top: -7rem;
       left: 25%;
       width: 0;
-      height: 0px;
+      height: 0rem;
       content: '';
       border-style: solid;
-      border-width: 4px;
+      border-width: 8rem;
       border-color: #fff #fff transparent transparent;
       transform: rotate(-45deg);
-      box-shadow: 1px -1px 2px #dfdcdc;
+      box-shadow: 2rem -2rem 4rem #dfdcdc;
       // transform: rotate(135deg)
     }
   }

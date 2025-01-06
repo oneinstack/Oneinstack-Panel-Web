@@ -124,26 +124,26 @@ onMounted(() => {
     right: 0;
     top: 0;
     z-index: 10;
-    height: 44px;
+    height: 88rem;
     width: 100%;
 
     &::after {
       content: '';
       position: absolute;
-      top: calc(-1000rem + 68px);
+      top: calc(-1000rem + 136rem);
       left: -50%;
       height: 1000rem;
       width: 200%;
       background-color: #f45645;
-      box-shadow: 0px 2px 2px 0px #df9b52;
+      box-shadow: 0rem 4rem 4rem 0rem #df9b52;
       border-radius: 50%;
       pointer-events: none;
     }
   }
 
   &-line {
-    height: 32px;
-    box-shadow: 0px 5px 9px 3px #ffffff;
+    height: 64rem;
+    box-shadow: 0rem 10rem 18rem 6rem #ffffff;
     background-color: #fff;
     z-index: 9;
   }
@@ -166,7 +166,7 @@ onMounted(() => {
     color: #b4b4b4;
     letter-spacing: 1px;
     margin-top: 12rem;
-    margin: 0 24px;
+    margin: 0 48rem;
     text-align: center;
   }
 
@@ -223,7 +223,7 @@ onMounted(() => {
 
       .item-data-line {
         width: 100%;
-        height: 1px;
+        height: 2rem;
         background: #fbfbfb;
         margin-top: 24rem;
       }

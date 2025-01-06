@@ -4,7 +4,7 @@
       <img
         class="filter_button_icon"
         :class="{ active: isActive }"
-        style="width: 6px; height: 10px"
+        style="width: 12rem; height: 20rem"
         src="/static/images/common_left_arrow.png"
         alt=""
         srcset=""

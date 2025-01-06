@@ -277,7 +277,7 @@ const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 
 		.time-item {
 			background: #FFF;
-			box-shadow: 2px 2px 4px 0px rgba(0, 0, 0, 0.10), -4px -4px 4px 0px rgba(255, 255, 255, 0.20);
+			box-shadow: 4rem 4rem 8rem 0rem rgba(0, 0, 0, 0.10), -8rem -8rem 8rem 0rem rgba(255, 255, 255, 0.20);
 			border-radius: 8rem;
 			font-size: 40rem;
 			color: #252529;
@@ -332,7 +332,7 @@ const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 				// background: #b0aea0;
 				background: rgba(00, 00, 00, 0.2);
 				border-radius: 16rem;
-				// box-shadow: 0px 8rem 8rem 0px #000 inset;
+				// box-shadow: 0rem 8rem 8rem 0rem #000 inset;
 				padding: 10rem;
 				display: flex;
 				align-items: center;
@@ -383,7 +383,7 @@ const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 
 .reckon-time {
 	padding: 20rem 32rem;
-	// border-top: 1px solid var(--line, #d8e0ea);
+	// border-top: 2rem solid var(--line, #d8e0ea);
 	// background: #edeff5;
 	background: linear-gradient(93deg, #F7DFB1 1.89%, #F7E0AE 98.59%);
 

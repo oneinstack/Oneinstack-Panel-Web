@@ -80,8 +80,8 @@ const conf = index({ DGameTipRef })
     justify-content: space-between;
     align-items: center;
     margin-right: 15rem;
-    border: 0.5px solid #e2e6ec;
-    box-shadow: 0px 2px 6px 0px #0000001a;
+    border: 1rem solid #e2e6ec;
+    box-shadow: 0rem 4rem 12rem 0rem #0000001a;
     background: #fff;
     padding: 5rem 0rem 10rem;
     border-radius: 10rem;

@@ -74,7 +74,7 @@ const props = defineProps({
     border-radius: 24rem;
     background-image: url('/static/theme/blue/withdraw-people-card.webp');
     background-size: contain;
-    box-shadow: 0px 2px 6px 0px #0000001a;
+    box-shadow: 0rem 4rem 12rem 0rem #0000001a;
   }
 
   .title {
@@ -88,7 +88,7 @@ const props = defineProps({
     font-weight: 800;
     line-height: 68rem;
     color: #fff;
-    text-shadow: 1px 1px 2px 0px #0D39FF;
+    text-shadow: 2rem 2rem 4rem 0rem #0D39FF;
   }
 
   .desc {

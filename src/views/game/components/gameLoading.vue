@@ -31,7 +31,7 @@
 	}
 
 	.loading-box {
-		width: 100px;
+		width: 200rem;
 		display: flex;
 		flex-direction: column;
 		justify-content: center;
@@ -39,8 +39,8 @@
 	}
 
 	.loadingio-spinner-ellipsis {
-		width: 80px;
-		height: 80px;
+		width: 160rem;
+		height: 160rem;
 		display: inline-block;
 		overflow: hidden;
 		background: none;
@@ -57,17 +57,17 @@
 
 	.ldio {
 		position: absolute;
-		width: 20px;
-		height: 20px;
+		width: 40rem;
+		height: 40rem;
 		border-radius: 50%;
-		transform: translate(40px, 40px) scale(1);
+		transform: translate(80rem, 80rem) scale(1);
 		background: #e15b64;
 		animation: ldio 3.7037037037037033s infinite cubic-bezier(0, 0.5, 0.5, 1);
 	}
 
 	.ldio1 {
 		background: #f47e60;
-		transform: translate(74px, 40px) scale(1);
+		transform: translate(148rem, 80rem) scale(1);
 		animation: ldio-r 0.9259259259259258s infinite cubic-bezier(0, 0.5, 0.5, 1), ldio-c 3.7037037037037033s infinite step-start;
 	}
 
@@ -93,33 +93,33 @@
 
 	@keyframes ldio {
 		0% {
-			transform: translate(6px, 40px) scale(0);
+			transform: translate(12rem, 80rem) scale(0);
 		}
 
 		25% {
-			transform: translate(6px, 40px) scale(0);
+			transform: translate(12rem, 80rem) scale(0);
 		}
 
 		50% {
-			transform: translate(6px, 40px) scale(1);
+			transform: translate(12rem, 80rem) scale(1);
 		}
 
 		75% {
-			transform: translate(40px, 40px) scale(1);
+			transform: translate(80rem, 80rem) scale(1);
 		}
 
 		100% {
-			transform: translate(74px, 40px) scale(1);
+			transform: translate(148rem, 80rem) scale(1);
 		}
 	}
 
 	@keyframes ldio-r {
 		0% {
-			transform: translate(74px, 40px) scale(1);
+			transform: translate(148rem, 80rem) scale(1);
 		}
 
 		100% {
-			transform: translate(74px, 40px) scale(0);
+			transform: translate(148rem, 80rem) scale(0);
 		}
 	}
 

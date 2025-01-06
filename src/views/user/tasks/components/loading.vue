@@ -3,17 +3,17 @@
 		<!-- 雪花状 -->
 		<div class="loading row" v-if="type == 1">
 			<div class="van-loading van-loading--spinner van-loading"
-				style="color: rgb(102, 102, 102); width: 22px; height: 22px;"><span
+				style="color: rgb(102, 102, 102); width: 44rem; height: 44rem;"><span
 					class="van-loading__spinner van-loading__spinner--spinner"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><!----></span>
 			</div>
 		</div>
 		<!-- 圆环状 -->
-		<span class="circle-loading__spinner" style="width: 20px;height: 20px;" v-else-if="type == 2">
+		<span class="circle-loading__spinner" style="width: 40rem;height: 40rem;" v-else-if="type == 2">
 			<div class="no-clip-circle"></div>
 		</span>
 
 		<!-- 行内加载 -->
-		<div class="van-loading van-loading--spinner van-loading" style="color: #FFF; width: 18px; height: 18px;"
+		<div class="van-loading van-loading--spinner van-loading" style="color: #FFF; width: 36rem; height: 36rem;"
 			v-else-if="type == 3"><span
 				class="van-loading__spinner van-loading__spinner--spinner"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><!----></span>
 		</div>
@@ -41,7 +41,7 @@ const props = defineProps({
 
 <style lang="less" scoped>
 .loading {
-	padding: 20px 0;
+	padding: 40rem 0;
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -49,9 +49,9 @@ const props = defineProps({
 
 .circle-loading__spinner {
 	display: inline-block;
-	width: 30px;
+	width: 60rem;
 	max-width: 100%;
-	height: 30px;
+	height: 60rem;
 	max-height: 100%;
 	-webkit-animation: van-rotate .7s linear infinite;
 	animation: van-rotate .7s linear infinite;
@@ -82,7 +82,7 @@ const props = defineProps({
 .no-clip-circle {
 	width: 100%;
 	height: 100%;
-	border: 1px solid #989898;
+	border: 2rem solid #989898;
 	border-radius: 50%;
 	border-right-color: transparent;
 	position: relative;
@@ -212,8 +212,8 @@ const props = defineProps({
 }
 
 .loadingio-spinner-ellipsis {
-	width: 80px;
-	height: 80px;
+	width: 160rem;
+	height: 160rem;
 	display: inline-block;
 	overflow: hidden;
 	background: none;
@@ -230,17 +230,17 @@ const props = defineProps({
 
 .ldio {
 	position: absolute;
-	width: 20px;
-	height: 20px;
+	width: 40rem;
+	height: 40rem;
 	border-radius: 50%;
-	transform: translate(40px, 40px) scale(1);
+	transform: translate(80rem, 80rem) scale(1);
 	background: #EB602D;
 	animation: ldio 3.7037037037037033s infinite cubic-bezier(0, 0.5, 0.5, 1);
 }
 
 .ldio1 {
 	background: #FFA64F;
-	transform: translate(74px, 40px) scale(1);
+	transform: translate(148rem, 80rem) scale(1);
 	animation: ldio-r 0.9259259259259258s infinite cubic-bezier(0, 0.5, 0.5, 1), ldio-c 3.7037037037037033s infinite step-start;
 }
 
@@ -266,33 +266,33 @@ const props = defineProps({
 
 @keyframes ldio {
 	0% {
-		transform: translate(6px, 40px) scale(0);
+		transform: translate(12rem, 80rem) scale(0);
 	}
 
 	25% {
-		transform: translate(6px, 40px) scale(0);
+		transform: translate(12rem, 80rem) scale(0);
 	}
 
 	50% {
-		transform: translate(6px, 40px) scale(1);
+		transform: translate(12rem, 80rem) scale(1);
 	}
 
 	75% {
-		transform: translate(40px, 40px) scale(1);
+		transform: translate(80rem, 80rem) scale(1);
 	}
 
 	100% {
-		transform: translate(74px, 40px) scale(1);
+		transform: translate(148rem, 80rem) scale(1);
 	}
 }
 
 @keyframes ldio-r {
 	0% {
-		transform: translate(74px, 40px) scale(1);
+		transform: translate(148rem, 80rem) scale(1);
 	}
 
 	100% {
-		transform: translate(74px, 40px) scale(0);
+		transform: translate(148rem, 80rem) scale(0);
 	}
 }
 

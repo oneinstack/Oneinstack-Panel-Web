@@ -63,7 +63,7 @@ const rewardImg = computed(() => {
   padding: 0 20rem;
   height: 188rem;
   border-radius: 20rem;
-  box-shadow: 2px 2px 6px #0000000d;
+  box-shadow: 4rem 4rem 12rem #0000000d;
   background-color: #fff;
   position: relative;
   display: flex;

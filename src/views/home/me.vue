@@ -70,7 +70,7 @@
                   <div class="left-total">{{ $t('wallet.topTitle') }}:</div>
                   <div class="left-icon">
                     <div>
-                      <div style="height: 8px" v-if="!conf.openEye"></div>
+                      <div style="height: 16rem" v-if="!conf.openEye"></div>
                       {{
                         conf.openEye
                           ? conf.defaultCoin.coinSymbol + sutil.dataHandling(conf.total_money)
@@ -196,7 +196,7 @@ const conf = index()
   top: 0;
   z-index: 99;
   width: 100%;
-  max-width: 500px;
+  max-width: 750rem;
   background-image: linear-gradient(180deg, #eb602d 0%, #ffa64f 108.78%);
   padding: 0rem 24rem;
 
@@ -306,7 +306,7 @@ const conf = index()
           .vip-icon {
             position: relative;
             display: inline-block;
-            line-height: 19px;
+            line-height: 38rem;
             font-size: 32rem;
             vertical-align: middle;
           }

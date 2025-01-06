@@ -562,7 +562,7 @@ const conf = index()
       justify-content: space-between;
       align-items: center;
       height: 96rem;
-      border-bottom: 1px solid #f9fafc;
+      border-bottom: 2rem solid #f9fafc;
 
       // margin-bottom: 20rem;
       .left-view {
@@ -863,7 +863,7 @@ const conf = index()
     justify-content: space-between;
     align-items: center;
     height: 96rem;
-    border-bottom: 1px solid #f6f7fa;
+    border-bottom: 2rem solid #f6f7fa;
     margin-bottom: 30rem;
 
     .left-user {
@@ -961,7 +961,7 @@ const conf = index()
 }
 
 .cu-bar {
-  min-height: 57px;
+  min-height: 110rem;
   display: flex;
   align-items: center;
   position: relative;
@@ -1054,7 +1054,7 @@ uni-button:after {
 
 .cu-modal {
   width: 100%;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 }
 
@@ -1066,7 +1066,7 @@ uni-button:after {
   bottom: 0rem;
   z-index: 9996;
   background: rgba(0, 0, 0, 0.5);
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 }
 
@@ -1075,7 +1075,7 @@ uni-button:after {
   z-index: 9998;
   bottom: 0rem;
   width: 100%;
-  max-width: 500px;
+  max-width: 750rem;
   margin: 0 auto;
 
   .popup-content {

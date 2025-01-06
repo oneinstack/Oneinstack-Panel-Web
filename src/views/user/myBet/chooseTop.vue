@@ -79,7 +79,7 @@ defineExpose({
 <style lang="less" scoped>
 .top-mask {
   background-color: #fff;
-  box-shadow: 0px 0px 10rem 0px rgba(0, 0, 0, 0.1);
+  box-shadow: 0rem 0rem 10rem 0rem rgba(0, 0, 0, 0.1);
   z-index: 10;
   position: relative;
 }
@@ -130,12 +130,14 @@ defineExpose({
   font-weight: 600;
   background-image: -webkit-linear-gradient(90deg, #eb602d 0%, #ffa64f 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 80rem;
 }
 .text-color-item {
   background-image: -webkit-linear-gradient(90deg, #ff7502 0%, #fc9b01 100%);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 </style>

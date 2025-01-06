@@ -27,15 +27,15 @@
 <style lang="less" scoped>
 	.not-bet {
 		text-align: center;
-		padding: 80rpx 0 10rpx;
+		padding: 80rem 0 10rem;
 		.game-default-img{
-			width: 290rpx;
-			height: 290rpx;
+			width: 290rem;
+			height: 290rem;
 		}
 		.no-data{
 			color: #96979B;
-			font-size: 28rpx;
-			margin-top: 20rpx;
+			font-size: 28rem;
+			margin-top: 20rem;
 		}
 	}
 </style>

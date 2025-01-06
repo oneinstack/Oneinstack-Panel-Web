@@ -82,31 +82,31 @@ const conf = index()
 <style lang="less" scoped>
 .cu-btn {
   position: relative;
-  border: 0px;
+  border: 0rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  padding: 0 15px;
-  font-size: 14px;
-  height: 33px;
+  padding: 0 30rem;
+  font-size: 28rem;
+  height: 66rem;
   line-height: 1;
   text-align: center;
   text-decoration: none;
   overflow: visible;
   margin-left: 0;
-  -webkit-transform: translate(0px, 0px);
-  transform: translate(0px, 0px);
+  -webkit-transform: translate(0rem, 0rem);
+  transform: translate(0rem, 0rem);
   margin-right: 0;
 
-  box-shadow: 3px 3px 4px rgba(255, 166, 79, 0.2) !important;
+  box-shadow: 6rem 6rem 8rem rgba(255, 166, 79, 0.2) !important;
   background: linear-gradient(180deg, #eb602d, #ffa64f 160%) !important;
   color: #fff;
   border-radius: 10rem;
 }
 .cu-btn.button-hover {
-  -webkit-transform: translate(0.5px, 0.5px);
-  transform: translate(0.5px, 0.5px);
+  -webkit-transform: translate(1rem, 1rem);
+  transform: translate(1rem, 1rem);
 }
 
 .status-view {
@@ -123,7 +123,7 @@ const conf = index()
     font-size: 28rem;
     border-radius: 10rem;
     .checked {
-      border-radius: 5px;
+      border-radius: 10rem;
       background: #e6f2ff;
       color: #006fff;
     }
@@ -233,7 +233,7 @@ const conf = index()
 }
 
 .bg-green {
-  box-shadow: 3px 3px 4px rgba(0, 11, 125, 0.2) !important;
+  box-shadow: 6rem 6rem 8rem rgba(0, 11, 125, 0.2) !important;
   background: linear-gradient(93.51deg, #006fff 5.72%, #087bff 86.61%) !important;
 }
 

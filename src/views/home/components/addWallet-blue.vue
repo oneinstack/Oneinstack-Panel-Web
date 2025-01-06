@@ -46,7 +46,7 @@ const conf = reactive({
 	bottom: 0rem;
 	z-index: 9996;
 	background: rgba(0, 0, 0, 0.5);
-	max-width: 500px;
+	max-width: 750rem;
 	margin: 0 auto;
 }
 
@@ -55,7 +55,7 @@ const conf = reactive({
 	z-index: 9998;
 	bottom: 0rem;
 	width: 100%;
-	max-width: 500px;
+	max-width: 750rem;
 	margin: 0 auto;
 
 	.popup-content {

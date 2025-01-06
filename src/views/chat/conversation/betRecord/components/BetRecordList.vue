@@ -8,7 +8,7 @@
     <div class="share_container">
       <div class="share_header">
         <div class="flex items-center" @click="conf.popupVisible = false">
-          <img class="back_icon" style="width: 8.4px; height: 14px" src="/static/images/common_left_arrow.png" alt=""
+          <img class="back_icon" style="width: 16.8rem; height: 28rem" src="/static/images/common_left_arrow.png" alt=""
             srcset="" />
           <span class="u-nav-title">{{ $t('home.Close') }}</span>
         </div>

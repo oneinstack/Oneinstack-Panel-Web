@@ -402,7 +402,7 @@ const conf = index()
 
         .code {
           // border-radius: 8rem;
-          // box-shadow: rgb(173, 179, 200) 0px 4rem 2rem 0px;
+          // box-shadow: rgb(173, 179, 200) 0rem 4rem 2rem 0rem;
           // background-image: linear-gradient(rgba(242, 246, 255, 0.7), rgba(223, 227, 237, 0.7));
           // padding: 16rem 24rem;
           color: rgb(132, 132, 144);
@@ -420,7 +420,7 @@ const conf = index()
           color: #006fff;
           border-radius: 35rem;
           border: 2rem solid #006fff;
-          box-shadow: #006fff 0px 2rem 2rem 0px;
+          box-shadow: #006fff 0rem 2rem 2rem 0rem;
         }
 
         .eye-img {
@@ -500,7 +500,7 @@ const conf = index()
   // width: 100%;
   text-align: center;
   // margin-top: 96rem;
-  max-width: 500px;
+  max-width: 750rem;
 
   .foot-title {
     color: #bbbbc5;
@@ -527,7 +527,7 @@ const conf = index()
   }
 
   .foot-item {
-    height: calc(200rem - 20px);
+    height: calc(200rem - 40rem);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -541,7 +541,7 @@ const conf = index()
 .cu-dialog {
   // height: 356rem;
   border-radius: 40rem 40rem 0rem 0rem !important;
-  max-width: 500px !important;
+  max-width: 750rem !important;
   margin: 0 auto;
 }
 
@@ -675,7 +675,7 @@ const conf = index()
 
 input :-webkit-autofill {
   -webkit-text-fill-color: #fff !important;
-  -webkit-box-shadow: 0 0 0 1000px #bbbbc5 inset !important;
+  -webkit-box-shadow: 0 0 0 2000rem #bbbbc5 inset !important;
 }
 
 .uni-input-placeholder.input-placeholder {

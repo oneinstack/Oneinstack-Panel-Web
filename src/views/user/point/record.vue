@@ -36,7 +36,7 @@ const conf = index()
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #f6f7fa;
+    border-bottom: 2rem solid #f6f7fa;
     padding: 20rem;
     font-size: 26rem;
 

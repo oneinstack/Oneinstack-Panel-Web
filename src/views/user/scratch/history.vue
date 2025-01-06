@@ -194,7 +194,7 @@ const conf = index()
     position: relative;
 
     .left-around {
-      width: 18px;
+      width: 36rem;
       height: 33rem;
       background: #eff1f5;
       border-radius: 18rem;
@@ -388,7 +388,7 @@ const conf = index()
       padding: 24rem 24rem 24rem;
 
       .more-btn {
-        box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+        box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
         border-radius: 2.13333vw;
         height: 78rem;
         display: flex;

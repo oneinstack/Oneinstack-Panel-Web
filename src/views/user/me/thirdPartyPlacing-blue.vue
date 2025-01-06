@@ -450,7 +450,7 @@ const conf = index()
     }
 
     // &:first-of-type{
-    // 	border-radius: 0px 0px 16rem 16rem;
+    // 	border-radius: 0rem 0rem 16rem 16rem;
     // }
   }
 
@@ -459,7 +459,7 @@ const conf = index()
     padding: 24rem;
 
     .more-btn {
-      box-shadow: rgba(0, 0, 0, 0.1) 0px 8rem 8rem;
+      box-shadow: rgba(0, 0, 0, 0.1) 0rem 8rem 8rem;
       border-radius: 16rem;
       height: 78rem;
       display: flex;

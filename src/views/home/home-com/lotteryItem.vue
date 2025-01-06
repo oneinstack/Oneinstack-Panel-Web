@@ -69,8 +69,8 @@ defineProps({
   // }
   .line-two {
     position: absolute;
-    width: 200px;
-    height: 200px;
+    width: 400rem;
+    height: 400rem;
     background-image: conic-gradient(transparent, transparent, transparent, #eb7941);
     animation: animate 4s linear infinite;
   }

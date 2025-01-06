@@ -174,7 +174,7 @@ defineExpose({
 
         // border: 4rem solid #9AAAB5;
         .bg-color {
-          border: 1px solid rgba(255, 255, 255, 0.22);
+          border: 2rem solid rgba(255, 255, 255, 0.22);
           background: linear-gradient(180deg, #c2ced6 0%, #9eadb8 100%);
           box-shadow: 0 12rem #95a4af;
           border-radius: 16rem;
@@ -344,7 +344,7 @@ defineExpose({
     padding: 24rem 24rem 0rem;
 
     .more-btn {
-      box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+      box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
       border-radius: 2.13333vw;
       height: 78rem;
       display: flex;

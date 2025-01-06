@@ -129,7 +129,7 @@ onMounted(() => {
 			height: 100%;
 
 			.swiper-slide {
-				width: 320px !important;
+				width: 640rem !important;
 				height: 100%;
 
 			}
@@ -146,7 +146,7 @@ onMounted(() => {
 	background-size: 100% 100%;
 	border-radius: 30rem;
 	position: relative;
-	// box-shadow: 0px -2px 10px 0px red;
+	// box-shadow: 0rem -4rem 20rem 0rem red;
 
 	.coin-img {
 		width: 100%;
@@ -236,15 +236,15 @@ onMounted(() => {
 		}
 
 		30% {
-			transform: translateX(-7px)
+			transform: translateX(-14rem)
 		}
 
 		60% {
-			transform: translateX(4px)
+			transform: translateX(8rem)
 		}
 
 		90% {
-			transform: translateX(-1px)
+			transform: translateX(-2rem)
 		}
 	}
 }
@@ -258,11 +258,11 @@ onMounted(() => {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 18px;
-	font-size: 22px;
+	border-radius: 36rem;
+	font-size: 44rem;
 	font-weight: bold;
 	color: #fff;
-	box-shadow: 2px 2px 10px 0px rgba(0, 0, 0, 0.5);
+	box-shadow: 4rem 4rem 20rem 0rem rgba(0, 0, 0, 0.5);
 }
 
 .swiper-slide:nth-child(1n) {

@@ -90,7 +90,7 @@ const conf = index()
       margin: 10rem;
       padding: 0 20rem;
       background-color: #f9f9f9;
-      border-radius: 5px;
+      border-radius: 10rem;
       line-height: 50rem;
       line-height: 50rem;
       height: 50rem !important;
@@ -119,7 +119,7 @@ const conf = index()
       justify-content: space-between;
       align-items: center;
       height: 96rem;
-      border-bottom: 1px solid #f9fafc;
+      border-bottom: 2rem solid #f9fafc;
 
       .left-user {
         display: flex;
@@ -183,7 +183,7 @@ const conf = index()
     padding: 24rem 24rem 24rem;
 
     .more-btn {
-      box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+      box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
       border-radius: 2.13333vw;
       height: 78rem;
       display: flex;

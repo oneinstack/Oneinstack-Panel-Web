@@ -186,8 +186,8 @@ const conf = index()
   color: #5c5c5c;
 }
 .order-icon {
-  width: 13px;
-  height: 13px;
+  width: 26rem;
+  height: 26rem;
 }
 
 .top12 {

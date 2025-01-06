@@ -19,7 +19,7 @@ const props = defineProps({
 	},
 	font: {
 		type: String,
-		default: "18px Arial"
+		default: "36rem Arial"
 	},
 	text: {
 		type: String,

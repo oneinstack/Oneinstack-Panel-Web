@@ -208,7 +208,7 @@ defineExpose({
 @media (min-width: 960px) {
   .luckybox {
     &-main {
-      max-width: 500px;
+      max-width: 750rem;
     }
   }
 }

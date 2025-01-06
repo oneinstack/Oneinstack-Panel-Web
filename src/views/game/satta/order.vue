@@ -308,7 +308,7 @@ onMounted(() => {
 .order {
 	background: #F5F5F5;
 	height: 100%;
-	max-width: 500px;
+	max-width: 750rem;
 	margin: 0 auto;
 	display: flex;
 	flex-direction: column;
@@ -513,7 +513,7 @@ onMounted(() => {
 			padding: 24rem 24rem 0rem;
 
 			.more-btn {
-				box-shadow: rgba(0, 0, 0, 0.1) 0px 1.06667vw 1.06667vw;
+				box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
 				border-radius: 2.13333vw;
 				height: 78rem;
 				display: flex;

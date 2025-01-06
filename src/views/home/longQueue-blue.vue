@@ -104,7 +104,7 @@ const conf = index()
     .list-item {
       margin-top: 20rem;
       border-radius: 10rem;
-      box-shadow: 0px 0px 14rem 0px #a8a8a8;
+      box-shadow: 0rem 0rem 14rem 0rem #a8a8a8;
       background: #fff;
       width: 100%;
   

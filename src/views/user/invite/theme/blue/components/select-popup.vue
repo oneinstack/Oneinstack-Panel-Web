@@ -96,7 +96,7 @@ export default {
     right: 24rem;
     width: 184rem;
     border-radius: 4rem;
-    box-shadow: 0px 0px 10px 0px #00000026;
+    box-shadow: 0rem 0rem 20rem 0rem #00000026;
     background: #ffffff;
     top: 68rem;
 

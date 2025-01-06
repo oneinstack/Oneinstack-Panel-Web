@@ -145,7 +145,7 @@ const conf = index()
 		border-radius: 42rem;
 		background: linear-gradient(360deg, #FFFFFF 85%, #D1DFFF 100%);
 		padding: 60rem 48rem;
-		box-shadow: 0px 4px 10px 0px #4F81FF26;
+		box-shadow: 0rem 8rem 20rem 0rem #4F81FF26;
 
 
 		.title {
