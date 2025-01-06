@@ -391,6 +391,7 @@ const conf = index()
         background: #fff;
         padding: 8rem 20rem;
         border-radius: 25rem;
+        z-index: 999;
 
         span {
           font-size: 32rem;
