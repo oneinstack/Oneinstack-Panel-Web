@@ -277,15 +277,14 @@ const conf = index()
 
       .item-img {
         width: 100%;
-        height: 340rem;
+        min-height: 200rem;
         border-radius: 10rem;
+        overflow: hidden;
+        font-size: 0 !important;
       }
 
       .item-content {
         text-align: center;
-        // display: flex;
-        // justify-content: space-between;
-        // align-items: center;
         margin-top: 10rem;
         color: #000;
         font-weight: 600;
@@ -296,15 +295,6 @@ const conf = index()
           height: 20rem;
           margin-right: 6rem;
         }
-
-        // .item-heat{
-        // 	font-size: 21rem;
-        // 	color: rgba(00, 00, 00, 0.5);
-        // 	.heat-img{
-        // 		width: 22rem;
-        // 		height: 20rem;
-        // 	}
-        // }
       }
     }
   }

@@ -79,8 +79,11 @@ const conf = index({ modalRefs })
 .main-img {
   display: block;
   width: 100%;
-  height: 700rem;
-  padding-top: 20rem;
+  min-height: 400rem;
+  margin-top: 20rem;
+  font-size: 0;
+  border-radius: 20rem 20rem 0rem 0rem;
+  overflow: hidden;
 
   img {
     width: 100%;
@@ -96,7 +99,7 @@ const conf = index({ modalRefs })
   background: #fff;
   padding: 22rem 0rem;
   z-index: 1;
-  border-radius: 0rem 0rem 10px 10px;
+  border-radius: 0rem 0rem 20rem 20rem;
   box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.06);
 
   .nav-content {

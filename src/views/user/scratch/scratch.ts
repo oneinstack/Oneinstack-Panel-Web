@@ -9,8 +9,8 @@ import StatusBarConfig from '@/utils/StatusBarConfig'
 export const index = () => {
   const conf = reactive({
     price: '',
-    prizeAsc: 0,
-    priceAsc: -1 as any,
+    prizeAsc: 0 as any,
+    priceAsc: null as any,
     priceType: 0,
     scratchList: [] as any[],
     coinSymbol: '',
@@ -29,10 +29,11 @@ export const index = () => {
     changeType(type: any) {
       conf.priceType = type
       if (type == 0) {
-        conf.priceAsc = ''
+        conf.priceAsc = null
+        conf.prizeAsc == 0 ? (conf.prizeAsc = 1) : (conf.prizeAsc = 0)
       }
       if (type == 1) {
-        conf.prizeAsc = -1
+        conf.prizeAsc = null
         conf.priceAsc == 0 ? (conf.priceAsc = 1) : (conf.priceAsc = 0)
       }
       conf.getScratchTicketlList()
