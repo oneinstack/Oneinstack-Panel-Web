@@ -46,10 +46,7 @@ export const index = () => {
         //签到数据提交
         handleSign(index: any) {
             if (!index) {
-                index = 0
-                conf.signList?.forEach((item, itemIndex) => {
-                    item.isSgnin && (index = itemIndex)
-                })
+                index = conf.signList.findLastIndex(item => item.isSgnin) + 1
             }
             apis.savaSigninRecord({
                 success: (res: any) => {

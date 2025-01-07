@@ -87,7 +87,7 @@ export const index = () => {
         item.changeMoney = item.changeMoney
         item._type = item.type == 1 ? i18n.t('yueb.TransferOutAmount') : i18n.t('yueb.TransferInAmount')
       })
-      conf.detailData = [...data.records, ...conf.detailData]
+      conf.detailData = [...conf.detailData,...data.records]
 
       if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isShowMore = true)
     },

@@ -21,7 +21,6 @@ export const index = ({ emit }: any) => {
       let userVip = conf.showConfirm()
       if (userVip) {
         System.toast(i18n.t('code.2603'))
-        conf.show = false
         return
       }
       if (conf.num == 0) conf.num = 1
