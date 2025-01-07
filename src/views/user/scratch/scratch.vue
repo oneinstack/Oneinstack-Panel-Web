@@ -11,7 +11,29 @@
       <img class="wallet-img" src="/static/img/wallet.webp" />
     </template>
     <div class="main-img">
-      <img src="/static/img/home-banner.png" />
+      <img src="/static/img/home-banner.webp" />
+      <div class="win-box">
+        <van-notice-bar left-icon="none" :scrollable="false" color="#fff" background="transparent">
+          <van-swipe
+              vertical
+              class="notice-swipe"
+              :autoplay="3000"
+              :touchable="false"
+              :show-indicators="false"
+            >
+              <van-swipe-item v-for="(item,itemIndex) in conf.winData" :key="itemIndex">
+                <div class="left">
+                  <img src="/static/img/crown.png" />
+                  <span>{{ item.userName || '' }}</span>
+                </div>
+                <div class="right">
+                  <img src="/static/img/Win.png" />
+                  <span>{{ item.amount || '' }}</span>
+                </div>
+              </van-swipe-item>
+            </van-swipe>
+        </van-notice-bar>
+      </div>
     </div>
     <div class="nav-list-box" :style="conf.sTop">
       <div class="nav-title">
@@ -107,11 +129,46 @@ const conf = index()
   width: 100%;
   height: 638rem;
   padding: 20rem 0rem;
-
+  position: relative;
   img {
     width: 100%;
     height: 100%;
     border-radius: 10rem;
+  }
+  .win-box{
+    position: absolute;
+    left: 3%;
+    bottom: 38rem;
+    width: 94%;
+    height: 84rem;
+    font-size: 32rem;
+    font-weight: 600;
+    .notice-swipe {
+      margin-top: 8rem;
+      height: 84rem;
+      line-height: 84rem;
+      width: 100% !important;
+
+      .left,.right{
+        display: flex;
+        align-items: center;
+        text-shadow: 2rem 2rem 4rem #333;
+      }
+
+      .right{
+        font-size: 34rem !important;
+        font-style: italic;
+        padding-right: 10rem;
+        img{
+          width: 90rem;
+        }
+      }
+    }
+
+    img{
+      width: 60rem;
+      margin-right: 10rem;
+    }
   }
 }
 
@@ -302,4 +359,28 @@ const conf = index()
     margin-top: 40rem;
   }
 }
+
+:deep(.van-badge__wrapper .van-icon .van-icon-volume-o .van-notice-bar__left-icon){
+    display: none !important;
+    min-width: 0rem !important;
+    width: 0rem !important;
+  }
+
+:deep(.van-notice-bar__content){
+  width: 100% !important;
+}
+
+:deep(.van-swipe-item){
+    width: 100% !important;
+    height: 84rem !important;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  :deep(.van-notice-bar__left-icon, .van-notice-bar__right-icon){
+    width: 0rem !important;
+    min-width: 0rem !important;
+  }
 </style>
+

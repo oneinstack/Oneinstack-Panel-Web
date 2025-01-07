@@ -19,6 +19,7 @@ export const index = () => {
     defaultWalletInfo: {} as any,
     walletMoney: '-',
     sTop: '--sTop: 104rem',
+    winData: [] as any[],
     goPurchase(item: any) {
       System.router.push('/user/scratch/purchase?id=' + item.id)
     },
@@ -82,11 +83,18 @@ export const index = () => {
       } else {
         System.router.replace('/login')
       }
-    }
+    },
+
+    /** 获取刮刮乐虚拟数据 */
+    async loadVirtualData() {
+      const res = await apis.getStatistics({
+        dataType: '11'
+      })
+      conf.winData = res.data['11']
+    },
   })
   onMounted(async () => {
     conf.sTop = `--sTop:${(sutil.rem2px(104) + StatusBarConfig.statusHeight)}px`
-    console.log(conf.sTop);
     
     let coinlist = await svalue.getCoinlist()
     conf.defaultCoin = coinlist.find((item: any) => item.isDefault)
@@ -100,6 +108,7 @@ export const index = () => {
       conf.walletMoney = (item.coinSymbol || '₹') + sutil.dataHandling(m)
     }
     conf.getScratchTicketlList()
+    conf.loadVirtualData()
   })
 
   return conf
