@@ -22,5 +22,13 @@ export default [
   {
     path: '/game/Satta/Satta',
     component: '/game/satta/satta'
+  },
+  {
+    path: '/game/Animals/Animals',
+    component: '/game/Animals/Animals'
+  },
+  {
+    path: '/game/Animals/Open',
+    component: '/game/Animals/Open'
   }
 ]
