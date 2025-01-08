@@ -1762,5 +1762,18 @@ export default {
     integral: 'Troca de pontos',
     purchase: 'Compra de usuários',
     system: 'Aquisição de Sistema'
-  }
+  },
+  Feedback: {
+    title: 'Feedback',
+    add: 'New Feedback',
+    questionType: 'Tipo de pergunta',
+    problemDescription: 'Descrição do problema',
+    problemScreenshot: 'Captura de tela do problema',
+    contactAccount: 'Conta de contato',
+    submit: 'Enviar',
+    pleaseFillInAllFields: 'Por favor, preencha todos os campos',
+    detail: 'Detalhes do Feedback',
+    replyContent: 'Conteúdo da Resposta',
+    replyContentTip: 'Por favor, insira o conteúdo da resposta',
+  },
 }

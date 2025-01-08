@@ -38,6 +38,12 @@ export const index = () => {
           new: false,
           url: '/user/about/about',
           isShow: true
+        },
+        {
+          name: 'Feedback',
+          new: false,
+          url: '/user/Feedback/index',
+          isShow: true
         }
       ],
       [

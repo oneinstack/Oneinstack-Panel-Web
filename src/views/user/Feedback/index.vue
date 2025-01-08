@@ -1,0 +1,78 @@
+<script setup lang="ts">
+import { index } from './index'
+
+const conf = index()
+</script>
+
+<template>
+  <x-page no-footer>
+    <template #title>{{ $t('Feedback.title') }}</template>
+    <template #right>
+      <van-icon name="add-o" size="32rem" style="margin-right: 30rem;" @click="conf.handlePageInto('add',null)"/>
+    </template>
+    <!-- 列表 -->
+    <div class="content-view" style="overflow: auto" @scroll="conf.moreMessage">
+      <div class="cu-list">
+        <div class="cu-item" @click="conf.handlePageInto('detail',item)" v-for="(item,index) in conf.listData" :key="index" >
+          <div class="cu-item-title">
+            <div>
+              {{ item.typeName }}
+              <van-icon name="arrow" size="20rem" />
+            </div>
+            <div class="status-view" v-if="item.issieStatus == 0"></div>
+          </div>
+          <div class="time">
+            {{ item.createTime }}
+          </div>
+          <div class="cu-item-content">
+            {{ item.issueDepict }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </x-page>
+</template>
+
+<style scoped lang="less">
+.content-view {
+  width: 100%;
+  padding: 30rem;
+  .cu-list {
+    width: 100%;
+    height: 100%;
+    color: #999999;
+
+
+    .cu-item {
+      width: 100%;
+      padding: 30rem;
+      border-radius: 20rem;
+      background: #fff;
+      max-height: 332rem;
+      margin-bottom: 20rem;
+      display: -webkit-box;
+      line-clamp: 3; 
+      -webkit-line-clamp: 3; /* 限制显示的行数 */
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      .cu-item-title {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: #333333;
+        font-size: 32rem;
+        font-weight: 600;
+        font-family: 'PingFang SC';
+
+        .status-view{
+          width: 12rem;
+          height: 12rem;
+          background: #FF3333;
+          border-radius: 50%;
+        }
+      }
+
+    }
+  }
+}
+</style>

@@ -226,5 +226,18 @@ export default [
   {
     path: '/user/network',
     component: '/user/network/network'
+  },
+  {
+    path: '/user/Feedback/index',
+    component: '/user/Feedback/index'
+  },
+  {
+    path: '/user/Feedback/add',
+    component: '/user/Feedback/add'
+  },
+  {
+    path: '/user/Feedback/detail',
+    component: '/user/Feedback/detail'
   }
+
 ]

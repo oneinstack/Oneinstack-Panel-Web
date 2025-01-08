@@ -378,5 +378,19 @@ export const apis = {
   getUserIntegralExchangeRecordList: (data?: ApiData) =>
     http.get('/api/integralExchange/getUserIntegralExchangeRecordList', data),
   // 奖励兑换按钮
-  integralExchange: (data?: ApiData) => http.get('/api/integralExchange/exchange', data)
+  integralExchange: (data?: ApiData) => http.get('/api/integralExchange/exchange', data),
+
+  // <-------------- 站内信-------------->
+  // 获取问题类型
+  dictBycode: (data?: ApiData) => http.post('/api/systemApi/dictBycode', data),
+  // 问题反馈提交
+  addQuestion: (data?: ApiData) => http.post('/api/internamessage/addQuestion', { ...data, json: true }),
+  // 查询所有反馈
+  questionList: (data?: ApiData) => http.post('/api/internamessage/questionList', data),
+  // 查询反馈详情
+  questionDetail: (data?: ApiData) => http.post('/api/internamessage/questionDetail', data),  
+  // 用户-问题反馈回复
+  reoly: (data?: ApiData) => http.post('/api/internamessage/reoly', data),  
+
+
 }
