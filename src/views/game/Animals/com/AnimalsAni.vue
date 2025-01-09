@@ -1,5 +1,8 @@
 <template>
     <div class="track">
+        <countdown :time="conf.downNum" v-if="conf.downNum < 36" />
+        <!-- 领奖台 -->
+        <podium :winList="conf.numlist" v-if="conf.podiumShow" />
         <cview name="trackitm" direction="-">
             <div class="track-bg"></div>
         </cview>
@@ -11,7 +14,7 @@
                             :src="`/static/lottie/exb/exb-${conf.aniName}.json`" />
                         <div class="rain">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                                :src="`/static/lottie/rain.json`" />
+                                :src="`/static/lottie/plus.json`" />
                         </div>
                     </div>
                 </cview>
@@ -19,6 +22,10 @@
                     <div class="animal2" id="animal2">
                         <lottie-player autoplay loop :key="conf.aniName" mode="normal"
                             :src="`/static/lottie/hm/hm-${conf.aniName}.json`" />
+                        <div class="rain">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniName"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
                     </div>
                 </cview>
                 <cview name="animal3">
@@ -50,9 +57,10 @@
                 <img v-if="conf.showReady == 'ready'" class="ready-img" src="/static/img/game/animal/Ready.png" />
                 <img v-else-if="conf.showReady == 'go'" class="ready-img" src="/static/img/game/animal/Go.png" />
             </div>
+            <!-- 排名动画 -->
             <div class="sort" v-show="conf.rank">
-                <div class="item" v-for="(item,index) in conf.numlist" :key="index">
-                    <arank :imgUrl="item.img" :name="item.name" :sort="item.sort" v-if="item.show" />
+                <div class="item" v-for="(item, index) in conf.numlist" :key="index">
+                    <rank :imgUrl="item.img" :name="item.name" :sort="item.sort" v-if="item.show" />
                 </div>
             </div>
         </div>
@@ -61,7 +69,9 @@
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue';
 import cview from './cview.vue';
-import arank from './arank.vue'
+import rank from './rank.vue'
+import countdown from './countdown.vue';
+import podium from './podium.vue';
 import stween from '@/sstore/stween';
 import System from '@/utils/System';
 import { Scope } from 'tools-vue3';
@@ -75,8 +85,10 @@ const conf = reactive({
     showReady: '',
     isStart: false,
     rank: false,
+    podiumShow: false,
     numlist: [] as any[],
     numsort: [] as any[],
+    downNum: 30,
     init() {
         for (let i = 1; i < 7; i++) {
             stween.to('animal' + i, {
@@ -109,6 +121,25 @@ const conf = reactive({
         }, 2200)
         // conf.numlist = res
     },
+    rest() {
+        conf.podiumShow = false
+        conf.rank = false
+        conf.aniName = 'walk'
+        conf.showReady = ''
+        stween.kill(['trackitm'])
+        for (let i = 1; i < 7; i++) {
+            stween.kill(['animal' + i])
+        }
+        timer.clear()
+        stween.set(['trackitm'], {
+            x: 0
+        })
+        for (let i = 1; i < 7; i++) {
+            stween.set('animal' + i, {
+                x: 0
+            })
+        }
+    },
     // 开始
     start() {
         //背景
@@ -140,9 +171,6 @@ const conf = reactive({
             }
         }
         conf.loopCar(conf.getRandomCarArr(), _final, '')
-        timer.once(() => {
-            conf.stop([])
-        }, 20000)
     },
     getRandomCarArr() {
         const arr = []
@@ -171,8 +199,6 @@ const conf = reactive({
         }
         conf.numsort = conf.numsort.sort((a, b) => b.sort - a.sort)
         console.log(conf.numsort);
-        
-        
     },
     /**
    * 冲线钩子
@@ -196,7 +222,7 @@ const conf = reactive({
                 stween.pause(['trackitm'])
             }
         })
-        
+
         timer.once(() => {
             //移出屏幕外面
             for (let i = 1; i < 7; i++) {
@@ -214,8 +240,12 @@ const conf = reactive({
                     let num = conf.numsort[i].num
                     conf.numlist[num - 1].sort = i + 1
                     conf.numlist[num - 1].show = true
+                    if (i == 5) {
+                        timer.once(() => {
+                            conf.podiumShow = true
+                        }, 1000)
+                    }
                 }, (i + 1) * 50)
-                
             }
         }, 3600)
     },
@@ -268,7 +298,15 @@ onMounted(() => {
             num: 6
         }
     ]
-    conf.init()
+    setInterval(() => {
+        conf.downNum--
+        if (conf.downNum == 0) {
+            conf.init()
+            conf.downNum = 60
+        }
+        if (conf.downNum == 45) conf.stop([])
+        if (conf.downNum == 36) conf.rest()
+    }, 1000)
 })
 
 </script>
