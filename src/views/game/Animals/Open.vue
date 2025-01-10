@@ -104,7 +104,176 @@
         </div>
 
         <!-- 开奖记录 -->
-        <div class=""></div>
+        <div class="table-container">
+          <div>
+            <table>
+              <thead>
+                <tr class="tablehead">
+                  <th class="tableheadcolor">期 次</th>
+                  <th class="time">时 间</th>
+                  <th class="tableheadcolor">冠 军</th>
+                  <th>亚 军</th>
+                  <th class="tableheadcolor">季 军</th>
+                  <th>No4</th>
+                  <th class="tableheadcolor">No5</th>
+                  <th>No6</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in conf.history.list" @click="item.flipped = !item.flipped">
+                  <td class="table-date">
+                    <div>{{ item.issue }}</div>
+                  </td>
+                  <td class="odd-column time">{{ item.time }}</td>
+                  <td class="even-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[0]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg four">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[0]}`">{{ item.result[0] }}</span>
+                    </div>
+                  </td>
+                  <td class="odd-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[1]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[1]}`">{{ item.result[1] }}</span>
+                    </div>
+                  </td>
+                  <td class="even-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[2]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg six">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[2]}`">{{ item.result[2] }}</span>
+                    </div>
+                  </td>
+                  <td class="odd-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[3]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[3]}`">{{ item.result[3] }}</span>
+                    </div>
+                  </td>
+                  <td class="even-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[4]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[4]}`">{{ item.result[4] }}</span>
+                    </div>
+                  </td>
+                  <td class="odd-column" :class="{ flipped: item.flipped }">
+                    <div class="front">
+                      <img
+                        :src="`/static/img/game/animal/open/images/image${item.result[5]}.png`"
+                        loading="lazy"
+                        alt="result image"
+                        width="40"
+                        height="auto"
+                      />
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                    </div>
+                    <div class="back circle-bg five">
+                      <div class="tooltip">
+                        <img
+                          src="data:image/svg+xml,%3c?xml%20version='1.0'%20standalone='no'?%3e%3c!DOCTYPE%20svg%20PUBLIC%20'-//W3C//DTD%20SVG%201.1//EN'%20'http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd'%3e%3csvg%20t='1731069816378'%20class='icon'%20viewBox='0%200%201024%201024'%20version='1.1'%20xmlns='http://www.w3.org/2000/svg'%20p-id='33111'%20xmlns:xlink='http://www.w3.org/1999/xlink'%20width='200'%20height='200'%3e%3cpath%20d='M448%20832v64l-128.32-128L448%20640v64h192a192%20192%200%200%200%20115.84-345.152l0.704-0.896%2090.24-90.24A320%20320%200%200%201%20640%20832l-192.064%200.064zM576%20192V128l131.008%20128L576%20384V320H384a192%20192%200%200%200-115.712%20345.216l-91.072%2091.008A320%20320%200%200%201%20384%20192h192.064z'%20fill='%23bfbfbf'%20p-id='33112'%20data-spm-anchor-id='a313x.search_index.0.i10.181b3a81o4NWcd'%20class='selected'%3e%3c/path%3e%3c/svg%3e"
+                        />
+                      </div>
+                      <span :class="`t-${item.result[5]}`">{{ item.result[5] }}</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </x-page>
@@ -159,6 +328,22 @@ const conf = reactive({
         Etitle: 'Huanxing',
         content: '总是带来欢笑的欢猩，这次是否能笑到最后？',
         img: 'p6'
+      }
+    ]
+  },
+  history: {
+    list: [
+      {
+        issue: '01100872',
+        time: '14:32',
+        result: [4, 3, 6, 1, 2, 5],
+        flipped: false
+      },
+      {
+        issue: '01100871',
+        time: '14:31',
+        result: [5, 3, 6, 4, 1, 2],
+        flipped: false
       }
     ]
   }
@@ -454,6 +639,25 @@ onUnmounted(() => {
   }
 }
 
+.t-1 {
+  background-color: #e60000;
+}
+.t-2 {
+  background-color: #002fa7;
+}
+.t-3 {
+  background-color: #01847f;
+}
+.t-4 {
+  background-color: #fbd26a;
+}
+.t-5 {
+  background-color: #90f;
+}
+.t-6 {
+  background-color: #8f4b28;
+}
+
 .playerinfo {
   .playerimg {
     width: 80rem;
@@ -476,24 +680,201 @@ onUnmounted(() => {
       color: #fff;
       font-size: 30rem;
     }
-    .t-1 {
-      background-color: #e60000;
-    }
-    .t-2 {
-      background-color: #002fa7;
-    }
-    .t-3 {
-      background-color: #01847f;
-    }
-    .t-4 {
-      background-color: #fbd26a;
-    }
-    .t-5 {
-      background-color: #90f;
-    }
-    .t-6 {
-      background-color: #8f4b28;
-    }
   }
+}
+
+.tooltip {
+  display: none;
+  position: absolute;
+  top: v-bind('rem(-10)');
+  left: 92%;
+  font-size: v-bind('rem(0.6)');
+  transform: translate(-50%);
+  color: #363434;
+  padding: v-bind('rem(8)') v-bind('rem(12)');
+  font-size: v-bind('rem(14)');
+  border-radius: v-bind('rem(4)');
+  white-space: nowrap;
+}
+
+.tooltip img,
+.front .tooltip img {
+  width: v-bind('rem(20)');
+  height: auto;
+}
+
+.table-container {
+  margin-top: v-bind('rem(15)');
+  border-radius: v-bind('rem(15)');
+  padding-left: v-bind('rem(15)');
+  padding-right: v-bind('rem(15)');
+  flex: 1 1 100%;
+}
+
+table {
+  background-color: #f7e1ac;
+  border: 1px solid rgba(234, 201, 127, 0.65);
+  border-radius: v-bind('rem(15)');
+  border-collapse: separate;
+  overflow: hidden;
+  border-spacing: 0;
+  width: 100%;
+  box-shadow: 0 v-bind('rem(4)') v-bind('rem(10)') #0000001a;
+}
+
+.tableheadcolor {
+  background-color: #facd68;
+}
+
+.tablehead {
+  color: #61350b;
+}
+
+.tablehead th {
+  padding: v-bind('rem(5)');
+  font-size: v-bind('rem(22)');
+  font-weight: 700;
+}
+
+td {
+  height: 50px;
+  border: 1px solid rgba(234, 201, 127, 0.35);
+  text-align: center;
+  font-family: Arial, sans-serif;
+  font-size: v-bind('rem(16)');
+  padding: v-bind('rem(4)') 0;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.6s;
+  cursor: pointer;
+}
+
+td:hover .tooltip {
+  display: block;
+}
+.front,
+.back {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+.front img {
+  width: v-bind('rem(45)');
+}
+.back {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: rotateX(180deg) translateZ(1px);
+  -webkit-transform: rotateX(180deg) translateZ(1px);
+}
+
+.odd-column.time {
+  font-size: v-bind('rem(10)');
+  color: #b0b0b0;
+}
+
+td:hover .tooltip {
+  display: none;
+}
+
+.alltitle {
+  height: v-bind('rem(38)');
+}
+
+.title img {
+  margin-left: v-bind('rem(15)');
+  width: v-bind('rem(30)');
+  height: v-bind('rem(30)');
+}
+
+.title span {
+  margin-left: v-bind('rem(-15)');
+}
+
+.history-container {
+  flex-direction: column;
+}
+
+.sidebar {
+  order: 2;
+  flex: 1 1 100%;
+  min-width: auto;
+  border-right: none;
+}
+
+.table-container {
+  padding: 0;
+  order: 1;
+  flex: 1 1 100%;
+}
+
+.tablehead th {
+  padding: v-bind('rem(3)');
+  font-size: v-bind('rem(15)');
+  font-weight: 700;
+}
+
+.time-info {
+  flex-direction: column;
+}
+
+.title span {
+  width: 100%;
+  height: v-bind('rem(30)');
+  font-size: v-bind('rem(15)');
+}
+
+.table-date {
+  font-size: 10px;
+  color: #b0b0b0;
+}
+
+.front img {
+  width: v-bind('rem(35)');
+}
+
+.even-column {
+  background-color: #fffdf1;
+}
+
+.odd-column {
+  background-color: #fff;
+}
+
+.table-date {
+  position: relative;
+  background-color: #fffdf1;
+  color: #b0b0b0;
+  white-space: nowrap;
+}
+
+td.flipped {
+  transform: rotateX(180deg) translateZ(1px);
+  -webkit-transform: rotateX(180deg) translateZ(1px);
+  transition: transform 0.6s ease-in-out;
+  -webkit-transition: transform 0.6s ease-in-out;
+}
+
+.circle-bg span {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0 auto;
+  font-size: v-bind('rem(24)');
+  color: #fff;
+  width: v-bind('rem(30)');
+  height: v-bind('rem(30)');
+  border-radius: v-bind('rem(20)');
 }
 </style>
