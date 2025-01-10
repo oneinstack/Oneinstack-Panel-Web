@@ -1,5 +1,5 @@
 <template>
-  <x-page noHeader>
+  <x-page noHeader noFooter>
     <div class="navbar">
       <img class="logo" src="/static/img/game/animal/open/logo-lg2p9VKN.svg" />
     </div>
@@ -274,6 +274,34 @@
             </table>
           </div>
         </div>
+
+        <!-- 开奖记录分页 -->
+        <div class="row no-wrap" style="padding: 20rem 0">
+          <div class="col flex flex-center" style="overflow: hidden">
+            <van-pagination
+              class="history-page"
+              v-model="conf.history.page.pageNum"
+              :total-items="conf.history.page.total"
+              :show-page-size="2"
+              force-ellipses
+            >
+              <template #prev-text>
+                <van-icon name="arrow-left" />
+              </template>
+              <template #next-text>
+                <van-icon name="arrow" />
+              </template>
+              <template #page="{ text }">{{ text }}</template>
+            </van-pagination>
+          </div>
+          <div class="row items-center" style="gap: 10rem; margin-right: 40rem">
+            <div style="padding: 6rem 10rem">前往</div>
+            <input type="number" class="page-input" v-model="conf.history.page.pageNum" />
+            <div>页</div>
+          </div>
+        </div>
+
+        <div style="height: 60rem"></div>
       </div>
     </div>
   </x-page>
@@ -332,6 +360,11 @@ const conf = reactive({
     ]
   },
   history: {
+    page: {
+      pageNum: 1,
+      pageSize: 10,
+      total: 100
+    },
     list: [
       {
         issue: '01100872',
@@ -879,5 +912,37 @@ td.flipped {
   width: v-bind('rem(30)');
   height: v-bind('rem(30)');
   border-radius: v-bind('rem(20)');
+}
+.page-input {
+  width: 100rem;
+  height: 40rem;
+  flex: 1;
+  font-size: 25rem;
+  text-align: center;
+  border: 2rem solid #c4c4c4;
+  padding: 0 20rem;
+  margin-left: 10rem;
+  border-radius: 5rem 0rem 0rem 5rem;
+  color: #000000;
+  background: #fff;
+}
+
+.history-page {
+  :deep(.van-pagination__item) {
+    width: 60rem !important;
+    min-width: 60rem !important;
+    max-width: 60rem !important;
+    margin: 0 6rem !important;
+    height: 60rem !important;
+    min-height: 60rem !important;
+    max-height: 60rem !important;
+    border-radius: 10rem !important;
+    background: #f0f2f5 !important;
+    color: #303133 !important;
+  }
+  :deep(.van-pagination__item--active) {
+    background: #e6a23c !important;
+    color: #fff !important;
+  }
 }
 </style>
