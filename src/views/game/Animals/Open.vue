@@ -871,11 +871,6 @@ td:hover .tooltip {
   font-size: v-bind('rem(15)');
 }
 
-.table-date {
-  font-size: 10px;
-  color: #b0b0b0;
-}
-
 .front img {
   width: v-bind('rem(35)');
 }
@@ -891,6 +886,7 @@ td:hover .tooltip {
 .table-date {
   position: relative;
   background-color: #fffdf1;
+  font-size: 20rem;
   color: #b0b0b0;
   white-space: nowrap;
 }
