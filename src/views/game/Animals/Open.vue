@@ -737,7 +737,9 @@ table {
 }
 
 td {
-  height: 50px;
+  height: 80rem;
+  line-height: 80rem;
+  min-height: 80rem;
   border: 1px solid rgba(234, 201, 127, 0.35);
   text-align: center;
   font-family: Arial, sans-serif;
@@ -745,7 +747,7 @@ td {
   padding: v-bind('rem(4)') 0;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  perspective: 1000px;
+  perspective: v-bind('rem(1000)');
   transition: transform 0.6s;
   cursor: pointer;
 }
@@ -771,6 +773,7 @@ td:hover .tooltip {
 .front img {
   width: v-bind('rem(45)');
 }
+
 .back {
   display: flex;
   justify-content: center;
