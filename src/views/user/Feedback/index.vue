@@ -25,7 +25,7 @@ const conf = index()
             {{ item.createTime }}
           </div>
           <div class="cu-item-content">
-            {{ item.issueDepict }}
+            <van-text-ellipsis :content="item.issueDepict" rows="3"/>
           </div>
         </div>
       </div>
@@ -50,11 +50,6 @@ const conf = index()
       background: #fff;
       max-height: 332rem;
       margin-bottom: 20rem;
-      display: -webkit-box;
-      line-clamp: 3; 
-      -webkit-line-clamp: 3; /* 限制显示的行数 */
-      -webkit-box-orient: vertical;
-      overflow: hidden;
       .cu-item-title {
         display: flex;
         justify-content: space-between;
@@ -70,7 +65,12 @@ const conf = index()
           background: #FF3333;
           border-radius: 50%;
         }
+
       }
+
+      .cu-item-content,.time{
+          margin-top: 10rem;
+        }
 
     }
   }
