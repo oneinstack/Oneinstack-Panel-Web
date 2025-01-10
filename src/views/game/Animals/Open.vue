@@ -67,7 +67,7 @@
           <img class="left-img" src="/static/img/game/animal/open/player-DxPp290A.png" />
           <div class="left-title">往期数据</div>
         </div>
-        <div class="row right-box">
+        <!-- <div class="row right-box">
           <div class="date-item">今天</div>
           <div class="date-item">昨天</div>
           <div class="chosedate">
@@ -79,7 +79,7 @@
             </svg>
             <div class="date-text">2025-01-10</div>
           </div>
-        </div>
+        </div> -->
       </div>
 
       <div style="background: linear-gradient(to top, #fdf4e1, #f7e1ac)">
@@ -935,10 +935,11 @@ td.flipped {
     border-radius: 10rem !important;
     background: #f0f2f5 !important;
     color: #303133 !important;
-  }
-  :deep(.van-pagination__item--active) {
-    background: #e6a23c !important;
-    color: #fff !important;
+
+    &--active {
+      background: #e6a23c !important;
+      color: #fff !important;
+    }
   }
 }
 </style>
