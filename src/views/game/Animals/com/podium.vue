@@ -1,7 +1,7 @@
 <template>
     <div class="podiun">
         <div class="p-content">
-            <div class="sort1">
+            <div class="sort1" :class="getSortName(1)" >
                 <lottie-player autoplay loop mode="normal" :src="`/static/lottie/${getSortName(1)}-win.json`" />
             </div>
             <div class="flower">
@@ -20,7 +20,7 @@ System.loadModule('lottie')
 
 const props = defineProps({
     winList: {
-        default: [] as any[]
+        default: [] as any[],
     }
 })
 
@@ -50,17 +50,47 @@ const getSortName = (num: number) => {
         animation: img-animation 0.3s linear;
 
         .sort1 {
-            height: 450rem;
+            height: 460rem;
             position: absolute;
-            bottom: 136rem;
-            left: 113rem;
+            bottom: 116rem;
+            left: 109rem;
+        }
+
+        .exb{
+            bottom: 135rem;
+            left: 110rem;
+        }
+
+        .hm{
+            bottom: 134rem;
+            left: 114rem;
+        }
+
+        .pp{
+            bottom: 120rem;
+            left: 105rem;
+        }
+
+        .xz{
+            bottom: 142rem;
+            left: 107rem;
+        }
+
+        .zxb{
+            bottom: 122rem;
+            left: 106rem;
+        }
+
+        .hx{
+            bottom: 116rem;
+            left: 109rem;
         }
 
         .flower {
             height: 480rem;
             position: absolute;
             bottom: 200rem;
-            left: 80rem;
+            left: 76rem;
         }
 
         .sort2 {

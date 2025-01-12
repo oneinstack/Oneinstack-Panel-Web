@@ -2,6 +2,9 @@
     <van-popup class="popup-bottom-center" :show="conf.showMore" position="bottom" borderRadius='16' :round="true"
         @close="conf.closePopup">
         <div class="result">
+            <div class="cross" @click="conf.closePopup">
+                <van-icon name="cross" size="28rem" color="#ACACAC" />
+            </div>
             <div class="tips">Previous data</div>
             <div class="title">
                 <div class="line"></div>
@@ -23,28 +26,23 @@
                 <div class="line"></div>
             </div>
             <div class="table">
-                <div class="table-line">
+                <div class="table-title">
                     <div class="issus">
-                        0101011
+                        <div class="txt-t">Animals</div>
+                        <div class="txt-b">Periods</div>
                     </div>
-                    <div class="num">
-                        1
+                    <div class="num" v-for="(item, index) in conf.numlist" :key="index">
+                        <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     </div>
-                    <div class="num">
-                        2
-                    </div>
-                    <div class="num">
-                        3
-                    </div>
-                    <div class="num">
-                        4
-                    </div>
-                    <div class="num">
-                        5
-                    </div>
-                    <div class="num">
-                        6
-                    </div>
+                </div>
+                <div class="tabli-line" v-for="(item) in 10" :key="item">
+                    <div class="issue">123456</div>
+                    <div class="num active">A</div>
+                    <div class="num">B</div>
+                    <div class="num">C</div>
+                    <div class="num">D</div>
+                    <div class="num">E</div>
+                    <div class="num">F</div>
                 </div>
             </div>
         </div>
@@ -56,10 +54,13 @@ import { onMounted, reactive } from 'vue';
 
 
 const conf = reactive({
-    showMore: true,
+    showMore: false,
     numlist: [] as any[],
     closePopup() {
         conf.showMore = false
+    },
+    openPopup() {
+        conf.showMore = true
     }
 })
 
@@ -97,6 +98,9 @@ onMounted(() => {
         }
     ]
 })
+defineExpose({
+    openPopup: conf.openPopup
+})
 </script>
 
 <style lang="less" scoped>
@@ -104,6 +108,13 @@ onMounted(() => {
     background: #fff;
     text-align: center;
     padding: 0 20rem 20rem;
+    position: relative;
+
+    .cross{
+        position: absolute;
+        top: 30rem;
+        right: 30rem;
+    }
 
     .tips {
         color: #fff;
@@ -111,20 +122,21 @@ onMounted(() => {
         font-weight: 600;
         background: linear-gradient(328.56deg, #FF7502 18.81%, #FC9B01 77.66%);
         display: inline-block;
-        padding: 20rem 50rem;
+        padding: 20rem 30rem;
         border-radius: 0 0 48rem 48rem;
-        clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%)
+        clip-path: polygon(0 0, 100% 0, 94% 100%, 6% 100%)
     }
 
     .title{
         display: flex;
         align-items: center;
         width: 100%;
-        margin: 20rem 0rem;
+        margin: 40rem 0rem 20rem;
         .txt{
             color: #333;
             font-size: 26rem;
             margin: 0 20rem;
+            font-weight: 500;
         }
         .line{
             height: 2rem;
@@ -170,16 +182,80 @@ onMounted(() => {
         width: 100%;
         border: 2rem solid #FC9B01;
         border-radius: 16rem;
-        .table-line{
+        overflow: hidden;
+        margin-top: 40rem;
+        .table-title{
             display: flex;
-            height: 80rem;
+            height: 65rem;
+            background: #feebcc;
             .issus{
-                flex: 2;
+                position: relative;
+                overflow: hidden;
+                padding: 0% 6rem;
+                font-size: 20rem;
+                color: #FC9B01;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                height: 100%;
+                width: 130rem;
+
+                &::before {
+                    content: '';
+                    position: absolute;
+                    top: 2px;
+                    left: 2px;
+                    width: 200px;
+                    height: 2rem; 
+                    background-color: #ffbe57;
+                    transform: rotate(25.5deg);
+                    transform-origin: top left;
+                }
+                .txt-t{
+                    text-align: right;
+                }
+                .txt-b{
+                    text-align: left;
+                }
             }
             .num{
                 flex: 1;
+                border-left: 2rem solid #FC9B01;
+                &:nth-child(2n) {
+                    background: #FC9B01;
+                }
+                .img-bet{
+                    height: 100%;
+                }
+
             }
 
+        }
+        .tabli-line{
+            display: flex;
+            height: 55rem;
+            font-size: 24rem;
+            border-top: 2rem solid #FFBE57;
+            div{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .issue{ 
+                width: 130rem;
+                color: #A8A8A8;
+            }
+            .num{
+                flex: 1;
+                border-left: 2rem solid #FFBE57;
+                color: #333;
+                &:nth-child(2n) {
+                    background: #feebcc;
+                }
+            }
+            .active{
+                color: #F34F4F;
+            }
         }
     }
 }

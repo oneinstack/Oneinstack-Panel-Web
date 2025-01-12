@@ -2,18 +2,32 @@
     <x-page noHeader noFooter>
         <div class="ani-page">
             <!-- 游戏 -->
-            <div class="relative cgame-box" ref="cgamebox"
-                style="width: 100%; flex: 1; margin-bottom: 30rem">
+            <div class="relative cgame-box" ref="cgamebox" style="width: 100%; flex: 1; margin-bottom: 30rem;">
+                <!-- 游戏动画 -->
                 <cgame ref="cgameRef" :height="conf.game.box.width" />
+                <!-- 倒计时 -->
+                <countdown :time="conf.downNum" v-if="conf.downNum < 33" />
             </div>
             <aniBet />
+        </div>
+        <div v-if="conf.downNum < 33">
+            <div class="rulse" @click="conf.goPage('rules')">Rules</div>
+            <div class="rulse mony">
+                <div class="coin">$</div>
+                <div class="total">20</div>
+            </div>
+            <div class="rulse record" @click="conf.goPage('record')">
+                <img class="record-img" src="/static/img/game/animal/record.png" />
+                Record
+            </div>
         </div>
     </x-page>
 </template>
 <script setup lang="ts">
+import System from '@/utils/System';
 import cgame from './com/AnimalsAni.vue';
 import aniBet from './com/aniBet.vue';
-// import moreResult from './com/moreResult.vue';
+import countdown from './com/countdown.vue'
 import { onBeforeMount, onMounted, reactive, ref } from 'vue'
 
 const cgamebox = ref<any>()
@@ -51,6 +65,7 @@ const conf = reactive({
             }
         }
     },
+    downNum: 10,
     //重置所有内容
     reset() {
         //   conf.game.reset()
@@ -60,7 +75,21 @@ const conf = reactive({
         conf.reset()
         //初始化游戏宽高
         conf.game.box.init()
+        setInterval(() => {
+            conf.downNum--
+            if (conf.downNum == 0) {
+                cgameRef.value?.init()
+                conf.downNum = 60
+            }
+            if (conf.downNum == 45) cgameRef.value?.stop([])
+            if (conf.downNum == 33) cgameRef.value?.reset()
+        }, 1000)
     },
+    goPage(url: any) {
+        console.log('12345');
+
+        System.router.push('/game/Animals/' + url)
+    }
 })
 onMounted(async () => {
     conf.init()
@@ -91,5 +120,60 @@ onBeforeMount(async () => {
     flex-direction: column;
     justify-content: space-between;
     background: #fb9f7a;
+    position: relative;
+}
+
+.rulse {
+    position: absolute;
+    top: 12%;
+    background: #fff;
+    padding: 8rem 28rem;
+    border-radius: 0 30rem 30rem 0;
+    color: #9A470C;
+    font-size: 24rem;
+    z-index: 9;
+}
+
+.mony {
+    right: 0;
+    border-radius: 30rem 0rem 0rem 30rem;
+    display: flex;
+    align-items: center;
+    padding: 5rem 20rem 5rem 16rem;
+    min-width: 156rem;
+
+    .coin {
+        width: 38rem;
+        height: 38rem;
+        background-size: 100% 100%;
+        background-image: url('/static/img/coin-task.png');
+        color: #faa54b;
+        font-size: 14rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        // margin-right: 20rem;
+    }
+
+    .total {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+.record {
+    top: 18%;
+    right: 0;
+    border-radius: 30rem 0rem 0rem 30rem;
+    padding: 12rem 24rem 12rem 20rem;
+    display: flex;
+    align-items: center;
+    background: #4196FF;
+    color: #fff;
+
+    .record-img {
+        height: 28rem;
+        margin-right: 10rem;
+    }
 }
 </style>

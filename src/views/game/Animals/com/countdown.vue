@@ -24,16 +24,18 @@
                         </div>
                     </div>
                 </div>
-                <div class="more">
+                <div class="more" @click="conf.openMore">
                     <div class="txt">More</div>
                     <van-icon name="arrow" size="20rem" color="#E34348" />
                 </div>
             </div>
         </div>
     </div>
+    <moreResult ref="resultRefs" />
 </template>
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import moreResult from './moreResult.vue';
+import { onMounted, reactive, ref } from 'vue';
 
 const props = defineProps({
     time: {
@@ -41,8 +43,12 @@ const props = defineProps({
     }
 })
 
+const resultRefs = ref<any>()
 const conf = reactive({
-    numlist: [] as any[]
+    numlist: [] as any[],
+    openMore() {
+        resultRefs.value.openPopup()
+    }
 })
 
 onMounted(() => {
@@ -115,10 +121,11 @@ onMounted(() => {
                 color: #fff;
                 font-size: 42rem;
                 font-weight: 800;
-                padding: 16rem 50rem;
+                padding: 16rem 0rem;
                 border-radius: 16rem;
-                font-size: 24px;
-                font-family: 'Digital', monospace;
+                width: 240rem;
+                font-size: 32px;
+                font-family: 'XS';
                 /* 可使用数字风格字体 */
             }
         }

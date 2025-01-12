@@ -2,26 +2,23 @@
     <div class="bet">
         <div class="tips">Animals running</div>
         <div class="type-list">
-            <div class="type-item">
-                <img class="type-img" src="/static/img/game/animal/1st.png" />
-                <span>1st</span>
-            </div>
-            <div class="type-item">
-                <img class="type-img" src="/static/img/game/animal/2end.png" />
-                <span>2end</span>
-            </div>
-            <div class="type-item">
-                <img class="type-img" src="/static/img/game/animal/2end.png" />
-                <span>3rd</span>
-            </div>
+            <template v-for="(item, index) in conf.typeList" :key="index">
+                <div class="type-item" @click="conf.selectType = index">
+                    <div class="type-icon" :class="{ 'type-active': conf.selectType == index }">
+                        <img class="type-img" :src="`/static/img/game/animal/${item}.png`" />
+                    </div>
+                    <span>{{ item }}</span>
+                </div>
+            </template>
         </div>
         <div class="ani-list">
             <template v-for="(item, index) in conf.numlist" :key="index">
-                <div class="ani-item" :class="{'ani-active': index == conf.selectType}" @click="conf.changeType(index)">
+                <div class="ani-item" :class="{ 'ani-active': index == conf.selectAnimal }"
+                    @click="conf.changeType(index)">
                     <div class="ani-con">
                         <div class="ani-bg" :class="'ani-bg-' + index"></div>
                     </div>
-                    <div class="money" v-if="index == conf.selectType">
+                    <div class="money" v-if="index == conf.selectAnimal">
                         <div class="coin">$</div>20
                     </div>
                     <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
@@ -36,11 +33,11 @@
             <div class="btn-left">
                 <div class="name">Consume</div>
                 <div class="num">
-                    <div class="total" @click="conf.changeType(conf.selectType)">{{ conf.total }}</div>
+                    <div class="total" @click="conf.changeType(conf.selectAnimal)">{{ conf.total }}</div>
                     <div class="count">$</div>
                 </div>
             </div>
-            <div class="btn-right" style="justify-content: center;" v-if="conf.selectType == -1">
+            <div class="btn-right" style="justify-content: center;" v-if="conf.selectAnimal == -1">
                 <div>Guess</div>
             </div>
             <div class="btn-right" v-else>
@@ -59,16 +56,18 @@ import { onMounted, reactive } from 'vue';
 
 const conf = reactive({
     numlist: [] as any[],
-    selectType: -1,
+    selectType: 0,
+    typeList: ['1st', '2end', '3rd'],
+    selectAnimal: -1,
     total: 20,
-    changeType(index:number) {
-        if(index == conf.selectType) {
+    changeType(index: number) {
+        if (index == conf.selectAnimal) {
             conf.total = conf.total + 20
-            if(conf.total >= 1000) conf.total = 20
+            if (conf.total >= 1000) conf.total = 20
             return
         }
         conf.total = 20
-        conf.selectType = index
+        conf.selectAnimal = index
     }
 })
 
@@ -138,8 +137,19 @@ onMounted(() => {
             align-items: center;
             margin-right: 40rem;
 
-            .type-img {
+            .type-icon {
                 height: 60rem;
+                padding: 4rem;
+                border-radius: 50%;
+                background: #ffd8c3;
+            }
+
+            .type-active {
+                background: #ff5757;
+            }
+
+            .type-img {
+                height: 100%;
             }
 
             span {
@@ -221,17 +231,17 @@ onMounted(() => {
             }
 
             .ani-bg-0,
-            .ani-bg-3{
+            .ani-bg-3 {
                 background: linear-gradient(177.16deg, #FFE8B9 2.68%, #FFDDA0 33.87%);
             }
 
             .ani-bg-1,
-            .ani-bg-4{
+            .ani-bg-4 {
                 background: linear-gradient(177.16deg, #E9ECD3 2.68%, #EAE5C7 33.87%);
             }
 
             .ani-bg-2,
-            .ani-bg-5{
+            .ani-bg-5 {
                 background: linear-gradient(177.16deg, #FFE2C5 2.68%, #FFD7AE 33.87%);
             }
 
@@ -317,15 +327,18 @@ onMounted(() => {
             justify-content: space-between;
             padding: 0 20rem;
         }
-        .win{
+
+        .win {
             color: #fff;
             font-size: 20rem;
             text-align: left;
-            span{
+
+            span {
                 color: #FFC72C;
             }
         }
-        .line{
+
+        .line {
             width: 2rem;
             height: 40rem;
             background: #fff;

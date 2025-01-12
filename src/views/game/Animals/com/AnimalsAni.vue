@@ -1,20 +1,43 @@
 <template>
     <div class="track">
-        <countdown :time="conf.downNum" v-if="conf.downNum < 36" />
         <!-- 领奖台 -->
         <podium :winList="conf.numlist" v-if="conf.podiumShow" />
-        <cview name="trackitm" direction="-">
-            <div class="track-bg"></div>
-        </cview>
+        <!-- 观众台 -->
+        <div style="height: 25%;">
+            <cview name="desk" direction="-">
+                <div style="display: flex;height: 100%;width: 3000px;">
+                    <div class="desk"></div>
+                    <div class="desk"></div>
+                    <div class="desk"></div>
+                </div>
+            </cview>
+        </div>
+        <div class="trackitm">
+            <cview name="trackitm" direction="-">
+                <div class="track-bg"></div>
+            </cview>
+            <div style="position: absolute;inset: 0;">
+                <cview name="roadfinsh" direction="-">
+                    <div class="roadfinsh" id="roadstart"><img class="finsh-img"
+                            src="/static/img/game/animal/finish.png" />
+                    </div>
+                </cview>
+            </div>
+        </div>
         <div class="player">
             <div style="height: 100%;display: flex;flex-direction: column;">
                 <cview name="animal1">
                     <div class="animal1" id="animal1">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                            :src="`/static/lottie/exb/exb-${conf.aniName}.json`" />
-                        <div class="rain">
-                            <lottie-player autoplay loop mode="normal" :key="conf.aniName"
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniName1"
+                            :src="`/static/lottie/exb/exb-${conf.aniName1}.json`" />
+                        <div class="plus" v-if="conf.showPlus">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniName1"
                                 :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.jpg" />
+                            </cview>
                         </div>
                     </div>
                 </cview>
@@ -22,9 +45,14 @@
                     <div class="animal2" id="animal2">
                         <lottie-player autoplay loop :key="conf.aniName" mode="normal"
                             :src="`/static/lottie/hm/hm-${conf.aniName}.json`" />
-                        <div class="rain">
+                        <div class="rain" v-if="conf.showRain">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniName"
                                 :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.jpg" />
+                            </cview>
                         </div>
                     </div>
                 </cview>
@@ -70,7 +98,6 @@
 import { onMounted, reactive } from 'vue';
 import cview from './cview.vue';
 import rank from './rank.vue'
-import countdown from './countdown.vue';
 import podium from './podium.vue';
 import stween from '@/sstore/stween';
 import System from '@/utils/System';
@@ -82,22 +109,28 @@ System.loadModule('lottie')
 
 const conf = reactive({
     aniName: 'walk',
+    aniName1: 'walk',
     showReady: '',
     isStart: false,
     rank: false,
     podiumShow: false,
     numlist: [] as any[],
     numsort: [] as any[],
-    downNum: 30,
+    downNum: 10,
+    showPlus: false,
+    showRain: false,
+    plueItem: 0,
     init() {
         for (let i = 1; i < 7; i++) {
+            let time = MathUtil.getRandomInt(1400, 2000)
             stween.to('animal' + i, {
-                x: 200,
-                time: 2000
+                x: 190,
+                time
             })
         }
         timer.once(() => {
             conf.aniName = 'active'
+            conf.aniName1 = 'active'
             console.log(conf.aniName);
             timer.once(() => {
                 conf.showReady = 'ready'
@@ -105,33 +138,43 @@ const conf = reactive({
                     conf.showReady = 'go'
                     timer.once(() => {
                         conf.aniName = 'run'
+                        conf.aniName1 = 'run'
                         conf.showReady = ''
                         for (let i = 1; i < 7; i++) {
+                            let time = MathUtil.getRandomInt(1500, 2000)
                             stween.to('animal' + i, {
                                 x: 320,
-                                time: 2000
+                                time
                             })
                         }
                         timer.once(() => {
                             conf.start()
-                        }, 2000)
+                        }, 1500)
                     }, 800)
                 }, 800)
             }, 800)
         }, 2200)
         // conf.numlist = res
     },
-    rest() {
+    reset() {
+        conf.isStart = false
         conf.podiumShow = false
         conf.rank = false
         conf.aniName = 'walk'
+        conf.aniName1 = 'walk'
         conf.showReady = ''
-        stween.kill(['trackitm'])
+        conf.showPlus = false
+        conf.showRain = false
+        conf.plueItem = 0
+        stween.kill(['trackitm', 'desk', 'light', 'rain', 'roadfinsh'])
         for (let i = 1; i < 7; i++) {
             stween.kill(['animal' + i])
         }
         timer.clear()
-        stween.set(['trackitm'], {
+        stween.set(['trackitm', 'desk'], {
+            x: 0
+        })
+        stween.set(['roadfinsh'], {
             x: 0
         })
         for (let i = 1; i < 7; i++) {
@@ -142,54 +185,129 @@ const conf = reactive({
     },
     // 开始
     start() {
-        //背景
-        const loopBg = () => {
-            stween.to('trackitm', {
-                x: 1440,
-                time: 20000,
+        conf.isStart = true
+        //观景台
+        const loopDesk = () => {
+            stween.to('desk', {
+                x: 3000 - sutil.rem2px(750),
+                time: 18000,
                 reverse: () => { },
                 final() {
-                    stween.set('trackitm', {
-                        // x: 2260
+                    stween.set('desk', {
+                        x: sutil.rem2px(750)
                     })
                     if (conf.isStart) {
-                        loopBg()
+                        loopDesk()
                     }
                 }
             })
         }
+        loopDesk()
+        //背景
+        const loopBg = () => {
+            stween.to('trackitm', {
+                x: 500,
+                time: 4000,
+                reverse: () => { },
+                final() {
+                    stween.to('trackitm', {
+                        x: 1440,
+                        time: 32000,
+                        reverse: () => { },
+                        final() {
+                            stween.set('trackitm', {
+                                x: 2260
+                            })
+                            if (conf.isStart) {
+                                loopBg()
+                            }
+                        }
+                    })
+                }
+            })
+        }
         loopBg()
+        conf.carInfo.x = {}
         //动物跑步
         const _final = (i: any) => {
-            if (i === 7) {
+            if (i === 6) {
                 if (conf.stopFun) {
                     conf.stopFun()
                     conf.stopFun = null
                 } else if (conf.isStart) {
-                    conf.loopCar(conf.getRandomCarArr(), _final, '')
+                    // if(!conf.showPlus) conf.loopCar(conf.getRandomCarArr(), _final, '')
                 }
             }
         }
         conf.loopCar(conf.getRandomCarArr(), _final, '')
+        //道具
+        const looplight = () => {
+            stween.to('light', {
+                x: 880,
+                time: 3500,
+                final() {
+                    conf.carInfo.x[1] = conf.carInfo.x[1] + 100
+                    conf.showPlus = true
+                    conf.plueItem = conf.carInfo.x[1]
+                    conf.aniName1 = 'prop'
+                    stween.to('animal1', {
+                        x: conf.carInfo.x[1],
+                        time: conf.carInfo.x[1] * 10,
+                        final() {
+                            conf.aniName1 = 'run'
+                            conf.showPlus = false
+                            conf.loopCar(conf.getRandomCarArr(), _final, '')
+                        }
+                    })
+                }
+            })
+        }
+        looplight()
+        const looprain = () => {
+            stween.to('rain', {
+                x: 580,
+                time: 2000,
+                final() {
+                    conf.showRain = true
+                    stween.to('animal2', {
+                        x: conf.carInfo.x[2] - 100,
+                        time: conf.carInfo.x[2] * 10,
+                        final() {
+                            conf.showRain = false
+                            conf.loopCar(conf.getRandomCarArr(), _final, '')
+                        }
+                    })
+                }
+            })
+        }
+        looprain()
     },
+    carInfo: {
+        x: {}
+    } as any,
     getRandomCarArr() {
         const arr = []
         for (let i = 1; i < 7; i++) {
-            arr.push(MathUtil.getRandomInt(280, 400))
+            arr.push(MathUtil.getRandomInt(280, 420))
         }
+        if (conf.plueItem) arr[0] = conf.plueItem
+        conf.plueItem = 0
         return arr
     },
     loopCar(res: any, final: any, forceup: any) {
         conf.numsort = []
         for (let i = 1; i < 7; i++) {
-            const x = res[i - 1]
+            let x = res[i - 1]
+            if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
+            conf.carInfo.x[i] = x
+
             conf.numsort.push({
                 num: i,
                 sort: x
             })
             stween.to('animal' + i, {
                 x: x,
-                time: (x * 1.2),
+                time: (x * 10),
                 final() {
                     if (final) {
                         final(i)
@@ -198,7 +316,6 @@ const conf = reactive({
             })
         }
         conf.numsort = conf.numsort.sort((a, b) => b.sort - a.sort)
-        console.log(conf.numsort);
     },
     /**
    * 冲线钩子
@@ -209,47 +326,68 @@ const conf = reactive({
      * @param res -数组：[1,2,3]
      */
     async stop(res: any) {
-        console.log('999888');
+        const _arr = conf.getRandomCarArr()
 
-        stween.set('trackitm', {
-            x: 2660 - sutil.rem2px(1500)
-        })
-        stween.to('trackitm', {
-            x: 2660 - sutil.rem2px(750),
-            time: 3000,
-            reverse: () => { },
-            final() {
-                stween.pause(['trackitm'])
+        let maxIndex = 0;
+        for (let i = 1; i < _arr.length; i++) {
+            if (_arr[i] > _arr[maxIndex]) {
+                maxIndex = i;
             }
+        }
+        
+        conf.stopFun = () => {
+            conf.loopCar(
+                _arr,
+                (i: any) => {
+                    if (i === maxIndex) {
+                        conf.isStart = false
+                        conf.showWin()
+                    }
+                },
+                true
+            )
+        }
+    },
+    /**
+   * 结算画面
+   */
+    showWin() {
+        stween.pause(['trackitm'])
+        stween.to('roadfinsh', {
+            x: 180,
+            time: 1000
         })
-
+        //移出屏幕外面
         timer.once(() => {
-            //移出屏幕外面
+            stween.pause(['desk'])
             for (let i = 1; i < 7; i++) {
+                conf.rank = true
                 stween.to('animal' + i, {
-                    x: 2660 - sutil.rem2px(750),
-                    time: 6000,
+                    x: sutil.rem2px(750) + conf.carInfo.x[i],
+                    time: 2000,
                     final() {
-
+                        for (let i = 0; i < 6; i++) {
+                            timer.once(() => {
+                                let num = conf.numsort[i].num
+                                conf.numlist[num - 1].sort = i + 1
+                                conf.numlist[num - 1].show = true
+                                if (i == 5) conf.podiumShow = true
+                            }, (i + 1) * 80)
+                        }
                     }
                 })
             }
-            conf.rank = true
-            for (let i = 0; i < 6; i++) {
-                timer.once(() => {
-                    let num = conf.numsort[i].num
-                    conf.numlist[num - 1].sort = i + 1
-                    conf.numlist[num - 1].show = true
-                    if (i == 5) {
-                        timer.once(() => {
-                            conf.podiumShow = true
-                        }, 1000)
-                    }
-                }, (i + 1) * 50)
-            }
-        }, 3600)
+        }, 800)
     },
 
+})
+
+// 暴露方法
+defineExpose({
+    reset: conf.reset,
+    start: conf.start,
+    stop: conf.stop,
+    init: conf.init
 })
 
 onMounted(() => {
@@ -298,15 +436,7 @@ onMounted(() => {
             num: 6
         }
     ]
-    setInterval(() => {
-        conf.downNum--
-        if (conf.downNum == 0) {
-            conf.init()
-            conf.downNum = 60
-        }
-        if (conf.downNum == 45) conf.stop([])
-        if (conf.downNum == 36) conf.rest()
-    }, 1000)
+    // conf.init()
 })
 
 </script>
@@ -316,8 +446,33 @@ onMounted(() => {
     position: relative;
 }
 
+.desk {
+    width: 1000px;
+    height: 100%;
+    background: url('/static/img/game/animal/viewdesk.webp') no-repeat;
+    background-size: 100% 100%;
+}
+
+.trackitm {
+    height: 75%;
+    position: relative;
+}
+
+.roadfinsh {
+    position: absolute;
+    top: 0;
+    bottom: -28rem;
+    // left: 2660px;
+    right: -60px;
+}
+
+.finsh-img {
+    width: 18px;
+    height: 100%;
+}
+
 .track-bg {
-    background: url('/static/img/game/animal/animal-bg.jpg') no-repeat;
+    background: url('/static/img/game/animal/track-bg.png') no-repeat;
     width: 2660px;
     height: 100%;
     background-size: 100% 100%;
@@ -339,17 +494,40 @@ onMounted(() => {
 .animal6 {
     position: absolute;
     left: -160px;
-    height: 100px;
+    height: 200rem;
     bottom: 0%;
+}
+
+.plus {
+    position: absolute;
+    top: -20rem;
+    height: 220rem;
+    z-index: 9;
+}
+
+.plus-img {
+    width: 80rem;
+    height: 80rem;
+    position: absolute;
+    bottom: 25rem;
+    left: 900px;
 }
 
 .rain {
     position: absolute;
-    top: -4px;
-    right: -5px;
-    height: 100px;
-    width: 120px;
+    top: -28rem;
+    right: -26rem;
+    height: 220rem;
+    width: 240rem;
     z-index: 9;
+}
+
+.rain-img {
+    width: 80rem;
+    height: 80rem;
+    position: absolute;
+    bottom: 30rem;
+    left: 600px;
 }
 
 .Ready {

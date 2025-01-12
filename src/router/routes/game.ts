@@ -30,5 +30,13 @@ export default [
   {
     path: '/game/Animals/Open',
     component: '/game/Animals/Open'
+  },
+  {
+    path: '/game/Animals/rules',
+    component: '/game/Animals/rules'
+  },
+  {
+    path: '/game/Animals/record',
+    component: '/game/Animals/record'
   }
 ]
