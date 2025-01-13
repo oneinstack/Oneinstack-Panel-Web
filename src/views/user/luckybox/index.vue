@@ -1,5 +1,5 @@
 <template>
-  <x-page headerBgColor="transparent" :topfill="false">
+  <x-page headerBgColor="transparent" :topfill="false" noFooter>
     <template #right>
       <div class="flex flex-center" @click="toPage('/user/luckybox/record')">
         <img src="/static/img/luckybox/open-record.png" style="width: 30rem; height: 30rem; margin-right: 28rem" />
@@ -68,7 +68,7 @@
               class="flex flex-center"
               style="width: 320rem; height: 300rem; transform: translateY(-80rem); overflow: hidden"
             >
-              <div class="absolute">
+              <div class="absolute" style="overflow: hidden;">
                 <x-imgAni
                   ref="wait"
                   :show="conf.ani.wait.show"
@@ -80,7 +80,7 @@
                   :url="`/static/img/luckybox/boxani/ani-${conf.boxtype.item.boxType}-wait.png`"
                 />
               </div>
-              <div class="absolute">
+              <div class="absolute" style="overflow: hidden;">
                 <x-imgAni
                   ref="openRef"
                   :show="conf.ani.open.show"
@@ -151,6 +151,7 @@
           </div>
         </div>
       </div>
+      <div style="height: 60rem"></div>
     </div>
     <luckyboxRes ref="luckyboxResRef" @close="conf.ani.startWait" />
   </x-page>
@@ -447,6 +448,7 @@ init()
 
 .lucky-page-box {
   background: linear-gradient(180.23deg, #ff7ebc 0.2%, #fe8049 55.76%, rgba(255, 166, 79, 0) 99.8%);
+  min-height: 100%;
   .title {
     font-size: 64rem;
     font-weight: 400;
