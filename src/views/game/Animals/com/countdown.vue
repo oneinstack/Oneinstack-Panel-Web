@@ -3,9 +3,9 @@
         <div class="down-content">
             <div style="display: flex;justify-content: center;">
                 <div class="time-box">
-                    <div class="result">123456</div>
+                    <div class="result">{{ openExpect }}</div>
                     <div class="time">
-                        00<span style="margin: 5rem;">:</span><span v-if="time < 10">0</span>{{ time }}
+                        {{ times[1] || '00' }}<span style="margin: 5rem;">:</span>{{ times[2] || '00' }}
                     </div>
                 </div>
             </div>
@@ -16,75 +16,41 @@
             <div class="total">
                 <div class="tips">The past 100 championships</div>
                 <div class="list">
-                    <div class="list-item" v-for="(item, index) in conf.numlist" :key="index">
+                    <div class="list-item" v-for="(item, index) in totalList" :key="index">
                         <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
                         <div class="num">
                             <img class="glass-img" src="/static/img/game/animal/glass.png" />
-                            <div>{{ item.num }}</div>
+                            <div>{{ item[active] }}</div>
                         </div>
                     </div>
                 </div>
-                <div class="more" @click="conf.openMore">
+                <div class="more" @click="emit('showMore')">
                     <div class="txt">More</div>
                     <van-icon name="arrow" size="20rem" color="#E34348" />
                 </div>
             </div>
         </div>
     </div>
-    <moreResult ref="resultRefs" />
 </template>
 <script setup lang="ts">
-import moreResult from './moreResult.vue';
-import { onMounted, reactive, ref } from 'vue';
 
 const props = defineProps({
-    time: {
-        default: 0
+    times: {
+        default: [] as any
+    },
+    totalList: {
+        default: [] as any
+    },
+    active: {
+        default: 'st'
+    },
+    openExpect: {
+        default: ''
     }
 })
 
-const resultRefs = ref<any>()
-const conf = reactive({
-    numlist: [] as any[],
-    openMore() {
-        resultRefs.value.openPopup()
-    }
-})
+const emit = defineEmits(['showMore'])
 
-onMounted(() => {
-    conf.numlist = [
-        {
-            img: 'exb',
-            name: 'Exiaobao',
-            num: 1
-        },
-        {
-            img: 'hm',
-            name: 'Freshippo',
-            num: 2
-        },
-        {
-            img: 'pp',
-            name: 'Piaopiao',
-            num: 3
-        },
-        {
-            img: 'xz',
-            name: 'Xiazai',
-            num: 4
-        },
-        {
-            img: 'zxb',
-            name: 'Zhixiaobao',
-            num: 5
-        },
-        {
-            img: 'hx',
-            name: 'Huanxing',
-            num: 6
-        }
-    ]
-})
 </script>
 <style lang="less" scoped>
 .down-popup {

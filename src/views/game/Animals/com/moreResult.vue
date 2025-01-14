@@ -12,11 +12,11 @@
                 <div class="line"></div>
             </div>
             <div class="list">
-                <div class="list-item" v-for="(item, index) in conf.numlist" :key="index">
+                <div class="list-item" v-for="(item, index) in totalList" :key="index">
                     <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
                     <div class="num">
                         <img class="glass-img" src="/static/img/game/animal/glass.png" />
-                        <div>{{ item.num }}</div>
+                        <div>{{ item[conf.active] }}</div>
                     </div>
                 </div>
             </div>
@@ -31,18 +31,15 @@
                         <div class="txt-t">Animals</div>
                         <div class="txt-b">Periods</div>
                     </div>
-                    <div class="num" v-for="(item, index) in conf.numlist" :key="index">
+                    <div class="num" v-for="(item, index) in totalList" :key="index">
                         <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     </div>
                 </div>
-                <div class="tabli-line" v-for="(item) in 10" :key="item">
+                <div class="tabli-line" v-for="(item) in result" :key="item.openTime">
                     <div class="issue">123456</div>
-                    <div class="num active">A</div>
-                    <div class="num">B</div>
-                    <div class="num">C</div>
-                    <div class="num">D</div>
-                    <div class="num">E</div>
-                    <div class="num">F</div>
+                    <template  v-for="(n,i) in item.openCodeArr" :key="i">
+                        <div class="num" :class="{'active': (conf.active=='st' && n=='A') || (conf.active=='nd' && n=='B') || (conf.active=='rd' && n=='C')}">{{ n }}</div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -52,52 +49,27 @@
 <script lang="ts" setup>
 import { onMounted, reactive } from 'vue';
 
+const props = defineProps({
+    result: {
+        default: [] as any
+    },
+    totalList: {
+        default: [] as any
+    }
+})
 
 const conf = reactive({
     showMore: false,
-    numlist: [] as any[],
+    active: 'st',
     closePopup() {
         conf.showMore = false
     },
-    openPopup() {
+    openPopup(e:any) {
+        if(e) conf.active = e // 当前选中的类型
         conf.showMore = true
     }
 })
 
-onMounted(() => {
-    conf.numlist = [
-        {
-            img: 'exb',
-            name: 'Exiaobao',
-            num: 1
-        },
-        {
-            img: 'hm',
-            name: 'Freshippo',
-            num: 2
-        },
-        {
-            img: 'pp',
-            name: 'Piaopiao',
-            num: 3
-        },
-        {
-            img: 'xz',
-            name: 'Xiazai',
-            num: 4
-        },
-        {
-            img: 'zxb',
-            name: 'Zhixiaobao',
-            num: 5
-        },
-        {
-            img: 'hx',
-            name: 'Huanxing',
-            num: 6
-        }
-    ]
-})
 defineExpose({
     openPopup: conf.openPopup
 })

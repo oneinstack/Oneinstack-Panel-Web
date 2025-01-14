@@ -252,7 +252,7 @@ export const slottery = reactive({
           if (res.lastOpen.openCode) {
             conf.results = res.lastOpen.openCode.split(',').map((item: any, index: number) => {
               return {
-                num: Number(item)
+                num: item
               }
             })
             conf.setCountDownNum()

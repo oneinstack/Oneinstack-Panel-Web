@@ -28,56 +28,146 @@
             <div style="height: 100%;display: flex;flex-direction: column;">
                 <cview name="animal1">
                     <div class="animal1" id="animal1">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName1"
-                            :src="`/static/lottie/exb/exb-${conf.aniName1}.json`" />
-                        <div class="plus" v-if="conf.showPlus">
-                            <lottie-player autoplay loop mode="normal" :key="conf.aniName1"
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                            :src="`/static/lottie/exb/exb-${conf.aniInfo[1]}.json`" />
+                        <div class="plus" v-if="conf.showPlus[1]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/plus.json`" />
                         </div>
                         <div v-else>
-                            <cview name="light" direction="-">
-                                <img class="plus-img" src="/static/img/game/animal/light-plus.jpg" />
+                            <cview name="light1" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[1]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain1" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
                             </cview>
                         </div>
                     </div>
                 </cview>
                 <cview name="animal2">
                     <div class="animal2" id="animal2">
-                        <lottie-player autoplay loop :key="conf.aniName" mode="normal"
-                            :src="`/static/lottie/hm/hm-${conf.aniName}.json`" />
-                        <div class="rain" v-if="conf.showRain">
-                            <lottie-player autoplay loop mode="normal" :key="conf.aniName"
+                        <lottie-player autoplay loop :key="conf.aniInfo[2]" mode="normal"
+                            :src="`/static/lottie/hm/hm-${conf.aniInfo[2]}.json`" />
+                         <div class="plus" v-if="conf.showPlus[2]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[2]"
+                                :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light2" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[2]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
                         <div v-else>
-                            <cview name="rain" direction="-">
-                                <img class="rain-img" src="/static/img/game/animal/rain.jpg" />
+                            <cview name="rain2" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
                             </cview>
                         </div>
                     </div>
                 </cview>
                 <cview name="animal3">
                     <div class="animal3" id="animal3">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                            :src="`/static/lottie/pp/pp-${conf.aniName}.json`" />
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[3]"
+                            :src="`/static/lottie/pp/pp-${conf.aniInfo[3]}.json`" />
+                        <div class="plus" v-if="conf.showPlus[3]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[3]"
+                                :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light3" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[3]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain3" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
+                            </cview>
+                        </div>
                     </div>
                 </cview>
                 <cview name="animal4">
                     <div class="animal4" id="animal4">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                            :src="`/static/lottie/xz/xz-${conf.aniName}.json`" />
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[4]"
+                            :src="`/static/lottie/xz/xz-${conf.aniInfo[4]}.json`" />
+                        <div class="plus" v-if="conf.showPlus[4]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[4]"
+                                :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light4" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[4]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain4" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
+                            </cview>
+                        </div>
                     </div>
                 </cview>
                 <cview name="animal5">
                     <div class="animal5" id="animal5">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                            :src="`/static/lottie/zxb/zxb-${conf.aniName}.json`" />
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[5]"
+                            :src="`/static/lottie/zxb/zxb-${conf.aniInfo[5]}.json`" />
+                        <div class="plus" v-if="conf.showPlus[5]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[5]"
+                                :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light5" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[5]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain5" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
+                            </cview>
+                        </div>
                     </div>
                 </cview>
                 <cview name="animal6">
                     <div class="animal6" id="animal6">
-                        <lottie-player autoplay loop mode="normal" :key="conf.aniName"
-                            :src="`/static/lottie/hx/hx-${conf.aniName}.json`" />
+                        <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[6]"
+                            :src="`/static/lottie/hx/hx-${conf.aniInfo[6]}.json`" />
+                        <div class="plus" v-if="conf.showPlus[6]">
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[6]"
+                                :src="`/static/lottie/plus.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="light6" direction="-">
+                                <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
+                            </cview>
+                        </div>
+                        <div class="rain" v-if="conf.showRain[6]"> 
+                            <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
+                                :src="`/static/lottie/rain.json`" />
+                        </div>
+                        <div v-else>
+                            <cview name="rain6" direction="-">
+                                <img class="rain-img" src="/static/img/game/animal/rain.png" />
+                            </cview>
+                        </div>
                     </div>
                 </cview>
             </div>
@@ -107,9 +197,33 @@ import sutil from '@/sstore/sutil';
 const timer = Scope.Timer()
 System.loadModule('lottie')
 
+const emit = defineEmits(['close'])
+
 const conf = reactive({
-    aniName: 'walk',
-    aniName1: 'walk',
+    aniInfo: {
+        1: 'walk',
+        2: 'walk',
+        3: 'walk',
+        4: 'walk',
+        5: 'walk',
+        6: 'walk',
+    } as any,
+    showPlus: {
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false,
+    } as any,
+    showRain: {
+        1: false,
+        2: false,
+        3: false,
+        4: false,
+        5: false,
+        6: false,
+    } as any,
     showReady: '',
     isStart: false,
     rank: false,
@@ -117,30 +231,81 @@ const conf = reactive({
     numlist: [] as any[],
     numsort: [] as any[],
     downNum: 10,
-    showPlus: false,
-    showRain: false,
-    plueItem: 0,
+    setList(arr:any) {
+    const sorts = [6, 5, 4]
+    conf.numlist = arr.map((item:any, i:any) => {
+        return {
+            num: item,
+            sort: sorts[i]
+        }
+        })
+    },
     init() {
+        conf.numlist = [
+            {
+                img: 'exb',
+                name: 'Exiaobao',
+                show: false,
+                sort: 1,
+                num: 1
+            },
+            {
+                img: 'hm',
+                name: 'Freshippo',
+                show: false,
+                sort: 2,
+                num: 2
+            },
+            {
+                img: 'pp',
+                name: 'Piaopiao',
+                show: false,
+                sort: 3,
+                num: 3
+            },
+            {
+                img: 'xz',
+                name: 'Xiazai',
+                show: false,
+                sort: 4,
+                num: 4
+            },
+            {
+                img: 'zxb',
+                name: 'Zhixiaobao',
+                show: false,
+                sort: 5,
+                num: 5
+            },
+            {
+                img: 'hx',
+                name: 'Huanxing',
+                show: false,
+                sort: 6,
+                num: 6
+            }
+        ]
         for (let i = 1; i < 7; i++) {
+            conf.aniInfo[i] = 'walk'
             let time = MathUtil.getRandomInt(1400, 2000)
             stween.to('animal' + i, {
                 x: 190,
-                time
+                time,
+                final() {
+                    conf.aniInfo[i] = 'active'
+                }
             })
         }
+        
         timer.once(() => {
-            conf.aniName = 'active'
-            conf.aniName1 = 'active'
-            console.log(conf.aniName);
             timer.once(() => {
                 conf.showReady = 'ready'
                 timer.once(() => {
                     conf.showReady = 'go'
                     timer.once(() => {
-                        conf.aniName = 'run'
-                        conf.aniName1 = 'run'
                         conf.showReady = ''
                         for (let i = 1; i < 7; i++) {
+                            conf.aniInfo[i] = 'run'
                             let time = MathUtil.getRandomInt(1500, 2000)
                             stween.to('animal' + i, {
                                 x: 320,
@@ -160,15 +325,15 @@ const conf = reactive({
         conf.isStart = false
         conf.podiumShow = false
         conf.rank = false
-        conf.aniName = 'walk'
-        conf.aniName1 = 'walk'
         conf.showReady = ''
-        conf.showPlus = false
-        conf.showRain = false
-        conf.plueItem = 0
+        conf.numsort = []
         stween.kill(['trackitm', 'desk', 'light', 'rain', 'roadfinsh'])
         for (let i = 1; i < 7; i++) {
+            conf.aniInfo[i] = 'walk'
+            conf.showRain[i] = false
             stween.kill(['animal' + i])
+            stween.kill(['light' + i])
+            stween.kill(['rain' + i])
         }
         timer.clear()
         stween.set(['trackitm', 'desk'], {
@@ -179,6 +344,12 @@ const conf = reactive({
         })
         for (let i = 1; i < 7; i++) {
             stween.set('animal' + i, {
+                x: 0
+            })
+            stween.set('light' + i, {
+                x: 0
+            })
+            stween.set('rain' + i, {
                 x: 0
             })
         }
@@ -229,58 +400,20 @@ const conf = reactive({
         loopBg()
         conf.carInfo.x = {}
         //动物跑步
-        const _final = (i: any) => {
+        const _final = (i: any) => {   
             if (i === 6) {
                 if (conf.stopFun) {
                     conf.stopFun()
                     conf.stopFun = null
                 } else if (conf.isStart) {
-                    // if(!conf.showPlus) conf.loopCar(conf.getRandomCarArr(), _final, '')
+                    conf.loopCar(conf.getRandomCarArr(), _final, '')
                 }
             }
         }
         conf.loopCar(conf.getRandomCarArr(), _final, '')
-        //道具
-        const looplight = () => {
-            stween.to('light', {
-                x: 880,
-                time: 3500,
-                final() {
-                    conf.carInfo.x[1] = conf.carInfo.x[1] + 100
-                    conf.showPlus = true
-                    conf.plueItem = conf.carInfo.x[1]
-                    conf.aniName1 = 'prop'
-                    stween.to('animal1', {
-                        x: conf.carInfo.x[1],
-                        time: conf.carInfo.x[1] * 10,
-                        final() {
-                            conf.aniName1 = 'run'
-                            conf.showPlus = false
-                            conf.loopCar(conf.getRandomCarArr(), _final, '')
-                        }
-                    })
-                }
-            })
-        }
-        looplight()
-        const looprain = () => {
-            stween.to('rain', {
-                x: 580,
-                time: 2000,
-                final() {
-                    conf.showRain = true
-                    stween.to('animal2', {
-                        x: conf.carInfo.x[2] - 100,
-                        time: conf.carInfo.x[2] * 10,
-                        final() {
-                            conf.showRain = false
-                            conf.loopCar(conf.getRandomCarArr(), _final, '')
-                        }
-                    })
-                }
-            })
-        }
-        looprain()
+        // timer.once(() => {
+        //     conf.stop([])
+        // },10000)
     },
     carInfo: {
         x: {}
@@ -290,32 +423,38 @@ const conf = reactive({
         for (let i = 1; i < 7; i++) {
             arr.push(MathUtil.getRandomInt(280, 420))
         }
-        if (conf.plueItem) arr[0] = conf.plueItem
-        conf.plueItem = 0
         return arr
     },
     loopCar(res: any, final: any, forceup: any) {
         conf.numsort = []
         for (let i = 1; i < 7; i++) {
             let x = res[i - 1]
-            if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
-            conf.carInfo.x[i] = x
-
             conf.numsort.push({
                 num: i,
                 sort: x
             })
+        }
+        conf.numsort = conf.numsort.sort((a, b) => b.sort - a.sort)
+
+        for (let i = 1; i < 7; i++) {
+            let x = res[i - 1]
+            if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
+            conf.carInfo.x[i] = x
+            console.log(conf.carInfo);
+            if(i < 3 && conf.isStart) conf.aniInfo[conf.numsort[i - 1].num] = 'prop'
+            
+            // conf.aniName + conf.numsort[0].num = 'run'
             stween.to('animal' + i, {
                 x: x,
                 time: (x * 10),
                 final() {
+                    if(i < 3) conf.aniInfo[conf.numsort[i - 1].num] = 'run'
                     if (final) {
                         final(i)
                     }
                 }
             })
         }
-        conf.numsort = conf.numsort.sort((a, b) => b.sort - a.sort)
     },
     /**
    * 冲线钩子
@@ -326,32 +465,72 @@ const conf = reactive({
      * @param res -数组：[1,2,3]
      */
     async stop(res: any) {
+        let list = ["B","F",'A','C','E','F']
         const _arr = conf.getRandomCarArr()
-
-        let maxIndex = 0;
-        for (let i = 1; i < _arr.length; i++) {
-            if (_arr[i] > _arr[maxIndex]) {
-                maxIndex = i;
-            }
-        }
+        console.log(_arr);
         
-        conf.stopFun = () => {
-            conf.loopCar(
-                _arr,
-                (i: any) => {
-                    if (i === maxIndex) {
-                        conf.isStart = false
-                        conf.showWin()
-                    }
-                },
-                true
-            )
+        let minIndex = _arr.findIndex(number => number === Math.min(..._arr));
+        let maxIndex = _arr.findIndex(number => number === Math.max(..._arr));
+        maxIndex = maxIndex < 0 ? 1 : maxIndex + 1
+        minIndex = minIndex < 0 ? 1 : minIndex + 1
+        console.log(maxIndex);
+        console.log(minIndex);
+        
+        conf.stopFun = () => { }
+        conf.isStart = false
+        //道具
+        const looplight = () => {
+            stween.to('light' + maxIndex, {
+                x: 880,
+                time: 3500,
+                final() {  
+                    conf.showPlus[maxIndex] = true
+                    conf.aniInfo[maxIndex] = 'prop'
+                    stween.to('animal' + maxIndex, {
+                        x: conf.numsort[0].sort + 20,
+                        time: conf.carInfo.x[maxIndex] * 10,
+                        final() {
+                            conf.aniInfo[maxIndex] = 'run'
+                            conf.showPlus[maxIndex] = false
+                            conf.loopCar(
+                                _arr,
+                                (i: any) => {
+                                    if (i === maxIndex) {
+                                        conf.showWin(minIndex)
+                                    }
+                                },
+                                true
+                            )
+                        }
+                    })
+                }
+            })
         }
+        looplight()
+        const looprain = () => {
+            stween.to('rain' + minIndex, {
+                x: 580,
+                time: 2000,
+                final() {
+                    conf.showRain[minIndex] = true
+                    conf.aniInfo[minIndex] = 'run'
+                    stween.to('animal' + minIndex, {
+                        x: conf.numsort[5].sort - 20,
+                        time: conf.carInfo.x[minIndex] * 10,
+                        final() {
+                            conf.showRain[minIndex] = false
+                        }
+                    })
+                }
+            })
+        }
+        looprain()
     },
     /**
    * 结算画面
    */
-    showWin() {
+    showWin(maxIndex:number) {
+        console.log('1002');
         stween.pause(['trackitm'])
         stween.to('roadfinsh', {
             x: 180,
@@ -360,19 +539,26 @@ const conf = reactive({
         //移出屏幕外面
         timer.once(() => {
             stween.pause(['desk'])
+            
+            // 根据排名冲刺结算
+            conf.rank = true
             for (let i = 1; i < 7; i++) {
-                conf.rank = true
-                stween.to('animal' + i, {
-                    x: sutil.rem2px(750) + conf.carInfo.x[i],
-                    time: 2000,
+                stween.to('animal' + conf.numsort[i-1].num, {
+                    x: sutil.rem2px(750) + (600 - conf.numsort[i-1].sort),
+                    time: (600 - conf.numsort[i-1].sort) * 6,
                     final() {
-                        for (let i = 0; i < 6; i++) {
+                        let num = conf.numsort[i - 1].num
+                        conf.numlist[num - 1].sort = i
+                        conf.numlist[num - 1].show = true
+                        
+                        if (i == maxIndex) {
                             timer.once(() => {
-                                let num = conf.numsort[i].num
-                                conf.numlist[num - 1].sort = i + 1
-                                conf.numlist[num - 1].show = true
-                                if (i == 5) conf.podiumShow = true
-                            }, (i + 1) * 80)
+                                conf.podiumShow = true
+                            },1000)
+                            timer.once(() => {
+                                conf.reset()
+                                emit('close')
+                            },3000)
                         }
                     }
                 })
@@ -387,55 +573,11 @@ defineExpose({
     reset: conf.reset,
     start: conf.start,
     stop: conf.stop,
-    init: conf.init
+    init: conf.init,
+    setList: conf.setList
 })
 
 onMounted(() => {
-    console.log('6666');
-    conf.numlist = [
-        {
-            img: 'exb',
-            name: 'Exiaobao',
-            show: false,
-            sort: 1,
-            num: 1
-        },
-        {
-            img: 'hm',
-            name: 'Freshippo',
-            show: false,
-            sort: 2,
-            num: 2
-        },
-        {
-            img: 'pp',
-            name: 'Piaopiao',
-            show: false,
-            sort: 3,
-            num: 3
-        },
-        {
-            img: 'xz',
-            name: 'Xiazai',
-            show: false,
-            sort: 4,
-            num: 4
-        },
-        {
-            img: 'zxb',
-            name: 'Zhixiaobao',
-            show: false,
-            sort: 5,
-            num: 5
-        },
-        {
-            img: 'hx',
-            name: 'Huanxing',
-            show: false,
-            sort: 6,
-            num: 6
-        }
-    ]
     // conf.init()
 })
 
@@ -515,8 +657,8 @@ onMounted(() => {
 
 .rain {
     position: absolute;
-    top: -28rem;
-    right: -26rem;
+    top: -22rem;
+    right: -21rem;
     height: 220rem;
     width: 240rem;
     z-index: 9;

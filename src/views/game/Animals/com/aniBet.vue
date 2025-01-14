@@ -2,29 +2,29 @@
     <div class="bet">
         <div class="tips">Animals running</div>
         <div class="type-list">
-            <template v-for="(item, index) in conf.typeList" :key="index">
-                <div class="type-item" @click="conf.selectType = index">
-                    <div class="type-icon" :class="{ 'type-active': conf.selectType == index }">
-                        <img class="type-img" :src="`/static/img/game/animal/${item}.png`" />
+            <template v-for="(item, index) in options" :key="index">
+                <div class="type-item" @click="conf.changeType(item.key)">
+                    <div class="type-icon" :class="{ 'type-active': conf.selectType == item.key}">
+                        <img class="type-img" :src="`/static/img/game/animal/${item.key}.png`" />
                     </div>
-                    <span>{{ item }}</span>
+                    <span>{{ item.key }}</span>
                 </div>
             </template>
         </div>
         <div class="ani-list">
-            <template v-for="(item, index) in conf.numlist" :key="index">
-                <div class="ani-item" :class="{ 'ani-active': index == conf.selectAnimal }"
-                    @click="conf.changeType(index)">
+            <template v-for="(item, index) in listNumArr" :key="index">
+                <div class="ani-item" :class="{ 'ani-active': item.key == conf.selectAnimal }"
+                    @click="conf.changeAni(item.key)">
                     <div class="ani-con">
                         <div class="ani-bg" :class="'ani-bg-' + index"></div>
                     </div>
-                    <div class="money" v-if="index == conf.selectAnimal">
+                    <div class="money" v-if="item.key == conf.selectAnimal">
                         <div class="coin">$</div>20
                     </div>
                     <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     <div class="txt">
                         <div class="name">{{ item.name }}</div>
-                        <div class="odds">1.95</div>
+                        <div class="odds">{{ item[conf.selectType + 'odds'] || 0 }}</div>
                     </div>
                 </div>
             </template>
@@ -33,14 +33,14 @@
             <div class="btn-left">
                 <div class="name">Consume</div>
                 <div class="num">
-                    <div class="total" @click="conf.changeType(conf.selectAnimal)">{{ conf.total }}</div>
+                    <div class="total" @click="conf.changeAni(conf.selectAnimal)">{{ conf.total }}</div>
                     <div class="count">$</div>
                 </div>
             </div>
-            <div class="btn-right" style="justify-content: center;" v-if="conf.selectAnimal == -1">
+            <div class="btn-right" style="justify-content: center;" v-if="!conf.selectAnimal">
                 <div>Guess</div>
             </div>
-            <div class="btn-right" v-else>
+            <div class="btn-right" @click="conf.changeBet" v-else>
                 <div class="win">
                     <div>Guess correctly <span>1</span></div>
                     <div style="margin-top: 4rem;">Get <span>${{ conf.total * 1.95 }}</span></div>
@@ -49,61 +49,56 @@
                 <div>Guess</div>
             </div>
         </div>
+        <div class="mosk" v-if="stopBet"></div>
     </div>
 </template>
 <script setup lang="ts">
+import i18n from '@/lang';
+import System from '@/utils/System';
 import { onMounted, reactive } from 'vue';
 
+const props = defineProps({
+    options: {
+        default: [] as any[]
+    },
+    listNumArr: {
+        default: [] as any[]
+    },
+    stopBet: {
+        default: false
+    }
+})
+
+const emit = defineEmits(['changeBet'])
+
 const conf = reactive({
-    numlist: [] as any[],
-    selectType: 0,
-    typeList: ['1st', '2end', '3rd'],
-    selectAnimal: -1,
-    total: 20,
-    changeType(index: number) {
-        if (index == conf.selectAnimal) {
+    selectType: '',
+    selectAnimal: '',
+    total: 0,
+    changeType(key: string) {
+        conf.selectType = key
+        emit('changeBet',{type: key})
+    },
+    changeAni(key: string) {
+        if (key == conf.selectAnimal) {
             conf.total = conf.total + 20
             if (conf.total >= 1000) conf.total = 20
             return
         }
         conf.total = 20
-        conf.selectAnimal = index
+        conf.selectAnimal = key
+    },
+    changeBet() {
+        if(!conf.selectAnimal) {
+            System.toast(i18n.t('common.SelectType'))
+            return
+        }
+        emit('changeBet',{balance: conf.total,code: conf.selectType + '_' + conf.selectAnimal})
     }
 })
 
 onMounted(() => {
-    conf.numlist = [
-        {
-            img: 'exb',
-            name: 'Exiaobao',
-            num: 1
-        },
-        {
-            img: 'hm',
-            name: 'Freshippo',
-            num: 2
-        },
-        {
-            img: 'pp',
-            name: 'Piaopiao',
-            num: 3
-        },
-        {
-            img: 'xz',
-            name: 'Xiazai',
-            num: 4
-        },
-        {
-            img: 'zxb',
-            name: 'Zhixiaobao',
-            num: 5
-        },
-        {
-            img: 'hx',
-            name: 'Huanxing',
-            num: 6
-        }
-    ]
+    conf.selectType = props.options[0].key
 })
 </script>
 
@@ -114,6 +109,7 @@ onMounted(() => {
     background-size: 100% 100%;
     text-align: center;
     padding: 0 20rem 20rem;
+    position: relative;
 
     .tips {
         color: #933D00;
@@ -344,6 +340,13 @@ onMounted(() => {
             background: #fff;
             opacity: 0.3;
         }
+    }
+    .mosk{
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: 9;
+        border-radius: 40rem 40rem 0 0;
     }
 
 }
