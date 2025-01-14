@@ -1,7 +1,7 @@
 <template>
   <router-view v-slot="{ Component }" v-if="show">
     <keep-alive :include="[...usrouterview.include, ...usrouterview.includeDefault]">
-      <component :is="Component" :key="$route.fullPath" />
+      <component :is="Component" />
     </keep-alive>
   </router-view>
 </template>
