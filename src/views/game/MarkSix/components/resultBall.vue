@@ -71,12 +71,19 @@ const conf = reactive({
     transform: `translate(${props.aniX}rem,${props.aniY * reverse}rem) scale(${props.aniScale})`,
     transition: `transform ${props.time}ms linear`
   },
+  /**
+   * 设置显示值，停止动画
+   * @param val 
+   */
   setVal: (val: any) => {
     conf.ani.stop()
     const { nextName, currentName } = conf.ani.getName()
     const _conf = conf as any
     conf.setItem(_conf[currentName], val)
   },
+  /**
+   * 以随机值开始动画
+   */
   runAni: () => {
     if (conf.ani.isRun) return
     conf.ani.isRun = true
