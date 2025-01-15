@@ -1,36 +1,38 @@
 <template>
-    <div class="down-popup">
-        <div class="down-content">
-            <div style="display: flex;justify-content: center;">
-                <div class="time-box">
-                    <div class="result">{{ openExpect }}</div>
-                    <div class="time">
-                        {{ times[1] || '00' }}<span style="margin: 5rem;">:</span>{{ times[2] || '00' }}
-                    </div>
-                </div>
-            </div>
-            <div class="line">
-                <div class="line-item"></div>
-                <div class="line-item" style="margin-left: 100rem;"></div>
-            </div>
-            <div class="total">
-                <div class="tips">The past 100 championships</div>
-                <div class="list">
-                    <div class="list-item" v-for="(item, index) in totalList" :key="index">
-                        <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
-                        <div class="num">
-                            <img class="glass-img" src="/static/img/game/animal/glass.png" />
-                            <div>{{ item[active] }}</div>
+    <transition name="fade-slide-down" mode="out-in">
+        <div class="down-popup" v-if="showDown">
+            <div class="down-content">
+                <div style="display: flex;justify-content: center;">
+                    <div class="time-box">
+                        <div class="result">{{ openExpect }}</div>
+                        <div class="time">
+                            {{ times[1] || '00' }}<span style="margin: 5rem;">:</span>{{ times[2] || '00' }}
                         </div>
                     </div>
                 </div>
-                <div class="more" @click="emit('showMore')">
-                    <div class="txt">More</div>
-                    <van-icon name="arrow" size="20rem" color="#E34348" />
+                <div class="line">
+                    <div class="line-item"></div>
+                    <div class="line-item" style="margin-left: 100rem;"></div>
+                </div>
+                <div class="total">
+                    <div class="tips">The past 100 championships</div>
+                    <div class="list">
+                        <div class="list-item" v-for="(item, index) in totalList" :key="index">
+                            <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
+                            <div class="num">
+                                <img class="glass-img" src="/static/img/game/animal/glass.png" />
+                                <div>{{ item[active] }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="more" @click="emit('showMore')">
+                        <div class="txt">More</div>
+                        <van-icon name="arrow" size="20rem" color="#E34348" />
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    </transition>
 </template>
 <script setup lang="ts">
 
@@ -46,6 +48,9 @@ const props = defineProps({
     },
     openExpect: {
         default: ''
+    },
+    showDown: {
+        default: false
     }
 })
 
@@ -176,5 +181,16 @@ const emit = defineEmits(['showMore'])
             }
         }
     }
+}
+/* 从上向下渐入渐出 */
+.fade-slide-down-enter-active,
+.fade-slide-down-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-down-enter-from,
+.fade-slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(-100%);
 }
 </style>

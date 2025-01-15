@@ -22,7 +22,7 @@
                     :active="conf.bet.tabs.active"
                     :openExpect="conf.lotteryBox.current.openExpect"
                     @showMore="conf.openMore"
-                    v-if="conf.game.showDown"
+                    :showDown="conf.game.showDown"
                 />
             </div>
             <!-- 下注菜单 -->
@@ -30,16 +30,17 @@
                 :options="conf.bet.tabs.options"
                 :listNumArr="conf.bet.listNumArr"
                 :stopBet="!conf.game.showDown"
+                :defaultWalletInfo="conf.defaultWalletInfo"
                 @changeBet="conf.bet.requestBet"
             />
         </div>
         <div v-if="conf.game.showDown">
             <div class="rulse" @click="conf.goPage('rules')">Rules</div>
             <div class="rulse mony">
-                <div class="coin">$</div>
+                <div class="coin">{{ conf.defaultWalletInfo.coinSymbol || '₹' }}</div>
                 <div class="total">{{ conf.walletMoney }}</div>
             </div>
-            <div class="rulse record" @click="conf.goPage('record')">
+            <div class="rulse record" @click="conf.changeMyOrder">
                 <img class="record-img" src="/static/img/game/animal/record.png" />
                 Record
             </div>
@@ -49,24 +50,14 @@
             :totalList="conf.result.totalList"
             ref="resultRefs"
         />
-        <van-popup z-index="97" :show="conf.play.typeShow" position="bottom" borderRadius='16' :round="true"
-            @close="conf.play.closePopup">
-            <div class="type-list">
-                <template v-for="item in conf.play.list" :key="item.id">
-                    <div class="type-item" :class="{'type-active': conf.play.lotteryId == item.id}" @click="conf.play.reloadTo(item.id)">
-                        <div v-if="(item.lotteryInterval / 1000 / 60) >= 1">
-                            <span>{{ item.lotteryInterval / 1000 / 60 }}</span>
-                            {{ (item.lotteryInterval / 1000 / 60) > 1 ? $t('game.minutes') : $t('game.minute') }}
-                        </div>
-                        <div v-else>
-                            <span>{{ item.lotteryInterval / 1000 }}</span>{{ $t('game.second') }}
-                        </div>
-                    </div>
-                </template>
-                <div style="height: 20rem; background: #f6f6f6"></div>
-                <div class="type-item" @click="conf.play.closePopup">{{ $t('me.cancle') }}</div>
-            </div>
-        </van-popup>
+        <timeType
+            :typeShow="conf.play.typeShow"
+            :typeList="conf.play.list"
+            :lotteryId="conf.play.lotteryId"
+            :resultInfo="conf.result.typeResult"
+            @close="conf.play.closePopup"
+            @change="conf.play.reloadTo"
+        />
     </x-page>
 </template>
 <script setup lang="ts">
@@ -83,6 +74,8 @@ import i18n from '@/lang';
 import sconfig from '@/sstore/sconfig';
 import { svalue } from '@/sstore/svalue';
 import sutil from '@/sstore/sutil';
+import { clamp } from 'vant/lib/utils';
+import timeType from './com/timeType.vue';
 
 const cgamebox = ref<any>()
 const cgameRef = ref<any>()
@@ -115,6 +108,17 @@ const conf = reactive({
         stop: (res: any) => {
             if (conf.game.isRun) {
                 conf.game.isRun = false
+                let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
+                console.log(conf.lotteryBox.countDown);
+                let open = item.lotteryInterval / 1000 - 11
+                let time = conf.lotteryBox.countDown[3] - open
+                // 控制在35秒左右可下注
+                if(time > 0) {
+                    setTimeout(() => {
+                        cgameRef.value?.stop(res)
+                    }, time * 1000 )
+                    return
+                }
                 cgameRef.value?.stop(res)
             } else {
                 cgameRef.value?.setList(res)
@@ -188,7 +192,6 @@ const conf = reactive({
                 }
                 conf.bet.listNumArr.forEach(fun)
             })
-            console.log(conf.bet.listNumArr);
         },
         // 请求下注接口
         requestBet(e: any) {
@@ -226,6 +229,7 @@ const conf = reactive({
     //历史结果列表
     result: {
         list: [],
+        typeResult: {} as any,
         totalList: [] as any,
         getList: async () => {
             const { data: openData } = await apis.lotteryOpenResult({
@@ -235,18 +239,18 @@ const conf = reactive({
             })
             // 统计前一百条的冠、亚、季军
             conf.result.rest()
-            openData.records.forEach((item: any,index: number) => {
-                if(item.openCode) {
-                    let array = item.openCode.split(',')
-                    const stIndex = array.indexOf('A');
-                    const ndIndex = array.indexOf('B');
-                    const rdIndex = array.indexOf('C');
+            // openData.records.forEach((item: any,index: number) => {
+            //     if(item.openCode) {
+            //         let array = item.openCode.split(',')
+            //         const stIndex = array.indexOf('A');
+            //         const ndIndex = array.indexOf('B');
+            //         const rdIndex = array.indexOf('C');
                     
-                    conf.result.totalList[stIndex].st = conf.result.totalList[stIndex].st + 1
-                    conf.result.totalList[ndIndex].nd = conf.result.totalList[ndIndex].nd + 1
-                    conf.result.totalList[rdIndex].rd = conf.result.totalList[rdIndex].rd + 1
-                }
-            })
+            //         conf.result.totalList[stIndex].st = conf.result.totalList[stIndex].st + 1
+            //         conf.result.totalList[ndIndex].nd = conf.result.totalList[ndIndex].nd + 1
+            //         conf.result.totalList[rdIndex].rd = conf.result.totalList[rdIndex].rd + 1
+            //     }
+            // })
             let list = openData.records.slice(0, 10) || []
             conf.result.list = list.map((item: any) => {
                 let openCodeArr = []
@@ -256,6 +260,22 @@ const conf = reactive({
                     openCodeArr
                 }
             })
+        },
+        getTypeList: async (lotteryId: any) => {
+            const { data: openData } = await apis.lotteryOpenResult({
+                current: 1,
+                size: 5,
+                lotteryId
+            })
+            let n = true
+            openData.records.forEach((item: any) => {
+                if (item.openCode && n) {
+                    n = false;
+                    let openCodeArr = item.openCode.split(',')
+                    conf.result.typeResult[lotteryId] = {...item,openCodeArr}
+                    return;
+                }
+            });   
         },
         rest() {
             conf.result.totalList = [
@@ -285,8 +305,10 @@ const conf = reactive({
         conf.reset()
         //获取游戏列表
         conf.play.list = await slottery.findLotteryList('ANIMALS_RUNNING')
-        console.log(conf.play.list);
         
+        conf.play.list.forEach((item: any) => {
+            conf.result.getTypeList(item.id)
+        })
         let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
         conf.openLockCountdown = item.openLockCountdown / 1000 //锁定倒计时
         //选中当前游戏
@@ -301,7 +323,11 @@ const conf = reactive({
     },
     goPage(url: any) {
         System.router.push('/game/Animals/' + url + '?lotteryId=' + conf.play.lotteryId)
-    }
+    },
+    //查看my order
+    changeMyOrder() {
+      System.router.push('/user/myBet/index?lottery=ANIMALS_RUNNING')
+    },
 })
 onMounted(async () => {
     conf.play.list = await slottery.findLotteryList('ANIMALS_RUNNING')
@@ -316,7 +342,7 @@ onBeforeMount(async () => {
         timer: timer,
         success: (onetime: any, status: any, results: any) => {
             //处理游戏和刷新结果
-            if (onetime && status) {
+            if (onetime && status) {         
                 conf.game.action(
                     'stop',
                     results.map((v: any) => v.num)
@@ -331,7 +357,6 @@ onBeforeMount(async () => {
         lotteryId: () => conf.play.lotteryId,
         showBox: () => { }
     })
-    console.log(conf.lotteryBox);
     
     conf.bet.listNumArr = [
         {
@@ -457,19 +482,5 @@ onBeforeMount(async () => {
 }
 .type{
     background: #fff;
-}
-.type-list {
-  font-size: 30rem;
-  font-weight: 500;
-  background: #ffffff;
-
-  .type-item {
-    line-height: 100rem;
-    border-bottom: 1rem solid #eee;
-    text-align: center;
-  }
-  .type-active{
-    color: #ff5757;
-  }
 }
 </style>

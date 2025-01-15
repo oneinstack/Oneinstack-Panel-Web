@@ -35,12 +35,20 @@
                         <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     </div>
                 </div>
-                <div class="tabli-line" v-for="(item) in result" :key="item.openTime">
-                    <div class="issue">123456</div>
-                    <template  v-for="(n,i) in item.openCodeArr" :key="i">
-                        <div class="num" :class="{'active': (conf.active=='st' && n=='A') || (conf.active=='nd' && n=='B') || (conf.active=='rd' && n=='C')}">{{ n }}</div>
-                    </template>
-                </div>
+                <template  v-for="(item) in result" :key="item.openTime">
+                    <div class="tabli-line" v-if="item.openCode">
+                        <div class="issue">{{item.openExpect.length>7 ?item.openExpect.substr(4) : item.openExpect}}</div>
+                        <template  v-for="(n,i) in item.openCodeArr" :key="i">
+                            <div class="num" :class="{'active': (conf.active=='st' && n=='A') || (conf.active=='nd' && n=='B') || (conf.active=='rd' && n=='C')}">{{ n }}</div>
+                        </template>
+                    </div>
+                    <div class="tabli-line" v-else>
+                        <div class="issue">{{item.openExpect.length>7 ?item.openExpect.substr(4) : item.openExpect}}</div>
+                        <template v-for="n in 6" :key="n">
+                            <div class="num">?</div>
+                        </template>
+                    </div>
+                </template>
             </div>
         </div>
     </van-popup>

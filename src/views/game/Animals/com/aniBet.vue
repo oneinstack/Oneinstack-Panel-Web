@@ -14,12 +14,12 @@
         <div class="ani-list">
             <template v-for="(item, index) in listNumArr" :key="index">
                 <div class="ani-item" :class="{ 'ani-active': item.key == conf.selectAnimal }"
-                    @click="conf.changeAni(item.key)">
+                    @click="conf.changeAni(item.key,index)">
                     <div class="ani-con">
                         <div class="ani-bg" :class="'ani-bg-' + index"></div>
                     </div>
                     <div class="money" v-if="item.key == conf.selectAnimal">
-                        <div class="coin">$</div>20
+                        <div class="coin">{{ conf.betCoin }}</div>{{ conf.betMinMoney }}
                     </div>
                     <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     <div class="txt">
@@ -30,20 +30,20 @@
             </template>
         </div>
         <div class="btn">
-            <div class="btn-left">
+            <div class="btn-left" @click="conf.changeMul">
                 <div class="name">Consume</div>
                 <div class="num">
-                    <div class="total" @click="conf.changeAni(conf.selectAnimal)">{{ conf.total }}</div>
-                    <div class="count">$</div>
+                    <div class="total">{{ conf.total }}</div>
+                    <div class="count">{{ conf.betCoin }}</div>
                 </div>
             </div>
-            <div class="btn-right" style="justify-content: center;" v-if="!conf.selectAnimal">
+            <div class="btn-right" style="justify-content: center;" v-if="!conf.selectAnimal" @click="conf.changeBet">
                 <div>Guess</div>
             </div>
             <div class="btn-right" @click="conf.changeBet" v-else>
                 <div class="win">
                     <div>Guess correctly <span>1</span></div>
-                    <div style="margin-top: 4rem;">Get <span>${{ conf.total * 1.95 }}</span></div>
+                    <div style="margin-top: 4rem;">Get <span>{{ `${conf.betCoin}${getWinMoney}` }}</span></div>
                 </div>
                 <div class="line"></div>
                 <div>Guess</div>
@@ -54,8 +54,9 @@
 </template>
 <script setup lang="ts">
 import i18n from '@/lang';
+import sutil from '@/sstore/sutil';
 import System from '@/utils/System';
-import { onMounted, reactive } from 'vue';
+import { computed, onMounted, reactive, watch } from 'vue';
 
 const props = defineProps({
     options: {
@@ -66,6 +67,9 @@ const props = defineProps({
     },
     stopBet: {
         default: false
+    },
+    defaultWalletInfo: {
+        default: {} as any
     }
 })
 
@@ -74,19 +78,29 @@ const emit = defineEmits(['changeBet'])
 const conf = reactive({
     selectType: '',
     selectAnimal: '',
+    selectIndex: 0,
     total: 0,
+    betMinMoney: 1,
+    betMaxMoney: 10000,
+    betCoin: '₹',
     changeType(key: string) {
         conf.selectType = key
         emit('changeBet',{type: key})
     },
-    changeAni(key: string) {
+    changeAni(key: string,index:number) {
         if (key == conf.selectAnimal) {
-            conf.total = conf.total + 20
-            if (conf.total >= 1000) conf.total = 20
+            conf.total = conf.total + conf.betMinMoney
+            if (conf.total >= conf.betMaxMoney) conf.total = conf.betMinMoney
             return
         }
-        conf.total = 20
+        conf.total = conf.betMinMoney
         conf.selectAnimal = key
+        conf.selectIndex = index
+    },
+    changeMul() {
+        conf.total = conf.total * 10
+        if(conf.betMaxMoney > 10000) conf.betMaxMoney = 10000  
+        if (conf.total > conf.betMaxMoney) conf.total = conf.betMinMoney
     },
     changeBet() {
         if(!conf.selectAnimal) {
@@ -97,6 +111,20 @@ const conf = reactive({
     }
 })
 
+const getWinMoney = computed(() => {
+    let odds = props.listNumArr[conf.selectIndex][conf.selectType + 'odds'] || 1
+    return conf.total * odds
+})
+watch(
+  () => props.defaultWalletInfo,
+  (val: any) => {
+    conf.betMinMoney = parseFloat(sutil.dataHandling(val.betMinAmount))
+    conf.betMaxMoney = parseFloat(val.betMaxAmount)
+    
+    conf.betCoin = val.coinSymbol
+  },
+  { deep: true }
+)
 onMounted(() => {
     conf.selectType = props.options[0].key
 })

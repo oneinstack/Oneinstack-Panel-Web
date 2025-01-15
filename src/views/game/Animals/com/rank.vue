@@ -35,15 +35,15 @@ const props = defineProps({
     .stom-item {
         height: 100%;
         padding: 10rem 0;
-        transform: translateX(-140px);
+        transform: translateX(-120px);
         animation: img-animation 0.3s linear;
-        margin-top: -2px;
+        margin-top: 5rem;
 
         .sort-contant {
             width: 175px;
             height: 100%;
             background-image: linear-gradient(90deg, rgba(222, 110, 81, 0.00) 0%, #DE6E51 56%, rgba(222, 81, 81, 0.00) 100%);
-            padding: 2px;
+            padding: 4rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -51,10 +51,10 @@ const props = defineProps({
 
             .light {
                 position: absolute;
-                top: calc(30% - 5px);
+                top: calc(30% - 10rem);
                 right: 30px;
                 width: 58px;
-                height: 10px;
+                height: 20rem;
                 opacity: 0.39;
                 background-image: linear-gradient(90deg, rgba(255, 255, 255, 0.00) 7%, #FFFFFF 46%, rgba(255, 255, 255, 0.00) 100%);
             }
@@ -107,22 +107,22 @@ const props = defineProps({
 
             .num {
                 font-family: Arial-Black;
-                font-size: 34px;
+                font-size: 60rem;
                 color: #fff;
                 text-shadow: 0 3px 0 rgba(0, 0, 0, 0.24);
                 font-weight: 900;
-                padding-right: 10px;
+                padding-right: 20rem;
             }
 
         }
     }
     @keyframes img-animation {
         0% {
-            transform: translateX(00px);
+            transform: translateX(0px);
         }
 
         100% {
-            transform: translateX(-140px);
+            transform: translateX(-120px);
         }
     }
 </style>
