@@ -20,6 +20,10 @@ export default [
     component: '/game/winGo/winGo'
   },
   {
+    path: '/game/MarkSix/MarkSix',
+    component: '/game/MarkSix/MarkSix'
+  },
+  {
     path: '/game/Satta/Satta',
     component: '/game/satta/satta'
   },

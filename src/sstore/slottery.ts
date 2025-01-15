@@ -1,4 +1,5 @@
 import { apis } from '@/api/index'
+import i18n from '@/lang'
 import System from '@/utils/System'
 import { reactive } from 'vue'
 import { sutil } from './sutil'
@@ -56,24 +57,40 @@ export const slottery = reactive({
    * @returns
    */
   lotteryBox({
-    //页面对象-传入this即可
     timer,
-    //获取到正确数据后回调
     success,
-    //每次刷新倒计时回调
     updateCountDown,
-    //结果长度
     resultSize,
-    //获取彩票id方法
     lotteryId,
-    //弹框提示方法
     showBox
   }: {
+    /**
+     * 局部定时器
+     */
     timer: TimerBeanInter
+    /**
+     * 获取到正确数据后回调
+     * @param onetime 秒数，第一次传入0，内部传入3000
+     * @param _status 是否获取到正确数据
+     * @param results 结果
+     */
     success: (onetime: number, _status: any, results: any[]) => void
+    /**
+     * 每次刷新倒计时回调
+     * @param countDown 倒计时
+     */
     updateCountDown: (countDown: any[]) => void
+    /**
+     * 结果长度
+     */
     resultSize: number
-    lotteryId: () => string
+    /**
+     * 获取彩票id方法
+     */
+    lotteryId?: () => string
+    /**
+     * 弹框提示方法
+     */
     showBox: (issue: string, nextissue: string) => void
   }) {
     const conf = reactive({
@@ -99,7 +116,10 @@ export const slottery = reactive({
       timerStartTime: 0,
       timer: null,
       oncetimer: [] as any[],
-      //开始每3秒循环获取最新期数信息，直到获取到
+      /**
+       * 开始每x秒循环获取最新期数信息，直到获取到
+       * @param onetime 秒数，第一次传入0，内部传入3000
+       */
       getInfoLoop: (onetime: number) => {
         timer.un(...conf.oncetimer)
         conf.oncetimer = []
@@ -176,11 +196,29 @@ export const slottery = reactive({
           true
         )
       },
+      /**
+       * 当前期数
+       */
       issue: '',
+      /**
+       * 上期期数
+       */
       lastissue: '',
+      /**
+       * 下期期数
+       */
       nextissue: '',
+      /**
+       * 倒计时
+       */
       countDown: [0, 0, 0] as any[],
+      /**
+       * 结果
+       */
       results: [] as any[],
+      /**
+       * 结果长度
+       */
       resultSize: resultSize,
       current: {
         autoCloseDate: '',
@@ -218,11 +256,9 @@ export const slottery = reactive({
         conf.start()
         return new Promise(async (_res) => {
           let res = await lotteryOpen({
-            lotteryId: lotteryId(),
+            lotteryId: lotteryId ? lotteryId() : conf.play.item.id,
             final: (a: any, b: any) => {
-              if (!a && !b) {
-                _res(false)
-              }
+              if (!a) _res(false)
             }
           })
           res = res.data
@@ -269,6 +305,86 @@ export const slottery = reactive({
             _res(false)
           }
         })
+      },
+
+      /**
+       * 选择的玩法
+       */
+      play: {
+        item: {} as { id: string; lotteryTypeId: number; label: string; title: string },
+        list: [] as any[]
+      },
+      /**
+       * 钱包
+       */
+      wallet: {
+        /**
+         * 钱包余额(单位+金额)
+         */
+        label: '-',
+        /**
+         * 钱包余额
+         */
+        money: '0',
+        /**
+         * 钱包符号
+         */
+        coinSymbol: '₹',
+        /**
+         * 获取钱包余额
+         * @returns
+         */
+        getWalletMoney: async () => {
+          const sconfig = sutil.getStore('sconfig')
+          const svalue = sutil.getStore('svalue')
+          if (!sconfig.userInfo) return (conf.wallet.label = '-')
+          let item = await svalue.getDefaultWallet()
+          if (item.hasOwnProperty('coinSymbol')) {
+            let m = parseFloat(item.walletMoney)
+            conf.wallet.money = sutil.dataHandling(m)
+            conf.wallet.coinSymbol = item.coinSymbol || '₹'
+            conf.wallet.label = conf.wallet.coinSymbol + conf.wallet.money
+          }
+        }
+      },
+      /**
+       * 初始页面业务
+       * @returns
+       */
+      async init(
+        name:
+          | 'MARK_SIX'
+          | 'PK10'
+          | '3D_LOTTERY'
+          | '3D'
+          | 'Trx_Win_Go'
+          | '5D'
+          | 'COLOR'
+          | 'SATTA_KING'
+          | 'ANIMALS_RUNNING'
+      ) {
+        //获取游戏列表,并初始化游戏id和游戏类型
+        conf.play.list = await slottery.findLotteryList(name)
+        conf.play.list.sort((a: any, b: any) => a.lotteryInterval - b.lotteryInterval)
+        conf.play.list.forEach((item: any) => {
+          const minutes = item.lotteryInterval / 1000 / 60
+          item.label = minutes + (minutes > 1 ? i18n.t('game.minutes') : i18n.t('game.minute'))
+          item.openLockCountdown = item.openLockCountdown / 1000
+        })
+
+        //获取游戏id
+        const { id } = System.getRouterParams()
+        conf.play.item = id ? (conf.play.list.find((v: any) => v.id === id) as any) : conf.play.list[0]
+        //如果获取不到游戏id,则跳转到首页
+        if (!conf.play.item) {
+          System.router.replace('/')
+          return
+        }
+
+        //获取开奖信息任务
+        conf.getInfoLoop(0)
+        //获取钱包余额
+        conf.wallet.getWalletMoney()
       }
     })
     return conf
