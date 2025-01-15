@@ -19,7 +19,17 @@
     </div>
     <div class="top-bg-1"></div>
     <div class="top-bg-box">
-      <div style="height: 800rem"></div>
+      <div style="margin: 42rem 0; gap: 20rem" class="row flex-center">
+        <div
+          class="type-item flex flex-center relative"
+          v-for="item in lottery.play.list"
+          :key="item.id"
+          :class="{ active: item.id === lottery.play.item.id }"
+          @click="lottery.play.change(`/game/MarkSix/MarkSix`, item)"
+        >
+          {{ item.label }}
+        </div>
+      </div>
     </div>
   </GameLayout>
 </template>
@@ -61,5 +71,29 @@ const { conf, lottery } = index()
 .top-bg-box {
   width: 100%;
   background: linear-gradient(180deg, #ffc698 0%, #fff7e5 100%);
+
+  .type-item {
+    width: 164rem;
+    height: 104rem;
+    background-color: #fffef8;
+    color: #333333;
+    font-size: 28rem;
+    font-family: 700;
+    border-radius: 8rem;
+    box-shadow: inset 2rem 2rem 8rem 0rem rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    &.active {
+      background-color: #fffbe2;
+    }
+    &.active::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 8rem;
+      background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+    }
+  }
 }
 </style>

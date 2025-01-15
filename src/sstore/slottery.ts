@@ -1,4 +1,5 @@
 import { apis } from '@/api/index'
+import { ERouter } from '@/enum/Enum'
 import i18n from '@/lang'
 import System from '@/utils/System'
 import { reactive } from 'vue'
@@ -312,7 +313,11 @@ export const slottery = reactive({
        */
       play: {
         item: {} as { id: string; lotteryTypeId: number; label: string; title: string },
-        list: [] as any[]
+        list: [] as any[],
+        change: async (path: string, obj: any) => {
+          await System.router.replace(`${path}?id=${obj.id}`)
+          CEvent.emit(ERouter.reload)
+        }
       },
       /**
        * 钱包
