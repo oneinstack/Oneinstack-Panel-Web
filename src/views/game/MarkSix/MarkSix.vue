@@ -7,27 +7,23 @@
         <div>{{ lottery.issue }}</div>
       </div>
       <div class="result-box relative row flex-center" style="gap: 11rem">
-        <resultBall :number="lottery.results[0]" :aniX="60" />
-        <resultBall :number="lottery.results[1]" :aniX="40" />
-        <resultBall :number="lottery.results[2]" :aniX="20" />
-        <resultBall :number="lottery.results[3]" :aniX="0" />
-        <resultBall :number="lottery.results[4]" :aniX="-20" />
-        <resultBall :number="lottery.results[5]" :aniX="-40" />
-        <resultBall :number="lottery.results[6]" :aniX="-60" />
+        <resultBall
+          v-for="(_, index) in 7"
+          :key="index"
+          :index="index"
+          :number="lottery.results[index]"
+          :aniX="30 - index * 10"
+          :ref="conf.setBallRef"
+        />
       </div>
     </div>
   </GameLayout>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
 import GameLayout from '../components/gameLayout.vue'
 import resultBall from './components/resultBall.vue'
 import { index } from './MarkSix'
 const { conf, lottery } = index()
-
-const v = reactive({
-  v: 1
-})
 </script>
 
 <style lang="less" scoped>

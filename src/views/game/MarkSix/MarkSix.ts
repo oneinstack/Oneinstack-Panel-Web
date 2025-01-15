@@ -8,15 +8,30 @@ export const index = () => {
     timer: timer,
     success: (onetime: any, status: any, results: any) => {
       //刷新底部信息
-      if (onetime && status) {
-        console.log('onetime', onetime, status)
+      results.forEach((item: any, index: number) => {
+        conf.ballListRef[index].conf.setVal(item)
+      })
+    },
+    updateCountDown: (time: any) => {
+      if (time[3] <= 0) {
+        Object.keys(conf.ballListRef).forEach((key: any) => {
+          conf.ballListRef[key].conf.runAni()
+        })
       }
     },
-    updateCountDown: (time: any) => {},
     resultSize: 7,
     showBox: () => {}
   })
-  const conf = reactive({})
-  onMounted(() => {})
+  const conf = reactive({
+    ballListRef: {} as { [key: number]: { conf: any } },
+    setBallRef: (el: any) => {
+      conf.ballListRef[el.conf.index] = el
+    }
+  })
+  onMounted(() => {
+    Object.keys(conf.ballListRef).forEach((key: any) => {
+      conf.ballListRef[key].conf.runAni()
+    })
+  })
   return { conf, lottery }
 }
