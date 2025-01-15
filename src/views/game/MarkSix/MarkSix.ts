@@ -7,16 +7,14 @@ export const index = () => {
   const lottery = slottery.lotteryBox({
     timer: timer,
     success: (onetime: any, status: any, results: any) => {
-      //刷新底部信息
+      //设置开奖信息
       results.forEach((item: any, index: number) => {
         conf.ballListRef[index].conf.setVal(item)
       })
     },
     updateCountDown: (time: any) => {
       if (time[3] <= 0) {
-        Object.keys(conf.ballListRef).forEach((key: any) => {
-          conf.ballListRef[key].conf.runAni()
-        })
+        conf.runAni()
       }
     },
     resultSize: 7,
@@ -25,13 +23,20 @@ export const index = () => {
   const conf = reactive({
     ballListRef: {} as { [key: number]: { conf: any } },
     setBallRef: (el: any) => {
-      conf.ballListRef[el.conf.index] = el
+      if (el) conf.ballListRef[el.conf.index] = el
+      else conf.ballListRef = null as any
+    },
+    /**
+     * 开始开奖动画
+     */
+    runAni: () => {
+      Object.keys(conf.ballListRef).forEach((key: any) => {
+        conf.ballListRef[key].conf.runAni()
+      })
     }
   })
   onMounted(() => {
-    Object.keys(conf.ballListRef).forEach((key: any) => {
-      conf.ballListRef[key].conf.runAni()
-    })
+    conf.runAni()
   })
   return { conf, lottery }
 }

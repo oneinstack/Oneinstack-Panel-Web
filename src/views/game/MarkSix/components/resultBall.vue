@@ -36,6 +36,10 @@ const props = withDefaults(
     aniScale?: number
     reverse?: boolean
     index: number
+    /**
+     * 动画时间-ms
+     */
+    time?: number
   }>(),
   {
     size: 56,
@@ -43,7 +47,8 @@ const props = withDefaults(
     aniX: 0,
     aniY: 100,
     aniScale: 0.9,
-    reverse: true
+    reverse: true,
+    time: 100
   }
 )
 
@@ -55,7 +60,7 @@ const conf = reactive({
     color: '',
     img: '',
     val: '',
-    transition: 'transform 0.1s linear',
+    transition: `transform ${props.time}ms linear`,
     transform: 'translate(0rem,0rem) scale(1)'
   },
   next: {
@@ -64,7 +69,7 @@ const conf = reactive({
     img: '',
     val: '',
     transform: `translate(${props.aniX}rem,${props.aniY * reverse}rem) scale(${props.aniScale})`,
-    transition: 'transform 0.1s linear'
+    transition: `transform ${props.time}ms linear`
   },
   setVal: (val: any) => {
     conf.ani.stop()
@@ -117,7 +122,6 @@ const conf = reactive({
         _conf[nextName].transform = `translate(0rem,0rem) scale(1)`
         conf.ani.show = nextName
 
-        // 使用requestAnimationFrame代替timer
         requestAnimationFrame(() => {
           setTimeout(() => {
             _conf[currentName].transition = 'transform 0s'
@@ -125,13 +129,13 @@ const conf = reactive({
               _conf[currentName].transform =
                 `translate(${props.aniX}rem,${props.aniY * reverse}rem) scale(${props.aniScale})`
               setTimeout(() => {
-                _conf[currentName].transition = 'transform 0.1s linear'
+                _conf[currentName].transition = `transform ${props.time}ms linear`
                 requestAnimationFrame(() => {
                   conf.ani.toAni({ num: nextNum })
                 })
               })
             })
-          }, 100)
+          }, props.time)
         })
       })
     }

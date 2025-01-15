@@ -197,11 +197,11 @@ export const slottery = reactive({
         )
       },
       /**
-       * 当前期数
+       * 即将开奖期数
        */
       issue: '',
       /**
-       * 上期期数
+       * 最后一期期数
        */
       lastissue: '',
       /**

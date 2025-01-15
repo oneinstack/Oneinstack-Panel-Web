@@ -4,7 +4,7 @@
     <div class="top-result row relative">
       <div class="result column col justify-center">
         <div>{{ $t('game.result') }}:</div>
-        <div>{{ lottery.issue }}</div>
+        <div>{{ lottery.lastissue }}</div>
       </div>
       <div class="result-box relative row flex-center" style="gap: 11rem">
         <resultBall
@@ -16,6 +16,10 @@
           :ref="conf.setBallRef"
         />
       </div>
+    </div>
+    <div class="top-bg-1"></div>
+    <div class="top-bg-box">
+      <div style="height: 800rem"></div>
     </div>
   </GameLayout>
 </template>
@@ -45,5 +49,17 @@ const { conf, lottery } = index()
   overflow: hidden;
   height: calc(100% - 24rem);
   margin-top: 12rem;
+}
+
+.top-bg-1 {
+  width: 100%;
+  height: 30rem;
+  background: url('/static/img/game/marksix/top-bg-1.webp') no-repeat center center;
+  background-size: 100% 100%;
+}
+
+.top-bg-box {
+  width: 100%;
+  background: linear-gradient(180deg, #ffc698 0%, #fff7e5 100%);
 }
 </style>
