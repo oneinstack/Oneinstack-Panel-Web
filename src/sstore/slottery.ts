@@ -315,6 +315,7 @@ export const slottery = reactive({
         item: {} as { id: string; lotteryTypeId: number; label: string; title: string },
         list: [] as any[],
         change: async (path: string, obj: any) => {
+          if (obj.id === conf.play.item.id) return
           await System.router.replace(`${path}?id=${obj.id}`)
           CEvent.emit(ERouter.reload)
         }

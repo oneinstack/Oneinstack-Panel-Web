@@ -18,8 +18,10 @@
       </div>
     </div>
     <div class="top-bg-1"></div>
+
     <div class="top-bg-box">
-      <div style="margin: 42rem 0; gap: 20rem" class="row flex-center">
+      <!-- 切换玩法 -->
+      <div style="margin-top: 42rem; gap: 20rem" class="row flex-center">
         <div
           class="type-item flex flex-center relative"
           v-for="item in lottery.play.list"
@@ -28,6 +30,20 @@
           @click="lottery.play.change(`/game/MarkSix/MarkSix`, item)"
         >
           {{ item.label }}
+        </div>
+      </div>
+      <!-- 倒计时 -->
+      <div class="count-down-box">
+        <div>{{ $t('game.drawingTime') + ':' + lottery.issue }}</div>
+        <div class="row" style="margin-top: 20rem">
+          <div class="count-down row" style="gap: 4rem">
+            <div class="count-down-item flex flex-center">{{ lottery.countDown[0] }}</div>
+            <div>:</div>
+            <div class="count-down-item flex flex-center">{{ lottery.countDown[1] }}</div>
+            <div>:</div>
+            <div class="count-down-item flex flex-center">{{ lottery.countDown[2] }}</div>
+          </div>
+          <div class="col"></div>
         </div>
       </div>
     </div>
@@ -71,14 +87,15 @@ const { conf, lottery } = index()
 .top-bg-box {
   width: 100%;
   background: linear-gradient(180deg, #ffc698 0%, #fff7e5 100%);
+  padding: 0 32rem;
+  color: #333333;
+  font-size: 28rem;
+  font-weight: 600;
 
   .type-item {
     width: 164rem;
     height: 104rem;
     background-color: #fffef8;
-    color: #333333;
-    font-size: 28rem;
-    font-family: 700;
     border-radius: 8rem;
     box-shadow: inset 2rem 2rem 8rem 0rem rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -93,6 +110,19 @@ const { conf, lottery } = index()
       width: 100%;
       height: 8rem;
       background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+    }
+  }
+
+  .count-down-box {
+    font-size: 28rem;
+    margin-top: 32rem;
+    .count-down-item {
+      width: 72rem;
+      height: 72rem;
+      background: #000000;
+      border-radius: 4rem;
+      color: #ffffff;
+      font-size: 48rem;
     }
   }
 }
