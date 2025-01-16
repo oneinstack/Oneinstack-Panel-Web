@@ -34,7 +34,7 @@
         <div class="txt">{{ getJoinSource }}</div>
       </div>
     </div>
-    <div class="other">
+    <div class="other" v-if="conf.sourceUserInfo.userID">
       <!-- <div class="other-item">
         <img style="width: 34rem; height: 34rem;margin-right: 16rem;" src="/static/img/chat/video.svg" />
         <span>Voice or Video Call</span>

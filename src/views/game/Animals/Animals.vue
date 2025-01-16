@@ -111,7 +111,7 @@ const conf = reactive({
                 conf.game.isRun = false
                 let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
             
-                console.log(conf.lotteryBox.countDown);
+                // console.log(conf.lotteryBox.countDown);
                 let open = item.lotteryInterval / 1000 - 12
                 let time = conf.lotteryBox.countDown[3] - open
                 // 控制在35秒左右可下注

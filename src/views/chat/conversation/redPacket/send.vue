@@ -55,7 +55,7 @@
 
 <script setup lang="ts">
 
-// import { sim } from '@/sstore/sim'
+import { sim } from '@/sstore/sim'
 import i18n from '@/lang';
 import sutil from '@/sstore/sutil';
 import { svalue } from '@/sstore/svalue'
@@ -137,14 +137,14 @@ const conf = reactive({
           // on cancel
         });
     } else if (e.type === 2) {
-      // await sim.sendRedpack({
-      //   type: conf.typeIndex,
-      //   money: conf.money,
-      //   number: conf.number,
-      //   data: conf.content || conf.dataPlace,
-      //   tradePassword: e.verifySafety
-      // })
-      conf.back()
+      await sim.sendRedpack({
+        type: conf.typeIndex,
+        money: conf.money,
+        number: conf.number,
+        data: conf.content || conf.dataPlace,
+        tradePassword: e.verifySafety
+      })
+      sutil.pageBack()
     }
   }
 })
@@ -155,7 +155,7 @@ const allMoney = computed(() => {
   return conf.typeIndex === 3 ? money : money * number
 })
 onMounted(async () => {
-  conf.vrf = svf.getVf(this, {
+  conf.vrf = svf.getVf(conf, {
     number: { int: true },
     money: { float: true },
     content: { length: 60, trim: false }

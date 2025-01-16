@@ -16,7 +16,7 @@
       </div>
       <template v-if="csconversation.conversationList.length > 0">
         <van-swipe-cell v-for="(item, index) in csconversation.conversationList">
-          <div class="user-item" :class="{ pinned: item.isPinned }" @click="conf.toChating(item)">
+          <div class="user-item" :class="{ pinned: item.isPinned }" v-if="item.unreadCount || item.ex != 'hidden'" @click="conf.toChating(item)">
             <div class="row items-center" style="height: 92rem">
               <div class="relative face-box">
                 <headImg class="face" :src="item.faceURL" :isGroup="item.groupID ? true : false" />
@@ -59,6 +59,16 @@
         </van-swipe-cell>
       </template>
       <div class="border-right"></div>
+      <van-floating-bubble
+        axis="xy"
+        icon="chat"
+        magnetic="x"
+        :gap="5"
+        :offset="conf.offset"
+        @click="conf.onOffsetChange"
+      >
+        <img style="width: 100%;height: 100%;" src="/static/img/web-back.png" />
+      </van-floating-bubble>
     </div>
   </x-page>
 </template>
@@ -71,7 +81,11 @@ import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'
 import headImg from '../components/headImg.vue'
 import addDialog from './components/addDialog.vue'
+import { capis } from '@/modules/chat/api'
+import csuser from '@/modules/chat/sstore/csuser'
+import i18n from '@/lang'
 const conf = reactive({
+  offset: { x: 0,y: 600},
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
   listSort: () => {
     const plist = conf.list.filter((i) => i.isPinned)
@@ -85,25 +99,65 @@ const conf = reactive({
     })
 
     conf.list = [...plist, ...nlist]
+    console.log(conf.list);
+    
   },
-  top: async (item: any) => {
-    IMSDK.asyncApi(IMSDK.IMMethods.PinConversation, IMSDK.uuid(), {
-      conversationID: item.conversationID,
-      isPinned: !item.isPinned
-    })
-      .then(() => {
-        item.isPinned = !item.isPinned
-        conf.listSort()
+  top: async (item: any,type = 1) => {
+    // IMSDK.asyncApi(IMSDK.IMMethods.PinConversation, IMSDK.uuid(), {
+    //   conversationID: item.conversationID,
+    //   isPinned: !item.isPinned
+    // })
+    //   .then(() => {
+    //     item.isPinned = !item.isPinned
+    //     conf.listSort()
+    //   })
+    //   .catch(() => System.toast('置顶失败'))
+    console.log(item);
+      // 实现移除会话列表功能(说明：提供方法不能用，自定义实现方法)
+      let ex = type == 2 ? 'hidden' : ''
+      let isPinned = type == 1 ? !item.isPinned : item.isPinned
+      capis.setConversations({
+        userIDs: [csuser.selfInfo.userID],
+        conversation: {
+          conversationID: item.conversationID,
+          isPinned,
+          conversationType: item.conversationType,
+          userID: item.userID,
+          groupID: item.groupID,
+          recvMsgOpt: 0,
+          ex
+        }
       })
-      .catch(() => System.toast('置顶失败'))
+        .then((res) => {
+          if(type == 1) conf.listSort()
+          if(type == 2) {
+            if (item.unreadCount !== 0) {
+              item.unreadCount == 0
+              IMSDK.asyncApi(IMSDK.IMMethods.MarkConversationMessageAsRead, IMSDK.uuid(), item.conversationID)
+            }
+            csconversation.delConversationByCID(item.conversationID)
+          }
+          if(type == 3) prepareConversationState(item)
+        })
+        .catch((error) => {
+          System.toast(i18n.t('chatRoom.set_failed'))
+        })
   },
   delete: (item: any) => {
+    return conf.top(item,2)
+    console.log(csconversation.conversationList);
+    
+    console.log(item);
     IMSDK.asyncApi(IMSDK.IMMethods.DeleteConversationAndDeleteAllMsg, IMSDK.uuid(), item.conversationID)
       .then(() => csconversation.delConversationByCID(item.conversationID))
       .catch(() => System.toast('移除失败'))
   },
   toChating: (item: any) => {
+    if(item.ex == 'hidden') return conf.top(item,3)
     prepareConversationState(item)
+  },
+  onOffsetChange: () => {
+    System.router.replace('/home/home')
   },
   initList: () => {
     //解析最新消息
@@ -138,6 +192,8 @@ const conf = reactive({
 
 watch(() => csconversation.conversationList, conf.initList)
 onMounted(() => {
+  
+  conf.offset= {x:5, y:window.innerHeight - 160}
   conf.initList()
 })
 </script>

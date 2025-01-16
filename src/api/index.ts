@@ -312,7 +312,7 @@ export const apis = {
 
   // <-------------- 红包-------------->
   // 发红包
-  sendRedPacket: (data?: ApiData) => http.post('/api/v2/IMRedPacket/sendRedPacket', data),
+  sendRedPacket: (data?: ApiData) => http.post('/api/v2/IMRedPacket/sendRedPacket', { ...data, json: true }),
   // 领红包
   drawRedPacket: (data?: ApiData) => http.post('/api/v2/IMRedPacket/openRedPacket', data),
   // 红包状态

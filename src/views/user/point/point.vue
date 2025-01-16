@@ -324,6 +324,14 @@ const conf = index({ changeRef })
   padding: 0rem 20rem 20rem;
   font-size: 28rem;
 
+  div{
+    break-inside: avoid;
+  }
+
+  img{
+    break-inside: avoid;
+  }
+
   .point-item {
     background: #fff;
     border-radius: 10rem;

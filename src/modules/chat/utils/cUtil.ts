@@ -37,7 +37,7 @@ export const conversationSort = (conversationList: any[]) => {
 }
 
 export const formatHyperlink = (nickname: string, currentUserID: string) => {
-  return `<a href="${currentUserID}" style="color:#0089FF; text-decoration:none;">${nickname}</a>`
+  return `<a href="/#/chat/userCard?sourceID=${currentUserID}" style="color:#0089FF; text-decoration:none;">${nickname}</a>`
 }
 const regex = /\b(http[s]?:\/\/[^\s]+)\b/g
 export const parseLink = (content: string) => content.replace(regex, (match: string) => formatHyperlink(match, match))
