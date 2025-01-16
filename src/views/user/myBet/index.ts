@@ -202,6 +202,13 @@ export const index = ({ chooseRef }: any) => {
               color = obj[v]
             }
           }
+          // AnimalsRunning
+          else if (item.lotteryTypeCode == 'ANIMALS_RUNNING') {
+            const betCode = item.betCodes.split('_')[1]
+            img = `/static/img/game/animal/${betCode}.png`
+            color = v
+            v = parseInt(item.betCodes[0]) - 1
+          }
           return {
             img,
             value: v,

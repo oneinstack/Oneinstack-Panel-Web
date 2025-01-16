@@ -159,7 +159,7 @@
                             src="/static/lottie/zxb/zxb-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[5] == 'active'"
                             src="/static/lottie/zxb/zxb-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="0.8" v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 1"
                             src="/static/lottie/zxb/zxb-run.json" />
                         <lottie-player autoplay loop mode="normal" speed="1.3" v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 2"
                             src="/static/lottie/zxb/zxb-run.json" />
@@ -303,43 +303,43 @@ const conf = reactive({
     init() {
         conf.numlist = [
             {
-                img: 'exb',
-                name: 'Exiaobao',
+                img: 'A',
+                name: 'exb',
                 show: false,
                 sort: 1,
                 num: 1
             },
             {
-                img: 'hm',
-                name: 'Freshippo',
+                img: 'B',
+                name: 'hm',
                 show: false,
                 sort: 2,
                 num: 2
             },
             {
-                img: 'pp',
-                name: 'Piaopiao',
+                img: 'C',
+                name: 'pp',
                 show: false,
                 sort: 3,
                 num: 3
             },
             {
-                img: 'xz',
-                name: 'Xiazai',
+                img: 'D',
+                name: 'xz',
                 show: false,
                 sort: 4,
                 num: 4
             },
             {
-                img: 'zxb',
-                name: 'Zhixiaobao',
+                img: 'E',
+                name: 'zxb',
                 show: false,
                 sort: 5,
                 num: 5
             },
             {
-                img: 'hx',
-                name: 'Huanxing',
+                img: 'F',
+                name: 'hx',
                 show: false,
                 sort: 6,
                 num: 6
@@ -502,11 +502,12 @@ const conf = reactive({
             if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
             conf.carInfo.x[i] = x
             if(i < 3 && conf.isAddRun) conf.speedInfo[conf.numsort[i - 1].num] = 2
-            
+            let time = x * 10
+            if(!conf.isAddRun) time = x * 7
             // conf.aniName + conf.numsort[0].num = 'run'
             stween.to('animal' + i, {
                 x: x,
-                time: (x * 10),
+                time,
                 final() {
                     if(i < 3) conf.speedInfo[conf.numsort[i - 1].num] = 1
                     if (final) {
@@ -526,13 +527,13 @@ const conf = reactive({
      */
     async stop(res: any) {
         if(res.length < 6)  res = ["B","F",'A','C','E','D']
-        
-        const stIndex = res.indexOf('A');
-        const ndIndex = res.indexOf('B');
-        const rdIndex = res.indexOf('C');
-        const fuIndex = res.indexOf('D');
-        const fvIndex = res.indexOf('E');
-        const sxIndex = res.indexOf('F');
+        let list = ["A","B",'C','D','E','F']
+        const stIndex = list.indexOf(res[0]);
+        const ndIndex = list.indexOf(res[1]);
+        const rdIndex = list.indexOf(res[2]);
+        const fuIndex = list.indexOf(res[3]);
+        const fvIndex = list.indexOf(res[4]);
+        const sxIndex = list.indexOf(res[5]);
         let numList = conf.getRandomCarArr()
         numList = numList.sort((a,b) => b - a)
         let _arr = []
@@ -617,7 +618,7 @@ const conf = reactive({
             for (let i = 1; i < 7; i++) {
                 stween.to('animal' + conf.numsort[i-1].num, {
                     x: sutil.rem2px(750) + (600 - conf.numsort[i-1].sort),
-                    time: (600 - conf.numsort[i-1].sort) * 6,
+                    time: (600 - conf.numsort[i-1].sort) * 5,
                     final() {
                         let num = conf.numsort[i - 1].num
                         conf.numlist[num - 1].sort = i
@@ -731,7 +732,7 @@ onMounted(() => {
     position: absolute;
     top: -22rem;
     right: -21rem;
-    height: 220rem;
+    height: 240rem;
     width: 240rem;
     z-index: 9;
 }

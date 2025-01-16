@@ -26,7 +26,7 @@ const props = defineProps({
 
 const getSortName = (num: number) => {
     let current:any = props.winList.filter(item => item.sort == num)
-    return current[0].img
+    return current[0].name
 }
 
 </script>

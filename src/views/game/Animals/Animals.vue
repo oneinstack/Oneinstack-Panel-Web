@@ -29,7 +29,7 @@
             <aniBet
                 :options="conf.bet.tabs.options"
                 :listNumArr="conf.bet.listNumArr"
-                :stopBet="!conf.game.showDown"
+                :stopBet="!conf.game.showDown || (conf.lotteryBox.countDown[3] <= conf.openLockCountdown)"
                 :defaultWalletInfo="conf.defaultWalletInfo"
                 @changeBet="conf.bet.requestBet"
             />
@@ -74,7 +74,6 @@ import i18n from '@/lang';
 import sconfig from '@/sstore/sconfig';
 import { svalue } from '@/sstore/svalue';
 import sutil from '@/sstore/sutil';
-import { clamp } from 'vant/lib/utils';
 import timeType from './com/timeType.vue';
 
 const cgamebox = ref<any>()
@@ -107,10 +106,13 @@ const conf = reactive({
         },
         stop: (res: any) => {
             if (conf.game.isRun) {
+                let openCodeArr = res
+                conf.result.typeResult[conf.play.lotteryId] = {...conf.lotteryBox.last,openCodeArr}
                 conf.game.isRun = false
                 let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
+            
                 console.log(conf.lotteryBox.countDown);
-                let open = item.lotteryInterval / 1000 - 11
+                let open = item.lotteryInterval / 1000 - 12
                 let time = conf.lotteryBox.countDown[3] - open
                 // 控制在35秒左右可下注
                 if(time > 0) {
@@ -239,22 +241,38 @@ const conf = reactive({
             })
             // 统计前一百条的冠、亚、季军
             conf.result.rest()
-            // openData.records.forEach((item: any,index: number) => {
-            //     if(item.openCode) {
-            //         let array = item.openCode.split(',')
-            //         const stIndex = array.indexOf('A');
-            //         const ndIndex = array.indexOf('B');
-            //         const rdIndex = array.indexOf('C');
+            openData.records.forEach((item: any,index: number) => {
+                if(item.openCode) {
+                    let array = item.openCode.split(',')
+                    let list = ['A','B','C','D','E','F']
+                    const stIndex = list.indexOf(array[0]);
+                    const ndIndex = list.indexOf(array[1]);
+                    const rdIndex = list.indexOf(array[2]);
                     
-            //         conf.result.totalList[stIndex].st = conf.result.totalList[stIndex].st + 1
-            //         conf.result.totalList[ndIndex].nd = conf.result.totalList[ndIndex].nd + 1
-            //         conf.result.totalList[rdIndex].rd = conf.result.totalList[rdIndex].rd + 1
-            //     }
-            // })
+                    conf.result.totalList[stIndex].st = conf.result.totalList[stIndex].st + 1
+                    conf.result.totalList[ndIndex].nd = conf.result.totalList[ndIndex].nd + 1
+                    conf.result.totalList[rdIndex].rd = conf.result.totalList[rdIndex].rd + 1
+                }
+            })
             let list = openData.records.slice(0, 10) || []
             conf.result.list = list.map((item: any) => {
-                let openCodeArr = []
-                if (item.openCode) openCodeArr = item.openCode.split(',')
+                let openCodeArr = [] as any[]
+                let list = ['A','B','C','D','E','F']
+                if (item.openCode) {
+                    let arr = item.openCode.split(',')
+                    let one = list.indexOf(arr[0])
+                    let two = list.indexOf(arr[1])
+                    let three = list.indexOf(arr[2])
+                    let four = list.indexOf(arr[3])
+                    let five = list.indexOf(arr[4])
+                    let six = list.indexOf(arr[5])
+                    openCodeArr[one] = 1
+                    openCodeArr[two] = 2
+                    openCodeArr[three] = 3
+                    openCodeArr[four] = 4
+                    openCodeArr[five] = 5
+                    openCodeArr[six] = 6
+                }
                 return {
                     ...item,
                     openCodeArr
@@ -279,12 +297,12 @@ const conf = reactive({
         },
         rest() {
             conf.result.totalList = [
-                { img: 'exb', name: 'Exiaobao', st: 0, nd: 0, rd: 0 },
-                { img: 'hm', name: 'Freshippo', st: 0, nd: 0, rd: 0 },
-                { img: 'pp', name: 'Piaopiao', st: 0, nd: 0, rd: 0 },
-                { img: 'xz', name: 'Xiazai', st: 0, nd: 0, rd: 0 },
-                { img: 'zxb', name: 'Zhixiaobao', st: 0, nd: 0, rd: 0 },
-                { img: 'hx', name: 'Huanxing', st: 0, nd: 0, rd: 0 }
+                { img: 'A', name: 'Exiaobao', st: 0, nd: 0, rd: 0 },
+                { img: 'B', name: 'Freshippo', st: 0, nd: 0, rd: 0 },
+                { img: 'C', name: 'Piaopiao', st: 0, nd: 0, rd: 0 },
+                { img: 'D', name: 'Xiazai', st: 0, nd: 0, rd: 0 },
+                { img: 'E', name: 'Zhixiaobao', st: 0, nd: 0, rd: 0 },
+                { img: 'F', name: 'Huanxing', st: 0, nd: 0, rd: 0 }
             ]
         }
     },
@@ -314,7 +332,7 @@ const conf = reactive({
         //选中当前游戏
         conf.play.choose(conf.play.lotteryId)
         //获取赔率信息
-        // await conf.bet.getOdds()
+        await conf.bet.getOdds()
         //获取开奖信息任务
         conf.lotteryBox.getInfoLoop(0)
         conf.getWalletMoney(2)
@@ -326,7 +344,7 @@ const conf = reactive({
     },
     //查看my order
     changeMyOrder() {
-      System.router.push('/user/myBet/index?lottery=ANIMALS_RUNNING')
+      System.router.push('/user/myBet/index?lottery=AnimalsRunning')
     },
 })
 onMounted(async () => {
@@ -347,6 +365,7 @@ onBeforeMount(async () => {
                     'stop',
                     results.map((v: any) => v.num)
                 )
+                conf.result.getList()
             }
         },
         updateCountDown: (time: any) => {
@@ -357,7 +376,6 @@ onBeforeMount(async () => {
         lotteryId: () => conf.play.lotteryId,
         showBox: () => { }
     })
-    
     conf.bet.listNumArr = [
         {
             sort: 1,

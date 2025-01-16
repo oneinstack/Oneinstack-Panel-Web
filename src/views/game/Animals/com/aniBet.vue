@@ -98,7 +98,7 @@ const conf = reactive({
         conf.selectIndex = index
     },
     changeMul() {
-        conf.total = conf.total * 10
+        conf.total = conf.total + conf.betMinMoney
         if(conf.betMaxMoney > 10000) conf.betMaxMoney = 10000  
         if (conf.total > conf.betMaxMoney) conf.total = conf.betMinMoney
     },
@@ -113,7 +113,7 @@ const conf = reactive({
 
 const getWinMoney = computed(() => {
     let odds = props.listNumArr[conf.selectIndex][conf.selectType + 'odds'] || 1
-    return conf.total * odds
+    return sutil.dataHandling(conf.total * odds)
 })
 watch(
   () => props.defaultWalletInfo,
@@ -300,7 +300,7 @@ onMounted(() => {
     }
 
     .btn {
-        height: 120rem;
+        height: 110rem;
         width: 100%;
         display: flex;
         margin-top: 10rem;

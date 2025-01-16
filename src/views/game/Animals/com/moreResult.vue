@@ -39,7 +39,7 @@
                     <div class="tabli-line" v-if="item.openCode">
                         <div class="issue">{{item.openExpect.length>7 ?item.openExpect.substr(4) : item.openExpect}}</div>
                         <template  v-for="(n,i) in item.openCodeArr" :key="i">
-                            <div class="num" :class="{'active': (conf.active=='st' && n=='A') || (conf.active=='nd' && n=='B') || (conf.active=='rd' && n=='C')}">{{ n }}</div>
+                            <div class="num" :class="{'active': (conf.active=='st' && n==1) || (conf.active=='nd' && n==2) || (conf.active=='rd' && n==3)}">{{ n }}</div>
                         </template>
                     </div>
                     <div class="tabli-line" v-else>

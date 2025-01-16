@@ -28,7 +28,7 @@ export default [
     component: '/game/satta/satta'
   },
   {
-    path: '/game/Animals/Animals',
+    path: '/game/AnimalsRunning/AnimalsRunning',
     component: '/game/Animals/Animals'
   },
   {

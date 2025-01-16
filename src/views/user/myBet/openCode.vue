@@ -1,6 +1,6 @@
 <template>
   <div class="row items-center openCode">
-    <div class="row items-center" v-for="el in item.betOpenCodeList">
+    <div class="row items-center" v-for="(el,i) in item.betOpenCodeList">
       <!-- 3D -->
       <img v-if="item.lotteryTypeCode == '3D'" style="width: 42rem; height: 42rem; margin: 0 6rem" :src="el.img" />
 
@@ -40,6 +40,12 @@
       <div class="row relative flex-center" v-else-if="item.lotteryTypeCode == 'SATTA_KING'">
         <img style="width: 42rem; height: 42rem; margin: 0 6rem" src="/static/img/color-red.webp" />
         <div class="absolute" style="color: #fff; font-size: 24rem">{{ el.value }}</div>
+      </div>
+
+      <!-- AnimalsRunning -->
+      <div class="row relative flex-center" v-else-if="item.lotteryTypeCode == 'ANIMALS_RUNNING'">
+        <img v-if="i == el.value" style="width: 42rem; height: 42rem; margin: 0 6rem" :src="`/static/img/game/animal/${el.color}.png`" />
+        <!-- <div class="absolute" style="color: #666; font-size: 22rem;top: 40rem;">{{ el.value }}</div> -->
       </div>
     </div>
 
