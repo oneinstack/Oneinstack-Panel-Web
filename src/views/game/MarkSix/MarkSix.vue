@@ -69,16 +69,24 @@
 
       <!-- Betting 一二级 -->
       <bettingtabs v-if="conf.operation.active === 'betting'" />
-      
+
       <div style="height: 36rem"></div>
     </div>
 
-    <betting v-if="conf.operation.active === 'betting'" />
+    <!-- 内容区 -->
+    <div class="col" style="overflow: auto">
+      <!-- 下注区 -->
+      <betting v-if="conf.operation.active === 'betting'" />
+    </div>
+
+    <!-- 下注按钮 -->
+    <bottombtn v-if="conf.operation.active === 'betting'" />
   </GameLayout>
 </template>
 <script setup lang="ts">
 import { Scope } from 'tools-vue3'
 import GameLayout from '../components/gameLayout.vue'
+import bottombtn from './components/betting/bottombtn.vue'
 import betting from './components/betting/index.vue'
 import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'

@@ -21,57 +21,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
-const conf = reactive({
-  tree: [
-    {
-      label: 'Special code',
-      children: [
-        {
-          label: 'Special code'
-        },
-        {
-          label: 'Official code2'
-        },
-        {
-          label: 'Official code3'
-        }
-      ]
-    },
-    {
-      label: 'Positive code',
-      children: [
-        {
-          label: 'Special code2'
-        },
-        {
-          label: 'Official code22'
-        },
-        {
-          label: 'Official code32'
-        }
-      ]
-    }
-  ],
-  level1: {
-    list: [] as any[],
-    item: {} as any,
-    change(item: any) {
-      conf.level1.item = item
-      conf.level2.list = item.children
-      conf.level2.change(item.children[0])
-    }
-  },
-  level2: {
-    list: [] as any[],
-    item: {} as any,
-    change(item: any) {
-      conf.level2.item = item
-    }
-  }
-})
-conf.level1.list = conf.tree
-conf.level1.change(conf.tree[0])
+import { Scope } from 'tools-vue3'
+const mconf = Scope.getConf()
+const conf = mconf.conf.betting.tabs
 </script>
 <style lang="less" scoped>
 .level1-box {

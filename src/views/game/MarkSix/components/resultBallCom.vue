@@ -24,5 +24,6 @@ const props = defineProps<{
 .ball-box {
   background-repeat: no-repeat;
   background-size: 100% 100%;
+  pointer-events: none;
 }
 </style>

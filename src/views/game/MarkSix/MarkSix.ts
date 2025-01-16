@@ -35,9 +35,12 @@ export const index = () => {
         conf.ballListRef[key].conf.runAni()
       })
     },
+    /**
+     * 功能控制菜单
+     */
     operation: {
       active: 'betting',
-      list:[
+      list: [
         {
           label: i18n.t('game.betting'),
           value: 'betting'
@@ -62,10 +65,73 @@ export const index = () => {
       change: (item: any) => {
         conf.operation.active = item.value
       }
+    },
+    /**
+     *
+     */
+    betting: {
+      tabs: {
+        tree: [
+          {
+            label: 'Special code',
+            children: [
+              {
+                label: 'Special code'
+              },
+              {
+                label: 'Official code2'
+              },
+              {
+                label: 'Official code3'
+              }
+            ]
+          },
+          {
+            label: 'Positive code',
+            children: [
+              {
+                label: 'Special code2'
+              },
+              {
+                label: 'Official code22'
+              },
+              {
+                label: 'Official code32'
+              }
+            ]
+          }
+        ],
+        level1: {
+          list: [] as any[],
+          item: {} as any,
+          change(item: any) {
+            const { tabs } = conf.betting
+            tabs.level1.item = item
+            tabs.level2.list = item.children
+            tabs.level2.change(item.children[0])
+          }
+        },
+        level2: {
+          list: [] as any[],
+          item: {} as any,
+          change(item: any) {
+            const { tabs } = conf.betting
+            tabs.level2.item = item
+          }
+        },
+        init: () => {
+          const { tabs } = conf.betting
+          tabs.level1.list = tabs.tree
+          tabs.level1.change(tabs.tree[0])
+        }
+      }
     }
   })
   onMounted(() => {
     conf.runAni()
+
+    // 初始化下注区域选中
+    conf.betting.tabs.init()
   })
   return { conf, lottery }
 }

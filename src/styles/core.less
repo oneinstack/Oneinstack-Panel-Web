@@ -34,7 +34,7 @@ html {
   pointer-events: none;
 }
 
-#app {    
+#app {
   z-index: 1;
   height: var(--height);
   position: relative;
@@ -60,4 +60,11 @@ html {
 
 img {
   max-width: 750rem;
+}
+
+.gradient-text {
+  background-image: -webkit-linear-gradient(180deg, var(--color-1) 0%, var(--color-2) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

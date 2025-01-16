@@ -20,21 +20,27 @@ const conf = reactive({
     nextTick(() => {
       conf.show = true
     })
-  }
+  },
+  leaveTime: 0
 })
 
-CEvent.on(ERouter.browserShow, (isShow) => {
+CEvent.on(ERouter.browserShow, async (isShow) => {
   if (sconfig.userInfo) {
     if (isShow) {
       // 上线
-      apis.backOnline({
+      await apis.backOnline({
         toast: () => {}
       })
+      // 如果离开时间大于1分钟，则刷新页面
+      if (conf.leaveTime && Date.now() - conf.leaveTime > 60 * 1000) {
+        conf.reload()
+      }
     } else {
       // 下线
       apis.offline({
         toast: () => {}
       })
+      conf.leaveTime = Date.now()
     }
   }
 })

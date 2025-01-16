@@ -24,7 +24,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { onMounted, reactive } from 'vue'
 import { lhc } from './resultBall'
 import resultBallCom from './resultBallCom.vue'
 const props = withDefaults(
@@ -35,11 +35,12 @@ const props = withDefaults(
     aniY?: number
     aniScale?: number
     reverse?: boolean
-    index: number
+    index?: number
     /**
      * 动画时间-ms
      */
     time?: number
+    num?: any
   }>(),
   {
     size: 56,
@@ -73,7 +74,7 @@ const conf = reactive({
   },
   /**
    * 设置显示值，停止动画
-   * @param val 
+   * @param val
    */
   setVal: (val: any) => {
     conf.ani.stop()
@@ -151,6 +152,12 @@ const conf = reactive({
     item.val = lhc.getVal(num)
     item.img = lhc.getImg(num, props.active)
     item.color = lhc.getColor(num, props.active)
+  }
+})
+
+onMounted(() => {
+  if (props.num) {
+    conf.setVal({ num: props.num })
   }
 })
 
