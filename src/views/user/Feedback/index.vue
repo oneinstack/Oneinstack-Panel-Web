@@ -28,6 +28,7 @@ const conf = index()
             <van-text-ellipsis :content="item.issueDepict" rows="3"/>
           </div>
         </div>
+        <x-no-data v-if="conf.listData.length == 0"></x-no-data>
       </div>
     </div>
   </x-page>

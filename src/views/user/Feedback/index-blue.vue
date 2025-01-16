@@ -29,6 +29,7 @@ const conf = index()
             {{ item.issueDepict }}
           </div>
         </div>
+        <x-no-data v-if="conf.listData.length == 0"></x-no-data>
       </div>
     </div>
   </x-page>
