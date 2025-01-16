@@ -19,7 +19,10 @@ const conf = index()
               {{ item.typeName }}
               <van-icon name="arrow" size="20rem" />
             </div>
-            <div class="status-view" v-if="item.issieStatus == 0"></div>
+            <div class="status-view" v-if="item.statu == 0 && item.issieStatus != 2"></div>
+            <div v-if="item.issieStatus == 2">
+              <x-img src="/static/img/resolved.png" class="img-item" :lazyLoad="false" width="60rem" height="60rem"></x-img>
+            </div>
           </div>
           <div class="time">
             {{ item.createTime }}
