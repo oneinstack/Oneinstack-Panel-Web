@@ -80,7 +80,7 @@ export const index = () => {
     handleDataSubmit:() => {
         let isNull = false
         Object.keys(conf.formData).forEach((key: string) => {
-            if(!conf.formData[key] || conf.formData[key].length == 0){
+            if(key != 'fileList' && !conf.formData[key] && conf.formData[key].length == 0 ){
                 isNull = true
             }
         })

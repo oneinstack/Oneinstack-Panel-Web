@@ -37,8 +37,10 @@ const conf = index()
       <div class="input-box">
         <div class="lable">{{ $t('Feedback.problemScreenshot') }}</div>
         <van-uploader v-model="conf.formData.fileList" multiple :max-count="3" :after-read="conf.handleSelectPhoto">
-            <van-icon name="plus" size="50" color="#ccc" v-if="!conf.isShowImg" />
-            <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" v-else />
+          <div class="upload-view" v-if="!conf.isShowImg">
+            <van-icon name="plus" size="50" color="#ccc" />
+          </div>
+          <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" v-else />
         </van-uploader>
       </div>
       <div class="input-box">
@@ -375,5 +377,11 @@ input::placeholder,
 :deep(.van-uploader__preview-image){
     width: 216rem !important;
     height: 216rem !important;
+}
+.upload-view{
+  display: grid;
+  place-items: center;
+  width: 216rem;
+  height: 216rem;
 }
 </style>

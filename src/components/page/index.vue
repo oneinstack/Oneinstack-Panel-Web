@@ -240,10 +240,7 @@ onMounted(() => {
       left: 0;
 
       .back-img {
-        width: 18rem;
-        height: 30rem;
         margin-left: 30rem;
-        transform: translateY(-4rem);
       }
     }
 

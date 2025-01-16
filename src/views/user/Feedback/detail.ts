@@ -24,7 +24,7 @@ export const index = () => {
       apis.questionDetail({id:conf.dataObj.id}).then((res: any) => {
         conf.detailObj = res.data
         conf.detailObj.typeName = conf.typeList.find((item: any) => item.dictKey == String(conf.dataObj.issueType))?.dictValue
-        conf.imgList = res.data.issueUrl.split(',') || []
+        conf.imgList = res.data.issueUrl ? res.data.issueUrl.split(',') : []
         conf.detailObj.reolyList?.forEach((item: any) => {
           item.replyTime = new Date(item.replyTime).Format()
         })

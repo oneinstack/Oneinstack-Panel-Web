@@ -21,7 +21,7 @@ const conf = index()
           <div class="detail-content">
             {{ conf.detailObj.issueDepict }}
           </div>
-          <div class="img-content">
+          <div class="img-content" v-if="conf.imgList.length > 0">
             <template v-for="(item, itemIndex) in conf.imgList">
               <x-img :src="item" class="img-item" :lazyLoad="false"></x-img>
             </template>
@@ -43,7 +43,8 @@ const conf = index()
             </div>
           </div>
         </template>
-        <van-field
+        <template v-if="conf.detailObj.issieStatus != 2">
+          <van-field
             v-model="conf.replyContent"
             rows="3"
             autosize
@@ -51,13 +52,13 @@ const conf = index()
             maxlength="500"
             placeholder="Please Enter"
             show-word-limit
-        />
-
-        <div class="btn-view">
-        <div class="sumit-btn" @click="conf.handleDataSubmit">
-          {{ $t('Feedback.submit') }}
-        </div>
-      </div>
+          />
+          <div class="btn-view">
+            <div class="sumit-btn" @click="conf.handleDataSubmit">
+              {{ $t('Feedback.submit') }}
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </x-page>
@@ -94,6 +95,9 @@ const conf = index()
       background: #fff;
       border-radius: 20rem;
       line-height: 34rem;
+      .detail-content{
+        word-wrap: break-word;
+      }
       .img-content {
         margin-top: 20rem;
         display: flex;
@@ -109,6 +113,7 @@ const conf = index()
 
     .reply-item {
       margin-top: 20rem;
+      word-wrap: break-word;
       .info {
         font-size: 24rem;
         font-weight: 400;
