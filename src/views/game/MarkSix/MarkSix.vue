@@ -43,7 +43,14 @@
             <div>:</div>
             <div class="count-down-item flex flex-center">{{ lottery.countDown[2] }}</div>
           </div>
-          <div class="col"></div>
+          <div class="col flex items-center" style="margin: 0 20rem">
+            <div class="count-down-line relative">
+              <div
+                class="count-down-line-item"
+                :style="{ width: `${(lottery.countDown[3] / (lottery.play.item.lotteryInterval / 1000)) * 100}%` }"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -116,13 +123,31 @@ const { conf, lottery } = index()
   .count-down-box {
     font-size: 28rem;
     margin-top: 32rem;
+
+    .count-down {
+      font-size: 48rem;
+    }
+
     .count-down-item {
       width: 72rem;
       height: 72rem;
       background: #000000;
       border-radius: 4rem;
       color: #ffffff;
-      font-size: 48rem;
+    }
+
+    .count-down-line {
+      height: 16rem;
+      width: 100%;
+      border-radius: 22rem;
+      background: #b6b9c4;
+      transform: translateX(20rem);
+      overflow: hidden;
+    }
+    .count-down-line-item {
+      background: linear-gradient(180deg, #fb0224 0%, #f56900 100%);
+      height: 100%;
+      transition: width 0.3s;
     }
   }
 }

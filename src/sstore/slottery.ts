@@ -312,7 +312,14 @@ export const slottery = reactive({
        * 选择的玩法
        */
       play: {
-        item: {} as { id: string; lotteryTypeId: number; label: string; title: string },
+        item: {} as {
+          id: string
+          lotteryTypeId: number
+          label: string
+          title: string
+          openLockCountdown: number
+          lotteryInterval: number
+        },
         list: [] as any[],
         change: async (path: string, obj: any) => {
           if (obj.id === conf.play.item.id) return
