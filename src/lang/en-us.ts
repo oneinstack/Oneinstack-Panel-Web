@@ -362,7 +362,7 @@ export default {
     UploadPictureFailed: 'Upload picture failed',
     shakeTip: 'Please do not click continuously',
     noNetWork: 'NetWork interruption',
-    pefresh: 'Pefresh',
+    pefresh: 'Pefresh'
   },
   version: {
     title: 'Update',
@@ -1021,25 +1021,25 @@ export default {
   },
 
   task: {
-		Task: 'Task',
-		taskDetail: 'Task Detail',
-		mytask: 'My Task',
-		unfnished: 'unfnished',
-		completed: 'completed',
-		TaskName: 'Task Name',
-		TaskDescription: 'Task Description',
-		TaskNumber: 'Task Number',
-		TaskMoney: 'Task Money',
-		ALL: 'ALL',
-		Unfnished: 'Unfnished',
-		Completed: 'Completed',
-		Underway: 'Underway',
-		DEposit: 'Deposit',
-		ongoing: 'Ongoing',
-		failed: 'Failed',
-		finished: 'Finished',
-		claimed: 'Claimed'
-	},
+    Task: 'Task',
+    taskDetail: 'Task Detail',
+    mytask: 'My Task',
+    unfnished: 'unfnished',
+    completed: 'completed',
+    TaskName: 'Task Name',
+    TaskDescription: 'Task Description',
+    TaskNumber: 'Task Number',
+    TaskMoney: 'Task Money',
+    ALL: 'ALL',
+    Unfnished: 'Unfnished',
+    Completed: 'Completed',
+    Underway: 'Underway',
+    DEposit: 'Deposit',
+    ongoing: 'Ongoing',
+    failed: 'Failed',
+    finished: 'Finished',
+    claimed: 'Claimed'
+  },
 
   SattaKing: {
     Details: 'Details',
@@ -1521,7 +1521,7 @@ export default {
     groupAdministrator: 'Group Administrator',
     stickyTop: 'Sticky On Top',
     clearHistory: 'Clear Chat History',
-    groupChat:'Group Chat',
+    groupChat: 'Group Chat',
     savePicture: 'Save Picture',
     edit: 'Edit',
     groupCanEdit: 'Only the group owner and administrator can edit',
@@ -1533,15 +1533,16 @@ export default {
     clearNotification: 'Confirm to clear the group notification',
     allMute: 'All Members Mute',
     muteTips: 'After all members are muted, only the group owner and administrator are allowed to speak',
-    viewMoreMembers:'View more group members',
+    viewMoreMembers: 'View more group members',
     selectMaster: 'Select group master',
     chatDetails: 'Chat details',
-    administratorTips1: 'The administrator can assist the group master to manage the group chat and has the ability to remove group members',
+    administratorTips1:
+      'The administrator can assist the group master to manage the group chat and has the ability to remove group members',
     administratorTips2: 'Only the group owner has the ability to set up administrators and dismiss group chats',
     addMembers: 'Add Members',
     removeAdministrator: 'Confirm to remove administrator',
     administrativeRights: 'Remove administrative rights',
-    selectMembers: 'Select group members',
+    selectMembers: 'Select group members'
   },
   uView: {
     modal: {
@@ -1780,6 +1781,6 @@ export default {
     pleaseFillInAllFields: 'Please fill in all fields',
     detail: 'Feedback Details',
     replyContent: 'Reply Content',
-    replyContentTip: 'Please enter the reply content',
-  },
+    replyContentTip: 'Please enter the reply content'
+  }
 }

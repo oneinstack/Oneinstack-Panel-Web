@@ -66,14 +66,28 @@
           {{ item.label }}
         </div>
       </div>
+
+      <!-- Betting 一二级 -->
+      <bettingtabs v-if="conf.operation.active === 'betting'" />
+      
+      <div style="height: 36rem"></div>
     </div>
+
+    <betting v-if="conf.operation.active === 'betting'" />
   </GameLayout>
 </template>
 <script setup lang="ts">
+import { Scope } from 'tools-vue3'
 import GameLayout from '../components/gameLayout.vue'
+import betting from './components/betting/index.vue'
+import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'
 import { index } from './MarkSix'
 const { conf, lottery } = index()
+Scope.setConf({
+  conf,
+  lottery
+})
 </script>
 
 <style lang="less" scoped>
@@ -180,7 +194,7 @@ const { conf, lottery } = index()
     .type-item {
       height: 76rem;
       border-radius: 6rem;
-      padding: 0 30rem;
+      padding: 0 20rem;
       min-width: max-content;
       color: #666666;
       &.active {
