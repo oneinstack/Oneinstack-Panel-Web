@@ -14,8 +14,6 @@ import resultBall from '../resultBall.vue'
 const conf = reactive({
   list: [] as any[],
   change(item: any) {
-    console.log('item', item.num)
-
     item.isActive = !item.isActive
   }
 })

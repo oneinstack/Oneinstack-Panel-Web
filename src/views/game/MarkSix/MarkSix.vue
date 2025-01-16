@@ -1,5 +1,5 @@
 <template>
-  <GameLayout title="MarkSix" code="MARK_SIX" :lottery="lottery">
+  <GameLayout :ref="conf.layout.setRef" title="MarkSix" code="MARK_SIX" :lottery="lottery">
     <!--开奖结果  -->
     <div class="top-result row relative">
       <div class="result column col justify-center">
@@ -79,8 +79,10 @@
       <betting v-if="conf.operation.active === 'betting'" />
     </div>
 
+    <template #bet>666</template>
+
     <!-- 下注按钮 -->
-    <bottombtn v-if="conf.operation.active === 'betting'" />
+    <bottombtn v-if="conf.operation.active === 'betting'" @confirm="conf.betting.popup.open" />
   </GameLayout>
 </template>
 <script setup lang="ts">

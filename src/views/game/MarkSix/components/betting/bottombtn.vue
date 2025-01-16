@@ -1,12 +1,11 @@
 <template>
-    
-    <div class="bet-bottom-box row items-center justify-between" >
-      <div>
-        {{ $t('game.TotalBetAmount') }}:
-        <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">3</span>
-      </div>
-      <div class="bet-button flex flex-center">Bet</div>
+  <div class="bet-bottom-box row items-center justify-between">
+    <div>
+      {{ $t('game.TotalBetAmount') }}:
+      <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">3</span>
     </div>
+    <div class="bet-button flex flex-center" @click="$emit('confirm')">Bet</div>
+  </div>
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue'
@@ -28,4 +27,5 @@ const conf = reactive({})
     color: #ffffff;
     font-weight: 500;
   }
-}</style>
+}
+</style>

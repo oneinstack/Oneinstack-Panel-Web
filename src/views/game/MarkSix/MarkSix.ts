@@ -22,6 +22,13 @@ export const index = () => {
     showBox: () => {}
   })
   const conf = reactive({
+    layout: {
+      ref: null as any,
+      setRef: (el: any) => {
+        if (el) conf.layout.ref = el
+        else conf.layout.ref = null as any
+      }
+    },
     ballListRef: {} as { [key: number]: { conf: any } },
     setBallRef: (el: any) => {
       if (el) conf.ballListRef[el.conf.index] = el
@@ -123,6 +130,14 @@ export const index = () => {
           const { tabs } = conf.betting
           tabs.level1.list = tabs.tree
           tabs.level1.change(tabs.tree[0])
+        }
+      },
+      popup: {
+        open: () => {
+          conf.layout.ref.open()
+        },
+        close: () => {
+          conf.layout.ref.close()
         }
       }
     }
