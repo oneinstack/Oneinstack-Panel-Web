@@ -1,3 +1,4 @@
+import i18n from '@/lang'
 import slottery from '@/sstore/slottery'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
@@ -33,6 +34,34 @@ export const index = () => {
       Object.keys(conf.ballListRef).forEach((key: any) => {
         conf.ballListRef[key].conf.runAni()
       })
+    },
+    operation: {
+      active: 'betting',
+      list:[
+        {
+          label: i18n.t('game.betting'),
+          value: 'betting'
+        },
+        {
+          label: i18n.t('game.analyze'),
+          value: 'analyze'
+        },
+        {
+          label: i18n.t('game.result'),
+          value: 'result'
+        },
+        {
+          label: i18n.t('game.myOrder'),
+          value: 'myOrder'
+        },
+        {
+          label: i18n.t('game.rule'),
+          value: 'rule'
+        }
+      ],
+      change: (item: any) => {
+        conf.operation.active = item.value
+      }
     }
   })
   onMounted(() => {

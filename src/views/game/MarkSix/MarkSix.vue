@@ -21,7 +21,7 @@
 
     <div class="top-bg-box">
       <!-- 切换玩法 -->
-      <div style="margin-top: 42rem; gap: 20rem" class="row flex-center">
+      <div class="row no-wrap play-type" v-scroll :class="{ 'flex-center': lottery.play.list.length < 4 }">
         <div
           class="type-item flex flex-center relative"
           v-for="item in lottery.play.list"
@@ -51,6 +51,19 @@
               ></div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- 功能控制 -->
+      <div class="row items-center no-wrap operation-box" v-scroll>
+        <div
+          class="type-item flex flex-center relative text-no-wrap"
+          v-for="item in conf.operation.list"
+          :key="item.value"
+          :class="{ active: item.value === conf.operation.active }"
+          @click="conf.operation.change(item)"
+        >
+          {{ item.label }}
         </div>
       </div>
     </div>
@@ -99,9 +112,18 @@ const { conf, lottery } = index()
   font-size: 28rem;
   font-weight: 600;
 
-  .type-item {
-    width: 164rem;
+  .play-type {
+    margin-top: 42rem;
+    gap: 20rem;
+    width: 686rem;
     height: 104rem;
+  }
+
+  .type-item {
+    padding: 0 20rem;
+    min-width: 164rem;
+    height: 104rem;
+    flex-shrink: 0;
     background-color: #fffef8;
     border-radius: 8rem;
     box-shadow: inset 2rem 2rem 8rem 0rem rgba(0, 0, 0, 0.1);
@@ -148,6 +170,25 @@ const { conf, lottery } = index()
       background: linear-gradient(180deg, #fb0224 0%, #f56900 100%);
       height: 100%;
       transition: width 0.3s;
+    }
+  }
+
+  .operation-box {
+    margin-top: 20rem;
+    gap: 20rem;
+    width: 686rem;
+    .type-item {
+      height: 76rem;
+      border-radius: 6rem;
+      padding: 0 30rem;
+      min-width: max-content;
+      color: #666666;
+      &.active {
+        color: #000000;
+      }
+      &.active::before {
+        height: 6rem;
+      }
     }
   }
 }
