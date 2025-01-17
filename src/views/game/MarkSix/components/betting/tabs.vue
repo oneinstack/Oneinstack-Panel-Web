@@ -41,6 +41,7 @@ const conf = mconf.conf.betting.tabs
     border-radius: 8rem;
     overflow: hidden;
     font-size: 24rem;
+    line-height: 28rem;
 
     &.active {
       color: #333333;

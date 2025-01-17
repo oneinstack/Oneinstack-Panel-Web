@@ -1,332 +1,332 @@
 export const getOdds = () => [
   {
-    'name': '尾数连',
+    'name': 'tail_consecutive',
     'list': [
       {
-        'name': '二尾连中',
+        'name': 'two_tail_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_9',
           }
         ]
       },
       {
-        'name': '二尾连不中',
+        'name': 'two_tail_not_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_9',
           }
         ]
       },
       {
-        'name': '三尾连中',
+        'name': 'three_tail_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_9',
           }
         ]
       },
       {
-        'name': '三尾连不中',
+        'name': 'three_tail_not_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_9',
           }
         ]
       },
       {
-        'name': '四尾连中',
+        'name': 'four_tail_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_9',
           }
         ]
       },
       {
-        'name': '四尾连不中',
+        'name': 'four_tail_not_consecutive',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_9',
           }
@@ -335,10 +335,10 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '全不中',
+    'name': 'all_missed',
     'list': [
       {
-        'name': '五不中',
+        'name': 'five_missed',
         'list': [
           {
             'oddsName': '1',
@@ -498,7 +498,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '六不中',
+        'name': 'six_missed',
         'list': [
           {
             'oddsName': '1',
@@ -658,7 +658,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '七不中',
+        'name': 'seven_missed',
         'list': [
           {
             'oddsName': '1',
@@ -818,7 +818,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '八不中',
+        'name': 'eight_missed',
         'list': [
           {
             'oddsName': '1',
@@ -978,7 +978,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '九不中',
+        'name': 'nine_missed',
         'list': [
           {
             'oddsName': '1',
@@ -1138,7 +1138,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '十不中',
+        'name': 'ten_missed',
         'list': [
           {
             'oddsName': '1',
@@ -1298,7 +1298,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '十一不中',
+        'name': 'eleven_missed',
         'list': [
           {
             'oddsName': '1',
@@ -1458,7 +1458,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '十二不中',
+        'name': 'twelve_missed',
         'list': [
           {
             'oddsName': '1',
@@ -1620,58 +1620,58 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '尾数',
+    'name': 'tail',
     'list': [
       {
-        'name': '尾数',
+        'name': 'tail',
         'list': [
           {
-            'oddsName': '0尾',
+            'oddsName': 'tail_0',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_0',
           },
           {
-            'oddsName': '1尾',
+            'oddsName': 'tail_1',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_1',
           },
           {
-            'oddsName': '2尾',
+            'oddsName': 'tail_2',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_2',
           },
           {
-            'oddsName': '3尾',
+            'oddsName': 'tail_3',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_3',
           },
           {
-            'oddsName': '4尾',
+            'oddsName': 'tail_4',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_4',
           },
           {
-            'oddsName': '5尾',
+            'oddsName': 'tail_5',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_5',
           },
           {
-            'oddsName': '6尾',
+            'oddsName': 'tail_6',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_6',
           },
           {
-            'oddsName': '7尾',
+            'oddsName': 'tail_7',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_7',
           },
           {
-            'oddsName': '8尾',
+            'oddsName': 'tail_8',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_8',
           },
           {
-            'oddsName': '9尾',
+            'oddsName': 'tail_9',
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_9',
           }
@@ -1680,10 +1680,10 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '正码',
+    'name': 'positive_code',
     'list': [
       {
-        'name': '正码',
+        'name': 'positive_code',
         'list': [
           {
             'oddsName': '1',
@@ -1861,12 +1861,12 @@ export const getOdds = () => [
             'oddsCode': 'positive_code_sum_even',
           },
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_tiger',
           },
@@ -1885,333 +1885,333 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '正码1-6',
+    'name': 'positive_code_1_6',
     'list': [
       {
-        'name': '正码1',
+        'name': 'positive_code_1',
         'list': [
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_tail_big',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_even',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_tail_small',
           }
         ]
       },
       {
-        'name': '正码2',
+        'name': 'positive_code_2',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_even',
           },
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_tail_big',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_tail_small',
           }
         ]
       },
       {
-        'name': '正码3',
+        'name': 'positive_code_3',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_even',
           },
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_tail_big',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_tail_small',
           }
         ]
       },
       {
-        'name': '正码4',
+        'name': 'positive_code_4',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_even',
           },
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_tail_big',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_tail_small',
           }
         ]
       },
       {
-        'name': '正码5',
+        'name': 'positive_code_5',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_even',
           },
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_tail_big',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_tail_small',
           }
         ]
       },
       {
-        'name': '正码6',
+        'name': 'positive_code_6',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_even',
           },
           {
-            'oddsName': '和数大',
+            'oddsName': 'sum_big',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_big',
           },
           {
-            'oddsName': '和数小',
+            'oddsName': 'sum_small',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_small',
           },
           {
-            'oddsName': '和数单',
+            'oddsName': 'sum_odd',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_odd',
           },
           {
-            'oddsName': '和数双',
+            'oddsName': 'sum_even',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_even',
           },
           {
-            'oddsName': '尾数大',
+            'oddsName': 'tail_big',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_tail_big',
           },
           {
-            'oddsName': '尾数小',
+            'oddsName': 'tail_small',
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_tail_small',
           }
@@ -2220,10 +2220,10 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '正码特',
+    'name': 'positive_special',
     'list': [
       {
-        'name': '正码特-正1特',
+        'name': 'positive_special_1',
         'list': [
           {
             'oddsName': '1',
@@ -2383,7 +2383,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '正码特-正2特',
+        'name': 'positive_special_2',
         'list': [
           {
             'oddsName': '1',
@@ -2543,7 +2543,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '正码特-正3特',
+        'name': 'positive_special_3',
         'list': [
           {
             'oddsName': '1',
@@ -2703,7 +2703,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '正码特-正4特',
+        'name': 'positive_special_4',
         'list': [
           {
             'oddsName': '1',
@@ -2863,7 +2863,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '正码特-正5特',
+        'name': 'positive_special_5',
         'list': [
           {
             'oddsName': '1',
@@ -3023,7 +3023,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '正码特-正6特',
+        'name': 'positive_special_6',
         'list': [
           {
             'oddsName': '1',
@@ -3185,10 +3185,10 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '特码',
+    'name': 'special_code',
     'list': [
       {
-        'name': '特码',
+        'name': 'special_code',
         'list': [
           {
             'oddsName': '1',
@@ -3251,22 +3251,22 @@ export const getOdds = () => [
             'oddsCode': 'special_code_12',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_small',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_even',
           },
@@ -3345,153 +3345,153 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '过关',
+    'name': 'pass',
     'list': [
       {
-        'name': '过关-正码1',
+        'name': 'pass_positive_code_1',
         'list': [
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_even',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_small',
           }
         ]
       },
       {
-        'name': '过关-正码2',
+        'name': 'pass_positive_code_2',
         'list': [
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_small',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_even',
           },
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_odd',
           }
         ]
       },
       {
-        'name': '过关-正码3',
+        'name': 'pass_positive_code_3',
         'list': [
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_even',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_small',
           }
         ]
       },
       {
-        'name': '过关-正码4',
+        'name': 'pass_positive_code_4',
         'list': [
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_even',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_small',
           }
         ]
       },
       {
-        'name': '过关-正码5',
+        'name': 'pass_positive_code_5',
         'list': [
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_even',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_small',
           }
         ]
       },
       {
-        'name': '过关-正码6',
+        'name': 'pass_positive_code_6',
         'list': [
           {
-            'oddsName': '单',
+            'oddsName': 'odd',
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_odd',
           },
           {
-            'oddsName': '双',
+            'oddsName': 'even',
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_even',
           },
           {
-            'oddsName': '大',
+            'oddsName': 'big',
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_big',
           },
           {
-            'oddsName': '小',
+            'oddsName': 'small',
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_small',
           }
@@ -3500,10 +3500,10 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '连码',
+    'name': 'connect',
     'list': [
       {
-        'name': '连码-二中特',
+        'name': 'connect_two_special',
         'list': [
           {
             'oddsName': '1',
@@ -3663,7 +3663,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '连码-二全中',
+        'name': 'connect_two_full',
         'list': [
           {
             'oddsName': '1',
@@ -3823,7 +3823,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '连码-三中二',
+        'name': 'connect_three_in_two',
         'list': [
           {
             'oddsName': '1',
@@ -3983,7 +3983,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '连码-三全中',
+        'name': 'connect_three_full',
         'list': [
           {
             'oddsName': '1',
@@ -4143,7 +4143,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '连码-四全中',
+        'name': 'connect_four_full',
         'list': [
           {
             'oddsName': '1',
@@ -4303,7 +4303,7 @@ export const getOdds = () => [
         ]
       },
       {
-        'name': '连码-特串',
+        'name': 'connect_special_string',
         'list': [
           {
             'oddsName': '1',
@@ -4465,318 +4465,318 @@ export const getOdds = () => [
     ]
   },
   {
-    'name': '龙虎斗',
+    'name': 'dragon_and_tiger',
     'list': [
       {
-        'name': '正码一VS正码二',
+        'name': 'positive_code_1_vs_positive_code_2',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v2_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v2_tiger',
           }
         ]
       },
       {
-        'name': '正码一VS正码三',
+        'name': 'positive_code_1_vs_positive_code_3',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v3_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v3_tiger',
           }
         ]
       },
       {
-        'name': '正码一VS正码四',
+        'name': 'positive_code_1_vs_positive_code_4',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v4_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v4_tiger',
           }
         ]
       },
       {
-        'name': '正码一VS正码五',
+        'name': 'positive_code_1_vs_positive_code_5',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v5_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v5_tiger',
           }
         ]
       },
       {
-        'name': '正码一VS正码六',
+        'name': 'positive_code_1_vs_positive_code_6',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v6_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v6_tiger',
           }
         ]
       },
       {
-        'name': '正码一VS特码',
+        'name': 'positive_code_1_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v7_tiger',
           }
         ]
       },
       {
-        'name': '正码二VS正码三',
+        'name': 'positive_code_2_vs_positive_code_3',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v3_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v3_tiger',
           }
         ]
       },
       {
-        'name': '正码二VS正码四',
+        'name': 'positive_code_2_vs_positive_code_4',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v4_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v4_tiger',
           }
         ]
       },
       {
-        'name': '正码二VS正码五',
+        'name': 'positive_code_2_vs_positive_code_5',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v5_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v5_tiger',
           }
         ]
       },
       {
-        'name': '正码二VS正码六',
+        'name': 'positive_code_2_vs_positive_code_6',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v6_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v6_tiger',
           }
         ]
       },
       {
-        'name': '正码二VS特码',
+        'name': 'positive_code_2_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_2v7_tiger',
           }
         ]
       },
       {
-        'name': '正码三VS正码四',
+        'name': 'positive_code_3_vs_positive_code_4',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v4_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v4_tiger',
           }
         ]
       },
       {
-        'name': '正码三VS正码五',
+        'name': 'positive_code_3_vs_positive_code_5',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v5_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v5_tiger',
           }
         ]
       },
       {
-        'name': '正码三VS正码六',
+        'name': 'positive_code_3_vs_positive_code_6',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v6_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v6_tiger',
           }
         ]
       },
       {
-        'name': '正码三VS特码',
+        'name': 'positive_code_3_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_3v7_tiger',
           }
         ]
       },
       {
-        'name': '正码四VS正码五',
+        'name': 'positive_code_4_vs_positive_code_5',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v5_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v5_tiger',
           }
         ]
       },
       {
-        'name': '正码四VS正码六',
+        'name': 'positive_code_4_vs_positive_code_6',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v6_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v6_tiger',
           }
         ]
       },
       {
-        'name': '正码四VS特码',
+        'name': 'positive_code_4_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_4v7_tiger',
           }
         ]
       },
       {
-        'name': '正码五VS正码六',
+        'name': 'positive_code_5_vs_positive_code_6',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_5v6_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_5v6_tiger',
           }
         ]
       },
       {
-        'name': '正码五VS特码',
+        'name': 'positive_code_5_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_5v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_5v7_tiger',
           }
         ]
       },
       {
-        'name': '正码六VS特码',
+        'name': 'positive_code_6_vs_special_code',
         'list': [
           {
-            'oddsName': '龙',
+            'oddsName': 'dragon',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_6v7_dragon',
           },
           {
-            'oddsName': '虎',
+            'oddsName': 'tiger',
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_6v7_tiger',
           }
