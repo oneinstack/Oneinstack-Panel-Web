@@ -46,7 +46,7 @@ const conf = index()
           <div class="upload-view" v-if="!conf.isShowImg">
             <div>
               <img class="camera" src="/static/img/camera-feed.png"/>
-              <div class="uploadTip">{{'Photo Upload'}}</div>
+              <div class="uploadTip">{{$t('Feedback.PhotoUpload')}}</div>
             </div>
           </div>
           <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" v-else />

@@ -1781,6 +1781,7 @@ export default {
     detail: 'Detalles del Feedback',
     replyContent: 'Contenido de la respuesta',
     replyContentTip: 'Por favor, ingrese el contenido de la respuesta',
+    PhotoUpload:'Carga de fotos',
   },
 }
 

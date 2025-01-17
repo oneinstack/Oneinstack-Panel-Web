@@ -1784,6 +1784,7 @@ export default {
     pleaseFillInAllFields: 'Please fill in all fields',
     detail: 'Feedback Details',
     replyContent: 'Reply Content',
-    replyContentTip: 'Please enter the reply content'
+    replyContentTip: 'Please enter the reply content',
+    PhotoUpload:'Photo Upload',
   }
 }

@@ -1777,5 +1777,6 @@ export default {
     detail: 'प्रतिक्रिया विवरण',
     replyContent: 'प्रतिक्रिया सामग्री',
     replyContentTip: 'कृपया प्रतिक्रिया सामग्री भरें',
+    PhotoUpload:'फोटो अपलोड',
   },
 }

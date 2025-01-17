@@ -1776,5 +1776,6 @@ export default {
     detail: 'รายละเอียดความคิดเห็น',
     replyContent: 'เนื้อหาการตอบกลับ',
     replyContentTip: 'กรุณากรอกเนื้อหาการตอบกลับ',
+    PhotoUpload:'อัปโหลดภาพ',
   },
 }

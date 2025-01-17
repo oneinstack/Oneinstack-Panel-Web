@@ -1780,5 +1780,6 @@ export default {
     detail: 'Detail Feedback',
     replyContent: 'Konten Balasan',
     replyContentTip: 'Silakan masukkan konten balasan',
+    PhotoUpload:'Unggah Foto',
   },
 }
