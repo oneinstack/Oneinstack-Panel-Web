@@ -888,7 +888,9 @@ export default {
     SelectMoney: 'โปรดเลือกเงิน',
     isSureTip: 'แน่ใจนะว่าไม่จำเป็นต้องย้ายด่วน',
     noMoney: 'ยอดเงินในกระเป๋าสตางค์ปัจจุบันเป็น 0!',
-    packetsNumberTip: 'จำนวนแพ็คเก็ตสีแดงเป็นจำนวนเต็ม ที่มากกว่า 0 !'
+    packetsNumberTip: 'จำนวนแพ็คเก็ตสีแดงเป็นจำนวนเต็ม ที่มากกว่า 0 !',
+    PleaseEnterAccountOrPhone: 'กรุณาใส่บัญชีหรือโทรศัพท์',
+    PleaseSelect: 'โปรดเลือก',
   },
 
   tradeType: {

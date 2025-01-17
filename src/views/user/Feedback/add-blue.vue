@@ -20,7 +20,7 @@ const conf = index()
             class="input"
             :class="[!conf.formData.type ? 'select-value' : '']"
           >
-            {{ conf.formData.typeName || 'Please Select' }}
+            {{ conf.formData.typeName || $t('common.PleaseSelect') }}
           </div>
           <van-icon class="cuIcon-right" name="arrow" />
         </div>
@@ -36,7 +36,7 @@ const conf = index()
             autosize
             type="textarea"
             maxlength="500"
-            placeholder="Please Enter"
+            :placeholder="$t('common.PleaseEnter')"
             show-word-limit
         />
       </div>
@@ -57,7 +57,7 @@ const conf = index()
         <div class="input-view">
             <input
               class="input"
-              placeholder="Please Enter Account Or Phone"
+              :placeholder="$t('common.PleaseEnterAccountOrPhone')"
               v-model="conf.formData.account"
             />
             <van-icon

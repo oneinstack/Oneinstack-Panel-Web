@@ -884,7 +884,9 @@ export default {
     SelectMoney: 'Please Select Money',
     isSureTip: "Are you sure you don't need a quick transfer?",
     noMoney: 'The current wallet balance is 0!',
-    packetsNumberTip: 'The number of red packets is an integer greater than 0!'
+    packetsNumberTip: 'The number of red packets is an integer greater than 0!',
+    PleaseEnterAccountOrPhone: 'Please Enter Account Or Phone',
+    PleaseSelect: 'Please Select',
   },
 
   tradeType: {

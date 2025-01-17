@@ -890,7 +890,9 @@ export default {
     SelectMoney: 'कृपया पैसा चुनें',
     isSureTip: 'क्या आप निश्चित है कि आपको तेज स्थानान्तरण की जरूरत नहीं है?',
     noMoney: 'मौजूदा वालेट बैलेट 0 है!',
-    packetsNumberTip: 'लाल पैकेट की संख्या 0 से बढ़ी है!'
+    packetsNumberTip: 'लाल पैकेट की संख्या 0 से बढ़ी है!',
+    PleaseEnterAccountOrPhone: 'कृपया खाता या फोन दर्ज करें',
+    PleaseSelect: 'कृपया चुनें'
   },
 
   tradeType: {

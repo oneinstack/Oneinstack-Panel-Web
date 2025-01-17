@@ -889,7 +889,9 @@ export default {
     SelectMoney: 'Silahkan pilih uang',
     isSureTip: 'Kau yakin tak butuh pindahan cepat?',
     noMoney: 'Imbangan dompet saat ini adalah 0!',
-    packetsNumberTip: 'Jumlah paket merah lebih besar dari 0!'
+    packetsNumberTip: 'Jumlah paket merah lebih besar dari 0!',
+    PleaseEnterAccountOrPhone: 'Silakan masukkan akun atau nomor telepon',
+    PleaseSelect: 'Silakan pilih',
   },
 
   tradeType: {

@@ -886,7 +886,9 @@ export default {
     SelectMoney: 'Seleccione por favor o Dinheiro',
     isSureTip: 'Tem a certeza que não precisa de uma transferência rápida?',
     noMoney: 'O saldo actual da carteira é 0!',
-    packetsNumberTip: 'O número de pacotes vermelhos é um número inteiro maior que 0!'
+    packetsNumberTip: 'O número de pacotes vermelhos é um número inteiro maior que 0!',
+    PleaseEnterAccountOrPhone: 'Por favor, introduza a sua conta ou telefone',
+    PleaseSelect: 'Por favor, seleccione',
   },
 
   tradeType: {

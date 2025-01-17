@@ -888,7 +888,9 @@ export default {
     SelectMoney: 'Por favor seleccione el monto',
     isSureTip: '¿Está seguro de que no necesita una transferencia rápida?',
     noMoney: '¡El saldo actual de la billetera es 0!',
-    packetsNumberTip: '¡El número de sobres rojos debe ser un entero mayor que 0!'
+    packetsNumberTip: '¡El número de sobres rojos debe ser un entero mayor que 0!',
+    PleaseEnterAccountOrPhone: 'Por favor ingrese la cuenta o el teléfono',
+    PleaseSelect: 'Por favor seleccione',
   },
 
   tradeType: {
