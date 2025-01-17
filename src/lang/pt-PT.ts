@@ -136,7 +136,8 @@ export default {
     defaultMethod: 'Modo padrão padrão',
     newWindow: 'Uma nova janela',
     allData: 'Todos os dados foram exibidos',
-    notInternet: 'A internet foi invadida por alienígenas'
+    notInternet: 'A internet foi invadida por alienígenas',
+    Feedback: 'Feedback',
   },
   Transactions: {
     TradeType: 'Tipo de comércio',

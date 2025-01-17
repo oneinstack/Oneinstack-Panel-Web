@@ -40,7 +40,7 @@ export const index = () => {
           isShow: true
         },
         {
-          name: 'Feedback',
+          name: 'me.Feedback',
           new: false,
           url: '/user/Feedback/index',
           isShow: true

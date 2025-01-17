@@ -132,7 +132,8 @@ export default {
     defaultMethod: 'Default method',
     newWindow: 'New window',
     allData: 'All data has been displayed', // 已显示全部数据
-    notInternet: 'The Internet has been taken by aliens'
+    notInternet: 'The Internet has been taken by aliens',
+    Feedback: 'Feedback',
   },
   Transactions: {
     TradeType: 'Trade Type',

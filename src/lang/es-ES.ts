@@ -137,7 +137,8 @@ export default {
     defaultMethod: 'Método predeterminado',
     newWindow: 'Nueva ventana',
     allData: 'Todos los datos han sido mostrados',
-    notInternet: 'El Internet ha sido tomado por extraterrestres'
+    notInternet: 'El Internet ha sido tomado por extraterrestres',
+    Feedback: 'Feedback',
   },
   Transactions: {
     TradeType: 'Tipo de Transacción',

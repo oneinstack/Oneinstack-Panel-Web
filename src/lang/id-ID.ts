@@ -136,7 +136,8 @@ export default {
     defaultMethod: 'Mode standar',
     newWindow: 'Jendela baru',
     allData: 'Data lengkap telah ditampilkan',
-    notInternet: 'Internet telah dikuasai oleh alienै'
+    notInternet: 'Internet telah dikuasai oleh alienै',
+    Feedback: 'Feedback',
   },
   Transactions: {
     TradeType: 'Tipe perdagangan',

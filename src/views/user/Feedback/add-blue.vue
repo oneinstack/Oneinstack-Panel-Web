@@ -11,7 +11,10 @@ const conf = index()
     <!-- content -->
     <div class="content-view">
       <div class="input-box">
-        <div class="lable">{{ $t('Feedback.questionType') }}</div>
+        <div class="lable">
+          <span class="red-text">*</span>
+          {{ $t('Feedback.questionType') }}
+        </div>
         <div class="input-view" @click="conf.handleOpenMadal()">
           <div
             class="input"
@@ -23,7 +26,10 @@ const conf = index()
         </div>
       </div>
       <div class="input-box">
-        <div class="lable">{{ $t('Feedback.problemDescription') }}</div>
+        <div class="lable">
+          <span class="red-text">*</span>
+          {{ $t('Feedback.problemDescription') }}
+        </div>
         <van-field
             v-model="conf.formData.description"
             rows="3"
@@ -44,7 +50,10 @@ const conf = index()
         </van-uploader>
       </div>
       <div class="input-box">
-        <div class="lable">{{ $t('Feedback.contactAccount') }}</div>
+        <div class="lable">
+          <span class="red-text">*</span>
+          {{ $t('Feedback.contactAccount') }}
+        </div>
         <div class="input-view">
             <input
               class="input"
@@ -252,6 +261,9 @@ input::placeholder,
     font-weight: 500;
     font-size: 32rem;
     padding-left: 20rem;
+    .red-text{
+      color:red;
+    }
   }
 
   .input-view {

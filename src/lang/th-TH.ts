@@ -136,7 +136,8 @@ export default {
     defaultMethod: 'โหมดปริยาย',
     newWindow: 'หน้าต่างใหม่',
     allData: 'แสดงข้อมูลทั้งหมดै',
-    notInternet: 'อินเตอร์เน็ตถูกยึดครองโดยเอเลี่ยนै'
+    notInternet: 'อินเตอร์เน็ตถูกยึดครองโดยเอเลี่ยนै',
+    Feedback: 'ความคิดเห็น'
   },
   Transactions: {
     TradeType: 'ประเภทการค้า',

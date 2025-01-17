@@ -136,7 +136,8 @@ export default {
     defaultMethod: 'डिफ़ॉल्ट विधि',
     newWindow: 'नवीन विंडोW',
     allData: 'सभी डाटा प्रदर्शित किया गया है',
-    notInternet: 'इंटरनेट को विदेशी द्वारा व्यवस्था किया गया है'
+    notInternet: 'इंटरनेट को विदेशी द्वारा व्यवस्था किया गया है',
+    Feedback: 'प्रतिक्रिया',
   },
   Transactions: {
     TradeType: 'व्यापार प्रकार',
