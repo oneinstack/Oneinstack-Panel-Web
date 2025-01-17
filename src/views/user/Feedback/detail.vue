@@ -9,7 +9,10 @@ const conf = index()
     <template #title>{{ $t('Feedback.detail') }}</template>
     <!-- content -->
     <div class="content-view">
-      <div class="top-box">
+      <div class="top-box" style="position: relative;">
+        <div v-if="conf.detailObj.issieStatus == 2" class="resolved-img">
+          <x-img src="/static/img/resolved.png" class="img-item" :lazyLoad="false" width="60rem" height="60rem"></x-img>
+        </div>
         <div class="title">
           {{ conf.detailObj.typeName }}
         </div>
@@ -76,6 +79,11 @@ const conf = index()
     padding: 30rem;
     border-radius: 20rem;
     margin-bottom: 20rem;
+    .resolved-img{
+      position: absolute;
+      right: 20rem;
+      top: 20rem;
+    }
     .title {
       color: #333333;
       font-size: 32rem;
