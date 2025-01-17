@@ -3,26 +3,27 @@
     <div
       class="type-item flex justify-center items-start relative text-no-wrap"
       v-for="item in conf.level1.list"
-      :class="{ active: item.label === conf.level1.item.label }"
+      :class="{ active: item.name === conf.level1.item.name }"
       @click="conf.level1.change(item)"
     >
-      {{ item.label }}
+      {{ $t('lhc.' + item.name) }}
     </div>
   </div>
   <div class="row items-center no-wrap level2-box" v-scroll>
     <div
       class="type-item flex flex-center relative text-no-wrap"
       v-for="item in conf.level2.list"
-      :class="{ active: item.label === conf.level2.item.label }"
+      :class="{ active: item.name === conf.level2.item.name }"
       @click="conf.level2.change(item)"
     >
-      {{ item.label }}
+      {{ $t('lhc.' + item.name) }}
     </div>
   </div>
 </template>
 <script setup lang="ts">
 import { Scope } from 'tools-vue3'
-const mconf = Scope.getConf()
+import { MarkSixConfInter } from '../../MarkSix'
+const mconf = Scope.getConf<MarkSixConfInter>()
 const conf = mconf.conf.betting.tabs
 </script>
 <style lang="less" scoped>
@@ -49,7 +50,7 @@ const conf = mconf.conf.betting.tabs
       position: absolute;
       bottom: 0;
       margin: 0 auto;
-      width: 80rem;
+      width: 40%;
       height: 6rem;
       border-radius: 24rem;
       background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);

@@ -13,18 +13,19 @@
       <img src="/static/img/wallet.webp" style="width: 72rem; height: 72rem" />
     </template>
     <slot></slot>
-    <bet-popup :betShow="conf.bet.show" :betShare="conf.bet.share" @submit="conf.bet.submit">
+    <bet-popup :show="conf.bet.show" :betShare="conf.bet.share" @submit="conf.bet.submit" :lottery="lottery">
       <slot name="bet"></slot>
     </bet-popup>
   </x-page>
 </template>
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
-import betPopup from './betPopup.vue'
+import betPopup from './gameBetPopup.vue'
+import { LotteryConfInter } from '@/sstore/slottery';
 
 const props = defineProps<{
   title: string
-  lottery: any
+  lottery: LotteryConfInter
   code: string
 }>()
 
@@ -45,7 +46,7 @@ const conf = reactive({
 })
 
 onMounted(() => {
-  props.lottery.init(props.code)
+  props.lottery.init(props.code as any)
 })
 
 defineExpose({

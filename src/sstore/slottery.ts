@@ -405,3 +405,6 @@ export const slottery = reactive({
 })
 
 export default slottery
+
+
+export type LotteryConfInter = ReturnType<typeof slottery.lotteryBox>

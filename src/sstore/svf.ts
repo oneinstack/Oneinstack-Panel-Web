@@ -120,6 +120,8 @@ export const svf = reactive({
           .replace(/[^\d.]/g, '')
           .replace(/^(\d*\.?\d*).*$/, '$1')
           .replace(new RegExp(`^(\\d+)\\.(\\d{${fixed}}).*`), '$1.$2')
+        val = min ? (val < min ? min : val) : val
+        val = max ? (val > max ? max : val) : val
         return val
       },
       hanzi: (val: any) => {

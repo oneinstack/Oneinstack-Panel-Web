@@ -86,7 +86,6 @@
   </GameLayout>
 </template>
 <script setup lang="ts">
-import { Scope } from 'tools-vue3'
 import GameLayout from '../components/gameLayout.vue'
 import bottombtn from './components/betting/bottombtn.vue'
 import betting from './components/betting/index.vue'
@@ -94,10 +93,6 @@ import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'
 import { index } from './MarkSix'
 const { conf, lottery } = index()
-Scope.setConf({
-  conf,
-  lottery
-})
 </script>
 
 <style lang="less" scoped>

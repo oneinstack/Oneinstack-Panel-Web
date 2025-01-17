@@ -7,7 +7,7 @@ import { UIViteAutoImport } from 'ui-vite/src/autoimport'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { PluginOption } from 'vite'
-import { viteComType, viteDef, viteVar } from 'vite-var'
+import { viteComType, viteDef, viteVar,viteLanguage } from 'vite-var'
 import { globalType } from '../env/globalVar'
 import { androidSSL } from './plugins/androidSSL/androidSSL'
 import { tozip } from './plugins/tozip'
@@ -16,6 +16,9 @@ export const getPlugins = (env: globalType) => {
   const isBuild = env.env.pro === 'build'
 
   const plugin: PluginOption[] = [
+    viteLanguage({
+      path:'./src/lang/'
+    }),
     viteVar(env as any),
     viteDef(env.env.pro),
     viteComType({

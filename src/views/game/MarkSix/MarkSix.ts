@@ -2,6 +2,7 @@ import i18n from '@/lang'
 import slottery from '@/sstore/slottery'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
+import { getOdds } from './MarkSixDataOdds'
 
 export const index = () => {
   const timer = Scope.Timer()
@@ -78,44 +79,15 @@ export const index = () => {
      */
     betting: {
       tabs: {
-        tree: [
-          {
-            label: 'Special code',
-            children: [
-              {
-                label: 'Special code'
-              },
-              {
-                label: 'Official code2'
-              },
-              {
-                label: 'Official code3'
-              }
-            ]
-          },
-          {
-            label: 'Positive code',
-            children: [
-              {
-                label: 'Special code2'
-              },
-              {
-                label: 'Official code22'
-              },
-              {
-                label: 'Official code32'
-              }
-            ]
-          }
-        ],
+        tree: getOdds(),
         level1: {
           list: [] as any[],
           item: {} as any,
           change(item: any) {
             const { tabs } = conf.betting
             tabs.level1.item = item
-            tabs.level2.list = item.children
-            tabs.level2.change(item.children[0])
+            tabs.level2.list = item.list
+            tabs.level2.change(item.list[0])
           }
         },
         level2: {
@@ -148,5 +120,13 @@ export const index = () => {
     // 初始化下注区域选中
     conf.betting.tabs.init()
   })
+
+  Scope.setConf({
+    conf,
+    lottery
+  })
+
   return { conf, lottery }
 }
+
+export type MarkSixConfInter = ReturnType<typeof index>
