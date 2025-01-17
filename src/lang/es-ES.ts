@@ -1769,19 +1769,5 @@ export default {
     purchase: 'Compra de usuarios',
     system: 'Adquisición del sistema'
   },
-  Feedback: {
-    title: 'Feedback',
-    add: 'Nuevo Feedback',
-    questionType: 'Tipo de pregunta',
-    problemDescription: 'Descripción del problema',
-    problemScreenshot: 'Captura de pantalla del problema',
-    contactAccount: 'Cuenta de contacto',
-    submit: 'Enviar',
-    pleaseFillInAllFields: 'Por favor, complete todos los campos',
-    detail: 'Detalles del Feedback',
-    replyContent: 'Contenido de la respuesta',
-    replyContentTip: 'Por favor, ingrese el contenido de la respuesta',
-    PhotoUpload:'Carga de fotos',
-  },
 }
 

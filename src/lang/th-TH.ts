@@ -1764,18 +1764,4 @@ export default {
     purchase: 'การซื้อของผู้ใช้',
     system: 'การได้มาของระบบ'
   },
-  Feedback: {
-    title: 'ความคิดเห็น',
-    add: 'ความคิดเห็นใหม่',
-    questionType: 'ประเภทคำถาม',
-    problemDescription: 'คำอธิบายปัญหา',
-    problemScreenshot: 'ภาพหน้าจอปัญหา',
-    contactAccount: 'บัญชีติดต่อ',
-    submit: 'ส่ง',
-    pleaseFillInAllFields: 'กรุณากรอกทุกฟิลด์',
-    detail: 'รายละเอียดความคิดเห็น',
-    replyContent: 'เนื้อหาการตอบกลับ',
-    replyContentTip: 'กรุณากรอกเนื้อหาการตอบกลับ',
-    PhotoUpload:'อัปโหลดภาพ',
-  },
 }

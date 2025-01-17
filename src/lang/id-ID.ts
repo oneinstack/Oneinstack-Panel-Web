@@ -1768,18 +1768,4 @@ export default {
     purchase: 'Pembelian Pengguna',
     system: 'Akuisisi Sistem'
   },
-  Feedback: {
-    title: 'Feedback',
-    add: 'Feedback Baru',
-    questionType: 'Jenis Pertanyaan',
-    problemDescription: 'Deskripsi Masalah',
-    problemScreenshot: 'Screenshot Masalah',
-    contactAccount: 'Akun Kontak',
-    submit: 'Kirim',
-    pleaseFillInAllFields: 'Silakan isi semua bidang',
-    detail: 'Detail Feedback',
-    replyContent: 'Konten Balasan',
-    replyContentTip: 'Silakan masukkan konten balasan',
-    PhotoUpload:'Unggah Foto',
-  },
 }

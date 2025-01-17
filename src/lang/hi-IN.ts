@@ -1765,18 +1765,4 @@ export default {
     purchase: 'उपयोगकर्ता खरीद',
     system: 'सिस्टम अधिग्रहण'
   },
-  Feedback: {
-    title: 'प्रतिक्रिया',
-    add: 'नया प्रतिक्रिया',
-    questionType: 'प्रश्न प्रकार',
-    problemDescription: 'समस्या विवरण',
-    problemScreenshot: 'समस्या स्क्रीनशॉट',
-    contactAccount: 'संपर्क खाता',
-    submit: 'जमा करें',
-    pleaseFillInAllFields: 'कृपया सभी फ़ील्ड भरें',
-    detail: 'प्रतिक्रिया विवरण',
-    replyContent: 'प्रतिक्रिया सामग्री',
-    replyContentTip: 'कृपया प्रतिक्रिया सामग्री भरें',
-    PhotoUpload:'फोटो अपलोड',
-  },
 }
