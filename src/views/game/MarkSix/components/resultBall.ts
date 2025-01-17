@@ -33,3 +33,17 @@ export const lhc = {
 }
 
 lhc.init()
+
+export const resultBallManager = {
+  runList: {} as any,
+  runNextAni: (item: any, func: any, length = 7) => {
+    resultBallManager.runList[item.index] = func
+    const keysRun = Object.keys(resultBallManager.runList)
+    if (keysRun.length === length) {
+      Object.keys(resultBallManager.runList).forEach((key: any) => {
+        resultBallManager.runList[key]()
+      })
+      resultBallManager.runList = {}
+    }
+  }
+}

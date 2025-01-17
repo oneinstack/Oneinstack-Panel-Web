@@ -21,7 +21,7 @@
 
     <div class="top-bg-box">
       <!-- 切换玩法 -->
-      <div class="row no-wrap play-type" v-scroll :class="{ 'flex-center': lottery.play.list.length < 4 }">
+      <div class="row no-wrap play-type" v-scroll>
         <div
           class="type-item flex flex-center relative"
           v-for="item in lottery.play.list"

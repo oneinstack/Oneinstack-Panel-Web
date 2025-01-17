@@ -25,7 +25,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, reactive } from 'vue'
-import { lhc } from './resultBall'
+import { lhc, resultBallManager } from './resultBall'
 import resultBallCom from './resultBallCom.vue'
 const props = withDefaults(
   defineProps<{
@@ -49,7 +49,7 @@ const props = withDefaults(
     aniY: 100,
     aniScale: 0.9,
     reverse: true,
-    time: 100
+    time: 300
   }
 )
 
@@ -136,14 +136,16 @@ const conf = reactive({
             requestAnimationFrame(() => {
               _conf[currentName].transform =
                 `translate(${props.aniX}rem,${props.aniY * reverse}rem) scale(${props.aniScale})`
-              setTimeout(() => {
+              requestAnimationFrame(() => {
                 _conf[currentName].transition = `transform ${props.time}ms linear`
                 requestAnimationFrame(() => {
-                  conf.ani.toAni({ num: nextNum })
+                  resultBallManager.runNextAni(conf, () => {
+                    conf.ani.toAni({ num: nextNum })
+                  })
                 })
               })
             })
-          }, props.time)
+          }, props.time - 20)
         })
       })
     }
