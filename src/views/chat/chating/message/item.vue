@@ -16,6 +16,7 @@
         <div class="relative">
           <ItemText v-if="textRenderTypes.includes(item.contentType)" :item="item" />
           <ItemMedia v-else-if="mediaRenderTypes.includes(item.contentType)" :item="item" />
+          <custom v-else-if="showCustomRender = item.contentType" :message="item" />
           <div v-else>未知的消息类型</div>
         </div>
       </div>
@@ -30,9 +31,11 @@ import { MessageItem, MessageType } from 'openim-uniapp-polyfill'
 import headImg from '../../components/headImg.vue'
 import ItemMedia from './item-media.vue'
 import ItemText from './item-text.vue'
+import custom from './custom/index.vue'
 const textRenderTypes = [MessageType.TextMessage, MessageType.AtTextMessage, MessageType.QuoteMessage]
 const mediaRenderTypes = [MessageType.VideoMessage, MessageType.PictureMessage]
-defineProps<{
+const showCustomRender = MessageType.CustomMessage
+const props = defineProps<{
   item: MessageItem & { isme: boolean; noticeContent: string }
 }>()
 </script>

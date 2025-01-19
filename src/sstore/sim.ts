@@ -7,6 +7,7 @@ import { sconfig } from './sconfig'
 import System from '@/utils/System'
 import csuser from '@/modules/chat/sstore/csuser'
 import csconversation from '@/modules/chat/sstore/csconversation'
+import csmessage from '@/modules/chat/sstore/csmessage'
 
 export const CustomData = {
   /**
@@ -48,7 +49,7 @@ export const RedPackReceiveCode = {
   40: ()=> i18n.t('RedPackReceiveCode.Collected'),
 
   50: ()=> i18n.t('RedPackReceiveCode.Claimed'),
-}
+} as any
 
 export const sim = {
 
@@ -96,11 +97,12 @@ export const sim = {
   batchCreateImageMesage(paths:any) { },
   //发送自定义消息
   async sendCM(data:any, extension:any) {
-    const message = await IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
+    const message:any = await IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
       data,
       extension: JSON.stringify(extension),
       description: data
     })
+    csmessage.sendMessage(message)
     sim.sendMessage(message)
   },
   //最新消息提示

@@ -3,6 +3,8 @@ import { sapp } from './sapp'
 import { sbet } from './sbet'
 import { sconfig } from './sconfig'
 import { shome } from './shome'
+import { sim } from './sim'
+import { simdl } from './simdl'
 import { slottery } from './slottery'
 import { sshake } from './sshake'
 import { sstatus } from './sstatus'
@@ -26,7 +28,9 @@ sutil.store = {
   sshake,
   sweb,
   sapp,
-  stheme
+  stheme,
+  // sim,
+  simdl
 }
 
 export const reset = () => {
