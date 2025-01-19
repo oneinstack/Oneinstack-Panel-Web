@@ -15,7 +15,7 @@
                 <div class="list-item" v-for="(item, index) in totalList" :key="index">
                     <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
                     <div class="num">
-                        <img class="glass-img" src="/static/img/game/animal/glass.png" />
+                        <img class="glass-img" :src="`/static/img/game/animal/glass-${conf.active}.png`" />
                         <div>{{ item[conf.active] }}</div>
                     </div>
                 </div>
@@ -32,7 +32,7 @@
                         <div class="txt-b">Periods</div>
                     </div>
                     <div class="num" v-for="(item, index) in totalList" :key="index">
-                        <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
+                        <img class="img-bet" :src="`/static/img/game/animal/${item.name}-bet.png`" />
                     </div>
                 </div>
                 <template  v-for="(item) in result" :key="item.openTime">

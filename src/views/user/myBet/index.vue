@@ -15,6 +15,8 @@
         @click="conf.toDetail(item)"
       >
         <div class="order-item column">
+          <img v-if="item.betStatus == 1" style="height: 100rem;position: absolute;bottom: 20rem;right: 0;" src="/static/img/game/bet-lose.png" />
+          <img v-else-if="item.betStatus == 2" style="height: 100rem;position: absolute;bottom: 20rem;right: 0;" src="/static/img/game/bet-win.png" />
           <!-- 顶部显示 -->
           <div class="row items-center justify-between no-wrap">
             <div class="row no-wrap items-center">
@@ -89,6 +91,9 @@
                   <div v-if="['5D', 'PK10'].includes(item.lotteryTypeCode)">
                     {{ item.betOpenCodeList[0] ? Number(item.betOpenCodeList[0].value) : '' }}
                   </div>
+                  <div v-else-if="['ANIMALS_RUNNING'].includes(item.lotteryTypeCode)">
+                    {{ item.betOpenCodeList[0] ? item.betOpenCodeList[0].value : '' }}
+                  </div>
                   <div v-else>{{ item.sumVal }}</div>
                 </div>
               </div>
@@ -146,6 +151,7 @@ const conf = index({ chooseRef })
   width: 690rem;
   margin: 32rem 0rem;
   font-size: 24rem;
+  position: relative;
 }
 .order-icon {
   width: 26rem;

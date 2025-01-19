@@ -12,48 +12,53 @@
             </template>
         </div>
         <div class="ani-list">
-            <template v-for="(item, index) in listNumArr" :key="index">
-                <div class="ani-item" :class="{ 'ani-active': item.key == conf.selectAnimal }"
-                    @click="conf.changeAni(item.key,index)">
+            <template v-for="(item, index) in conf.betTypeList" :key="index">
+                <div class="ani-item" :class="{ 'ani-active': item.selectBet }"
+                    @click="conf.changeAni(item,index)">
                     <div class="ani-con">
                         <div class="ani-bg" :class="'ani-bg-' + index"></div>
                     </div>
-                    <div class="money" v-if="item.key == conf.selectAnimal">
-                        <div class="coin">{{ conf.betCoin }}</div>{{ conf.betMinMoney }}
+                    <div class="money" @click.stop="" v-if="item.selectBet">
+                        <div class="minus" @click.stop="conf.changCount(item,'-')">-</div>
+                        <div class="num"><div class="coin">{{ conf.betCoin }}</div>{{ item.betMoney }}</div>
+                        <div class="add" @click.stop="conf.changCount(item,'+')">+</div>
                     </div>
                     <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     <div class="txt">
                         <div class="name">{{ item.name }}</div>
                         <div class="odds">{{ item[conf.selectType + 'odds'] || 0 }}</div>
                     </div>
+                    <div class="addMoney" v-if="item.selectBet && conf.showAddani[index]">+{{ conf.quickRechargeAmount.list[conf.amount] }}</div>
                 </div>
             </template>
         </div>
         <div class="btn">
-            <div class="btn-left" @click="conf.changeMul">
-                <div class="name">Consume</div>
+            <div class="btn-left">
+                <div class="name">Single bet amount</div>
                 <div class="num">
-                    <div class="total">{{ conf.total }}</div>
-                    <div class="count">{{ conf.betCoin }}</div>
+                    <van-icon name="arrow-left" size="36rem" color="#fff" @click.stop="conf.changeAmount('-')" />
+                    <div class="total">{{ conf.betCoin }}{{ conf.quickRechargeAmount.list[conf.amount] }}</div>
+                    <van-icon name="arrow" size="36rem" color="#fff" @click.stop="conf.changeAmount('+')" />
                 </div>
             </div>
-            <div class="btn-right" style="justify-content: center;" v-if="!conf.selectAnimal" @click="conf.changeBet">
+            <div class="btn-right" style="justify-content: center;" v-if="!getWinMoney" @click="conf.changeBet">
                 <div>Guess</div>
             </div>
             <div class="btn-right" @click="conf.changeBet" v-else>
                 <div class="win">
-                    <div>Guess correctly <span>1</span></div>
-                    <div style="margin-top: 4rem;">Get <span>{{ `${conf.betCoin}${getWinMoney}` }}</span></div>
+                    <div>Betting amount</div>
+                    <div style="margin-top: 4rem;font-size: 25rem;"><span>{{ `${conf.betCoin}${getWinMoney}` }}</span></div>
                 </div>
                 <div class="line"></div>
                 <div>Guess</div>
             </div>
         </div>
-        <div class="mosk" v-if="stopBet"></div>
+        <!-- <div class="mosk" v-if="stopBet"></div> -->
     </div>
 </template>
 <script setup lang="ts">
 import i18n from '@/lang';
+import sconfig from '@/sstore/sconfig';
 import sutil from '@/sstore/sutil';
 import System from '@/utils/System';
 import { computed, onMounted, reactive, watch } from 'vue';
@@ -78,55 +83,101 @@ const emit = defineEmits(['changeBet'])
 const conf = reactive({
     selectType: '',
     selectAnimal: '',
-    selectIndex: 0,
-    total: 0,
     betMinMoney: 1,
     betMaxMoney: 10000,
     betCoin: '₹',
+    amount: 0,
+    showAddani: {0: false,1: false,2: false,3: false,4: false,5: false} as any,
+    betTypeList: [] as any[],
+    quickRechargeAmount: {
+		list: [1, 10, 10, 500,1000], // 快速下注列表
+		get: async () => {
+			const arr = sconfig.walletInfo.quickRechargeAmount.map((item:any) => parseInt(item))
+            if(arr[0] != conf.betMinMoney) {
+                conf.quickRechargeAmount.list = [conf.betMinMoney,...arr]
+            } else {
+                conf.quickRechargeAmount.list = arr
+            }      
+		}
+	},
     changeType(key: string) {
+        if(conf.selectType == key) return
         conf.selectType = key
+        conf.reset()
         emit('changeBet',{type: key})
     },
-    changeAni(key: string,index:number) {
-        if (key == conf.selectAnimal) {
-            conf.total = conf.total + conf.betMinMoney
-            if (conf.total >= conf.betMaxMoney) conf.total = conf.betMinMoney
+    changeAni(item: any,index:number) {
+        console.log(item);
+        
+        if (item.selectBet) {
+            conf.showAddani[index] = true
+            setTimeout(() => {
+                conf.showAddani[index] = false
+                item.betMoney = item.betMoney + conf.quickRechargeAmount.list[conf.amount]
+            },600)
+            
+            if (item.betMoney >= conf.betMaxMoney) item.betMoney = conf.betMaxMoney
             return
         }
-        conf.total = conf.betMinMoney
-        conf.selectAnimal = key
-        conf.selectIndex = index
+        item.selectBet = true
+        item.betMoney = conf.quickRechargeAmount.list[conf.amount]
     },
-    changeMul() {
-        conf.total = conf.total + conf.betMinMoney
-        if(conf.betMaxMoney > 10000) conf.betMaxMoney = 10000  
-        if (conf.total > conf.betMaxMoney) conf.total = conf.betMinMoney
+    changCount(item: any,type: string) {
+        if(type == '-' && item.betMoney > conf.betMinMoney) {
+            item.betMoney--
+        }
+        if(type == '+' && item.betMoney < conf.betMaxMoney) {
+            item.betMoney++
+        }
     },
     changeBet() {
-        if(!conf.selectAnimal) {
+        if(!getWinMoney.value) {
             System.toast(i18n.t('common.SelectType'))
             return
         }
-        emit('changeBet',{balance: conf.total,code: conf.selectType + '_' + conf.selectAnimal})
+        let list = conf.betTypeList.filter((item:any) => item.selectBet)
+        emit('changeBet',{list,selectType: conf.selectType})
+    },
+    changeAmount(type:string) {
+        if(type == '-' && conf.amount > 0) {
+            conf.amount--
+        }
+        if(type == '+' && conf.amount < conf.quickRechargeAmount.list.length - 1) {
+            conf.amount++
+        }
+        conf.betTypeList.forEach((item) => {
+            item.betMoney = conf.quickRechargeAmount.list[conf.amount]
+        })
+    },
+    reset() {
+        console.log('668');
+        conf.betTypeList.forEach((item) => {
+            item.betMoney = 0
+            item.selectBet = false
+        })
     }
 })
 
 const getWinMoney = computed(() => {
-    let odds = props.listNumArr[conf.selectIndex][conf.selectType + 'odds'] || 1
-    return sutil.dataHandling(conf.total * odds)
+    let total = 0
+    conf.betTypeList.forEach((item) => {
+        if(item.selectBet) total = sutil.addNum(total, item.betMoney)
+    })
+    return total
 })
 watch(
   () => props.defaultWalletInfo,
   (val: any) => {
     conf.betMinMoney = parseFloat(sutil.dataHandling(val.betMinAmount))
     conf.betMaxMoney = parseFloat(val.betMaxAmount)
-    
+    conf.quickRechargeAmount.get()
     conf.betCoin = val.coinSymbol
   },
   { deep: true }
 )
 onMounted(() => {
     conf.selectType = props.options[0].key
+    conf.betTypeList = props.listNumArr
 })
 </script>
 
@@ -198,7 +249,7 @@ onMounted(() => {
             border: 4rem solid #fff;
             position: relative;
             margin-right: 2%;
-            margin-bottom: 20rem;
+            margin-bottom: 22rem;
 
             &:nth-child(3n + 3) {
                 margin-right: 0rem;
@@ -212,15 +263,26 @@ onMounted(() => {
                 .money {
                     background: #FF4F4F;
                     display: inline-block;
-                    padding: 0rem 16rem 0rem 10rem;
+                    padding: 6rem 16rem;
                     position: absolute;
-                    top: -18rem;
+                    top: -24rem;
                     right: 20rem;
                     color: #fff;
                     font-size: 20rem;
-                    border-radius: 20rem;
+                    border-radius: 25rem;
                     display: flex;
                     align-items: center;
+
+                    .num{
+                        display: flex;
+                        align-items: center;
+                        margin: 0 6rem;
+                    }
+
+                    .add{
+                        margin-left: 6rem;
+                        padding-bottom: 3rem;
+                    }
 
                     .coin {
                         width: 32rem;
@@ -296,6 +358,25 @@ onMounted(() => {
                     font-weight: 600;
                 }
             }
+            .addMoney{
+                color: #FB3934;
+                position: absolute;
+                left: 55%;
+                bottom: 90%;
+                animation: down-animation 0.6s linear infinite both;
+                font-size: 32rem;
+                z-index: 10;
+            }
+            @keyframes down-animation {
+			0% {
+				// transform: rotate(90deg) scale(0.9);
+                bottom: 35%;
+			}
+			100% {
+				// transform: rotate(90deg) scale(0.9);
+                bottom: 90%;
+			}
+		}
         }
     }
 
@@ -311,18 +392,18 @@ onMounted(() => {
             box-shadow: 2px -4px 4px 0px #FFB212 inset;
             width: 300rem;
             border-radius: 20rem 0 0 20rem;
-            padding: 16rem 25rem 20rem;
+            padding: 10rem 20rem 0rem;
 
             .name {
                 color: #933C00;
                 font-size: 22rem;
-                margin-bottom: 10rem;
+                margin-bottom: 6rem;
             }
 
             .num {
                 display: flex;
-                justify-content: center;
-                align-items: flex-end;
+                justify-content: space-between;
+                align-items: center;
 
                 .count {
                     color: #933C00;
@@ -332,7 +413,7 @@ onMounted(() => {
 
                 .total {
                     color: #933C00;
-                    font-size: 40rem;
+                    font-size: 36rem;
 
                 }
             }

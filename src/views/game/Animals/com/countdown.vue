@@ -20,7 +20,7 @@
                         <div class="list-item" v-for="(item, index) in totalList" :key="index">
                             <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
                             <div class="num">
-                                <img class="glass-img" src="/static/img/game/animal/glass.png" />
+                                <img class="glass-img" :src="`/static/img/game/animal/glass-${active}.png`" />
                                 <div>{{ item[active] }}</div>
                             </div>
                         </div>

@@ -187,40 +187,50 @@ const conf = reactive({
                 const [key, oddskey] = item.oddsCode.split('_')
                 if (!odds[key]) odds[key] = {}
                 odds[key][oddskey] = item
+
             })
             conf.bet.tabs.options.forEach((v: any) => {
                 const fun = (item: any) => {
                     item[v.key + 'odds'] = Number(odds[v.key][item.key].odds)
+                    item[v.key + 'Code'] = odds[v.key][item.key].oddsCode
+                    item[v.key + 'Name'] = odds[v.key][item.key].oddsName
                 }
                 conf.bet.listNumArr.forEach(fun)
             })
+            console.log(conf.bet.listNumArr);
+            
         },
         // 请求下注接口
         requestBet(e: any) {
+            console.log(e);
             // 选择类型
             if (e.type) {
                 conf.bet.tabs.active = e.type.slice(1)
                 return
             }
             System.loading()
-            apis.lotteryUserBets({
-                money: e.balance, //单注金额
-                betCodes: e.code, //投注内容
-                betExpect: conf.lotteryBox.current.openExpect, //投注期号
-                betOpenId: conf.lotteryBox.current.lotteryOpenId, //开奖记录编号
-                lotteryId: conf.lotteryBox.current.lotteryId, //投注彩票ID
-                multiple: 1, //投注倍数
-                nums: 1, //投注数量
-                supplement: 0, //是否追加订单，0否，1是
-                walletCoinCode: conf.defaultWalletInfo.walletCoin, //下注钱包币种
-                success: (res: any) => {
-                    conf.getWalletMoney(2)
-                    System.toast(i18n.t('game.betSuccess'), 'success')
-                },
-                final: () => {
-                    System.loading(false)
-                }
+            e.list.forEach((item:any,index:number) => {
+                apis.lotteryUserBets({
+                    money: item.betMoney, //单注金额
+                    betCodes: item[e.selectType + 'Code'], //投注内容
+                    betExpect: conf.lotteryBox.current.openExpect, //投注期号
+                    betOpenId: conf.lotteryBox.current.lotteryOpenId, //开奖记录编号
+                    lotteryId: conf.lotteryBox.current.lotteryId, //投注彩票ID
+                    multiple: 1, //投注倍数
+                    nums: 1, //投注数量
+                    supplement: 0, //是否追加订单，0否，1是
+                    walletCoinCode: conf.defaultWalletInfo.walletCoin, //下注钱包币种
+                    success: (res: any) => {
+                        if(index == e.list.length - 1) {
+                            conf.getWalletMoney(2)
+                            System.toast(i18n.t('game.betSuccess'), 'success')
+                        }
+                    },
+                    final: () => {
+                        if(index == e.list.length - 1) System.loading(false)
+                    }
             });
+            })
         }
     } as any,
     downNum: 10,
@@ -297,12 +307,12 @@ const conf = reactive({
         },
         rest() {
             conf.result.totalList = [
-                { img: 'A', name: 'Exiaobao', st: 0, nd: 0, rd: 0 },
-                { img: 'B', name: 'Freshippo', st: 0, nd: 0, rd: 0 },
-                { img: 'C', name: 'Piaopiao', st: 0, nd: 0, rd: 0 },
-                { img: 'D', name: 'Xiazai', st: 0, nd: 0, rd: 0 },
-                { img: 'E', name: 'Zhixiaobao', st: 0, nd: 0, rd: 0 },
-                { img: 'F', name: 'Huanxing', st: 0, nd: 0, rd: 0 }
+                { img: 'A', name: 'zxb', st: 0, nd: 0, rd: 0 },
+                { img: 'B', name: 'hm', st: 0, nd: 0, rd: 0 },
+                { img: 'C', name: 'pp', st: 0, nd: 0, rd: 0 },
+                { img: 'D', name: 'xz', st: 0, nd: 0, rd: 0 },
+                { img: 'E', name: 'zxb', st: 0, nd: 0, rd: 0 },
+                { img: 'F', name: 'hx', st: 0, nd: 0, rd: 0 }
             ]
         }
     },
@@ -381,37 +391,49 @@ onBeforeMount(async () => {
             sort: 1,
             key: 'A',
             img: 'exb',
-            name: 'Exiaobao'
+            name: 'Exiaobao',
+            selectBet: false,
+            betMoney: 0
         },
         {
             sort: 2,
             key: 'B',
             img: 'hm',
-            name: 'Freshippo'
+            name: 'Freshippo',
+            selectBet: false,
+            betMoney: 0
         },
         {
             sort: 3,
             key: 'C',
             img: 'pp',
-            name: 'Piaopiao'
+            name: 'Piaopiao',
+            selectBet: false,
+            betMoney: 0
         },
         {
             sort: 4,
             key: 'D',
             img: 'xz',
-            name: 'Xiazai'
+            name: 'Xiazai',
+            selectBet: false,
+            betMoney: 0
         },
         {
             sort: 5,
             key: 'E',
             img: 'zxb',
-            name: 'Zhixiaobao'
+            name: 'Zhixiaobao',
+            selectBet: false,
+            betMoney: 0
         },
         {
             sort: 6,
             key: 'F',
             img: 'hx',
-            name: 'Huanxing'
+            name: 'Huanxing',
+            selectBet: false,
+            betMoney: 0
         }
     ]
 })

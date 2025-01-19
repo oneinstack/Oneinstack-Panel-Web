@@ -116,9 +116,18 @@ export const index = ({ chooseRef }: any) => {
         if (item.lotteryTypeCode == 'Trx_Win_Go') {
           betOpenCodeList = [sutil.getLastNum(betOpenCodeList[0])]
         }
+        if (item.lotteryTypeCode == 'ANIMALS_RUNNING') {
+          let openIndex = parseInt(item.betCodes[0]) - 1
+          betOpenCodeList = [betOpenCodeList[openIndex]]
+        }
+        
 
         //对配置进行初始化
         const getImgConfig = (v: any, item: any) => {
+          // console.log(v);
+          // console.log(item);
+          
+          
           if (StrUtil.isNull(v)) return null
           let img = ''
           let color = ''
@@ -205,9 +214,7 @@ export const index = ({ chooseRef }: any) => {
           // AnimalsRunning
           else if (item.lotteryTypeCode == 'ANIMALS_RUNNING') {
             const betCode = item.betCodes.split('_')[1]
-            img = `/static/img/game/animal/${betCode}.png`
-            color = v
-            v = parseInt(item.betCodes[0]) - 1
+            img = `/static/img/game/animal/${v}.png`
           }
           return {
             img,
@@ -292,6 +299,8 @@ export const index = ({ chooseRef }: any) => {
       }
 
       conf.list = [...conf.list, ...data]
+      console.log(conf.list);
+      
     },
     toDetail(item: any) {
       Cookie.set('betDetailInfo', {
