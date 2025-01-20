@@ -168,7 +168,7 @@ import sutil from '@/sstore/sutil'
 import addWallet from './components/addWallet-blue.vue'
 import cuModal from './theme/blue/components/cuModal.vue'
 import swiperWalletBlue from './components/swiperWalletBlue.vue'
-import { index } from './ts/wallet'
+import { index } from './wallet'
 
 const conf = index()
 </script>

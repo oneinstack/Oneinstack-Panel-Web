@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import RecordCard from './components/record-card.vue'
-import { index } from './ts/record'
+import { index } from './record'
 
 const conf = index()
 </script>

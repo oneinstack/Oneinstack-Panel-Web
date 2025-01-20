@@ -23,7 +23,7 @@
   
   <script setup lang="ts">
   import RecordCard from './components/record-card-blue.vue'
-  import { index } from './ts/record'
+  import { index } from './record'
   import stheme from '@/sstore/stheme'
   
   const conf = index()

@@ -132,7 +132,7 @@ import result from "./result.vue"
 import chat from "./chat.vue"
 import bigTime from "../components/bigTime.vue"
 import order from "./order.vue"
-import { index } from "./ts/winGo"  
+import { index } from "./winGo"  
 const {conf,gameBoxRefs} = index()
 </script>
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import betPopup from '../game/components/betPopup-blue.vue'
 import { stheme } from '@/sstore/stheme'
-import { index } from './ts/longQueue'
+import { index } from './longQueue'
 const conf = index()
 </script>
 

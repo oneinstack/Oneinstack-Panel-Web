@@ -140,7 +140,7 @@ import rule from "../components/gameRule.vue"
 import result from './result.vue'
 import chat from './chat.vue'
 import order from './order.vue'
-import { index } from './ts/5D'
+import { index } from './5D'
 import { ref } from 'vue'
 
 const gameBoxRefs = ref<any>()

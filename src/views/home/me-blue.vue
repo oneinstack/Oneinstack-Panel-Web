@@ -184,7 +184,7 @@
 import CuModal from './theme/blue/components/cuModal.vue'
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
-import { index } from './ts/me'
+import { index } from './me'
 
 const conf = index()
 </script>

@@ -166,7 +166,7 @@ import sutil from '@/sstore/sutil'
 import addWallet from './components/addWallet.vue'
 import cuModal from './components/cuModal.vue'
 import swiperWallet from './components/swiperWallet.vue'
-import { index } from './ts/wallet'
+import { index } from './wallet'
 
 const conf = index()
 </script>

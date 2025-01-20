@@ -201,7 +201,7 @@ import betPopup from '../components/betPopup-blue.vue';
 import timePopup from '../components/timePopup.vue';
 import gameLoop from '../components/gameLoop.vue';
 import sutil from '@/sstore/sutil';
-import { index } from './ts/3D';
+import { index } from './3D';
 import stheme from '@/sstore/stheme'
 
 const {conf,resultRefs,analyzeRefs,orderRefs} = index()

@@ -199,7 +199,7 @@ import betPopup from '../components/betPopup.vue';
 import timePopup from '../components/timePopup.vue';
 import gameLoop from '../components/gameLoop.vue';
 import sutil from '@/sstore/sutil';
-import { index } from './ts/3D';
+import { index } from './3D';
 
 const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 </script>

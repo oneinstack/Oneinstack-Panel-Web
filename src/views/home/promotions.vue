@@ -23,7 +23,7 @@
 
 <script setup lang="ts">
 import StatusBarConfig from '@/utils/StatusBarConfig'
-import { index } from './ts/promotions'
+import { index } from './promotions'
 import gridBlock from './components/gridBlock.vue'
 
 
