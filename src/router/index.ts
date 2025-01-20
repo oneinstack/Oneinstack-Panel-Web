@@ -7,7 +7,12 @@ import privateRoutes from './routes/index'
 import { routeTheme } from './theme'
 
 export const initRouter = () => {
+  // 传主题参数可设置主题（/home/home?theme=blue）
+  const {theme} = StrUtil.getParam(location.href)
+  if(theme && theme != Cookie.get('pageTheme')) Cookie.set('pageTheme', theme)
+
   routeTheme(privateRoutes, Cookie.get('pageTheme'))
+
   let _routes = privateRoutes as any[]
   const routes = [
     ..._routes,

@@ -285,11 +285,6 @@ const conf = reactive({
 Scope.setConf(conf)
 
 onMounted(() => {
-  // 首页传主题参数可设置主题（/home/home?theme=blue）
-  const {theme} = System.getRouterParams()
-  if(theme && theme != Cookie.get('pageTheme')){
-    System.setTheme(theme)
-  }
   const run = async () => {
     conf.getConfiguration()
     conf.getLotteryList()
