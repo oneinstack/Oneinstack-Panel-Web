@@ -188,7 +188,7 @@ const conf = index({ chooseRef })
     background: #fdab45;
   }
 
-  &.Cancelled {
+  &.cancelledOrder {
     background: #5c6381;
   }
 }
