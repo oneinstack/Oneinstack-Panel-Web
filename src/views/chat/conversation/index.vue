@@ -76,7 +76,7 @@
 import csconversation from '@/modules/chat/sstore/csconversation'
 import { parseMessageByType, prepareConversationState } from '@/modules/chat/utils/cUtil'
 import System from '@/utils/System'
-import IMSDK, { ConversationItem, FriendUserItem, GroupItem } from 'openim-uniapp-polyfill'
+import IMSDK, { ConversationItem, FriendUserItem, GroupItem, MessageType } from 'openim-uniapp-polyfill'
 import { onMounted, reactive, watch } from 'vue'
 import sutil from '../../../sstore/sutil'
 import headImg from '../components/headImg.vue'
@@ -84,6 +84,7 @@ import addDialog from './components/addDialog.vue'
 import { capis } from '@/modules/chat/api'
 import csuser from '@/modules/chat/sstore/csuser'
 import i18n from '@/lang'
+import { sim } from '@/sstore/sim'
 const conf = reactive({
   offset: { x: 0,y: 600},
   list: [] as (ConversationItem & FriendUserItem & GroupItem)[],
@@ -162,13 +163,19 @@ const conf = reactive({
   initList: () => {
     //解析最新消息
     csconversation.conversationList.forEach((item) => {
-      let parsedMessage = ''
+      let parsedMessage:any = ''
       try {
         if (item.latestMsg !== '') parsedMessage = JSON.parse(item.latestMsg)
-        parsedMessage = parseMessageByType(parsedMessage)
+        if (parsedMessage.contentType === MessageType.CustomMessage) {
+          parsedMessage = sim.getLatestMessage(parsedMessage)
+        } else {
+          parsedMessage = parseMessageByType(parsedMessage)
+        }
       } catch (e) {}
       item.latestMessage = parsedMessage
       if (item.groupID) {
+        let groupFace:any = Cookie.get('groupFaceList') || {}
+        if(groupFace[item.groupID]) return item.faceURL = groupFace[item.groupID]
         IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
           groupID: item.groupID,
           filter: 0,
@@ -177,6 +184,8 @@ const conf = reactive({
         }).then(({ data }: any) => {
           if (data.length) {
             item.faceURL = data.map((v: any) => v.faceURL)
+            groupFace[item.groupID] = item.faceURL
+            Cookie.set('groupFaceList', groupFace)
           }
         })
       }

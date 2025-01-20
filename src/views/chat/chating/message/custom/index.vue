@@ -1,6 +1,6 @@
 <template>
   <redpack v-if="conf.type === CustomData.RedPack" />
-  <!-- <ShareBet v-else-if="conf.type === CustomData.ShareBet" /> -->
+  <ShareBet v-else-if="conf.type === CustomData.ShareBet" />
   <other v-else />
 </template>
 
@@ -34,15 +34,10 @@ const conf = reactive({
 })
 onMounted(() => {
   const data = props.message.customElem
-  console.log('6688');
-  console.log(data);
   if (!data?.extension) return
   conf.item = JSON.parse(data.extension)
   conf.type = data.data
   
-  console.log('668801');
-  console.log(conf.type);
-  console.log(conf.item);
   conf.message = props.message
   
   Scope.setConf(conf)

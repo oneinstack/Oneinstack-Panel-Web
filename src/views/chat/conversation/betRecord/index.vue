@@ -15,9 +15,9 @@
 </template>
 
 <script setup lang="ts">
-// import { CustomData, sim } from '@/sstore/sim'
+import { CustomData, sim } from '@/sstore/sim'
 import { svalue } from '@/sstore/svalue'
-// import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
+import IMSDK, { IMMethods } from 'openim-uniapp-polyfill'
 // import { mapGetters } from 'vuex'
 import BetRecordFilter from './components/BetRecordFilter.vue'
 import BetRecordHeader from './components/BetRecordHeader.vue'
@@ -27,6 +27,8 @@ import i18n from '@/lang'
 import System from '@/utils/System'
 import { apis } from '@/api'
 import { Scope } from 'tools-vue3'
+import csconversation from '@/modules/chat/sstore/csconversation'
+import csuser from '@/modules/chat/sstore/csuser'
 
 
 const listRef = ref<any>()
@@ -43,55 +45,76 @@ const conf = reactive({
 
 	chat: {
 		active: '',
-		list: [],
+		list: [] as any[],
 		getList: () => {
-			// IMSDK.asyncApi('getAllConversationList', IMSDK.uuid())
-			// 	.then(({ data }) => {
-			// 		const { groupID, userID } = conf.storeCurrentConversation
-			// 		conf.chat.active = groupID || userID
-			// 		conf.chat.list = data.map((item:any) => {
-			// 			const v = {
-			// 				id: item.userID || item.groupID,
-			// 				imgUrl: item.faceURL,
-			// 				conversationID: item.conversationID,
-			// 				chatName: item.showName,
-			// 				groupID: item.groupID,
-			// 				userID: item.userID
-			// 			} as any
-			// 			v.sort = conf.chat.active === v.id ? 0 : 1
-			// 			return v
-			// 		})
-			// 		conf.chat.list.sort((a:any, b:any) => a.sort - b.sort)
-			// 	})
-			// 	.catch(({ errCode, errMsg }) => {
-			// 		System.toast(i18n.t('chatRoom.FailedGetList'))
-			// 	})
+			console.log('888801');
+			
+			IMSDK.asyncApi(IMMethods.GetAllConversationList, IMSDK.uuid())
+				.then(({ data }: any) => {
+					const { groupID, userID } = csconversation.currentConversation
+					conf.chat.active = groupID || userID
+					conf.chat.list = data.map((item:any) => {
+						const v = {
+							id: item.userID || item.groupID,
+							imgUrl: item.faceURL,
+							conversationID: item.conversationID,
+							chatName: item.showName,
+							groupID: item.groupID,
+							userID: item.userID
+						} as any
+						v.sort = conf.chat.active === v.id ? 0 : 1
+						return v
+					})
+					conf.chat.list.sort((a:any, b:any) => a.sort - b.sort)
+				})
+				.catch(({ errCode, errMsg }) => {
+					// System.toast(i18n.t('chatRoom.FailedGetList'))
+					
+					conf.chat.list = csconversation.conversationList.map((item:any) => {
+						const v = {
+							id: item.userID || item.groupID,
+							imgUrl: item.faceURL,
+							conversationID: item.conversationID,
+							chatName: item.showName,
+							groupID: item.groupID,
+							userID: item.userID
+						} as any
+						v.sort = conf.chat.active === v.id ? 0 : 1
+						return v
+					})
+					conf.chat.list.sort((a:any, b:any) => a.sort - b.sort)
+				})
 		}
 	},
 	toShare: ({ betList, chatList }: any) => {
-		// const data = CustomData.ShareBet
-		// const lotteryName = filterRefs.value.filters[0].currentSelect.label
-		// const shareName = conf.storeSelfInfo.nickname
-		// chatList.forEach(async (itemid) => {
-		// 	const sitem = conf.chat.list.find((v) => v.id === itemid)
-		// 	betList.forEach(async (betitem) => {
-		// 		betitem.lotteryName = lotteryName
-		// 		betitem.shareName = shareName
-		// 		const extension = {
-		// 			data: betitem
-		// 		}
-		// 		const message = await IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
-		// 			data,
-		// 			extension: JSON.stringify(extension),
-		// 			description: data
-		// 		})
-		// 		sim.sendMessage(message, undefined, undefined, {
-		// 			userID: sitem.userID,
-		// 			groupID: sitem.groupID
-		// 		})
-		// 	})
-		// })
-		// System.toast(i18n.t('chatRoom.ShareSuccess'),'success')
+		console.log('668');
+		console.log(betList);
+		console.log(chatList);
+		
+		
+		const data = CustomData.ShareBet
+		const lotteryName = filterRefs.value.filters[0].currentSelect.label
+		const shareName = csuser.selfInfo.nickname
+		chatList.forEach(async (itemid:any) => {
+			const sitem = conf.chat.list.find((v:any) => v.id === itemid)
+			betList.forEach(async (betitem:any) => {
+				betitem.lotteryName = lotteryName
+				betitem.shareName = shareName
+				const extension = {
+					data: betitem
+				}
+				const message = await IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
+					data,
+					extension: JSON.stringify(extension),
+					description: data
+				})
+				console.log('66666');
+				console.log(message);
+				
+				sim.sendMessage(message)
+			})
+		})
+		System.toast(i18n.t('chatRoom.ShareSuccess'),'success')
 	},
 	// 获取默认钱包
 	async getCoinData() {
@@ -168,11 +191,10 @@ const conf = reactive({
 			lotteryTypeId: obj.typeId,
 			lotteryId: obj.playId,
 			success: (res: any) => {
+				console.log(res);
+				
 				if (res.code == 200) {
 					let datas = res.data.records
-					console.log('66666');
-					console.log(datas);
-					
 					conf.listItems = datas.map((item: any, itemIndex: number) => {
 						item.newPlayName = obj.playName
 						item.playName = obj.playName

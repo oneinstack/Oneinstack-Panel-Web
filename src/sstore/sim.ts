@@ -92,7 +92,9 @@ export const sim = {
     return info.conversationType === 3
   },
   //发送消息到后台
-  sendMessage(msg:any) { },
+  sendMessage(msg:any) {
+    csmessage.sendMessage(msg)
+  },
   //发送图片消息到后台
   batchCreateImageMesage(paths:any) { },
   //发送自定义消息
@@ -102,7 +104,6 @@ export const sim = {
       extension: JSON.stringify(extension),
       description: data
     })
-    csmessage.sendMessage(message)
     sim.sendMessage(message)
   },
   //最新消息提示
@@ -257,10 +258,6 @@ export const sim = {
   getRedPacketStatus(id:any) {
     const selfInfo = sim.getSelfInfo()
     let rps = Cookie.get('redPacketStatus') || '{}'
-    console.log('6655');
-    
-    console.log(rps);
-    
     // rps = JSON.parse(rps)
     const obj = rps[selfInfo.userID] || {}
     return obj[id] || 35

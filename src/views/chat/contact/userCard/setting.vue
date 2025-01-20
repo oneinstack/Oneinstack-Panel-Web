@@ -67,7 +67,6 @@ const conf = reactive({
     )
       .then(() => {
         System.toast(i18n.t('chatRoom.op_success'), 'success')
-        console.log('666');
         
         setTimeout(() => sutil.pageBack(), 1000);
       })
@@ -92,12 +91,7 @@ onMounted(() => {
   const { sourceInfo }: any = route.query
   if (sourceInfo) {
     conf.sourceInfo = JSON.parse(sourceInfo)
-    console.log(conf.sourceInfo);
   }
-  console.log('6666');
-  
-  console.log(cscontact.blackList);
-  
 })
 </script>
 <style lang="less" scoped>

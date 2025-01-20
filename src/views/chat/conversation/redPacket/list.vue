@@ -99,8 +99,6 @@ event.on(EPage.scrollBottom, () => {
 })
 onMounted(() => {
   conf.item = simdl.data[DialogName.RedPackDetail] || {}
-  console.log(conf.item);
-  console.log('668');
   conf.show = true
   const selfInfo = sim.getSelfInfo()
   conf.self.show = selfInfo.userID == conf.item.data.sendUserId

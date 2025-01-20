@@ -45,7 +45,7 @@ const emit = defineEmits(['close'])
 const conf = reactive({
   show: false,
   item: {} as any,
-  loading: true,
+  loading: false,
   isSelf: false,
   status: 0,
   isGroup: false,

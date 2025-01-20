@@ -150,7 +150,6 @@ const conf = reactive({
         })
     },
     reset() {
-        console.log('668');
         conf.betTypeList.forEach((item) => {
             item.betMoney = 0
             item.selectBet = false

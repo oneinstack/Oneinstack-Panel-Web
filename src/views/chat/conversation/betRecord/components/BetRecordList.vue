@@ -23,13 +23,13 @@
       <div class="share_list">
         <van-checkbox-group v-model="conf.allSelect" placement="column" checked-color="#0fc05f">
           <van-checkbox class="select_all" activeColor="#0fc05f" name="all" 
-            @change="conf.onCheckAll">{{ $t('chatRoom.SelectAll') }}</van-checkbox>
+            @click="conf.onCheckAll">{{ $t('chatRoom.SelectAll') }}</van-checkbox>
         </van-checkbox-group>
 
-        <van-checkbox-group v-model="conf.checkGroupChat" placement="column" checked-color="#0fc05f" @change="conf.onCheckboxChange">
+        <van-checkbox-group v-model="conf.checkGroupChat" placement="column" checked-color="#0fc05f" >
           <van-row v-for="item in list" :key="item.id" class="group_chart_list" @click="conf.handleClickRowSelect(item.id)">
             <div class="flex col-3 items-center">
-              <van-checkbox :name="item.id" activeColor="#0fc05f" style="display: inline-block" />
+              <van-checkbox :name="item.id" activeColor="#0fc05f" style="display: inline-block" @click.stop="conf.handleClickSelect"  />
               <img class="group_chat_img" :src="item.imgUrl" alt="" srcset="" />
             </div>
             <van-col>
@@ -111,17 +111,21 @@ const conf = reactive({
   handleClickRowSelect(checkValue:any) {
     if (conf.checkGroupChat.includes(checkValue)) {
       conf.checkGroupChat = conf.checkGroupChat.filter((item) => item !== checkValue)
-    } else conf.checkGroupChat.push(checkValue)
+    } else {
+      conf.checkGroupChat.push(checkValue)
+    }
     conf.onCheckboxChange(conf.checkGroupChat)
   },
-
+  handleClickSelect() {
+    conf.onCheckboxChange(conf.checkGroupChat)
+  },
   onCheckboxChange(n:any) {
     if (n.length === props.list.length) conf.allSelect = ['all']
     else conf.allSelect = []
   },
 
   onCheckAll(isSelect:any) {
-    if (isSelect) conf.checkGroupChat = props.list.map((item) => item.id)
+    if (conf.allSelect.length) conf.checkGroupChat = props.list.map((item) => item.id)
     else conf.checkGroupChat = []
   }
 })
@@ -129,6 +133,11 @@ const conf = reactive({
 const actionText = computed(() => {
   const len = conf.checkGroupChat.length
   return len ? i18n.t('chatRoom.Complete') + `(${len})` : i18n.t('chatRoom.Complete')
+})
+
+// 暴露方法
+defineExpose({
+  hanldeOpenPopup: conf.hanldeOpenPopup
 })
 
 </script>
@@ -173,7 +182,7 @@ const actionText = computed(() => {
       margin: 24rem 0;
     }
 
-    .u-row {
+    .van-row {
       margin-bottom: 24rem;
 
       &:last-child {

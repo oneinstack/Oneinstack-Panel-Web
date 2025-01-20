@@ -44,8 +44,6 @@ const conf = reactive({
   },
   reset() {
     conf.typeList = []
-    console.log('6689');
-    console.log(conf.typeList);
   }
 })
 

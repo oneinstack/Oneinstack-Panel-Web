@@ -79,6 +79,12 @@ const conf = reactive({
 		emit('filter', obj)
 	}
 })
+
+// 暴露方法
+defineExpose({
+	filters: conf.filters
+})
+
 onMounted(() => {
 	console.log(mconf);
 	

@@ -177,6 +177,7 @@ const conf = reactive({
 	async changeShareOpen() {
 		if (props.betShare) return
 		console.log('conf.mconf', conf.mconf.gameType);
+		conf.num = parseFloat(conf.num)
 		let obj = {
 			coinSymbol: conf.coinSymbol,
 			betMoney: conf.num.toFixed(4),
