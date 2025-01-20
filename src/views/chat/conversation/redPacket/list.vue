@@ -3,7 +3,8 @@
     <div class="redpack-list">
     <div class="redpack-list-top"></div>
     <div class="redpack-list-line"></div>
-    <div>
+    <div v-if="conf.show">
+      <x-statusbar header />
       <div class="content-desc column items-center fit-width">
         <div class="row flex-center" style="gap: 15rem">
           <img :src="sutil.getAvatarUrl(conf.item.data.senderFaceUrl)" />
@@ -59,11 +60,12 @@ import sutil from '@/sstore/sutil';
 import { Scope } from 'tools-vue3';
 import { onMounted, reactive } from 'vue';
 
-// import { sim } from '@/sstore/sim'
-// import { DialogName, simdl } from '@/sstore/simdl'
+import { sim } from '@/sstore/sim'
+import { DialogName, simdl } from '@/sstore/simdl'
 
 const conf = reactive({
   item: {} as any,
+  show: false,
   selfItem: null as any, //自己领取的红包信息
 
   self: {
@@ -96,21 +98,24 @@ event.on(EPage.scrollBottom, () => {
   conf.scrolltolower()
 })
 onMounted(() => {
-  // conf.item = simdl.data[DialogName.RedPackDetail] || {}
-  // const selfInfo = sim.getSelfInfo()
-  // conf.self.show = selfInfo.userID == conf.item.data.sendUserId
-  // conf.self.totalNum = Number(conf.item.data.number)
-  // conf.self.totalMoney = Number(conf.item.data.money)
-  // conf.self.getNum = conf.item.list.length
-  // conf.item.list.forEach((v:any) => {
-  //   conf.self.getMoney += v.money
-  // })
-  // conf.selfItem = conf.item.list.find((v:any) => v.memberId === selfInfo.userID)
+  conf.item = simdl.data[DialogName.RedPackDetail] || {}
+  console.log(conf.item);
+  console.log('668');
+  conf.show = true
+  const selfInfo = sim.getSelfInfo()
+  conf.self.show = selfInfo.userID == conf.item.data.sendUserId
+  conf.self.totalNum = Number(conf.item.data.number)
+  conf.self.totalMoney = Number(conf.item.data.money)
+  conf.self.getNum = conf.item.list.length
+  conf.item.list.forEach((v:any) => {
+    conf.self.getMoney += v.money
+  })
+  conf.selfItem = conf.item.list.find((v:any) => v.memberId === selfInfo.userID)
 
-  // //领取完毕设置状态
-  // if (conf.self.totalNum === conf.self.getNum && !conf.selfItem) {
-  //   sim.setRedPacketStatus(conf.item.data.id, 20)
-  // }
+  //领取完毕设置状态
+  if (conf.self.totalNum === conf.self.getNum && !conf.selfItem) {
+    sim.setRedPacketStatus(conf.item.data.id, 20)
+  }
 })
 </script>
 
@@ -149,10 +154,8 @@ onMounted(() => {
   }
 
   .content-desc {
-    position: absolute;
     z-index: 1;
     color: #1a1a1a;
-    top: 54rem;
 
     img {
       width: 54rem;

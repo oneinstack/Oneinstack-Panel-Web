@@ -257,7 +257,11 @@ export const sim = {
   getRedPacketStatus(id:any) {
     const selfInfo = sim.getSelfInfo()
     let rps = Cookie.get('redPacketStatus') || '{}'
-    rps = JSON.parse(rps)
+    console.log('6655');
+    
+    console.log(rps);
+    
+    // rps = JSON.parse(rps)
     const obj = rps[selfInfo.userID] || {}
     return obj[id] || 35
   },
@@ -293,6 +297,8 @@ export const sim = {
     simdl.data[DialogName.RedPackDetail] = {
       ...item
     }
+    console.log('6688');
+    
     System.router.push('/chat/redPacket/list')
     fun()
     simdl.close(DialogName.loading)

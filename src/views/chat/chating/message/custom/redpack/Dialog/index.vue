@@ -5,8 +5,8 @@
 
 <script setup lang="ts">
 import { DialogName, simdl } from '@/sstore/simdl'
-import loadingCom from './redpack/loadingIM.vue'
-import redpackDetail from './redpack/detail.vue'
+import loadingCom from './loadingIM.vue'
+import redpackDetail from './detail.vue'
 import { onMounted, onUnmounted } from 'vue';
 
 onMounted(() => {

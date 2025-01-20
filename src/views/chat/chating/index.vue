@@ -86,7 +86,7 @@
         <toolsVue :show="conf.tools.show" />
       </div>
     </div>
-    <chating-dialog />
+    <!-- <chating-dialog /> -->
   </x-page>
 </template>
 <script setup lang="ts">
@@ -105,7 +105,7 @@ import { nextTick, onMounted, reactive, ref, watch } from 'vue'
 import CInput from './com/cinput.vue'
 import toolsVue from './com/tools.vue'
 import MessageList from './message/list.vue'
-import ChatingDialog from './com/Dialog/index.vue'
+// import ChatingDialog from './com/Dialog/index.vue'
 const event = Scope.Event()
 const chatBoxRef = ref<any>()
 const inputRef = ref({} as any)

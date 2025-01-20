@@ -1,5 +1,4 @@
 <template>
-  <div>
     <div v-if="conf.show" class="redpack-detail-pop" :style="{ zIndex: conf.item.zIndex }">
       <div class="content-box boom-once">
         <img class="close" src="/static/images/icon_close.svg" @click="conf.close" />
@@ -30,7 +29,6 @@
         </div>
       </div>
     </div>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -42,11 +40,12 @@ import { onMounted, reactive } from 'vue';
 
 const timer = Scope.Timer()
 
+const emit = defineEmits(['close'])
+
 const conf = reactive({
-  show: true,
-  RedPackReceiveCode,
+  show: false,
   item: {} as any,
-  loading: false,
+  loading: true,
   isSelf: false,
   status: 0,
   isGroup: false,
@@ -64,6 +63,8 @@ const conf = reactive({
   },
   close() {
     simdl.close(DialogName.RedPackDetail)
+    emit('close')
+    conf.show = false
   },
   toRedPackList() {
     sim.toRedPackList(conf.item, conf.close)
@@ -80,6 +81,7 @@ onMounted(() => {
   const selfInfo = sim.getSelfInfo()
   conf.isGroup = sim.isGroup()
   conf.isSelf = selfInfo.userID === conf.item.data.sendUserId
+  conf.show = true
 
   //判断是不是过期
   if (Date.now() - conf.item.data.sendTime > 24 * 60 * 60 * 1000) {

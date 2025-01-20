@@ -1,18 +1,24 @@
 <template>
-  <div class="redpack_container" :class="[mconf.item.status == 35 ? '' : 'redpack_over']" @click="conf.getDetail">
-    <div class="rtop">
+  <div class="redpack_container"
+    :class="[mconf.item.status == 35 ? '' : 'redpack_over', mconf.item.isme ? 'message_item_self' : '']"
+    @click="conf.getDetail">
+    <div class="rtop" v-if="conf.show ">
       <img :src="`/static/images/redpack${mconf.item.status == 35 ? '' : '-over'}.png`" />
       <div class="column">
         <div class="content">{{ mconf.item.data }}</div>
-        <div class="content-over">{{ mconf.item.status == 35 ? '' : RedPackReceiveCode[mconf.item.status] }}</div>
+        <div class="content-over">{{ mconf.item.status == 35 ? '' : RedPackReceiveCode[mconf.item.status]() }}</div>
       </div>
     </div>
     <div class="rline"></div>
     <div class="rdesc">{{ $t('chatRoom.wechat_rpkt') }}</div>
   </div>
+  <redpackDetail v-if="conf.typeList.includes(DialogName.RedPackDetail)" @close="conf.reset" />
+  <loadingCom v-if="conf.typeList.includes(DialogName.loading)" />
 </template>
 
 <script setup lang="ts">
+import loadingCom from './Dialog/loadingIM.vue'
+import redpackDetail from './Dialog/detail.vue'
 import i18n from '@/lang';
 import { RedPackReceiveCode, sim } from '@/sstore/sim'
 import { DialogName, simdl } from '@/sstore/simdl'
@@ -23,20 +29,32 @@ const mconf = Scope.getConf()
 const event = Scope.Event()
 
 const conf = reactive({
+  typeList: [] as any[],
+  show: false,
   async getDetail() {
-      simdl.open({
-        type: DialogName.RedPackDetail,
-        data: {
-          ...mconf.item
-        }
-      })
-    }
+    simdl.open({
+      type: DialogName.RedPackDetail,
+      data: {
+        ...mconf.item
+      }
+    })
+    setTimeout(() => {
+      conf.typeList = simdl.listType
+    },200)
+  },
+  reset() {
+    conf.typeList = []
+    console.log('6689');
+    console.log(conf.typeList);
+  }
 })
 
 onMounted(() => {
+  simdl.clear()
   const _item = mconf.item
   const _msg = mconf.message
   _item.sendTime = _msg.sendTime
+  _item.isme = _msg.isme
 
   if (mconf.item.id) {
     event.on('setRedPacketStatus', ({ id, status }) => {
@@ -44,6 +62,7 @@ onMounted(() => {
     })
     mconf.item.status = sim.getRedPacketStatus(mconf.item.id)
   }
+  conf.show = true
   mconf.item = {
     ..._item,
     data: _item.data || i18n.t('chatRoom.congrats'),
@@ -68,7 +87,7 @@ onMounted(() => {
       border-right: 6px solid #e08d35;
     }
 
-    .message_item_self &::after {
+    .reverse &::after {
       border-left: 6px solid #e08d35;
     }
   }
@@ -80,7 +99,7 @@ onMounted(() => {
       border-right: 6px solid #fce2c2;
     }
 
-    .message_item_self &::after {
+    .reverse &::after {
       border-left: 6px solid #fce2c2;
     }
 
@@ -92,7 +111,7 @@ onMounted(() => {
         border-left: 6px dashed transparent;
       }
 
-      .message_item_self &::after {
+      .reverse &::after {
         border-left: 6px solid #f4dfc6;
         border-right: 6px dashed transparent;
       }
@@ -163,7 +182,7 @@ onMounted(() => {
   border-right: 6px solid #f99e3b;
 }
 
-.message_item_self .redpack_container::after {
+.reverse .redpack_container::after {
   left: unset;
   right: -11px;
   margin-left: 12px;
