@@ -327,6 +327,55 @@ export const slottery = reactive({
           CEvent.emit(ERouter.reload)
         }
       },
+
+      /**
+       * 下注
+       */
+      bet: {
+        /**
+         * 获取当前下注的所有信息
+         */
+        getInfo: () => {
+          const obj = {
+            betCodes: conf.bet.content.join(','),
+            betExpect: conf.current.openExpect,
+            betOpenId: conf.current.lotteryOpenId,
+            lotteryId: conf.play.item.id,
+            money: conf.bet.totalMoney,
+            multiple: conf.bet.multiple,
+            nums: 1,
+            supplement: 0,
+            walletCoinCode: conf.wallet.coinSymbol
+          }
+          return obj
+        },
+
+        /**
+         * 下注内容
+         */
+        content: [] as any[],
+
+        /**
+         * 下注注数
+         */
+        num: 0,
+
+        /**
+         * 下注金额
+         */
+        money: 0,
+
+        /**
+         * 下注倍数
+         */
+        multiple: 0,
+
+        /**
+         * 下注总金额
+         */
+        totalMoney: 0
+      },
+
       /**
        * 钱包
        */
@@ -405,6 +454,5 @@ export const slottery = reactive({
 })
 
 export default slottery
-
 
 export type LotteryConfInter = ReturnType<typeof slottery.lotteryBox>

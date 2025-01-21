@@ -19,9 +19,11 @@
   </x-page>
 </template>
 <script setup lang="ts">
+import { apis } from '@/api'
+import { LotteryConfInter } from '@/sstore/slottery'
+import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
 import betPopup from './gameBetPopup.vue'
-import { LotteryConfInter } from '@/sstore/slottery';
 
 const props = defineProps<{
   title: string
@@ -33,9 +35,18 @@ const conf = reactive({
   bet: {
     share: false,
     show: false,
-    submit: (status: number) => {
+    submit: async (status: number) => {
       if (status) {
-        //确认提交
+        System.loading()
+        const obj = props.lottery.bet.getInfo()
+        console.log('obj', obj)
+        obj.betCodes = ''
+        await apis.lotteryUserBets({
+          ...obj,
+          final: async () => {
+            System.loading(false)
+          }
+        })
         conf.bet.show = false
       } else {
         //取消提交

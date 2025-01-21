@@ -75,7 +75,7 @@ export const index = () => {
       }
     },
     /**
-     *
+     * 下注信息
      */
     betting: {
       tabs: {
