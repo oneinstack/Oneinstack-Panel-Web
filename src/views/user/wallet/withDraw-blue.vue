@@ -494,8 +494,8 @@ const conf = index()
         height: 52rem;
         line-height: 52rem;
         padding: 0rem 20rem;
-        background: #fff6e6;
-        color: #999999;
+        background: #F6F7FA;
+        color: #646464;
         border-radius: 30rem;
         margin-right: 30rem;
         font-size: 28rem;

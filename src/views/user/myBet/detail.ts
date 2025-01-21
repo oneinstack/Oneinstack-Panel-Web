@@ -8,7 +8,7 @@ export const index = () => {
         0: 'toDrawn',
         1: 'losingLottery',
         2: 'prizeWinning',
-        3: 'Cancelled'
+        3: 'cancelledOrder'
       } as any,
 
       imgcolor: {

@@ -19,8 +19,11 @@
               :class="{ active: conf.choose[index][conf._key] === item[conf._key] }"
               @click="conf.chooseItem(index, item)"
             >
-              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }">
+              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }" v-if="item.lotteryTypeCode != 'ANIMALS_RUNNING'">
                 {{ item[conf._label] }}
+              </div>
+              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }" v-else>
+                {{ item[conf._label]?.replace(/([A-Z])/g, ' $1').trim() }}
               </div>
             </div>
           </template>
@@ -64,12 +67,15 @@ defineExpose({
   color: #a9a9a9;
 }
 .choose-item {
+  padding: 10rem;
   width: 160rem;
-  height: 64rem;
+  // height: 64rem;
   border-radius: 8rem;
   background-color: #f6f7fa;
   color: #646464;
   font-size: 26rem;
+  word-break: break-word !important; /* 允许在单词内换行 */
+  text-align: center;
   &.active {
     background-color: #fff6e6;
   }

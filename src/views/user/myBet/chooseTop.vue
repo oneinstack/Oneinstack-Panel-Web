@@ -94,6 +94,7 @@ defineExpose({
   font-size: 28rem;
   color: #333;
   font-weight: 500;
+  word-break: break-all !important; /* 允许在单词内换行 */
 }
 
 .choose-dialog {

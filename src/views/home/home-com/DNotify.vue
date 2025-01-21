@@ -18,6 +18,13 @@
               <span>{{ $t('home.NoPrompt') }}</span>
             </div>
           </div>
+          <!-- <div class="check">
+            <div style="display: flex; align-items: center" @click.stop="conf.isNoPromptPop = !conf.isNoPromptPop">
+              <img v-if="!conf.isNoPromptPop" class="check-img" src="/static/img/uncheck.png" />
+              <img v-else class="check-img" src="/static/img/check.png" />
+              <span>{{ $t('home.NoPrompt') }}</span>
+            </div>
+          </div> -->
           <div class="action" @click="conf.close">
             <van-icon name="close" color="#fff" size="60rem" />
           </div>
@@ -89,7 +96,7 @@ const conf = index()
   }
   .action {
     position: absolute;
-    bottom: -120rem;
+    bottom: -160rem;
     left: 0rem;
     right: 0rem;
     text-align: center;
@@ -102,14 +109,18 @@ const conf = index()
 
 .check {
   position: absolute;
-  bottom: -30rem;
-  left: 0rem;
-  right: 0rem;
+  bottom: -80rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 270rem;
+  height: 60rem;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0) 0%, #00000080 49.5%, rgba(0, 0, 0, 0) 100%);
   display: flex;
-  align-items: center;
-  margin: 20rem 50rem 40rem 20rem;
   justify-content: center;
-  z-index: 8;
+  align-items: center;
+  font-family: PingFang SC;
+  font-size: 20rem;
+  font-weight: 400;
 
   .check-img {
     width: 28rem;

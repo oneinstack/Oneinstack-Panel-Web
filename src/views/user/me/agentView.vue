@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import { index } from './agentView'
-
 const conf = index()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer header-bg-color="transparent" :topfill="false">
     <template #title>{{ $t('agencyCenterModule.FindTitle') }}</template>
     <!-- 搜索栏 -->
-    <div class="search">
+     <div class="invite-container">
+      <x-statusbar header />
+
+      <div class="search">
       <!-- left -- 开始时间 -->
       <div class="left-view">
         <div class="title">{{ $t('agencyCenterModule.StartTime') }}</div>
@@ -39,6 +41,9 @@ const conf = index()
         </div>
       </div>
     </div>
+
+
+     </div>
 
     <div>
       <div class="winning-box">
@@ -80,12 +85,16 @@ const conf = index()
 </template>
 
 <style scoped lang="less">
+.invite-container {
+  height: max-content;
+  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+}
+
 .search {
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
   font-weight: 500;
-  background: linear-gradient(180deg, #eb602d 0%, #ffa64f 160%);
   padding: 50rem 30rem;
 
   .left-view,

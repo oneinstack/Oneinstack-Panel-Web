@@ -35,11 +35,13 @@ export const index = ({ emit, lotteryTypeRef, betTimeRef }: any) => {
       const key = 'key'
       const label = 'label'
       const children = 'children'
+      const lotteryTypeCode = 'lotteryTypeCode'
       for (let i = 0; i < res.length; i++) {
         const _item: any = res[i]
         let obj = {
           [key]: _item.lotteryTypeVO.lotteryTypeId,
           [label]: _item.lotteryTypeVO.lotteryTypeName,
+          [lotteryTypeCode]: _item.lotteryTypeVO.lotteryTypeCode,
           [children]: _item.lotteryVOList.map((v: any) => ({
             [key]: v.id,
             [label]: v.lotteryShowname

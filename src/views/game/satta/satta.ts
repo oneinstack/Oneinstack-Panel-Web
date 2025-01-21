@@ -6,6 +6,8 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import { ERouter } from '@/enum/Enum'
+import svf from '@/sstore/svf'
+
 
 export const index = ({ orderRefs, selectRefs }: any) => {
   const conf = reactive({
@@ -79,17 +81,11 @@ export const index = ({ orderRefs, selectRefs }: any) => {
     countdownTime: null as any,
     selectShow: false,
     defaultWalletInfo: {} as any,
+    vf: {} as any,
     // input输入事件
     handleInputEnter(e: any) {
-      let val = e.detail.value
-      if (val[0] == '0') {
-        val = ''
-      }
-      val = val
-        .replace(/[^\d.]/g, '')
-        .replace(/^(\-)*(\d+)\.(\d{0}).*$/, '$1$2')
-        .replace(/^\.*$/g, '')
-      conf.BettingNumber = val
+      conf.vf['BettingNumber'](e)
+      conf.BettingAmount && conf.handleBetMoney()
     },
 
     //获取选择号码高度
@@ -312,26 +308,7 @@ export const index = ({ orderRefs, selectRefs }: any) => {
 
     //输入下注金额
     handleEnterBetAmount(e: any) {
-      let val = conf.BettingAmount + ''
-      if (val.length > 1 && val[0] === '0' && val[1] !== '.') {
-        val = val.substring(1)
-      }
-      val = val
-        .replace(/[^\d.]/g, '')
-        .replace(/^(\-)*(\d+)\.(\d{4}).*$/, '$1$2.$3')
-        .replace(/^\.*$/g, '')
-      // 移除非数字和点以及除第一个点外的所有点
-      val = val
-        .replace(/[^\d.]/g, '')
-        .replace(/\.{2,}/g, '.')
-        .replace('.', '$#$')
-        .replace(/\./g, '')
-        .replace('$#$', '.')
-      const decimalIndex = val.indexOf('.')
-      if (decimalIndex !== -1) {
-        val = val.substring(0, decimalIndex) + '.' + val.substring(decimalIndex).replace('.', '')
-      }
-      conf.BettingAmount = val
+      conf.vf['BettingAmount'](e)
       conf.BettingAmount && conf.handleBetMoney()
     },
 
@@ -343,7 +320,7 @@ export const index = ({ orderRefs, selectRefs }: any) => {
 
     //增加、减少下注注数
     handleBetNumber(type: any) {
-      conf.BettingNumber = conf.BettingNumber
+      conf.BettingNumber = Number(conf.BettingNumber)
       switch (type) {
         case 'reduce':
           conf.BettingNumber > 1 && (conf.BettingNumber -= 1)
@@ -550,6 +527,16 @@ export const index = ({ orderRefs, selectRefs }: any) => {
     canShare: computed<any>(() => {
       return !conf.betClose && conf.betArr.length && conf.BettingNumber && conf.BettingAmount
     })
+  })
+
+  conf.vf = svf.getVf(conf, {
+    BettingNumber: {
+      int: true,
+    },
+    BettingAmount: {
+      float: true,
+      fixed: 4
+    }
   })
   onMounted(() => {
     // 获取钱包

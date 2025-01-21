@@ -19,8 +19,11 @@
               :class="{ active: conf.choose[index][conf._key] === item[conf._key] }"
               @click="conf.chooseItem(index, item)"
             >
-              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }">
+              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }" v-if="item.lotteryTypeCode != 'ANIMALS_RUNNING'">
                 {{ item[conf._label] }}
+              </div>
+              <div :class="{ 'color-active': conf.choose[index][conf._key] === item[conf._key] }" v-else>
+                {{ item[conf._label]?.replace(/([A-Z])/g, ' $1').trim() }}
               </div>
             </div>
           </template>

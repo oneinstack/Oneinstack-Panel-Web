@@ -568,7 +568,6 @@ const conf = index({ orderRefs, selectRefs })
       font-size: 30rem;
       width: 350rem;
       padding: 0 20rem;
-      text-align: center;
     }
 
     .money-btn {
@@ -692,6 +691,7 @@ const conf = index({ orderRefs, selectRefs })
           display: flex;
           justify-content: start;
           font-size: 24rem;
+          align-items: end;
 
           .rit {
             margin-left: 20rem;
