@@ -193,6 +193,7 @@ const conf = reactive({
 
     csconversation.conversationList.sort((a, b) => b.isPinned - a.isPinned)
     conf.listSort()
+    if(Cookie.get('betRecord') && csconversation.conversationList.length) System.router.push('/chat/betRecordForward')
   },
   addDialog: {
     show: false

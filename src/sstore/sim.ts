@@ -8,6 +8,7 @@ import System from '@/utils/System'
 import csuser from '@/modules/chat/sstore/csuser'
 import csconversation from '@/modules/chat/sstore/csconversation'
 import csmessage from '@/modules/chat/sstore/csmessage'
+import sutil from './sutil'
 
 export const CustomData = {
   /**
@@ -105,6 +106,10 @@ export const sim = {
       description: data
     })
     sim.sendMessage(message)
+    Timer.once(() => {
+      sim.contentBottom()
+      sutil.pageBack()
+    }, 5000)
   },
   //最新消息提示
   latestMessageConfig: {
@@ -191,9 +196,6 @@ export const sim = {
     sim.sendCM(CustomData.RedPack, {
       ...data
     })
-    Timer.once(() => {
-      sim.contentBottom()
-    }, 500)
   },
   //发送领取红包消息
   async receiveRedPack(item:any) {

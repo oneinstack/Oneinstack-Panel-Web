@@ -4,6 +4,7 @@ import { apis } from '@/api';
 import i18n from '@/lang';
 import System from '@/utils/System';
 import sutil from '@/sstore/sutil';
+import { Scope } from 'tools-vue3';
 export const index = () => {
     const gameBoxRefs = ref<any>()
     const conf = reactive({
@@ -127,10 +128,11 @@ export const index = () => {
     
         selectPlayTypeName: '',
         isClickPage: false,
-        gameType: '',
+        gameType: 'Trx',
         gameTypeId: '',
         chartDataList: [] as any[],
         comKey: 0,
+        lotteryShowname: '',
         //获取玩法类型
         getLotteryList(index: any) {
             //清空倒计时定时器
@@ -141,7 +143,7 @@ export const index = () => {
                     let datas = res.data
                     let newIndex = datas.findIndex((item: any) => item.lotteryTypeVO.lotteryTypeCode == 'Trx_Win_Go')
                     conf.gameTypeArr = datas[newIndex].lotteryVOList || []
-                    conf.gameType = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
+                    conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
                     conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
                     conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
                     conf.lotteryId = conf.gameTypeArr[index].id
@@ -167,7 +169,7 @@ export const index = () => {
     
         //获取当前玩法数据
         getCurrentPlayInfo(index: any) {
-            conf.gameType = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
+            conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
             conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
             conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
             conf.lotteryId = conf.gameTypeArr[index].id
@@ -563,6 +565,6 @@ export const index = () => {
         clearInterval(conf.scollTimer);
         conf.scollTimer = null;
     })
-    
+    Scope.setConf(conf)
     return {conf,gameBoxRefs}
 }

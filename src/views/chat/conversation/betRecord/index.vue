@@ -47,8 +47,6 @@ const conf = reactive({
 		active: '',
 		list: [] as any[],
 		getList: () => {
-			console.log('888801');
-			
 			IMSDK.asyncApi(IMMethods.GetAllConversationList, IMSDK.uuid())
 				.then(({ data }: any) => {
 					const { groupID, userID } = csconversation.currentConversation
@@ -87,11 +85,6 @@ const conf = reactive({
 		}
 	},
 	toShare: ({ betList, chatList }: any) => {
-		console.log('668');
-		console.log(betList);
-		console.log(chatList);
-		
-		
 		const data = CustomData.ShareBet
 		const lotteryName = filterRefs.value.filters[0].currentSelect.label
 		const shareName = csuser.selfInfo.nickname
@@ -183,8 +176,11 @@ const conf = reactive({
 	},
 
 	handleFilter(obj: any) {
+		console.log('8889');
+		
 		console.log('obj', obj)
 		conf.getLotteryOdds(obj)
+		console.log('8887');
 		apis.meOder({
 			current: 1,
 			size: 10000,
@@ -206,6 +202,8 @@ const conf = reactive({
 								return obj.split('_')[1] + '_' + obj.split('_')[2]
 							}).join(",") || ''
 						} else if (obj.lotteryTypeCode == '3D') {
+							console.log('665555');
+							
 							item.orderType = item.betCodes.split('_')[0]
 							let order: any = conf.getPurchase(item.betCodes)
 							item.newBetCodes = item.newBetCodesArr.map((obj: any) => {

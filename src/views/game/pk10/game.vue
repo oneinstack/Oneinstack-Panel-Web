@@ -421,8 +421,6 @@ const conf = reactive({
     conf.numlist = res
   },
   async start() {
-    console.log('55889977');
-
     await conf.startCountdown()
     conf.isStart = true
     //背景
@@ -478,14 +476,11 @@ const conf = reactive({
         if (conf.stopFun) {
           conf.stopFun()
           conf.stopFun = null
-        } else if (conf.isStart) {
-          console.log('229');
-          
+        } else if (conf.isStart) {  
           conf.loopCar(conf.getRandomCarArr(), _final,'')
         }
       }
     }
-    console.log('210');
     conf.loopCar(conf.getRandomCarArr(), _final,'')
   },
   carInfo: {
@@ -499,8 +494,6 @@ const conf = reactive({
     return arr
   },
   loopCar(res:any, final:any, forceup:any) {
-    console.log('228');
-    
     conf.numlist = []
     for (let i = 1; i < 11; i++) {
       const x = res[i - 1]

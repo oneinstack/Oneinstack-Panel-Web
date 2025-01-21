@@ -6,6 +6,7 @@ import { svalue } from '@/sstore/svalue';
 import sutil from '@/sstore/sutil';
 import sconfig from '@/sstore/sconfig';
 import slottery from '@/sstore/slottery';
+import { Scope } from 'tools-vue3';
 
 export const index = () => {
     const resultRefs = ref<any>()
@@ -526,5 +527,6 @@ export const index = () => {
             conf.timer = null;
         }
     })
+    Scope.setConf(conf)
 	return {conf,resultRefs,analyzeRefs,orderRefs}
 }

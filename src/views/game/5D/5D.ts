@@ -3,6 +3,7 @@ import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import System from '@/utils/System'
 import { svalue } from '@/sstore/svalue'
 import sutil from '@/sstore/sutil'
+import { Scope } from 'tools-vue3'
 
 export const index = ({ gameBoxRefs }: any) => {
   const conf = reactive({
@@ -186,6 +187,7 @@ export const index = ({ gameBoxRefs }: any) => {
     gameType: '',
     gameTypeId: '',
     countdownArr: [] as any[],
+    lotteryShowname: '',
     getRandomInt(min: any, max: any) {
       min = Math.ceil(min) // 确保min是整数
       max = Math.floor(max) // 确保max是整数
@@ -197,9 +199,12 @@ export const index = ({ gameBoxRefs }: any) => {
       apis.lotteryList({
         success: (res: any) => {
           let datas = res.data
+          console.log(datas);
+          
           let newIndex = datas.findIndex((item: any) => item.lotteryTypeVO.lotteryTypeCode == '5D')
           conf.gameTypeArr = datas[newIndex].lotteryVOList || []
-          conf.gameType = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
+          conf.gameType = datas[newIndex].lotteryTypeVO.lotteryTypeCode
+          conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
           conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
           conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
           conf.lotteryId = conf.gameTypeArr[index].id
@@ -220,7 +225,9 @@ export const index = ({ gameBoxRefs }: any) => {
 
     //获取当前玩法数据
     getCurrentPlayInfo(index: any) {
-      conf.gameType = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
+      console.log(conf.gameTypeArr);
+      
+      conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
       conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
       conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
       conf.lotteryId = conf.gameTypeArr[index].id
@@ -607,5 +614,6 @@ export const index = ({ gameBoxRefs }: any) => {
     }
     conf.getLotteryList(0)
   })
+  Scope.setConf(conf)
   return conf
 }

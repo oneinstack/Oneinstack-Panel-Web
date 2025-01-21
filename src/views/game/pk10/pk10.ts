@@ -12,6 +12,7 @@ export const index = ({ cgamebox, cgameRef, gameBoxRefs }: any) => {
     loading: false,
     lotteryTypeId: 0,
     openLockCountdown: 0,
+    gameType: 'pk10',
     page: {
       pageSize: 10,
       pageNum: 1,
@@ -397,6 +398,6 @@ export const index = ({ cgamebox, cgameRef, gameBoxRefs }: any) => {
       }
     ]
   })
-
+  Scope.setConf(conf)
   return conf
 }

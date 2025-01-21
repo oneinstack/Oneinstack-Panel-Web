@@ -18,8 +18,8 @@
       :isSingleSelection="conf.isSingleSelection" class="recently_chatting" @select="conf.handleSelect"
       @row-click="conf.hanldeItemClick" />
 
-    <van-dialog :show="conf.modal.show" showCancelButton :confirmButtonText="conf.modal.confirmText" :cancelButtonText="conf.modal.cancelText"
-      @cancel="conf.modal.handleCancel" @confirm="conf.modal.handleConfirm">
+    <van-dialog :show="conf.modal.show" showCancelButton :confirmButtonText="conf.modal.confirmText"
+      :cancelButtonText="conf.modal.cancelText" @cancel="conf.modal.handleCancel" @confirm="conf.modal.handleConfirm">
       <div class="modal_container">
         <div class="title" v-if="!conf.isComplete">{{ $t('chatRoom.sendTo') }}：</div>
         <div class="title" v-else>{{ $t('chatRoom.sharingSuccess') }}!</div>
@@ -39,15 +39,17 @@ import BetRecordHeader from './components/BetRecordHeader.vue'
 import BetRecordFilter from './components/BetRecordFilter.vue'
 import RecentlyForwarded from './components/RecentlyForwarded.vue'
 import RecentlyChatting from './components/RecentlyChatting.vue'
-// import IMSDK, { IMMethods, SessionType } from 'openim-uniapp-polyfill'
+import IMSDK, { IMMethods, SessionType } from 'openim-uniapp-polyfill'
 // import MyAvatar from '@/components/MyAvatar/index.vue'
-// import { CustomData } from '@/sstore/sim'
+import { CustomData } from '@/sstore/sim'
 // import { mapGetters } from 'vuex'
-// import { offlinePushInfo } from '@/util/imCommon'
 import i18n from '@/lang'
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, onUnmounted, reactive } from 'vue'
 import System from '@/utils/System'
 import sutil from '@/sstore/sutil'
+import { offlinePushInfo } from '@/modules/chat/utils/cUtil'
+import csuser from '@/modules/chat/sstore/csuser'
+import csconversation from '@/modules/chat/sstore/csconversation'
 
 const conf = reactive({
   isSingleSelection: true, // 是否单选
@@ -71,11 +73,13 @@ const conf = reactive({
     },
     handleConfirm: () => {
       if (!conf.isComplete) return conf.handleSend()
-      sutil.pageBack()
+      const betRecord = Cookie.get('betRecord')
+      // sutil.pageBack()
+      System.router.replace('/game/' + betRecord.lotteryName + '/' + betRecord.lotteryName)
     }
   },
   isGroup(type: any) {
-    // return type === SessionType.WorkingGroup
+    return type === SessionType.WorkingGroup
   },
 
   getChatItemById(id: any) {
@@ -83,8 +87,7 @@ const conf = reactive({
   },
 
   hanldeFilter(keyword: any) {
-    console.log(keyword);
-    conf.modal.show = true
+    // conf.modal.show = true
     if (!keyword) return conf.chatListData = conf.copyChatlistData
     conf.chatListData = conf.chatListData.filter((item: any) => item.name.toLowerCase().includes(keyword.toLowerCase()))
   },
@@ -110,80 +113,85 @@ const conf = reactive({
 
   handleSend() {
     // 发送消息
-    // const data = CustomData.ShareBet
-    // const shareName = conf.storeSelfInfo.nickname
-    // const betRecord = JSON.parse(Cookie.get('betRecord'))
-    // conf.selectedChats.forEach(async (itemid) => {
-    //   const sitem = conf.getChatItemById(itemid)
-    //   console.log('sitem', sitem);
-    //   const betList = [betRecord]
-    //   betList.forEach(async (betitem) => {
-    //     betitem.shareName = shareName
-    //     betitem.betUserId = sitem.userID
-    //     const extension = {
-    //       data: betitem
-    //     }
-    //     try {
-    //       IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
-    //         data,
-    //         extension: JSON.stringify(extension),
-    //         description: data
-    //       }).then((message) => {
-    //         const sendMessage = (message, info) => {
-    //           IMSDK.asyncApi(IMMethods.SendMessage, IMSDK.uuid(), {
-    //             recvID: info.userID,
-    //             groupID: info.groupID,
-    //             message,
-    //             offlinePushInfo
-    //           })
-    //             .then(({ data }) => {
-    //               System.toast(i18n.t('chatRoom.sharingSuccess'),'success')
-    //               conf.isComplete = true
-    //               conf.modal.confirmText = i18n.t('chatRoom.backGamePage')
-    //               conf.modal.cancelText = i18n.t('chatRoom.toImPage')
-    //               conf.modal.show = true
-    //             })
-    //             .catch(({ data, errCode, errMsg }) => {
-    //             })
-    //         }
-    //         sendMessage(message, {
-    //           userID: sitem.userID,
-    //           groupID: sitem.groupID
-    //         })
-    //         if (!conf.recentlyForwardedData.find((item:any) => item.id === sitem.id)) conf.recentlyForwardedData.unshift(sitem)
-    //         Cookie.set('recentlyForwardedData', JSON.stringify(conf.recentlyForwardedData))
-    //       })
-    //     } catch (e) {
-    //       console.log(e);
-    //     }
-    //   })
-    // })
-    // conf.modal.show = false
-    // conf.selectedChats = []
+    const data = CustomData.ShareBet
+    const shareName = csuser.selfInfo.nickname
+    const betRecord = Cookie.get('betRecord')
+    conf.selectedChats.forEach(async (itemid) => {
+      const sitem = conf.getChatItemById(itemid)
+      const betList = [betRecord]
+      betList.forEach(async (betitem) => {
+        betitem.shareName = shareName
+        betitem.betUserId = sitem.userID
+        const extension = {
+          data: betitem
+        }
+        try {
+          IMSDK.asyncApi(IMMethods.CreateCustomMessage, IMSDK.uuid(), {
+            data,
+            extension: JSON.stringify(extension),
+            description: data
+          }).then((message) => {
+            const sendMessage = (message: any, info: any) => {
+              IMSDK.asyncApi(IMMethods.SendMessage, IMSDK.uuid(), {
+                recvID: info.userID,
+                groupID: info.groupID,
+                message,
+                offlinePushInfo
+              })
+                .then(({ data }: any) => {
+                  System.toast(i18n.t('chatRoom.sharingSuccess'), 'success')
+                  conf.isComplete = true
+                  conf.modal.confirmText = i18n.t('chatRoom.backGamePage')
+                  conf.modal.cancelText = i18n.t('chatRoom.toImPage')
+                  conf.modal.show = true
+                })
+                .catch(({ data, errCode, errMsg }) => {
+                })
+            }
+            sendMessage(message, {
+              userID: sitem.userID,
+              groupID: sitem.groupID
+            })
+            if (!conf.recentlyForwardedData.find((item: any) => item.id === sitem.id)) conf.recentlyForwardedData.unshift(sitem)
+            Cookie.set('recentlyForwardedData', JSON.stringify(conf.recentlyForwardedData))
+          })
+        } catch (e) {
+          console.log(e);
+        }
+      })
+    })
+    conf.modal.show = false
+    conf.selectedChats = []
   },
 
   initData() {
-    // System.loading()
-    // IMSDK.asyncApi('getAllConversationList', IMSDK.uuid())
-    //   .then(({ data }) => {
-    //     System.loading(false)
-    //     conf.chatListData = data.map((item:any) => ({
-    //       id: item.userID || item.groupID,
-    //       imgUrl: item.faceURL,
-    //       name: item.showName,
-    //       conversationID: item.conversationID,
-    //       groupID: item.groupID,
-    //       userID: item.userID,
-    //       type: item.conversationType,
-    //     }))
-    //     conf.copyChatlistData = conf.chatListData
-    //   })
-    //   .catch(({ errCode, errMsg }) => {
-    //     uni.showToast({
-    //       title: '获取列表失败请重试',
-    //       icon: 'error'
-    //     })
-    //   })
+    System.loading()
+    IMSDK.asyncApi(IMMethods.GetAllConversationList, IMSDK.uuid())
+      .then(({ data }: any) => {
+        conf.chatListData = data.map((item: any) => ({
+          id: item.userID || item.groupID,
+          imgUrl: item.faceURL,
+          name: item.showName,
+          conversationID: item.conversationID,
+          groupID: item.groupID,
+          userID: item.userID,
+          type: item.conversationType,
+        }))
+        conf.copyChatlistData = conf.chatListData
+      })
+      .catch(({ errCode, errMsg }) => {
+        System.loading(false)
+        conf.chatListData = csconversation.conversationList.map((item: any) => ({
+          id: item.userID || item.groupID,
+          imgUrl: item.faceURL,
+          name: item.showName,
+          conversationID: item.conversationID,
+          groupID: item.groupID,
+          userID: item.userID,
+          type: item.conversationType,
+        }))
+        conf.copyChatlistData = conf.chatListData
+      })
   }
 })
 
@@ -195,8 +203,12 @@ const selectTotal = computed(() => {
 
 onMounted(() => {
   const storageData = Cookie.get('recentlyForwardedData')
-  if (storageData) conf.recentlyForwardedData = JSON.parse(storageData)
+  if (storageData) conf.recentlyForwardedData = storageData
   conf.initData()
+})
+
+onUnmounted(() => {
+  Cookie.remove('betRecord')
 })
 
 </script>

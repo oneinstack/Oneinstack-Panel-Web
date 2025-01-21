@@ -8,15 +8,15 @@
 			<!-- 下拉菜单内容 -->
 			<div class="filter_button_container">
 				<div class="scroll_wrap">
-					<van-button v-for="item in activeFilter.options" :key="item.value" size="small"
-						class="filter_button" :class="{ active: activeFilter.currentSelect.value === item.value }"
+					<van-button v-for="item in conf.activeFilter.options" :key="item.value" size="small"
+						class="filter_button" :class="{ active: conf.activeFilter.currentSelect.value === item.value }"
 						@click="conf.hanldeFileter(item, true)">
 						<span>{{ item.label }}</span>
 					</van-button>
 				</div>
 			</div>
 		</div>
-		<div v-if="conf.isShowDropdown" class="mask_layer" @click="conf.hanldeShowDropdown(activeFilter, activeFilter.isActive)">
+		<div v-if="conf.isShowDropdown" class="mask_layer" @click="conf.hanldeShowDropdown(conf.activeFilter, conf.activeFilter.isActive)">
 		</div>
 	</div>
 </template>
@@ -32,6 +32,7 @@ const conf = reactive({
 	isShowDropdown: false, // 是否显示下拉菜单
 	filters: [{
 		isActive: false,
+		index: 0,
 		currentSelect: {
 			label: '',
 			value: 1
@@ -40,6 +41,7 @@ const conf = reactive({
 	},
 	{
 		isActive: false,
+		index: 1,
 		currentSelect: {
 			label: '',
 			value: 1
@@ -47,14 +49,26 @@ const conf = reactive({
 		options: []
 	}
 	],
+	activeFilter: {} as any,
 	selectIndex: 0,
 	async hanldeShowDropdown(item:any, active:any) {
+		console.log('9999');
+		
 		conf.filters.forEach((filter) => (filter.isActive = false)) // 重置其他选项为非激活
 		item.isActive = !active
 		conf.isShowDropdown = !active // 切换下拉菜单显隐
+		console.log(conf.filters);
+		conf.activeFilter = conf.filters.find((filter) => filter.isActive)
 	},
 
 	hanldeFileter(item:any, val:any) {
+		console.log('5555');
+		
+		console.log(item);
+		
+		// conf.filters[0].currentSelect = item
+		console.log(conf.activeFilter);
+		
 		if (item.data) {
 			conf.filters[1].options = item.data.map((into:any) => {
 				return {
@@ -66,10 +80,12 @@ const conf = reactive({
 			conf.filters[1].currentSelect = conf.filters[1].options[0]
 		}
 		if (val) {
-			activeFilter.currentSelect = item
-			activeFilter.isActive = false
+			conf.activeFilter.currentSelect = item
+			conf.activeFilter.isActive = false
+			
 			conf.isShowDropdown = false // 切换下拉菜单显隐
 		}
+		console.log(conf.filters)
 		let obj = {
 			typeId: conf.filters[0].currentSelect.value,
 			playId: conf.filters[1].currentSelect.value,
@@ -101,11 +117,11 @@ onMounted(() => {
 	conf.filters[0].currentSelect = conf.filters[0].options[0]
 	conf.hanldeFileter(conf.filters[0].options[0], false)
 })
-const activeFilter:any = computed(() => {
-	console.log(conf.filters);
+// const activeFilter:any = computed(() => {
+// 	console.log(conf.filters);
 	
-	return conf.filters.find((filter) => filter.isActive)
-})
+// 	return conf.filters.find((filter) => filter.isActive)
+// })
 </script>
 
 <style lang="less" scoped>

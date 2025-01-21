@@ -17,6 +17,7 @@
 
 <script setup lang="ts">
 // import { SessionType } from 'openim-uniapp-polyfill'
+import { SessionType } from 'openim-uniapp-polyfill';
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -51,7 +52,7 @@ const checkboxValue = computed(() => {
   return props.checkeds || []
 })
 const isGroup = (type:any) => {
-  // return type === SessionType.WorkingGroup
+  return type === SessionType.WorkingGroup
 }
 </script>
 

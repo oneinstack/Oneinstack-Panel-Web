@@ -104,6 +104,7 @@ import { onMounted, reactive } from 'vue';
 import System from '@/utils/System';
 import i18n from '@/lang';
 import sutil from '@/sstore/sutil';
+import { Scope } from 'tools-vue3';
 const props = defineProps({
 	betImg: {
 		default: ''
@@ -131,6 +132,9 @@ const props = defineProps({
 	}
 })
 const emit = defineEmits(['submit','share'])
+
+const mconf = Scope.getConf()
+
 const conf = reactive({
 	num: 10 as any,
 	showTip: false,
@@ -176,7 +180,6 @@ const conf = reactive({
 	// 聊天室弹窗
 	async changeShareOpen() {
 		if (props.betShare) return
-		console.log('conf.mconf', conf.mconf.gameType);
 		conf.num = parseFloat(conf.num)
 		let obj = {
 			coinSymbol: conf.coinSymbol,
@@ -184,8 +187,8 @@ const conf = reactive({
 			money: conf.num.toFixed(4),
 			orderType: '',
 			id: StrUtil.getId(),
-			lotteryName: conf.mconf.gameType,
-			lotteryTypeCode: conf.mconf.gameType,
+			lotteryName: mconf.gameType,
+			lotteryTypeCode: mconf.gameType,
 			betLotteryId: '',
 			betOpenId: '',
 			betExpect: '',
@@ -199,50 +202,49 @@ const conf = reactive({
 			betContent: '',
 			betTitle: ''
 		}
-		switch (conf.mconf.gameType) {
+		switch (mconf.gameType) {
 			case 'Color':
 			case '3D':
-				obj.betLotteryId = conf.mconf.currentOpen.lotteryId
-				obj.betOpenId = conf.mconf.currentOpen.lotteryOpenId
-				obj.betExpect = conf.mconf.currentOpen.openExpect
-				let key = conf.mconf.gameType === 'Color' ? 'colorItem' : 'addsItem'
-				obj.betCodes = conf.mconf[key].oddsCode
-				obj.betType = conf.mconf[key].betType
-				obj.betNum = conf.mconf[key].betNum
-				let time = conf.mconf.gameType === 'Color' ? conf.mconf.tabIndex : conf.mconf.currentOpen.orderType
-				obj.playName = `${time / 1000 / 60}min${conf.mconf.gameType}`
+				obj.betLotteryId = mconf.currentOpen.lotteryId
+				obj.betOpenId = mconf.currentOpen.lotteryOpenId
+				obj.betExpect = mconf.currentOpen.openExpect
+				let key = mconf.gameType === 'Color' ? 'colorItem' : 'addsItem'
+				obj.betCodes = mconf[key].oddsCode
+				obj.betType = mconf[key].betType
+				obj.betNum = mconf[key].betNum
+				let time = mconf.gameType === 'Color' ? mconf.tabIndex : mconf.currentOpen.orderType
+				obj.playName = `${time / 1000 / 60}min${mconf.gameType}`
 				break
 			case '5D':
-			case 'pk10':
 			case 'Trx':
-				obj.betLotteryId = conf.mconf.currentOpenInfo.lotteryId
-				obj.betOpenId = conf.mconf.currentOpenInfo.lotteryOpenId
-				obj.betExpect = conf.mconf.currentOpenInfo.openExpect
-				console.log(conf.mconf.currentTab);
-				obj.playName = `${conf.mconf.currentTab.lotteryShortname}min${conf.mconf.gameType}`
-				if (conf.mconf.gameType === '5D') obj.betCodes = conf.mconf.selectBetNumArr.map((item:any) => item.oddsCode).join('') || ''
-				else if (conf.mconf.gameType === 'pk10') {
-					obj.lotteryName = obj.lotteryName.toUpperCase()
-					obj.lotteryTypeCode = obj.lotteryName
-					obj.playName = `${conf.mconf.currentTab.lotteryShortname}min${obj.lotteryName}`
-					let num = conf.mconf.selectBetNumArr[0].active + '_'
-					obj.betCodes = num + conf.mconf.selectBetNumArr[0]?.key || ''
-				} else if (conf.mconf.gameType === 'Trx') {
+				if (mconf.gameType === '5D') obj.betCodes = mconf.selectBetInfoArr.map((item:any) => item.oddsCode).join('') || ''
+				else if (mconf.gameType === 'Trx') {
 					obj.lotteryName = obj.lotteryName + 'WinGo'
 					obj.lotteryTypeCode = obj.lotteryName
-					obj.betCodes = conf.mconf.selectBetNumArr.map((obj:any) => {
+					obj.betCodes = mconf.selectBetInfoArr.map((obj:any) => {
 						return obj.oddsCode
 					}).join(",") || ''
 				}
 				break
+			case 'pk10':
+				obj.playName = mconf.play.item.lotteryShowname
+				obj.betLotteryId = mconf.lotteryBox.current.lotteryId
+				obj.betOpenId = mconf.lotteryBox.current.lotteryOpenId
+				obj.betExpect = mconf.lotteryBox.current.openExpect
+				obj.lotteryName = obj.lotteryName.toUpperCase()
+				obj.lotteryTypeCode = obj.lotteryName
+				// obj.playName = `${mconf.currentTab.lotteryShortname}min${obj.lotteryName}`
+				let num = mconf.selectBetInfoArr[0].active + '_'
+				obj.betCodes = num + mconf.selectBetInfoArr[0]?.key || ''
+				break
 		}
 		obj.newPlayName = obj.playName
 		obj.newBetCodesArr = obj.betCodes.split(',')
-		if (conf.mconf.gameType == '5D') {
+		if (mconf.gameType == '5D') {
 			obj.newBetCodes = obj.newBetCodesArr.map(obj => {
 				return obj.split('_')[1] + '_' + obj.split('_')[2]
 			}).join(",") || ''
-		} else if (conf.mconf.gameType == '3D') {
+		} else if (mconf.gameType == '3D') {
 			obj.orderType = obj.betCodes.split('_')[0]
 			obj.newBetCodes = obj.newBetCodesArr.map(obj => {
 				return obj.split('_')[1]
@@ -273,7 +275,6 @@ const conf = reactive({
 		}
 		obj.betContent = obj.newBetCodes
 		obj.betTitle = obj.betExpect
-		console.log('obj', obj)
 		Cookie.set('betRecord', JSON.stringify(obj))
 		await sconfig.toChat('/chat/betRecordForward')
 	},

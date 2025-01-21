@@ -144,7 +144,6 @@ const conf = reactive({
         data: conf.content || conf.dataPlace,
         tradePassword: e.verifySafety
       })
-      sutil.pageBack()
     }
   }
 })

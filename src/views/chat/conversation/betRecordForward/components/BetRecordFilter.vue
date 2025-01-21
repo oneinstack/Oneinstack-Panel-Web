@@ -8,7 +8,7 @@
       shape="square"
       @change="$emit('search', $event)"
     /> -->
-    <van-search @search="emit('search', $event)" v-model="conf.keyword" :placeholder="$t('chatRoom.search')" />
+    <van-search @update:model-value="emit('search', $event)" v-model="conf.keyword" :placeholder="$t('chatRoom.search')" />
   </div>
 </template>
 

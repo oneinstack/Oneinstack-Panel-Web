@@ -6,6 +6,7 @@ import { onMounted, onUnmounted, reactive } from 'vue'
 import sbet from '@/sstore/sbet'
 import { svalue } from '@/sstore/svalue'
 import sstatus from '@/sstore/sstatus'
+import { Scope } from 'tools-vue3'
 
 export const index = ({ resultRefs, colorRefs, tabsRefs }: any) => {
   const conf = reactive({
@@ -443,6 +444,6 @@ export const index = ({ resultRefs, colorRefs, tabsRefs }: any) => {
       conf.timer = null
     }
   })
-
+  Scope.setConf(conf)
   return conf
 }
