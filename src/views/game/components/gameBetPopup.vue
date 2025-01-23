@@ -156,8 +156,10 @@ onMounted(async () => {
   .bet-type {
     padding: 24rem;
     background: #fffef8;
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
+    gap: 12rem;
+    place-items: center !important;
   }
 
   .select-box {

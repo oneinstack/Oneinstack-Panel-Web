@@ -24,9 +24,10 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive,watch } from 'vue'
 import { lhc, resultBallManager } from './resultBall'
 import resultBallCom from './resultBallCom.vue'
+
 const props = withDefaults(
   defineProps<{
     size?: number
@@ -166,5 +167,13 @@ onMounted(() => {
 defineExpose({
   conf
 })
+
+watch(
+	() => props.num,
+	(val: any) => {
+    conf.setVal({ num: props.num })
+	},
+  { deep: true }
+)
 </script>
 <style lang="less" scoped></style>

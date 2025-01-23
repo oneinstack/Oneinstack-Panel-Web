@@ -1,5 +1,13 @@
 <template>
-  <GameLayout :ref="conf.layout.setRef" title="MarkSix" code="MARK_SIX" :lottery="lottery">
+  <GameLayout
+    :ref="conf.layout.setRef"
+    title="MarkSix"
+    code="MARK_SIX"
+    :lottery="lottery"
+    :onInit="conf.getLotteryOdds"
+    :betInfo="conf.betting"
+    @reset="conf.reset"
+  >
     <!--开奖结果  -->
     <div class="top-result row relative">
       <div class="result column col justify-center">
@@ -74,15 +82,28 @@
     </div>
 
     <!-- 内容区 -->
-    <div class="col" style="overflow: auto">
+    <div class="col" style="overflow: auto" :class="{ 'stop-bet': conf.stopBet }">
       <!-- 下注区 -->
-      <betting v-if="conf.operation.active === 'betting'" />
+      <betting v-if="conf.operation.active === 'betting'"/>
     </div>
 
-    <template #bet>666</template>
+
+    <!-- 下注弹窗内容 -->
+    <template #bet>
+      <template v-for="item in conf.betting.betArr">
+        <div class="ball-box" :style="{
+          'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
+          }"
+          v-if="isNaN(item.oddsName)">
+          <div>{{ item.oddsName?.split('_')[1] || item.oddsName}}</div>
+        </div>
+        <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
+      </template>
+    </template>
 
     <!-- 下注按钮 -->
-    <bottombtn v-if="conf.operation.active === 'betting'" @confirm="conf.betting.popup.open" />
+    <bottombtn v-if="conf.operation.active === 'betting'" @confirm="conf.betting.popup.open" :class="{ 'stop-bet': conf.stopBet }"/>
+    <time-popup @close="conf.timePopupShop = false" v-if="conf.timePopupShop"></time-popup>
   </GameLayout>
 </template>
 <script setup lang="ts">
@@ -91,6 +112,7 @@ import bottombtn from './components/betting/bottombtn.vue'
 import betting from './components/betting/index.vue'
 import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'
+import timePopup from '../components/timePopup.vue';
 import { index } from './MarkSix'
 const { conf, lottery } = index()
 </script>
@@ -210,5 +232,17 @@ const { conf, lottery } = index()
       }
     }
   }
+}
+
+.stop-bet{
+  filter: grayscale(1);
+}
+
+.ball-box{
+  height: 72rem;
+  padding: 0rem 20rem;
+  line-height: 72rem;
+  border: 2rem solid rgba(0, 0, 0, 0.1);
+  border-radius: 10rem;
 }
 </style>

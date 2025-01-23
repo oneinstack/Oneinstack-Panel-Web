@@ -2,14 +2,14 @@
   <div class="bet-bottom-box row items-center justify-between">
     <div>
       {{ $t('game.TotalBetAmount') }}:
-      <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">3</span>
+      <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">{{ mconf.conf.betting.totalAmount }}</span>
     </div>
     <div class="bet-button flex flex-center" @click="$emit('confirm')">Bet</div>
   </div>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
-const conf = reactive({})
+import { Scope } from 'tools-vue3'
+const mconf = Scope.getConf()
 </script>
 <style lang="less" scoped>
 .bet-bottom-box {

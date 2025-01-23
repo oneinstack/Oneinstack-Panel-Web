@@ -2,28 +2,51 @@
   <div class="flex relative" style="gap: 14rem; padding: 32rem">
     <template v-for="item in conf.list">
       <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)">
-        <resultBall :num="item.num" :size="72" :active="item.isActive" />
-        <div class="odds">9.5</div>
+         <div class="ball-box" :style="{
+          'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
+          }"
+          v-if="isNaN(item.oddsName)">
+          <div>{{ item.oddsName?.split('_')[1] || item.oddsName}}</div>
+        </div>
+        <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
+        <div class="odds">{{ parseFloat(item.odds).toFixed(2) }}</div>
       </div>
     </template>
   </div>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
-import resultBall from '../resultBall.vue'
-const conf = reactive({
-  list: [] as any[],
-  change(item: any) {
-    item.isActive = !item.isActive
+  import { reactive, watch } from 'vue';
+  import resultBall from '../resultBall.vue'
+  import { Scope } from 'tools-vue3'
+  const mconf = Scope.getConf()
+  const conf = reactive({
+    list: [] as any[],
+    allData: [] as any[],
+    change(item: any) {
+      if(mconf.conf.stopBet){
+        return
+      }
+      item.isActive = !item.isActive
+      const data = conf.list.filter((item:any) => item.isActive)
+      mconf.conf.betting.getChoseData(data)
+    },
+  })
+
+const props = defineProps({
+  listData: {
+    type: Array,
+    default: []
   }
 })
+watch(
+	() => props.listData,
+	(val: any) => {
+		if (val) {
+      conf.list = val
+		}
+	}
+)
 
-for (let i = 1; i <= 31; i++) {
-  conf.list.push({
-    num: i,
-    isActive: false
-  })
-}
 </script>
 <style lang="less" scoped>
 .play-item {
@@ -38,6 +61,16 @@ for (let i = 1; i <= 31; i++) {
   &.active {
     border: 2rem solid #ff7502;
     background: #fff2e9;
+  }
+
+  .ball-box {
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    pointer-events: none;
+    width: 72rem;
+    height: 72rem;
+    font-size: 30rem;
+    text-align: center;
   }
 
   .odds {

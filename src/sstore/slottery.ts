@@ -346,7 +346,7 @@ export const slottery = reactive({
             multiple: conf.bet.multiple,
             nums: 1,
             supplement: 0,
-            walletCoinCode: conf.wallet.coinSymbol
+            walletCoinCode: conf.wallet.coinCode 
           }
           return obj
         },
@@ -393,6 +393,12 @@ export const slottery = reactive({
          * 钱包符号
          */
         coinSymbol: '₹',
+
+         /**
+         * 钱包code
+         */
+
+        coinCode:'',
         /**
          * 获取钱包余额
          * @returns
@@ -407,6 +413,7 @@ export const slottery = reactive({
             conf.wallet.money = sutil.dataHandling(m)
             conf.wallet.coinSymbol = item.coinSymbol || '₹'
             conf.wallet.label = conf.wallet.coinSymbol + conf.wallet.money
+            conf.wallet.coinCode = item.coinCode
           }
         }
       },

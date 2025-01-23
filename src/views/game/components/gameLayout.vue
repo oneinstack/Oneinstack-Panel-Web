@@ -22,14 +22,19 @@
 import { apis } from '@/api'
 import { LotteryConfInter } from '@/sstore/slottery'
 import System from '@/utils/System'
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, defineEmits } from 'vue';
 import betPopup from './gameBetPopup.vue'
+import i18n from '@/lang'
 
 const props = defineProps<{
   title: string
   lottery: LotteryConfInter
   code: string
+  onInit?: () => void
+  betInfo?: any
 }>()
+
+const emit = defineEmits(['reset'])
 
 const conf = reactive({
   bet: {
@@ -39,10 +44,26 @@ const conf = reactive({
       if (status) {
         System.loading()
         const obj = props.lottery.bet.getInfo()
-        console.log('obj', obj)
-        obj.betCodes = ''
+        obj.betCodes = props.betInfo.betArr.map((num:any) => num.oddsCode).join(',')
+        obj.money = status
+        obj.nums = props.betInfo.totalAmount
+        obj.multiple = 1
+          // money => 单注金额
+          // betCodes => 投注内容
+          // betExpect => 投注期号
+          // betOpenId => 开奖记录编号
+          // lotteryId => 投注彩票ID
+          // multiple => 投注倍数
+          // nums => 投注数量
+          // supplement => 是否追加订单，0否，1是
+          // walletCoinCode => 下注钱包币种
         await apis.lotteryUserBets({
           ...obj,
+          success: (res: any) => {
+            props.lottery.wallet.getWalletMoney()
+            System.toast(i18n.t('game.betSuccess'),'success')
+            emit('reset')
+          },
           final: async () => {
             System.loading(false)
           }
@@ -56,8 +77,9 @@ const conf = reactive({
   }
 })
 
-onMounted(() => {
-  props.lottery.init(props.code as any)
+onMounted(async () => {
+  await props.lottery.init(props.code as any)
+  props.onInit?.()
 })
 
 defineExpose({

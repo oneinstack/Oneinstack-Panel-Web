@@ -339,6 +339,7 @@ export const getOdds = () => [
     'list': [
       {
         'name': 'five_missed',
+        'amount':'5',
         'list': [
           {
             'oddsName': '1',
@@ -499,6 +500,7 @@ export const getOdds = () => [
       },
       {
         'name': 'six_missed',
+        'amount':'6',
         'list': [
           {
             'oddsName': '1',
@@ -659,6 +661,7 @@ export const getOdds = () => [
       },
       {
         'name': 'seven_missed',
+        'amount':'7',
         'list': [
           {
             'oddsName': '1',
@@ -819,6 +822,7 @@ export const getOdds = () => [
       },
       {
         'name': 'eight_missed',
+        'amount':'8',
         'list': [
           {
             'oddsName': '1',
@@ -979,6 +983,7 @@ export const getOdds = () => [
       },
       {
         'name': 'nine_missed',
+        'amount':'9',
         'list': [
           {
             'oddsName': '1',
@@ -1139,6 +1144,7 @@ export const getOdds = () => [
       },
       {
         'name': 'ten_missed',
+        'amount':'10',
         'list': [
           {
             'oddsName': '1',
@@ -1299,6 +1305,7 @@ export const getOdds = () => [
       },
       {
         'name': 'eleven_missed',
+        'amount':'11',
         'list': [
           {
             'oddsName': '1',
@@ -1459,6 +1466,7 @@ export const getOdds = () => [
       },
       {
         'name': 'twelve_missed',
+        'amount':'12',
         'list': [
           {
             'oddsName': '1',
@@ -3335,11 +3343,6 @@ export const getOdds = () => [
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_nine_eleven',
           },
-          {
-            'oddsName': '12',
-            'oddsParentCode': 'special_code_',
-            'oddsCode': 'special_code_twelve',
-          }
         ]
       }
     ]
