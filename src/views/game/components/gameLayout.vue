@@ -61,8 +61,8 @@ const conf = reactive({
           ...obj,
           success: (res: any) => {
             props.lottery.wallet.getWalletMoney()
-            System.toast(i18n.t('game.betSuccess'),'success')
-            emit('reset')
+            // System.toast(i18n.t('game.betSuccess'),'success')
+            emit('reset',obj)
           },
           final: async () => {
             System.loading(false)

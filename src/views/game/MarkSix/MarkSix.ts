@@ -45,7 +45,8 @@ export const index = () => {
   })
 
   const conf = reactive({
-    reset:()=>{
+    reset:(val:any)=>{
+      conf.winBetInfo = val
       const obj = conf.betting.tabs.level2
       const data =  JSON.parse(JSON.stringify(obj.item.list))
       data?.forEach((item:any) => {
@@ -56,10 +57,16 @@ export const index = () => {
         obj.item.list = data
         conf.betting.totalAmount = 0
         conf.betting.betArr = []
+        conf.isWinBet = true
+        setTimeout(() => {
+          conf.isWinBet = false
+      }, 3000)
       })
     },
     stopBet:false,
-    timePopupShop:false,
+    timePopupShop: false,
+    isWinBet: false,
+    winBetInfo: {} as any,
     layout: {
       ref: null as any,
       setRef: (el: any) => {

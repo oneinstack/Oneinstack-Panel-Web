@@ -104,9 +104,26 @@
     <!-- 下注按钮 -->
     <bottombtn v-if="conf.operation.active === 'betting'" @confirm="conf.betting.popup.open" :class="{ 'stop-bet': conf.stopBet }"/>
     <time-popup @close="conf.timePopupShop = false" v-if="conf.timePopupShop"></time-popup>
+
+    <!-- 下注信息 -->
+     <template v-if="conf.isWinBet">
+      <div class="popup-mask"></div>
+        <div class="tips-popup" @click="conf.isWinBet = false">
+            <div class="bet-win">
+                <div class="win-title">{{ $t('game.winBet') }}</div>
+                <div class="win-content">
+                    <div class="win-item">{{ $t('game.expect') }}：{{ conf.winBetInfo?.betExpect }}</div>
+                    <div class="win-item">{{ $t('game.amount') }}：{{ sutil.Mul(conf.winBetInfo?.money , conf.winBetInfo?.nums) }}</div>
+                    <div class="win-item">{{ $t('game.start') }}：{{ sutil.getTimeFormat(lottery.current.startTime) }}</div>
+                    <div class="win-item">{{ $t('game.open') }}：{{ sutil.getTimeFormat(lottery.current.openTime) }}</div>
+                </div>
+            </div>
+        </div>
+     </template>
   </GameLayout>
 </template>
 <script setup lang="ts">
+import sutil from '@/sstore/sutil';
 import GameLayout from '../components/gameLayout.vue'
 import bottombtn from './components/betting/bottombtn.vue'
 import betting from './components/betting/index.vue'
@@ -244,5 +261,65 @@ const { conf, lottery } = index()
   line-height: 72rem;
   border: 2rem solid rgba(0, 0, 0, 0.1);
   border-radius: 10rem;
+}
+.popup-mask {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: rgba(0, 0, 0, 0.3);
+}
+
+.tips-popup {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 998;
+
+	.bet-win {
+		width: 600rem;
+		height: 152rem;
+		border-radius: 20rem;
+		background: #FFF;
+		box-shadow: 20rem 20rem 40rem 0rem rgba(255, 255, 255, 0.25), -20rem -20rem 40rem 0rem rgba(255, 255, 255, 0.25);
+		color: #000;
+		font-weight: 500;
+		font-size: 40rem;
+		overflow: hidden;
+		animation: colorBtn 1s forwards;
+
+		.win-title {
+			height: 152rem;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+		}
+
+		.win-content {
+			font-size: 30rem;
+			padding-left: 40rem;
+
+			.win-item {
+				margin-bottom: 8rem;
+			}
+		}
+	}
+
+	@keyframes colorBtn {
+		0% {
+			height: 152rem;
+		}
+
+		100% {
+			height: 372rem;
+		}
+	}
 }
 </style>
