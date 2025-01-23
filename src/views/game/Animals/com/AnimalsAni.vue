@@ -225,7 +225,7 @@
             <!-- 排名动画 -->
             <div class="sort" v-show="conf.rank">
                 <div class="item" v-for="(item, index) in conf.numlist" :key="index">
-                    <rank :imgUrl="item.img" :name="item.name" :sort="item.sort" v-if="item.show" />
+                    <rank :imgUrl="item.img" :name="item.lable" :sort="item.sort" v-if="item.show" />
                 </div>
             </div>
         </div>
@@ -305,6 +305,7 @@ const conf = reactive({
             {
                 img: 'A',
                 name: 'exb',
+                lable: 'Exiaobao',
                 show: false,
                 sort: 1,
                 num: 1
@@ -312,6 +313,7 @@ const conf = reactive({
             {
                 img: 'B',
                 name: 'hm',
+                lable: 'Freshippo',
                 show: false,
                 sort: 2,
                 num: 2
@@ -319,6 +321,7 @@ const conf = reactive({
             {
                 img: 'C',
                 name: 'pp',
+                lable: 'Piaopiao',
                 show: false,
                 sort: 3,
                 num: 3
@@ -326,6 +329,7 @@ const conf = reactive({
             {
                 img: 'D',
                 name: 'xz',
+                lable: 'Xiazai',
                 show: false,
                 sort: 4,
                 num: 4
@@ -333,6 +337,7 @@ const conf = reactive({
             {
                 img: 'E',
                 name: 'zxb',
+                lable: 'Zhixiaobao',
                 show: false,
                 sort: 5,
                 num: 5
@@ -340,6 +345,7 @@ const conf = reactive({
             {
                 img: 'F',
                 name: 'hx',
+                lable: 'Huanxing',
                 show: false,
                 sort: 6,
                 num: 6

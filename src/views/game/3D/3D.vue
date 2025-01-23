@@ -262,9 +262,7 @@ const {conf,resultRefs,analyzeRefs,orderRefs} = index()
 		width: 100%;
 		height: 28rem;
 	}
-
 	border-bottom: 2rem solid #FFECD3;
-	;
 }
 
 .time-nav {

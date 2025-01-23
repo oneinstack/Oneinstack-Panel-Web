@@ -91,8 +91,16 @@ const conf = reactive({
         isRun: false,
         showDown: true,
         action: (type: any, res: any) => {
+            let open = conf.play.item.lotteryInterval / 1000 - 13
+            let time = res[3] - open
+            
             if (type == 'time' && res[3] === 0) conf.game.start()
             else if (type == 'stop') conf.game.stop(res)
+            else if(time > 0) conf.game.start()
+            else if(time < 0 && conf.game.isRun) {
+                const openCode = conf.lotteryBox.last.openCode.split(',')
+                if(conf.lotteryBox.last.openCode) conf.game.stop(openCode)
+            }
         },
         reset: () => {
             conf.game.isRun = false
@@ -106,9 +114,9 @@ const conf = reactive({
         },
         stop: (res: any) => {
             if (conf.game.isRun) {
+                conf.game.isRun = false
                 let openCodeArr = res
                 conf.result.typeResult[conf.play.lotteryId] = {...conf.lotteryBox.last,openCodeArr}
-                conf.game.isRun = false
                 let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
             
                 // console.log(conf.lotteryBox.countDown);
@@ -196,13 +204,10 @@ const conf = reactive({
                     item[v.key + 'Name'] = odds[v.key][item.key].oddsName
                 }
                 conf.bet.listNumArr.forEach(fun)
-            })
-            console.log(conf.bet.listNumArr);
-            
+            })  
         },
         // 请求下注接口
         requestBet(e: any) {
-            console.log(e);
             // 选择类型
             if (e.type) {
                 conf.bet.tabs.active = e.type.slice(1)
@@ -386,6 +391,7 @@ onBeforeMount(async () => {
         lotteryId: () => conf.play.lotteryId,
         showBox: () => { }
     })
+    
     conf.bet.listNumArr = [
         {
             sort: 1,

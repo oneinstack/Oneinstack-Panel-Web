@@ -1,6 +1,6 @@
 <template>
     <div class="stom-item">
-        <div class="sort-contant">
+        <div class="sort-contant" :class="{'first-contant': sort == 1}">
             <div class="light"></div>
             <div class="light light-b"></div>
             <div class="right">
@@ -25,7 +25,7 @@ const props = defineProps({
         default: ''
     },
     sort: {
-        default: ''
+        default: '' as any
     }
 })
 
@@ -48,6 +48,10 @@ const props = defineProps({
             justify-content: space-between;
             align-items: center;
             position: relative;
+
+            &.first-contant {
+                background-image: linear-gradient(90deg, rgba(254,218,124,0.00) 0%, #FEDA7C 56%, rgba(254,218,124,0.00) 100%);
+            }
 
             .light {
                 position: absolute;

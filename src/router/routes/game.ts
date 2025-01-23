@@ -24,6 +24,10 @@ export default [
     component: '/game/MarkSix/MarkSix'
   },
   {
+    path: '/game/3DLottery/3DLottery',
+    component: '/game/Lottery3D/Lottery3D'
+  },
+  {
     path: '/game/Satta/Satta',
     component: '/game/satta/satta'
   },
