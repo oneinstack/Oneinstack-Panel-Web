@@ -213,8 +213,12 @@ export const index = ({ chooseRef }: any) => {
           }
           // AnimalsRunning
           else if (item.lotteryTypeCode == 'ANIMALS_RUNNING') {
-            const betCode = item.betCodes.split('_')[1]
             img = `/static/img/game/animal/${v}.png`
+          }
+
+          // 3DLottery
+          else if (item.lotteryTypeCode == '3D_LOTTERY') {
+            img = `/static/img/game/3d/d${v}.png`
           }
           return {
             img,

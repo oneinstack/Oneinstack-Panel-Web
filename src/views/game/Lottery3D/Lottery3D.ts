@@ -4,9 +4,11 @@ import { Scope } from 'tools-vue3'
 import { onMounted, reactive, ref } from 'vue'
 import { getOdds } from './Lottery3DDataOdds'
 import { apis } from '@/api'
+import System from '@/utils/System'
 
 export const index = () => {
   const resultRefs = ref<any>()
+  const orderRefs = ref<any>()
   const timer = Scope.Timer()
   const lottery = slottery.lotteryBox({
     timer: timer,
@@ -20,6 +22,7 @@ export const index = () => {
       if (time[3] <= 0) {
         conf.loop.runAni()
       }
+      conf.betting.popup.autoClose(time[3])
     },
     resultSize: 3,
     showBox: () => {}
@@ -51,7 +54,6 @@ export const index = () => {
       },
       action: (res: any) => {
         conf.loop.autoplay = false
-        console.log(res)
         conf.loop.openCode = res
 
         let num1 = parseInt(res[0])
@@ -69,8 +71,8 @@ export const index = () => {
         } else {
           conf.loop.openCode[5] = 1
         }
-        console.log(conf.operation.active);
-        if(conf.operation.active === 'result') resultRefs.value?.initResult()
+        if (conf.operation.active === 'result') resultRefs.value?.initResult()
+          if (conf.operation.active === 'myOrder') orderRefs.value?.initOrder()
       }
     },
     /**
@@ -113,7 +115,6 @@ export const index = () => {
           change(item: any) {
             const { tabs } = conf.betting
             tabs.level1.item = item
-            console.log(item)
           }
         },
         init: () => {
@@ -125,18 +126,29 @@ export const index = () => {
           }, 600)
         }
       },
+      betShow: false,
+      disabledShow: false,
       popup: {
         open: () => {
           //   conf.layout.ref.open()
+          conf.betting.betShow = true
+
         },
-        close: () => {
-          //   conf.layout.ref.close()
+        close: (type = 1) => {
+          //  conf.layout.ref.close()
+          if(type == 1) return conf.betting.betShow = false
+        },
+        autoClose: (time: any) => {
+          if(time <= lottery.play.item.openLockCountdown) {
+            conf.betting.popup.close()
+            conf.betting.disabledShow = true
+          } else {
+            conf.betting.disabledShow = false
+          }
         }
       },
       //获取赔率
       getOdds: async () => {
-        console.log(lottery.play.item);
-        
         let list = await slottery.findLotteryList('3D_LOTTERY')
         const { data } = await apis.lotteryOdds({
           lotteryTypeId: list[0].lotteryTypeId,
@@ -146,6 +158,29 @@ export const index = () => {
           conf.betting.tabs.oddsInfo[item.oddsCode] = Number(item.odds)
         }
         data.forEach(fun)
+      },
+      // 请求下注接口
+      requestBet(e: any) {
+        let obj = lottery.bet.getInfo()
+        System.loading()
+        e.forEach((item: any, index: number) => {
+          obj.betCodes = item.oddsCode
+          apis.lotteryUserBets({
+            ...obj,
+            success: (res: any) => {
+              if (index == e.length - 1) {
+                System.toast(i18n.t('game.betSuccess'), 'success')
+                lottery.wallet.getWalletMoney()
+                conf.betting.popup.close()
+              }
+            },
+            final: () => {
+              if (index == e.length - 1) {
+                System.loading(false)
+              }
+            }
+          })
+        })
       }
     }
   })
@@ -159,10 +194,7 @@ export const index = () => {
     conf,
     lottery
   })
-  console.log('8888')
-  console.log(lottery)
-
-  return { conf, lottery, resultRefs }
+  return { conf, lottery, resultRefs, orderRefs }
 }
 
 export type WelfareConfInter = ReturnType<typeof index>

@@ -36,7 +36,7 @@
 						v-if="betObj.betType == 'colorNum'">{{ betObj.betNum }}</div>
 				</div>
 			</div>
-			<div class="bet-type" v-else>
+			<div class="bet-type" v-else> 
 				<slot></slot>
 			</div>
 			<div class="select-box">
@@ -58,6 +58,9 @@
 						<input :placeholder="conf.betInputPlaceholder" v-model="conf.num" inputmode="decimal"
 							@input="conf.vfFun($event, 'num')" />
 					</div>
+				</div>
+				<div>
+					<slot :coinSymbol="conf.coinSymbol" :money="conf.num" name="tips"></slot>
 				</div>
 				<div class="bet-btn" @click="conf.submit">
 					{{ $t('game.totalPrice') }} {{ conf.coinSymbol }}{{ conf.num || 0 }}
@@ -432,6 +435,7 @@ onMounted(async () => {
 		background: #fffef8;
 		display: flex;
 		justify-content: center;
+		position: relative;
 
 		.bet-type-item {
 			position: relative;

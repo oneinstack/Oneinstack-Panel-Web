@@ -31,9 +31,11 @@
                             src="/static/lottie/exb/exb-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[1] == 'active'"
                             src="/static/lottie/exb/exb-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[1] == 'run' && conf.speedInfo[1] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="1"
+                            v-show="conf.aniInfo[1] == 'run' && conf.speedInfo[1] == 1"
                             src="/static/lottie/exb/exb-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="2" v-show="conf.aniInfo[1] == 'run' && conf.speedInfo[1] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="2"
+                            v-show="conf.aniInfo[1] == 'run' && conf.speedInfo[1] == 2"
                             src="/static/lottie/exb/exb-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[1] == 'prop'"
                             src="/static/lottie/exb/exb-prop.json" />
@@ -46,7 +48,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[1]"> 
+                        <div class="rain" v-if="conf.showRain[1]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -63,9 +65,11 @@
                             src="/static/lottie/hm/hm-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[2] == 'active'"
                             src="/static/lottie/hm/hm-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[2] == 'run' && conf.speedInfo[2] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="1"
+                            v-show="conf.aniInfo[2] == 'run' && conf.speedInfo[2] == 1"
                             src="/static/lottie/hm/hm-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="2" v-show="conf.aniInfo[2] == 'run' && conf.speedInfo[2] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="2"
+                            v-show="conf.aniInfo[2] == 'run' && conf.speedInfo[2] == 2"
                             src="/static/lottie/hm/hm-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[2] == 'prop'"
                             src="/static/lottie/hm/hm-prop.json" />
@@ -78,7 +82,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[2]"> 
+                        <div class="rain" v-if="conf.showRain[2]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -95,9 +99,11 @@
                             src="/static/lottie/pp/pp-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[3] == 'active'"
                             src="/static/lottie/pp/pp-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[3] == 'run' && conf.speedInfo[3] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="1"
+                            v-show="conf.aniInfo[3] == 'run' && conf.speedInfo[3] == 1"
                             src="/static/lottie/pp/pp-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="2" v-show="conf.aniInfo[3] == 'run'&& conf.speedInfo[3] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="2"
+                            v-show="conf.aniInfo[3] == 'run' && conf.speedInfo[3] == 2"
                             src="/static/lottie/pp/pp-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[3] == 'prop'"
                             src="/static/lottie/pp/pp-prop.json" />
@@ -110,7 +116,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[3]"> 
+                        <div class="rain" v-if="conf.showRain[3]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -127,9 +133,11 @@
                             src="/static/lottie/xz/xz-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[4] == 'active'"
                             src="/static/lottie/xz/xz-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[4] == 'run' && conf.speedInfo[4] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="1"
+                            v-show="conf.aniInfo[4] == 'run' && conf.speedInfo[4] == 1"
                             src="/static/lottie/xz/xz-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="2" v-show="conf.aniInfo[4] == 'run' && conf.speedInfo[4] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="2"
+                            v-show="conf.aniInfo[4] == 'run' && conf.speedInfo[4] == 2"
                             src="/static/lottie/xz/xz-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[4] == 'prop'"
                             src="/static/lottie/xz/xz-prop.json" />
@@ -142,7 +150,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[4]"> 
+                        <div class="rain" v-if="conf.showRain[4]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -159,9 +167,11 @@
                             src="/static/lottie/zxb/zxb-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[5] == 'active'"
                             src="/static/lottie/zxb/zxb-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="0.8" v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="0.8"
+                            v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 1"
                             src="/static/lottie/zxb/zxb-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1.3" v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="1.3"
+                            v-show="conf.aniInfo[5] == 'run' && conf.speedInfo[5] == 2"
                             src="/static/lottie/zxb/zxb-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[5] == 'prop'"
                             src="/static/lottie/zxb/zxb-prop.json" />
@@ -174,7 +184,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[5]"> 
+                        <div class="rain" v-if="conf.showRain[5]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -191,9 +201,11 @@
                             src="/static/lottie/hx/hx-walk.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[6] == 'active'"
                             src="/static/lottie/hx/hx-active.json" />
-                        <lottie-player autoplay loop mode="normal" speed="1" v-show="conf.aniInfo[6] == 'run' && conf.speedInfo[6] == 1"
+                        <lottie-player autoplay loop mode="normal" speed="1"
+                            v-show="conf.aniInfo[6] == 'run' && conf.speedInfo[6] == 1"
                             src="/static/lottie/hx/hx-run.json" />
-                        <lottie-player autoplay loop mode="normal" speed="2" v-show="conf.aniInfo[6] == 'run' && conf.speedInfo[6] == 2"
+                        <lottie-player autoplay loop mode="normal" speed="2"
+                            v-show="conf.aniInfo[6] == 'run' && conf.speedInfo[6] == 2"
                             src="/static/lottie/hx/hx-run.json" />
                         <lottie-player autoplay loop mode="normal" v-show="conf.aniInfo[6] == 'prop'"
                             src="/static/lottie/hx/hx-prop.json" />
@@ -206,7 +218,7 @@
                                 <img class="plus-img" src="/static/img/game/animal/light-plus.png" />
                             </cview>
                         </div>
-                        <div class="rain" v-if="conf.showRain[6]"> 
+                        <div class="rain" v-if="conf.showRain[6]">
                             <lottie-player autoplay loop mode="normal" :key="conf.aniInfo[1]"
                                 :src="`/static/lottie/rain.json`" />
                         </div>
@@ -291,14 +303,14 @@ const conf = reactive({
     numsort: [] as any[],
     downNum: 10,
     isAddRun: true,
-    setList(arr:any) {
-    const sorts = [6, 5, 4]
-    conf.numlist = arr.map((item:any, i:any) => {
-        return {
-            num: item,
-            sort: sorts[i]
-        }
-        })
+    setList(arr: any) {
+        const sorts = [6, 5, 4]
+        // conf.numlist = arr.map((item: any, i: any) => {
+        //     return {
+        //         num: item,
+        //         sort: sorts[i]
+        //     }
+        // })
     },
     init() {
         conf.numlist = [
@@ -362,7 +374,7 @@ const conf = reactive({
                 }
             })
         }
-        
+
         timer.once(() => {
             timer.once(() => {
                 conf.showReady = 'ready'
@@ -467,7 +479,7 @@ const conf = reactive({
         loopBg()
         conf.carInfo.x = {}
         //动物跑步
-        const _final = (i: any) => {   
+        const _final = (i: any) => {
             if (i === 6) {
                 if (conf.stopFun) {
                     conf.stopFun()
@@ -507,15 +519,15 @@ const conf = reactive({
             let x = res[i - 1]
             if (!conf.carInfo.x[i]) conf.carInfo.x[i] = 0
             conf.carInfo.x[i] = x
-            if(i < 3 && conf.isAddRun) conf.speedInfo[conf.numsort[i - 1].num] = 2
+            if (i < 3 && conf.isAddRun) conf.speedInfo[conf.numsort[i - 1].num] = 2
             let time = x * 10
-            if(!conf.isAddRun) time = x * 7
+            if (!conf.isAddRun) time = x * 7
             // conf.aniName + conf.numsort[0].num = 'run'
             stween.to('animal' + i, {
                 x: x,
                 time,
                 final() {
-                    if(i < 3) conf.speedInfo[conf.numsort[i - 1].num] = 1
+                    if (i < 3) conf.speedInfo[conf.numsort[i - 1].num] = 1
                     if (final) {
                         final(i)
                     }
@@ -532,8 +544,8 @@ const conf = reactive({
      * @param res -数组：[1,2,3]
      */
     async stop(res: any) {
-        if(res.length < 6)  res = ["B","F",'A','C','E','D']
-        let list = ["A","B",'C','D','E','F']
+        if (res.length < 6) res = ["B", "F", 'A', 'C', 'E', 'D']
+        let list = ["A", "B", 'C', 'D', 'E', 'F']
         const stIndex = list.indexOf(res[0]);
         const ndIndex = list.indexOf(res[1]);
         const rdIndex = list.indexOf(res[2]);
@@ -541,7 +553,7 @@ const conf = reactive({
         const fvIndex = list.indexOf(res[4]);
         const sxIndex = list.indexOf(res[5]);
         let numList = conf.getRandomCarArr()
-        numList = numList.sort((a,b) => b - a)
+        numList = numList.sort((a, b) => b - a)
         let _arr = []
         _arr[stIndex] = numList[0]
         _arr[ndIndex] = numList[1]
@@ -549,12 +561,12 @@ const conf = reactive({
         _arr[fuIndex] = numList[3]
         _arr[fvIndex] = numList[4]
         _arr[sxIndex] = numList[5]
-        
+
         let minIndex = _arr.findIndex(number => number === Math.min(..._arr));
         let maxIndex = _arr.findIndex(number => number === Math.max(..._arr));
         maxIndex = maxIndex < 0 ? 1 : maxIndex + 1
         minIndex = minIndex < 0 ? 1 : minIndex + 1
-        
+
         conf.stopFun = () => { }
         conf.isAddRun = false
         //道具
@@ -608,7 +620,7 @@ const conf = reactive({
     /**
    * 结算画面
    */
-    showWin(maxIndex:number) {
+    showWin(maxIndex: number) {
         stween.pause(['trackitm'])
         stween.to('roadfinsh', {
             x: 160,
@@ -618,26 +630,26 @@ const conf = reactive({
         //移出屏幕外面
         timer.once(() => {
             stween.pause(['desk'])
-            
+
             // 根据排名冲刺结算
             conf.rank = true
             for (let i = 1; i < 7; i++) {
-                stween.to('animal' + conf.numsort[i-1].num, {
-                    x: sutil.rem2px(750) + (600 - conf.numsort[i-1].sort),
-                    time: (600 - conf.numsort[i-1].sort) * 5,
+                stween.to('animal' + conf.numsort[i - 1].num, {
+                    x: sutil.rem2px(750) + (600 - conf.numsort[i - 1].sort),
+                    time: (600 - conf.numsort[i - 1].sort) * 5,
                     final() {
                         let num = conf.numsort[i - 1].num
                         conf.numlist[num - 1].sort = i
                         conf.numlist[num - 1].show = true
-                        
+
                         if (i == maxIndex) {
                             timer.once(() => {
                                 conf.podiumShow = true
-                            },1000)
+                            }, 1000)
                             timer.once(() => {
                                 conf.reset()
                                 emit('close')
-                            },3000)
+                            }, 3000)
                         }
                     }
                 })

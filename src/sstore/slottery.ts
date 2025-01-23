@@ -369,7 +369,7 @@ export const slottery = reactive({
         /**
          * 下注倍数
          */
-        multiple: 0,
+        multiple: 1,
 
         /**
          * 下注总金额

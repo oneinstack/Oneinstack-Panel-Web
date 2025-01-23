@@ -5,5 +5,5 @@ export default{
     'third_ball': 'Third ball',
     'span': 'span',
     'triplet': 'Triplet',
-    'courageous': 'Courageous'
+    'any': 'Any'
 }

@@ -134,6 +134,12 @@
       <div class="type" v-if="onlyLast == false">{{ item.betItem.value[0] }}</div>
       <img v-if="item.betItem.img" class="img-size" style="margin: 0 6rem" :src="item.betItem.img" />
     </div>
+
+     <!-- 3DLottery -->
+     <div class="PK10 row relative items-center" v-else-if="item.lotteryTypeCode == '3D_LOTTERY'">
+      <div class="type" v-if="onlyLast == false">{{ item.betItem.value[0] }}</div>
+      <img v-if="item.betItem.img" class="img-size" style="margin: 0 6rem" :src="item.betItem.img" />
+    </div>
   </div>
 </template>
 <script lang="ts" setup>

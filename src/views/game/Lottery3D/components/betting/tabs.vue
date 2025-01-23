@@ -1,13 +1,12 @@
 <template>
-  <div class="row items-center no-wrap level1-box" v-scroll>
-    <div
-      class="type-item flex justify-center items-start relative text-no-wrap"
-      v-for="item in conf.level1.list"
-      :class="{ active: item.name === conf.level1.item.name }"
-      @click="conf.level1.change(item)"
-    >
-      {{ $t('3d.' + item.name) }}
+  <div style="position: relative;">
+    <div class="row items-center no-wrap level1-box" v-scroll>
+      <div class="type-item flex justify-center items-start relative text-no-wrap" v-for="item in conf.level1.list"
+        :class="{ active: item.name === conf.level1.item.name }" @click="conf.level1.change(item)">
+        {{ $t('3d.' + item.name) }}
+      </div>
     </div>
+    <img class="arrow-img" src="/static/img/double-arrow.png" />
   </div>
 </template>
 <script setup lang="ts">
@@ -18,8 +17,9 @@ const conf = mconf.conf.betting.tabs
 </script>
 <style lang="less" scoped>
 .level1-box {
-  margin-top: 20rem;
+  margin-top: 24rem;
   gap: 20rem;
+
   .type-item {
     height: 50rem;
     border-radius: 6rem;
@@ -35,6 +35,7 @@ const conf = mconf.conf.betting.tabs
     &.active {
       color: #333333;
     }
+
     &.active::before {
       content: '';
       position: absolute;
@@ -46,5 +47,11 @@ const conf = mconf.conf.betting.tabs
       background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
     }
   }
+}
+.arrow-img{
+  height: 12rem;
+  position: absolute;
+  top: 18%;
+  right: -18rem;
 }
 </style>

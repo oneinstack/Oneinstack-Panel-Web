@@ -139,9 +139,14 @@
         </div>
         <!-- 内容区 -->
         <div class="col" style="overflow: auto;" :class="{'active-bg': conf.operation.active==='betting'}">
-            <!-- 下注区 -->
-            <betting v-if="conf.operation.active === 'betting'" />
+            
+            <!-- 下注区和处理下注 -->
+            <betting @changeBet="conf.betting.requestBet" :key="conf.betting.tabs.level1.item.name" v-if="conf.operation.active === 'betting'" />
+
             <result ref="resultRefs" v-if="conf.operation.active === 'result'" :lotteryId="lottery.play.item.id" />
+
+            <order ref="orderRefs" v-if="conf.operation.active === 'myOrder'" :lotteryId="lottery.play.item.id" />
+
             <template v-if="conf.operation.active === 'rule'">
                 <div style="padding: 20rem 48rem" v-html="lottery.play.item.lotteryRuleurl"></div>
             </template>
@@ -154,8 +159,10 @@ import bettingtabs from './components/betting/tabs.vue'
 import betting from './components/betting/index.vue'
 import gameLoop from '../components/gameLoop.vue';
 import result from './components/result.vue'
+import order from './components/order.vue'
+
 import { index } from './Lottery3D'
-const { conf, lottery, resultRefs } = index()
+const { conf, lottery, resultRefs, orderRefs } = index()
 </script>
 <style lang="less" scoped>
 .time-box {
