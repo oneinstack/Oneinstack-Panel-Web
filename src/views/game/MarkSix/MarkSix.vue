@@ -77,14 +77,16 @@
 
       <!-- Betting 一二级 -->
       <bettingtabs v-if="conf.operation.active === 'betting'" />
-
       <div style="height: 36rem"></div>
     </div>
 
     <!-- 内容区 -->
-    <div class="col" style="overflow: auto" :class="{ 'stop-bet': conf.stopBet }">
+    <div class="col" style="overflow: auto" :class="{ 'stop-bet': conf.stopBet && conf.operation.active === 'betting' }">
       <!-- 下注区 -->
       <betting v-if="conf.operation.active === 'betting'"/>
+      <!-- Result -->
+      <resultCom v-if="conf.operation.active === 'result'"/>
+
     </div>
 
 
@@ -102,8 +104,10 @@
     </template>
 
     <!-- 下注按钮 -->
-    <bottombtn v-if="conf.operation.active === 'betting'" @confirm="conf.betting.popup.open" :class="{ 'stop-bet': conf.stopBet }"/>
-    <time-popup @close="conf.timePopupShop = false" v-if="conf.timePopupShop"></time-popup>
+    <template v-if="conf.operation.active === 'betting'">
+      <bottombtn @confirm="conf.betting.popup.open" :class="{ 'stop-bet': conf.stopBet }"/>
+      <time-popup @close="conf.timePopupShop = false" v-if="conf.timePopupShop"></time-popup>
+    </template>
 
     <!-- 下注信息 -->
      <template v-if="conf.isWinBet">
@@ -130,6 +134,7 @@ import betting from './components/betting/index.vue'
 import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'
 import timePopup from '../components/timePopup.vue';
+import resultCom from './result.vue';
 import { index } from './MarkSix'
 const { conf, lottery } = index()
 </script>
