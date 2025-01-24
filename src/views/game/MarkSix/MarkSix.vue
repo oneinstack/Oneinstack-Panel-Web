@@ -86,7 +86,10 @@
       <betting v-if="conf.operation.active === 'betting'"/>
       <!-- Result -->
       <resultCom v-if="conf.operation.active === 'result'"/>
-
+      <!-- Rule -->
+      <ruleCom v-if="conf.operation.active === 'rule'" :list="lottery.play.item.lotteryRuleurl" style="margin-top: 16rem;"></ruleCom>
+      <!-- 下注区 -->
+      <orderCom v-if="conf.operation.active === 'myOrder'" ref="orderRefs" :lotteryId="lottery.play.item.id"/>
     </div>
 
 
@@ -135,6 +138,8 @@ import bettingtabs from './components/betting/tabs.vue'
 import resultBall from './components/resultBall.vue'
 import timePopup from '../components/timePopup.vue';
 import resultCom from './result.vue';
+import orderCom from './order.vue';
+import ruleCom from '../components/gameRule.vue';
 import { index } from './MarkSix'
 const { conf, lottery } = index()
 </script>

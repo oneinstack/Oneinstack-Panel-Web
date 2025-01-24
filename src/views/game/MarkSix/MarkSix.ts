@@ -97,10 +97,10 @@ export const index = () => {
           label: i18n.t('game.betting'),
           value: 'betting'
         },
-        {
-          label: i18n.t('game.analyze'),
-          value: 'analyze'
-        },
+        // {
+        //   label: i18n.t('game.analyze'),
+        //   value: 'analyze'
+        // },
         {
           label: i18n.t('game.result'),
           value: 'result'
@@ -163,9 +163,8 @@ export const index = () => {
           if(conf.stopBet){
             return
           }
-
           if(conf.betting.totalAmount == 0){
-            System.toast('请选择投注')
+            System.toast('Please select a bet!')
             // System.toast(i18n.t('game.setWalletTip'))
             return
           }
