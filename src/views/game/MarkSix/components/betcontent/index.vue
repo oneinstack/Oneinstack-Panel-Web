@@ -12,7 +12,7 @@ const conf = reactive({
     conf.listData = []
     let data1 = markSixConf.oddsData
     let data2 = markSixConf.betting.tabs.level2.item.list
-    data2.forEach((item:any) => {
+    data2?.forEach((item:any) => {
       let obj = data1.find((num:any) => num.oddsCode === item.oddsCode)
       let newObj = {
         languageName: item.oddsName,
@@ -35,10 +35,12 @@ watch(
 watch(
 	() => markSixConf.betting.tabs.level2.item.list,
 	(val: any) => {
-    // console.log('val===',val)
 		conf.initData()
 	},
   { deep: true }
 )
+onMounted(() => {
+  conf.initData()
+})
 </script>
 <style lang="less" scoped></style>

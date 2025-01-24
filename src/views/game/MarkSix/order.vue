@@ -44,12 +44,12 @@
 						<div class="content-item">
 							<img class="content-img" src="/static/img/bet-time.png" />
 							<div class="content" style="gap: 4rem;">{{ 'BetContent' }}:
-								<template v-for="into in item.betContent">
+								<template v-for="(into,intoIndex) in item.betContent">
 									<div class="ball-box" :style="{
 									'background-image': `url('/static/img/game/marksix/${into}.webp')`,
 									}"
 									v-if="isNaN(into)">
-									<div>{{ into?.split('_')[1] || into}}</div>
+									<div>{{ intoIndex != item.betContent.length - 1 ? into + ' , ' : into }}</div>
 									</div>
 									<resultBall :num="into" :size="42" :active="item.isActive" v-if="!isNaN(into)"/>
 								</template>
@@ -167,7 +167,8 @@ const conf = reactive({
 				res.data.records.forEach((item: any) => {
 					let info = orderConf.oddsData.filter((num:any) => item.betCodes.includes(num.oddsCode))
 					item.playName = info[0].oddsLabel
-					item.betContent = info.map((into:any) => into.oddsName)
+					item.betContent = conf.allData.filter((into:any) => item.betCodes.includes(into.oddsCode))
+					item.betContent = item.betContent.map((into:any) => into.oddsName)
 					let obj = svalue.coinlist.find(into => into.coinCode == item.betCoinCode)
 					item.coinTousdt = obj.coinTousdt
 					//默认钱包coinSymbol
@@ -236,7 +237,19 @@ const conf = reactive({
 		if (conf.pageSize * conf.pageNum >= conf.total) return conf.isTips = true
 		conf.pageNum++;
 		conf.getLotteryResult();
-	}
+	},
+	getOneArr (data:any) {
+		let newData:any = []
+		const callback = (item:any) => {
+			(item.list || (item.list = [])).map((v:any) => {
+			callback(v)
+			})
+			delete item.list
+			newData.push(item)
+		}
+		data.map((v:any) => callback(v))
+		return newData
+	},
 })
 watch(
 	() => props.lotteryId,
@@ -250,10 +263,9 @@ defineExpose({
 	initOrder
 })
 onMounted( () =>{
-	console.log('conf.tree',conf.tree)
-	conf.allData = conf.tree.map((item:any) => item.list.concat(conf.allData))
-	// conf.allData = conf.allData.map((item:any) => item)
-	console.log('conf.allData',conf.allData)
+	let tree = JSON.parse(JSON.stringify(orderConf.betting.tabs.tree))
+	conf.allData = conf.getOneArr(tree);
+	console.log('orderConf.betting.tabs.tree',orderConf.betting.tabs)
 })
 </script>
 

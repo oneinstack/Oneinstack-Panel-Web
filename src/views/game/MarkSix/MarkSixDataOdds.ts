@@ -1,3 +1,4 @@
+import i18n from '@/lang';
 export const getOdds = () => [
   {
     'name': 'tail_consecutive',
@@ -6,52 +7,52 @@ export const getOdds = () => [
         'name': 'two_tail_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'two_lianzhong_code_',
             'oddsCode': 'two_lianzhong_code_9',
           }
@@ -61,52 +62,52 @@ export const getOdds = () => [
         'name': 'two_tail_not_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'two_missed_code_',
             'oddsCode': 'two_missed_code_9',
           }
@@ -116,52 +117,52 @@ export const getOdds = () => [
         'name': 'three_tail_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'three_lianzhong_code_',
             'oddsCode': 'three_lianzhong_code_9',
           }
@@ -171,52 +172,52 @@ export const getOdds = () => [
         'name': 'three_tail_not_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'three_missed_code_',
             'oddsCode': 'three_missed_code_9',
           }
@@ -226,52 +227,52 @@ export const getOdds = () => [
         'name': 'four_tail_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'four_lianzhong_code_',
             'oddsCode': 'four_lianzhong_code_9',
           }
@@ -281,52 +282,52 @@ export const getOdds = () => [
         'name': 'four_tail_not_consecutive',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'four_missed_code_',
             'oddsCode': 'four_missed_code_9',
           }
@@ -1634,52 +1635,52 @@ export const getOdds = () => [
         'name': 'tail',
         'list': [
           {
-            'oddsName': 'tail_0',
+            'oddsName': i18n.t('markSixOdds.tail_0'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_0',
           },
           {
-            'oddsName': 'tail_1',
+            'oddsName': i18n.t('markSixOdds.tail_1'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_1',
           },
           {
-            'oddsName': 'tail_2',
+            'oddsName': i18n.t('markSixOdds.tail_2'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_2',
           },
           {
-            'oddsName': 'tail_3',
+            'oddsName': i18n.t('markSixOdds.tail_3'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_3',
           },
           {
-            'oddsName': 'tail_4',
+            'oddsName': i18n.t('markSixOdds.tail_4'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_4',
           },
           {
-            'oddsName': 'tail_5',
+            'oddsName': i18n.t('markSixOdds.tail_5'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_5',
           },
           {
-            'oddsName': 'tail_6',
+            'oddsName': i18n.t('markSixOdds.tail_6'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_6',
           },
           {
-            'oddsName': 'tail_7',
+            'oddsName': i18n.t('markSixOdds.tail_7'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_7',
           },
           {
-            'oddsName': 'tail_8',
+            'oddsName': i18n.t('markSixOdds.tail_8'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_8',
           },
           {
-            'oddsName': 'tail_9',
+            'oddsName': i18n.t('markSixOdds.tail_9'),
             'oddsParentCode': 'tail_number_code_',
             'oddsCode': 'tail_number_code_9',
           }
@@ -1849,42 +1850,42 @@ export const getOdds = () => [
             'oddsCode': 'positive_code_31',
           },
           {
-            'oddsName': '总和小',
+            'oddsName': i18n.t('markSixOdds.total_small'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_sum_small',
           },
           {
-            'oddsName': '总和大',
+            'oddsName': i18n.t('markSixOdds.total_big'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_sum_big',
           },
           {
-            'oddsName': '总和单',
+            'oddsName': i18n.t('markSixOdds.total_odd'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_sum_odd',
           },
           {
-            'oddsName': '总和双',
+            'oddsName': i18n.t('markSixOdds.total_even'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_sum_even',
           },
           {
-            'oddsName': 'dragon',
+            'oddsName': i18n.t('markSixOdds.dragon'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_dragon',
           },
           {
-            'oddsName': 'tiger',
+            'oddsName': i18n.t('markSixOdds.tiger'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_tiger',
           },
           {
-            'oddsName': '总尾大',
+            'oddsName': i18n.t('markSixOdds.total_big_tail'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_mantissa_big',
           },
           {
-            'oddsName': '总尾小',
+            'oddsName': i18n.t('markSixOdds.total_small_tail'),
             'oddsParentCode': 'positive_code_',
             'oddsCode': 'positive_code_mantissa_small',
           }
@@ -1899,52 +1900,52 @@ export const getOdds = () => [
         'name': 'positive_code_1',
         'list': [
           {
-            'oddsName': 'tail_big',
-            'oddsParentCode': 'positive_1_code_',
-            'oddsCode': 'positive_1_code_tail_big',
-          },
-          {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_combine_even',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
+            'oddsParentCode': 'positive_1_code_',
+            'oddsCode': 'positive_1_code_tail_big',
+          },
+          {
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_1_code_',
             'oddsCode': 'positive_1_code_tail_small',
           }
@@ -1954,52 +1955,52 @@ export const getOdds = () => [
         'name': 'positive_code_2',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_combine_even',
           },
           {
-            'oddsName': 'tail_big',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_tail_big',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_2_code_',
             'oddsCode': 'positive_2_code_tail_small',
           }
@@ -2009,52 +2010,52 @@ export const getOdds = () => [
         'name': 'positive_code_3',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_combine_even',
           },
           {
-            'oddsName': 'tail_big',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_tail_big',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_3_code_',
             'oddsCode': 'positive_3_code_tail_small',
           }
@@ -2064,52 +2065,52 @@ export const getOdds = () => [
         'name': 'positive_code_4',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_combine_even',
           },
           {
-            'oddsName': 'tail_big',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_tail_big',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_4_code_',
             'oddsCode': 'positive_4_code_tail_small',
           }
@@ -2119,52 +2120,52 @@ export const getOdds = () => [
         'name': 'positive_code_5',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_combine_even',
           },
           {
-            'oddsName': 'tail_big',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_tail_big',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_5_code_',
             'oddsCode': 'positive_5_code_tail_small',
           }
@@ -2174,52 +2175,52 @@ export const getOdds = () => [
         'name': 'positive_code_6',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_even',
           },
           {
-            'oddsName': 'sum_big',
+            'oddsName': i18n.t('markSixOdds.combine_big'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_big',
           },
           {
-            'oddsName': 'sum_small',
+            'oddsName': i18n.t('markSixOdds.combine_small'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_small',
           },
           {
-            'oddsName': 'sum_odd',
+            'oddsName': i18n.t('markSixOdds.combine_odd'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_odd',
           },
           {
-            'oddsName': 'sum_even',
+            'oddsName': i18n.t('markSixOdds.combine_even'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_combine_even',
           },
           {
-            'oddsName': 'tail_big',
+            'oddsName': i18n.t('markSixOdds.tail_big'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_tail_big',
           },
           {
-            'oddsName': 'tail_small',
+            'oddsName': i18n.t('markSixOdds.tail_small'),
             'oddsParentCode': 'positive_6_code_',
             'oddsCode': 'positive_6_code_tail_small',
           }
@@ -3259,22 +3260,22 @@ export const getOdds = () => [
             'oddsCode': 'special_code_12',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_small',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'special_code_',
             'oddsCode': 'special_code_even',
           },
@@ -3354,22 +3355,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_1',
         'list': [
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_even',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_1_code_',
             'oddsCode': 'clearance_positive_1_code_small',
           }
@@ -3379,22 +3380,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_2',
         'list': [
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_small',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_even',
           },
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_2_code_',
             'oddsCode': 'clearance_positive_2_code_odd',
           }
@@ -3404,22 +3405,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_3',
         'list': [
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_even',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_3_code_',
             'oddsCode': 'clearance_positive_3_code_small',
           }
@@ -3429,22 +3430,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_4',
         'list': [
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_even',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_4_code_',
             'oddsCode': 'clearance_positive_4_code_small',
           }
@@ -3454,22 +3455,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_5',
         'list': [
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_even',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_5_code_',
             'oddsCode': 'clearance_positive_5_code_small',
           }
@@ -3479,22 +3480,22 @@ export const getOdds = () => [
         'name': 'pass_positive_code_6',
         'list': [
           {
-            'oddsName': 'odd',
+            'oddsName': i18n.t('markSixOdds.odd'),
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_odd',
           },
           {
-            'oddsName': 'even',
+            'oddsName': i18n.t('markSixOdds.even'),
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_even',
           },
           {
-            'oddsName': 'big',
+            'oddsName': i18n.t('markSixOdds.big'),
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_big',
           },
           {
-            'oddsName': 'small',
+            'oddsName': i18n.t('markSixOdds.small'),
             'oddsParentCode': 'clearance_positive_6_code_',
             'oddsCode': 'clearance_positive_6_code_small',
           }
@@ -4474,12 +4475,12 @@ export const getOdds = () => [
         'name': 'positive_code_1_vs_positive_code_2',
         'list': [
           {
-            'oddsName': 'dragon',
+            'oddsName': i18n.t('markSixOdds.dragon'),
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v2_dragon',
           },
           {
-            'oddsName': 'tiger',
+            'oddsName': i18n.t('markSixOdds.tiger'),
             'oddsParentCode': 'dtf_code_',
             'oddsCode': 'dtf_code_1v2_tiger',
           }
