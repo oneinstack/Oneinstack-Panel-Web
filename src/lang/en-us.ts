@@ -183,7 +183,7 @@ export default {
     purchaseCode: 'PurchaseCode',
     openTime: 'OpenTime',
     prizeMoney: 'PrizeMoney',
-    openCode: 'OpenCode',
+    openCode: 'Winner',
     color: 'Color',
     colorTips: 'Betting close before 10 seconds, Wish everyone good luck',
     pauseBetting: 'Pause betting',

@@ -135,10 +135,17 @@
       <img v-if="item.betItem.img" class="img-size" style="margin: 0 6rem" :src="item.betItem.img" />
     </div>
 
-     <!-- 3DLottery -->
-     <div class="PK10 row relative items-center" v-else-if="item.lotteryTypeCode == '3D_LOTTERY'">
-      <div class="type" v-if="onlyLast == false">{{ item.betItem.value[0] }}</div>
-      <img v-if="item.betItem.img" class="img-size" style="margin: 0 6rem" :src="item.betItem.img" />
+    <!-- 3DLottery -->
+    <div class="PK10 row relative items-center" v-else-if="item.lotteryTypeCode == '3D_LOTTERY'">
+      <div class="type" v-if="onlyLast == false">{{ item.betItem.lastVal.type || item.betItem.lastVal }}</div>
+      <div style="display: flex;flex-wrap: wrap;">
+        <template v-for="(url,i) in item.betCodeArr" :key="i" >
+          <div class="txt-box" :style="{'margin-left': i == 0 ? '10rem' : 0}" v-if="item.betCodes.split('_')[0] == 'triple'">
+            <div class="txt" :class="{ 'small': url.length > 17 }"><span v-if="i != 0">,</span>{{ url }}</div>
+          </div>
+          <img class="img-size" style="margin-left: 6rem;" v-else :src="`/static/img/game/3d/d${url}.png`" />
+        </template>
+      </div>
     </div>
   </div>
 </template>

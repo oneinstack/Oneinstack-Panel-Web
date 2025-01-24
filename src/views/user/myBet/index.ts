@@ -110,6 +110,7 @@ export const index = ({ chooseRef }: any) => {
         item.lotteryTypeCode = plotteryItem?.lotteryTypeVO.lotteryTypeCode
         item.lotteryTypeName = plotteryItem?.lotteryTypeVO.lotteryTypeName
         item.lotteryItem = lotteryItem
+        item.betCodeArr = [] as any[]
 
         //处理各彩种开奖结果
         let betOpenCodeList = item.betOpenCode.split(',')
@@ -219,6 +220,14 @@ export const index = ({ chooseRef }: any) => {
           // 3DLottery
           else if (item.lotteryTypeCode == '3D_LOTTERY') {
             img = `/static/img/game/3d/d${v}.png`
+            let arr = item.betCodes ? item.betCodes.split(',') : []
+            let list = [] as any[]
+            arr.forEach((item:any) => {
+              const url = item.split('_')[1]
+              // list.push(`/static/img/game/3d/d${url}.png`)
+              list.push(url)
+            })
+            item.betCodeArr = list
           }
           return {
             img,

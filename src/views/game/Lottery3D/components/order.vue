@@ -24,18 +24,36 @@
 							<div class="title-code">{{ item.betExpect }}</div>
 						</div>
 
-						<div class="title-right" v-if="item.betCodes">
-							<div class="type">
+						<!-- <div class="title-right" v-if="item.betCodes">
+							<div class="bet-type">
 								{{ item.betCodes.split('_')[0] }}
 							</div>
 							<img class="img" :src="`/static/img/game/3d/d${item.betCodes.split('_')[1]}.png`" />
-						</div>
+						</div> -->
 					</div>
 
 					<div class="result-content">
 						<div class="content-item">
-							<img class="content-img" src="/static/img/bet-time.png" />
-							<div class="content">{{ $t('game.bettingTime') }}:{{ sutil.getTimeFormat(item.betTime) }}
+							<div class="content-img-item">
+								<img src="/static/img/bet-numbers.png" />
+								<div class="img-num">
+									<span style="margin-top: 0rem">B</span>
+								</div>
+							</div>
+							<div class="content">
+								{{ $t('SattaKing.BettingContent2') }}:
+								<div class="bet-type">
+									{{ item.betCodes.split('_')[0] }}
+								</div>
+								<div class="openCode" v-if="item.betCodeArr">
+									<template v-for="(url,i2) in item.betCodeArr" :key="i2">
+										<div class="txt-box" :style="{'margin-left': i2 == 0 ? '10rem' : 0}" v-if="item.betCodes.split('_')[0] == 'triple'">
+											<div class="txt" :class="{ 'small': url.length > 17 }"><span v-if="i2 != 0">,</span>{{ url.split('_')[1] }}</div>
+										</div>
+										<img v-else :src="`/static/img/game/3d/d${url.split('_')[1]}.png`" />
+									</template>
+									
+								</div>
 							</div>
 						</div>
 						<div class="content-item">
@@ -147,8 +165,7 @@ const conf = reactive({
 					//下注钱包coinSymbol
 					item.coinSymbol = obj.coinSymbol == 'USDT' ? obj.coinSymbol + ' ' : obj.coinSymbol
 
-					let arr = item.betOpenCode ? item.betOpenCode.split(',') : []
-					item.OpenCodeArr = []
+					item.betCodeArr = item.betCodes ? item.betCodes.split(',') : []
 					if (defaultWalletInfo.walletCoin != item.betCoinCode) {
 						//下注金额汇率转换（eg:默认钱包=CNY，默认币种钱包=INR,下注钱包=USD,将下注金额转换为默认钱包对应金额）
 						let betMoneyResult = sutil.Mul(
@@ -176,6 +193,8 @@ const conf = reactive({
 					}
 				})
 				conf.resultList = [...conf.resultList, ...res.data.records]
+				console.log(conf.resultList);
+				
 				conf.total = res.data.total
 				if (conf.pageSize * conf.pageNum >= conf.total) return conf.isTips = true
 			}
@@ -295,12 +314,6 @@ defineExpose({
 				.title-right {
 					display: flex;
 					align-items: center;
-					.type {
-						color: #5bcdff;
-						font-size: 26rem;
-						font-weight: 700;
-						margin-right: 10rem;
-					}
 					.img{
 						height: 42rem;
 					}
@@ -346,7 +359,7 @@ defineExpose({
 							bottom: 0;
 							right: 0;
 							left: 0;
-							color: #000;
+							color: #3a3a3a;
 							font-size: 15rem;
 							display: flex;
 							align-items: center;
@@ -355,6 +368,7 @@ defineExpose({
 					}
 					.openCode{
 						display: flex;
+						flex-wrap: wrap;
 						img{
 							height: 42rem;
 							margin-left: 6rem;
@@ -368,6 +382,13 @@ defineExpose({
 					justify-content: space-between;
 
 				}
+			}
+
+			.bet-type {
+				color: #5bcdff;
+				font-size: 26rem;
+				font-weight: 700;
+				margin-left: 10rem;
 			}
 
 			&:first-of-type {

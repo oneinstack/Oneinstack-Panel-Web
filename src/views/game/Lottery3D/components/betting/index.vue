@@ -22,9 +22,13 @@
 
   <bet-popup :betShow="bsconf.betShow" @submit="conf.handleBetSubmit">
     <div v-scroll>
-      <div style="display: flex;" v-scroll>
+      <div style="display: flex;align-items: center;" v-scroll>
+        <div class="bet-type">{{ conf.betTypeTitle }}</div>
         <template v-for="item in conf.betList" :key="item.oddsCode">
-          <img class="img" :src="`/static/img/game/3d/${item.imgUrl}.png`" />
+          <div class="txt-box" v-if="conf.betTypeTitle == 'triple'">
+              <div class="txt" :class="{ 'small': item.imgUrl.length > 10 }">{{ item.imgUrl }}</div>
+          </div>
+          <img v-else class="img" :src="`/static/img/game/3d/${item.imgUrl}.png`" />
         </template>
       </div>
       <img class="arrow-img" v-show="betNum > 7" src="/static/img/double-arrow.png" />
@@ -58,6 +62,7 @@ const conf = reactive({
   betNumList: [] as any[],
   betList: [] as any[],
   strList: [] as any[],
+  betTypeTitle: '',
   changeBet(e:any,type: any) {
     if(e.type == 'clear') {
       conf.clearBet(1)
@@ -120,17 +125,30 @@ const conf = reactive({
     if(bsconf.disabledShow) return
     if(betNum.value == 0) return System.toast(i18n.t('SattaKing.betEmptyTip'))
     bsconf.popup.open()
-    conf.betList = [...conf.betSizeList, ...conf.betNumList]
+    conf.betList = [...conf.betSizeList, ...conf.betNumList,...conf.strList]
+    let list = [] as any[]
+    conf.betList.forEach((item) => {
+      list.push(item.oddsCode)
+    })
+    mconf.lottery.bet.content = list
+    console.log('66555');
+    conf.betTypeTitle = conf.betList[0].oddsCode.split('_')[0]
+    console.log(conf.betList);
+    
   },
   handleBetSubmit(e: any) {
     if (!e) return bsconf.betShow = false
     mconf.lottery.bet.totalMoney = e
-    emit('changeBet',conf.betList)
+    let list = [] as any[]
+    conf.betList.forEach((item) => {
+      list.push(item.oddsCode)
+    })
+    emit('changeBet',list)
   }
 })
 
 const betNum = computed(() => {
-  return conf.betSizeList.length + conf.betNumList.length
+  return conf.betSizeList.length + conf.betNumList.length + conf.strList.length
 })
 </script>
 <style lang="less" scoped>
@@ -172,5 +190,34 @@ const betNum = computed(() => {
   position: absolute;
   top: calc(50% - 6rem);
   right: 6rem;
+}
+.bet-type {
+  color: #5bcdff;
+  font-size: 26rem;
+  font-weight: 700;
+  margin-right: 6rem;
+}
+.txt-box {
+    border: 2rem solid #EAEAEA;
+    border-radius: 8rem;
+    min-width: 160rem;
+    color: #333333;
+    height: 60rem;
+    padding: 1rem 1rem 4rem;
+    margin-left: 10rem;
+
+    .txt {
+        height: 100%;
+        background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEF 100%);
+        border-radius: 0 0 10rem 10rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 26rem;
+    }
+
+    .small {
+        font-size: 20rem;
+    }
 }
 </style>

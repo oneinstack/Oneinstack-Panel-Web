@@ -137,7 +137,7 @@
             <div style="width: 10rem"></div>
             <div class="row flex-center text-m" style="width: 180rem; word-break: break-word">
               <template v-if="conf.item.lotteryTypeCode != 'SATTA_KING'">
-                <betCode onlyLast :item="conf.item" />
+                <betCode :onlyLast="true" :item="conf.item" />
               </template>
               <template v-else>
                 {{

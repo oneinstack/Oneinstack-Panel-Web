@@ -28,6 +28,7 @@ export const index = () => {
     showBox: () => {}
   })
   const conf = reactive({
+    gameType: '3D_LOTTERY',
     loop: {
       numList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
       sumList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],
@@ -149,10 +150,10 @@ export const index = () => {
       },
       //获取赔率
       getOdds: async () => {
-        let list = await slottery.findLotteryList('3D_LOTTERY')
+        let list = await slottery.findLotteryList(conf.gameType)
         const { data } = await apis.lotteryOdds({
           lotteryTypeId: list[0].lotteryTypeId,
-          lotteryTypeCode: '3D_LOTTERY'
+          lotteryTypeCode: conf.gameType
         })
         const fun = (item: any) => {
           conf.betting.tabs.oddsInfo[item.oddsCode] = Number(item.odds)
@@ -162,25 +163,24 @@ export const index = () => {
       // 请求下注接口
       requestBet(e: any) {
         let obj = lottery.bet.getInfo()
+        console.log(e);
+        obj.betCodes = e.join(',')
+        console.log(obj.betCodes);
         System.loading()
-        e.forEach((item: any, index: number) => {
-          obj.betCodes = item.oddsCode
+        // e.forEach((item: any, index: number) => {
+        //   obj.betCodes = item.oddsCode
           apis.lotteryUserBets({
             ...obj,
             success: (res: any) => {
-              if (index == e.length - 1) {
-                System.toast(i18n.t('game.betSuccess'), 'success')
-                lottery.wallet.getWalletMoney()
-                conf.betting.popup.close()
-              }
+              System.toast(i18n.t('game.betSuccess'), 'success')
+              lottery.wallet.getWalletMoney()
+              conf.betting.popup.close()
             },
             final: () => {
-              if (index == e.length - 1) {
-                System.loading(false)
-              }
+              System.loading(false)
             }
           })
-        })
+        // })
       }
     }
   })

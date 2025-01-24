@@ -31,13 +31,21 @@
                 style="height: 36rem; transform: translateY(2rem)"
               />
             </div>
-            <div class="row items-center" style="transform: translateX(10rem)">
+            <div class="row items-center" style="transform: translateX(10rem)" v-if="item.betCodeArr.length < 2">
               <betCode :item="item" />
             </div>
           </div>
 
           <!-- 其他信息 -->
           <template v-if="item.lotteryTypeCode != 'SATTA_KING'">
+            <div class="row items-center top12" v-if="item.betCodeArr.length > 1">
+              <div class="flex flex-center relative">
+                <img class="order-icon" src="/static/img/bet-numbers.png" />
+                <div class="absolute" style="font-size: 18rem">B</div>
+              </div>
+              <div style="margin: 0 10rem">{{ $t('SattaKing.BettingContent2') + ':' }}</div>
+              <betCode :item="item" />
+            </div>
             <div class="row items-center top12">
               <img class="order-icon" src="/static/img/bet-time.png" />
               <div style="margin: 0 10rem">{{ $t('game.bettingTime') + ':' }}</div>
@@ -71,7 +79,7 @@
               {{ $t(item.lotteryTypeCode != 'SATTA_KING' ? 'game.betMoney' : 'game.TotalBetAmount') + ':' }}
             </div>
             <div>
-              {{ item.coinSymbol + item.betMoney }}
+              {{ item.coinSymbol + item.totalBetAmount }}
             </div>
           </div>
           <div class="row items-center top12">

@@ -184,6 +184,13 @@ const conf = reactive({
 	// 聊天室弹窗
 	async changeShareOpen() {
 		if (props.betShare) return
+		// console.log(mconf.conf.gameType);
+		// console.log(mconf);
+		// let betObj = mconf.lottery.bet.getInfo()
+		// console.log(betObj);
+		
+		const gameType = mconf.gameType || mconf.conf.gameType
+		
 		conf.num = parseFloat(conf.num)
 		let obj = {
 			coinSymbol: conf.coinSymbol,
@@ -191,8 +198,8 @@ const conf = reactive({
 			money: conf.num.toFixed(4),
 			orderType: '',
 			id: StrUtil.getId(),
-			lotteryName: mconf.gameType,
-			lotteryTypeCode: mconf.gameType,
+			lotteryName: gameType,
+			lotteryTypeCode: gameType,
 			betLotteryId: '',
 			betOpenId: '',
 			betExpect: '',
@@ -206,7 +213,7 @@ const conf = reactive({
 			betContent: '',
 			betTitle: ''
 		}
-		switch (mconf.gameType) {
+		switch (gameType) {
 			case 'Color':
 			case '3D':
 				obj.betLotteryId = mconf.currentOpen.lotteryId
@@ -240,6 +247,16 @@ const conf = reactive({
 				// obj.playName = `${mconf.currentTab.lotteryShortname}min${obj.lotteryName}`
 				let num = mconf.selectBetInfoArr[0].active + '_'
 				obj.betCodes = num + mconf.selectBetInfoArr[0]?.key || ''
+				break
+			case '3D_LOTTERY':
+				let bet3dObj = mconf.lottery.bet.getInfo()
+				obj.playName = mconf.lottery.play.item.lotteryShowname
+				obj.betLotteryId = bet3dObj.lotteryId
+				obj.betOpenId = bet3dObj.betOpenId
+				obj.betExpect = bet3dObj.betExpect
+				obj.lotteryName = obj.lotteryName.toUpperCase()
+				obj.lotteryTypeCode = obj.lotteryName
+				obj.betCodes = bet3dObj.betCodes
 				break
 		}
 		obj.newPlayName = obj.playName
@@ -279,6 +296,8 @@ const conf = reactive({
 		}
 		obj.betContent = obj.newBetCodes
 		obj.betTitle = obj.betExpect
+		console.log(obj);
+		
 		Cookie.set('betRecord', JSON.stringify(obj))
 		await sconfig.toChat('/chat/betRecordForward')
 	},
