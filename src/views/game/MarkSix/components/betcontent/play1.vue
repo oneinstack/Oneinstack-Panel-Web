@@ -1,9 +1,12 @@
 <template>
   <div class="flex relative" style="gap: 14rem; padding: 32rem">
     <template v-for="item in conf.list">
-      <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)">
+      <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)" :style="{
+          'width': isNaN(item.oddsName) ? '218rem' : '102rem'
+          }">
          <div class="ball-box" :style="{
           'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
+          'width': isNaN(item.oddsName) ? '100%' : '72rem'
           }"
           v-if="isNaN(item.oddsName)">
           <div>{{ item.languageName}}</div>

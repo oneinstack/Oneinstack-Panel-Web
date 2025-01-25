@@ -122,6 +122,7 @@
 </template>
 
 <script setup lang="ts">
+import i18n from '@/lang'
 import { apis } from '@/api';
 import sconfig from '@/sstore/sconfig';
 import sutil from '@/sstore/sutil';
@@ -166,7 +167,8 @@ const conf = reactive({
 			success: (res: any) => {
 				res.data.records.forEach((item: any) => {
 					let info = orderConf.oddsData.filter((num:any) => item.betCodes.includes(num.oddsCode))
-					item.playName = info[0].oddsLabel
+					let str = conf.allData.find((into:any) => info[0].oddsCode == into.oddsCode)?.parentName || ''
+					item.playName = i18n.t('lhc.' + str)
 					item.betContent = conf.allData.filter((into:any) => item.betCodes.includes(into.oddsCode))
 					item.betContent = item.betContent.map((into:any) => into.oddsName)
 					let obj = svalue.coinlist.find(into => into.coinCode == item.betCoinCode)
@@ -242,7 +244,8 @@ const conf = reactive({
 		let newData:any = []
 		const callback = (item:any) => {
 			(item.list || (item.list = [])).map((v:any) => {
-			callback(v)
+				v.parentName = item.name
+				callback(v)
 			})
 			delete item.list
 			newData.push(item)
@@ -265,7 +268,8 @@ defineExpose({
 onMounted( () =>{
 	let tree = JSON.parse(JSON.stringify(orderConf.betting.tabs.tree))
 	conf.allData = conf.getOneArr(tree);
-	console.log('orderConf.betting.tabs.tree',orderConf.betting.tabs)
+	// console.log('conf.allData',conf.allData)
+	// console.log('orderConf.betting.tabs.tree',orderConf.betting.tabs)
 })
 </script>
 
