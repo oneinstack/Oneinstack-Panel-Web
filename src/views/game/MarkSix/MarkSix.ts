@@ -168,6 +168,9 @@ export const index = () => {
             // System.toast(i18n.t('game.setWalletTip'))
             return
           }
+          const list  = conf.betting.betArr.map((num:any) => num.oddsCode)
+          lottery.bet.content = list
+          lottery.bet.num = conf.betting.totalAmount
           conf.layout.ref.open()
         },
         close: () => {

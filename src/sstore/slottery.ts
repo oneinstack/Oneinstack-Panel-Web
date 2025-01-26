@@ -212,7 +212,7 @@ export const slottery = reactive({
       /**
        * 倒计时
        */
-      countDown: [0, 0, 0] as any[],
+      countDown: ['00', '00', '00'] as any[],
       /**
        * 结果
        */
@@ -344,7 +344,7 @@ export const slottery = reactive({
             lotteryId: conf.play.item.id,
             money: conf.bet.totalMoney,
             multiple: conf.bet.multiple,
-            nums: 1,
+            nums: conf.bet.num,
             supplement: 0,
             walletCoinCode: conf.wallet.coinCode 
           }
@@ -359,7 +359,7 @@ export const slottery = reactive({
         /**
          * 下注注数
          */
-        num: 0,
+        num: 1,
 
         /**
          * 下注金额
@@ -439,6 +439,8 @@ export const slottery = reactive({
         conf.play.list.forEach((item: any) => {
           const minutes = item.lotteryInterval / 1000 / 60
           item.label = minutes + (minutes > 1 ? i18n.t('game.minutes') : i18n.t('game.minute'))
+          item.timeType = minutes
+          item.timeName = minutes > 1 ? i18n.t('game.minutes') : i18n.t('game.minute')
           item.openLockCountdown = item.openLockCountdown / 1000
         })
 

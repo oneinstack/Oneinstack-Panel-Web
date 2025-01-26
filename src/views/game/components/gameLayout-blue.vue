@@ -1,5 +1,5 @@
 <template>
-  <x-page noFooter>
+  <x-page noFooter :headerBgColor="stheme.theme.blue.headerBgColor()">
     <!-- 头部标题 -->
     <template #title>
       <slot name="title">{{ title }} - {{ lottery.play.item.label }}</slot>
@@ -17,17 +17,17 @@
       :lottery="lottery">
       <slot name="bet"></slot>
     </bet-popup>
-  </x-page>  
+  </x-page>
 </template>
 <script setup lang="ts">
 import { apis } from '@/api'
 import { LotteryConfInter } from '@/sstore/slottery'
 import System from '@/utils/System'
 import { onMounted, reactive, defineEmits } from 'vue';
-import betPopup from './gameBetPopup.vue'
-import i18n from '@/lang'
+import betPopup from './gameBetPopup-blue.vue'
 import { Scope } from 'tools-vue3';
 import sconfig from '@/sstore/sconfig';
+import stheme from '@/sstore/stheme'
 
 const props = defineProps<{
   title: string
@@ -79,6 +79,7 @@ const conf = reactive({
         conf.bet.show = false
       }
     },
+    // 分享注单
     async shareBet(money: any) {
       const obj = props.lottery.bet.getInfo()
       console.log(obj);
@@ -111,12 +112,11 @@ const conf = reactive({
 			}).join(",") || ''
       sobj.betContent = sobj.newBetCodes
       sobj.newPlayName = sobj.playName
-      console.log(mconf.conf.betting.typeTitle);
       
       if(mconf.conf.betting.typeTitle) sobj.newPlayName = sobj.newPlayName + ' - ' + mconf.conf.betting.typeTitle
       console.log(sobj);
-      Cookie.set('betRecord', JSON.stringify(sobj))
-		  await sconfig.toChat('/chat/betRecordForward')
+      // Cookie.set('betRecord', JSON.stringify(sobj))
+		  // await sconfig.toChat('/chat/betRecordForward')
     }
   }
 })

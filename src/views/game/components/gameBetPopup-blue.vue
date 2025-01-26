@@ -17,7 +17,7 @@
         </div>
         <div style="width: 10%">
           <img v-if="showShare && sconfig.userInfo && svalue.configv1['im_open']" class="share-img"
-						style="margin-right: 24rem" src="/static/img/share.png" @click="conf.share"
+						style="margin-right: 24rem" src="/static/theme/blue/share.png" @click="conf.share"
 						:class="{ 'disabled': betShare }" />
         </div>
       </div>
@@ -170,7 +170,7 @@ onMounted(async () => {
 
   .bet-type {
     padding: 24rem;
-    background: #fffef8;
+    background: #E6F2FF;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
     gap: 12rem;
@@ -209,7 +209,7 @@ onMounted(async () => {
           align-items: center;
 
           &.money-active {
-            background: #d90000;
+            background: #006FFF;
             color: #fff;
           }
         }
@@ -252,10 +252,8 @@ onMounted(async () => {
       font-size: 28rem;
       font-weight: 700;
       border-radius: 95rem;
-      background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
-      box-shadow:
-        0 2rem 0 0 rgba(255, 255, 255, 0.2) inset,
-        0 2rem 7rem 0 rgba(0, 0, 0, 0.25);
+      background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
+			box-shadow: 0 2rem 0 0 rgba(255, 255, 255, .2) inset, 0 2rem 7rem 0 rgba(0, 0, 0, .25);
     }
   }
 }

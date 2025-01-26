@@ -132,7 +132,7 @@ const props = defineProps({
 		default: ''
 	},
 	oddsArr: {
-		default: []
+		default: [] as any[]
 	}
 })
 const initOrder = () => {
