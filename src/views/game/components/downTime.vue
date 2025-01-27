@@ -6,10 +6,16 @@
   </div>
 </template>
 <script setup lang="ts">
+import { onMounted } from 'vue';
+
 const props = defineProps({
   times: {
       default: [] as any
     }
+})
+onMounted(() => {
+  console.log(props.times);
+  
 })
 </script>
 

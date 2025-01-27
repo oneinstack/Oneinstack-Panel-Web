@@ -1,17 +1,6 @@
 <template>
-  <GameLayout title="5D" :code="conf.gameType" :lottery="lottery" :ref="conf.layout.setRef"
+  <GameLayout :showTips="true" title="5D" :code="conf.gameType" :lottery="lottery" :ref="conf.layout.setRef"
 		@reset="conf.betting.popup.close">
-    <div>
-			<div class="tip">
-				<img class="tip-icon" src="/static/img/Frame.png" />
-				<div style="width: 100%;overflow: hidden;">
-					<div class="tip-content">
-						<span>{{ $t('winGo.BettingCloseTip1') + lottery.play.item.openLockCountdown +
-							$t('winGo.BettingCloseTip2') }}</span>
-					</div>
-				</div>
-			</div>
-		</div>
 		<div class="row play-item-box">
 			<div style="overflow-y: scroll;">
 				<div class="tabs-list">
@@ -211,44 +200,6 @@ const { conf, lottery } = index()
 				background: url(/static/theme/blue/time_nor.webp) no-repeat;
 				background-size: 100%;
 			}
-		}
-	}
-}
-
-.tip {
-	display: flex;
-	align-items: center;
-	padding: 0rem 24rem;
-	height: 80rem;
-	background: #E6F2FF;
-
-	.tip-icon {
-		width: 32rem;
-		height: 32rem;
-		margin-right: 16rem;
-		flex-shrink: 0;
-	}
-
-	.tip-content {
-		font-size: 26rem;
-		color: #45454d;
-		font-weight: 500;
-		display: inline-block;
-		white-space: nowrap;
-		animation: u-loop-animation 20s linear infinite both;
-		text-align: right;
-		// 这一句很重要，为了能让滚动左右连接起来
-		padding-left: 100%;
-		flex-wrap: nowrap;
-	}
-
-	@keyframes u-loop-animation {
-		0% {
-			transform: translate3d(0, 0, 0);
-		}
-
-		100% {
-			transform: translate3d(-100%, 0, 0);
 		}
 	}
 }

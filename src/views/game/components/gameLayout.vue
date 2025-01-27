@@ -12,6 +12,17 @@
       </div>
       <img src="/static/img/wallet.webp" style="width: 72rem; height: 72rem" />
     </template>
+    <div v-if="showTips">
+			<div class="tip">
+				<img class="tip-icon" src="/static/img/Frame.png" />
+				<div style="width: 100%;overflow: hidden;">
+					<div class="tip-content">
+						<span>{{ $t('winGo.BettingCloseTip1') + lottery.play.item.openLockCountdown +
+							$t('winGo.BettingCloseTip2') }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
     <slot></slot>
     <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit"
       @share="conf.bet.shareBet" :lottery="lottery">
@@ -29,13 +40,27 @@ import i18n from '@/lang'
 import { Scope } from 'tools-vue3';
 import sconfig from '@/sstore/sconfig';
 
-const props = defineProps<{
-  title: string
-  lottery: LotteryConfInter
-  code: string
-  onInit?: () => void
-  betInfo?: any
-}>()
+const props = defineProps({
+	title: {
+		default: ''
+	},
+	lottery: {
+		default: {} as LotteryConfInter
+	},
+	code: {
+		default: ''
+	},
+	onInit: {
+		default: null as any
+	},
+	betInfo: {
+		default: {} as any
+	},
+	showTips: {
+		default: false
+	}
+})
+
 
 const emit = defineEmits(['reset'])
 
@@ -118,8 +143,8 @@ const conf = reactive({
 
       if (mconf.conf.betting.typeTitle) sobj.newPlayName = sobj.newPlayName + ' - ' + mconf.conf.betting.typeTitle
       console.log(sobj);
-      Cookie.set('betRecord', JSON.stringify(sobj))
-      await sconfig.toChat('/chat/betRecordForward')
+      // Cookie.set('betRecord', JSON.stringify(sobj))
+      // await sconfig.toChat('/chat/betRecordForward')
     }
   }
 })
@@ -139,4 +164,42 @@ defineExpose({
 })
 </script>
 
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.tip {
+	display: flex;
+	align-items: center;
+	padding: 0rem 24rem;
+	height: 80rem;
+	background: #FFF9ED;
+
+	.tip-icon {
+		width: 32rem;
+		height: 32rem;
+		margin-right: 16rem;
+		flex-shrink: 0;
+	}
+
+	.tip-content {
+		font-size: 26rem;
+		color: #45454d;
+		font-weight: 500;
+		display: inline-block;
+		white-space: nowrap;
+		animation: u-loop-animation 20s linear infinite both;
+		text-align: right;
+		// 这一句很重要，为了能让滚动左右连接起来
+		padding-left: 100%;
+		flex-wrap: nowrap;
+	}
+
+	@keyframes u-loop-animation {
+		0% {
+			transform: translate3d(0, 0, 0);
+		}
+
+		100% {
+			transform: translate3d(-100%, 0, 0);
+		}
+	}
+}
+</style>

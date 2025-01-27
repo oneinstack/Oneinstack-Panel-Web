@@ -243,8 +243,7 @@ export const index = () => {
           })
 
           let coinlistArr = await svalue.getCoinlist() //货币数据
-          conf.his.order.list = data.records || []
-          conf.his.order.list?.forEach((item: any) => {
+          data.records?.forEach((item: any) => {
             item.openNumberArr = item.betOpenCode ? item.betOpenCode.split(',') : []
             item.sum = eval(item.openNumberArr.join('+')) || ''
 

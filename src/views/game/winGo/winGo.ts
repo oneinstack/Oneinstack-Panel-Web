@@ -1,570 +1,304 @@
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { apis } from '@/api'
+import { onMounted, reactive, ref } from 'vue'
+import i18n from '@/lang'
+import slottery from '@/sstore/slottery'
+import { getOdds } from './winGoDataOdds'
+import { Scope } from 'tools-vue3'
 import { svalue } from '@/sstore/svalue'
-import { apis } from '@/api';
-import i18n from '@/lang';
-import System from '@/utils/System';
-import sutil from '@/sstore/sutil';
-import { Scope } from 'tools-vue3';
+import sutil from '@/sstore/sutil'
+
 export const index = () => {
-    const gameBoxRefs = ref<any>()
-    const conf = reactive({
-        hours: '00',	//倒计时 - 时
-        minutes: '00',	//倒计时 - 分
-        second: '00',	//倒计时 - 秒
-        countdownArr: ['00', '00', '00'],	//倒计时数组
-        countdownDialogTime: 10,
-        bigDownShow: false,
-    
-        drawLotteryResult: ['9', 'A', 'E', 'A', 'D'],
-        resuleIndex: null as any,
-        openCodeAllData: [] as any[],
-        scollIndex: 0,
-        scollTimer: null as any,
-        selectBetInfoArr: [] as any[],	//选择下注信息
-        bet: {
-            //打开下注弹框
-            open: () => {
-                CEvent.emit('openbet')
-            },
-            //关闭下注弹框
-            close: () => {
-                CEvent.emit('closebet')
-            },
-            autoClose: (time: any) => {
-                time <= conf.openLockCountdown && conf.bet.close()
-            },
-            //清理选中数据
-            closeFun: (type: any) => {
-                conf.bet.listNum = []
-                conf.bet.listBS = []
-                if (type == 'betSuccess' && conf.tabType == 3) {
-                    conf.changeResultType(3, null)
-                }
-            },
-            //下注数字原始数据
-            listNumArr: [] as any[],
-            //选中数据
-            listNum: [] as any[],
-            //下注大小单双原始数据
-            listBSArr: [] as any[],
-            //选中数据
-            listBS: [] as any[],
-            //选择下注数据
-            choose: (item: any, name: any) => {
-                if (conf.bet[name].includes(item)) {
-                    let index = conf.bet[name].findIndex((v: any) => v.sort == item.sort)
-                    if (index >= 0) conf.bet[name].splice(index, 1)
-                    // conf.bet[name].remove((v) => v.sort == item.sort)
-                } else {
-                    conf.bet[name].push(item)
-                }
-                conf.bet[name].sort((a: any, b: any) => a.sort - b.sort)
-                conf.bet.open()
-                conf.selectBetInfoArr = conf.bet[name]
-            }
-        } as any,
-        countdownSetTime: null as any,
-        play: {
-            active: '',
-            choose: (key: any, index: any) => {
-                conf.play.active = key
-                //清空倒计时定时器
-                clearTimeout(conf.countdownSetTime)
-                conf.countdownSetTime = null
-                conf.getCurrentPlayInfo(index)
-                conf.bet.close()
-            },
-            list: []
-        },
-        his: {
-            tabs: {
-                active: '1',
-                options: [{
-                    key: '1',
-                    label: 'Game history'
-                },
-                {
-                    key: '2',
-                    label: 'My history'
-                }
-                ],
-                choose: (item: any) => {
-                    conf.his.tabs.active = item.key
-                }
-            }
-        },
-        tabType: 1,
-        lotteryRuleurl: '',
-        gameTypeArr: [] as any[],	//玩法类型
-        lotteryId: '',	//当前玩法类型id
-        openLockCountdown: 0,	//当前玩法类型停止下注倒计时
-        currentOpenInfo: {} as any, //当前期数开奖信息
-        lastOpenInfo: {} as any, //上一期开奖期数
-        nextOpenInfo: {} as any, //下一期开奖信息
-        countdownNum: 10,	//当前玩法类型开奖倒计时
-        getOpenLotteryInfoTimer: null as any,	//获取开奖信息定时器
-        oddsArr: [] as any[], //赔率数据
-    
-        //result分页
-        resultPageSize: 10,
-        resultPageNum: 1,
-        resultTotalPages: 0,
-        resultTotal: 0,
-        resultList: [],
-    
-        pageObj: {
-            page: 1,
-            size: 10,
-            total: 0,
-            pageTotal: 0,
-        },
-    
-        //order
-        orderPageSize: 10,
-        orderPageNum: 1,
-        orderTotalPages: 0,
-        orderTotal: 0,
-        orderDataList: [],
-    
-        selectPlayTypeName: '',
-        isClickPage: false,
-        gameType: 'Trx',
-        gameTypeId: '',
-        chartDataList: [] as any[],
-        comKey: 0,
-        lotteryShowname: '',
-        //获取玩法类型
-        getLotteryList(index: any) {
-            //清空倒计时定时器
-            clearInterval(conf.countdownSetTime)
-            conf.countdownSetTime = null
-            apis.lotteryList({
-                success: (res: any) => {
-                    let datas = res.data
-                    let newIndex = datas.findIndex((item: any) => item.lotteryTypeVO.lotteryTypeCode == 'Trx_Win_Go')
-                    conf.gameTypeArr = datas[newIndex].lotteryVOList || []
-                    conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
-                    conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
-                    conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
-                    conf.lotteryId = conf.gameTypeArr[index].id
-                    conf.play.list = datas[newIndex].lotteryVOList || []
-                    conf.play.active = conf.gameTypeArr[index].id || []
-                    let min = conf.gameTypeArr[index].lotteryInterval || conf.gameTypeArr[0].lotteryInterval
-                    if ((min / 1000 / 60) >= 1) {
-                        conf.selectPlayTypeName = (min / 1000 / 60) + ((min / 1000 / 60) > 1 ? i18n.t('game.minutes') : i18n.t('game.minute'))
-                    } else {
-                        conf.selectPlayTypeName = (min / 1000) + i18n.t('game.second')
-                    }
-                    if (conf.getOpenLotteryInfoTimer) {
-                        clearTimeout(conf.getOpenLotteryInfoTimer)
-                        conf.getOpenLotteryInfoTimer = null
-                    }
-                    conf.getLotteryOpen('changePlay')
-                    conf.getLotteryOdds(conf.gameTypeArr[index].lotteryTypeId)
-                    conf.changeResultType(conf.tabType, null)
-                    conf.lotteryRuleurl = conf.gameTypeArr[index].lotteryRuleurl
-                }
-            });
-        },
-    
-        //获取当前玩法数据
-        getCurrentPlayInfo(index: any) {
-            conf.lotteryShowname = conf.gameTypeArr[index].lotteryShowname || conf.gameTypeArr[0].lotteryShowname
-            conf.gameTypeId = conf.gameTypeArr[index].id || conf.gameTypeArr[0].id
-            conf.openLockCountdown = conf.gameTypeArr[index].openLockCountdown / 1000 //锁定倒计时
-            conf.lotteryId = conf.gameTypeArr[index].id
-            conf.play.active = conf.gameTypeArr[index].id || []
-            let min = conf.gameTypeArr[index].lotteryInterval || conf.gameTypeArr[0].lotteryInterval
-            if ((min / 1000 / 60) >= 1) {
-                conf.selectPlayTypeName = (min / 1000 / 60) + ((min / 1000 / 60) > 1 ? i18n.t('game.minutes') : i18n.t('game.minute'))
-            } else {
-                conf.selectPlayTypeName = (min / 1000) + i18n.t('game.second')
-            }
-            if (conf.getOpenLotteryInfoTimer) {
-                clearTimeout(conf.getOpenLotteryInfoTimer)
-                conf.getOpenLotteryInfoTimer = null
-            }
-            conf.getLotteryOpen('changePlay')
-            conf.lotteryRuleurl = conf.gameTypeArr[index].lotteryRuleurl
-        },
-    
-        // 获取开奖信息
-        getLotteryOpen(type: any) {
-            if (type == 'changePlay') {
-                System.loading()
-            }
-            conf.resuleIndex = null
-            apis.lotteryOpen({
-                lotteryId: conf.lotteryId,
-                success: (res: any) => {
-                    let datas = res.data
-                    conf.currentOpenInfo = datas.currentOpen
-                    conf.lastOpenInfo = datas.lastOpen
-                    conf.nextOpenInfo = datas.nextOpen
-                    conf.countdownNum = parseInt(conf.currentOpenInfo.openTime) - parseInt(datas.currentSystemTime)
-                    type && conf.handleCountdown(conf.countdownNum)
-    
-                    //上一期数未开奖
-                    if (!conf.lastOpenInfo.openCode) {
-                        clearTimeout(conf.getOpenLotteryInfoTimer);
-                        conf.getOpenLotteryInfoTimer = null;
-                        conf.getOpenLotteryInfoTimer = setTimeout(() => {
-                            conf.getLotteryOpen(null)
-                        }, 1000)
-                        clearInterval(conf.scollTimer);
-                        conf.scollTimer = null;
-                        conf.handleScollNumber()
-                    } else {
-                        gameBoxRefs.value?.getWalletMoney(2)
-                        conf.handleDrawLotteryResult(conf.lastOpenInfo.openCode)
-                        conf.changeResultType(conf.tabType, null)
-                    }
-                },
-                final: () => {
-                    System.loading(false)
-                }
-            });
-        },
-    
-        // 未开奖 => 数字变化
-        handleScollNumber() {
-            conf.scollTimer = setInterval(() => {
-                conf.scollIndex = conf.getRandomIndex(conf.openCodeAllData)
-            }, 100)
-        },
-    
-        //随机选择数组索引
-        getRandomIndex(array: any) {
-            let randomIndex = Math.floor(Math.random() * array.length);
-            return randomIndex;
-        },
-    
-        // 倒计时
-        handleCountdown(nowDate: any) {
-            let hours = Math.floor((nowDate / 1000 / 60 / 60) % 24)
-            let minutes = Math.floor((nowDate / 1000 / 60) % 60)
-            let seconds = Math.floor((nowDate / 1000) % 60)
-            if (seconds < 0) return
-            conf.hours = conf.ripr(hours)
-            conf.minutes = conf.ripr(minutes)
-            conf.second = conf.ripr(seconds)
-            conf.countdownDialogTime = conf.ripr(Math.floor(nowDate / 1000))
-            conf.countdownDialogTime = conf.countdownDialogTime
-            conf.bigDownShow = true
-            if (nowDate > 0) {
-                conf.countdownSetTime = setTimeout(() => {
-                    nowDate -= 1000
-                    if (nowDate < 0) {
-                        clearInterval(conf.countdownSetTime);
-                        conf.countdownSetTime = null;
-                        if (conf.getOpenLotteryInfoTimer) {
-                            clearTimeout(conf.getOpenLotteryInfoTimer);
-                            conf.getOpenLotteryInfoTimer = null;
-                        }
-                        conf.getLotteryOpen('load')
-                    } else {
-                        conf.handleCountdown(nowDate)
-                    }
-                    conf.countdownArr = [conf.hours, conf.minutes, conf.second]
-                    conf.bet.autoClose(conf.countdownDialogTime)
-                }, 1000)
-            }
-        },
-    
-        //获取赔率
-        getLotteryOdds(lotteryTypeId: string) {
-            // System.loading()
-            apis.lotteryOdds({
-                lotteryTypeId,
-                lotteryTypeCode: "Trx_Win_Go",
-                success: (res: any) => {
-                    let regex = /^[0-9]*$/ // 匹配数字
-                    let datas = res.data || []
-                    datas?.forEach((item: any) => {
-                        let num = item.oddsCode.split('_')[1]
-                        item.number = regex.test(num) ? parseFloat(num) : num.toUpperCase()
-                        item.odds = parseFloat(item.odds)
-    
-                        //颜色、大小赔率
-                        let newIndex = conf.bet.listBSArr.findIndex((into: any) => into.label.toUpperCase() == item.number)
-                        if (newIndex != -1) {
-                            let newObj = {
-                                ...item,
-                                ...conf.bet.listBSArr[newIndex]
-                            }
-                            conf.bet.listBSArr[newIndex] = newObj
-                        }
-    
-                        // 数字赔率
-                        let index = conf.bet.listNumArr.findIndex((into: any) => into.label == item.number)
-                        if (index != -1) {
-                            let obj = {
-                                ...item,
-                                ...conf.bet.listNumArr[index]
-                            }
-                            conf.bet.listNumArr[index] = obj
-                        }
-                    })
-                },
-                final: () => {
-                    System.loading()
-                }
-            });
-        },
-    
-        //数据小于10处理
-        ripr(num: any) {
-            num = parseFloat(num)
-            return num < 10 ? `0${num}` : num
-        },
-    
-        //处理开奖结果
-        handleDrawLotteryResult(val: any) {
-            let openCode = conf.toUpperCase(val.slice(val.length - 5, val.length))
-            conf.drawLotteryResult = Array.from(openCode)
-            let regex = /^[0-9]*$/ // 匹配数字
-            conf.resuleIndex = null
-            let resultObj = {}
-            conf.drawLotteryResult.forEach((item, itemIndex) => {
-                if (regex.test(item)) {
-                    conf.resuleIndex = itemIndex
-                    conf.drawLotteryResult[itemIndex] = item
-                }
-            })
-        },
-    
-        //选择菜单类型（Rule、Result history、Chart、My order）
-        //type判断分页
-        changeResultType(num: any, type: any) {
-            conf.tabType = num
-            switch (num) {
-                //Result history
-                case 1:
-                    if (type == 'last') {
-                        conf.resultPageNum--
-                    } else if (type == 'next') {
-                        conf.resultPageNum++
-                    } else {
-                        conf.resultPageNum = 1
-                    }
-                    conf.getLotteryResult()
-                    break;
-                //Chart
-                case 2:
-                    if (type == 'last') {
-                        conf.resultPageNum--
-                    } else if (type == 'next') {
-                        conf.resultPageNum++
-                    } else {
-                        conf.resultPageNum = 1
-                    }
-                    conf.getLotteryResult()
-                    break;
-                //My order
-                case 3:
-                    if (type == 'last') {
-                        conf.orderPageNum--
-                    } else if (type == 'next') {
-                        conf.orderPageNum++
-                    } else {
-                        conf.orderPageNum = 1
-                    }
-                    conf.getOrderData()
-                    break;
-                //Rule
-                case 4:
-    
-                    break;
-            }
-        },
-    
-        //获取result数据
-        getLotteryResult() {
-            // System.loading()
-            // conf.chartDataList = []
-            apis.lotteryOpenResult({
-                current: conf.resultPageNum,
-                size: conf.resultPageSize,
-                lotteryId: conf.lotteryId,
-                success: (res: any) => {
-                    let datas = res.data
-                    conf.resultList = datas.records || []
-                    conf.resultList?.forEach((item: any) => {
-                        item.openNumberStr = conf.toUpperCase(item.openCode.slice(item.openCode.length - 5, item.openCode.length))
-                        let index = conf.findLastDigitIndex(item.openNumberStr)
-                        item.openNumber = String(item.openNumberStr.slice(index, index + 1)) || ''
-                    })
-                    conf.resultTotal = datas.total
-                    conf.resultTotalPages = datas.pages
-                    conf.pageObj.page = datas.current
-                    conf.pageObj.total = datas.total
-                    conf.pageObj.pageTotal = Math.ceil(datas.total / conf.pageObj.size)
-                    conf.comKey++
-                    conf.chartDataList = conf.resultList.filter((item: any) => { return item.openCode })
-                },
-                final: () => {
-                    System.loading(false)
-                }
-            });
-        },
-    
-        // 使用正则表达式匹配字符串中的所有字母，并将其转换为大写
-        toUpperCase(str: any) {
-            return str.replace(/[a-z]/g, function (letter: any) {
-                return letter.toUpperCase();
-            });
-        },
-    
-        //获取My order数据
-        async getOrderData() {
-            let defaultWalletInfo = await svalue.getDefaultWallet()
-            System.loading()
-            apis.lotteryUserOrder({
-                current: conf.orderPageNum,
-                size: conf.orderPageSize,
-                lotteryId: conf.lotteryId,
-                success: async (res: any) => {
-                    let coinlistArr = await svalue.getCoinlist()	//货币数据
-                    // let defaultCoin = uni.getStorageSync('defaultCoin')	//默认货币数据
-                    let datas = res.data
-                    conf.orderDataList = datas.records || []
-                    conf.orderDataList?.forEach((item: any) => {
-                        item.openNumberStr = item.betOpenCode ? item.betOpenCode.slice(item.betOpenCode.length - 5, item.betOpenCode.length) : ''
-                        let index = conf.findLastDigitIndex(item.openNumberStr)
-                        item.openNumber = index != -1 ? parseFloat(item.openNumberStr.slice(index, index + 1)) : ''
-    
-                        let color = conf.bet.listNumArr.find((into: any) => into.label == item.openNumber)?.color || ''
-                        item.color = color
-                        //下注number
-                        item.betNumber = item.betCodes.split('_')[1]
-                        //下注number对应颜色
-                        let betColor = conf.bet.listNumArr.find((into: any) => into.label == item.betNumber)?.color || ''
-                        item.betColor = betColor
-                        let obj = coinlistArr.find(into => into.coinCode == item.betCoinCode)
-                        //默认钱包coinSymbol
-                        item.defaultWalletCoinSymbol = defaultWalletInfo.coinSymbol == 'USDT' ? defaultWalletInfo.coinSymbol + ' ' : defaultWalletInfo.coinSymbol
-                        item.defaultWalletCoin = defaultWalletInfo.walletCoin
-    
-                        //下注钱包coinSymbol
-                        item.coinSymbol = obj.coinSymbol == 'USDT' ? obj.coinSymbol + ' ' : obj.coinSymbol
-    
-                        // 下注钱包对应汇率
-                        item.coinTousdt = obj?.coinTousdt
-    
-                        //下注金额汇率转换（eg:默认钱包=CNY，默认币种钱包=INR,下注钱包=USD,将下注金额转换为默认钱包对应金额）
-                        let betMoneyResult = sutil.Mul(sutil.division(defaultWalletInfo.coinTousdt, item.coinTousdt, false), item.totalBetAmount)
-                        betMoneyResult = sutil.formatNumber(betMoneyResult)
-                        let betMoneyResultToFixed4 = sutil.dataHandling(betMoneyResult)
-                        item.betMoneyToFixed4 = betMoneyResultToFixed4
-    
-                        //中奖金额汇率转换
-                        let PrizeMoneyResult = null
-                        if (parseFloat(item.betPrizeMoney) > 0) {
-                            PrizeMoneyResult = sutil.Mul(sutil.division(defaultWalletInfo.coinTousdt, item.coinTousdt, false), item.betPrizeMoney)
-                            PrizeMoneyResult = sutil.formatNumber(PrizeMoneyResult)
-                        } else {
-                            item.betPrizeMoney = 0.00
-                            PrizeMoneyResult = 0.00
-                        }
-                        let PrizeMoneyResultToFixed4 = sutil.dataHandling(PrizeMoneyResult)
-                        item.PrizeMoneyToFixed4 = PrizeMoneyResultToFixed4
-                    })
-                    conf.orderTotal = datas.total
-                    conf.pageObj.page = datas.current
-                    conf.pageObj.total = datas.total
-                    conf.pageObj.pageTotal = Math.ceil(datas.total / conf.pageObj.size)
-                },
-                final: () => {
-                    System.loading(false)
-                }
-            });
-        },
-    
-        //匹配开奖结果最后一个数字的位置
-        findLastDigitIndex(str: any) {
-            const matches = str.match(/\d(?!.*\d)/);
-            const index = matches ? str.search(/\d(?!.*\d)/) : -1;
-            return index;
-        },
-    
-        //分页change
-        handlePageChange(type: any) {
-            conf.changeResultType(conf.tabType, type)
-            conf.handleClickOrderPage(true)
-        },
-    
-        //点击order => 分页
-        handleClickOrderPage(val: any) {
-            conf.isClickPage = val
-        },
-    })
-    const init = () => {
-        conf.bet.listNumArr = []
-        let greenArr = [1, 3, 7, 9]
-        for (let i = 0; i < 10; i++) {
-            let color = ''
-            if (i == 0) {
-                color = 'rv'
-            } else if (greenArr.includes(i)) {
-                color = 'g'
-            } else if (i == 5) {
-                color = 'gv'
-            } else {
-                color = 'r'
-            }
-            conf.bet.listNumArr.push({
-                // sort: i + 4,
-                key: i,
-                label: i,
-                color,
-                // type: 'num',
-                // odds: 9
-            })
-        }
-    
-        conf.bet.listBSArr = [
-            {
-                label: 'Red',
-                color: 'red',
-            },
-            {
-                label: 'Green',
-                color: 'green',
-            },
-            {
-                label: 'Violet',
-                color: 'violet',
-            },
-            {
-                label: 'Big',
-                color: 'blue',
-            },
-            {
-                label: 'Small',
-                color: 'yellow',
-            }
-        ]
-    }
-    onMounted(() => {
-        init()
+  const timer = Scope.Timer()
+  const lottery = slottery.lotteryBox({
+    timer: timer,
+    success: (onetime: any, status: any, results: any) => {
+      //设置开奖信息
+      // results.forEach((item: any, index: number) => {})
+      //处理游戏和刷新结果
+      conf.loop.action(results.map((v: any) => v.num))
+      conf.page.change(1)
+    },
+    updateCountDown: (time: any) => {
+      if (time[3] <= 0) {
+        conf.loop.runAni()
+      }
+      conf.betting.popup.autoClose(time[3])
+    },
+    resultSize: 5,
+    showBox: () => {}
+  })
+  const conf = reactive({
+    gameType: 'Trx_Win_Go',
+    layout: {
+      ref: null as any,
+      setRef: (el: any) => {
+        if (el) conf.layout.ref = el
+        else conf.layout.ref = null as any
+      }
+    },
+    /**
+     * 开奖处理
+     */
+    loop: {
+      // 开奖结果信息
+      openCode: ['B', 'A', 'E', 'A', '4'],
+      autoplay: false,
+      resuleIndex: null as any,
+      /**
+       * 开始开奖动画
+       */
+      runAni: () => {
+        conf.loop.autoplay = true
         let arr = Array.from({ length: 26 }, (_, index) => String.fromCharCode('A'.charCodeAt(0) + index))
-        for (let i = 0; i < 10; i++) {
-            conf.openCodeAllData.push(i)
+        conf.loop.openCode.forEach((item: any, index) => {
+          const num = Math.floor(Math.random() * 26)
+          conf.loop.openCode[index] = arr[num]
+        })
+        setTimeout(() => {
+          if (conf.loop.autoplay) {
+            conf.loop.runAni()
+          }
+        }, 100)
+      },
+      action: (res: any) => {
+        console.log(res)
+
+        conf.loop.autoplay = false
+        const val = res[0]
+        let openCode = conf.loop.toUpperCase(val.slice(val.length - 5, val.length))
+        conf.loop.openCode = Array.from(openCode)
+        let regex = /^[0-9]*$/ // 匹配数字
+        conf.loop.resuleIndex = null
+        conf.loop.openCode.forEach((item, itemIndex) => {
+          if (regex.test(item)) {
+            conf.loop.resuleIndex = itemIndex
+            conf.loop.openCode[itemIndex] = item
+          }
+        })
+      },
+      // 使用正则表达式匹配字符串中的所有字母，并将其转换为大写
+      toUpperCase(str: any) {
+        return str.replace(/[a-z]/g, function (letter: any) {
+          return letter.toUpperCase()
+        })
+      },
+      //匹配开奖结果最后一个数字的位置
+      findLastDigitIndex(str: any) {
+        const matches = str.match(/\d(?!.*\d)/)
+        const index = matches ? str.search(/\d(?!.*\d)/) : -1
+        return index
+      }
+    },
+    /**
+     * 功能控制菜单
+     */
+    operation: {
+      active: 'result',
+      list: [
+        {
+          label: i18n.t('game.resultHistory'),
+          value: 'result'
+        },
+        {
+          label: i18n.t('winGo.Chart'),
+          value: 'chart'
+        },
+        {
+          label: i18n.t('game.rule'),
+          value: 'rule'
+        },
+        {
+          label: i18n.t('game.myOrder'),
+          value: 'myOrder'
         }
-        conf.openCodeAllData = [...conf.openCodeAllData, ...arr]
-        conf.getLotteryList(0)
-    })
-    onUnmounted(() => {
-        //清空倒计时定时器
-        clearTimeout(conf.countdownSetTime)
-        conf.countdownSetTime = null
-    
-        clearTimeout(conf.getOpenLotteryInfoTimer)
-        conf.getOpenLotteryInfoTimer = null
-    
-        clearInterval(conf.scollTimer);
-        conf.scollTimer = null;
-    })
-    Scope.setConf(conf)
-    return {conf,gameBoxRefs}
+      ],
+      change: (item: any) => {
+        conf.operation.active = item.value
+        conf.page.reset()
+        conf.page.change(1)
+      }
+    },
+    /**
+     * 下注信息
+     */
+    betting: {
+      betTypeArr: [] as any,
+      betNumArr: [] as any[], //选中的数据
+      typeTitle: '',
+      showCods: '',
+      oddsInfo: {} as any,
+      tabs: {
+        list: getOdds(),
+        init: () => {
+          setTimeout(() => {
+            conf.betting.getOdds()
+          }, 600)
+        }
+      },
+      popup: {
+        open: (item: any, type: number) => {
+          item.isActive = !item.isActive
+          lottery.bet.content = [item.oddsCode]
+          conf.betting.showCods = item.name
+          if (type == 1) conf.betting.betTypeArr = [item]
+          if (type == 2) conf.betting.betNumArr = [item]
+
+          conf.layout.ref.open()
+        },
+        close: (e: any) => {
+          conf.betting.tabs.list[0].sizeList.forEach((item) => {
+            item.isActive = false
+          })
+          conf.betting.tabs.list[0].numList.forEach((item) => {
+            item.isActive = false
+          })
+          conf.betting.betTypeArr = []
+          conf.betting.betNumArr = []
+          conf.layout.ref.close()
+        },
+        autoClose: (time: any) => {
+          if (time <= lottery.play.item.openLockCountdown) {
+            conf.betting.popup.close({})
+          } else {
+          }
+        }
+      },
+      oddsArr: [] as any[],
+      //获取赔率
+      getOdds: async () => {
+        let list = await slottery.findLotteryList(conf.gameType)
+        const { data } = await apis.lotteryOdds({
+          lotteryTypeId: list[0].lotteryTypeId,
+          lotteryTypeCode: conf.gameType
+        })
+        const fun = (item: any) => {
+          conf.betting.oddsInfo[item.oddsCode] = Number(item.odds)
+        }
+        data.forEach(fun)
+      }
+    },
+    page: {
+      pageSize: 10,
+      pageNum: 1,
+      total: 9,
+      reset: () => {
+        conf.page.total = 0
+        conf.page.pageNum = 1
+      },
+      change: (val: any) => {
+        conf.page.pageNum = val
+        if (conf.operation.active == 'result' || conf.operation.active == 'chart') conf.his.result.getList()
+        else if (conf.operation.active == 'myOrder') conf.his.order.getList()
+      }
+    },
+    his: {
+      result: {
+        comKey: 0,
+        list: [] as any[],
+        chartList: [] as any[],
+        getList: async () => {
+          const { data: openData } = await apis.lotteryOpenResult({
+            current: conf.page.pageNum,
+            size: conf.page.pageSize,
+            lotteryId: lottery.current.lotteryId
+          })
+          conf.his.result.list = openData.records || []
+          conf.his.result.list?.forEach((item: any) => {
+            item.openNumberStr = conf.loop.toUpperCase(
+              item.openCode.slice(item.openCode.length - 5, item.openCode.length)
+            )
+            let index = conf.loop.findLastDigitIndex(item.openNumberStr)
+            item.openNumber = String(item.openNumberStr.slice(index, index + 1)) || ''
+          })
+          conf.page.total = openData.total
+          conf.his.result.comKey++
+          conf.his.result.chartList = conf.his.result.list.filter((item: any) => {
+            return item.openCode
+          })
+        }
+      },
+      order: {
+        list: [],
+        //获取roder列表
+        getList: async () => {
+          let defaultWalletInfo = await svalue.getDefaultWallet()
+          const { data } = await apis.lotteryUserOrder({
+            current: conf.page.pageNum,
+            size: conf.page.pageSize,
+            lotteryId: lottery.current.lotteryId
+          })
+
+          let coinlistArr = await svalue.getCoinlist() //货币数据
+          data.records?.forEach((item: any) => {
+            item.openNumberStr = item.betOpenCode
+              ? item.betOpenCode.slice(item.betOpenCode.length - 5, item.betOpenCode.length)
+              : ''
+            let index = conf.loop.findLastDigitIndex(item.openNumberStr)
+            item.openNumber = index != -1 ? parseFloat(item.openNumberStr.slice(index, index + 1)) : ''
+
+            let color = conf.betting.tabs.list[0].numList.find((into: any) => into.label == item.openNumber)?.color || ''
+            item.color = color
+            //下注number
+            item.betNumber = item.betCodes.split('_')[1]
+            //下注number对应颜色
+            let betColor = conf.betting.tabs.list[0].numList.find((into: any) => into.label == item.betNumber)?.color || ''
+            item.betColor = betColor
+            let obj = coinlistArr.find((into) => into.coinCode == item.betCoinCode)
+            //默认钱包coinSymbol
+            item.defaultWalletCoinSymbol =
+              defaultWalletInfo.coinSymbol == 'USDT' ? defaultWalletInfo.coinSymbol + ' ' : defaultWalletInfo.coinSymbol
+            item.defaultWalletCoin = defaultWalletInfo.walletCoin
+
+            //下注钱包coinSymbol
+            item.coinSymbol = obj.coinSymbol == 'USDT' ? obj.coinSymbol + ' ' : obj.coinSymbol
+
+            // 下注钱包对应汇率
+            item.coinTousdt = obj?.coinTousdt
+
+            //下注金额汇率转换（eg:默认钱包=CNY，默认币种钱包=INR,下注钱包=USD,将下注金额转换为默认钱包对应金额）
+            let betMoneyResult = sutil.Mul(
+              sutil.division(defaultWalletInfo.coinTousdt, item.coinTousdt, false),
+              item.totalBetAmount
+            )
+            betMoneyResult = sutil.formatNumber(betMoneyResult)
+            let betMoneyResultToFixed4 = sutil.dataHandling(betMoneyResult)
+            item.betMoneyToFixed4 = betMoneyResultToFixed4
+
+            //中奖金额汇率转换
+            let PrizeMoneyResult = null
+            if (parseFloat(item.betPrizeMoney) > 0) {
+              PrizeMoneyResult = sutil.Mul(
+                sutil.division(defaultWalletInfo.coinTousdt, item.coinTousdt, false),
+                item.betPrizeMoney
+              )
+              PrizeMoneyResult = sutil.formatNumber(PrizeMoneyResult)
+            } else {
+              item.betPrizeMoney = 0.0
+              PrizeMoneyResult = 0.0
+            }
+            let PrizeMoneyResultToFixed4 = sutil.dataHandling(PrizeMoneyResult)
+            item.PrizeMoneyToFixed4 = PrizeMoneyResultToFixed4
+          })
+          conf.his.order.list = data.records || []
+          conf.page.total = data.total
+        }
+      }
+    }
+  })
+
+  onMounted(() => {
+    conf.loop.runAni()
+    // 初始化下注区域
+    conf.betting.tabs.init()
+  })
+
+  Scope.setConf({
+    conf,
+    lottery
+  })
+  console.log(lottery)
+
+  return { conf, lottery }
 }
+
+export type dConfInter = ReturnType<typeof index>
