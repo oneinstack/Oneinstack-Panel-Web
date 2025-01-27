@@ -22,6 +22,8 @@ export const index = ({ cgamebox, cgameRef, gameBoxRefs }: any) => {
         conf.page.pageNum = 1
       },
       change: (val: any) => {
+        console.log(val);
+        
         conf.his.getList()
         conf.handleClickOrderPage(true)
       }

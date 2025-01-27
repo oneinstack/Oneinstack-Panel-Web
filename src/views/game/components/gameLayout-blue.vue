@@ -82,10 +82,6 @@ const conf = reactive({
     // 分享注单
     async shareBet(money: any) {
       const obj = props.lottery.bet.getInfo()
-      console.log(obj);
-      console.log(mconf);
-      
-      
       const num = parseFloat(money)
 
       let sobj = {
@@ -107,9 +103,13 @@ const conf = reactive({
         betContent: '',
         betTitle: obj.betExpect
       }
-      sobj.newBetCodes = sobj.newBetCodesArr.map(obj => {
-				return obj.split('_')[1]
-			}).join(",") || ''
+      if (mconf.conf.betting.showCods) {
+        sobj.newBetCodes = mconf.conf.betting.showCods
+      } else {
+        sobj.newBetCodes = sobj.newBetCodesArr.map(obj => {
+          return obj.split('_')[1]
+        }).join(",") || ''
+      }
       sobj.betContent = sobj.newBetCodes
       sobj.newPlayName = sobj.playName
       

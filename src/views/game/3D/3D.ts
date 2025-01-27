@@ -70,7 +70,6 @@ export const index = () => {
       },
       action: (res: any) => {
         conf.loop.autoplay = false
-        conf.loop.openCode
 
         let num1 = parseInt(res[0])
         let num2 = parseInt(res[1])
@@ -148,6 +147,7 @@ export const index = () => {
       type: 0,
       item: {} as any,
       typeTitle: '',
+      showCods: '',
       isWinBet: false,
       money: 0,
       popup: {
@@ -155,6 +155,7 @@ export const index = () => {
           conf.betting.type = e.type
           conf.betting.item = e.info
           lottery.bet.content = [e.info.oddsCode]
+          conf.betting.showCods  = e.info.imgUrl == 0 ? '?' : e.info.imgUrl
           if(e.type == 1) conf.betting.typeTitle = i18n.t('game.sumType')
           else if(e.type == 2) conf.betting.typeTitle = i18n.t('game.sumPoints')
           else if(e.type == 3) conf.betting.typeTitle = i18n.t('game.single')

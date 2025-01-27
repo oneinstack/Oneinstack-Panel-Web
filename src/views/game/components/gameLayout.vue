@@ -13,11 +13,11 @@
       <img src="/static/img/wallet.webp" style="width: 72rem; height: 72rem" />
     </template>
     <slot></slot>
-    <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit" @share="conf.bet.shareBet"
-      :lottery="lottery">
+    <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit"
+      @share="conf.bet.shareBet" :lottery="lottery">
       <slot name="bet"></slot>
     </bet-popup>
-  </x-page>  
+  </x-page>
 </template>
 <script setup lang="ts">
 import { apis } from '@/api'
@@ -50,7 +50,6 @@ const conf = reactive({
       if (money) {
         System.loading()
         const obj = props.lottery.bet.getInfo()
-        console.log(obj);
         obj.money = money
         // money => 单注金额
         // betCodes => 投注内容
@@ -61,6 +60,7 @@ const conf = reactive({
         // nums => 投注数量
         // supplement => 是否追加订单，0否，1是
         // walletCoinCode => 下注钱包币种
+        console.log(obj);
         await apis.lotteryUserBets({
           ...obj,
           success: (res: any) => {
@@ -83,8 +83,8 @@ const conf = reactive({
       const obj = props.lottery.bet.getInfo()
       console.log(obj);
       console.log(mconf);
-      
-      
+
+
       const num = parseFloat(money)
 
       let sobj = {
@@ -106,17 +106,20 @@ const conf = reactive({
         betContent: '',
         betTitle: obj.betExpect
       }
-      sobj.newBetCodes = sobj.newBetCodesArr.map(obj => {
-				return obj.split('_')[1]
-			}).join(",") || ''
+      if (mconf.conf.betting.showCods) {
+        sobj.newBetCodes = mconf.conf.betting.showCods
+      } else {
+        sobj.newBetCodes = sobj.newBetCodesArr.map(obj => {
+          return obj.split('_')[1]
+        }).join(",") || ''
+      }
       sobj.betContent = sobj.newBetCodes
       sobj.newPlayName = sobj.playName
-      console.log(mconf.conf.betting.typeTitle);
-      
-      if(mconf.conf.betting.typeTitle) sobj.newPlayName = sobj.newPlayName + ' - ' + mconf.conf.betting.typeTitle
+
+      if (mconf.conf.betting.typeTitle) sobj.newPlayName = sobj.newPlayName + ' - ' + mconf.conf.betting.typeTitle
       console.log(sobj);
       Cookie.set('betRecord', JSON.stringify(sobj))
-		  await sconfig.toChat('/chat/betRecordForward')
+      await sconfig.toChat('/chat/betRecordForward')
     }
   }
 })

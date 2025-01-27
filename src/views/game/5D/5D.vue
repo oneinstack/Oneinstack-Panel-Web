@@ -1,154 +1,259 @@
 <template>
-	<gameBox ref="gameBoxRefs" :list="conf.play.list" :active="conf.play.active"
-		:betShare="conf.countdownDialogTime <= 20" @change="conf.play.choose" @close="conf.bet.closeFun"
-		:selectBetInfo="conf.selectBetInfoArr" :gameType="'5D'" :currentOpenInfo="conf.currentOpenInfo"
-		:openLockCountdown="conf.openLockCountdown">
-		<!-- 下注弹框自定义显示列表 -->
-		<template v-slot:bet>
-			<div class="row items-center">
-				<div class="select-bet-type">{{ conf.selectBetType }}</div>
-				<template v-for="item in conf.betTypeArr" :key="item">
-					<div class="bet-type flex-center" :class="[`num_${item}`]">{{ item }}</div>
-				</template>
-				<template v-for="(item, itemIndex) in conf.selectBetInfoArr" :key="itemIndex">
-					<div class="flex-center-num" v-if="item.type == 'num'">
-						<img src="/static/img/poinits.webp" />
-						<span>{{ item.number }}</span>
+	<GameLayout title="5D" :code="conf.gameType" :lottery="lottery" :ref="conf.layout.setRef"
+		@reset="conf.betting.popup.close">
+		<div>
+			<div class="tip">
+				<img class="tip-icon" src="/static/img/Frame.png" />
+				<div style="width: 100%;overflow: hidden;">
+					<div class="tip-content">
+						<span>{{ $t('winGo.BettingCloseTip1') + lottery.play.item.openLockCountdown +
+							$t('winGo.BettingCloseTip2') }}</span>
 					</div>
-					<div class="bet-number flex-center" :class="['num_' + item.color]" v-else>{{ item.number }}
+				</div>
+			</div>
+		</div>
+		<div class="row play-item-box">
+			<div style="overflow-y: scroll;">
+				<div class="tabs-list">
+					<template v-for="item in lottery.play.list" :key="item.id">
+						<div class="tab-item" :class="{ 'tab-active': item.id === lottery.play.item.id }"
+							@click="lottery.play.change(`/game/${conf.gameType}/${conf.gameType}`, item)">
+							<div class="item-content">
+								<div class="icon"></div>
+								<span>{{ item.label }}</span>
+							</div>
+						</div>
+					</template>
+				</div>
+			</div>
+		</div>
+		<div style="padding: 20rem;">
+			<!-- 开奖结果 -->
+			<div class="game-result">
+				<div class="result-top">
+					<div class="txt-grey">{{ $t('game.resultBig') }}</div>
+					<div class="round-num" v-for="(item, index) in conf.loop.openCode.numArr" :key="index">
+						<div class="fade-item">
+							<img src="/static/img/poinits.webp" class="point-img" />
+							<span>{{ item.value }}</span>
+						</div>
+						<div class="word-index">{{ item.key }}</div>
+					</div>
+					<div>=</div>
+					<div class="round-num">
+						<div class="fade-item fage-active"
+							:class="conf.loop.openCode.sum > 22 ? 'num_blue' : 'num_yellow'">
+							{{ conf.loop.openCode.sum }}
+						</div>
+					</div>
+				</div>
+				<!-- 开奖倒计时 -->
+				<div class="result-number">
+					<div class="txt-grey flex-bw">
+						<span>{{ $t('game.drawID') }}</span>
+						<span>{{ $t('winGo.TimeRemaining') }}</span>
+					</div>
+					<div class="flex-bw num-time">
+						<div class="number">{{ lottery.issue }}</div>
+						<div class="down-time">
+							<div class="time-item flex-center red-bg">{{ lottery.countDown[1][0] }}</div>
+							<div class="time-item flex-center red-bg">{{ lottery.countDown[1][1] }}</div>
+							<div class="division">:</div>
+							<div class="time-item flex-center red-bg">{{ lottery.countDown[2][0] }}</div>
+							<div class="time-item flex-center red-bg">{{ lottery.countDown[2][1] }}</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="bet-select-box">
+				<!-- 下注类型 -->
+				<div class="bet-type-list">
+					<template v-for="(item, index) in conf.betting.tabs.list" :key="index">
+						<div class="d5-bet-type flex-center"
+							:class="{ 'type-active': item.name === conf.betting.tabs.item.name }"
+							@click="conf.betting.tabs.change(item)">{{ item.name }}</div>
+					</template>
+				</div>
+				<!-- 下注按钮 -->
+				<div class="d5-bet-content">
+					<div class="flex-bw">
+						<template v-for="item in conf.betting.tabs.item.sizeList" :key="item.oddsCode">
+							<div class="bet-type-btn flex-bw"
+								:class="['num_' + item.color, item.isActive ? 'active' : '']"
+								@click="conf.betting.popup.open(item, 1)">
+								<span>{{ item.name }}</span>
+								<span>{{ conf.betting.oddsInfo[item.oddsCode] || 0 }}</span>
+							</div>
+						</template>
+					</div>
+					<!-- 下注数字 -->
+					<div class="d5-bet-num" v-show="conf.betting.tabs.item.numList">
+						<template v-for="item in conf.betting.tabs.item.numList" :key="item.oddsCode">
+							<div class="bet-num-item" :class="{ 'active_number': item.isActive }"
+								@click="conf.betting.popup.open(item, 2)">
+								<div class="num-box flex-center">
+									<img src="/static/img/poinits.webp" />
+									<span>{{ item.name }}</span>
+								</div>
+								<div class="onum-dds">{{ conf.betting.oddsInfo[item.oddsCode] || 0 }}</div>
+							</div>
+						</template>
+					</div>
+				</div>
+				<div class="big-time" v-if="lottery.countDown[3] <= lottery.play.item.openLockCountdown">
+					<div class="big-down-time">
+						<div class="big-time-item flex-center red-bg">{{ lottery.countDown[2][0] }}</div>
+						<div class="big-time-item flex-center red-bg">{{ lottery.countDown[2][1] }}</div>
+					</div>
+				</div>
+			</div>
+			<!-- 历史结果记录 -->
+			<div class="d5-list">
+				<!-- 功能控制 -->
+				<div class="d5-list-type flex-bw" v-scroll>
+					<template v-for="item in conf.operation.list" :key="item.value">
+						<div class="type-item flex-center"
+							:class="{ 'type-active': item.value === conf.operation.active }"
+							@click="conf.operation.change(item)">
+							{{ item.label }}
+						</div>
+					</template>
+				</div>
+				<result v-if="conf.operation.active === 'result'" :resultList="conf.his.result.list"></result>
+				<chat v-else-if="conf.operation.active === 'chart'" :key="conf.his.result.comKey"
+					:chartDataList="conf.his.result.chartList">
+				</chat>
+				<order v-if="conf.operation.active === 'myOrder'" :orderDataList="conf.his.order.list"></order>
+				<rule ref="orderRefs" v-if="conf.operation.active === 'rule'"
+					:list="lottery.play.item.lotteryRuleurl" />
+			</div>
+			<!-- 分页工具 -->
+			<cpage :pageSize="conf.page.pageSize" :pageNum.sync="conf.page.pageNum" :total="conf.page.total"
+				@change="conf.page.change" v-if="conf.page.total > conf.page.pageSize"
+				style="margin-bottom: 150rem; margin-top: 30rem" />
+		</div>
+		<!-- 下注弹窗内容 -->
+		<template #bet>
+			<div class="row items-center">
+				<div class="select-bet-type">{{ conf.betting.tabs.item.name }}</div>
+				<template v-for="item in conf.betting.betTypeArr" :key="item">
+					<div class="bet-type flex-center" :class="[`num_${item.color}`]">{{ item.name }}</div>
+				</template>
+				<template v-for="(item, itemIndex) in conf.betting.betNumArr" :key="itemIndex">
+					<div class="flex-center-num">
+						<img src="/static/img/poinits.webp" />
+						<span>{{ item.name }}</span>
 					</div>
 				</template>
 			</div>
 		</template>
-		<!-- 开奖结果 -->
-		<div class="game-result">
-			<div class="result-top">
-				<div class="txt-grey">{{ $t('game.resultBig') }}</div>
-				<div class="round-num" v-for="(item, index) in conf.resultInfoObj.numArr">
-					<div class="fade-item">
-						<img src="/static/img/poinits.webp" class="point-img" />
-						<!-- 已开奖 -->
-						<span v-if="!conf.isNoOpenCode">{{ item.value }}</span>
-						<!-- 未开奖 -->
-						<span v-else>{{ conf.openCodeAllData[conf.scollIndex + index] || index }}</span>
-					</div>
-					<div class="word-index">{{ item.key }}</div>
-				</div>
-				<div>=</div>
-				<div class="round-num">
-					<!-- 已开奖 -->
-					<div class="fade-item fage-active" :class="conf.resultInfoObj.sum > 22 ? 'num_blue' : 'num_yellow'"
-						v-if="!conf.isNoOpenCode">
-						{{ conf.resultInfoObj.sum }}</div>
-					<!-- 未开奖 -->
-					<div class="fade-item fage-active" :class="conf.resultInfoObj.sum > 22 ? 'num_blue' : 'num_yellow'"
-						v-else>
-						{{ conf.scollSum }}</div>
-				</div>
-			</div>
-			<!-- 开奖倒计时 -->
-			<div class="result-number">
-				<div class="txt-grey flex-bw">
-					<span>{{ $t('game.drawID') }}</span>
-					<span>{{ $t('winGo.TimeRemaining') }}</span>
-				</div>
-				<div class="flex-bw num-time">
-					<div class="number">{{ conf.currentOpenInfo.openExpect }}</div>
-					<div class="down-time">
-						<div class="time-item flex-center red-bg">{{ conf.minutes[0] }}</div>
-						<div class="time-item flex-center red-bg">{{ conf.minutes[1] }}</div>
-						<div class="division">:</div>
-						<div class="time-item flex-center red-bg">{{ conf.second[0] }}</div>
-						<div class="time-item flex-center red-bg">{{ conf.second[1] }}</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="bet-select-box">
-			<!-- 下注类型 -->
-			<div class="bet-type-list">
-				<template v-for="(item, index) in conf.selectBetList" :key="index">
-					<div class="d5-bet-type flex-center" :class="{ 'type-active': item == conf.selectBetType }"
-						@click="conf.handleSelectBetType(item, index)">{{ item }}</div>
-				</template>
-			</div>
-			<!-- 下注按钮 -->
-			<div class="d5-bet-content">
-				<div class="flex-bw">
-					<template v-for="(item, index) in conf.betTypeOdds" :key="item.name">
-						<div class="bet-type-btn flex-bw" :class="['num_' + item.color]"
-							@click="conf.handleSelectBet(item)">
-							<span>{{ item.number }}</span>
-							<span>{{ item.odds }}</span>
-						</div>
-					</template>
-				</div>
-				<!-- 下注数字 -->
-				<div class="d5-bet-num">
-					<template v-for="(item, itemIndex) in conf.betNumberOdds" :key="itemIndex">
-						<div class="bet-num-item" v-if="conf.selectBetType != 'SUM'"
-							:class="{ 'active_number': conf.betNumArr.includes(item.number) }">
-							<div class="num-box flex-center" @click="conf.handleSelectBet(item)">
-								<img src="/static/img/poinits.webp" />
-								<span>{{ item.number }}</span>
-							</div>
-							<div class="onum-dds">{{ item.odds }}</div>
-						</div>
-					</template>
-				</div>
-			</div>
-			<div class="big-time" v-if="conf.bigDownShow && conf.countdownDialogTime <= conf.openLockCountdown">
-				<div class="big-down-time">
-					<div class="big-time-item flex-center red-bg">{{ conf.second[0] }}</div>
-					<div class="big-time-item flex-center red-bg">{{ conf.second[1] }}</div>
-				</div>
-			</div>
-		</div>
-		<!-- 历史结果记录 -->
-		<div class="d5-list">
-			<div class="d5-list-type flex-bw">
-				<div class="type-item flex-center" :class="{ 'type-active': conf.tabType == 1 }"
-					@click="conf.handleSelctTabChange(1, null)">{{ $t('game.resultHistory') }}</div>
-				<div class="type-item flex-center" :class="{ 'type-active': conf.tabType == 2 }"
-					@click="conf.handleSelctTabChange(2, null)">{{ $t('winGo.Chart') }}</div>
-				<div class="type-item flex-center" :class="{ 'type-active': conf.tabType == 4 }"
-					@click="conf.handleSelctTabChange(4, null)">{{ $t('game.rule') }}</div>
-				<div class="type-item flex-center" :class="{ 'type-active': conf.tabType == 3 }"
-					@click="conf.handleSelctTabChange(3, null)">{{ $t('game.myOrder') }}</div>
-			</div>
-			<result v-if="conf.tabType == 1" :resultList="conf.resultList"></result>
-			<chat v-else-if="conf.tabType == 2" :key="conf.comKey" :chartDataList="conf.chartDataList"
-				:selectBetIndex="conf.selectBetIndex">
-			</chat>
-			<order v-if="conf.tabType == 3" :orderDataList="conf.orderDataList" :isClickPage="conf.isClickPage"
-				@handleClickOrderPage="conf.handleClickOrderPage"></order>
-			<rule v-if="conf.tabType == 4" :list="conf.lotteryRuleurl"></rule>
-		</div>
-		<!-- 分页工具 -->
-		<cpage :pageInfo="conf.pageObj" style="margin-top: 30rem"
-			v-if="(conf.tabType == 1 || (conf.tabType == 2 && conf.selectBetIndex != 5)) ? conf.resultList.length > 0 : conf.tabType == 3 ? conf.orderDataList.length > 0 : ''"
-			@handlePageChange="conf.handlePageChange" />
-
-		<game-loading v-if="conf.loading" />
-	</gameBox>
+	</GameLayout>
 </template>
 <script setup lang="ts">
-import gameBox from '../components/gameBox.vue'
+import GameLayout from '../components/gameLayout.vue'
 import gameLoading from "../components/gameLoading.vue"
-import cpage from '../components/gamePage.vue'
+import cpage from '../components/cpage.vue'
 import rule from "../components/gameRule.vue"
-import result from './result.vue'
-import chat from './chat.vue'
-import order from './order.vue'
+import result from './com/result.vue'
+import chat from './com/chat.vue'
+import order from './com/order.vue'
 import { index } from './5D'
-import { ref } from 'vue'
 
-const gameBoxRefs = ref<any>()
-
-const conf = index({ gameBoxRefs })
+const { conf, lottery } = index()
 </script>
 
 <style lang="less" scoped>
+.tip {
+	display: flex;
+	align-items: center;
+	padding: 0rem 24rem;
+	height: 80rem;
+	background: #FFF9ED;
+
+	.tip-icon {
+		width: 32rem;
+		height: 32rem;
+		margin-right: 16rem;
+		flex-shrink: 0;
+	}
+
+	.tip-content {
+		font-size: 26rem;
+		color: #45454d;
+		font-weight: 500;
+		display: inline-block;
+		white-space: nowrap;
+		animation: u-loop-animation 20s linear infinite both;
+		text-align: right;
+		// 这一句很重要，为了能让滚动左右连接起来
+		padding-left: 100%;
+		flex-wrap: nowrap;
+	}
+
+	@keyframes u-loop-animation {
+		0% {
+			transform: translate3d(0, 0, 0);
+		}
+
+		100% {
+			transform: translate3d(-100%, 0, 0);
+		}
+	}
+}
+
+.play-item-box {
+	background-color: #fff;
+	border-radius: 36rem;
+	margin: 20rem 20rem 0;
+}
+
+.colum,
+.flex,
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.tabs-list {
+	display: flex;
+	align-items: flex-end;
+
+	.tab-item {
+		border-radius: 36rem;
+		height: 180rem;
+		padding: 0rem 24rem;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 25%;
+		color: #959ba8;
+
+		.item-content {
+			display: flex;
+			align-items: center;
+			font-size: 24rem;
+
+			.icon {
+				width: 58rem;
+				height: 58rem;
+				background: url(/static/img/game/time_nor.png) no-repeat;
+				background-size: 100%;
+			}
+		}
+
+		&.tab-active {
+			border: 2rem solid #F88c43;
+			background: linear-gradient(180deg, #FFA64F 0%, #fff 90.5%);
+			color: #F88c43 !important;
+
+			.icon {
+				background: url(/static/img/game/time_cur.png) no-repeat;
+				background-size: 100%;
+			}
+		}
+	}
+}
+
 .select-bet-type {
 	margin: 0 12rem 0 8rem;
 	color: #0074ff;
@@ -469,6 +574,12 @@ const conf = index({ gameBoxRefs })
 	color: #fff;
 	padding: 0 14rem;
 	cursor: pointer;
+
+	&.active {
+		color: #ffffff;
+		background: -webkit-linear-gradient(left, #F6843F, #FEA14D);
+		background: linear-gradient(90deg, #F6843F, #FEA14D);
+	}
 }
 
 .num_Big {
@@ -528,8 +639,8 @@ const conf = index({ gameBoxRefs })
 
 			&.active {
 				color: #ffffff;
-				background: -webkit-linear-gradient(left, #F6843F, #FEA14D);
-				background: linear-gradient(90deg, #F6843F, #FEA14D);
+				border: 2rem solid #F88c43;
+				background: #FEC74810;
 			}
 		}
 
