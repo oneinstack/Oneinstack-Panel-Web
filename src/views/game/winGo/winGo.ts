@@ -61,8 +61,6 @@ export const index = () => {
         }, 100)
       },
       action: (res: any) => {
-        console.log(res)
-
         conf.loop.autoplay = false
         const val = res[0]
         let openCode = conf.loop.toUpperCase(val.slice(val.length - 5, val.length))
@@ -296,7 +294,6 @@ export const index = () => {
     conf,
     lottery
   })
-  console.log(lottery)
 
   return { conf, lottery }
 }

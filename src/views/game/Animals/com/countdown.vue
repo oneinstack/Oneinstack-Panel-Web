@@ -6,7 +6,7 @@
                     <div class="time-box">
                         <div class="result">{{ openExpect }}</div>
                         <div class="time">
-                            {{ times[1] || '00' }}<span style="margin: 5rem;">:</span>{{ times[2] || '00' }}
+                            {{ times[1] || '00' }}<span style="margin-left: 12rem;">:</span>{{ times[2] || '00' }}
                         </div>
                     </div>
                 </div>
@@ -90,7 +90,7 @@ const emit = defineEmits(['showMore'])
                 display: inline-block;
                 text-align: center;
                 color: #fff;
-                font-size: 42rem;
+                font-size: 44rem;
                 font-weight: 800;
                 padding: 16rem 0rem;
                 border-radius: 16rem;

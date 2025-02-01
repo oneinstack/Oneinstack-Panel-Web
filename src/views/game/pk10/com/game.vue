@@ -341,7 +341,6 @@ import { Scope } from 'tools-vue3';
 import { stween } from '@/sstore/stween';
 import cview from './cview.vue'
 import { onMounted, reactive, watch } from 'vue';
-import { log } from 'util';
 
 const props = defineProps({
   issue: {

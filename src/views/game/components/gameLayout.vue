@@ -90,7 +90,7 @@ const conf = reactive({
           ...obj,
           success: (res: any) => {
             props.lottery.wallet.getWalletMoney()
-            // System.toast(i18n.t('game.betSuccess'),'success')
+            System.toast(i18n.t('game.betSuccess'),'success')
             emit('reset', obj)
           },
           final: async () => {
@@ -143,8 +143,8 @@ const conf = reactive({
 
       if (mconf.conf.betting.typeTitle) sobj.newPlayName = sobj.newPlayName + ' - ' + mconf.conf.betting.typeTitle
       console.log(sobj);
-      // Cookie.set('betRecord', JSON.stringify(sobj))
-      // await sconfig.toChat('/chat/betRecordForward')
+      Cookie.set('betRecord', JSON.stringify(sobj))
+      await sconfig.toChat('/chat/betRecordForward')
     }
   }
 })

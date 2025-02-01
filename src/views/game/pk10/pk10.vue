@@ -1,173 +1,189 @@
 <template>
-  <gameBox
-    ref="gameBoxRefs"
-    :list="conf.play.list"
-    :active="conf.play.active"
-    :betShare="conf.lotteryBox.countDown[3] <= 20"
-    @change="conf.play.reloadTo"
-    @close="conf.bet.closeFun"
-    :selectBetInfo="conf.selectBetInfoArr"
-    :currentOpenInfo="conf.lotteryBox.current"
-    :gameType="'pk10'"
-    :openLockCountdown="conf.openLockCountdown"
-  >
-    <!-- 下注弹框自定义显示列表 -->
-    <template v-slot:bet>
+  <GameLayout :showTips="true" title="PK10" :code="conf.gameType" :lottery="lottery" :ref="conf.layout.setRef"
+    @reset="conf.betting.popup.close">
+    <div class="row play-item-box">
+      <div style="overflow-y: scroll;">
+        <div class="tabs-list">
+          <template v-for="item in lottery.play.list" :key="item.id">
+            <div class="tab-item" :class="{ 'tab-active': item.id === lottery.play.item.id }"
+              @click="lottery.play.change(`/game/${conf.gameType}/${conf.gameType}`, item)">
+              <div class="item-content">
+                <div class="icon"></div>
+                <span>{{ item.label }}</span>
+              </div>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <div style="padding: 20rem;">
+      <!-- 期数信息、倒计时 -->
+      <div class="time-box" style="margin: 6rem 0 30rem 0">
+        <div class="row justify-between">
+          <div>
+            <div class="text">{{ $t('game.drawID') }}</div>
+            <div class="number">{{ lottery.issue }}</div>
+          </div>
+          <div class="column items-end">
+            <div style="margin-bottom: 14rem">
+              {{ $t('winGo.TimeRemaining') }}
+            </div>
+            <ctime :times="[lottery.countDown[0], lottery.countDown[1], lottery.countDown[2]]" />
+          </div>
+        </div>
+      </div>
+      <!-- 游戏 -->
+      <div class="relative cgame-box" ref="cgamebox"
+        style="width: 100%; height: 398rem; overflow: hidden; margin: 0 auto; margin-bottom: 30rem"
+        :style="{ 'height': conf.game.box.height + 'px' }">
+        <cgame ref="cgameRef" :title="lottery.play.item.label" :issue="lottery.lastissue"
+          :width="conf.game.box.width" />
+      </div>
+      <!-- 下注选项 -->
+      <div class="bet-box column fit-width relative" style="padding: 40rem 24rem 30rem 24rem">
+        <div class="row" style="gap: 40rem">
+          <template v-for="item in conf.betting.tabs.list">
+            <div class="pl-tabs-item col" :class="{ 'active': item.name === conf.betting.tabs.item.name }"
+              @click="conf.betting.tabs.change(item)">
+              {{ item.name }}
+            </div>
+          </template>
+        </div>
+
+        <div class="game-line" style="margin: 30rem 0"></div>
+        <div class="row" style="gap: 8rem">
+          <template v-for="item in conf.betting.tabs.item.numList" :key="item.oddsCode">
+            <div class="column flex-center ball-box" :class="{ 'active': item.isActive }" style="width: 19%"
+              @click="conf.betting.popup.open(item, 2)">
+              <div class="ball" :class="['qkball' + item.name]"></div>
+              <div style="line-height: 50rem">
+                {{ conf.betting.oddsInfo[item.oddsCode] || 0 }}
+              </div>
+            </div>
+          </template>
+        </div>
+        <div class="row" style="gap: 6rem; margin-top: 10rem">
+          <template v-for="item in conf.betting.tabs.item.sizeList" :key="item.oddsCode">
+            <div class="col bsitem-box" :class="{ 'active': item.isActive }" @click="conf.betting.popup.open(item, 1)">
+              <div class="bsitem row justify-between items-center" :class="['num_' + item.color]">
+                <div>{{ item.name }}</div>
+                <div>{{ conf.betting.oddsInfo[item.oddsCode] || 0 }}</div>
+              </div>
+            </div>
+          </template>
+        </div>
+        <!-- 倒计时5秒弹窗 -->
+        <big-time :seconds="lottery.countDown[2]"
+          v-if="lottery.countDown[3] <= lottery.play.item.openLockCountdown"></big-time>
+      </div>
+      <!-- 历史记录 -->
+      <div class="twgo-list">
+        <div class="twgo-list-type flex justify-between items-center">
+          <div class="type-item flex flex-center" v-for="item in conf.operation.list" :key="item.value"
+            :class="{ 'type-active': item.value === conf.operation.active }" @click="conf.operation.change(item)">
+            {{ item.label }}
+          </div>
+        </div>
+        <history v-if="conf.operation.active === 'result'" :historyList="conf.his.result.list" />
+        <order v-if="conf.operation.active === 'myOrder'" :orderDataList="conf.his.order.list"></order>
+        <template v-if="conf.operation.active === 'rule'">
+          <div style="padding: 20rem 48rem" v-html="lottery.play.item.lotteryRuleurl"></div>
+        </template>
+      </div>
+      <!-- 分页工具 -->
+      <cpage :pageSize="conf.page.pageSize" :pageNum.sync="conf.page.pageNum" :total="conf.page.total"
+        @change="conf.page.change" v-if="conf.page.total > conf.page.pageSize"
+        style="margin-bottom: 150rem; margin-top: 30rem" />
+    </div>
+    <!-- 下注弹窗内容 -->
+    <template #bet>
       <div class="row items-center">
         <div class="select-info-name" style="margin-right: 10rem">
-          {{ conf.bet.tabs.active }}
+          {{ conf.betting.tabs.item.name }}
         </div>
         <div class="col row items-center">
-          <template v-for="item in conf.bet.listNum">
-            <div :class="['qkball' + item.sort]" style="height: 58rem; width: 58rem"></div>
+          <template v-for="item in conf.betting.betNumArr" :key="item.oddsCode">
+            <div :class="['qkball' + item.name]" style="height: 58rem; width: 58rem"></div>
           </template>
-          <template v-for="item in conf.bet.listBS">
+          <template v-for="item in conf.betting.betTypeArr" :key="item.oddsCode">
             <div class="row flex-center ct-bs" :class="['num_' + item.color]">
-              <div>{{ item.label }}</div>
+              <div>{{ item.name }}</div>
             </div>
           </template>
         </div>
       </div>
     </template>
-
-    <!-- 期数信息、倒计时 -->
-    <div class="time-box" style="margin: 6rem 0 30rem 0">
-      <div class="row justify-between">
-        <div>
-          <div class="text">{{ $t('game.drawID') }}</div>
-          <div class="number">{{ conf.lotteryBox.issue }}</div>
-        </div>
-        <div class="column items-end">
-          <div style="margin-bottom: 14rem">
-            {{ $t('winGo.TimeRemaining') }}
-          </div>
-          <ctime :times="conf.lotteryBox.countDown" />
-        </div>
-      </div>
-    </div>
-
-    <!-- 游戏 -->
-    <div
-      class="relative cgame-box"
-      ref="cgamebox"
-      style="width: 100%; height: 398rem; overflow: hidden; margin: 0 auto; margin-bottom: 30rem"
-      :style="{ 'height': conf.game.box.height + 'px' }"
-    >
-      <cgame
-        ref="cgameRef"
-        :title="conf.play.item.title"
-        :issue="conf.lotteryBox.lastissue"
-        :width="conf.game.box.width"
-      />
-    </div>
-
-    <!-- 下注选项 -->
-    <div class="bet-box column fit-width relative" style="padding: 40rem 24rem 30rem 24rem">
-      <div class="row" style="gap: 40rem">
-        <template v-for="item in conf.bet.tabs.options">
-          <div
-            class="pl-tabs-item col"
-            :class="[conf.bet.tabs.active == item.key ? 'active' : '']"
-            @click="conf.bet.tabs.choose(item)"
-          >
-            {{ item.label }}
-          </div>
-        </template>
-      </div>
-
-      <div class="game-line" style="margin: 30rem 0"></div>
-      <div class="row" style="gap: 8rem">
-        <template v-for="item in conf.bet.listNumArr">
-          <div
-            class="column flex-center ball-box"
-            :class="[conf.bet.listNum.find((v: any) => v.key == item.key) ? 'active' : '']"
-            style="width: 19%"
-            @click="conf.bet.choose(item, 'listNum')"
-          >
-            <div class="ball" :class="['qkball' + item.sort]"></div>
-            <div style="line-height: 50rem">
-              {{ item[conf.bet.tabs.active + 'odds'] }}
-            </div>
-          </div>
-        </template>
-      </div>
-      <div class="row" style="gap: 6rem; margin-top: 10rem">
-        <template v-for="item in conf.bet.listBSArr">
-          <div
-            class="col bsitem-box"
-            :class="[conf.bet.listBS.find((v: any) => v.key == item.key) ? 'active' : '']"
-            @click="conf.bet.choose(item, 'listBS')"
-          >
-            <div class="bsitem row justify-between items-center" :class="['num_' + item.color]">
-              <div>{{ item.label }}</div>
-              <div>{{ item[conf.bet.tabs.active + 'odds'] }}</div>
-            </div>
-          </div>
-        </template>
-      </div>
-      <!-- 倒计时5秒弹窗 -->
-      <big-time
-        :seconds="conf.lotteryBox.countDown[2]"
-        v-if="conf.lotteryBox.countDown[3] <= conf.openLockCountdown"
-      ></big-time>
-    </div>
-
-    <!-- 历史记录 -->
-    <div class="twgo-list">
-      <div class="twgo-list-type flex justify-between items-center">
-        <div
-          class="type-item flex flex-center"
-          v-for="(item, index) in conf.his.tabs.options"
-          :class="{ 'type-active': conf.his.tabs.active == item.value }"
-          @click="conf.his.tabs.choose(item)"
-        >
-          {{ item.label }}
-        </div>
-      </div>
-      <history v-if="conf.his.tabs.active == 1" ref="historyRfes" :historyList="conf.his.result.list" />
-      <order
-        v-if="conf.his.tabs.active == 3"
-        :orderDataList="conf.his.order.list"
-        :isClickPage="conf.isClickPage"
-        @handleClickOrderPage="conf.handleClickOrderPage"
-      ></order>
-      <template v-if="conf.his.tabs.active == 4">
-        <div style="padding: 20rem 48rem" v-html="conf.play.item.lotteryRuleurl"></div>
-      </template>
-    </div>
-
-    <!-- 分页工具 -->
-    <cpage
-      :pageSize="conf.page.pageSize"
-      :pageNum.sync="conf.page.pageNum"
-      :total="conf.page.total"
-      @change="conf.page.change"
-      v-if="conf.page.total > conf.page.pageSize"
-      style="margin-bottom: 150rem; margin-top: 30rem"
-    />
     <!-- 加载动画 -->
     <game-loading v-if="conf.loading" />
-  </gameBox>
+  </GameLayout>
 </template>
 <script setup lang="ts">
-import gameBox from '../components/gameBox.vue'
-import cpage from './cpage.vue'
+import GameLayout from '../components/gameLayout.vue'
+import cpage from '../components/cpage.vue'
 import gameLoading from '../components/gameLoading.vue'
 import ctime from '../components/downTime.vue'
-import cgame from './game.vue'
+import cgame from './com/game.vue'
 import bigTime from '../components/bigTime.vue'
-import history from './gameHistory.vue'
-import order from './order.vue'
+import history from './com/gameHistory.vue'
+import order from './com/order.vue'
 import { index } from './pk10'
-import { ref } from 'vue'
 
-const cgamebox = ref<any>()
-const cgameRef = ref<any>()
-const gameBoxRefs = ref<any>()
-const conf = index({ cgamebox, cgameRef, gameBoxRefs })
+  const { conf, lottery, cgamebox, cgameRef, gameBoxRefs } = index()
 </script>
 
 <style lang="less" scoped>
+.play-item-box {
+	background-color: #fff;
+	border-radius: 36rem;
+	margin: 20rem 20rem 0;
+}
+
+.colum,
+.flex,
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.tabs-list {
+	display: flex;
+	align-items: flex-end;
+
+	.tab-item {
+		border-radius: 36rem;
+		height: 180rem;
+		padding: 0rem 24rem;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		width: 25%;
+		color: #959ba8;
+
+		.item-content {
+			display: flex;
+			align-items: center;
+			font-size: 24rem;
+
+			.icon {
+				width: 58rem;
+				height: 58rem;
+				background: url(/static/img/game/time_nor.png) no-repeat;
+				background-size: 100%;
+			}
+		}
+
+		&.tab-active {
+			border: 2rem solid #F88c43;
+			background: linear-gradient(180deg, #FFA64F 0%, #fff 90.5%);
+			color: #F88c43 !important;
+
+			.icon {
+				background: url(/static/img/game/time_cur.png) no-repeat;
+				background-size: 100%;
+			}
+		}
+	}
+}
 //自定义下注列表样式
 .select-info-name {
   color: #0074ff;
