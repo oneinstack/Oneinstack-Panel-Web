@@ -1,90 +1,45 @@
 <template>
-  <x-page
-    :noFooter="true"
-    :fixed="false"
-    ref="colorRefs"
-    :bgcolor="conf.categoryIndex == 1 ? '#A6B4BD' : '#f5f5fa'"
-    :header-bg-color="stheme.theme.blue.headerBgColor()"
-  >
-    <template #title>
-      <div v-if="conf.tabIndex / 1000 / 60 >= 1">
-        {{ $t('game.color') }}-{{ conf.tabIndex / 1000 / 60 || '' }}
-        {{ conf.tabIndex / 1000 / 60 > 1 ? $t('game.minutes') : $t('game.minute') }}
+  <GameLayout :showTips="true" title="Color" :code="conf.gameType" :lottery="lottery" :ref="conf.layout.setRef"
+    @reset="conf.betting.popup.close">
+    <div class="game">
+      <div class="game-title">
+        <div class="minute">{{ lottery.play.item.timeType }} {{ lottery.play.item.timeName }}</div>
+        <div class="result">{{ lottery.lastissue }} {{ $t('game.result') }}:</div>
       </div>
-      <div v-else>{{ $t('game.color') }}-{{ conf.tabIndex / 1000 || '' }} {{ $t('game.second') }}</div>
-    </template>
-    <template #right>
-      <div class="right-content">
-        <div class="right-text">{{ $t('wallet.balance') }}</div>
-        <div class="right-icon">{{ conf.walletMoney }}</div>
-      </div>
-      <img class="wallet-img" src="/static/img/wallet.webp" />
-    </template>
-    <template #top>
-      <div class="tip">
-        <img class="tip-icon" src="/static/img/Frame.png" />
-        <div style="width: 100%; overflow: hidden">
-          <div class="tip-content">
-            <span>{{ $t('game.colorTips') }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="game">
-        <div class="game-title">
-          <div class="minute" v-if="conf.tabIndex / 1000 / 60 >= 1">
-            {{ conf.tabIndex / 1000 / 60 }}
-            {{ conf.tabIndex / 1000 / 60 > 1 ? $t('game.minutes') : $t('game.minute') }}
-          </div>
-          <div class="minute" v-else>{{ conf.tabIndex / 1000 }} {{ $t('game.second') }}1</div>
-          <div class="result">{{ conf.lastOpen.openExpect }} {{ $t('game.result') }}:</div>
-        </div>
-        <div class="game-banner">
-          <game-loop :swipeList="conf.bannerList" :target-swipe="conf.colorNum" :autoplay="conf.autoplay">
-            <template v-slot="{ item }">
-              <div class="swiper">
-                <div class="banner-item">
-                  <img class="img" :src="item.src" />
-                  <div class="num">{{ item.num }}</div>
-                </div>
+      <div class="game-banner">
+        <game-loop :swipeList="conf.loop.bannerList" :target-swipe="conf.loop.openCode[0]"
+          :autoplay="conf.loop.autoplay">
+          <template v-slot="{ item }">
+            <div class="swiper">
+              <div class="banner-item">
+                <img class="img" :src="item.src" />
+                <div class="num">{{ item.num }}</div>
               </div>
-            </template>
-          </game-loop>
-        </div>
+            </div>
+          </template>
+        </game-loop>
       </div>
-      <div class="category" :class="{ 'betCategory': conf.categoryIndex == 1 }">
-        <div @click="conf.categoryIndex = 1">
-          <span :class="{ 'category-active': conf.categoryIndex == 1 }">{{ $t('game.betting') }}</span>
-        </div>
-        <div @click="conf.categoryIndex = 2">
-          <span :class="{ 'category-active': conf.categoryIndex == 2 }">{{ $t('game.rule') }}</span>
-        </div>
-        <div @click="conf.categoryIndex = 3">
-          <span :class="{ 'category-active': conf.categoryIndex == 3 }">{{ $t('game.resultHistory') }}</span>
-        </div>
-        <div @click="conf.categoryIndex = 4">
-          <span :class="{ 'category-active': conf.categoryIndex == 4 }">{{ $t('game.myOrder') }}</span>
-        </div>
+    </div>
+    <!-- 功能控制 -->
+    <div class="category" v-scroll :class="{ 'betCategory': conf.operation.active === 'betting' }">
+      <div v-for="item in conf.operation.list" :key="item.value" @click="conf.operation.change(item)">
+        <span :class="{ 'category-active': item.value === conf.operation.active }">{{ item.label }}</span>
       </div>
-    </template>
-    <div style="width: 100%; height: 100%" :style="{ background: conf.categoryIndex == 1 ? '#A6B4BD' : '#f5f5fa' }">
-      <div class="betting" v-if="conf.categoryIndex == 1">
+    </div>
+    <!-- 内容区 -->
+    <div class="col" style="overflow-y: scroll;" ref="scrollRef"
+      :style="{ background: conf.operation.active === 'betting' ? '#A6B4BD' : '#f5f5fa' }">
+      <div class="betting" v-if="conf.operation.active === 'betting'">
         <img class="box-top" src="/static/img/box-top.png" />
-        <div class="time-tabs" v-if="conf.tabs.length">
+        <div class="time-tabs" v-if="lottery.play.list.length">
           <div style="overflow-x: scroll" ref="tabsRefs" v-scroll>
             <div class="tabs-list">
-              <template v-for="(item, index) in conf.tabs" :key="index">
-                <div
-                  class="tab-item"
-                  :class="{ 'tab-active': item.lotteryInterval == conf.tabIndex }"
-                  @click="conf.changeTab(item, index)"
-                >
-                  <div class="item-content" v-if="item.lotteryInterval / 1000 / 60 >= 1">
-                    <span>{{ item.lotteryInterval / 1000 / 60 }}</span>
-                    {{ item.lotteryInterval / 1000 / 60 > 1 ? $t('game.minutes') : $t('game.minute') }}
-                  </div>
-                  <div class="item-content" v-else>
-                    <span>{{ item.lotteryInterval / 1000 }}</span>
-                    {{ $t('game.second') }}
+              <template v-for="(item, index) in lottery.play.list" :key="index">
+                <div class="tab-item" :class="{ 'tab-active': item.id === lottery.play.item.id }"
+                  @click="lottery.play.change(`/game/Color/Color`, item)">
+                  <div class="item-content">
+                    <span>{{ item.timeType }}</span>
+                    {{ item.timeName }}
                   </div>
                 </div>
               </template>
@@ -97,252 +52,114 @@
             <div class="reckon-container">
               <div class="current-time">
                 <div class="time-num">
-                  <div class="num-item">{{ conf.hour }}</div>
+                  <div class="num-item">{{ lottery.countDown[0] }}</div>
                   <span>:</span>
-                  <div class="num-item">{{ conf.minutes }}</div>
+                  <div class="num-item">{{ lottery.countDown[1] }}</div>
                   <span>:</span>
-                  <div class="num-item">{{ conf.second }}</div>
+                  <div class="num-item">{{ lottery.countDown[2] }}</div>
                 </div>
               </div>
               <div class="current-expect">
                 <div class="expect-status">
-                  <div class="periods">{{ conf.currentOpen.openExpect }}</div>
+                  <div class="periods">{{ lottery.issue }}</div>
                   <div class="status">
-                    {{ conf.timeStopBet ? $t('game.pauseBetting') : $t('game.betting') + '...' }}
+                    {{ lottery.countDown[3] <= lottery.play.item.openLockCountdown ? $t('game.pauseBetting') :
+                      $t('game.betting') + '...' }} </div>
                   </div>
                 </div>
-              </div>
-              <div class="bar">
-                <div class="bar-active" :style="{ 'width': conf.bar + '%' }"></div>
-              </div>
-              <div class="scale">
-                <div class="scale-list" :class="{ 'disabled': conf.timeStopBet }">
-                  <div
-                    class="scale-item"
-                    @click="
-                      conf.changeBet(conf.odds.color_green_status, 'color-green.webp', 'color_green', 'color', 'GREEN')
-                    "
-                    :class="{ 'disabled': conf.odds.color_green_status == 0 }"
-                  >
-                    <div class="bg-color" :class="{ 'colorBtn': conf.colorBtnNum == 'GREEN' }">
-                      <div class="color-name">GREEN</div>
-                      <div class="color-num">1:{{ conf.greenOdds }}</div>
-                    </div>
-                  </div>
-                  <div
-                    class="scale-item"
-                    @click="
-                      conf.changeBet(
-                        conf.odds.color_violet_status,
-                        'color-violet.webp',
-                        'color_violet',
-                        'color',
-                        'VIOLET'
-                      )
-                    "
-                    :class="{ 'disabled': conf.odds.color_violet_status == 0 }"
-                  >
-                    <div class="bg-color color-purple" :class="{ 'colorBtn': conf.colorBtnNum == 'VIOLET' }">
-                      <div class="color-name">VIOLET</div>
-                      <div class="color-num">1:{{ conf.violetOdds }}</div>
-                    </div>
-                  </div>
-                  <div
-                    class="scale-item"
-                    @click="conf.changeBet(conf.odds.color_red_status, 'color-red.webp', 'color_red', 'color', 'RED')"
-                    :class="{ 'disabled': conf.odds.color_red_status == 0 }"
-                  >
-                    <div class="bg-color color-red" :class="{ 'colorBtn': conf.colorBtnNum == 'RED' }">
-                      <div class="color-name">RED</div>
-                      <div class="color-num">1:{{ conf.redOdds }}</div>
-                    </div>
+                <div class="bar">
+                  <div class="bar-active"
+                    :style="{ width: `${(lottery.countDown[3] / (lottery.play.item.lotteryInterval / 1000)) * 100}%` }">
                   </div>
                 </div>
-              </div>
-            </div>
-          </div>
-          <div class="circle-btn">
-            <img class="robot-center" src="/static/img/robot-center.png" />
-            <div class="btn-list-box">
-              <div class="btn-list" :class="{ 'disabled': conf.timeStopBet }">
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_0_status, 'color2.webp', 'nums_0', 'colorNum', 0)"
-                  :class="{ 'disabled': conf.odds.nums_0_status == 0 }"
-                >
-                  <div class="btn-bg" :class="{ 'colorBtn': conf.colorBtnNum == 0 }">0</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_1_status, 'color-green.webp', 'nums_1', 'colorNum', 1)"
-                  :class="{ 'disabled': conf.odds.nums_1_status == 0 }"
-                >
-                  <div class="btn-bg color-green" :class="{ 'colorBtn': conf.colorBtnNum == 1 }">1</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_2_status, 'color-red.webp', 'nums_2', 'colorNum', 2)"
-                  :class="{ 'disabled': conf.odds.nums_2_status == 0 }"
-                >
-                  <div class="btn-bg color-red" :class="{ 'colorBtn': conf.colorBtnNum == 2 }">2</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_3_status, 'color-green.webp', 'nums_3', 'colorNum', 3)"
-                  :class="{ 'disabled': conf.odds.nums_3_status == 0 }"
-                >
-                  <div class="btn-bg color-green" :class="{ 'colorBtn': conf.colorBtnNum == 3 }">3</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_4_status, 'color-red.webp', 'nums_4', 'colorNum', 4)"
-                  :class="{ 'disabled': conf.odds.nums_4_status == 0 }"
-                >
-                  <div class="btn-bg color-red" :class="{ 'colorBtn': conf.colorBtnNum == 4 }">4</div>
-                </div>
-                <!-- 大小 -->
-                <div
-                  class="btn-item"
-                  @click="
-                    conf.changeBet(conf.odds.num_small_status, 'color-blue.png', 'num_small', 'colorNum', 'SMALL')
-                  "
-                  :class="{ 'disabled': conf.odds.nums_10_status == 0 }"
-                >
-                  <div class="btn-bg color-bule" :class="{ 'colorBtn': conf.colorBtnNum == 'SMALL' }">SMALL</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_5_status, 'color1.webp', 'nums_5', 'colorNum', 5)"
-                  :class="{ 'disabled': conf.odds.nums_5_status == 0 }"
-                >
-                  <div class="btn-bg color-5" :class="{ 'colorBtn': conf.colorBtnNum == 5 }">5</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_6_status, 'color-red.webp', 'nums_6', 'colorNum', 6)"
-                  :class="{ 'disabled': conf.odds.nums_6_status == 0 }"
-                >
-                  <div class="btn-bg color-red" :class="{ 'colorBtn': conf.colorBtnNum == 6 }">6</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_7_status, 'color-green.webp', 'nums_7', 'colorNum', 7)"
-                  :class="{ 'disabled': conf.odds.nums_7_status == 0 }"
-                >
-                  <div class="btn-bg color-green" :class="{ 'colorBtn': conf.colorBtnNum == 7 }">7</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_8_status, 'color-red.webp', 'nums_8', 'colorNum', 8)"
-                  :class="{ 'disabled': conf.odds.nums_8_status == 0 }"
-                >
-                  <div class="btn-bg color-red" :class="{ 'colorBtn': conf.colorBtnNum == 8 }">8</div>
-                </div>
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.nums_9_status, 'color-green.webp', 'nums_9', 'colorNum', 9)"
-                  :class="{ 'disabled': conf.odds.nums_9_status == 0 }"
-                >
-                  <div class="btn-bg color-green" :class="{ 'colorBtn': conf.colorBtnNum == 9 }">9</div>
-                </div>
-                <!-- 大小 -->
-
-                <div
-                  class="btn-item"
-                  @click="conf.changeBet(conf.odds.num_big_status, 'color-red.webp', 'num_big', 'colorNum', 'BIG')"
-                  :class="{ 'disabled': conf.odds.nums_11_status == 0 }"
-                >
-                  <div class="btn-bg color-btn-big color-big" :class="{ 'colorBtn': conf.colorBtnNum == 'BIG' }">
-                    BIG
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="bottom-container">
-            <div class="bottom-title">
-              <div class="parting-line"></div>
-              <span>MY BETS</span>
-              <div class="parting-line"></div>
-            </div>
-            <div class="bottom-roller">
-              <div class="printer-box" v-if="conf.selectBetList.length">
-                <div class="printer-top"></div>
-                <!-- <div class="printer" v-if="openPrinter"></div> -->
-                <div class="printer1">
-                  <template v-for="(item, index) in conf.selectBetList" :key="index">
-                    <div class="dashed" :style="{ marginTop: index == 0 ? '56rem' : '0rem' }"></div>
-                    <div class="printer-open">
-                      <div class="printer-back">
-                        <img class="printer-img" src="/static/img/printer-left.png" />
-                        <div class="back-title">color</div>
-                        <img class="printer-img" src="/static/img/printer-right.png" />
-                      </div>
-                      <div class="printer-content">
-                        <div class="printer-expect">{{ item.openExpect }}</div>
-                        <div class="open-content">
-                          <div class="code">
-                            <div class="open-item">{{ $t('game.BettingCode') }}：{{ item.betNum }}</div>
-                            <div class="open-item">{{ $t('chat.type') }}：color</div>
-                          </div>
-                          <div class="open-item">{{ $t('game.amount') }}：{{ item.money }}</div>
-                          <div class="open-item">{{ $t('game.start') }}：{{ sutil.getTimeFormat(item.startTime) }}</div>
-                          <div class="open-item">{{ $t('game.open') }}：{{ sutil.getTimeFormat(item.openTime) }}</div>
+                <div class="scale">
+                  <div class="scale-list"
+                    :class="{ 'disabled': lottery.countDown[3] <= lottery.play.item.openLockCountdown }">
+                    <template v-for="item in conf.betting.tabs.list[0].sizeList">
+                      <div class="scale-item" @click="conf.betting.popup.open(item, 1)">
+                        <div class="bg-color" :class="[item.isActive ? 'colorBtn' : '', item.color ? item.color : '']">
+                          <div class="color-name">{{ item.name }}</div>
+                          <div class="color-num">1:{{ conf.betting.oddsInfo[item.oddsCode] || 1 }}</div>
                         </div>
                       </div>
-                    </div>
-                  </template>
-                  <div id="last-msg-item" style="height: 1rem"></div>
+                    </template>
+                  </div>
                 </div>
               </div>
-              <img class="roll-bottom" src="/static/img/roll-bottom.png" />
+            </div>
+            <div class="circle-btn">
+              <img class="robot-center" src="/static/img/robot-center.png" />
+              <div class="btn-list-box">
+                <div class="btn-list"
+                  :class="{ 'disabled': lottery.countDown[3] <= lottery.play.item.openLockCountdown }">
+                  <template v-for="item in conf.betting.tabs.list[0].numList">
+                    <div class="btn-item" @click="conf.betting.popup.open(item, 2)">
+                      <div class="btn-bg" :class="[item.isActive ? 'colorBtn' : '', item.color ? item.color : '']">{{
+                        item.name }}</div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            <div class="bottom-container">
+              <div class="bottom-title">
+                <div class="parting-line"></div>
+                <span>MY BETS</span>
+                <div class="parting-line"></div>
+              </div>
+              <div class="bottom-roller">
+                <div class="printer-box" v-if="conf.betting.selectBetList.length">
+                  <div class="printer-top"></div>
+                  <div class="printer1">
+                    <template v-for="(item, index) in conf.betting.selectBetList" :key="index">
+                      <div class="dashed" :style="{ marginTop: index == 0 ? '56rem' : '0rem' }"></div>
+                      <div class="printer-open">
+                        <div class="printer-back">
+                          <img class="printer-img" src="/static/img/printer-left.png" />
+                          <div class="back-title">color</div>
+                          <img class="printer-img" src="/static/img/printer-right.png" />
+                        </div>
+                        <div class="printer-content">
+                          <div class="printer-expect">{{ item.openExpect }}</div>
+                          <div class="open-content">
+                            <div class="code">
+                              <div class="open-item">{{ $t('game.BettingCode') }}：{{ item.betNum }}</div>
+                              <div class="open-item">{{ $t('chat.type') }}：color</div>
+                            </div>
+                            <div class="open-item">{{ $t('game.amount') }}：{{ item.money }}</div>
+                            <div class="open-item">{{ $t('game.start') }}：{{ sutil.getTimeFormat(item.startTime) }}
+                            </div>
+                            <div class="open-item">{{ $t('game.open') }}：{{ sutil.getTimeFormat(item.openTime) }}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                    <div id="last-msg-item" style="height: 1rem"></div>
+                  </div>
+                </div>
+                <img class="roll-bottom" src="/static/img/roll-bottom.png" />
+              </div>
             </div>
           </div>
-          <div class="bottom-container-line"></div>
         </div>
+        <rule v-if="conf.operation.active === 'rule'" :list="lottery.play.item.lotteryRuleurl" />
+        <result ref="resultRefs" v-if="conf.operation.active === 'result'" :lottery="lottery" />
+        <order ref="orderRefs" v-if="conf.operation.active === 'myOrder'" :lotteryId="lottery.play.item.id"	:lotteryOdds="conf.betting.oddsArr"></order>
       </div>
-      <rule v-if="conf.categoryIndex == 2" :list="conf.lotteryRuleurl"></rule>
-      <result
-        v-if="conf.categoryIndex == 3"
-        :tabs="conf.tabs"
-        ref="resultRefs"
-        :selectIndexId="conf.tabIndexId"
-      ></result>
-      <order
-        v-if="conf.categoryIndex == 4"
-        :lotteryId="conf.lotteryId"
-        ref="orderRefs"
-        :lotteryOdds="conf.lotteryOdds"
-      ></order>
-    </div>
-    <time-popup @close="conf.timePopupShop = false" v-if="conf.timePopupShop"></time-popup>
-    <bet-popup
-      :betShow="conf.showBet"
-      :betObj="conf.colorItem"
-      @submit="conf.submit"
-      @share="conf.share"
-      :betShare="conf.betShare"
-      :isBetBtnClick="conf.isBetBtnClick"
-    ></bet-popup>
-  </x-page>
+      <time-popup @close="conf.loop.timePopupShop = false" v-if="conf.loop.timePopupShop"></time-popup>
+  </GameLayout>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
-import betPopup from '../components/betPopup-blue.vue'
+  import GameLayout from '../components/gameLayout-blue.vue'
 import timePopup from '../components/timePopup.vue'
 import gameLoop from '../components/gameLoop.vue'
 import rule from '../components/gameRule.vue'
-import result from './result-blue.vue'
-import order from './order.vue'
+import result from './com/result-blue.vue'
+import order from './com/order.vue'
 import { index } from './color'
-import stheme from '@/sstore/stheme'
 import sutil from '@/sstore/sutil'
 
-const resultRefs = ref<any>()
-const colorRefs = ref<any>()
-const tabsRefs = ref<any>()
-
-const conf = index({ resultRefs, colorRefs, tabsRefs })
+const { conf, lottery, scrollRef, tabsRefs, resultRefs, orderRefs } = index()
 </script>
 
 <style lang="less" scoped>
@@ -769,17 +586,14 @@ const conf = index({ resultRefs, colorRefs, tabsRefs })
 
           .color-big {
             font-size: 28rem;
+            border: 2rem solid rgba(255, 255, 255, 0.26);
+            background: linear-gradient(180deg, #ea6332 0%, #eb602d 100%);
+            box-shadow: 0 12rem #d4572a;
           }
 
           .color-red {
             background: linear-gradient(180deg, #d90029 0%, #be0505 100%);
             box-shadow: 0 12rem #bb1212;
-          }
-
-          .color-btn-big {
-            border: 2rem solid rgba(255, 255, 255, 0.26);
-            background: linear-gradient(180deg, #ea6332 0%, #eb602d 100%);
-            box-shadow: 0 12rem #d4572a;
           }
         }
       }

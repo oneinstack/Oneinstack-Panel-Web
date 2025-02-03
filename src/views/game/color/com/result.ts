@@ -3,9 +3,8 @@ import { sstatus } from '@/sstore/sstatus'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
 
-export const index = ({ props, tabRrfs }: any) => {
+export const index = ({ props, tabRrfs, mconf }: any) => {
   const conf = reactive({
-    tabIndex: 1,
     lotteryId: '',
     resultList: [] as any,
     pageSize: 10,
@@ -15,9 +14,8 @@ export const index = ({ props, tabRrfs }: any) => {
     colorBtnNum: 1,
     isTips: false,
     changeTab(item: any, index: any) {
-      conf.tabIndex = item.lotteryInterval
       sstatus.getscrollLeft(tabRrfs, 550, index, 180)
-      conf.index = index
+      conf.lotteryId = item.id
       conf.resultList = []
       conf.pageNum = 1
       conf.total = 0
@@ -43,18 +41,15 @@ export const index = ({ props, tabRrfs }: any) => {
     moreMessage() {
       if (conf.pageSize * conf.pageNum >= conf.total) return (conf.isTips = true)
       conf.pageNum++
-      conf.getLotteryResult(props.tabs[conf.index].id)
+      conf.getLotteryResult(conf.lotteryId)
     },
     initResult(e: any) {
-      console.log(e)
-
-      let lotteryId = props.tabs[conf.index].id
-      if (e != lotteryId) return
+      if (e != conf.lotteryId) return
       System.loading()
       apis.lotteryOpenResult({
         current: 1,
         size: 10,
-        lotteryId,
+        lotteryId: conf.lotteryId,
         success: (res: any) => {
           let datas = res.data.records
           if (conf.resultList[0].openExpect != datas[0].openExpect) {
@@ -77,14 +72,9 @@ export const index = ({ props, tabRrfs }: any) => {
   })
 
   onMounted(() => {
-    if (props.selectIndexId) {
-      conf.index = props.tabs.findIndex((item: any) => item.id == props.selectIndexId)
-      conf.tabIndex = props.tabs[conf.index].lotteryInterval
-      conf.getLotteryResult(props.tabs[conf.index].id)
-    } else {
-      conf.tabIndex = props.tabs[0].lotteryInterval
-      conf.getLotteryResult(props.tabs[0].id)
-    }
+    conf.lotteryId = props.lottery.play.item.id
+    conf.getLotteryResult(conf.lotteryId)
+    sstatus.getscrollLeft(tabRrfs, 550, (props.lottery.play.item.lotterySort - 1), 180)
   })
 
   return conf

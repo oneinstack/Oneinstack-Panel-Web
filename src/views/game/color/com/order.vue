@@ -33,7 +33,7 @@
 							<div class="purchase-bg" v-else-if="item.orderType == 'small'"
 								style="background: #189EE4 ;">
 								{{ item.orderType }}</div>
-							<div class="purchase-bg" v-else-if="item.orderType == 'big'" style="background: #C42D2D ;">
+							<div class="purchase-bg" v-else-if="item.orderType == 'big'" style="background: #d4572a ;">
 								{{ item.orderType }}</div>
 
 
@@ -186,10 +186,11 @@ const conf = reactive({
 		conf.getLotteryResult()
 	},
 	getPurchase(oddsId: any) {
+		
 		let num = props.lotteryOdds.find((item: any) => {
 			return item.oddsCode == oddsId
 		});
-
+		
 		if (num) return num
 	},
 	async getLotteryResult() {
@@ -205,7 +206,7 @@ const conf = reactive({
 					let order = conf.getPurchase(item.betCodes)
 					return {
 						oddsId: order.oddsId,
-						orderType: order.orderType,
+						orderType: order.oddsCode.split('_')[1],
 						...item
 					}
 				})
@@ -332,6 +333,10 @@ const conf = reactive({
 })
 onMounted(() => {
 	conf.initOrder()
+})
+// 暴露方法
+defineExpose({
+	initOrder: conf.initOrder
 })
 </script>
 

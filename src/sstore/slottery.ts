@@ -319,7 +319,10 @@ export const slottery = reactive({
           title: string
           openLockCountdown: number
           lotteryInterval: number,
-          lotteryRuleurl: string
+          lotteryRuleurl: string,
+          timeType: number,
+          timeName: string,
+          lotterySort: number
         },
         list: [] as any[],
         change: async (path: string, obj: any) => {

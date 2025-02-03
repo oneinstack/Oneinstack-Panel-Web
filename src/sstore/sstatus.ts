@@ -50,15 +50,22 @@ export const sstatus = reactive({
     const minute = date.getMinutes()
     return `${hour}:${minute}`
   },
+  lastIndex: 0,
   // 导航栏选中的项显示在中间
-  getscrollLeft(leftRefs:any,n: number, i: number, w: number) {
+  getscrollLeft(leftRefs:any,n: number, i: number, w: number,aniShow = true) {
+    sstatus.lastIndex = i
     let num = (window.innerWidth - sutil.rem2px(n)) / 2
     let scrollNum = num > 0 ? num : 0
     let scrollLeft = (i - 1) * sutil.rem2px(w) - scrollNum
+    if(!aniShow) {
+      leftRefs.value.scrollLeft = scrollLeft
+      return
+    }
     leftRefs.value?.scrollTo({
       left: scrollLeft,
       behavior: 'smooth'
     })
+    
   }
 })
 

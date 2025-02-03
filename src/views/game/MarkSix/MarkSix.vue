@@ -251,6 +251,7 @@ const { conf, lottery } = index()
       padding: 0 20rem;
       min-width: max-content;
       color: #666666;
+      flex: 1;
       &.active {
         color: #000000;
       }

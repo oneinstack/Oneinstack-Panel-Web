@@ -45,6 +45,7 @@ export const index = () => {
   })
 
   const conf = reactive({
+    gameType: 'MARK_SIX',
     reset:(val:any)=>{
       conf.winBetInfo = val
       const obj = conf.betting.tabs.level2

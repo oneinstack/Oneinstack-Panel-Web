@@ -3,17 +3,13 @@
     <div style="overflow-x: scroll" ref="tabRrfs" v-scroll>
       <div class="scale">
         <div class="scale-list">
-          <template v-for="(item, index) in props.tabs" :key="index">
+          <template v-for="(item, index) in props.lottery.play.list" :key="index">
             <div class="scale-item" @click="conf.changeTab(item, index)">
-              <div class="bg-color" :class="{ 'colorBtn': item.lotteryInterval == conf.tabIndex }">
+              <div class="bg-color" :class="{ 'colorBtn': item.id == conf.lotteryId }">
                 <div class="color-name">
-                  <div class="tab-text" v-if="item.lotteryInterval / 1000 / 60 >= 1">
-                    <span>{{ item.lotteryInterval / 1000 / 60 || '' }}</span>
-                    {{ item.lotteryInterval / 1000 / 60 > 1 ? $t('game.minutes') : $t('game.minute') }}
-                  </div>
-                  <div class="tab-text" v-else>
-                    <span>{{ item.lotteryInterval / 1000 || '' }}</span>
-                    {{ $t('game.second') }}
+                  <div class="tab-text">
+                    <span>{{ item.timeType }}</span>
+                    {{ item.timeName }}
                   </div>
                 </div>
               </div>
@@ -91,15 +87,11 @@ import { ref } from 'vue'
 import { index } from './result'
 
 const props = defineProps({
-  tabs: {
-    default: [] as any
-  },
-  selectIndexId: {
-    default: ''
+  lottery: {
+    default: {} as any
   }
 })
 const tabRrfs = ref<any>()
-
 const conf = index({ props, tabRrfs })
 
 // 暴露方法
@@ -228,11 +220,11 @@ defineExpose({
       justify-content: space-between;
       // padding: 0rem 16rem;
       padding-left: 16rem;
-      background: #58a5ff;
+      background: #d0d3dc;
 
       div {
         font-size: 24rem;
-        color: #ffffff;
+        color: #45454d;
         padding: 16rem 0rem;
         display: flex;
         justify-content: center;
@@ -333,7 +325,7 @@ defineExpose({
         }
 
         &:nth-child(2n) {
-          background: #e6f2ff;
+          background: #e9ecf5;
         }
       }
     }
