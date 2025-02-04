@@ -115,9 +115,9 @@
                     <div class="time-num">
                         <div class="num-item">{{ lottery.countDown[0] }}</div>
                         <span>:</span>
-                        <div class="num-item">{{ lottery.countDown[1] }}</div>
+                        <downTime :value="lottery.countDown[1]" />
                         <span>:</span>
-                        <div class="num-item">{{ lottery.countDown[2] }}</div>
+                        <downTime :value="lottery.countDown[2]" />
                     </div>
                     <div class="bar">
                         <div class="bar-active"
@@ -160,6 +160,7 @@ import betting from './components/betting/index.vue'
 import gameLoop from '../components/gameLoop.vue';
 import result from './components/result.vue'
 import order from './components/order.vue'
+import downTime from '../components/aniDownTime.vue';
 
 import { index } from './Lottery3D'
 const { conf, lottery, resultRefs, orderRefs } = index()

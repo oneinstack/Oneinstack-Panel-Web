@@ -5,10 +5,10 @@
             <div class="cross" @click="conf.closePopup">
                 <van-icon name="cross" size="28rem" color="#ACACAC" />
             </div>
-            <div class="tips">Previous data</div>
+            <div class="tips">{{ $t('ar.previous') }}</div>
             <div class="title">
                 <div class="line"></div>
-                <div class="txt">The past 100 championships</div>
+                <div class="txt">{{ $t('ar.past_100') }}</div>
                 <div class="line"></div>
             </div>
             <div class="list">
@@ -22,14 +22,14 @@
             </div>
             <div class="title">
                 <div class="line"></div>
-                <div class="txt">the past 10 competitions</div>
+                <div class="txt">{{ $t('ar.past_10') }}</div>
                 <div class="line"></div>
             </div>
             <div class="table">
                 <div class="table-title">
                     <div class="issus">
-                        <div class="txt-t">Animals</div>
-                        <div class="txt-b">Periods</div>
+                        <div class="txt-t">{{ $t('ar.animals') }}</div>
+                        <div class="txt-b">{{ $t('ar.periods') }}</div>
                     </div>
                     <div class="num" v-for="(item, index) in totalList" :key="index">
                         <img class="img-bet" :src="`/static/img/game/animal/${item.name}-bet.png`" />

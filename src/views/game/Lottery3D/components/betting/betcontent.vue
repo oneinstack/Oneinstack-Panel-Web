@@ -6,10 +6,10 @@
                 <span>{{ title }}</span>
             </div>
             <div class="btn-list" :class="{'disabled': disabled}" v-if="randomShow">
-                <div class="btn-item" @click="conf.random('random')">Random</div>
+                <div class="btn-item" @click="conf.random('random')">{{ $t('3d.random') }}</div>
                 <div class="btn-item" style="margin-left: 20rem;"  @click="conf.random('clear')">
                     <div class="clear">
-                        <span>clear</span>
+                        <span>{{ $t('3d.clear') }}</span>
                     </div>
                 </div>
             </div>

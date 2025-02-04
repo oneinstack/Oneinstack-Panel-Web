@@ -15,7 +15,7 @@
 			</div>
 			<div class="line">
 				<div class="label">{{ $t('SattaKing.BettingContent2') + ' :' }}</div>
-				<div class="value"> {{ conf.betInfo.newBetCodes }} </div>
+				<div class="value" style="overflow-x: auto;"> {{ conf.betInfo.newBetCodes }} </div>
 			</div>
 			<div class="line">
 				<div class="label">{{ $t('game.TotalBetAmount') + ' :' }}</div>
@@ -54,7 +54,7 @@
 							</div>
 							<div class="line">
 								<div class="label">{{ $t('SattaKing.BettingContent2') }}:</div>
-								<div class="value"> {{ conf.betInfo.newBetCodes }} </div>
+								<div class="value" style="overflow-x: auto;"> {{ conf.betInfo.newBetCodes }} </div>
 							</div>
 						</div>
 					</div>
@@ -335,6 +335,7 @@ onMounted(() => {
 	.label {
 		color: #666666 !important;
 		font-weight: 500;
+		flex-shrink: 0;
 	}
 
 	.value {

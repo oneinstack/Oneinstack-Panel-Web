@@ -129,6 +129,8 @@ export const index = () => {
         list: getOdds(),
         init: () => {
           setTimeout(() => {
+            console.log(conf.betting.tabs.list[0]);
+            
             conf.betting.getOdds()
           }, 600)
         }

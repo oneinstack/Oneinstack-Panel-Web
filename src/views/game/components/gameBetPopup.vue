@@ -57,6 +57,7 @@
 import i18n from '@/lang'
 import { sconfig } from '@/sstore/sconfig'
 import { LotteryConfInter } from '@/sstore/slottery'
+import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { svf } from '@/sstore/svf'
 import System from '@/utils/System'
@@ -118,10 +119,15 @@ onMounted(async () => {
       fixed: 4
     }
   })
+  if (Cookie.get('roomOrder')) {
+		Cookie.remove('roomOrder')
+	}
   if (!sconfig.userInfo) return
   await svalue.getDefaultWallet()
   conf.quickRechargeAmount.list = sconfig.walletInfo.quickRechargeAmount.map((item: any) => parseInt(item))
-  conf.num = conf.quickRechargeAmount.list[0]
+  console.log(sconfig.walletInfo);
+  if (sconfig.walletInfo.betMinAmount) conf.num = sutil.dataHandling(sconfig.walletInfo.betMinAmount)
+  else conf.num = conf.quickRechargeAmount.list[0]
 })
 </script>
 

@@ -54,9 +54,11 @@
                 <div class="time-num">
                   <div class="num-item">{{ lottery.countDown[0] }}</div>
                   <span>:</span>
-                  <div class="num-item">{{ lottery.countDown[1] }}</div>
+                  <!-- <div class="num-item">{{ lottery.countDown[1] }}</div> -->
+                  <downTime :w="100" :h="100" :value="lottery.countDown[1]" />
                   <span>:</span>
-                  <div class="num-item">{{ lottery.countDown[2] }}</div>
+                  <downTime :w="100" :h="100" :value="lottery.countDown[2]" />
+                  <!-- <div class="num-item">{{ lottery.countDown[2] }}</div> -->
                 </div>
               </div>
               <div class="current-expect">
@@ -157,6 +159,7 @@
   import rule from '../components/gameRule.vue'
   import result from './com/result.vue'
   import order from './com/order.vue'
+  import downTime from '../components/aniDownTime.vue';
   import { index } from './color'
   import sutil from '@/sstore/sutil'
 
@@ -410,6 +413,7 @@
             display: flex;
             align-items: center;
             margin: 28rem 0rem 22rem;
+            font-size: 66rem;
 
             .num-item {
               width: 100rem;

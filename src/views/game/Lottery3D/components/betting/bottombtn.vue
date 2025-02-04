@@ -4,7 +4,7 @@
       {{ $t('game.TotalBetAmount') }}:
       <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">{{ betNum }}</span>
     </div>
-    <div class="bet-button flex flex-center" :class="{'disabled': disabled}" @click="$emit('confirm')">Bet</div>
+    <div class="bet-button flex flex-center" :class="{'disabled': disabled}" @click="$emit('confirm')">{{ $t('3d.bet') }}</div>
   </div>
 </template>
 <script setup lang="ts">

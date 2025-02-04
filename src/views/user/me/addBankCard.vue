@@ -294,12 +294,13 @@ const conf = index()
         </div>
         <div class="input-box">
           <div class="lable">{{ $t('addBankCradModule.QRCode') }}</div>
-          <div class="photo-view">
-            <van-uploader :after-read="conf.handleSelectPhoto">
+          <van-uploader :after-read="conf.handleSelectPhoto">
+            <div class="photo-view">
               <van-icon name="plus" size="50" color="#ccc" v-if="!conf.isShowImg" />
               <img class="img-bg" :src="conf.formData.scanCodePayImgUrl" v-else />
-            </van-uploader>
-          </div>
+            </div>
+          </van-uploader>
+          
         </div>
       </div>
 

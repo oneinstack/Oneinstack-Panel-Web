@@ -225,6 +225,8 @@ export const index = () => {
     conf,
     lottery
   })
+  console.log(lottery);
+  
   return { conf, lottery, resultRefs, analyzeRefs, orderRefs }
 }
 

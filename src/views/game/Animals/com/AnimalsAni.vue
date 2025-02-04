@@ -630,7 +630,10 @@ const conf = reactive({
         //移出屏幕外面
         timer.once(() => {
             stween.pause(['desk'])
-
+            console.log('8888');
+            console.log(conf.numsort);
+            
+            
             // 根据排名冲刺结算
             conf.rank = true
             for (let i = 1; i < 7; i++) {

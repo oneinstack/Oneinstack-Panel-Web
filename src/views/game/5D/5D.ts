@@ -1,11 +1,9 @@
 import { apis } from '@/api'
 import { onMounted, reactive, ref } from 'vue'
-import System from '@/utils/System'
 import i18n from '@/lang'
 import slottery from '@/sstore/slottery'
 import { getOdds } from './5DDataOdds'
 import { Scope } from 'tools-vue3'
-import { set } from '@vueuse/core'
 import { svalue } from '@/sstore/svalue'
 import sutil from '@/sstore/sutil'
 
@@ -176,7 +174,6 @@ export const index = () => {
         autoClose: (time: any) => {
           if (time <= lottery.play.item.openLockCountdown) {
             conf.betting.popup.close({})
-          } else {
           }
         }
       },

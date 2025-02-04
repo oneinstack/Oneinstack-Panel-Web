@@ -15,7 +15,7 @@
                     <div class="line-item" style="margin-left: 100rem;"></div>
                 </div>
                 <div class="total">
-                    <div class="tips">The past 100 championships</div>
+                    <div class="tips">{{ $t('ar.past_100') }}</div>
                     <div class="list">
                         <div class="list-item" v-for="(item, index) in totalList" :key="index">
                             <img class="img" :src="`/static/img/game/animal/${item.img}.png`" />
@@ -26,7 +26,7 @@
                         </div>
                     </div>
                     <div class="more" @click="emit('showMore')">
-                        <div class="txt">More</div>
+                        <div class="txt">{{ $t('ar.more') }}</div>
                         <van-icon name="arrow" size="20rem" color="#E34348" />
                     </div>
                 </div>

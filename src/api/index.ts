@@ -226,7 +226,7 @@ export const apis = {
   //修改登录密码
   changepass: (obj?: ApiData) => http.get('/api/users/changepass', obj),
   //修改支付密码
-  updateWithdrawPassword: (obj?: ApiData) => http.get('/api/users/updateWithdrawPassword', obj),
+  updateWithdrawPassword: (obj?: ApiData) => http.post('/api/users/updateWithdrawPassword', obj),
   //我的代理列表数据
   subsetPage: (obj?: ApiData) => http.get('/api/invite/subsetPage', obj),
   //代理详情

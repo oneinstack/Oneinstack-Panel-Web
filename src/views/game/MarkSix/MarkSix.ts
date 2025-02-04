@@ -47,6 +47,8 @@ export const index = () => {
   const conf = reactive({
     gameType: 'MARK_SIX',
     reset:(val:any)=>{
+      console.log(val);
+      if(!val.money) return
       conf.winBetInfo = val
       const obj = conf.betting.tabs.level2
       const data =  JSON.parse(JSON.stringify(obj.item.list))

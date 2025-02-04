@@ -5,5 +5,8 @@ export default{
     'third_ball': 'Third ball',
     'span': 'span',
     'triplet': 'Triplet',
-    'any': 'Any'
+    'any': 'Any',
+    'random': 'Random',
+    'clear': 'Clear',
+    'bet': 'Bet',
 }

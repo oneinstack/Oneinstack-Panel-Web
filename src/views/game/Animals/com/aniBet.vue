@@ -1,40 +1,48 @@
 <template>
     <div class="bet">
         <div class="tips">Animals running</div>
-        <div class="type-list">
-            <template v-for="(item, index) in options" :key="index">
-                <div class="type-item" @click="conf.changeType(item.key)">
-                    <div class="type-icon" :class="{ 'type-active': conf.selectType == item.key}">
-                        <img class="type-img" :src="`/static/img/game/animal/${item.key}.png`" />
+        <div class="top-type">
+            <div class="type-list">
+                <template v-for="(item, index) in options" :key="index">
+                    <div class="type-item" @click="conf.changeType(item.key)">
+                        <div class="type-icon" :class="{ 'type-active': conf.selectType == item.key }">
+                            <img class="type-img" :src="`/static/img/game/animal/${item.key}.png`" />
+                        </div>
+                        <span>{{ item.key }}</span>
                     </div>
-                    <span>{{ item.key }}</span>
-                </div>
-            </template>
+                </template>
+            </div>
+            <div style="width: 10%;">
+                <img v-if="sconfig.userInfo && svalue.configv1['im_open']" class="share-img" style="margin-right: 24rem"
+                    src="/static/img/share.png" :class="{ 'disabled': betShare }" @click="conf.share" />
+            </div>
         </div>
         <div class="ani-list">
             <template v-for="(item, index) in conf.betTypeList" :key="index">
-                <div class="ani-item" :class="{ 'ani-active': item.selectBet }"
-                    @click="conf.changeAni(item,index)">
+                <div class="ani-item" :class="{ 'ani-active': item.selectBet }" @click="conf.changeAni(item, index)">
                     <div class="ani-con">
                         <div class="ani-bg" :class="'ani-bg-' + index"></div>
                     </div>
                     <div class="money" @click.stop="" v-if="item.selectBet">
-                        <div class="minus" @click.stop="conf.changCount(item,'-')">-</div>
-                        <div class="num"><div class="coin">{{ conf.betCoin }}</div>{{ item.betMoney }}</div>
-                        <div class="add" @click.stop="conf.changCount(item,'+')">+</div>
+                        <div class="minus" @click.stop="conf.changCount(item, '-')">-</div>
+                        <div class="num">
+                            <div class="coin">{{ conf.betCoin }}</div>{{ item.betMoney }}
+                        </div>
+                        <div class="add" @click.stop="conf.changCount(item, '+')">+</div>
                     </div>
                     <img class="img-bet" :src="`/static/img/game/animal/${item.img}-bet.png`" />
                     <div class="txt">
                         <div class="name">{{ item.name }}</div>
                         <div class="odds">{{ item[conf.selectType + 'odds'] || 0 }}</div>
                     </div>
-                    <div class="addMoney" v-if="item.selectBet && conf.showAddani[index]">+{{ conf.quickRechargeAmount.list[conf.amount] }}</div>
+                    <div class="addMoney" v-if="item.selectBet && conf.showAddani[index]">+{{
+                        conf.quickRechargeAmount.list[conf.amount] }}</div>
                 </div>
             </template>
         </div>
         <div class="btn">
             <div class="btn-left">
-                <div class="name">Single bet amount</div>
+                <div class="name">{{ $t('ar.bet_amount') }}</div>
                 <div class="num">
                     <van-icon name="arrow-left" size="36rem" color="#fff" @click.stop="conf.changeAmount('-')" />
                     <div class="total">{{ conf.betCoin }}{{ conf.quickRechargeAmount.list[conf.amount] }}</div>
@@ -42,18 +50,19 @@
                 </div>
             </div>
             <div class="btn-right" style="justify-content: center;" v-if="!getWinMoney" @click="conf.changeBet">
-                <div>Guess</div>
+                <div>{{ $t('ar.guess') }}</div>
             </div>
             <div class="btn-right" @click="conf.changeBet" v-else>
                 <div class="win">
-                    <div>Betting amount</div>
-                    <div style="margin-top: 4rem;font-size: 25rem;"><span>{{ `${conf.betCoin}${getWinMoney}` }}</span></div>
+                    <div>{{ $t('ar.betting_amount') }}</div>
+                    <div style="margin-top: 4rem;font-size: 25rem;"><span>{{ `${conf.betCoin}${getWinMoney}` }}</span>
+                    </div>
                 </div>
                 <div class="line"></div>
-                <div>Guess</div>
+                <div>{{ $t('ar.guess') }}</div>
             </div>
         </div>
-        <!-- <div class="mosk" v-if="stopBet"></div> -->
+        <div class="mosk" v-if="stopBet"></div>
     </div>
 </template>
 <script setup lang="ts">
@@ -61,6 +70,7 @@ import i18n from '@/lang';
 import sconfig from '@/sstore/sconfig';
 import sutil from '@/sstore/sutil';
 import System from '@/utils/System';
+import { svalue } from '@/sstore/svalue'
 import { computed, onMounted, reactive, watch } from 'vue';
 
 const props = defineProps({
@@ -75,10 +85,13 @@ const props = defineProps({
     },
     defaultWalletInfo: {
         default: {} as any
+    },
+    betShare: {
+        default: false
     }
 })
 
-const emit = defineEmits(['changeBet'])
+const emit = defineEmits(['changeBet','share'])
 
 const conf = reactive({
     selectType: '',
@@ -87,62 +100,70 @@ const conf = reactive({
     betMaxMoney: 10000,
     betCoin: '₹',
     amount: 0,
-    showAddani: {0: false,1: false,2: false,3: false,4: false,5: false} as any,
+    showAddani: { 0: false, 1: false, 2: false, 3: false, 4: false, 5: false } as any,
     betTypeList: [] as any[],
     quickRechargeAmount: {
-		list: [1, 10, 10, 500,1000], // 快速下注列表
-		get: async () => {
-			const arr = sconfig.walletInfo.quickRechargeAmount.map((item:any) => parseInt(item))
-            if(arr[0] != conf.betMinMoney) {
-                conf.quickRechargeAmount.list = [conf.betMinMoney,...arr]
+        list: [1, 10, 10, 500, 1000], // 快速下注列表
+        get: async () => {
+            const arr = sconfig.walletInfo.quickRechargeAmount.map((item: any) => parseInt(item))
+            if (arr[0] != conf.betMinMoney) {
+                conf.quickRechargeAmount.list = [conf.betMinMoney, ...arr]
             } else {
                 conf.quickRechargeAmount.list = arr
-            }      
-		}
-	},
+            }
+        }
+    },
     changeType(key: string) {
-        if(conf.selectType == key) return
+        if (conf.selectType == key) return
         conf.selectType = key
         conf.reset()
-        emit('changeBet',{type: key})
+        emit('changeBet', { type: key })
     },
-    changeAni(item: any,index:number) {
+    changeAni(item: any, index: number) {
         console.log(item);
-        
+
         if (item.selectBet) {
             conf.showAddani[index] = true
             setTimeout(() => {
                 conf.showAddani[index] = false
                 item.betMoney = item.betMoney + conf.quickRechargeAmount.list[conf.amount]
-            },600)
-            
+            }, 600)
+
             if (item.betMoney >= conf.betMaxMoney) item.betMoney = conf.betMaxMoney
             return
         }
         item.selectBet = true
         item.betMoney = conf.quickRechargeAmount.list[conf.amount]
     },
-    changCount(item: any,type: string) {
-        if(type == '-' && item.betMoney > conf.betMinMoney) {
+    changCount(item: any, type: string) {
+        if (type == '-' && item.betMoney > conf.betMinMoney) {
             item.betMoney--
         }
-        if(type == '+' && item.betMoney < conf.betMaxMoney) {
+        if (type == '+' && item.betMoney < conf.betMaxMoney) {
             item.betMoney++
         }
     },
     changeBet() {
-        if(!getWinMoney.value) {
+        if (!getWinMoney.value) {
             System.toast(i18n.t('common.SelectType'))
             return
         }
-        let list = conf.betTypeList.filter((item:any) => item.selectBet)
-        emit('changeBet',{list,selectType: conf.selectType})
+        let list = conf.betTypeList.filter((item: any) => item.selectBet)
+        emit('changeBet', { list, selectType: conf.selectType })
     },
-    changeAmount(type:string) {
-        if(type == '-' && conf.amount > 0) {
+    share() {
+        if (!getWinMoney.value) {
+            System.toast(i18n.t('common.SelectType'))
+            return
+        }
+        let list = conf.betTypeList.filter((item: any) => item.selectBet)
+        emit('share', {list,type: conf.selectType} )
+    },
+    changeAmount(type: string) {
+        if (type == '-' && conf.amount > 0) {
             conf.amount--
         }
-        if(type == '+' && conf.amount < conf.quickRechargeAmount.list.length - 1) {
+        if (type == '+' && conf.amount < conf.quickRechargeAmount.list.length - 1) {
             conf.amount++
         }
         conf.betTypeList.forEach((item) => {
@@ -160,19 +181,19 @@ const conf = reactive({
 const getWinMoney = computed(() => {
     let total = 0
     conf.betTypeList.forEach((item) => {
-        if(item.selectBet) total = sutil.addNum(total, item.betMoney)
+        if (item.selectBet) total = sutil.addNum(total, item.betMoney)
     })
     return total
 })
 watch(
-  () => props.defaultWalletInfo,
-  (val: any) => {
-    conf.betMinMoney = parseFloat(sutil.dataHandling(val.betMinAmount))
-    conf.betMaxMoney = parseFloat(val.betMaxAmount)
-    conf.quickRechargeAmount.get()
-    conf.betCoin = val.coinSymbol
-  },
-  { deep: true }
+    () => props.defaultWalletInfo,
+    (val: any) => {
+        conf.betMinMoney = parseFloat(sutil.dataHandling(val.betMinAmount))
+        conf.betMaxMoney = parseFloat(val.betMaxAmount)
+        conf.quickRechargeAmount.get()
+        conf.betCoin = val.coinSymbol
+    },
+    { deep: true }
 )
 onMounted(() => {
     conf.selectType = props.options[0].key
@@ -200,10 +221,15 @@ onMounted(() => {
         clip-path: polygon(0 0, 100% 0, 90% 100%, 10% 100%)
     }
 
-    .type-list {
-        width: 100%;
+    .top-type {
         display: flex;
+        align-items: center;
+        justify-content: space-between;
         margin-top: 20rem;
+    }
+
+    .type-list {
+        display: flex;
 
         .type-item {
             display: flex;
@@ -232,6 +258,12 @@ onMounted(() => {
                 margin-left: 10rem;
             }
         }
+    }
+
+    .share-img {
+        width: 47rem;
+        height: 35rem;
+        margin-left: 20rem;
     }
 
     .ani-list {
@@ -272,13 +304,13 @@ onMounted(() => {
                     display: flex;
                     align-items: center;
 
-                    .num{
+                    .num {
                         display: flex;
                         align-items: center;
                         margin: 0 6rem;
                     }
 
-                    .add{
+                    .add {
                         margin-left: 6rem;
                         padding-bottom: 3rem;
                     }
@@ -357,7 +389,8 @@ onMounted(() => {
                     font-weight: 600;
                 }
             }
-            .addMoney{
+
+            .addMoney {
                 color: #FB3934;
                 position: absolute;
                 left: 55%;
@@ -366,16 +399,18 @@ onMounted(() => {
                 font-size: 32rem;
                 z-index: 10;
             }
+
             @keyframes down-animation {
-			0% {
-				// transform: rotate(90deg) scale(0.9);
-                bottom: 35%;
-			}
-			100% {
-				// transform: rotate(90deg) scale(0.9);
-                bottom: 90%;
-			}
-		}
+                0% {
+                    // transform: rotate(90deg) scale(0.9);
+                    bottom: 35%;
+                }
+
+                100% {
+                    // transform: rotate(90deg) scale(0.9);
+                    bottom: 90%;
+                }
+            }
         }
     }
 
@@ -449,7 +484,8 @@ onMounted(() => {
             opacity: 0.3;
         }
     }
-    .mosk{
+
+    .mosk {
         position: absolute;
         inset: 0;
         background: rgba(0, 0, 0, 0.4);
@@ -457,5 +493,9 @@ onMounted(() => {
         border-radius: 40rem 40rem 0 0;
     }
 
+}
+
+.disabled {
+    filter: grayscale(1);
 }
 </style>

@@ -138,7 +138,7 @@ export const index = () => {
         ...obj
       })
 
-      System.toast(i18n.t(`code.${res.code}`) || 'success')
+      System.toast(i18n.t(`code.${res.code}`),'success')
       setTimeout(() => {
         if (conf.typeName == 'Account') {
           System.router.push('/login?type=3')

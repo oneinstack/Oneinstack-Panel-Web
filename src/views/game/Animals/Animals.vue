@@ -3,11 +3,8 @@
         <template #title>
             <div class="head-title" @click="conf.play.typeShow = !conf.play.typeShow">
                 <span>Animals - {{ conf.play.item.title }}</span>
-                <img
-                class="arrow-img"
-                src="/static/img/type-arrow.png"
-                :style="{ 'transform': conf.play.typeShow ? 'rotate(-180deg)' : 'rotate(0deg)' }"
-                />
+                <img class="arrow-img" src="/static/img/type-arrow.png"
+                    :style="{ 'transform': conf.play.typeShow ? 'rotate(-180deg)' : 'rotate(0deg)' }" />
             </div>
         </template>
         <div class="ani-page">
@@ -16,23 +13,14 @@
                 <!-- 游戏动画 -->
                 <cgame ref="cgameRef" @close="conf.game.showDown = true" />
                 <!-- 倒计时 -->
-                <countdown
-                    :times="conf.lotteryBox.countDown"
-                    :totalList="conf.result.totalList"
-                    :active="conf.bet.tabs.active"
-                    :openExpect="conf.lotteryBox.current.openExpect"
-                    @showMore="conf.openMore"
-                    :showDown="conf.game.showDown"
-                />
+                <countdown :times="conf.lotteryBox.countDown" :totalList="conf.result.totalList"
+                    :active="conf.bet.tabs.active" :openExpect="conf.lotteryBox.current.openExpect"
+                    @showMore="conf.openMore" :showDown="conf.game.showDown" />
             </div>
             <!-- 下注菜单 -->
-            <aniBet
-                :options="conf.bet.tabs.options"
-                :listNumArr="conf.bet.listNumArr"
+            <aniBet :options="conf.bet.tabs.options" :listNumArr="conf.bet.listNumArr"
                 :stopBet="!conf.game.showDown || (conf.lotteryBox.countDown[3] <= conf.openLockCountdown)"
-                :defaultWalletInfo="conf.defaultWalletInfo"
-                @changeBet="conf.bet.requestBet"
-            />
+                :defaultWalletInfo="conf.defaultWalletInfo" @changeBet="conf.bet.requestBet" @share="conf.bet.shareBet" />
         </div>
         <div v-if="conf.game.showDown">
             <div class="rulse" @click="conf.goPage('rules')">Rules</div>
@@ -45,19 +33,9 @@
                 Record
             </div>
         </div>
-        <moreResult
-            :result="conf.result.list"
-            :totalList="conf.result.totalList"
-            ref="resultRefs"
-        />
-        <timeType
-            :typeShow="conf.play.typeShow"
-            :typeList="conf.play.list"
-            :lotteryId="conf.play.lotteryId"
-            :resultInfo="conf.result.typeResult"
-            @close="conf.play.closePopup"
-            @change="conf.play.reloadTo"
-        />
+        <moreResult :result="conf.result.list" :totalList="conf.result.totalList" ref="resultRefs" />
+        <timeType :typeShow="conf.play.typeShow" :typeList="conf.play.list" :lotteryId="conf.play.lotteryId"
+            :resultInfo="conf.result.typeResult" @close="conf.play.closePopup" @change="conf.play.reloadTo" />
     </x-page>
 </template>
 <script setup lang="ts">
@@ -80,6 +58,7 @@ const cgamebox = ref<any>()
 const cgameRef = ref<any>()
 const resultRefs = ref<any>()
 const conf = reactive({
+    gameType: 'ANIMALS_RUNNING',
     loading: false,
     lotteryTypeId: 0,
     lotteryBox: { countDown: [0, 0, 0] } as any,
@@ -93,13 +72,13 @@ const conf = reactive({
         action: (type: any, res: any) => {
             let open = conf.play.item.lotteryInterval / 1000 - 13
             let time = res[3] - open
-            
+
             if (type == 'time' && res[3] === 0) conf.game.start()
             else if (type == 'stop') conf.game.stop(res)
-            else if(time > 0) conf.game.start()
-            else if(time < 0 && conf.game.isRun) {
+            else if (time > 0) conf.game.start()
+            else if (time < 0 && conf.game.isRun) {
                 const openCode = conf.lotteryBox.last.openCode.split(',')
-                if(conf.lotteryBox.last.openCode) conf.game.stop(openCode)
+                if (conf.lotteryBox.last.openCode) conf.game.stop(openCode)
             }
         },
         reset: () => {
@@ -116,17 +95,17 @@ const conf = reactive({
             if (conf.game.isRun) {
                 conf.game.isRun = false
                 let openCodeArr = res
-                conf.result.typeResult[conf.play.lotteryId] = {...conf.lotteryBox.last,openCodeArr}
+                conf.result.typeResult[conf.play.lotteryId] = { ...conf.lotteryBox.last, openCodeArr }
                 let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
-            
+
                 // console.log(conf.lotteryBox.countDown);
                 let open = item.lotteryInterval / 1000 - 12
                 let time = conf.lotteryBox.countDown[3] - open
                 // 控制在35秒左右可下注
-                if(time > 0) {
+                if (time > 0) {
                     setTimeout(() => {
                         cgameRef.value?.stop(res)
-                    }, time * 1000 )
+                    }, time * 1000)
                     return
                 }
                 cgameRef.value?.stop(res)
@@ -204,7 +183,7 @@ const conf = reactive({
                     item[v.key + 'Name'] = odds[v.key][item.key].oddsName
                 }
                 conf.bet.listNumArr.forEach(fun)
-            })  
+            })
         },
         // 请求下注接口
         requestBet(e: any) {
@@ -214,7 +193,7 @@ const conf = reactive({
                 return
             }
             System.loading()
-            e.list.forEach((item:any,index:number) => {
+            e.list.forEach((item: any, index: number) => {
                 apis.lotteryUserBets({
                     money: item.betMoney, //单注金额
                     betCodes: item[e.selectType + 'Code'], //投注内容
@@ -226,16 +205,59 @@ const conf = reactive({
                     supplement: 0, //是否追加订单，0否，1是
                     walletCoinCode: conf.defaultWalletInfo.walletCoin, //下注钱包币种
                     success: (res: any) => {
-                        if(index == e.list.length - 1) {
+                        if (index == e.list.length - 1) {
                             conf.getWalletMoney(2)
                             System.toast(i18n.t('game.betSuccess'), 'success')
                         }
                     },
                     final: () => {
-                        if(index == e.list.length - 1) System.loading(false)
+                        if (index == e.list.length - 1) System.loading(false)
                     }
-            });
+                });
             })
+        },
+        async shareBet(e: any) {
+            console.log(e);
+            
+            const obj = conf.lotteryBox.bet.getInfo()
+            console.log(obj);
+            console.log(conf.defaultWalletInfo);
+            
+            console.log(conf.lotteryBox);
+            // console.log(mconf);
+
+            const betCodes = e.list.map((item:any) => item[e.type + 'Code']).join(',') || ''
+            const newBetCodesArr = e.list.map((item:any) => item.name)
+            const num = parseFloat(conf.defaultWalletInfo.betMinAmount)
+
+            let sobj = {
+                coinSymbol: conf.defaultWalletInfo.coinSymbol,
+                betMoney: num.toFixed(4),
+                money: num.toFixed(4),
+                orderType: '',
+                id: StrUtil.getId(),
+                lotteryName: conf.gameType.toUpperCase(),
+                lotteryTypeCode: conf.gameType.toUpperCase(),
+                betLotteryId: conf.play.lotteryId,
+                betOpenId: obj.betOpenId,
+                betExpect: obj.betExpect,
+                betCodes,
+                playName: conf.play.item.lotteryShowname,
+                newPlayName: '',
+                newBetCodesArr,
+                newBetCodes: '',
+                betContent: '',
+                betTitle: obj.betExpect
+            }
+  
+            sobj.newBetCodes = sobj.newBetCodesArr.join(",") || ''
+            sobj.betContent = sobj.newBetCodes
+            sobj.newPlayName = sobj.playName
+
+            sobj.newPlayName = sobj.newPlayName + ' - ' + e.type
+            console.log(sobj);
+            Cookie.set('betRecord', JSON.stringify(sobj))
+            await sconfig.toChat('/chat/betRecordForward')
         }
     } as any,
     downNum: 10,
@@ -256,14 +278,14 @@ const conf = reactive({
             })
             // 统计前一百条的冠、亚、季军
             conf.result.rest()
-            openData.records.forEach((item: any,index: number) => {
-                if(item.openCode) {
+            openData.records.forEach((item: any, index: number) => {
+                if (item.openCode) {
                     let array = item.openCode.split(',')
-                    let list = ['A','B','C','D','E','F']
+                    let list = ['A', 'B', 'C', 'D', 'E', 'F']
                     const stIndex = list.indexOf(array[0]);
                     const ndIndex = list.indexOf(array[1]);
                     const rdIndex = list.indexOf(array[2]);
-                    
+
                     conf.result.totalList[stIndex].st = conf.result.totalList[stIndex].st + 1
                     conf.result.totalList[ndIndex].nd = conf.result.totalList[ndIndex].nd + 1
                     conf.result.totalList[rdIndex].rd = conf.result.totalList[rdIndex].rd + 1
@@ -272,7 +294,7 @@ const conf = reactive({
             let list = openData.records.slice(0, 10) || []
             conf.result.list = list.map((item: any) => {
                 let openCodeArr = [] as any[]
-                let list = ['A','B','C','D','E','F']
+                let list = ['A', 'B', 'C', 'D', 'E', 'F']
                 if (item.openCode) {
                     let arr = item.openCode.split(',')
                     let one = list.indexOf(arr[0])
@@ -305,10 +327,10 @@ const conf = reactive({
                 if (item.openCode && n) {
                     n = false;
                     let openCodeArr = item.openCode.split(',')
-                    conf.result.typeResult[lotteryId] = {...item,openCodeArr}
+                    conf.result.typeResult[lotteryId] = { ...item, openCodeArr }
                     return;
                 }
-            });   
+            });
         },
         rest() {
             conf.result.totalList = [
@@ -338,7 +360,7 @@ const conf = reactive({
         conf.reset()
         //获取游戏列表
         conf.play.list = await slottery.findLotteryList('ANIMALS_RUNNING')
-        
+
         conf.play.list.forEach((item: any) => {
             conf.result.getTypeList(item.id)
         })
@@ -359,7 +381,7 @@ const conf = reactive({
     },
     //查看my order
     changeMyOrder() {
-      System.router.push('/user/myBet/index?lottery=AnimalsRunning')
+        System.router.push('/user/myBet/index?lottery=AnimalsRunning')
     },
 })
 onMounted(async () => {
@@ -375,7 +397,7 @@ onBeforeMount(async () => {
         timer: timer,
         success: (onetime: any, status: any, results: any) => {
             //处理游戏和刷新结果
-            if (onetime && status) {         
+            if (onetime && status) {
                 conf.game.action(
                     'stop',
                     results.map((v: any) => v.num)
@@ -391,7 +413,7 @@ onBeforeMount(async () => {
         lotteryId: () => conf.play.lotteryId,
         showBox: () => { }
     })
-    
+
     conf.bet.listNumArr = [
         {
             sort: 1,
@@ -463,16 +485,17 @@ onBeforeMount(async () => {
 // }
 
 .head-title {
-  font-size: 32rem;
-  font-weight: Bold;
+    font-size: 32rem;
+    font-weight: Bold;
 
-  .arrow-img {
-    width: 28rem;
-    height: 14rem;
-    margin-left: 10rem;
-    transition: transform 0.3s ease-in-out;
-  }
+    .arrow-img {
+        width: 28rem;
+        height: 14rem;
+        margin-left: 10rem;
+        transition: transform 0.3s ease-in-out;
+    }
 }
+
 .rulse {
     position: absolute;
     top: 12%;
@@ -526,7 +549,8 @@ onBeforeMount(async () => {
         margin-right: 10rem;
     }
 }
-.type{
+
+.type {
     background: #fff;
 }
 </style>

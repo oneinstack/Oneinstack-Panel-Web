@@ -65,7 +65,7 @@ import { showConfirmDialog } from 'vant';
 import { computed, onMounted, reactive } from 'vue';
 
 const conf = reactive({
-  isGroup: true, //是否是群聊
+  isGroup: false, //是否是群聊
   typeShow: false,
   typeIndex: 2, //2普通红包，3拼手气红包
   passwordShow: false,
@@ -88,15 +88,23 @@ const conf = reactive({
     let maxMoney = parseFloat(svalue.configv1['lottery_im_red_packet_max_money']),
       minMoney = parseFloat(svalue.configv1['lottery_im_red_packet_min_money']),
       maxNumber = parseFloat(svalue.configv1['lottery_im_red_packet_max_of_signe_time'])
+      money = parseFloat(money)
+      
+      
+      
+    
     const isAllow = !(types.some((type: any) => {
       switch (type) {
         case 'maxMoney':
-          return money > maxMoney && System.toast(i18n.t('code.100043' + minMoney))
+          money > maxMoney && System.toast(i18n.t('code.100044') + maxMoney)
+          return money > maxMoney
 
         case 'minMoney':
-          return money < minMoney && System.toast(i18n.t('code.100043' + minMoney))
+          money < minMoney && System.toast(i18n.t('code.100043') + minMoney)
+          return money < minMoney
         case 'maxNumber':
-          return conf.number > maxNumber && System.toast(i18n.t('code.100042' + maxNumber))
+          conf.number > maxNumber && System.toast(i18n.t('code.100042') + maxNumber)
+          return conf.number > maxNumber
       }
     }))
     return isAllow
@@ -161,7 +169,7 @@ onMounted(async () => {
   })
 
   conf.dataPlace = i18n.t('chatRoom.congrats')
-  // conf.isGroup = sim.getCurrentInfo()?.conversationType === 3
+  conf.isGroup = sim.getCurrentInfo()?.conversationType === 3
   if (!conf.isGroup) {
     conf.number = 1
   }
