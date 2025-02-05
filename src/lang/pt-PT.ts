@@ -168,6 +168,7 @@ export default {
     winBet: 'Ganhar uma aposta',
     expect: 'Esperar',
     amount: 'Montante',
+    totalBets: 'Apostas totais',  // Total bets
     start: 'Hora de início',
     open: 'Horário aberto',
     drawID: 'Desenhar o ID',

@@ -1,5 +1,5 @@
 <template>
-    <GameLayout title="3DLottery" code="3D_LOTTERY" :lottery="lottery">
+    <GameLayout title="3DLottery" code="3D_LOTTERY" :lottery="lottery" :ref="conf.layout.setRef" @reset="conf.betting.popup.close">
         <div class="time-box">
             <div class="time-outer">
                 <div class="time-content">
@@ -138,10 +138,10 @@
             <bettingtabs v-if="conf.operation.active === 'betting'" />
         </div>
         <!-- 内容区 -->
-        <div class="col" style="overflow: auto;" :class="{'active-bg': conf.operation.active==='betting'}">
-            
+        <div class="col" style="overflow: auto;" :class="{ 'active-bg': conf.operation.active === 'betting' }">
             <!-- 下注区和处理下注 -->
-            <betting @changeBet="conf.betting.requestBet" :key="conf.betting.tabs.level1.item.name" v-if="conf.operation.active === 'betting'" />
+            <betting @changeBet="conf.betting.popup.open" :key="conf.betting.tabs.level1.item.name"
+                v-if="conf.operation.active === 'betting'" />
 
             <result ref="resultRefs" v-if="conf.operation.active === 'result'" :lotteryId="lottery.play.item.id" />
 
@@ -151,6 +151,21 @@
                 <div style="padding: 20rem 48rem" v-html="lottery.play.item.lotteryRuleurl"></div>
             </template>
         </div>
+        <!-- 下注弹窗内容 -->
+        <template #bet>
+            <div style="width: 100%;display: flex;justify-content: center;" v-scroll>
+                <div style="display: flex;align-items: center;" v-scroll>
+                    <div class="bet-type">{{ conf.betting.betTypeTitle }}</div>
+                    <template v-for="item in conf.betting.betList" :key="item.oddsCode">
+                        <div class="txt-box" v-if="conf.betting.betTypeTitle == 'triple'">
+                            <div class="txt" :class="{ 'small': item.imgUrl.length > 10 }">{{ item.imgUrl }}</div>
+                        </div>
+                        <img v-else class="img" :src="`/static/img/game/3d/${item.imgUrl}.png`" />
+                    </template>
+                </div>
+                <img class="arrow-img" v-show="conf.betting.betList.length > 7" src="/static/img/double-arrow.png" />
+            </div>
+        </template>
     </GameLayout>
 </template>
 <script setup lang="ts">
@@ -458,7 +473,52 @@ const { conf, lottery, resultRefs, orderRefs } = index()
         }
     }
 }
-.active-bg{
+
+.active-bg {
     background: #FFE1C3;
+}
+.img {
+  height: 85rem;
+  margin-left: 4rem;
+
+  &:first-of-type {
+    margin-left: 0rem;
+  }
+}
+
+.arrow-img{
+  height: 12rem;
+  position: absolute;
+  top: calc(50% - 6rem);
+  right: 6rem;
+}
+.bet-type {
+  color: #5bcdff;
+  font-size: 26rem;
+  font-weight: 700;
+  margin-right: 6rem;
+}
+.txt-box {
+    border: 2rem solid #EAEAEA;
+    border-radius: 8rem;
+    min-width: 160rem;
+    color: #333333;
+    height: 60rem;
+    padding: 1rem 1rem 4rem;
+    margin-left: 10rem;
+
+    .txt {
+        height: 100%;
+        background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEF 100%);
+        border-radius: 0 0 10rem 10rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 26rem;
+    }
+
+    .small {
+        font-size: 20rem;
+    }
 }
 </style>

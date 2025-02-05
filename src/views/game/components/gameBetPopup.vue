@@ -33,7 +33,7 @@
               :key="amount"
               class="money-item"
               :class="{ 'money-active': conf.num == amount }"
-              @click="conf.handleClickQuickMoney(amount)"
+              @click="conf.num = amount"
             >
               {{ lottery.wallet.coinSymbol }}{{ amount }}
             </div>
@@ -45,8 +45,11 @@
             <input placeholder="" v-model="conf.num" inputmode="decimal" @input="conf.vfFun($event, 'num')" />
           </div>
         </div>
+        <div>
+					<slot :coinSymbol="lottery.wallet.coinSymbol" :money="conf.num" name="tips"></slot>
+				</div>
         <div class="bet-btn" @click="conf.submit">
-          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ conf.totalPrice || 0 }}
+          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ sutil.Mul(conf.num, lottery.bet.content.length) || 0 }}
         </div>
       </div>
     </div>
@@ -61,7 +64,7 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { svf } from '@/sstore/svf'
 import System from '@/utils/System'
-import { onMounted, reactive,watch } from 'vue'
+import { onMounted, reactive } from 'vue'
 const props = defineProps({
   show: {
     default: false
@@ -74,12 +77,9 @@ const props = defineProps({
 	},
   betShare: {
     default: false
-  },
-  betAmount: {
-    default: 1 as number,
   }
 })
-const emit = defineEmits(['submit', 'share','betAmount'])
+const emit = defineEmits(['submit', 'share'])
 const conf = reactive({
   num: 10 as any,
   totalPrice: 0 as number,
@@ -96,7 +96,6 @@ const conf = reactive({
       return
     }
     if (!conf.num.length) conf.num = 0
-    conf.totalPrice = conf.num * props.betAmount
   },
   // 下注
   submit() {
@@ -104,7 +103,7 @@ const conf = reactive({
     if (conf.num == 0) {
       return System.toast(i18n.t('common.SelectMoney'))
     }
-    emit('submit', conf.totalPrice)
+    emit('submit', conf.num)
   },
   // 分享注单
   share() {
@@ -115,10 +114,6 @@ const conf = reactive({
   // 关闭下注弹窗
   closePopup() {
     emit('submit', 0)
-  },
-  handleClickQuickMoney:(val:any) => {
-    conf.num = val
-    conf.totalPrice = conf.num * props.betAmount
   }
 })
 onMounted(async () => {
@@ -138,14 +133,6 @@ onMounted(async () => {
   else conf.num = conf.quickRechargeAmount.list[0]
 })
 
-watch(
-	() => props.betAmount,
-	(val: any) => {
-		if (val) {
-      conf.totalPrice = conf.num * props.betAmount
-		}
-	}
-)
 </script>
 
 <style lang="less" scoped>
@@ -191,14 +178,15 @@ watch(
     }
   }
 
-  // .bet-type {
-  //   padding: 24rem;
-  //   background: #fffef8;
-  //   display: grid;
-  //   grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
-  //   gap: 12rem;
-  //   place-items: center !important;
-  // }
+  .bet-type {
+    padding: 24rem;
+    background: #fffef8;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
+    gap: 12rem;
+    place-items: center !important;
+    position: relative;
+  }
 
   .select-box {
     padding: 0rem 40rem;

@@ -95,19 +95,21 @@
 
     <!-- 下注弹窗内容 -->
     <template #bet>
-      <div class="bet-content">
-        <template v-for="item in conf.betting.betArr">
-          <div class="ball-box" :style="{
-            'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
-            }"
-            v-if="isNaN(item.oddsName)">
-            <div>{{ item.languageName}}</div>
-          </div>
-          <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
-        </template>
-      </div>
-      <div class="input">
-        <div class="input-title">{{ 'TotalBetAmount' }}: {{ conf.betting.totalAmount }}</div>
+      <div style="width: 100%;">
+        <div class="bet-content">
+          <template v-for="item in conf.betting.betArr">
+            <div class="ball-box" :style="{
+              'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
+              }"
+              v-if="isNaN(item.oddsName)">
+              <div>{{ item.languageName}}</div>
+            </div>
+            <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
+          </template>
+        </div>
+        <!-- <div class="input">
+          <div class="input-title">{{ 'TotalBetAmount' }}: {{ conf.betting.totalAmount }}</div>
+        </div> -->
       </div>
     </template>
 

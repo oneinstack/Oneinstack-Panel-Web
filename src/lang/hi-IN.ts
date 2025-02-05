@@ -168,6 +168,7 @@ export default {
     winBet: 'एक बाज़ी जीतें',
     expect: 'अपेक्षा करें',
     amount: 'रकम',
+    totalBets: 'कुल दांव',  // Total bets
     start: 'शुरू होने का समय',
     open: 'खुलने का समय',
     drawID: 'ड्रा आईडी',

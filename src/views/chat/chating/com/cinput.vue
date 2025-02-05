@@ -10,6 +10,7 @@
     @blur="conf.blur"
     :inputmode="conf.inputmode"
     @click="conf.blur"
+    v-scroll
   ></div>
 </template>
 <script setup lang="ts">
@@ -116,6 +117,11 @@ const messageInput = (e: Event) => {
   childNodes.value = (e.target as HTMLInputElement).childNodes
   message.value = (e.target as HTMLInputElement).innerHTML
   emit('update:modelValue', message.value)
+  messageInputDom.value.scrollTo({
+    top: messageInputDom.value.scrollHeight,
+    behavior: 'smooth'
+  })
+  
 }
 
 const messageInputDom = ref()

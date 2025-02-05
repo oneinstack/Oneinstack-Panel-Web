@@ -45,8 +45,11 @@
             <input placeholder="" v-model="conf.num" inputmode="decimal" @input="conf.vfFun($event, 'num')" />
           </div>
         </div>
+        <div>
+					<slot :coinSymbol="lottery.wallet.coinSymbol" :money="conf.num" name="tips"></slot>
+				</div>
         <div class="bet-btn" @click="conf.submit">
-          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ conf.num || 0 }}
+          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ sutil.Mul(conf.num, lottery.bet.content.length) || 0 }}
         </div>
       </div>
     </div>
@@ -177,6 +180,7 @@ onMounted(async () => {
     grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
     gap: 12rem;
     place-items: center !important;
+    position: relative;
   }
 
   .select-box {

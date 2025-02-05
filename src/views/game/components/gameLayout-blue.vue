@@ -12,6 +12,7 @@
       </div>
       <img src="/static/img/wallet.webp" style="width: 72rem; height: 72rem" />
     </template>
+    <!-- 滚动通知 -->
     <div v-if="showTips">
 			<div class="tip">
 				<img class="tip-icon" src="/static/img/Frame.png" />
@@ -27,6 +28,13 @@
     <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit" @share="conf.bet.shareBet"
       :lottery="lottery">
       <slot name="bet"></slot>
+      <!-- 多注显示 -->
+      <template #tips="{ money, coinSymbol }" v-if="lottery.bet.content.length > 1">
+        <div class="tips">
+          <div class="num">{{ $t('game.totalBets') }}: <span>{{ lottery.bet.content.length }}</span></div>
+          <div>{{ $t('game.amount') }}: <span>{{ coinSymbol }}{{ sutil.Mul(money, lottery.bet.content.length) }}</span></div>
+        </div>
+      </template>
     </bet-popup>
   </x-page>
 </template>
@@ -40,6 +48,7 @@ import { Scope } from 'tools-vue3';
 import sconfig from '@/sstore/sconfig';
 import stheme from '@/sstore/stheme'
 import i18n from '@/lang';
+import sutil from '@/sstore/sutil'
 
 const props = defineProps({
 	title: {
@@ -198,5 +207,22 @@ defineExpose({
 			transform: translate3d(-100%, 0, 0);
 		}
 	}
+}
+.tips {
+  padding: 0rem 0rem 30rem;
+  font-size: 30rem;
+  color: #333;
+  display: flex;
+
+  .num {
+    margin-right: 40rem;
+  }
+
+  span {
+    background-image: -webkit-linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 </style>

@@ -80,6 +80,8 @@ const conf = reactive({
     inset: 0;
     z-index: 9;
     background: rgba(0, 0, 0, 0.3);
+    width: 750rem;
+    margin: 0 auto;
 }
 
 .bet-type {
@@ -87,6 +89,9 @@ const conf = reactive({
     z-index: 10;
     left: 0;
     right: 0;
+    width: 750rem;
+    margin: 0 auto;
+    
 
     .content {
         display: flex;

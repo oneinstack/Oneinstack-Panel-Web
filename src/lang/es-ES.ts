@@ -169,6 +169,7 @@ export default {
     winBet: 'Ganar una apuesta',
     expect: 'Esperar',
     amount: 'Monto',
+    totalBets: 'Apuestas totales',  // Total bets
     start: 'Hora de inicio',
     open: 'Hora de apertura',
     drawID: 'ID del sorteo',

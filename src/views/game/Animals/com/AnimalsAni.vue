@@ -600,7 +600,7 @@ const conf = reactive({
         looplight()
         const looprain = () => {
             stween.to('rain' + minIndex, {
-                x: 580,
+                x: 680,
                 time: 2000,
                 final() {
                     conf.showRain[minIndex] = true
@@ -752,7 +752,7 @@ onMounted(() => {
 .rain {
     position: absolute;
     top: -22rem;
-    right: -21rem;
+    right: -61rem;
     height: 240rem;
     width: 240rem;
     z-index: 9;
@@ -763,7 +763,7 @@ onMounted(() => {
     height: 80rem;
     position: absolute;
     bottom: 30rem;
-    left: 600px;
+    left: 700px;
 }
 
 .Ready {

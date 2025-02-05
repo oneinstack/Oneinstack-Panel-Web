@@ -168,6 +168,7 @@ export default {
     winBet: 'Menangkan taruhan',
     expect: 'Berharap',
     amount: 'Jumlah',
+    totalBets: 'Taruhan total',  // Total bets
     start: 'Waktu mulai',
     open: 'Waktu buka',
     drawID: 'Tarik ID',

@@ -29,6 +29,13 @@ export const index = () => {
   })
   const conf = reactive({
     gameType: '3D_LOTTERY',
+    layout: {
+      ref: null as any,
+      setRef: (el: any) => {
+        if (el) conf.layout.ref = el
+        else conf.layout.ref = null as any
+      }
+    },
     loop: {
       numList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
       sumList: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27],
@@ -73,7 +80,7 @@ export const index = () => {
           conf.loop.openCode[5] = 1
         }
         if (conf.operation.active === 'result') resultRefs.value?.initResult()
-          if (conf.operation.active === 'myOrder') orderRefs.value?.initOrder()
+        if (conf.operation.active === 'myOrder') orderRefs.value?.initOrder()
       }
     },
     /**
@@ -115,6 +122,12 @@ export const index = () => {
           item: {} as any,
           change(item: any) {
             const { tabs } = conf.betting
+            conf.betting.betSizeList = []
+            conf.betting.betNumList = []
+            conf.betting.strList = []
+            if (tabs.level1.item.sizeList) tabs.level1.item.sizeList.forEach((item: any) => (item.isActive = false))
+            if (tabs.level1.item.numList) tabs.level1.item.numList.forEach((item: any) => (item.isActive = false))
+            if (tabs.level1.item.strList) tabs.level1.item.item.strList.forEach((item: any) => (item.isActive = false))
             tabs.level1.item = item
           }
         },
@@ -129,19 +142,35 @@ export const index = () => {
       },
       betShow: false,
       disabledShow: false,
+      betList: [] as any[],
+      betTypeTitle: '',
+      betSizeList: [] as any[],
+      betNumList: [] as any[],
+      strList: [] as any[],
       popup: {
-        open: () => {
-          //   conf.layout.ref.open()
-          conf.betting.betShow = true
+        open: (e: any) => {
+          console.log('888888')
 
+          console.log(e)
+          conf.betting.betList = e.list
+          conf.betting.betTypeTitle = e.type
+          conf.layout.ref.open()
+          // conf.betting.betShow = true
         },
         close: (type = 1) => {
-          //  conf.layout.ref.close()
-          if(type == 1) return conf.betting.betShow = false
+          if (type == 2) return conf.layout.ref.close()
+          const { tabs } = conf.betting
+          conf.betting.betSizeList = []
+          conf.betting.betNumList = []
+          conf.betting.strList = []
+          if (tabs.level1.item.sizeList) tabs.level1.item.sizeList.forEach((item: any) => (item.isActive = false))
+          if (tabs.level1.item.numList) tabs.level1.item.numList.forEach((item: any) => (item.isActive = false))
+          if (tabs.level1.item.strList) tabs.level1.item.strList.forEach((item: any) => (item.isActive = false))
+          conf.layout.ref.close()
         },
         autoClose: (time: any) => {
-          if(time <= lottery.play.item.openLockCountdown) {
-            conf.betting.popup.close()
+          if (time <= lottery.play.item.openLockCountdown) {
+            conf.betting.popup.close(2)
             conf.betting.disabledShow = true
           } else {
             conf.betting.disabledShow = false
@@ -163,23 +192,23 @@ export const index = () => {
       // 请求下注接口
       requestBet(e: any) {
         let obj = lottery.bet.getInfo()
-        console.log(e);
+        console.log(e)
         obj.betCodes = e.join(',')
-        console.log(obj.betCodes);
+        console.log(obj.betCodes)
         System.loading()
         // e.forEach((item: any, index: number) => {
         //   obj.betCodes = item.oddsCode
-          apis.lotteryUserBets({
-            ...obj,
-            success: (res: any) => {
-              System.toast(i18n.t('game.betSuccess'), 'success')
-              lottery.wallet.getWalletMoney()
-              conf.betting.popup.close()
-            },
-            final: () => {
-              System.loading(false)
-            }
-          })
+        apis.lotteryUserBets({
+          ...obj,
+          success: (res: any) => {
+            System.toast(i18n.t('game.betSuccess'), 'success')
+            lottery.wallet.getWalletMoney()
+            conf.betting.popup.close()
+          },
+          final: () => {
+            System.loading(false)
+          }
+        })
         // })
       }
     }

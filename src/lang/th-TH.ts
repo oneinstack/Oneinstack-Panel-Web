@@ -168,6 +168,7 @@ export default {
     winBet: 'ชนะการเดิมพัน',
     expect: 'คาดหมาย',
     amount: 'ปริมาณ',
+    totalBets: 'การเดิมพันทั้งหมด',  // Total bets
     start: 'เวลาเริ่มต้น',
     open: 'เวลาเปิดบริการ',
     drawID: 'วาด ID ',

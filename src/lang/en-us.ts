@@ -164,6 +164,7 @@ export default {
     winBet: 'Win a bet',
     expect: 'Expect',
     amount: 'Amount',
+    totalBets: 'Total bets',
     start: 'Start time',
     open: 'Open time',
     drawID: 'Draw ID',

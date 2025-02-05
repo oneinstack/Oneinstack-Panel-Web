@@ -13,20 +13,27 @@
       <img src="/static/img/wallet.webp" style="width: 72rem; height: 72rem" />
     </template>
     <div v-if="showTips">
-			<div class="tip">
-				<img class="tip-icon" src="/static/img/Frame.png" />
-				<div style="width: 100%;overflow: hidden;">
-					<div class="tip-content">
-						<span>{{ $t('winGo.BettingCloseTip1') + lottery.play.item.openLockCountdown +
-							$t('winGo.BettingCloseTip2') }}</span>
-					</div>
-				</div>
-			</div>
-		</div>
+      <div class="tip">
+        <img class="tip-icon" src="/static/img/Frame.png" />
+        <div style="width: 100%;overflow: hidden;">
+          <div class="tip-content">
+            <span>{{ $t('winGo.BettingCloseTip1') + lottery.play.item.openLockCountdown +
+              $t('winGo.BettingCloseTip2') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
     <slot></slot>
     <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit"
-      @share="conf.bet.shareBet" :lottery="lottery" :betAmount="betInfo?.totalAmount">
+      @share="conf.bet.shareBet" :lottery="lottery">
       <slot name="bet"></slot>
+      <!-- 多注显示 -->
+      <template #tips="{ money, coinSymbol }" v-if="lottery.bet.content.length > 1">
+        <div class="tips">
+          <div class="num">{{ $t('game.totalBets') }}: <span>{{ lottery.bet.content.length }}</span></div>
+          <div>{{ $t('game.amount') }}: <span>{{ coinSymbol }}{{ sutil.Mul(money, lottery.bet.content.length) }}</span></div>
+        </div>
+      </template>
     </bet-popup>
   </x-page>
 </template>
@@ -39,26 +46,27 @@ import betPopup from './gameBetPopup.vue'
 import i18n from '@/lang'
 import { Scope } from 'tools-vue3';
 import sconfig from '@/sstore/sconfig';
+import sutil from '@/sstore/sutil'
 
 const props = defineProps({
-	title: {
-		default: ''
-	},
-	lottery: {
-		default: {} as LotteryConfInter
-	},
-	code: {
-		default: ''
-	},
-	onInit: {
-		default: null as any
-	},
-	betInfo: {
-		default: {} as any
-	},
-	showTips: {
-		default: false
-	}
+  title: {
+    default: ''
+  },
+  lottery: {
+    default: {} as LotteryConfInter
+  },
+  code: {
+    default: ''
+  },
+  onInit: {
+    default: null as any
+  },
+  betInfo: {
+    default: {} as any
+  },
+  showTips: {
+    default: false
+  }
 })
 
 
@@ -72,10 +80,11 @@ const conf = reactive({
     show: false,
     // 下注
     submit: async (money: any) => {
-      if (parseFloat(money) > parseFloat(props.lottery.wallet.money)) {
-          System.toast(i18n.t('SattaKing.insufficient'))
-          return
-        }
+      const totalMoney:any = sutil.Mul(money, props.lottery.bet.content.length)
+      if (parseFloat(totalMoney) > parseFloat(props.lottery.wallet.money)) {
+        System.toast(i18n.t('SattaKing.insufficient'))
+        return
+      }
       if (money) {
         System.loading()
         const obj = props.lottery.bet.getInfo()
@@ -93,7 +102,7 @@ const conf = reactive({
           ...obj,
           success: (res: any) => {
             props.lottery.wallet.getWalletMoney()
-            System.toast(i18n.t('game.betSuccess'),'success')
+            System.toast(i18n.t('game.betSuccess'), 'success')
             emit('reset', obj)
           },
           final: async () => {
@@ -159,6 +168,10 @@ onMounted(async () => {
 
 defineExpose({
   open: () => {
+    console.log('555666');
+
+    console.log(props.lottery.bet);
+
     conf.bet.show = true
   },
   close: () => {
@@ -169,40 +182,57 @@ defineExpose({
 
 <style lang="less" scoped>
 .tip {
-	display: flex;
-	align-items: center;
-	padding: 0rem 24rem;
-	height: 80rem;
-	background: #FFF9ED;
+  display: flex;
+  align-items: center;
+  padding: 0rem 24rem;
+  height: 80rem;
+  background: #FFF9ED;
 
-	.tip-icon {
-		width: 32rem;
-		height: 32rem;
-		margin-right: 16rem;
-		flex-shrink: 0;
-	}
+  .tip-icon {
+    width: 32rem;
+    height: 32rem;
+    margin-right: 16rem;
+    flex-shrink: 0;
+  }
 
-	.tip-content {
-		font-size: 26rem;
-		color: #45454d;
-		font-weight: 500;
-		display: inline-block;
-		white-space: nowrap;
-		animation: u-loop-animation 20s linear infinite both;
-		text-align: right;
-		// 这一句很重要，为了能让滚动左右连接起来
-		padding-left: 100%;
-		flex-wrap: nowrap;
-	}
+  .tip-content {
+    font-size: 26rem;
+    color: #45454d;
+    font-weight: 500;
+    display: inline-block;
+    white-space: nowrap;
+    animation: u-loop-animation 20s linear infinite both;
+    text-align: right;
+    // 这一句很重要，为了能让滚动左右连接起来
+    padding-left: 100%;
+    flex-wrap: nowrap;
+  }
 
-	@keyframes u-loop-animation {
-		0% {
-			transform: translate3d(0, 0, 0);
-		}
+  @keyframes u-loop-animation {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
 
-		100% {
-			transform: translate3d(-100%, 0, 0);
-		}
-	}
+    100% {
+      transform: translate3d(-100%, 0, 0);
+    }
+  }
+}
+.tips {
+  padding: 0rem 0rem 30rem;
+  font-size: 30rem;
+  color: #333;
+  display: flex;
+
+  .num {
+    margin-right: 40rem;
+  }
+
+  span {
+    background-image: -webkit-linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 }
 </style>
