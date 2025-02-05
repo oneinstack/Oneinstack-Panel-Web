@@ -84,6 +84,11 @@
             <div style="width: 11%">{{ $t('winGo.BS') }}</div>
             <div style="width: 11%">{{ $t('pk10.OE') }}</div>
           </div>
+          <div class="result-title" v-if="conf.typeIndex == 'MARK_SIX'">
+            <div style="width: 30%">{{ $t('game.drawID') }}</div>
+            <div style="width: 59%">{{ $t('game.result') }}</div>
+            <div style="width: 11%">{{ $t('game.sum') }}</div>
+          </div>
           <div class="result-list">
             <!-- 3d -->
             <div v-if="conf.typeIndex == '3D'">
@@ -260,6 +265,25 @@
               </template>
             </div>
 
+            <!-- 六合彩 -->
+            <div v-if="conf.typeIndex == 'MARK_SIX'">
+              <template v-for="(item, index) in conf.resultList" :key="index">
+                <div class="result-ltem" v-if="item.openCode">
+                  <div style="width: 30%; word-break: break-all; font-size: 28rem">{{ item.openExpect }}</div>
+                  <div style="width: 59%" class="share-point">
+                    <template v-for="into in item.openCode.split(',')">
+                      <resultBall :num="into" :size="42" style="margin-right: 4rem;"/>
+                    </template>
+                  </div>
+                  <div style="width: 11%; display: flex; justify-content: center">
+                    <div class="sum">
+                      <div class="sum-num">{{ conf.getTotal(item.openCode) }}</div>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
             <!-- 5D -->
             <div v-if="conf.typeIndex == '5D'">
               <template v-for="(item, index) in conf.resultList" :key="index">
@@ -311,6 +335,7 @@
               </template>
             </div>
 
+
             <div v-if="conf.resultList.length > 0">
               <div class="more" v-if="conf.isTips == false">
                 <div class="more-btn" @click="conf.moreMessage">
@@ -333,6 +358,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
 import { index } from './resultHistory'
+import resultBall from '../../game/MarkSix/components/resultBall.vue'
 
 const typeRefs = ref<any>()
 
