@@ -37,22 +37,8 @@
           </div>
 
           <!-- 其他信息 -->
-          <template v-if="item.lotteryTypeCode != 'SATTA_KING'">
-            <div class="row items-center top12" v-if="item.betCodeArr.length > 1">
-              <div class="flex flex-center relative">
-                <img class="order-icon" src="/static/img/bet-numbers.png" />
-                <div class="absolute" style="font-size: 18rem">B</div>
-              </div>
-              <div style="margin: 0 10rem">{{ $t('SattaKing.BettingContent2') + ':' }}</div>
-              <betCode :item="item" />
-            </div>
-            <div class="row items-center top12">
-              <img class="order-icon" src="/static/img/bet-time.png" />
-              <div style="margin: 0 10rem">{{ $t('game.bettingTime') + ':' }}</div>
-              <div>{{ item.betTime }}</div>
-            </div>
-          </template>
-          <template v-else>
+           <!-- satta king -->
+          <template v-if="item.lotteryTypeCode == 'SATTA_KING'">
             <div class="row items-center top12">
               <div class="row items-center">
                 <img class="order-icon" src="/static/img/bet-time.png" />
@@ -70,6 +56,48 @@
               <img class="order-icon" src="/static/img/bet-time.png" />
               <div style="margin: 0 10rem">{{ $t('SattaKing.GameType') + ':' }}</div>
               <div>{{ item.lotteryItem.lotteryShowname }}</div>
+            </div>
+          </template>
+          <!-- 六合彩 -->
+          <template v-else-if="item.lotteryTypeCode == 'MARK_SIX'">
+            <div class="row items-center top12">
+              <div class="row items-center">
+                <img class="order-icon" src="/static/img/bet-time.png" />
+                <div style="margin: 0 10rem">{{ $t('SattaKing.BettingContent2') + ':' }}</div>
+              </div>
+              <div class="col" style="text-wrap: wrap; word-break: break-word;">
+                <div style="display: flex;flex-wrap: wrap;">
+                  <template v-for="(into,intoIndex) in item.betContent">
+									<div class="ball-box" :style="{
+                    'background-image': `url('/static/img/game/marksix/${into}.webp')`,
+                    }"
+                    v-if="isNaN(into)">
+                    <div>{{ intoIndex != item.betContent.length - 1 ? into + ' , ' : into }}</div>
+									</div>
+									<resultBall :num="into" :size="42" v-if="!isNaN(into)" style="margin: 0rem 4rem 4rem 0rem;"/>
+								</template>
+                </div>
+              </div>
+            </div>
+            <div class="row items-center top12">
+              <img class="order-icon" src="/static/img/bet-time.png" />
+              <div style="margin: 0 10rem">{{ $t('SattaKing.GameType') + ':' }}</div>
+              <div>{{ item.playName }}</div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="row items-center top12" v-if="item.betCodeArr.length > 1">
+              <div class="flex flex-center relative">
+                <img class="order-icon" src="/static/img/bet-numbers.png" />
+                <div class="absolute" style="font-size: 18rem">B</div>
+              </div>
+              <div style="margin: 0 10rem">{{ $t('SattaKing.BettingContent2') + ':' }}</div>
+              <betCode :item="item" />
+            </div>
+            <div class="row items-center top12">
+              <img class="order-icon" src="/static/img/bet-time.png" />
+              <div style="margin: 0 10rem">{{ $t('game.bettingTime') + ':' }}</div>
+              <div>{{ item.betTime }}</div>
             </div>
           </template>
 
@@ -106,7 +134,10 @@
                 </div>
               </div>
               <div style="margin: 0 10rem">{{ $t('game.openCode') + ':' }}</div>
-              <openCode :item="item" />
+              <openCode :item="item" v-if="item.lotteryTypeCode != 'MARK_SIX'"/>
+              <template v-for="into in item.betOpenCodeList" v-else>
+                <resultBall :num="into.value" :size="42" style="margin-right: 4rem;"/>
+              </template>
             </div>
 
             <!-- 5D多一列sum显示单独处理 -->
@@ -144,6 +175,7 @@ import betCode from './betCode.vue'
 import chooseTop from './chooseTop.vue'
 import openCode from './openCode.vue'
 import { index } from './index'
+import resultBall from '../../game/MarkSix/components/resultBall.vue'
 
 const chooseRef = ref()
 const conf = index({ chooseRef })
@@ -199,5 +231,9 @@ const conf = index({ chooseRef })
   &.cancelledOrder {
     background: #5c6381;
   }
+}
+
+:deep(.ball-box){
+  position: relative !important;
 }
 </style>

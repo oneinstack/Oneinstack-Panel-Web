@@ -34,19 +34,8 @@
           <div class="title-b1">BetContent</div>
 
           <!-- 其他信息 -->
-          <template v-if="conf.item.lotteryTypeCode != 'SATTA_KING'">
-            <div class="row items-center top12">
-              <img class="order-icon" src="/static/img/bet-time.png" />
-              <div style="margin: 0 10rem">{{ $t('game.bettingTime') + ':' }}</div>
-              <div>{{ conf.item.betTime }}</div>
-            </div>
-            <div class="row items-center top12">
-              <img class="order-icon" src="/static/img/bet-time.png" />
-              <div style="margin: 0 10rem">{{ $t('game.openTime') + ':' }}</div>
-              <div>{{ conf.item.betOpenTime }}</div>
-            </div>
-          </template>
-          <template v-else>
+          <!-- satta king -->
+          <template v-if="conf.item.lotteryTypeCode == 'SATTA_KING'">
             <div class="row items-center top12">
               <div class="row items-center">
                 <img class="order-icon" src="/static/img/bet-time.png" />
@@ -64,6 +53,46 @@
               <img class="order-icon" src="/static/img/bet-time.png" />
               <div style="margin: 0 10rem">{{ $t('SattaKing.GameType') + ':' }}</div>
               <div>{{ conf.item.lotteryItem.lotteryShowname }}</div>
+            </div>
+          </template>
+          <!-- 六合彩 -->
+          <template v-else-if="conf.item.lotteryTypeCode == 'MARK_SIX'">
+            <div class="row items-center top12">
+              <div class="row items-center">
+                <img class="order-icon" src="/static/img/bet-time.png" />
+                <div style="margin: 0 10rem">{{ $t('SattaKing.BettingContent2') + ':' }}</div>
+              </div>
+              <div class="col" style="text-wrap: wrap;word-break: break-word;">
+                <div style="display: flex;flex-wrap: wrap;">
+                  <template v-for="(into,intoIndex) in conf.item.betContent">
+                    <div class="ball-box" :style="{
+                    'background-image': `url('/static/img/game/marksix/${into}.webp')`,
+                    }"
+                    v-if="isNaN(into)">
+                    <div>{{ intoIndex != conf.item.betContent.length - 1 ? into + ' , ' : into }}</div>
+									</div>
+									<resultBall :num="into" :size="42" v-if="!isNaN(into)" style="margin: 0rem 4rem 4rem 0rem;"/>
+                  </template>
+								</div>
+              </div>
+            </div>
+            <div class="row items-center top12">
+              <img class="order-icon" src="/static/img/bet-time.png" />
+              <div style="margin: 0 10rem">{{ $t('SattaKing.GameType') + ':' }}</div>
+              <div>{{ conf.item.playName }}</div>
+            </div>
+          </template>
+          <!-- 其他 -->
+          <template v-else>
+            <div class="row items-center top12">
+              <img class="order-icon" src="/static/img/bet-time.png" />
+              <div style="margin: 0 10rem">{{ $t('game.bettingTime') + ':' }}</div>
+              <div>{{ conf.item.betTime }}</div>
+            </div>
+            <div class="row items-center top12">
+              <img class="order-icon" src="/static/img/bet-time.png" />
+              <div style="margin: 0 10rem">{{ $t('game.openTime') + ':' }}</div>
+              <div>{{ conf.item.betOpenTime }}</div>
             </div>
           </template>
 

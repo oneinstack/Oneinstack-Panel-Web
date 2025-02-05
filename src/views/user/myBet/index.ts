@@ -6,6 +6,10 @@ import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
 import { apis } from '../../../api/index'
+import { getOdds } from '../../game/MarkSix/MarkSixDataOdds'
+import i18n from '@/lang'
+
+
 
 export const index = ({ chooseRef }: any) => {
   const event = Scope.Event()
@@ -13,6 +17,7 @@ export const index = ({ chooseRef }: any) => {
   const conf = reactive({
     list: [] as any[],
     loading: false,
+    MarkSixOddsData: [] as any[],
     options: {
       betStatus: {
         0: 'toDrawn',
@@ -125,10 +130,6 @@ export const index = ({ chooseRef }: any) => {
 
         //对配置进行初始化
         const getImgConfig = (v: any, item: any) => {
-          // console.log(v);
-          // console.log(item);
-          
-          
           if (StrUtil.isNull(v)) return null
           let img = ''
           let color = ''
@@ -229,6 +230,14 @@ export const index = ({ chooseRef }: any) => {
             })
             item.betCodeArr = list
           }
+
+          // 六合彩
+          else if (item.lotteryTypeCode == 'MARK_SIX') {
+            item.betContent = conf.MarkSixOddsData.filter((into:any) => item.betCodes.includes(into.oddsCode))
+					  item.betContent = item.betContent.map((into:any) => into.oddsName)
+            let str = conf.MarkSixOddsData.find((into:any) => item.betCodes.includes(into.oddsCode))?.parentName || ''
+					  item.playName = i18n.t('lhc.' + str)
+          }
           return {
             img,
             value: v,
@@ -312,8 +321,6 @@ export const index = ({ chooseRef }: any) => {
       }
 
       conf.list = [...conf.list, ...data]
-      console.log(conf.list);
-      
     },
     toDetail(item: any) {
       Cookie.set('betDetailInfo', {
@@ -324,12 +331,30 @@ export const index = ({ chooseRef }: any) => {
         }
       })
       System.router.push('/user/myBet/detail')
-    }
+    },
+
+    getOneArr (data:any) {
+      let newData:any = []
+      const callback = (item:any) => {
+        (item.list || (item.list = [])).map((v:any) => {
+          v.parentName = item.name
+          callback(v)
+        })
+        delete item.list
+        newData.push(item)
+      }
+      data.map((v:any) => callback(v))
+      return newData
+    },
   })
 
   onMounted(() => {
     chooseRef.value.getList()
     event.on(EPage.scrollBottom, conf.page.change)
+
+    // 六合彩赔率表
+    let tree = getOdds()
+	  conf.MarkSixOddsData = conf.getOneArr(tree);
   })
 
   return conf
