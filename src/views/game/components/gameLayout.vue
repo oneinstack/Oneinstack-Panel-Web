@@ -25,7 +25,7 @@
 		</div>
     <slot></slot>
     <bet-popup :show="conf.bet.show" :betShare="lottery.countDown[3] < 20" @submit="conf.bet.submit"
-      @share="conf.bet.shareBet" :lottery="lottery">
+      @share="conf.bet.shareBet" :lottery="lottery" :betAmount="betInfo?.totalAmount">
       <slot name="bet"></slot>
     </bet-popup>
   </x-page>
@@ -71,7 +71,11 @@ const conf = reactive({
     share: false,
     show: false,
     // 下注
-    submit: async (money: number) => {
+    submit: async (money: any) => {
+      if (parseFloat(money) > parseFloat(props.lottery.wallet.money)) {
+          System.toast(i18n.t('SattaKing.insufficient'))
+          return
+        }
       if (money) {
         System.loading()
         const obj = props.lottery.bet.getInfo()
@@ -85,7 +89,6 @@ const conf = reactive({
         // nums => 投注数量
         // supplement => 是否追加订单，0否，1是
         // walletCoinCode => 下注钱包币种
-        console.log(obj);
         await apis.lotteryUserBets({
           ...obj,
           success: (res: any) => {

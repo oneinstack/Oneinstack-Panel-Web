@@ -33,7 +33,7 @@
               :key="amount"
               class="money-item"
               :class="{ 'money-active': conf.num == amount }"
-              @click="conf.num = amount"
+              @click="conf.handleClickQuickMoney(amount)"
             >
               {{ lottery.wallet.coinSymbol }}{{ amount }}
             </div>
@@ -46,7 +46,7 @@
           </div>
         </div>
         <div class="bet-btn" @click="conf.submit">
-          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ conf.num || 0 }}
+          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ conf.totalPrice || 0 }}
         </div>
       </div>
     </div>
@@ -61,7 +61,7 @@ import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import { svf } from '@/sstore/svf'
 import System from '@/utils/System'
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive,watch } from 'vue'
 const props = defineProps({
   show: {
     default: false
@@ -74,11 +74,15 @@ const props = defineProps({
 	},
   betShare: {
     default: false
+  },
+  betAmount: {
+    default: 1 as number,
   }
 })
-const emit = defineEmits(['submit', 'share'])
+const emit = defineEmits(['submit', 'share','betAmount'])
 const conf = reactive({
   num: 10 as any,
+  totalPrice: 0 as number,
   translateY: 0,
   quickRechargeAmount: {
     list: [10, 20, 50, 100] // 快速下注列表
@@ -92,6 +96,7 @@ const conf = reactive({
       return
     }
     if (!conf.num.length) conf.num = 0
+    conf.totalPrice = conf.num * props.betAmount
   },
   // 下注
   submit() {
@@ -99,7 +104,7 @@ const conf = reactive({
     if (conf.num == 0) {
       return System.toast(i18n.t('common.SelectMoney'))
     }
-    emit('submit', conf.num)
+    emit('submit', conf.totalPrice)
   },
   // 分享注单
   share() {
@@ -110,6 +115,10 @@ const conf = reactive({
   // 关闭下注弹窗
   closePopup() {
     emit('submit', 0)
+  },
+  handleClickQuickMoney:(val:any) => {
+    conf.num = val
+    conf.totalPrice = conf.num * props.betAmount
   }
 })
 onMounted(async () => {
@@ -125,10 +134,18 @@ onMounted(async () => {
   if (!sconfig.userInfo) return
   await svalue.getDefaultWallet()
   conf.quickRechargeAmount.list = sconfig.walletInfo.quickRechargeAmount.map((item: any) => parseInt(item))
-  console.log(sconfig.walletInfo);
   if (sconfig.walletInfo.betMinAmount) conf.num = sutil.dataHandling(sconfig.walletInfo.betMinAmount)
   else conf.num = conf.quickRechargeAmount.list[0]
 })
+
+watch(
+	() => props.betAmount,
+	(val: any) => {
+		if (val) {
+      conf.totalPrice = conf.num * props.betAmount
+		}
+	}
+)
 </script>
 
 <style lang="less" scoped>
@@ -174,14 +191,14 @@ onMounted(async () => {
     }
   }
 
-  .bet-type {
-    padding: 24rem;
-    background: #fffef8;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
-    gap: 12rem;
-    place-items: center !important;
-  }
+  // .bet-type {
+  //   padding: 24rem;
+  //   background: #fffef8;
+  //   display: grid;
+  //   grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
+  //   gap: 12rem;
+  //   place-items: center !important;
+  // }
 
   .select-box {
     padding: 0rem 40rem;

@@ -95,15 +95,20 @@
 
     <!-- 下注弹窗内容 -->
     <template #bet>
-      <template v-for="item in conf.betting.betArr">
-        <div class="ball-box" :style="{
-          'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
-          }"
-          v-if="isNaN(item.oddsName)">
-          <div>{{ item.languageName}}</div>
-        </div>
-        <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
-      </template>
+      <div class="bet-content">
+        <template v-for="item in conf.betting.betArr">
+          <div class="ball-box" :style="{
+            'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
+            }"
+            v-if="isNaN(item.oddsName)">
+            <div>{{ item.languageName}}</div>
+          </div>
+          <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
+        </template>
+      </div>
+      <div class="input">
+        <div class="input-title">{{ 'TotalBetAmount' }}: {{ conf.betting.totalAmount }}</div>
+      </div>
     </template>
 
     <!-- 下注按钮 -->
@@ -332,5 +337,28 @@ const { conf, lottery } = index()
 			height: 372rem;
 		}
 	}
+}
+
+.bet-content{
+  padding: 24rem;
+  background: #fffef8;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130rem,1fr));
+  gap: 12rem;
+  place-items: center !important;
+
+}
+
+.input {
+  display: flex;
+  align-items: center;
+  margin: 32rem;
+
+  .input-title {
+    color: #45454d;
+    font-weight: 700;
+    font-size: 28rem;
+    margin-right: 24rem;
+  }
 }
 </style>
