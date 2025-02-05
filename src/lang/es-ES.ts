@@ -211,7 +211,8 @@ export default {
     setWalletTip: '¡Por favor, configure la billetera predeterminada!',
     minBetTip: 'El monto mínimo de la apuesta es', //最小下注金额为
     maxBetTip: 'El monto máximo de la apuesta es', //最大下注金额为
-    betSuccess: 'Apuesta exitosa!' // 下注成功
+    betSuccess: 'Apuesta exitosa!', // 下注成功
+    BetNumber:'Número de apuesta',
   },
   scratch: {
     scratch: 'Rascar',

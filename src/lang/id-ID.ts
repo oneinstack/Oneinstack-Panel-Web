@@ -210,7 +210,8 @@ export default {
     setWalletTip: 'Tolong atur dompet standar!', //请设置默认钱包!
     minBetTip: 'Jumlah minimum bertaruh', //最小下注金额为
     maxBetTip: 'Jumlah maksimum untuk bertaruh', //最大下注金额为
-    betSuccess: 'Bertaruhan berhasil!' // 下注成功
+    betSuccess: 'Bertaruhan berhasil!', // 下注成功
+    BetNumber:'Nomor Bet',
   },
   scratch: {
     scratch: 'Gores',

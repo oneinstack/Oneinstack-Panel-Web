@@ -210,7 +210,8 @@ export default {
     setWalletTip: 'Por favor, defina a carteira por omissão!', //请设置默认钱包!
     minBetTip: 'O montante mínimo de aposta é', //最小下注金额为
     maxBetTip: 'O montante máximo de aposta é', //最大下注金额为
-    betSuccess: 'Aposta bem sucedida!' // 下注成功
+    betSuccess: 'Aposta bem sucedida!', // 下注成功
+    BetNumber:'Número da aposta',
   },
   scratch: {
     scratch: 'Raspadinha',

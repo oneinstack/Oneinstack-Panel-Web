@@ -211,7 +211,8 @@ export default {
     setWalletTip: 'कृपया डिफ़ॉल्ट वालेट सेट करें!', //请设置默认钱包!
     minBetTip: 'न्यूनतम बेटिंग मात्रा है', //最小下注金额为
     maxBetTip: 'अधिकतम बेटिंग मात्रा है', //最大下注金额为
-    betSuccess: 'बेट सफल!' // 下注成功
+    betSuccess: 'बेट सफल!', // 下注成功
+    BetNumber:'शर्त संख्या',
   },
   scratch: {
     scratch: 'स्क्रैच',

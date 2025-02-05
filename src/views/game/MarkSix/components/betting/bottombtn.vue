@@ -4,7 +4,7 @@
       {{ $t('game.TotalBetAmount') }}:
       <span style="--color-1: #eb602d; --color-2: #ffa64f" class="gradient-text">{{ mconf.conf.betting.totalAmount }}</span>
     </div>
-    <div class="bet-button flex flex-center" @click="$emit('confirm')">Bet</div>
+    <div class="bet-button flex flex-center" @click="$emit('confirm')">{{ $t('game.bet') }}</div>
   </div>
 </template>
 <script setup lang="ts">

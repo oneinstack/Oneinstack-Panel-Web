@@ -206,7 +206,8 @@ export default {
     setWalletTip: 'Please set the default wallet!', //请设置默认钱包!
     minBetTip: 'The minimum bet amount is', //最小下注金额为
     maxBetTip: 'The maximum bet amount is', //最大下注金额为
-    betSuccess: 'Bet successful!' // 下注成功
+    betSuccess: 'Bet successful!', // 下注成功
+    BetNumber:'BetNumber',
   },
   scratch: {
     scratch: 'Scratch',

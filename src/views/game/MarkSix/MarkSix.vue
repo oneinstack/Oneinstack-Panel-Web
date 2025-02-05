@@ -100,7 +100,7 @@
           'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
           }"
           v-if="isNaN(item.oddsName)">
-          <div>{{ item.oddsName?.split('_')[1] || item.oddsName}}</div>
+          <div>{{ item.languageName}}</div>
         </div>
         <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
       </template>

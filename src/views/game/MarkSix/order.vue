@@ -38,12 +38,12 @@
 						</div>
 						<div class="content-item">
 							<img class="content-img" src="/static/img/bet-time.png" />
-							<div class="content">{{ 'PlayName' }}:{{ item.playName }}
+							<div class="content">{{ $t('SattaKing.GameType') }}:{{ item.playName }}
 							</div>
 						</div>
 						<div class="content-item">
 							<img class="content-img" src="/static/img/bet-time.png" />
-							<div class="content" style="gap: 4rem;">{{ 'BetContent' }}:
+							<div class="content" style="gap: 4rem;">{{ $t('SattaKing.BettingContent2') }}:
 								<template v-for="(into,intoIndex) in item.betContent">
 									<div class="ball-box" :style="{
 									'background-image': `url('/static/img/game/marksix/${into}.webp')`,
@@ -71,7 +71,7 @@
 						<div class="content-item">
 							<img class="content-img" src="/static/img/bet-money.png" />
 							<div class="content">
-								{{ 'BetNums' }}:{{ parseInt(item.betNums) }}
+								{{ $t('game.BetNumber') }}:{{ parseInt(item.betNums) }}
 							</div>
 						</div>
 						<div class="content-item">
