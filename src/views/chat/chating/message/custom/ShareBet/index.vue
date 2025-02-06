@@ -1,7 +1,7 @@
 <template>
 	<div class="box">
 		<div class="title">
-			<img :src="conf.imgSrc" class="type-img" />
+			<!-- <img :src="conf.imgSrc" class="type-img" /> -->
 			{{ conf.betInfo.lotteryName }}
 		</div>
 		<div class="content">
@@ -33,7 +33,7 @@
 			<div class="cu-dialog">
 				<div class="padding-xl">
 					<div class="title-box">
-						<img :src="conf.imgSrc" class="type-img" />
+						<!-- <img :src="conf.imgSrc" class="type-img" /> -->
 						<div>{{ conf.betInfo.lotteryName }}</div>
 						<div class="close" @click="conf.modalName = ''">×</div>
 					</div>

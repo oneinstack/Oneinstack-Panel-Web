@@ -30,10 +30,13 @@
           <van-row v-for="item in list" :key="item.id" class="group_chart_list" @click="conf.handleClickRowSelect(item.id)">
             <div class="flex col-3 items-center">
               <van-checkbox :name="item.id" activeColor="#0fc05f" style="display: inline-block" @click.stop="conf.handleClickSelect"  />
-              <img class="group_chat_img" :src="item.imgUrl" alt="" srcset="" />
+              <!-- <img class="group_chat_img" :src="item.imgUrl" alt="" srcset="" /> -->
+               <div class="group_chat_img">
+                <headImg :src="item.imgUrl" :isGroup="item.groupID ? true : false" />
+               </div>
             </div>
             <van-col>
-              <span style="margin-left: 12rem; font-size: 32rem">{{ item.chatName }}</span>
+              <span style="margin-left: 12rem; font-size: 32rem;line-height: 92rem;">{{ item.chatName }}</span>
               <span v-if="item.id === currentGroupChatId" style="margin-left: 12rem; color: #0fc05f">{{
                 $t('chatRoom.CurrentSession') }}</span>
             </van-col>
@@ -50,6 +53,7 @@ import betRecordListItem from './BetRecordListItem.vue'
 import { Scope } from 'tools-vue3';
 import System from '@/utils/System';
 import i18n from '@/lang';
+import headImg from '@/views/chat/components/headImg.vue';
 
 const props = defineProps({
   selectMode: {
@@ -191,9 +195,10 @@ defineExpose({
 
       .group_chat_img {
         margin: 0 12rem;
-        width: 72rem;
-        height: 72rem;
-        border-radius: 4rem;
+        width: 92rem;
+        height: 92rem;
+        border-radius: 8rem;
+        overflow: hidden;
       }
     }
   }

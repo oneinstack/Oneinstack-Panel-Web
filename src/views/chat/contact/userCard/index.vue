@@ -7,7 +7,9 @@
     </template>
     <div class="user-card">
       <div class="user">
-        <img class="author" :src="conf.sourceUserInfo.faceURL" />
+        <div class="author">
+          <headImg :src="conf.sourceUserInfo.faceURL" />
+        </div>
         <div class="info">
           <div class="nickname">
             <span>{{ getShowName }}</span>
@@ -52,7 +54,7 @@
 <script setup lang="ts">
 import { capis } from '@/modules/chat/api';
 import { computed, onMounted, reactive } from 'vue'
-import { useRoute } from 'vue-router';
+import headImg from '@/views/chat/components/headImg.vue';
 import IMSDK, {
   GroupJoinSource,
   GroupMemberRole,
@@ -273,6 +275,7 @@ onMounted(() => {
       height: 96rem;
       border-radius: 4rem;
       margin-top: 9rem;
+      overflow: hidden;
     }
 
     .info {

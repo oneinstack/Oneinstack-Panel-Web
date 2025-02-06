@@ -42,6 +42,10 @@ const getGroupList = computed(() => {
         friend.groupName.includes(conf.keyword)
     )
   }
+  console.log('66544');
+  
+  console.log(cscontact.groupList);
+  
   return cscontact.groupList
 })
 onMounted(() => {

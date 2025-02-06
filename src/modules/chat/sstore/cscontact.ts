@@ -53,6 +53,24 @@ export const cscontact = reactive({
         break
       }
     }
+    groupList.forEach((item) => {
+      if (item.groupID) {
+        let groupFace:any = Cookie.get('groupFaceList') || {}
+        if(groupFace[item.groupID]) return item.faceURL = groupFace[item.groupID]
+        IMSDK.asyncApi(IMSDK.IMMethods.GetGroupMemberList, IMSDK.uuid(), {
+          groupID: item.groupID,
+          filter: 0,
+          offset: 0,
+          count: 9
+        }).then(({ data }: any) => {
+          if (data.length) {
+            item.faceURL = data.map((v: any) => v.faceURL)
+            groupFace[item.groupID] = item.faceURL
+            Cookie.set('groupFaceList', groupFace)
+          }
+        })
+      }
+    })
     cscontact.groupList = groupList
   },
 

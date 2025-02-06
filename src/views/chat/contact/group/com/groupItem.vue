@@ -1,7 +1,7 @@
 <template>
     <div class="item" @click="conf.goChat">
         <div class="avatar-img">
-            <headImg class="face" :src="groupInfo.faceURL" />
+            <headImg class="face" :src="groupInfo.faceURL" :isGroup="groupInfo.groupID ? true : false" />
         </div>
         <div class="name">{{ groupInfo.groupName }}</div>
     </div>
@@ -31,8 +31,8 @@ const conf = reactive({
     border-bottom: 2rem #F6F7FA solid;
 
     .avatar-img {
-        width: 80rem;
-        height: 80rem;
+        width: 92rem;
+        height: 92rem;
         border-radius: 8rem;
         overflow: hidden;
     }

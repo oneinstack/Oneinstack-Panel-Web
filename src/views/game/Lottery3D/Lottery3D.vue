@@ -113,7 +113,7 @@
                 <div class="reckon-title">{{ $t('game.drawingTime') + ':' + lottery.issue }}</div>
                 <div class="time-bar">
                     <div class="time-num">
-                        <div class="num-item">{{ lottery.countDown[0] }}</div>
+                        <downTime :value="lottery.countDown[0]" />
                         <span>:</span>
                         <downTime :value="lottery.countDown[1]" />
                         <span>:</span>
@@ -390,6 +390,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
         .time-num {
             display: flex;
             align-items: center;
+            font-size: 30rem;
 
             .num-item {
                 width: 56rem;

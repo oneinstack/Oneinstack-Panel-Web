@@ -81,7 +81,12 @@ const conf = reactive({
 						return v
 					})
 					conf.chat.list.sort((a:any, b:any) => a.sort - b.sort)
+					console.log('9998');
+				
+					console.log(conf.chat.list);
 				})
+				
+				
 		}
 	},
 	toShare: ({ betList, chatList }: any) => {
@@ -101,9 +106,6 @@ const conf = reactive({
 					extension: JSON.stringify(extension),
 					description: data
 				})
-				console.log('66666');
-				console.log(message);
-				
 				sim.sendMessage(message)
 			})
 		})
@@ -180,14 +182,12 @@ const conf = reactive({
 		
 		console.log('obj', obj)
 		conf.getLotteryOdds(obj)
-		console.log('8887');
 		apis.meOder({
 			current: 1,
 			size: 10000,
 			lotteryTypeId: obj.typeId,
 			lotteryId: obj.playId,
 			success: (res: any) => {
-				console.log(res);
 				
 				if (res.code == 200) {
 					let datas = res.data.records

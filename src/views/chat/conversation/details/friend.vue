@@ -5,10 +5,12 @@
     </template>
     <div class="user">
       <div class="info" @click="conf.toUserCard">
-        <img :src="csconversation.currentConversation.faceURL" />
+        <div class="img">
+          <headImg :src="csconversation.currentConversation.faceURL" />
+        </div>
         <van-text-ellipsis :content="csconversation.currentConversation.showName" />
       </div>
-      <img style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" @click="conf.toGroup" />
+      <img class="img" style="margin-left: 30rem;" src="/static/img/chat/setting_add.svg" @click="conf.toGroup" />
     </div>
     <conversationSetting />
   </x-page>
@@ -18,6 +20,7 @@ import cscontact from '@/modules/chat/sstore/cscontact';
 import csconversation from '@/modules/chat/sstore/csconversation';
 import conversationSetting from './com/conversationSetting.vue';
 import System from '@/utils/System';
+import headImg from '@/views/chat/components/headImg.vue';
 import { reactive } from 'vue'
 const conf = reactive({
   muteChecked: false,
@@ -52,10 +55,11 @@ const conf = reactive({
     text-align: center;
   }
 
-  img {
+  .img {
     width: 90rem;
     height: 90rem;
     border-radius: 8rem;
+    overflow: hidden;
   }
 }
 

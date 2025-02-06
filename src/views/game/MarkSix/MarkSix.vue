@@ -45,11 +45,12 @@
         <div>{{ $t('game.drawingTime') + ':' + lottery.issue }}</div>
         <div class="row" style="margin-top: 20rem">
           <div class="count-down row" style="gap: 4rem">
-            <div class="count-down-item flex flex-center">{{ lottery.countDown[0] }}</div>
+            <downTime :w="72" :h="72" :value="lottery.countDown[0]" />
             <div>:</div>
-            <div class="count-down-item flex flex-center">{{ lottery.countDown[1] }}</div>
+            <downTime :w="72" :h="72" :value="lottery.countDown[1]" />
             <div>:</div>
-            <div class="count-down-item flex flex-center">{{ lottery.countDown[2] }}</div>
+            <!-- <div class="count-down-item flex flex-center">{{ lottery.countDown[2] }}</div> -->
+            <downTime :w="72" :h="72" :value="lottery.countDown[2]" />
           </div>
           <div class="col flex items-center" style="margin: 0 20rem">
             <div class="count-down-line relative">
@@ -147,6 +148,7 @@ import timePopup from '../components/timePopup.vue';
 import resultCom from './result.vue';
 import orderCom from './order.vue';
 import ruleCom from '../components/gameRule.vue';
+import downTime from '../components/aniDownTime.vue';
 import { index } from './MarkSix'
 const { conf, lottery, resultRefs, orderRefs } = index()
 </script>
@@ -222,7 +224,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
     margin-top: 32rem;
 
     .count-down {
-      font-size: 48rem;
+      font-size: 46rem;
     }
 
     .count-down-item {
