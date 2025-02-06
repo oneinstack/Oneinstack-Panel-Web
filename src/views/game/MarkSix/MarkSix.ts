@@ -188,6 +188,12 @@ export const index = () => {
         conf.betting.totalAmount = 0
         if(obj.hasOwnProperty('amount')){
           conf.betting.totalAmount = conf.betting.combination(data.length,Number(obj.amount))
+        }else if(obj.hasOwnProperty('min')){
+          if(data.length >= obj.min){
+            conf.betting.totalAmount = 1
+          }else{
+            conf.betting.totalAmount = 0
+          }
         }else{
           conf.betting.totalAmount = data.length
         }

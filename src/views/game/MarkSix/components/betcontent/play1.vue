@@ -24,7 +24,6 @@
   const mconf = Scope.getConf()
   const conf = reactive({
     list: [] as any[],
-    allData: [] as any[],
     change(item: any) {
       if(mconf.conf.stopBet){
         return
@@ -47,7 +46,11 @@ watch(
 		if (val) {
       conf.list = val
 		}
-	}
+	},
+  {
+    deep:true,
+    immediate:true
+  }
 )
 
 </script>

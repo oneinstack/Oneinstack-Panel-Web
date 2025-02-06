@@ -5,6 +5,7 @@ export const getOdds = () => [
     'list': [
       {
         'name': 'two_tail_consecutive',
+        'amount':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -60,6 +61,7 @@ export const getOdds = () => [
       },
       {
         'name': 'two_tail_not_consecutive',
+        'amount':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -115,6 +117,7 @@ export const getOdds = () => [
       },
       {
         'name': 'three_tail_consecutive',
+        'amount':'3',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -170,6 +173,7 @@ export const getOdds = () => [
       },
       {
         'name': 'three_tail_not_consecutive',
+        'amount':'3',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -225,6 +229,7 @@ export const getOdds = () => [
       },
       {
         'name': 'four_tail_consecutive',
+        'amount':'4',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -280,6 +285,7 @@ export const getOdds = () => [
       },
       {
         'name': 'four_tail_not_consecutive',
+        'amount':'4',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.tail_0'),
@@ -3353,6 +3359,7 @@ export const getOdds = () => [
     'list': [
       {
         'name': 'pass_positive_code_1',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.odd'),
@@ -3378,6 +3385,7 @@ export const getOdds = () => [
       },
       {
         'name': 'pass_positive_code_2',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.big'),
@@ -3403,6 +3411,7 @@ export const getOdds = () => [
       },
       {
         'name': 'pass_positive_code_3',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.odd'),
@@ -3428,6 +3437,7 @@ export const getOdds = () => [
       },
       {
         'name': 'pass_positive_code_4',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.odd'),
@@ -3453,6 +3463,7 @@ export const getOdds = () => [
       },
       {
         'name': 'pass_positive_code_5',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.odd'),
@@ -3478,6 +3489,7 @@ export const getOdds = () => [
       },
       {
         'name': 'pass_positive_code_6',
+        'min':'2',
         'list': [
           {
             'oddsName': i18n.t('markSixOdds.odd'),
@@ -3508,6 +3520,7 @@ export const getOdds = () => [
     'list': [
       {
         'name': 'connect_two_special',
+        'amount':'2',
         'list': [
           {
             'oddsName': '1',
@@ -3668,6 +3681,7 @@ export const getOdds = () => [
       },
       {
         'name': 'connect_two_full',
+        'amount':'2',
         'list': [
           {
             'oddsName': '1',
@@ -3828,6 +3842,7 @@ export const getOdds = () => [
       },
       {
         'name': 'connect_three_in_two',
+        'amount':'3',
         'list': [
           {
             'oddsName': '1',
@@ -3988,6 +4003,7 @@ export const getOdds = () => [
       },
       {
         'name': 'connect_three_full',
+        'amount':'3',
         'list': [
           {
             'oddsName': '1',
@@ -4148,6 +4164,7 @@ export const getOdds = () => [
       },
       {
         'name': 'connect_four_full',
+        'amount':'4',
         'list': [
           {
             'oddsName': '1',
@@ -4308,6 +4325,7 @@ export const getOdds = () => [
       },
       {
         'name': 'connect_special_string',
+        'amount':'2',
         'list': [
           {
             'oddsName': '1',
