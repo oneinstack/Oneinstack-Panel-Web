@@ -1,13 +1,15 @@
 import i18n from '@/lang'
 import slottery from '@/sstore/slottery'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive,nextTick } from 'vue'
+import { onMounted, reactive,nextTick,ref } from 'vue'
 import { getOdds } from './MarkSixDataOdds'
 import { apis } from '@/api';
 import System from '@/utils/System';
 
 
 export const index = () => {
+  const resultRefs = ref<any>()
+  const orderRefs = ref<any>()
   const timer = Scope.Timer()
   const lottery = slottery.lotteryBox({
     timer: timer,
@@ -16,6 +18,8 @@ export const index = () => {
       results.forEach((item: any, index: number) => {
         conf.ballListRef[index].conf.setVal(item)
       })
+      if (conf.operation.active == 'result') resultRefs.value?.initResult()
+      if (conf.operation.active === 'myOrder') orderRefs.value?.initOrder()
     },
     updateCountDown: (time: any) => {
       if (time[3] <= 0) {
@@ -47,7 +51,6 @@ export const index = () => {
   const conf = reactive({
     gameType: 'MARK_SIX',
     reset:(val:any)=>{
-      console.log(val);
       if(!val.money) return
       conf.winBetInfo = val
       const obj = conf.betting.tabs.level2
@@ -167,8 +170,7 @@ export const index = () => {
             return
           }
           if(conf.betting.totalAmount == 0){
-            System.toast('Please select a bet!')
-            // System.toast(i18n.t('game.setWalletTip'))
+            System.toast(i18n.t('SattaKing.betEmptyTip'))
             return
           }
           const list  = conf.betting.betArr.map((num:any) => num.oddsCode)
@@ -235,7 +237,6 @@ export const index = () => {
 
     // 初始化下注区域选中
     conf.betting.tabs.init()
-
   })
 
   Scope.setConf({
@@ -243,7 +244,7 @@ export const index = () => {
     lottery
   })
 
-  return { conf, lottery }
+  return { conf, lottery, resultRefs, orderRefs }
 }
 
 export type MarkSixConfInter = ReturnType<typeof index>

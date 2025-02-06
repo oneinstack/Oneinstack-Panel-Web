@@ -268,8 +268,6 @@ defineExpose({
 onMounted( () =>{
 	let tree = JSON.parse(JSON.stringify(orderConf.betting.tabs.tree))
 	conf.allData = conf.getOneArr(tree);
-	// console.log('conf.allData',conf.allData)
-	// console.log('orderConf.betting.tabs.tree',orderConf.betting.tabs)
 })
 </script>
 

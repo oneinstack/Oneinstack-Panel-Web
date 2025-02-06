@@ -41,8 +41,6 @@ import { onMounted, reactive } from 'vue'
 import { apis } from '@/api'
 import System from '@/utils/System'
 import resultBall from './components/resultBall.vue'
-
-
 import { Scope } from 'tools-vue3'
 const {lottery} = Scope.getConf()
 const conf = reactive({
@@ -80,8 +78,39 @@ const conf = reactive({
     },
 
 })
-onMounted(async () => {
-    await conf.getLotteryResult()
+
+const initResult = () => {
+	apis.lotteryOpenResult({
+		current: 1,
+		size: 10,
+		lotteryId: lottery.play.item.id,
+		success: (res: any) => {
+			if (conf.resultList[0].openExpect != res.data.records[0].openExpect) {
+				conf.resultList.unshift(res.data.records[0])
+				conf.resultList.pop()
+				conf.resultList[0].openCodeArr = conf.resultList[0].openCode ? conf.resultList[0].openCode.split(',') : []
+				conf.resultList[0].sum = conf.resultList[0].openCodeArr.map(Number).reduce((acc:any, curr:any) => acc + curr, 0);
+			}
+			let index = conf.resultList.findIndex((item: any) => !item.openCode)
+			if (index != -1) {
+				let openExpect = conf.resultList[index]?.openExpect
+				let newIndex = res.data.records.findIndex((item: any) => item.openExpect == openExpect)
+				conf.resultList[index].openCode = res.data.records[newIndex].openCode
+			}
+			conf.total = res.data.total
+        },
+        final: () => {
+          System.loading(false)
+        }
+	});
+}
+
+// 暴露方法
+defineExpose({
+	initResult
+})
+onMounted(() => {
+    conf.getLotteryResult()
 })
 </script>
 

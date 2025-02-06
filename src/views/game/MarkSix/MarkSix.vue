@@ -85,11 +85,11 @@
       <!-- 下注区 -->
       <betting v-if="conf.operation.active === 'betting'"/>
       <!-- Result -->
-      <resultCom v-if="conf.operation.active === 'result'"/>
+      <resultCom ref="resultRefs" v-if="conf.operation.active === 'result'"/>
       <!-- Rule -->
       <ruleCom v-if="conf.operation.active === 'rule'" :list="lottery.play.item.lotteryRuleurl" style="margin-top: 16rem;"></ruleCom>
       <!-- 下注区 -->
-      <orderCom v-if="conf.operation.active === 'myOrder'" ref="orderRefs" :lotteryId="lottery.play.item.id"/>
+      <orderCom ref="orderRefs" v-if="conf.operation.active === 'myOrder'" :lotteryId="lottery.play.item.id"/>
     </div>
 
 
@@ -148,7 +148,7 @@ import resultCom from './result.vue';
 import orderCom from './order.vue';
 import ruleCom from '../components/gameRule.vue';
 import { index } from './MarkSix'
-const { conf, lottery } = index()
+const { conf, lottery, resultRefs, orderRefs } = index()
 </script>
 
 <style lang="less" scoped>
