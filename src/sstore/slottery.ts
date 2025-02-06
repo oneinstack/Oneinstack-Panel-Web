@@ -377,7 +377,7 @@ export const slottery = reactive({
         /**
          * 下注总金额
          */
-        totalMoney: 0,
+        totalMoney: 0
       },
 
       /**
@@ -391,7 +391,7 @@ export const slottery = reactive({
         /**
          * 钱包余额
          */
-        money: '0',
+        money: 0 as any,
         /**
          * 钱包符号
          */
@@ -402,6 +402,7 @@ export const slottery = reactive({
          */
 
         coinCode:'',
+
         /**
          * 获取钱包余额
          * @returns
@@ -413,9 +414,10 @@ export const slottery = reactive({
           let item = await svalue.getDefaultWallet()
           if (item.hasOwnProperty('coinSymbol')) {
             let m = parseFloat(item.walletMoney)
-            conf.wallet.money = sutil.dataHandling(m)
+            conf.wallet.money = m
+            let strm = sutil.dataHandling(m)
             conf.wallet.coinSymbol = item.coinSymbol || '₹'
-            conf.wallet.label = conf.wallet.coinSymbol + conf.wallet.money
+            conf.wallet.label = conf.wallet.coinSymbol + strm
             conf.wallet.coinCode = item.coinCode
           }
         }

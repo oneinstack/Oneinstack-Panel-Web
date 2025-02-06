@@ -752,7 +752,7 @@ onMounted(() => {
 .rain {
     position: absolute;
     top: -22rem;
-    right: -61rem;
+    right: -21rem;
     height: 240rem;
     width: 240rem;
     z-index: 9;

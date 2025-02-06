@@ -49,7 +49,7 @@
 					<slot :coinSymbol="lottery.wallet.coinSymbol" :money="conf.num" name="tips"></slot>
 				</div>
         <div class="bet-btn" @click="conf.submit">
-          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ sutil.Mul(conf.num, lottery.bet.content.length) || 0 }}
+          {{ $t('game.totalPrice') }} {{ lottery.wallet.coinSymbol }}{{ sutil.Mul(conf.num, lottery.bet.num) || 0 }}
         </div>
       </div>
     </div>

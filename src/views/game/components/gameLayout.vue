@@ -28,10 +28,10 @@
       @share="conf.bet.shareBet" :lottery="lottery">
       <slot name="bet"></slot>
       <!-- 多注显示 -->
-      <template #tips="{ money, coinSymbol }" v-if="lottery.bet.content.length > 1">
+      <template #tips="{ money, coinSymbol }" v-if="lottery.bet.num > 1">
         <div class="tips">
-          <div class="num">{{ $t('game.totalBets') }}: <span>{{ lottery.bet.content.length }}</span></div>
-          <div>{{ $t('game.amount') }}: <span>{{ coinSymbol }}{{ sutil.Mul(money, lottery.bet.content.length) }}</span></div>
+          <div class="num">{{ $t('game.totalBets') }}: <span>{{ lottery.bet.num }}</span></div>
+          <div>{{ $t('game.amount') }}: <span>{{ coinSymbol }}{{ sutil.Mul(money, lottery.bet.num) }}</span></div>
         </div>
       </template>
     </bet-popup>
@@ -80,7 +80,8 @@ const conf = reactive({
     show: false,
     // 下注
     submit: async (money: any) => {
-      const totalMoney:any = sutil.Mul(money, props.lottery.bet.content.length)
+      const totalMoney:any = sutil.Mul(money, props.lottery.bet.num)
+      
       if (parseFloat(totalMoney) > parseFloat(props.lottery.wallet.money)) {
         System.toast(i18n.t('SattaKing.insufficient'))
         return

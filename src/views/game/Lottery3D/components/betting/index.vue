@@ -106,6 +106,7 @@ const conf = reactive({
     })
 
     mconf.lottery.bet.content = list
+    mconf.lottery.bet.num = list.length
     conf.betTypeTitle = betList[0].oddsCode.split('_')[0]
     emit('changeBet', { list: betList, type: conf.betTypeTitle })
 
