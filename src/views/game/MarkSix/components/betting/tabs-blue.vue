@@ -1,0 +1,98 @@
+<template>
+  <div class="row items-center no-wrap level1-box" v-scroll>
+    <div
+      class="type-item flex justify-center items-start relative text-no-wrap"
+      v-for="item in conf.level1.list"
+      @click="conf.level1.change(item)"
+      :class="{ active: item.name === conf.level1.item.name }"
+    >
+      {{ $t('lhc.' + item.name) }}
+    </div>
+  </div>
+  <div class="row items-center no-wrap level2-box" v-scroll>
+    <div
+      class="type-item flex flex-center relative text-no-wrap"
+      v-for="item in conf.level2.list"
+      :class="{ active: item.name === conf.level2.item.name }"
+      @click="conf.level2.change(item)"
+    >
+     <span :class="{ activeName: item.name === conf.level2.item.name }"> {{ $t('lhc.' + item.name) }}</span>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import { Scope } from 'tools-vue3'
+import { MarkSixConfInter } from '../../MarkSix'
+const mconf = Scope.getConf<MarkSixConfInter>()
+const conf = mconf.conf.betting.tabs
+</script>
+<style lang="less" scoped>
+.level1-box {
+  margin-top: 20rem;
+  gap: 20rem;
+  width: 686rem;
+  .type-item {
+    height: 50rem;
+    border-radius: 6rem;
+    min-width: max-content;
+    color: #999999;
+
+    flex-shrink: 0;
+    border-radius: 8rem;
+    overflow: hidden;
+    font-size: 24rem;
+    line-height: 28rem;
+
+    &.active {
+      color: #333333;
+    }
+    &.active::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      margin: 0 auto;
+      width: 40%;
+      height: 6rem;
+      border-radius: 24rem;
+      background: linear-gradient(109.77deg, #087BFF 4.47%, #0645D9 138.81%);
+    }
+  }
+}
+.level2-box {
+  margin-top: 20rem;
+  gap: 20rem;
+  width: 686rem;
+  .type-item {
+    height: 50rem;
+    border-radius: 6rem;
+    min-width: max-content;
+    color: #999999;
+    background-color: #fffef8;
+    padding: 0 20rem;
+
+    flex-shrink: 0;
+    border-radius: 6rem;
+    overflow: hidden;
+    font-size: 18rem;
+    &.active {
+      color: #333333;
+      .activeName{
+        background: linear-gradient(109.77deg, #087BFF 4.47%, #0645D9 138.81%);
+        background-clip: text;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        color: transparent;
+      }
+    }
+    &.active::before {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 20rem;
+      height: 20rem;
+      background: url('/static/theme/blue/tabs-active.png') no-repeat center center / 100% 100%;
+    }
+  }
+}
+</style>

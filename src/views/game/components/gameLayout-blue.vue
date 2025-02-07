@@ -219,7 +219,7 @@ defineExpose({
   }
 
   span {
-    background-image: -webkit-linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+    background: linear-gradient(93.51deg, #006FFF 5.72%, #087BFF 86.61%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
