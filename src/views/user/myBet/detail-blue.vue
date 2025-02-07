@@ -165,15 +165,24 @@
           <div class="row items-center betnumber-head" style="margin-bottom: 40rem">
             <div style="width: 10rem"></div>
             <div class="row flex-center text-m" style="width: 180rem; word-break: break-word">
-              <template v-if="conf.item.lotteryTypeCode != 'SATTA_KING'">
-                <betCode onlyLast :item="conf.item" />
-              </template>
-              <template v-else>
+              <template v-if="conf.item.lotteryTypeCode == 'SATTA_KING'">
                 {{
                   typeof conf.item.betItem.value[0] === 'object'
                     ? conf.item.betItem.value.map((v: any) => v.value).join(',')
                     : conf.item.betItem.value[1]
                 }}
+              </template>
+              <template v-else-if="conf.item.lotteryTypeCode == 'MARK_SIX'" v-for="(into,intoIndex) in conf.item.betContent">
+                <div class="ball-box" :style="{
+                    'background-image': `url('/static/img/game/marksix/${into}.webp')`,
+                    }"
+                    v-if="isNaN(into)">
+                    <div>{{ intoIndex != conf.item.betContent.length - 1 ? into + ' , ' : into }}</div>
+									</div>
+									<resultBall :num="into" :size="42" v-if="!isNaN(into)" style="margin: 0 4rem 4rem 0;"/>
+              </template>
+              <template v-else>
+                <betCode :onlyLast="true" :item="conf.item" />
               </template>
             </div>
             <div class="row flex-center text-m" style="width: 180rem">
@@ -184,8 +193,7 @@
             </div>
             <div style="width: 10rem"></div>
           </div>
-        </div>
-      </div>
+        </div>      </div>
     </div>
   </x-page>
 </template>
@@ -194,6 +202,8 @@ import betCode from './betCode.vue'
 import openCode from './openCode.vue'
 import { index } from './detail'
 import stheme from '@/sstore/stheme';
+import resultBall from '../../game/MarkSix/components/resultBall.vue'
+
 
 const conf = index()
 </script>

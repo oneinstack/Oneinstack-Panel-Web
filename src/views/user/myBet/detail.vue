@@ -182,7 +182,7 @@
                     v-if="isNaN(into)">
                     <div>{{ intoIndex != conf.item.betContent.length - 1 ? into + ' , ' : into }}</div>
 									</div>
-									<resultBall :num="into" :size="42" v-if="!isNaN(into)" style="margin-right: 4rem;"/>
+									<resultBall :num="into" :size="42" v-if="!isNaN(into)" style="margin: 0 4rem 4rem 0;"/>
               </template>
               <template v-else>
                 <betCode :onlyLast="true" :item="conf.item" />
