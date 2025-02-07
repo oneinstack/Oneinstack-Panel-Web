@@ -9,6 +9,7 @@ import System from '@/utils/System'
 export const index = () => {
   const resultRefs = ref<any>()
   const orderRefs = ref<any>()
+  const cRefs = ref<any>()
   const timer = Scope.Timer()
   const lottery = slottery.lotteryBox({
     timer: timer,
@@ -125,10 +126,15 @@ export const index = () => {
             conf.betting.betSizeList = []
             conf.betting.betNumList = []
             conf.betting.strList = []
-            if (tabs.level1.item.sizeList) tabs.level1.item.sizeList.forEach((item: any) => (item.isActive = false))
-            if (tabs.level1.item.numList) tabs.level1.item.numList.forEach((item: any) => (item.isActive = false))
-            if (tabs.level1.item.strList) tabs.level1.item.item.strList.forEach((item: any) => (item.isActive = false))
+            const lost = tabs.level1.item
             tabs.level1.item = item
+            if (lost.sizeList) lost.sizeList.forEach((item: any) => (item.isActive = false))
+            if (lost.numList) lost.numList.forEach((item: any) => (item.isActive = false))
+            if (lost.strList) lost.strList.forEach((item: any) => (item.isActive = false))
+              
+            cRefs.value.scrollTo({
+              top: 0
+            })
           }
         },
         init: () => {
@@ -223,7 +229,7 @@ export const index = () => {
     conf,
     lottery
   })
-  return { conf, lottery, resultRefs, orderRefs }
+  return { conf, lottery, resultRefs, orderRefs, cRefs }
 }
 
 export type WelfareConfInter = ReturnType<typeof index>

@@ -100,7 +100,6 @@ watch(
   left: 0;
   position: absolute;
   top: 0;
-  width: 100%;
 }
 .count .top {
   border-top-left-radius: v-bind('b+"rem"');
@@ -108,6 +107,7 @@ watch(
   box-shadow: inset 0 2rem rgba(0, 0, 0, 0.9), inset 0 3rem 0 rgba(255, 255, 255, 0.4);
   height: 50%;
   overflow: hidden;
+  width: 100%;
 }
 .count .top:before {
   bottom: 0;

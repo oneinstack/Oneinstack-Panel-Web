@@ -138,7 +138,7 @@
             <bettingtabs v-if="conf.operation.active === 'betting'" />
         </div>
         <!-- 内容区 -->
-        <div class="col" style="overflow: auto;" :class="{ 'active-bg': conf.operation.active === 'betting' }">
+        <div class="col" style="overflow: auto;" ref="cRefs" :class="{ 'active-bg': conf.operation.active === 'betting' }">
             <!-- 下注区和处理下注 -->
             <betting @changeBet="conf.betting.popup.open" :key="conf.betting.tabs.level1.item.name"
                 v-if="conf.operation.active === 'betting'" />
@@ -178,7 +178,7 @@ import order from './components/order.vue'
 import downTime from '../components/aniDownTime.vue';
 
 import { index } from './Lottery3D'
-const { conf, lottery, resultRefs, orderRefs } = index()
+const { conf, lottery, resultRefs, orderRefs, cRefs } = index()
 </script>
 <style lang="less" scoped>
 .time-box {
