@@ -126,7 +126,10 @@
                 </div>
               </div>
               <div style="margin: 0 10rem">{{ $t('game.openCode') + ':' }}</div>
-              <openCode :item="conf.item" />
+              <openCode :item="conf.item" v-if="conf.item.lotteryTypeCode != 'MARK_SIX'"/>
+              <template v-for="into in conf.item.betOpenCodeList" v-else>
+                <resultBall :num="into.value" :size="42" style="margin-right: 4rem;"/>
+              </template>
             </div>
 
             <!-- 5D多一列sum显示单独处理 -->
