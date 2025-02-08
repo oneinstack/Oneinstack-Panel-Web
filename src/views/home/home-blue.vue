@@ -295,6 +295,7 @@ const conf = reactive({
 
   moreUrl: '',
   async handleChangeCategory(id: string | number) {
+    conf.moreUrl = ''
     conf.currentCategoryId = id as LocalGameType
     switch (id as LocalGameType) {
       case 'lottery':
