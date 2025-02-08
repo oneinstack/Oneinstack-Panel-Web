@@ -1,4 +1,8 @@
 <template>
+  <div class="name">
+    <img src="/static/img/betting-icon.png">
+    {{ $t('lhc.' + markSixConf.betting.tabs.level2.item.name || markSixConf.betting.tabs.level2.item.list[0].name) }}
+  </div>
   <play1 :listData="conf.listData1" v-if="conf.listData1.length > 0"/>
   <play1 :listData="conf.listData2" v-if="conf.listData2.length > 0"/>
 </template>
@@ -51,4 +55,16 @@ onMounted(() => {
   conf.initData()
 })
 </script>
-<style lang="less" scoped></style>
+<style lang="less" scoped>
+.name{
+  padding: 32rem 0 0rem 32rem;
+  font-size: 32rem;
+  display: flex;
+  align-items: center;
+  img{
+    width: 24rem;
+    height: 24rem;
+    margin-right: 8rem;
+  }
+}
+</style>

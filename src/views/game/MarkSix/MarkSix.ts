@@ -1,7 +1,7 @@
 import i18n from '@/lang'
 import slottery from '@/sstore/slottery'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive,nextTick,ref } from 'vue'
+import { onMounted, reactive,nextTick,ref,watch } from 'vue'
 import { getOdds } from './MarkSixDataOdds'
 import { apis } from '@/api';
 import System from '@/utils/System';
@@ -133,35 +133,51 @@ export const index = () => {
         level1: {
           list: [] as any[],
           item: {} as any,
-          change(item: any) {
+          change(item: any,val:any = false) {
             const { tabs } = conf.betting
             tabs.level1.item = item
             tabs.level2.list = item.list
-            tabs.level2.change(item.list[0])
             conf.betting.totalAmount = 0
             conf.betting.betArr = []
+            tabs.showLeve2 = !tabs.showLeve2
+            let obj = item.list.find((into:any) => into.name == tabs.level2.item.name) || item.list[0]
+            tabs.level2.change(obj,true)
+            tabs.isOnload = val
           }
         },
+        showLeve2:false,
+        isOnload:false,
         level2: {
           list: [] as any[],
           item: {} as any,
-          change(item: any) {
+          change(item: any,val: any = false) {
             const { tabs } = conf.betting
-            tabs.level2.item = item
-            tabs.level2.item.list = tabs.level2.item.list.map((into:any) => {
-              return {
-                isActive:false,
-                ...into
-              }
+            tabs.level2.list?.forEach((into:any) => {
+              into.isActive = item.name == into.name ? true : false
             })
-            conf.betting.totalAmount = 0
-            conf.betting.betArr = []
+            if(val){
+              tabs.level2.item = item
+              tabs.level2.item.list = tabs.level2.item.list.map((into:any) => {
+                return {
+                  isActive: false,
+                  ...into
+                }
+              })
+              conf.betting.totalAmount = 0
+              conf.betting.betArr = []
+            }
+          },
+          confirm(){
+            conf.betting.tabs.showLeve2 = false
+            let obj = conf.betting.tabs.level2.list.find((item:any) => item.isActive)
+            conf.betting.tabs.level2.change(obj,true)
           }
+
         },
         init: () => {
           const { tabs } = conf.betting
           tabs.level1.list = tabs.tree
-          tabs.level1.change(tabs.tree[0])
+          tabs.level1.change(tabs.tree[0],true)
         },
       },
       popup: {
@@ -238,6 +254,17 @@ export const index = () => {
     // 初始化下注区域选中
     conf.betting.tabs.init()
   })
+
+  watch(
+    () => conf.betting.tabs.level1.item,
+    (val: any) => {
+      if(conf.betting.tabs.isOnload){
+        conf.betting.tabs.showLeve2 = false
+      }else{
+        conf.betting.tabs.showLeve2 = true
+      }
+    }
+  )
 
   Scope.setConf({
     conf,

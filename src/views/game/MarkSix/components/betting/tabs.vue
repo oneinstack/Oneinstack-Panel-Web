@@ -1,5 +1,6 @@
 <template>
-  <div class="row items-center no-wrap level1-box" v-scroll>
+  <div class="div-box">
+    <div class="row items-center no-wrap level1-box" v-scroll>
     <div
       class="type-item flex justify-center items-start relative text-no-wrap"
       v-for="item in conf.level1.list"
@@ -7,22 +8,46 @@
       @click="conf.level1.change(item)"
     >
       {{ $t('lhc.' + item.name) }}
+      <img
+        src="/static/images/point_up.png"
+        style="height: 16rem; width: 26rem; transition: 0.3s;margin: 6rem 0 0 10rem;"
+        v-if="item.name === conf.level1.item.name"
+        :class="{ 'rotate-180': conf.showLeve2 }"
+      />
     </div>
   </div>
-  <div class="row items-center no-wrap level2-box" v-scroll>
-    <div
-      class="type-item flex flex-center relative text-no-wrap"
-      v-for="item in conf.level2.list"
-      :class="{ active: item.name === conf.level2.item.name }"
-      @click="conf.level2.change(item)"
-    >
-      {{ $t('lhc.' + item.name) }}
+  <template v-if="conf.showLeve2">
+    <div class="choose-dialog-mask" @click="conf.showLeve2 = false"></div>
+    <div class="choose-dialog">
+      <div style="padding: 0 32rem">
+          <div class="row">
+            <div
+              class="type-item flex flex-center"
+              v-for="item in conf.level2.list"
+              :class="{ active: item.isActive }"
+              @click="conf.level2.change(item)"
+            >
+              {{ $t('lhc.' + item.name) }}
+            </div>
+          </div>
+          <div style="height: 32rem; border-bottom: 1rem solid #f6f7fa; width: 100%"></div>
+          <div class="row items-center justify-between">
+            <div class="text-color-1" @click="conf.showLeve2 = false">{{ $t('chat.cancle') }}</div>
+            <div class="text-color-1" @click="conf.level2.confirm()">{{ $t('chatRoom.confirm') }}</div>
+          </div>
+      </div>
     </div>
+
+  </template>
+  
+
   </div>
 </template>
 <script setup lang="ts">
 import { Scope } from 'tools-vue3'
 import { MarkSixConfInter } from '../../MarkSix'
+import { Style } from '@capacitor/status-bar';
+
 const mconf = Scope.getConf<MarkSixConfInter>()
 const conf = mconf.conf.betting.tabs
 </script>
@@ -30,7 +55,7 @@ const conf = mconf.conf.betting.tabs
 .level1-box {
   margin-top: 20rem;
   gap: 20rem;
-  width: 686rem;
+  width: 100%;
   .type-item {
     height: 50rem;
     border-radius: 6rem;
@@ -58,35 +83,92 @@ const conf = mconf.conf.betting.tabs
     }
   }
 }
-.level2-box {
-  margin-top: 20rem;
-  gap: 20rem;
-  width: 686rem;
-  .type-item {
-    height: 50rem;
-    border-radius: 6rem;
-    min-width: max-content;
-    color: #999999;
-    background-color: #fffef8;
-    padding: 0 20rem;
-
-    flex-shrink: 0;
-    border-radius: 6rem;
-    overflow: hidden;
-    font-size: 18rem;
-
-    &.active {
-      color: #eb602d;
+.div-box{
+  position: relative;
+  padding: 0 32rem;
+  .choose-dialog {
+    position: absolute;
+    top: calc(100% + 20rem);
+    left: 0;
+    width: 100%;
+    background-color: #fff;
+    border-bottom-left-radius: 40rem;
+    border-bottom-right-radius: 40rem;
+    z-index: 1;
+    .choose-level1-name{
+      margin: 20rem 0;
     }
-    &.active::before {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      width: 20rem;
-      height: 20rem;
-      background: url('/static/img/game/marksix/tabs-active.webp') no-repeat center center / 100% 100%;
+    &-item {
+      width: 160rem;
+      height: 64rem;
+      border-radius: 8rem;
+      background-color: #f6f7fa;
+      color: #646464;
+      font-size: 26rem;
+      &.active {
+        background-color: #fff6e6;
+      }
+    }
+    .row{
+        gap: 15rem;
+        margin-top: 20rem;
+        max-height: 350rem;
+        overflow-y: auto;
+    }
+    .type-item {
+      padding: 10rem;
+      width: 218rem;
+      border-radius: 8rem;
+      background-color: #f6f7fa;
+      color: #999999;
+      font-size: 26rem;
+      word-break: break-word !important;
+      text-align: center;
+
+      &.active {
+        color: #eb602d;
+        position: relative;
+      }
+      &.active::before {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 20rem;
+        height: 20rem;
+        background: url('/static/img/game/marksix/tabs-active.webp') no-repeat center center / 100% 100%;
+      }
+    }
+    .text-color-1 {
+      font-size: 32rem;
+      font-weight: 600;
+      background-image: -webkit-linear-gradient(90deg, #eb602d 0%, #ffa64f 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 80rem;
+    }
+    .text-color-item {
+      background-image: -webkit-linear-gradient(90deg, #ff7502 0%, #fc9b01 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
   }
 }
+
+.choose-dialog-mask {
+  position: fixed;
+  top: 50%;
+  left: 0;
+  width: 100vw;
+  height: 50vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1;
+}
+
+.rotate-180 {
+  transform: rotateZ(180deg);
+}
+
 </style>

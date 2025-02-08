@@ -184,7 +184,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
 .top-bg-box {
   width: 100%;
   background: linear-gradient(180deg, #ffc698 0%, #fff7e5 100%);
-  padding: 0 32rem;
+  // padding: 0 32rem;
   color: #333333;
   font-size: 28rem;
   font-weight: 600;
@@ -194,6 +194,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
     gap: 20rem;
     width: 686rem;
     height: 104rem;
+    padding: 0 32rem;
   }
 
   .type-item {
@@ -222,6 +223,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
   .count-down-box {
     font-size: 28rem;
     margin-top: 32rem;
+    padding: 0 32rem;
 
     .count-down {
       font-size: 46rem;
@@ -254,6 +256,7 @@ const { conf, lottery, resultRefs, orderRefs } = index()
     margin-top: 20rem;
     gap: 20rem;
     width: 686rem;
+    padding: 0 32rem;
     .type-item {
       height: 76rem;
       border-radius: 6rem;

@@ -184,7 +184,7 @@
   .top-bg-box {
     width: 100%;
     background: linear-gradient(116.01deg, #C0DCFF 9.5%, #68A2FF 100.92%) !important;
-    padding: 0 32rem;
+    // padding: 0 32rem;
     color: #333333;
     font-size: 28rem;
     font-weight: 600;
@@ -194,6 +194,7 @@
       gap: 20rem;
       width: 686rem;
       height: 104rem;
+      padding: 0 32rem;
     }
   
     .type-item {
@@ -222,6 +223,7 @@
     .count-down-box {
       font-size: 28rem;
       margin-top: 32rem;
+      padding: 0 32rem;
   
       .count-down {
         font-size: 46rem;
@@ -254,6 +256,7 @@
       margin-top: 20rem;
       gap: 20rem;
       width: 686rem;
+      padding: 0 32rem;
       .type-item {
         height: 76rem;
         border-radius: 6rem;
