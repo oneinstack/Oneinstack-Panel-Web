@@ -25,7 +25,8 @@
           <x-load-img :src="item.imgUrl"></x-load-img>
         </div>
       </template>
-      <div class="not-data" v-if="!conf.isLoading && conf.gameList.length == 0">{{ $t('user.noMore') }}</div>
+      <x-no-data v-if="!conf.isLoading && conf.gameList.length == 0" style="margin-left: 130rem;"></x-no-data>
+      <!-- <div class="not-data" v-if="!conf.isLoading && conf.gameList.length == 0">{{ $t('user.noMore') }}</div> -->
       <div class="loading-box" v-if="conf.isLoading">
         <van-loading type="spinner" />
       </div>
