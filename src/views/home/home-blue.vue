@@ -44,7 +44,7 @@
                 <x-load-img :src="item.imgUrl" />
               </div>
             </div>
-            <div v-if="!row.data.length" class="not-data">{{ $t('user.noMore') }}</div>
+            <x-no-data v-if="!row.data.length" style="margin-left: 60rem;"></x-no-data>
           </template>
         </CategoryBlock>
         <!-- 任务 -->
