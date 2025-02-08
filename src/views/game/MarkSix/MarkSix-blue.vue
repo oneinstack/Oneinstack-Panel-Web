@@ -253,9 +253,10 @@
     }
   
     .operation-box {
-      margin-top: 20rem;
       gap: 20rem;
-      width: 686rem;
+      display: flex;
+      justify-content: space-between;
+      margin-top: 20rem;
       padding: 0 32rem;
       .type-item {
         height: 76rem;
