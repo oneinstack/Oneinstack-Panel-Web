@@ -21,7 +21,8 @@
                 <div style="overflow-x: scroll;" v-scroll>
                     <div class="time-list">
                         <div v-for="(item, index) in lottery.play.list" :key="index" class="time-item"
-                            :class="{ 'time-active': item.id === lottery.play.item.id }">
+                            :class="{ 'time-active': item.id === lottery.play.item.id }"
+                            @click="lottery.play.change(`/game/3DLottery/3DLottery`, item)">
                             <div>{{ item.label }}</div>
                         </div>
                     </div>

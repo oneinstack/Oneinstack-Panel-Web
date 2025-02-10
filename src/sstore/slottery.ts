@@ -440,7 +440,7 @@ export const slottery = reactive({
       ) {
         //获取游戏列表,并初始化游戏id和游戏类型
         conf.play.list = await slottery.findLotteryList(name)
-        conf.play.list.sort((a: any, b: any) => a.lotteryInterval - b.lotteryInterval)
+        // conf.play.list.sort((a: any, b: any) => a.lotteryInterval - b.lotteryInterval)
         conf.play.list.forEach((item: any) => {
           const minutes = item.lotteryInterval / 1000 / 60
           item.label = minutes + (minutes > 1 ? i18n.t('game.minutes') : i18n.t('game.minute'))

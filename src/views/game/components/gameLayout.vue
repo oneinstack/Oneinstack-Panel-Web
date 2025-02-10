@@ -90,6 +90,7 @@ const conf = reactive({
         System.loading()
         const obj = props.lottery.bet.getInfo()
         obj.money = money
+        obj.nums = 1
         // money => 单注金额
         // betCodes => 投注内容
         // betExpect => 投注期号
