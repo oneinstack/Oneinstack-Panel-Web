@@ -305,12 +305,12 @@ const conf = reactive({
     isAddRun: true,
     setList(arr: any) {
         const sorts = [6, 5, 4]
-        // conf.numlist = arr.map((item: any, i: any) => {
-        //     return {
-        //         num: item,
-        //         sort: sorts[i]
-        //     }
-        // })
+        conf.numlist = arr.map((item: any, i: any) => {
+            return {
+                num: item,
+                sort: sorts[i]
+            }
+        })
     },
     init() {
         conf.numlist = [
@@ -630,16 +630,13 @@ const conf = reactive({
         //移出屏幕外面
         timer.once(() => {
             stween.pause(['desk'])
-            console.log('8888');
-            console.log(conf.numsort);
-            
-            
             // 根据排名冲刺结算
             conf.rank = true
+            let timeArr = [300,400,500,600,700,800,900]
             for (let i = 1; i < 7; i++) {
                 stween.to('animal' + conf.numsort[i - 1].num, {
                     x: sutil.rem2px(750) + (600 - conf.numsort[i - 1].sort),
-                    time: (600 - conf.numsort[i - 1].sort) * 5,
+                    time: (600 - conf.numsort[i - 1].sort) * 4 + timeArr[i-1],
                     final() {
                         let num = conf.numsort[i - 1].num
                         conf.numlist[num - 1].sort = i

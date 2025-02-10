@@ -24,24 +24,34 @@ export const index = () => {
     game: {
       isRun: false,
       showDown: true,
+      fistRun: true,
+      fistStop: false,
       action: (type: any, res: any) => {
-        let open = conf.play.item.lotteryInterval / 1000 - 13
+        let open = conf.play.item.lotteryInterval / 1000 - 12
         let time = res[3] - open
 
         if (type == 'time' && res[3] === 0) conf.game.start()
         else if (type == 'stop') conf.game.stop(res)
-        else if (time > 0) conf.game.start()
-        else if (time < 0 && conf.game.isRun) {
+        else if (time > 0 && conf.game.fistRun) conf.game.fistStart()
+        else if (time < 0 && conf.game.fistStop) {
           const openCode = conf.lotteryBox.last.openCode.split(',')
-          if (conf.lotteryBox.last.openCode) conf.game.stop(openCode)
+          if (conf.lotteryBox.last.openCode) {
+            conf.game.fistStop = false
+            conf.game.stop(openCode)
+          }
         }
       },
       reset: () => {
         conf.game.isRun = false
         cgameRef.value?.reset()
       },
+      fistStart: () => {
+        conf.game.fistStop = true
+        conf.game.start()
+      },
       start: () => {
         if (conf.game.isRun) return
+        conf.game.fistRun = false
         conf.game.showDown = false
         conf.game.isRun = true
         cgameRef.value?.init()
@@ -54,7 +64,7 @@ export const index = () => {
           let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
 
           // console.log(conf.lotteryBox.countDown);
-          let open = item.lotteryInterval / 1000 - 12
+          let open = item.lotteryInterval / 1000 - 11
           let time = conf.lotteryBox.countDown[3] - open
           // 控制在35秒左右可下注
           if (time > 0) {
@@ -65,6 +75,8 @@ export const index = () => {
           }
           cgameRef.value?.stop(res)
         } else {
+          console.log('555555');
+          
           cgameRef.value?.setList(res)
         }
       }
@@ -171,14 +183,7 @@ export const index = () => {
         })
       },
       async shareBet(e: any) {
-        console.log(e)
-
         const obj = conf.lotteryBox.bet.getInfo()
-        console.log(obj)
-        console.log(conf.defaultWalletInfo)
-
-        console.log(conf.lotteryBox)
-        // console.log(mconf);
 
         const betCodes = e.list.map((item: any) => item[e.type + 'Code']).join(',') || ''
         const newBetCodesArr = e.list.map((item: any) => item.name)
