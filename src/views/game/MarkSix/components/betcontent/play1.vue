@@ -1,17 +1,19 @@
 <template>
-  <div class="flex relative" style="gap: 14rem; padding: 32rem">
-    <template v-for="item in conf.list">
-      <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)" :style="{
-          'width': isNaN(item.oddsName) ? '218rem' : '102rem'
-          }">
+  <div class="flex relative" style="gap: 14rem; padding: 32rem" v-if="conf.list1.length > 0">
+    <template v-for="item in conf.list1">
+      <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)" style="width:102rem">
+        <resultBall :num="item.oddsName" :size="72" :active="item.isActive"/>
+        <div class="odds">{{ parseFloat(item.odds).toFixed(2) }}</div>
+      </div>
+    </template>
+  </div>
+  <div class="flex relative" style="gap: 14rem; padding: 32rem" v-if="conf.list2.length > 0">
+    <template v-for="item in conf.list2">
+      <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)" style="width:218rem">
          <div class="ball-box" :style="{
           'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
           'width': isNaN(item.oddsName) ? '100%' : '72rem'
-          }"
-          v-if="isNaN(item.oddsName)">
-          <div>{{ item.languageName}}</div>
-        </div>
-        <resultBall :num="item.oddsName" :size="72" :active="item.isActive" v-if="!isNaN(item.oddsName)"/>
+          }">{{ item.languageName}}</div>
         <div class="odds">{{ parseFloat(item.odds).toFixed(2) }}</div>
       </div>
     </template>
@@ -23,13 +25,15 @@
   import { Scope } from 'tools-vue3'
   const mconf = Scope.getConf()
   const conf = reactive({
-    list: [] as any[],
+    allList: [] as any[],
+    list1: [] as any[],
+    list2: [] as any[],
     change(item: any) {
       if(mconf.conf.stopBet){
         return
       }
       item.isActive = !item.isActive
-      const data = conf.list.filter((item:any) => item.isActive)
+      const data = conf.allList.filter((item:any) => item.isActive)
       mconf.conf.betting.getChoseData(data)
     },
   })
@@ -44,7 +48,16 @@ watch(
 	() => props.listData,
 	(val: any) => {
 		if (val) {
-      conf.list = val
+      conf.list1 = []
+      conf.list2 = []
+      conf.allList = val
+      conf.allList?.forEach((item:any) => {
+        if(!isNaN(item.oddsName)){
+          conf.list1.push(item)
+        }else{
+          conf.list2.push(item)
+        }
+      })
 		}
 	},
   {

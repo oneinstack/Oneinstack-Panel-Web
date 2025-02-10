@@ -3,8 +3,7 @@
     <img src="/static/img/betting-icon.png">
     {{ $t('lhc.' + markSixConf.betting.tabs.level2.item.name || markSixConf.betting.tabs.level2.item.list[0].name) }}
   </div>
-  <play1 :listData="conf.listData1" v-if="conf.listData1.length > 0"/>
-  <play1 :listData="conf.listData2" v-if="conf.listData2.length > 0"/>
+  <play1 :listData="conf.listData"/>
 </template>
 <script setup lang="ts">
 import { reactive,watch,onMounted } from 'vue'
@@ -12,25 +11,18 @@ import play1 from './play1.vue'
 import { Scope } from 'tools-vue3'
 const { conf:markSixConf } = Scope.getConf()
 const conf = reactive({
-  listData1: [] as any[],
-  listData2: [] as any[],
+  listData: [] as any[],
   initData() {
-    conf.listData1 = []
-    conf.listData2 = []
+    conf.listData = []
     let data1 = markSixConf.oddsData
     let data2 = markSixConf.betting.tabs.level2.item.list
-    data2?.forEach((item:any) => {
+    data2?.forEach((item:any,itemIndex:any) => {
       let obj = data1.find((num:any) => num.oddsCode === item.oddsCode)
       let newObj = {
         languageName: item.oddsName,
         ...obj,
       }
-      if(isNaN(item.oddsName)){
-        conf.listData2.push(newObj)
-      }else{
-        conf.listData1.push(newObj)
-        
-      }
+      conf.listData.push(newObj)
     })
     // const oddsCode = data2.map((item:any) => item.oddsCode)
     // let obj = data1.filter((num:any) => oddsCode.includes(num.oddsCode))
