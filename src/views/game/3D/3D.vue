@@ -185,6 +185,7 @@ import analyze from './com/analyze.vue';
 import timePopup from '../components/timePopup.vue';
 import gameLoop from '../components/gameLoop.vue';
 import downTime from '../components/aniDownTime.vue';
+import anidownTime from '../components/aniDownTime1.vue';
 import sutil from '@/sstore/sutil';
 import { index } from './3D';
 
@@ -376,7 +377,7 @@ const { conf, lottery, resultRefs, analyzeRefs, orderRefs } = index()
 		.time-num {
 			display: flex;
 			align-items: center;
-			font-size: 30rem;
+			font-size: 44rem;
 
 			.num-item {
 				width: 56rem;

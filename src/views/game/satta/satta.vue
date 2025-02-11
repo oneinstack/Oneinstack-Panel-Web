@@ -354,7 +354,7 @@ const { conf, lottery, cRefs } = index()
         .time-num {
             display: flex;
             align-items: center;
-            font-size: 30rem;
+            font-size: 44rem;
 
             .num-item {
                 width: 56rem;

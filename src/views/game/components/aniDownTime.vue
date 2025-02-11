@@ -1,6 +1,6 @@
 <template>
   <div class="count" :class="[conf.changeState, conf.arrow]">
-    <span class="current top">{{ value }}</span>
+    <span class="current top" :class="[conf.changeState]">{{ value }}</span>
     <span class="next top">{{ value }}</span>
     <span class="current bottom">{{ value }}</span>
     <span class="next bottom">{{ value }}</span>
@@ -13,13 +13,13 @@ const props = defineProps({
     default: 0 as any
   },
   w: {
-    default: 56
+    default: 68
   },
   h: {
-    default: 56
+    default: 68
   },
   b: {
-    default: 8
+    default: 6
   }
 })
 //动态宽高
@@ -58,7 +58,7 @@ watch(
 </script>
 <style lang="less" scoped>
 .count {
-  // box-shadow: 0 5px 5px -5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 5px 5px -5px rgba(0, 0, 0, 0.2);
   -moz-perspective: 500px;
   -webkit-perspective: 500px;
   perspective: 500px;
@@ -66,6 +66,7 @@ watch(
   -moz-transform: translateZ(0);
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
+  
   width: v-bind('w+"rem"');
   height: v-bind('h+"rem"');
   line-height: v-bind('h+"rem"');
@@ -73,33 +74,37 @@ watch(
   box-sizing: border-box;
 }
 .count span {
-  background: #000;
+  background: #333;
   color: #fff;
   display: block;
   left: 0;
   position: absolute;
   top: 0;
-  // text-shadow: 0 1px 0 #282828, 0 2px 0 #1e1e1e, 0 3px 0 #141414, 0 4px 0 #0a0a0a, 0 5px 0 #000,
-  //   0 0 10px rgba(0, 0, 0, 0.8);
+  text-shadow: 0 1px 0 #282828, 0 2px 0 #1e1e1e, 0 3px 0 #141414, 0 4px 0 #0a0a0a, 0 5px 0 #000,
+    0 0 8px rgba(0, 0, 0, 0.8);
   -moz-transform-origin: 0 v-bind('h/2+"rem"') 0;
   -webkit-transform-origin: 0 v-bind('h/2+"rem"') 0;
   transform-origin: 0 v-bind('h/2+"rem"') 0;
   width: 100%;
 }
 .count span:before {
-  // border-bottom: 2px solid #000;
+  border-bottom: 2rem solid #000;
   content: '';
   left: 0;
   position: absolute;
   width: 100%;
 }
 .count span:after {
-  // box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35);
+  // box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.2);
   content: '';
   height: 100%;
   left: 0;
   position: absolute;
   top: 0;
+  width: 100%;
+}
+.count .small {
+  font-size: 175px;
 }
 .count .top {
   border-top-left-radius: v-bind('b+"rem"');
@@ -107,7 +112,6 @@ watch(
   box-shadow: inset 0 2rem rgba(0, 0, 0, 0.9), inset 0 3rem 0 rgba(255, 255, 255, 0.4);
   height: 50%;
   overflow: hidden;
-  width: 100%;
 }
 .count .top:before {
   bottom: 0;
