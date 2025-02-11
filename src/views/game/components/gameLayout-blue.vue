@@ -2,7 +2,10 @@
   <x-page noFooter :headerBgColor="stheme.theme.blue.headerBgColor()">
     <!-- 头部标题 -->
     <template #title>
-      <slot name="title">{{ title }} - {{ lottery.play.item.label }}</slot>
+      <slot name="title">
+        <span v-if="title == 'Satta'">{{ lottery.play.item.lotteryShowname }}</span>
+        <span v-else>{{ title }} - {{ lottery.play.item.label }}</span>
+      </slot>
     </template>
     <!-- 头部钱包 -->
     <template #right>
@@ -100,7 +103,8 @@ const conf = reactive({
           ...obj,
           success: (res: any) => {
             props.lottery.wallet.getWalletMoney()
-            System.toast(i18n.t('game.betSuccess'),'success')
+            const list = ['Satta','Dice','MarkSix']
+            if(!list.includes(props.title)) System.toast(i18n.t('game.betSuccess'), 'success')
             emit('reset', obj)
           },
           final: async () => {

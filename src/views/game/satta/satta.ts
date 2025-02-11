@@ -8,8 +8,6 @@ import { svalue } from '@/sstore/svalue'
 import sutil from '@/sstore/sutil'
 
 export const index = () => {
-  const resultRefs = ref<any>()
-  const orderRefs = ref<any>()
   const cRefs = ref<any>()
   const timer = Scope.Timer()
   const lottery = slottery.lotteryBox({
@@ -59,8 +57,7 @@ export const index = () => {
         let currIndex = conf.loop.numList.findIndex((item: any) => item.number == res[0])
         conf.loop.openCode = currIndex
 
-        // if (conf.operation.active === 'result') resultRefs.value?.initResult()
-        // if (conf.operation.active === 'myOrder') orderRefs.value?.initOrder()
+        conf.page.change(1)
       }
     },
     /**
@@ -90,6 +87,10 @@ export const index = () => {
         conf.operation.active = item.value
         conf.page.reset()
         conf.page.change(1)
+
+        cRefs.value.scrollTo({
+          top: 0
+        })
       }
     },
     /**
@@ -138,21 +139,30 @@ export const index = () => {
       betShow: false,
       disabledShow: false,
       betList: [] as any[],
-      betTypeTitle: '',
+      typeTitle: '',
       popup: {
         open: (e: any) => {
-          conf.betting.betTypeTitle = conf.betting.tabs.item.name
+          conf.betting.typeTitle = conf.betting.tabs.item.name
           conf.layout.ref.open()
           // conf.betting.betShow = true
         },
-        close: (type = 1) => {
-          if (type == 2) return conf.layout.ref.close()
+        close: (e: any) => {
+          if (e.money) {
+            lottery.bet.money = parseFloat(e.money) * lottery.bet.num
+            lottery.bet.content = conf.betting.betList
+
+            conf.betting.betShow = true
+            timer.once(() => {
+              conf.betting.betShow = false
+            }, 2000)
+          }
+
           conf.betting.betList = []
           conf.layout.ref.close()
         },
         autoClose: (time: any) => {
           if (time <= lottery.play.item.openLockCountdown) {
-            conf.betting.popup.close(2)
+            conf.layout.ref.close()
             conf.betting.disabledShow = true
           } else {
             conf.betting.disabledShow = false
@@ -191,15 +201,16 @@ export const index = () => {
         conf.page.isTips = false
         conf.page.total = 0
         conf.page.pageNum = 1
+        conf.his.result.list = []
+        conf.his.order.list = []
       },
-      nextPage: () =>  {
+      nextPage: () => {
         const v = conf.page.pageNum + 1
         conf.page.change(v)
-        
       },
       change: (val: any) => {
         conf.page.pageNum = val
-        if (conf.operation.active == 'result' || conf.operation.active == 'chart') conf.his.result.getList()
+        if (conf.operation.active == 'result') conf.his.result.getList()
         else if (conf.operation.active == 'myOrder') conf.his.order.getList()
       }
     },
@@ -209,16 +220,18 @@ export const index = () => {
         list: [] as any[],
         chartList: [] as any[],
         getList: async () => {
-          console.log('666888');
-          
+          System.loading()
           const { data: openData } = await apis.lotteryOpenResult({
             current: conf.page.pageNum,
             size: conf.page.pageSize,
-            lotteryId: lottery.current.lotteryId
+            lotteryId: lottery.current.lotteryId,
+            final: (status, data: any) => {
+              System.loading(false)
+            }
           })
-          conf.his.result.list = [...conf.his.result.list,...openData.records]
+          conf.his.result.list = [...conf.his.result.list, ...openData.records]
           conf.page.total = openData.total
-          if (conf.page.pageSize * conf.page.pageNum >= conf.page.total) return conf.page.isTips = true
+          if (conf.page.pageSize * conf.page.pageNum >= conf.page.total) return (conf.page.isTips = true)
         }
       },
       order: {
@@ -226,12 +239,15 @@ export const index = () => {
         //获取roder列表
         getList: async () => {
           let defaultWalletInfo = await svalue.getDefaultWallet()
+          System.loading()
           const { data } = await apis.lotteryUserOrder({
             current: conf.page.pageNum,
             size: conf.page.pageSize,
-            lotteryId: lottery.current.lotteryId
+            lotteryId: lottery.current.lotteryId,
+            final: (status, data: any) => {
+              System.loading(false)
+            }
           })
-
           let coinlistArr = await svalue.getCoinlist() //货币数据
           data.records?.forEach((item: any) => {
             //下注number
@@ -272,9 +288,9 @@ export const index = () => {
             let PrizeMoneyResultToFixed4 = sutil.dataHandling(PrizeMoneyResult)
             item.PrizeMoneyToFixed4 = PrizeMoneyResultToFixed4
           })
-          conf.his.order.list = [...conf.his.order.list,...data.records]
+          conf.his.order.list = [...conf.his.order.list, ...data.records]
           conf.page.total = data.total
-          if (conf.page.pageSize * conf.page.pageNum >= conf.page.total) return conf.page.isTips = true
+          if (conf.page.pageSize * conf.page.pageNum >= conf.page.total) return (conf.page.isTips = true)
         }
       }
     }
@@ -285,11 +301,13 @@ export const index = () => {
     conf.betting.tabs.init()
   })
 
+  console.log(lottery)
+
   Scope.setConf({
     conf,
     lottery
   })
-  return { conf, lottery, resultRefs, orderRefs, cRefs }
+  return { conf, lottery, cRefs }
 }
 
 export type WelfareConfInter = ReturnType<typeof index>

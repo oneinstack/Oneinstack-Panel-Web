@@ -1,9 +1,9 @@
 <template>
-	<div class="result">
+	<div class="result" :style="`--color-1: ${bg[0]}; --color-2: ${bg[1]};`">
 		<div class="result-title">
 			<div style="width: 28%;">{{ $t('game.drawID') }}</div>
 			<div style="width: 35%;">{{ $t('game.result') }}</div>
-			<div style="width: 37%;">{{ $t('game.sum') }}</div>
+			<div style="width: 37%;">{{ $t('SattaKing.LotteryTime') }}</div>
 		</div>
 		<div class="result-list">
 			<template v-for="(item, index) in resultList" :key="index">
@@ -49,15 +49,15 @@
 </template>
 
 <script setup lang="ts">
-import { apis } from '@/api';
-import sutil from '@/sstore/sutil';
-import { onMounted, reactive, watch } from 'vue';
 const props = defineProps({
 	resultList: {
 		default: [] as any[]
 	},
 	isTips: {
 		default: false
+	},
+	bg: {
+		default: ['#FFE5C7','#FFFBF5']
 	}
 })
 
@@ -73,7 +73,7 @@ const emit = defineEmits(['change'])
 	.result-title {
 		display: flex;
 		padding: 0rem 24rem;
-		background: #FFE5C7;
+		background: var(--color-1);
 
 		div {
 			font-size: 24rem;
@@ -139,7 +139,7 @@ const emit = defineEmits(['change'])
 			}
 
 			&:nth-child(2n) {
-				background: #FFFBF5;
+				background: var(--color-2);
 			}
 		}
 
@@ -148,8 +148,6 @@ const emit = defineEmits(['change'])
 			padding: 24rem 24rem 0rem;
 
 			.more-btn {
-				// box-shadow: rgba(0, 0, 0, 0.1) 0rem 1.06667vw 1.06667vw;
-				// border-radius: 2.13333vw;
 				height: 78rem;
 				display: flex;
 				align-items: center;

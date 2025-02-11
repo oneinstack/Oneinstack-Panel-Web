@@ -1,5 +1,5 @@
 <template>
-    <GameLayout title="Satta" code="SATTA_KING" :lottery="lottery" :ref="conf.layout.setRef"
+    <GameLayout title="3DLottery" code="SATTA_KING" :lottery="lottery" :ref="conf.layout.setRef"
         @reset="conf.betting.popup.close">
         <div class="time-box">
             <div class="time-outer">
@@ -15,7 +15,7 @@
             </div>
         </div>
         <div class="incline">
-            <img class="incline-img" src="/static/img/game/welfare-incline.png" />
+            <img class="incline-img" src="/static/theme/blue/incline.png" />
         </div>
         <div class="content-box">
             <div class="time-nav">
@@ -80,7 +80,7 @@
                 </div>
             </div>
             <!-- Betting 一二级 -->
-            <bettingtabs v-if="conf.operation.active === 'betting'" />
+            <bettingtabs :bg="['#087BFF','#0645D9']" v-if="conf.operation.active === 'betting'" />
         </div>
         <!-- 内容区 -->
         <div class="col" style="overflow: auto;" ref="cRefs"
@@ -89,11 +89,9 @@
             <betting @changeBet="conf.betting.popup.open" :key="conf.betting.tabs.item.name"
                 v-if="conf.operation.active === 'betting'" />
 
-            <result v-if="conf.operation.active === 'result'" :resultList="conf.his.result.list"
-                :isTips="conf.page.isTips" @change="conf.page.nextPage" />
+            <result :bg="['#58A5FF','#E6F2FF']" v-if="conf.operation.active === 'result'" :resultList="conf.his.result.list" :isTips="conf.page.isTips" @change="conf.page.nextPage" />
 
-            <order v-if="conf.operation.active === 'myOrder'" :resultList="conf.his.order.list"
-                :isTips="conf.page.isTips" @change="conf.page.nextPage" />
+            <order v-if="conf.operation.active === 'myOrder'"  :resultList="conf.his.order.list" :isTips="conf.page.isTips" @change="conf.page.nextPage" />
 
             <template v-if="conf.operation.active === 'rule'">
                 <div style="padding: 20rem 48rem" v-html="conf.betting.tabs.item.rule"></div>
@@ -113,8 +111,8 @@
                 <img class="arrow-img" v-show="conf.betting.betList.length > 7" src="/static/img/double-arrow.png" />
             </div>
         </template>
-        <!-- 下注弹窗信息 -->
-        <div v-if="conf.betting.betShow">
+         <!-- 下注弹窗信息 -->
+         <div v-if="conf.betting.betShow">
             <div class="popup-mask"></div>
             <div class="tips-popup" @click="conf.betting.betShow = false">
                 <div class="bet-win">
@@ -137,9 +135,9 @@
     </GameLayout>
 </template>
 <script setup lang="ts">
-import GameLayout from '../components/gameLayout.vue'
+import GameLayout from '../components/gameLayout-blue.vue'
 import bettingtabs from './components/betting/tabs.vue'
-import betting from './components/betting/index.vue'
+import betting from './components/betting/index-blue.vue'
 import gameLoop from '../components/gameLoop.vue';
 import result from './components/result.vue'
 import order from './components/order.vue'
@@ -158,13 +156,13 @@ const { conf, lottery, cRefs } = index()
 
     .time-outer {
         padding: 10rem 12rem;
-        background: linear-gradient(89.96deg, #FFDEBB 0.49%, #FCCFAC 99.97%);
+        background: linear-gradient(89.96deg, #a4caff .49%, #7af 99.97%);
         height: 100%;
         border-radius: 20rem;
 
         .time-content {
             height: 100%;
-            background: linear-gradient(89.96deg, #FFD1A0 0.49%, #F8B98A 99.97%);
+            background: linear-gradient(89.96deg, #A4CAFF 0.49%, #77AAFF 99.97%);
             border-radius: 20rem;
             display: flex;
             align-items: center;
@@ -183,7 +181,7 @@ const { conf, lottery, cRefs } = index()
                     width: 8rem;
                     height: 8rem;
                     border-radius: 50%;
-                    background: #EA934B;
+                    background: #0A45CF;
                     margin-right: 4rem;
 
                     &:last-of-type {
@@ -193,9 +191,12 @@ const { conf, lottery, cRefs } = index()
             }
 
             span {
-                color: #EA934B;
-                font-size: 40rem;
-                font-weight: 600;
+                background: linear-gradient(112.71deg, #296AED 4.28%, #0A45CF 67.56%);
+				-webkit-background-clip: text;
+				-webkit-text-fill-color: transparent;
+				background-clip: text;
+				font-size: 40rem;
+				font-weight: 600;
             }
         }
     }
@@ -214,7 +215,7 @@ const { conf, lottery, cRefs } = index()
 }
 
 .content-box {
-    background: linear-gradient(344.78deg, #FFD9BF 8.93%, #FFDEBB 87.54%);
+    background: linear-gradient(116.01deg, #C0DCFF 9.5%, #68A2FF 100.92%) !important;
     padding: 0 24rem 20rem;
 }
 
@@ -228,7 +229,6 @@ const { conf, lottery, cRefs } = index()
         .time-item {
             background: #FFF;
             box-shadow: 4rem 4rem 8rem 0rem rgba(0, 0, 0, 0.10), -8rem -8rem 8rem 0rem rgba(255, 255, 255, 0.20);
-            box-shadow: 2px 2px 4px 0px #0000001A, -4px -4px 4px 0px #FFFFFF33;
 
             border-radius: 8rem;
             font-size: 29rem;
@@ -253,9 +253,8 @@ const { conf, lottery, cRefs } = index()
             }
 
             &.time-active {
-                border-top: 8rem solid #EC612E;
-                background: #FFFBE2;
-                box-shadow: 2px 2px 4px 0px #0000001A inset;
+                border-top: 0.8vw solid #296AED;
+                background: #E6F2FF;
             }
         }
     }
@@ -384,7 +383,7 @@ const { conf, lottery, cRefs } = index()
 
             .bar-active {
                 height: 100%;
-                background: linear-gradient(180deg, #FB0224 0%, #F56900 100%);
+                background: linear-gradient(112.71deg, #296AED 4.28%, #0A45CF 67.56%);
             }
         }
     }
@@ -401,7 +400,7 @@ const { conf, lottery, cRefs } = index()
     overflow: hidden;
 
     &.active {
-        background-color: #fffbe2;
+        background: #E6F2FF;
     }
 
     &.active::before {
@@ -411,7 +410,7 @@ const { conf, lottery, cRefs } = index()
         left: 0;
         width: 100%;
         height: 8rem;
-        background: linear-gradient(180deg, #eb602d 0%, #ffa64f 100%);
+        background: linear-gradient(112.71deg, #296AED 4.28%, #0A45CF 67.56%);
     }
 }
 
@@ -439,7 +438,7 @@ const { conf, lottery, cRefs } = index()
 }
 
 .active-bg {
-    background: #FFE1C3;
+    background: #E6F2FF;
 }
 
 .arrow-img {
@@ -478,57 +477,66 @@ const { conf, lottery, cRefs } = index()
         font-weight: 900;
     }
 }
+.popup-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // z-index: 997;
+  background: rgba(0, 0, 0, 0.3);
+}
 
 .tips-popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 998;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 998;
 
-    .bet-win {
-        width: 600rem;
-        height: 152rem;
-        border-radius: 20rem;
-        background: #fff;
-        box-shadow:
-            20rem 20rem 40rem 0rem rgba(255, 255, 255, 0.25),
-            -20rem -20rem 40rem 0rem rgba(255, 255, 255, 0.25);
-        color: #000;
-        font-weight: 500;
-        font-size: 40rem;
-        overflow: hidden;
-        animation: colorBtn 1s forwards;
+  .bet-win {
+    width: 600rem;
+    height: 152rem;
+    border-radius: 20rem;
+    background: #fff;
+    box-shadow:
+      20rem 20rem 40rem 0rem rgba(255, 255, 255, 0.25),
+      -20rem -20rem 40rem 0rem rgba(255, 255, 255, 0.25);
+    color: #000;
+    font-weight: 500;
+    font-size: 40rem;
+    overflow: hidden;
+    animation: colorBtn 1s forwards;
 
-        .win-title {
-            height: 152rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .win-content {
-            font-size: 30rem;
-            padding-left: 40rem;
-
-            .win-item {
-                margin-bottom: 8rem;
-            }
-        }
+    .win-title {
+      height: 152rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    @keyframes colorBtn {
-        0% {
-            height: 152rem;
-        }
+    .win-content {
+      font-size: 30rem;
+      padding-left: 40rem;
 
-        100% {
-            height: 572rem;
-        }
+      .win-item {
+        margin-bottom: 8rem;
+      }
     }
+  }
+
+  @keyframes colorBtn {
+    0% {
+      height: 152rem;
+    }
+
+    100% {
+      height: 572rem;
+    }
+  }
 }
 </style>
