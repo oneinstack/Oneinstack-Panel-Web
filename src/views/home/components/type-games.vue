@@ -1,11 +1,39 @@
 <script setup>
 import { Scope } from 'tools-vue3'
+import { onBeforeUnmount, onMounted, reactive } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
 
 const mconf = Scope.getConf()
 const categories = mconf.categories
+const autoPlay = reactive({
+  arrs: [],
+  currentIndex: 0,
+  timer: null,
+  play: () => {
+    if (!autoPlay.arrs.length) return
+    else if (autoPlay.arrs.length === 1) autoPlay.arrs[0].isSelect = true
+    autoPlay.timer = setTimeout(() => {
+      autoPlay.stop()
+      autoPlay.arrs[autoPlay.currentIndex].isSelect = true
+      autoPlay.currentIndex++
+      autoPlay.currentIndex === autoPlay.arrs.length && (autoPlay.currentIndex = 0)
+      autoPlay.play()
+    }, 3000)
+  },
+  stop: () => {
+    if (!autoPlay.arrs.length) return
+    autoPlay.arrs.forEach((item) => (item.isSelect = false))
+    autoPlay.timer && clearTimeout(autoPlay.timer)
+    autoPlay.timer = null
+  }
+})
+autoPlay.arrs = categories.filter((item) => item.number)
+
+onMounted(() => autoPlay.play())
+
+onBeforeUnmount(() => autoPlay.stop())
 </script>
 
 <template>
@@ -27,8 +55,11 @@ const categories = mconf.categories
         v-for="item in categories"
         :key="item.id"
         class="categories-item"
+        :class="{ 'is-select': item.isSelect }"
         :style="{ borderColor: item.color }"
         @click="$router.push(item.link)"
+        @mouseenter="autoPlay.stop()"
+        @mouseleave="autoPlay.play()"
       >
         <div class="bg" :style="{ backgroundImage: `url(${item.img})` }" />
         <div>
@@ -151,7 +182,8 @@ const categories = mconf.categories
       position: relative;
       cursor: pointer;
 
-      &:hover {
+      &:hover,
+      &.is-select {
         transform: translateY(-50px);
         transition: all ease-in-out 0.5s;
 
