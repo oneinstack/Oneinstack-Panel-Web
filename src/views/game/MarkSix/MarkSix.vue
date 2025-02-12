@@ -82,7 +82,7 @@
     </div>
 
     <!-- 内容区 -->
-    <div class="col" style="overflow: auto" :class="{ 'stop-bet': conf.stopBet && conf.operation.active === 'betting' }">
+    <div class="col content" :class="{ 'stop-bet': conf.stopBet && conf.operation.active === 'betting' }">
       <!-- 下注区 -->
       <betting v-if="conf.operation.active === 'betting'"/>
       <!-- Result -->
@@ -370,5 +370,10 @@ const { conf, lottery, resultRefs, orderRefs } = index()
     font-size: 28rem;
     margin-right: 24rem;
   }
+}
+
+.content{
+  overflow: auto;
+  background: linear-gradient(180deg, #FFFCF5 0%, #FFF6E5 100%);
 }
 </style>

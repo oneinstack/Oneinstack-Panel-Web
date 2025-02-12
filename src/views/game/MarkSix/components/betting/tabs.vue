@@ -27,7 +27,7 @@
               :class="{ active: item.isActive }"
               @click="conf.level2.change(item)"
             >
-              {{ $t('lhc.' + item.name) }}
+            <span :class="{ activeName: item.isActive}">{{ $t('lhc.' + item.name) }}</span>
             </div>
           </div>
           <div style="height: 32rem; border-bottom: 1rem solid #f6f7fa; width: 100%"></div>
@@ -54,7 +54,7 @@ const conf = mconf.conf.betting.tabs
 <style lang="less" scoped>
 .level1-box {
   margin-top: 20rem;
-  gap: 20rem;
+  gap: 35rem;
   width: 100%;
   .type-item {
     height: 50rem;
@@ -126,8 +126,15 @@ const conf = mconf.conf.betting.tabs
       text-align: center;
 
       &.active {
-        color: #eb602d;
+        background: #FFF6E6;
         position: relative;
+        .activeName{
+          background: linear-gradient(328.56deg, #FF7502 18.81%, #FC9B01 77.66%);
+          background-clip: text;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          color: transparent;
+        }
       }
       &.active::before {
         content: '';

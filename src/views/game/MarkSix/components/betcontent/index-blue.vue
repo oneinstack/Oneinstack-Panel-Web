@@ -1,6 +1,6 @@
 <template>
   <div class="name">
-    <img src="/static/img/betting-icon.png">
+    <img src="/static/theme/blue/betting-icon.png">
     {{ $t('lhc.' + markSixConf.betting.tabs.level2.item.name || markSixConf.betting.tabs.level2.item.list[0].name) }}
   </div>
   <play1 :listData="conf.listData"/>

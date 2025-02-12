@@ -53,7 +53,7 @@ const conf = mconf.conf.betting.tabs
 <style lang="less" scoped>
 .level1-box {
   margin-top: 20rem;
-  gap: 20rem;
+  gap: 35rem;
   width: 100%;
   .type-item {
     height: 50rem;
