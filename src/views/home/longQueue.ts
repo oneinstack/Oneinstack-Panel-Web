@@ -20,7 +20,6 @@ export const index = () => {
           System.router.push(path)
         },
         getList: async () => {
-          System.loading()
           const ttime = Date.now() - conf.lastTime
           if (conf.loading || ttime < 3000) return
           conf.loading = true
@@ -28,7 +27,6 @@ export const index = () => {
           const res = await apis.changLong({
             final: () => {
               conf.loading = false
-              System.loading(false)
             }
           })
           if (!res.data.length) {
@@ -96,6 +94,7 @@ export const index = () => {
             return item
           })
           conf.list = res.data
+          System.loading(false)
           conf.time.run()
         },
         bet: {
@@ -176,7 +175,7 @@ export const index = () => {
 
     const timer = Scope.Timer()
     onMounted(() => {
-        System.loading(false)
+      System.loading()
         timer.on(
             () => {
             conf.getList()
