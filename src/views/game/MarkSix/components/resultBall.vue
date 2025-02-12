@@ -9,16 +9,16 @@
       class="absolute"
       :size="props.size"
       :val="conf.current.val"
-      :img="conf.current.img"
-      :color="conf.current.color"
+      :img="props.active ? conf.current.chooseImg : conf.current.img"
+      :color="props.active ? '#fff' : conf.current.color"
       :style="{ 'transform': conf.current.transform, 'transition': conf.current.transition }"
     />
     <resultBallCom
       class="absolute"
       :size="props.size"
       :val="conf.next.val"
-      :img="conf.next.img"
-      :color="conf.next.color"
+      :img="props.active ? conf.next.chooseImg : conf.next.img"
+      :color="props.active ? '#fff' : conf.next.color"
       :style="{ 'transform': conf.next.transform, 'transition': conf.next.transition }"
     />
   </div>
@@ -62,6 +62,7 @@ const conf = reactive({
     color: '',
     img: '',
     val: '',
+    chooseImg:'',
     transition: `transform ${props.time}ms linear`,
     transform: 'translate(0rem,0rem) scale(1)'
   },
@@ -70,6 +71,7 @@ const conf = reactive({
     color: '',
     img: '',
     val: '',
+    chooseImg:'',
     transform: `translate(${props.aniX}rem,${props.aniY * reverse}rem) scale(${props.aniScale})`,
     transition: `transform ${props.time}ms linear`
   },
@@ -154,6 +156,7 @@ const conf = reactive({
   setItem: (item: any, num: any) => {
     item.val = lhc.getVal(num)
     item.img = lhc.getImg(num, props.active)
+    item.chooseImg = lhc.getImg(num, true)
     item.color = lhc.getColor(num, props.active)
   }
 })
