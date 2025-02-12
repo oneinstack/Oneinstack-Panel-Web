@@ -96,6 +96,7 @@ const conf = reactive({
                 // color: #F5843F;
                 font-size: 34rem;
                 font-weight: 700;
+                box-shadow: 0rem 4rem 12rem rgba(0, 0, 0, 0.4);
 
                 .txt {
                     background: linear-gradient(#eb602d, #ffa64f);
