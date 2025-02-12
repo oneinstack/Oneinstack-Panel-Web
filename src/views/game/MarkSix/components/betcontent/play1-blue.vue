@@ -10,10 +10,9 @@
   <div class="flex relative" style="gap: 14rem; padding: 32rem" v-if="conf.list2.length > 0">
     <template v-for="item in conf.list2">
       <div class="play-item column flex-center" :class="{ active: item.isActive }" @click="conf.change(item)" style="width:218rem">
-         <div class="ball-box" :style="{
-          'background-image': `url('/static/img/game/marksix/${item.oddsName}.webp')`,
-          'width': isNaN(item.oddsName) ? '100%' : '72rem'
-          }">{{ item.languageName}}</div>
+         <div class="border-box">
+          <div class="ball-box">{{ item.languageName }}</div>
+         </div>
         <div class="odds">{{ parseFloat(item.odds).toFixed(2) }}</div>
       </div>
     </template>
@@ -84,15 +83,26 @@ watch(
   	background-image: linear-gradient(to right, #E6F2FF, #E6F2FF), linear-gradient(109.77deg, #087BFF 4.47%, #0645D9 138.81%);
   }
 
+  .border-box{
+    border: 1.4rem solid #EAEAEA;
+    padding: 2rem;
+    border-radius: 8rem;
+    margin: 10rem;
+  }
+
   .ball-box {
     background-repeat: no-repeat;
     background-size: 100% 100%;
     pointer-events: none;
-    width: 72rem;
-    height: 72rem;
     font-size: 30rem;
     text-align: center;
     word-break: break-word;
+    padding: 4rem 10rem;
+    border-radius: 8rem;
+    width: auto !important;
+    height: auto !important;
+    overflow: hidden;
+    background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEF 100%);
   }
 
   .odds {
