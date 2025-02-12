@@ -128,7 +128,7 @@
                   <div class="win-title">{{ $t('game.winBet') }}</div>
                   <div class="win-content">
                       <div class="win-item">{{ $t('game.expect') }}：{{ conf.winBetInfo?.betExpect }}</div>
-                      <div class="win-item">{{ $t('game.amount') }}：{{ sutil.Mul(conf.winBetInfo?.money , conf.winBetInfo?.nums) }}</div>
+                      <div class="win-item">{{ $t('game.amount') }}：{{ sutil.Mul(conf.winBetInfo?.money , lottery.bet.num) }}</div>
                       <div class="win-item">{{ $t('game.start') }}：{{ sutil.getTimeFormat(lottery.current.startTime) }}</div>
                       <div class="win-item">{{ $t('game.open') }}：{{ sutil.getTimeFormat(lottery.current.openTime) }}</div>
                   </div>

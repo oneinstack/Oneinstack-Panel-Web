@@ -112,7 +112,7 @@ const conf = mconf.conf.betting.tabs
     .row{
         gap: 15rem;
         margin-top: 20rem;
-        max-height: 350rem;
+        max-height: 300rem;
         overflow-y: auto;
     }
     .type-item {
