@@ -9,5 +9,7 @@ export default {
   'periods': 'ระยะเวลา',
   'bet_amount': 'จำนวนเงินเดิมพันเดี่ยว',
   'guess': 'ทาย',
-  'betting_amount': 'จำนวนเงินเดิมพัน'
+  'betting_amount': 'จำนวนเงินเดิมพัน',
+  'totalBet': 'จำนวนเดิมพันรวม', // Total bet amount
+
 }

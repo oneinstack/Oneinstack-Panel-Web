@@ -627,22 +627,23 @@ const conf = reactive({
             time: 800
         })
         conf.isStart = false
+        
         //移出屏幕外面
         timer.once(() => {
             stween.pause(['desk'])
             // 根据排名冲刺结算
             conf.rank = true
-            let timeArr = [300,400,500,600,700,800,900]
+            let timeArr = [1100,1200,1400,1600,1800,1900]
             for (let i = 1; i < 7; i++) {
                 stween.to('animal' + conf.numsort[i - 1].num, {
                     x: sutil.rem2px(750) + (600 - conf.numsort[i - 1].sort),
-                    time: (600 - conf.numsort[i - 1].sort) * 4 + timeArr[i-1],
+                    time: timeArr[i-1],
                     final() {
                         let num = conf.numsort[i - 1].num
                         conf.numlist[num - 1].sort = i
                         conf.numlist[num - 1].show = true
 
-                        if (i == maxIndex) {
+                        if (i == 5) {
                             timer.once(() => {
                                 conf.podiumShow = true
                             }, 1000)

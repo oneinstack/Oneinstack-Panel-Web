@@ -6,7 +6,7 @@
                     <div class="time-box">
                         <div class="result">{{ openExpect }}</div>
                         <div class="time">
-                            <div>{{ times[1] || '00' }}<span style="margin-left: 12rem;margin-right: -3rem;">:</span>{{ times[2] || '00' }}</div>
+                            <div>{{ times[1] || '00' }}<span style="margin-left: 25rem;margin-right: 10rem;">:</span>{{ times[2] || '00' }}</div>
                         </div>
                     </div>
                 </div>
@@ -92,9 +92,9 @@ const emit = defineEmits(['showMore'])
                 color: #fff;
                 font-size: 44rem;
                 font-weight: 800;
-                padding: 16rem 0rem;
+                padding: 16rem 6rem 16rem 0rem;
                 border-radius: 16rem;
-                width: 240rem;
+                width: 250rem;
                 font-size: 32px;
                 font-family: 'XS';
                 /* 可使用数字风格字体 */

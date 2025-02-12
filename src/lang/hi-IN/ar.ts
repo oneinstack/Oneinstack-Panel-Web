@@ -9,5 +9,6 @@ export default {
   'periods': 'अवधियाँ',
   'bet_amount': 'एकल दांव की राशि',
   'guess': 'अनुमान',
-  'betting_amount': 'दांव की राशि'
+  'betting_amount': 'दांव की राशि',
+  'totalBet': 'कुल दांव राशि', // Total bet amount
 }

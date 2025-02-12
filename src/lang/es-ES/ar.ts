@@ -7,7 +7,8 @@ export default {
   'past_10': 'Las últimas 10 competiciones',
   'animals': 'Animales',
   'periods': 'Períodos',
-  'bet_amount': 'Monto de la apuesta individual',
+  'bet_amount': 'Monto de única',
   'guess': 'Adivinar',
-  'betting_amount': 'Monto de la apuesta'
+  'betting_amount': 'Monto de la apuesta',
+  'totalBet': 'Cantidad total apostada', // Total bet amount
 }

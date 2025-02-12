@@ -9,5 +9,6 @@ export default{
     'periods': 'Periods',
     'bet_amount': 'Single bet amount',
     'guess': 'Guess',
-    'betting_amount': 'Betting amount'
+    'betting_amount': 'Betting amount',
+    'totalBet': 'Total bet amount'
 }

@@ -64,7 +64,7 @@ export const index = () => {
           let item = conf.play.list.find((v: any) => v.id === conf.play.lotteryId) as any
 
           // console.log(conf.lotteryBox.countDown);
-          let open = item.lotteryInterval / 1000 - 11
+          let open = item.lotteryInterval / 1000 - 12
           let time = conf.lotteryBox.countDown[3] - open
           // 控制在35秒左右可下注
           if (time > 0) {

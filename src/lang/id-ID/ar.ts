@@ -7,7 +7,8 @@ export default {
   'past_10': '10 Kompetisi Terakhir',
   'animals': 'Hewan',
   'periods': 'Periode',
-  'bet_amount': 'Jumlah Taruhan Tunggal',
+  'bet_amount': 'Taruhan Tunggal',
   'guess': 'Tebak',
-  'betting_amount': 'Jumlah Taruhan'
+  'betting_amount': 'Jumlah Taruhan',
+  'totalBet': 'Jumlah taruhan total', // Total bet amount
 }

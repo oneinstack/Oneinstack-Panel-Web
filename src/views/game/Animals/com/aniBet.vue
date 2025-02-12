@@ -42,24 +42,27 @@
         </div>
         <div class="btn">
             <div class="btn-left">
-                <div class="name">{{ $t('ar.bet_amount') }}</div>
-                <div class="num">
-                    <van-icon name="arrow-left" size="36rem" color="#fff" @click.stop="conf.changeAmount('-')" />
-                    <div class="total">{{ conf.betCoin }}{{ conf.quickRechargeAmount.list[conf.amount] }}</div>
-                    <van-icon name="arrow" size="36rem" color="#fff" @click.stop="conf.changeAmount('+')" />
+                <img class="bet-img" :src="`/static/img/game/animal/betBtn${conf.isBetActive}.png`" />
+                <div class="left-contnet" :style="{ 'padding-top': conf.isBetActive ? '25rem' : '10rem' }"
+                    @click="conf.changeAmount">
+                    <div class="name">{{ $t('ar.bet_amount') }}</div>
+                    <div class="num">
+                        {{ conf.betCoin }}{{ conf.quickRechargeAmount.list[conf.amount] }}
+                    </div>
                 </div>
             </div>
             <div class="btn-right" style="justify-content: center;" v-if="!getWinMoney" @click="conf.changeBet">
-                <div>{{ $t('ar.guess') }}</div>
+                <div style="flex: 1;">{{ $t('ar.guess') }}</div>
             </div>
             <div class="btn-right" @click="conf.changeBet" v-else>
                 <div class="win">
-                    <div>{{ $t('ar.betting_amount') }}</div>
-                    <div style="margin-top: 4rem;font-size: 25rem;"><span>{{ `${conf.betCoin}${getWinMoney}` }}</span>
+                    <div>{{ $t('ar.totalBet') }}</div>
+                    <div class="num">
+                        <div class="coin">{{ conf.betCoin }}</div>{{ getWinMoney }}
                     </div>
                 </div>
                 <div class="line"></div>
-                <div>{{ $t('ar.guess') }}</div>
+                <div style="flex: 1;">{{ $t('ar.guess') }}</div>
             </div>
         </div>
         <div class="mosk" v-if="stopBet"></div>
@@ -91,7 +94,7 @@ const props = defineProps({
     }
 })
 
-const emit = defineEmits(['changeBet','share'])
+const emit = defineEmits(['changeBet', 'share'])
 
 const conf = reactive({
     selectType: '',
@@ -100,6 +103,7 @@ const conf = reactive({
     betMaxMoney: 10000,
     betCoin: '₹',
     amount: 0,
+    isBetActive: '',
     showAddani: { 0: false, 1: false, 2: false, 3: false, 4: false, 5: false } as any,
     betTypeList: [] as any[],
     quickRechargeAmount: {
@@ -157,18 +161,24 @@ const conf = reactive({
             return
         }
         let list = conf.betTypeList.filter((item: any) => item.selectBet)
-        emit('share', {list,type: conf.selectType} )
+        emit('share', { list, type: conf.selectType })
     },
-    changeAmount(type: string) {
-        if (type == '-' && conf.amount > 0) {
-            conf.amount--
-        }
-        if (type == '+' && conf.amount < conf.quickRechargeAmount.list.length - 1) {
+    changeAmount() {
+        if (conf.isBetActive) return
+        conf.isBetActive = '-active'
+
+        if (conf.amount < conf.quickRechargeAmount.list.length - 1) {
             conf.amount++
+        } else {
+            conf.amount = 0
         }
         conf.betTypeList.forEach((item) => {
             item.betMoney = conf.quickRechargeAmount.list[conf.amount]
         })
+
+        setTimeout(() => {
+            conf.isBetActive = ''
+        }, 300)
     },
     reset() {
         conf.betTypeList.forEach((item) => {
@@ -415,41 +425,39 @@ onMounted(() => {
     }
 
     .btn {
-        height: 110rem;
+        height: 115rem;
         width: 100%;
         display: flex;
         margin-top: 10rem;
 
         .btn-left {
             height: 100%;
-            background: linear-gradient(180deg, #FFD36D 0%, #FFC313 100%);
-            box-shadow: 2px -4px 4px 0px #FFB212 inset;
-            width: 300rem;
-            border-radius: 20rem 0 0 20rem;
-            padding: 10rem 20rem 0rem;
+            width: 210rem;
+            // border-radius: 20rem 0 0 20rem;
+            margin-right: 16rem;
+            position: relative;
+
+            .left-contnet {
+                position: absolute;
+                inset: 0;
+            }
+
+            .bet-img {
+                width: 100%;
+                height: 100%;
+            }
 
             .name {
                 color: #933C00;
-                font-size: 22rem;
-                margin-bottom: 6rem;
+                font-size: 15rem;
             }
 
             .num {
                 display: flex;
-                justify-content: space-between;
-                align-items: center;
-
-                .count {
-                    color: #933C00;
-                    font-size: 30rem;
-                    margin-left: 4rem;
-                }
-
-                .total {
-                    color: #933C00;
-                    font-size: 36rem;
-
-                }
+                justify-content: center;
+                color: #933C00;
+                font-size: 36rem;
+                margin-top: -4rem;
             }
         }
 
@@ -458,22 +466,40 @@ onMounted(() => {
             height: 100%;
             background: linear-gradient(180deg, #FE908C 0%, #F24F4F 100%);
             box-shadow: -2px -4px 4px 0px #F34F4F inset;
-            border-radius: 0 20rem 20rem 0;
+            border-radius: 20rem;
             color: #fff;
             font-size: 42rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20rem;
         }
 
         .win {
             color: #fff;
             font-size: 20rem;
-            text-align: left;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 60%;
 
-            span {
-                color: #FFC72C;
+            .num {
+                display: flex;
+                align-items: center;
+                font-size: 38rem;
+                margin-top: 4rem;
+            }
+
+            .coin {
+                width: 36rem;
+                height: 36rem;
+                background-size: 100% 100%;
+                background-image: url('/static/img/coin-task.png');
+                color: #faa54b;
+                font-size: 14rem;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
         }
 
