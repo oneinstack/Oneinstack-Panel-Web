@@ -50,7 +50,7 @@ const props = withDefaults(
     aniY: 100,
     aniScale: 0.9,
     reverse: true,
-    time: 300
+    time: 120
   }
 )
 

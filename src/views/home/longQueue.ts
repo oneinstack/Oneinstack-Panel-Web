@@ -20,6 +20,7 @@ export const index = () => {
           System.router.push(path)
         },
         getList: async () => {
+          System.loading()
           const ttime = Date.now() - conf.lastTime
           if (conf.loading || ttime < 3000) return
           conf.loading = true
@@ -27,6 +28,7 @@ export const index = () => {
           const res = await apis.changLong({
             final: () => {
               conf.loading = false
+              System.loading(false)
             }
           })
           if (!res.data.length) {
