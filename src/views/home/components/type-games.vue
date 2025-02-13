@@ -11,21 +11,21 @@ const autoPlay = reactive({
   arrs: [],
   currentIndex: 0,
   timer: null,
-  play: () => {
-    if (!autoPlay.arrs.length) return
-    else if (autoPlay.arrs.length === 1) autoPlay.arrs[0].isSelect = true
-    autoPlay.timer = setTimeout(() => {
-      autoPlay.stop()
+  interval: 3000,
+  play: async () => {
+    if (!autoPlay.arrs.length || autoPlay.timer) return
+    autoPlay.timer = setInterval(() => {
+      if (autoPlay.arrs.length === 1 && autoPlay.arrs[0].isSelect) return (autoPlay.arrs[0].isSelect = false)
+      autoPlay.arrs.forEach((item) => (item.isSelect = false))
       autoPlay.arrs[autoPlay.currentIndex].isSelect = true
       autoPlay.currentIndex++
       autoPlay.currentIndex === autoPlay.arrs.length && (autoPlay.currentIndex = 0)
-      autoPlay.play()
-    }, 3000)
+    }, autoPlay.interval)
   },
-  stop: () => {
-    if (!autoPlay.arrs.length) return
+  stop: async () => {
+    if (!autoPlay.arrs.length || !autoPlay.timer) return
     autoPlay.arrs.forEach((item) => (item.isSelect = false))
-    autoPlay.timer && clearTimeout(autoPlay.timer)
+    autoPlay.timer && clearInterval(autoPlay.timer)
     autoPlay.timer = null
   }
 })
@@ -56,12 +56,12 @@ onBeforeUnmount(() => autoPlay.stop())
         :key="item.id"
         class="categories-item"
         :class="{ 'is-select': item.isSelect }"
-        :style="{ borderColor: item.color }"
+        :style="{ backgroundColor: item.color }"
         @click="$router.push(item.link)"
         @mouseenter="autoPlay.stop()"
         @mouseleave="autoPlay.play()"
       >
-        <div class="bg" :style="{ backgroundImage: `url(${item.img})` }" />
+        <img :src="item.img" class="bg" />
         <div>
           <div class="index" :style="{ color: item.color }">
             <span>{{ item.index.toString().padStart(2, '0') }}</span>
@@ -170,22 +170,43 @@ onBeforeUnmount(() => autoPlay.stop())
     }
 
     &-item {
-      border-bottom: 10px solid;
+      padding: 10px;
       display: flex;
       justify-content: space-between;
       flex: 1;
       flex-flow: column nowrap;
       border-radius: 8px;
-      padding: 24px 24px 16px;
+      padding: 24px 24px 26px;
       overflow: hidden;
       height: 575px;
       position: relative;
       cursor: pointer;
+      transition: all ease-in-out 0.8s;
+
+      @keyframes progress {
+        100% {
+          transform: scaleX(1);
+        }
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        transform-origin: left;
+        transform: scaleX(0);
+        background-color: rgba($color: #fff, $alpha: 0.6);
+      }
+
+      &:not(.bg) * {
+        z-index: 9;
+      }
 
       &:hover,
       &.is-select {
         transform: translateY(-50px);
-        transition: all ease-in-out 0.5s;
 
         .bg {
           filter: grayscale(0);
@@ -198,18 +219,21 @@ onBeforeUnmount(() => autoPlay.stop())
         }
       }
 
+      &.is-select {
+        &::after {
+          animation: progress 3s linear 1;
+        }
+      }
+
       .bg {
         width: 100%;
-        height: 100%;
+        height: 565px;
         position: absolute;
         top: 0;
         left: 0;
         filter: grayscale(1);
-        z-index: -1;
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-size: cover;
         transition: all ease-in-out 0.5s;
+        object-fit: cover;
       }
 
       .index {
