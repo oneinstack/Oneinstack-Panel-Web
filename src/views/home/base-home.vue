@@ -1,6 +1,5 @@
 <script setup>
 import { reactive } from 'vue'
-import HomeBanner from './components/home-banner.vue'
 import NewGames from './components/new-games.vue'
 import TypeGames from './components/type-games.vue'
 import { Scope } from 'tools-vue3'
@@ -26,7 +25,7 @@ const conf = reactive({
       .filter((item) => item.isNewGame)
       .map((item) => ({
         id: item.gameCode,
-        img: item.imgUrl,
+        img: item.iconUrl,
         name: item.gameName,
         desc: item.gameDesc,
         link: item.supportTryUrl,
