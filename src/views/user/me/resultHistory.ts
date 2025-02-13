@@ -2,6 +2,8 @@ import { apis } from '@/api'
 import { sstatus } from '@/sstore/sstatus'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
+import { Scope } from 'tools-vue3'
+
 
 export const index = ({ typeRefs }: any) => {
   const conf = reactive({
@@ -204,6 +206,10 @@ export const index = ({ typeRefs }: any) => {
   }
   onMounted(() => {
     init()
+  })
+
+  Scope.setConf({
+    conf
   })
 
   return conf
