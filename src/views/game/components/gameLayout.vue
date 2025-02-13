@@ -174,10 +174,6 @@ onMounted(async () => {
 
 defineExpose({
   open: () => {
-    console.log('555666');
-
-    console.log(props.lottery.bet);
-
     conf.bet.show = true
   },
   close: () => {

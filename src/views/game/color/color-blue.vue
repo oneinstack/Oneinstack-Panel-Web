@@ -150,6 +150,20 @@
           :lotteryOdds="conf.betting.oddsArr"></order>
       </div>
       <time-popup @close="conf.loop.timePopupShop = false" v-if="conf.loop.timePopupShop"></time-popup>
+
+      <!-- 下注弹窗内容 -->
+      <template #bet>
+        <div style="width: 100%;">
+          <div class="bet-content">
+            <template v-for="item in conf.betting.betNumArr">
+              <div class="btn-item">
+                <div class="btn-bg" :class="[item.isActive ? 'colorBtn' : '', item.color ? item.color : '']">{{
+                  item.name }}</div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </template>
   </GameLayout>
 </template>
   <script setup lang="ts">
@@ -794,4 +808,57 @@
       background: linear-gradient(180deg, #acc3d1 0%, #96a6b0 100%);
     }
   }
+
+  .bet-content {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    .btn-item {
+      width: 90rem;
+      height: 90rem;
+      border-radius: 50%;
+      margin-bottom: 14rem;
+      display: flex;
+      justify-content: center;
+
+      .btn-bg {
+        background: linear-gradient(180deg, #d90029 0%, #cb0b0b 51.5%, #9154ea 53.59%, #7027d6 100%);
+        width: 80%;
+        height: 72rem;
+        border-radius: 50%;
+        font-size: 36rem;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #fff;
+        box-shadow: 0rem 4rem 12rem rgba(0, 0, 0, 0.4);
+      }
+
+      .color-5 {
+        background: linear-gradient(180deg, #32c94a 0%, #1d9f32 51%, #9154ea 50%, #7027d6 100%);
+      }
+
+      .color-green {
+        background: linear-gradient(180deg, #35d14e 0%, #19992e 100%);
+      }
+
+      .color-bule {
+        background: linear-gradient(180deg, #27b2f6 0%, #0080c7 100%);
+        font-size: 18rem;
+      }
+
+      .color-big {
+        font-size: 28rem;
+        border: 2rem solid rgba(255, 255, 255, 0.26);
+        background: linear-gradient(180deg, #ea6332 0%, #eb602d 100%);
+      }
+
+      .color-red {
+        background: linear-gradient(180deg, #d90029 0%, #be0505 100%);
+      }
+    }
+  }
+
 </style>
