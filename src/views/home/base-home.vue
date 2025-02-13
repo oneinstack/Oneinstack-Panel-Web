@@ -104,7 +104,6 @@ Scope.setConf(conf)
 
 <template>
   <div class="base-home-container">
-    <home-banner />
     <new-games v-if="conf.newGames.length" />
     <type-games />
 
