@@ -12,7 +12,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive } from 'vue';
+import { onMounted, reactive,onUnmounted} from 'vue';
+import { Howl } from "howler";
 
 const emit = defineEmits(['close'])
 const conf = reactive({
@@ -20,6 +21,19 @@ const conf = reactive({
 	count: 3,
 	isRotating: true
 })
+const soundBgm = new Howl({
+	src: ['/static/audio/countdown.ogg'],
+	autoplay: true,
+	loop: true,
+	volume: 1,
+	preload: true,
+	onload: function() {
+		soundBgm.play(); // 在点击后播放
+    },
+	onend: function () {
+	},
+})
+
 onMounted(() => {
 	const timer = setInterval(() => {
 		if (conf.count > 1) {
@@ -30,6 +44,11 @@ onMounted(() => {
 		}
 	}, 1000);
 })
+
+onUnmounted(()=>{
+	soundBgm.pause()
+})
+
 </script>
 
 <style lang="less" scoped>

@@ -35,6 +35,7 @@
     "@vant/touch-emulator": "1.4.0",
     "@vueuse/core": "12.3.0",
     "encryptlong": "3.1.4",
+    "howler": "^2.2.4",
     "html2canvas": "1.4.1",
     "ionicons": "7.4.0",
     "jsencrypt": "3.3.2",
@@ -57,6 +58,7 @@
   "devDependencies": {
     "@capacitor/cli": "6.1.2",
     "@types/archiver": "6.0.2",
+    "@types/howler": "^2.2.12",
     "@types/node": "22.9.0",
     "@types/semver": "7.5.8",
     "@vant/auto-import-resolver": "1.2.1",

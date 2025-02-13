@@ -84,7 +84,7 @@ watch(
   }
 
   .border-box{
-    border: 1.4rem solid #EAEAEA;
+    // border: 1.4rem solid #EAEAEA;
     padding: 2rem;
     border-radius: 8rem;
     margin: 10rem;
@@ -99,10 +99,10 @@ watch(
     word-break: break-word;
     padding: 4rem 10rem;
     border-radius: 8rem;
-    width: auto !important;
-    height: auto !important;
-    overflow: hidden;
-    background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEF 100%);
+    // width: auto !important;
+    // height: auto !important;
+    // overflow: hidden;
+    // background: linear-gradient(180deg, #FFFFFF 0%, #EEEEEF 100%);
   }
 
   .odds {
