@@ -1,24 +1,37 @@
 <script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+
 defineProps({
   bg: {
     type: String,
-    default: '#080807',
-  },
+    default: '#080807'
+  }
 })
+
+const show = ref(true)
+const handleToggleShow = () => {
+  show.value = !(document.body.scrollTop > 0)
+}
+
+onMounted(() => document.body.addEventListener('scroll', handleToggleShow))
+
+onBeforeUnmount(() => document.body.removeEventListener('scroll', handleToggleShow))
 </script>
 
 <template>
-  <div class="nav-bar-container">
-    <div class="left">
-      <slot name="left" />
+  <transition name="slide-bottom">
+    <div v-show="show" class="nav-bar-container">
+      <div class="left">
+        <slot name="left" />
+      </div>
+      <div class="center">
+        <slot name="center" />
+      </div>
+      <div class="right">
+        <slot name="right" />
+      </div>
     </div>
-    <div class="center">
-      <slot name="center" />
-    </div>
-    <div class="right">
-      <slot name="right" />
-    </div>
-  </div>
+  </transition>
 </template>
 
 <style scoped lang="scss">
@@ -33,11 +46,7 @@ defineProps({
   align-items: center;
   width: 100%;
   height: var(--nav-heaght);
-  background: linear-gradient(
-    180deg,
-    rgba(0, 0, 0, 0.48) 0%,
-    rgba(0, 0, 0, 0) 100%
-  );
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.48) 0%, rgba(0, 0, 0, 0) 100%);
 }
 
 @media screen and (max-width: 768px) {

@@ -1,6 +1,6 @@
 <script setup>
 import { Scope } from 'tools-vue3'
-import { onBeforeUnmount, onMounted, reactive } from 'vue'
+import { onBeforeUnmount, reactive, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -29,9 +29,17 @@ const autoPlay = reactive({
     autoPlay.timer = null
   }
 })
-autoPlay.arrs = categories.filter((item) => item.number)
 
-onMounted(() => autoPlay.play())
+watch(
+  () => categories,
+  () => {
+    autoPlay.arrs = categories.filter((item) => item.number)
+    autoPlay.play()
+  },
+  {
+    deep: true
+  }
+)
 
 onBeforeUnmount(() => autoPlay.stop())
 </script>
@@ -43,14 +51,10 @@ onBeforeUnmount(() => autoPlay.stop())
     <img src="/images/category-bg-3.png" alt="" class="category-bg-3" />
     <img src="/images/category-bg-4.png" alt="" class="category-bg-4" />
     <img src="/images/category-bg-5.png" alt="" class="category-bg-5" />
-    <div class="title">
+    <div class="title" style="color: transparent">
       <h1 class="type-games-title">{{ t('gameTypes') }}</h1>
-      <h2 class="type-games-subtitle">
-        {{ t('gameTypesDesc') }}
-      </h2>
     </div>
     <ul class="categories">
-      <img src="/svg/game-split.svg" alt="" class="split-img" />
       <li
         v-for="item in categories"
         :key="item.id"
@@ -82,7 +86,6 @@ onBeforeUnmount(() => autoPlay.stop())
 <style scoped lang="scss">
 .type-games-container {
   padding: 160px 0;
-  background-image: url('/images/game-type-bg.png');
   background-position: center center;
   background-size: cover;
   position: relative;
@@ -313,11 +316,13 @@ onBeforeUnmount(() => autoPlay.stop())
     gap: 24px 0 !important;
 
     &-item {
-      border-bottom: none !important;
-      border-right: 10px solid;
       align-items: center;
       flex-direction: row !important;
       z-index: 1;
+
+      &::after {
+        z-index: 9;
+      }
 
       .name {
         font-size: calc(1.325rem + 0.9vw) !important;

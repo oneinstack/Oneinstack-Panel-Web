@@ -2,6 +2,7 @@ export default {
   game: 'GAME',
   games: 'GAMES',
   about: 'ABOUT',
+  news: 'NEWS',
   tryNow: 'Try Now',
   comingSoon: 'Coming Soon',
   newGames: 'NEW </br> Games',

@@ -49,6 +49,10 @@ const nav = reactive({
     {
       label: t('about'),
       path: '/about'
+    },
+    {
+      label: t('news'),
+      path: '/news'
     }
   ]
 })

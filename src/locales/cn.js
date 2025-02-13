@@ -2,6 +2,7 @@ export default {
   game: '游戏',
   games: '游戏',
   about: '关于',
+  news: '最新消息',
   tryNow: '立即试玩',
   comingSoon: '敬请期待',
   newGames: '最新游戏',

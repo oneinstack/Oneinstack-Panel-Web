@@ -39,12 +39,6 @@ const rows = computed(() => {
         </vue3-marquee>
       </template>
     </div>
-
-    <div class="footer">
-      <router-link to="/game/list" class="btn">
-        <span>{{ t('allGames') }}</span>
-      </router-link>
-    </div>
   </div>
 </template>
 
