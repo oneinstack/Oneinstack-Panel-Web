@@ -52,13 +52,7 @@
             <div class="reckon-container">
               <div class="current-time">
                 <div class="time-num">
-                  <downTime :w="100" :h="100" :value="lottery.countDown[0]" />
-                  <span>:</span>
-                  <!-- <div class="num-item">{{ lottery.countDown[1] }}</div> -->
-                  <downTime :w="100" :h="100" :value="lottery.countDown[1]" />
-                  <span>:</span>
-                  <downTime :w="100" :h="100" :value="lottery.countDown[2]" />
-                  <!-- <div class="num-item">{{ lottery.countDown[2] }}</div> -->
+                  <downTime :w="100" :h="100" :value="lottery.countDown" />
                 </div>
               </div>
               <div class="current-expect">

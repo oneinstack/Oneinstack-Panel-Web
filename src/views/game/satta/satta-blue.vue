@@ -36,11 +36,7 @@
                         <div class="reckon-time">
                             <div class="time-bar">
                                 <div class="time-num">
-                                    <downTime :value="lottery.countDown[0]" />
-                                    <span>:</span>
-                                    <downTime :value="lottery.countDown[1]" />
-                                    <span>:</span>
-                                    <downTime :value="lottery.countDown[2]" />
+                                    <downTime :value="lottery.countDown" />
                                 </div>
                                 <div class="bar">
                                     <div class="bar-active"

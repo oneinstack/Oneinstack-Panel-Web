@@ -45,12 +45,7 @@
           <div>{{ $t('game.drawingTime') + ':' + lottery.issue }}</div>
           <div class="row" style="margin-top: 20rem">
             <div class="count-down row" style="gap: 4rem">
-              <downTime :w="72" :h="72" :value="lottery.countDown[0]" />
-              <div>:</div>
-              <downTime :w="72" :h="72" :value="lottery.countDown[1]" />
-              <div>:</div>
-              <!-- <div class="count-down-item flex flex-center">{{ lottery.countDown[2] }}</div> -->
-              <downTime :w="72" :h="72" :value="lottery.countDown[2]" />
+              <downTime :w="72" :h="72" :value="lottery.countDown" />
             </div>
             <div class="col flex items-center" style="margin: 0 20rem">
               <div class="count-down-line relative">
