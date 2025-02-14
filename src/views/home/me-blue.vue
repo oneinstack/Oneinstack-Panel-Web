@@ -470,6 +470,7 @@ const conf = index()
   padding: 0 30rem;
   z-index: 2;
   position: relative;
+  text-transform: capitalize;
 }
 
 .menu-item {
