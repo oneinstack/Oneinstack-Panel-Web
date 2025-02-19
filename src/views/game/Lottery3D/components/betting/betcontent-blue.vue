@@ -2,7 +2,7 @@
     <div class="betting">
         <div class="betting-title">
             <div>
-                <img src="/static/img/betting-icon.png" />
+                <img src="/static/theme/blue/betting-icon.png" />
                 <span>{{ title }}</span>
             </div>
             <div class="btn-list" :class="{'disabled': disabled}" v-if="randomShow">
