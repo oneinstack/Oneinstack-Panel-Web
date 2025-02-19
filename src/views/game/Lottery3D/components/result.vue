@@ -1,5 +1,5 @@
 <template>
-	<div class="result">
+	<div class="result" :style="`--color-1: ${bg[0]}; --color-2: ${bg[1]};`">
 		<div class="result-title">
 			<div style="width: 27%;">{{ $t('game.drawID') }}</div>
 			<div style="width: 31%;">{{ $t('game.result') }}</div>
@@ -79,11 +79,15 @@
 
 <script setup lang="ts">
 import { apis } from '@/api';
+import System from '@/utils/System';
 import { onMounted, reactive, watch } from 'vue';
 
 const props = defineProps({
 	lotteryId: {
 		default: ''
+	},
+	bg: {
+		default: ['#FFE5C7','#FFFBF5']
 	}
 })
 const conf = reactive({
@@ -93,6 +97,7 @@ const conf = reactive({
 	total: 0,
 	isTips: false,
 	getLotteryResult() {
+		System.loading()
 		conf.isTips = false
 		apis.lotteryOpenResult({
 			current: conf.pageNum,
@@ -102,7 +107,10 @@ const conf = reactive({
 				conf.resultList = [...conf.resultList, ...res.data.records]
 				conf.total = res.data.total
 				if (conf.pageSize * conf.pageNum >= conf.total) return conf.isTips = true
-			}
+			},
+			final: (status, data: any) => {
+              System.loading(false)
+            }
 		});
 	},
 	getNum(item: any, index: any) {
@@ -193,7 +201,7 @@ onMounted(() => {
 	.result-title {
 		display: flex;
 		padding: 0rem 24rem;
-		background: #FFE5C7;
+		background: var(--color-1);
 
 		div {
 			font-size: 24rem;
@@ -259,7 +267,7 @@ onMounted(() => {
 			}
 
 			&:nth-child(2n) {
-				background: #FFFBF5;
+				background: var(--color-2);
 			}
 		}
 
