@@ -65,7 +65,7 @@ const conf = reactive({
           <el-button type="primary" @click="conf.handleAdd">IP操作统计</el-button>
         </el-space>
         <div class="demo-form-inline">
-          <SearchInput placeholder="请输入搜索关键字" />
+          <SearchInput placeholder="请输入关键词进行搜索" />
         </div>
       </div>
 
@@ -81,7 +81,7 @@ const conf = reactive({
           </template>
         </el-table-column>
         <el-table-column prop="address" label="备份" />
-        <el-table-column prop="address" label="跟目录" />
+        <el-table-column prop="address" label="根目录" />
         <el-table-column prop="address" label="日流量" />
         <el-table-column prop="address" label="到期时间" />
         <el-table-column prop="address" label="备注" />

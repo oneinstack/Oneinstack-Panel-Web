@@ -13,13 +13,13 @@ conf.list.getData()
   <div v-if="conf.showTips" class="tip">
     <div class="flex items-center fit-width">
       <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
-      <span class="ellipsis" style="margin-left: 32px; max-width: 85%">
+      <span class="ellipsis" style="margin-left: 32px; flex: 1;">
         请在添加数据库后，务必到[
         <span style="color: var(--el-color-primary)">计划任务</span>
         ]添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者MySQL命令行创建的数据库需要点击"从服务器获取"才能在计划任务中备份
       </span>
     </div>
-    <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false"><CircleClose /></el-icon>
+    <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false" style="margin-left: 24px;"><CircleClose /></el-icon>
   </div>
   <div class="container">
     <div class="tool-bar">

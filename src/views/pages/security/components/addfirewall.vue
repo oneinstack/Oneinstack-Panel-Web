@@ -157,7 +157,7 @@ import { log } from 'console'
               const endIpParts = endIp.split('.').map(Number);
               for (let i = 0; i < 4; i++) {
                 if (startIpParts[i] > endIpParts[i]) {
-                  callback(new Error('IP范围格式不正确，起始IP不能大于结束IP'));
+                  callback(new Error('IP范围格式不正确,起始IP不能大于结束IP'));
                   return;
                 }
               }
