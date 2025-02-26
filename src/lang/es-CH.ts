@@ -1,3 +1,4 @@
+import { pl } from "element-plus/es/locale";
 
 export default {
     hello: 'Hola',
@@ -128,7 +129,7 @@ export default {
 	open:'打开',//打开
 	upload:'下载',//下载
 	delete:'删除',//删除
-	suredelete:'确定删除所选文件',//确定删除所选文件
+	suredeletefile:'确定删除所选文件',//确定删除所选文件
 	clearlist:'清空列表',//清空列表
 	dragfile:'请将需要上传的文件/文件夹拖到此处',//请将需要上传的文件/文件夹拖到此处
 	placeholderfile:'请输入文件名',//请输入文件名
@@ -143,10 +144,76 @@ export default {
 	homesoftware:'安全风险',//安全风险
 	contentnull:'当前内容为空，点击编辑',//当前内容为空，点击编辑
 	internalmemory:'内存',//内存
-	// addsucceed:'添加成功',//添加成
-	
-	
-	
-	
+	panellog:'面板日志',//面板日志
+	websitelog:'网站日志',//网站日志
+	logaudit:'日志审计',//日志审计
+	sshloginlog:'SSH登录日志',//SSH登录日志
+	softwarelog:'软件日志',//软件日志
+	operationlog:'操作日志',//操作日志
+	runlog:'运行日志'	,//运行日志
+	tasklog:'计划任务日志',//计划任务日志
+	refreshlog:'刷新日志',//刷新日志
+	clearlog:'清空日志',//清空日志
+	ipstatistics:'IP操作统计',//IP操作统计
+	placeholderkeyword:'请输入关键词进行搜索',//请输入关键词进行搜索	
+	webscitename:'网站名称',//网站名称
+	status:'状态',//状态
+	inoperation:'运行中',//运行中
+	stopped:'已停止',//已停止
+	backupcopy:'备份',//备份
+	dailyflow:'日流量',//日流量
+	maturitytime:'到期时间',//到期时间
+	SSLcertificate:'SSL证书',//SSL证书
+	seeting:'设置',//设置
+	addfirewall:'添加防火墙',//添加防火墙
+	updatefirewall:'更新防火墙',//更新防火墙
+	agreement:'协议',//协议
+	selectprotocol:'请选择协议类型',//请选择协议类型
+	placeholderport:'支持多个端口，如:80,88',//支持多个端口，如:80,88
+	source:'来源',//来源
+	allIP:'全部IP',//全部IP
+	sectionIP:'部分IP',//部分IP
+	supportmultipleIP:'支持多个IP地址,如:',//支持多个IP地址，如：
+	strategy:'策略',//策略
+	placeholder:'请选择策略类型',//请选择策略类型
+	passthrough:'放行',//放行
+	prohibit:'禁止',//禁止
+	direction:'方向',//方向
+	selectrule:'请选择规则方向',//请选择规则方向
+	inbound:'入站',//入站
+	outbound:'出站',//出站
+	addmultipleport:'支持添加多个端口,如',//支持添加多个端口,如
+	selectprotocoltype:'请选择协议类型',//请选择协议类型
+	inputport:'请输入端口',//请输入端口
+	portformatincorrect:'端口格式不正确',//端口格式不正确
+	placeholderIP:'请输入IP地址',//请输入IP地址
+	iperror:'IP地址格式不正确',//IP地址格式不正确
+	ipradius:'IP范围格式不正确,起始IP不能大于结束IP',//IP范围格式不正确,起始IP不能大于结束IP
+	selectstatus:'请选择状态',//请选择状态
+	modifysuccess:'修改成功',//修改成功
+	addfailed:'添加失败',//添加失败
+	modifyfailed:'修改失败',//修改失败
+	operationfailed:'操作失败',//操作失败
+	suredeletedata:'确认要删除该数据吗？',//确认要删除该数据吗？
+	tips:'提示',//提示
+	deletefailed:'删除失败',//删除失败
+	deletesuccess:'删除成功',//删除成功
+	getdatafailed:'获取数据失败',//获取数据失败
+	addportrulet:'添加端口规则',//添加端口规则
+	importrule:'导入规则',//导入规则
+	exportrule:'导出规则',//导出规则
+	alldirections:'所有方向',//所有方向
+	policytype:'策略类型',//策略类型
+	systemfirewall:'系统防火墙',//系统防火墙
+	SSHmanagement:'SSH管理',//SSH管理
+	safetydetection:'安全检测',//安全检测
+	violationworddetection:'违规词检测',//违规词检测
+	PHPwebsitesecurity:'PHP网站安全',//PHP网站安全
+	intrusionprevention:'入侵防御',//入侵防御
+	systemhardening:'系统加固',//系统加固
+
+
+
+	//还剩下setting/software/task/terminal/website几个页面目录里的文字没有翻译
   }
   

@@ -216,9 +216,9 @@ onMounted(() => {
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
                <span v-if="scope.row.state === 1"> 运行中</span>
-              <span v-if="scope.row.state === 0">已停用</span>
+              <span v-if="scope.row.state === 0">已停止</span>
               <!-- <a style="color: #64ffc9; text-decoration: underline" >运行中</a>
-              <a style="color: #ff8888; text-decoration: underline" >已停用</a> -->
+              <a style="color: #ff8888; text-decoration: underline" >已停止</a> -->
             </div>
           </template>
         </el-table-column>
