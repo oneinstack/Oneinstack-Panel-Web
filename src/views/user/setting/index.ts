@@ -96,6 +96,12 @@ export const index = () => {
         id: 'blue',
         bg: '#E6F2FF',
         color: '#006FFF'
+      },
+      {
+        name: 'me.blackTheme',
+        id: 'black',
+        bg: '#E6F2FF',
+        color: '#006FFF'
       }
     ],
     popup: {

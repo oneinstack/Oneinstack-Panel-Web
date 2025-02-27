@@ -8,6 +8,11 @@ export const stheme = reactive({
       headerBgColor: () => {
         return `url(/static/theme/blue/bg-square.webp) 336rem -${104 - sutil.px2rem(StatusBarConfig.statusHeight)}rem / 523rem auto no-repeat,linear-gradient(to right, rgba(0, 111, 255) 0%, rgba(16, 127, 253) 100%)`
       }
+    },
+    black: {
+      headerBgColor: () => {
+        return `#323838`
+      }
     }
   }
 })

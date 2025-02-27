@@ -55,6 +55,9 @@ export const index = ({ DGameTipRef }: any) => {
         conf.initData[item.gamePlatformCode].push(item)
       })
       conf.tabs.list = Object.keys(conf.initData).map((item) => ({ gamePlatformCode: item }))
+      console.log(conf.tabs.list);
+      console.log(conf.initData);
+      
       conf.nextPage()
     },
     nextPage: async () => {

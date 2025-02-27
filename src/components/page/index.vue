@@ -1,22 +1,21 @@
 <template>
   <div class="column nav-box fit-height">
     <slot name="header">
-      <div
-        class="c-head-main"
-        :style="{
-          position: fixed ? 'fixed' : 'relative',
-          background: conf.headerBgColor
-        }"
-        v-if="noHeader === false"
-      >
+      <div class="c-head-main" :style="{
+        position: fixed ? 'fixed' : 'relative',
+        background: conf.headerBgColor
+      }" v-if="noHeader === false">
         <x-statusbar />
-        <div
-          class="c-head-nav"
-          :style="{ height: uspage.header.height }"
-          :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }"
-        >
+        <div class="c-head-nav" :style="{ height: uspage.header.height }"
+          :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }">
           <div class="back" @click="conf.goBack">
-            <van-icon class="back-img" :name="backIcon" :color="conf.backColor" v-if="showBack" :size="backIconSize" />
+            <div v-if="showBack">
+              <div class="back-black" v-if="conf.backType == 'black'">
+                <van-icon size="28rem" color="#fff" name="arrow-left" />
+              </div>
+              <van-icon v-else class="back-img" :name="backIcon" :color="conf.backColor" :size="backIconSize" />
+            </div>
+
           </div>
           <div class="c-head-nav-title">
             <slot name="title" />
@@ -48,6 +47,7 @@ import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onBeforeMount, onMounted, reactive, ref } from 'vue'
 import uspage from './uspage'
+import stheme from '@/sstore/stheme'
 const props = defineProps({
   /**
    * 是否固定header，默认true
@@ -125,6 +125,7 @@ const props = defineProps({
 
 const scrollRef = ref<any>()
 const conf = reactive({
+  backType: '',
   bgColor: props.bgcolor || uspage.bgcolor,
   headerBgColor: props.headerBgColor || uspage.header.bgColor,
   backColor: props.backColor || uspage.header.backColor,
@@ -169,6 +170,11 @@ const conf = reactive({
    * 设置背景颜色
    */
   setBgColor: () => {
+    if (Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
+      conf.bgColor = '#222627'
+      conf.headerBgColor = stheme.theme.black.headerBgColor()
+      conf.backType = 'black';
+    }
     document.documentElement.style.setProperty('--bgcolor', conf.bgColor)
   },
   /**
@@ -238,6 +244,17 @@ onMounted(() => {
       align-items: center;
       width: 100rem;
       left: 0;
+
+      .back-black{
+        margin-left: 30rem;
+        background: #464F50;
+        width: 56rem;
+        height: 56rem;
+        border-radius: 12rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
 
       .back-img {
         margin-left: 30rem;
