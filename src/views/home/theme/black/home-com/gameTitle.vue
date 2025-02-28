@@ -1,15 +1,15 @@
 <template>
     <div class="title">
         <div class="l-name">{{ name }}</div>
-        <div class="r-btn">
-            <div class="btn">
+        <div class="r-btn" v-show="showRight">
+            <div class="btn" :style="{padding: !showPage ? '10rem 14rem': '6rem 20rem'}">
                 <div class="name">All</div>
                 <van-icon size="24rem" name="arrow" />
             </div>
-            <div class="btn">
+            <div class="btn" style="margin-left: 20rem;" v-if="showPage">
                 <van-icon size="24rem" color="#8a8a8a" name="arrow-left" />
             </div>
-            <div class="btn">
+            <div class="btn" v-if="showPage">
                 <van-icon size="24rem" name="arrow" />
             </div>
         </div>
@@ -18,7 +18,15 @@
 <script setup lang="ts">
 
 const props = defineProps({
-    name: String
+    name: {
+        default: ''
+    },
+    showRight: {
+        default: true
+    },
+    showPage: {
+        default: true
+    }
 })
 
 </script>
@@ -47,11 +55,6 @@ const props = defineProps({
             .name{
                 color: #fff;
                 margin-right: 10rem;
-            }
-
-            &:first-child {
-                margin-right: 20rem;
-                padding: 6rem 20rem;
             }
 
             &:last-child {
