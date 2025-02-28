@@ -1,14 +1,7 @@
 <template>
   <div class="games">
-    <div class="games-title" v-scroll>
-      <template v-for="(item, index) in conf.navList" :key="index">
-        <div class="games-name" :class="{ 'games-active': conf.gamesIndex == item.type }"
-          @click="conf.changeNav(item.type)">
-          <img class="type-img" :src="`/static/img/home/black/${item.imgName}.png`" />
-          <div class="name">{{ item.name }}</div>
-        </div>
-      </template>
-    </div>
+    <!-- 导航栏 -->
+     <gamesNav @change="conf.changeNav" />
     <template v-for="item in conf.navList.slice(1)" :key="item.type">
       <div class="games-content" v-if="conf.initData[item.type]">
         <gameTitle :name="item.name" />
@@ -49,73 +42,36 @@ import { svalue } from '@/sstore/svalue'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
 import gameTitle from './gameTitle.vue'
+import gamesNav from '../components/gamesNav.vue'
+import System from '@/utils/System'
+import { log } from 'node:console'
 const mconf = Scope.getConf()
 const conf = reactive({
-  userType: 0,
-  gamesIndex: '',
   isLoading: false,
   gameList: [] as any[],
   initData: {} as any,
   initType: {} as any,
-  navPositionLeft: 60,
-  handleVisitorClickGame: () => { },
-  navList: [
-    {
-      name: i18n.t('home.allGame'),
-      url: '/user/casino/index?type=Games',
-      type: '',
-      imgName: 'all'
-    },
-    {
-      name: i18n.t('home.games'),
-      url: '/user/casino/index?type=Games',
-      type: 'Games',
-      imgName: 'slots'
-    },
-    {
-      name: i18n.t('home.live'),
-      url: '/user/casino/index?type=Live',
-      type: 'Live',
-      imgName: 'Casino'
-    },
-    {
-      name: i18n.t('home.chess'),
-      url: '/user/casino/index?type=Chess',
-      type: 'Chess',
-      imgName: 'chess'
-    },
-    {
-      name: i18n.t('home.fish'),
-      url: '/user/casino/index?type=Fishing',
-      type: 'Fishing',
-      imgName: 'fish'
-    }
-  ],
-  // 获取游戏导航栏的位置
-  async getNavItemInfo() {
-    const tlist = await svalue.getGameType()
-    tlist.forEach((v) => {
-      const _item: any = conf.navList.find((m) => v.gameTypeCode === m.type)
-      if (_item) _item.sort = v.sort
-    })
-    conf.navList.sort((a: any, b: any) => a.sort - b.sort)
-    conf.changeNav(conf.navList[0].type)
-  },
-  changeNav(type: any) {
-    // if (type == conf.gamesIndex) return
-    conf.gamesIndex = type
+  navList: [] as any[],
+  changeNav(e: any) {
     conf.gameList = []
-    conf.getGamesData(type)
+    if (Array.isArray(e)) {
+      conf.navList = e
+      conf.getGamesData(e[0].type)
+      return
+    }
+    conf.getGamesData(e)
   },
 
   //获取games列表数据
   async getGamesData(typeCode: any) {
     conf.isLoading = true
+    System.loading()
     const res = await apis.getThirdGameList({
       deviceType: 1, //邮箱验证码
       typeCode,
       final: (status, config, xhr) => {
         conf.isLoading = false
+        System.loading(false)
       }
     })
     conf.initData = {
@@ -136,40 +92,13 @@ const conf = reactive({
   }
 })
 
-onMounted(() => {
-  conf.changeNav(conf.navList[0].type)
-})
+// onMounted(() => {
+//   conf.changeNav(conf.navList[0].type)
+// })
 </script>
 <style lang="less" scoped>
 .games {
   padding-left: 24rem;
-
-  .games-title {
-    display: flex;
-    align-items: center;
-    color: #BFBFBF;
-    font-size: 24rem;
-
-    .games-name {
-      margin-right: 20rem;
-      display: flex;
-      align-items: center;
-      flex-shrink: 0;
-
-      .type-img {
-        height: 24rem;
-        width: 24rem;
-        margin-right: 10rem;
-      }
-    }
-
-    .games-active {
-      background: #394143;
-      padding: 15rem 12rem;
-      border-radius: 14rem;
-      color: #FFF;
-    }
-  }
 
   .games-content {
     padding: 24rem 0rem 0rem;

@@ -66,9 +66,6 @@ const conf = reactive({
   }
 })
 onMounted(() => {
-  console.log('6666');
-
-  console.log(mconf)
   conf.init()
 })
 </script>

@@ -174,6 +174,7 @@ const conf = reactive({
     }
   ] as any[],
   showOpen(e: any) {
+    if(!e.list) return
     const index = conf.menuList.findIndex((item: any) => item.name === e.name);
     conf.menuList[index].isMore = !conf.menuList[index].isMore;
   },

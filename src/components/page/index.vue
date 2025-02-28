@@ -173,7 +173,8 @@ const conf = reactive({
     if (Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
       conf.bgColor = '#222627'
       conf.headerBgColor = stheme.theme.black.headerBgColor()
-      conf.backType = 'black';
+      conf.backType = 'black'
+      uspage.tabbar.height = '120rem'
     }
     document.documentElement.style.setProperty('--bgcolor', conf.bgColor)
   },

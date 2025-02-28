@@ -15,10 +15,10 @@
         </div>
         <img class="head-img" src="/static/img/home/black/casino-top.png" />
       </div>
-      <div class="search">
-        <van-icon size="36rem" color="#BFBFBF" name="search" />
-        <div class="place">Search Game</div>
-      </div>
+      
+      <!-- 搜索框 -->
+      <search />
+
       <!-- 游戏列表导航 -->
       <gamesBox />
 
@@ -96,6 +96,7 @@ import slotsGamesItem from './home-com/slotsGamesItem.vue'
 import TopWinList from './home-com/topWinList.vue'
 import WinList from './theme/black/home-com/winList.vue'
 import greenBtn from './theme/black/components/greenBtn.vue'
+import search from './theme/black/components/search.vue'
 
 const timer = Scope.Timer()
 const DGameTipRef = ref<any>(null)
@@ -121,14 +122,6 @@ const conf = reactive({
   // 客服
   async handleClickServiceImg() {
     svalue.toService()
-  },
-  //获取slots游戏列表
-  async getSlotsGames() {
-    const res = await apis.getThirdGameList({
-      deviceType: 1, //邮箱验证码
-      typeCode: 'Games'
-    })
-    conf.slotsGamesList = res.data.slice(0, 6)
   },
   //click游戏提示
   handleClickGameTip(item: any) {
@@ -247,7 +240,6 @@ onMounted(() => {
     conf.getLotteryList()
     conf.getScratchTicketlList()
 
-    conf.getSlotsGames()
     conf.getLanguageList()
     conf.loadVirtualData()
   }
@@ -288,22 +280,6 @@ onMounted(() => {
     width: 100%;
     height: 408rem;
     margin-top: 12rem;
-  }
-}
-
-.search{
-  height: 80rem;
-  background: #292D2E;
-  border: 1px solid #383E3E;
-  display: flex;
-  align-items: center;
-  margin: 24rem 24rem;
-  border-radius: 14rem;
-  padding: 0rem 16rem;
-  .place{
-    color: #BFBFBF;
-    font-size: 25rem;
-    margin-left: 20rem;
   }
 }
 
