@@ -10,7 +10,7 @@
           :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }">
           <div class="back" @click="conf.goBack">
             <div v-if="showBack">
-              <div class="back-black" v-if="conf.backType == 'black'">
+              <div class="back-black" :style="{background: conf.backColor}" v-if="conf.backType == 'black'">
                 <van-icon size="28rem" color="#fff" name="arrow-left" />
               </div>
               <van-icon v-else class="back-img" :name="backIcon" :color="conf.backColor" :size="backIconSize" />
@@ -45,7 +45,7 @@ import { EPage } from '@/enum/Enum'
 import sapp from '@/sstore/sapp'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
-import { onBeforeMount, onMounted, reactive, ref } from 'vue'
+import { onBeforeMount, onMounted, reactive, ref, watch } from 'vue'
 import uspage from './uspage'
 import stheme from '@/sstore/stheme'
 const props = defineProps({
@@ -172,7 +172,8 @@ const conf = reactive({
   setBgColor: () => {
     if (Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
       conf.bgColor = '#222627'
-      conf.headerBgColor = stheme.theme.black.headerBgColor()
+      conf.headerBgColor = props.headerBgColor || stheme.theme.black.headerBgColor()
+      conf.backColor = props.backColor || '#464F50'
       conf.backType = 'black'
       uspage.tabbar.height = '120rem'
     }
@@ -201,6 +202,13 @@ const conf = reactive({
 })
 
 defineExpose({ ...conf })
+
+watch(
+  () => props.headerBgColor,
+  (val: any) => {
+    conf.headerBgColor = val
+  }
+)
 
 onBeforeMount(() => {
   conf.setBgColor()
@@ -248,7 +256,7 @@ onMounted(() => {
 
       .back-black{
         margin-left: 30rem;
-        background: #464F50;
+        // background: #464F50;
         width: 56rem;
         height: 56rem;
         border-radius: 12rem;

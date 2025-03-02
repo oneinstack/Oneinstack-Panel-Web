@@ -1,9 +1,11 @@
+import { EPage } from '@/enum/Enum'
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
+import stheme from '@/sstore/stheme'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
-import { reactive } from 'vue'
+import { onMounted, reactive } from 'vue'
 
 export const index = () => {
   const timer = Scope.Timer()
@@ -83,6 +85,91 @@ export const index = () => {
         id: 'es-ES'
       }
     ],
+    bgcolor: 'transparent',
+    blackMenuList: [
+      {
+        name: 'Exchange',
+        imgUrl: 'ct-change',
+        url: ''
+      },
+      {
+        name: 'Fortune',
+        imgUrl: 'ct-fortune',
+        url: ''
+      },
+      {
+        name: 'Transaction',
+        imgUrl: 'ct-tran',
+        url: ''
+      },
+      {
+        name: 'Bet History',
+        imgUrl: 'ct-bet',
+        url: ''
+      },
+      {
+        name: 'Notification',
+        imgUrl: 'ct-notif',
+        isArrowRight: true,
+        url: ''
+      },
+      {
+        name: 'Refer',
+        imgUrl: 'ct-refer',
+        isArrowRight: true,
+        url: ''
+      },
+      {
+        name: 'Agency Center',
+        imgUrl: 'ct-agency',
+        isArrowRight: true,
+        url: ''
+      },
+      {
+        name: 'Settings',
+        imgUrl: 'ct-setting',
+        isArrowRight: true,
+        url: ''
+      },
+      {
+        name: 'Language',
+        imgUrl: 'ct-language',
+        isArrowRight: true,
+        rName: '',
+        func: () => {
+          conf.popup.open('lang')
+        },
+        isShow: true
+      },
+      {
+        name: 'Currency',
+        imgUrl: 'ct-currency',
+        isArrowRight: true,
+        rName: 'INR',
+      },
+      {
+        name: 'Theme',
+        imgUrl: 'ct-theme',
+        isArrowRight: true,
+        rName: '',
+        func: () => {
+          conf.popup.open('theme')
+        },
+        isShow: true
+      },
+      {
+        name: 'Live Support',
+        imgUrl: 'ct-live',
+        isArrowRight: true,
+        url: ''
+      },
+      {
+        name: 'Feedback',
+        imgUrl: 'ct-feedback',
+        isArrowRight: true,
+        url: ''
+      }
+    ],
     currentTheme: Cookie.get('pageTheme') || '',
     themeArr: [
       {
@@ -125,6 +212,7 @@ export const index = () => {
     },
     async changeLang(item: any) {
       conf.language = item.id
+      conf.blackMenuList[8].rName = item?.name
       System.loading()
       await i18n.setLang(item.id)
       System.loading(false)
@@ -140,6 +228,28 @@ export const index = () => {
       conf.total_money = 0
       System.toast('out success', 'success')
       timer.once(() => sutil.pageBack(), 2000)
+    },
+    hrefUrl: location.origin,
+    copyTxt() {
+      StrUtil.copyText(conf.hrefUrl)
+      System.toast(i18n.t('invite.CopySuccessful'), 'success')
+    }
+  })
+
+  onMounted(() => {
+    const item = conf.langArr.find((v) => v.id == conf.language)
+    console.log(item);
+    conf.blackMenuList[8].rName = item?.name
+    const theme:any = conf.themeArr.find((v) => v.id == conf.currentTheme)
+    conf.blackMenuList[10].rName = i18n.t(theme?.name)
+  })
+
+  const event = Scope.Event()
+  event.on(EPage.scroll, (e) => {
+    if (e.top > 80) {
+      conf.bgcolor = stheme.theme.black.headerBgColor()
+    } else {
+      conf.bgcolor = 'transparent'
     }
   })
   return conf

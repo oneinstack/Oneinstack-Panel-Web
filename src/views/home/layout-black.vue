@@ -23,13 +23,13 @@ const conf = reactive({
       path: '/home/me',
       icon: 'menu',
       name: 'Menu',
-      auth: false
+      auth: true
     },
     {
       path: '/home/promotions',
       icon: 'explore',
       name: 'Explore',
-      auth: false
+      auth: true
     },
     {
       path: '/home/home',
@@ -41,7 +41,7 @@ const conf = reactive({
       path: '/home/wallet',
       icon: 'lottery',
       name: 'Lottery',
-      auth: false
+      auth: true
     },
     {
       path: '/home/longQueue',

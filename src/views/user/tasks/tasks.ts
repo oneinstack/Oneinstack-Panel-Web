@@ -9,7 +9,7 @@ import { EPage } from '@/enum/Enum'
 
 export const index = ({ signPopRefs }: any) => {
   const conf = reactive({
-    bgcolor: '',
+    bgcolor: 'transparent',
     isHeadFixed: false,
     moreDayShow: false,
     calendar: [] as any[],
@@ -385,7 +385,7 @@ export const index = ({ signPopRefs }: any) => {
     if (e.top > 60) {
       conf.bgcolor = 'linear-gradient(180deg, #EB602D 0%, #FFA64F 160%)'
     } else {
-      conf.bgcolor = ''
+      conf.bgcolor = 'transparent'
     }
   })
 

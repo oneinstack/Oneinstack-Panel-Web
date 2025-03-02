@@ -25,11 +25,25 @@
             </div>
             <div class="badge">2</div>
         </div>
-        <img class="user-img" src="/static/img/default-header.png" />
+        <img @click="conf.goPage('/user/setting/setting')" class="user-img"
+            :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
+                ? sconfig.userInfo.userImgUrl
+                : '/static/img/default-header.png'
+            " />
     </div>
 </template>
 <script setup lang="ts">
+import { reactive } from 'vue';
 import greenBtn from './greenBtn.vue';
+import System from '@/utils/System';
+import sconfig from '@/sstore/sconfig';
+
+const conf = reactive({
+    goPage(url: string) {
+        System.router.push(url)
+    }
+})
+
 </script>
 <style lang="less" scoped>
 .info {
@@ -41,7 +55,8 @@ import greenBtn from './greenBtn.vue';
     .logo-img {
         height: 60rem;
     }
-    .wallet{
+
+    .wallet {
         display: flex;
         align-items: center;
         border: 4rem solid #FFFFFF1A;
@@ -51,30 +66,35 @@ import greenBtn from './greenBtn.vue';
         margin: 0rem 20rem;
         flex: 1;
         padding-right: 2rem;
-        .w-money{
+
+        .w-money {
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 16rem;
             flex: 1;
-            .money{
+
+            .money {
                 display: flex;
                 align-items: center;
                 color: #fff;
                 font-size: 28rem;
-                .cion-img{
+
+                .cion-img {
                     height: 30rem;
                     margin-right: 16rem;
                     border-radius: 2rem;
                 }
             }
         }
-        .w-btn{
+
+        .w-btn {
             width: 56rem;
             height: 56rem;
         }
     }
-    .nav{
+
+    .nav {
         display: flex;
         align-items: center;
         height: 70rem;
@@ -83,22 +103,26 @@ import greenBtn from './greenBtn.vue';
         border-radius: 16rem;
         position: relative;
         margin-right: 50rem;
-        .nav-item{
+
+        .nav-item {
             flex: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            .nav-img{
+
+            .nav-img {
                 height: 36rem;
                 width: 36rem;
             }
         }
-        .line{
+
+        .line {
             background: rgba(255, 255, 255, 0.1);
             width: 2rem;
             height: 40rem;
         }
-        .badge{
+
+        .badge {
             position: absolute;
             top: 0rem;
             right: -25rem;
@@ -109,10 +133,12 @@ import greenBtn from './greenBtn.vue';
             font-size: 18rem;
         }
     }
-    .user-img{
+
+    .user-img {
         width: 64rem;
         height: 64rem;
         border-radius: 50%;
+        border: 4rem solid #FFFFFF03;
     }
 }
 </style>

@@ -14,6 +14,7 @@
                 <div>{{ menuInfo.rNum }}</div>
                 <div class="r-num">{{ menuInfo.rPrice }}</div>
             </div>
+            <div class="r-name" v-show="menuInfo.rName">{{ menuInfo.rName }}</div>
             <div class="arrow flex-center">
                 <van-icon size="24rem" color="#bfbfbf" name="arrow" v-if="menuInfo.isArrowRight" />
                 <van-icon size="24rem" color="#bfbfbf" name="arrow-up" v-else-if="menuInfo.isMore" />
@@ -85,6 +86,11 @@ const emit = defineEmits(['change'])
             font-size: 24rem;
             color: #fff;
             text-align: right;
+        }
+
+        .r-name{
+            color: #B3BEC1;
+            font-size: 24rem;
         }
 
         .arrow {

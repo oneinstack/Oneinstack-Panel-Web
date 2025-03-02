@@ -1,5 +1,5 @@
 <template>
-    <div class="g-btn">
+    <div class="g-btn" @click="conf.change">
         <div class="top"></div>
         <div class="bottom"></div>
         <div class="txt">
@@ -8,7 +8,14 @@
     </div>
 </template>
 <script setup lang="ts">
+import { reactive } from 'vue';
 
+const emit = defineEmits(['click'])
+const conf = reactive({
+    change() {
+        emit('click')
+    }
+})
 </script>
 <style lang="less" scoped>
 .g-btn {

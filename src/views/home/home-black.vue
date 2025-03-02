@@ -3,18 +3,7 @@
     <div>
       <x-statusbar />
       <!-- 头部 -->
-      <div class="head">
-        <div class="head-daily">
-          <img class="logo-img" src="/static/img/home/black/logo.png" />
-          <div class="head-login" @click="conf.handleClickServiceImg">
-            <div class="log">Login</div>
-            <div class="reg">
-              <greenBtn>Register</greenBtn>
-            </div>
-          </div>
-        </div>
-        <img class="head-img" src="/static/img/home/black/casino-top.png" />
-      </div>
+      <topStatus />
       
       <!-- 搜索框 -->
       <search />
@@ -97,6 +86,7 @@ import TopWinList from './home-com/topWinList.vue'
 import WinList from './theme/black/home-com/winList.vue'
 import greenBtn from './theme/black/components/greenBtn.vue'
 import search from './theme/black/components/search.vue'
+import topStatus from './theme/black/home-com/topStatus.vue'
 
 const timer = Scope.Timer()
 const DGameTipRef = ref<any>(null)
@@ -247,42 +237,6 @@ onMounted(() => {
 })
 </script>
 <style lang="less" scoped>
-
-.head {
-  padding: 16rem 24rem 0rem;
-  background: linear-gradient(180deg, #204734 0%, #222627 100%);
-
-  .head-daily {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    .logo-img {
-      height: 68rem;
-    }
-
-    .head-login {
-      display: flex;
-      align-items: center;
-      font-size: 28rem;
-      font-weight: 600;
-      .log{
-        color: #fff;
-        margin-right: 30rem;
-      }
-      .reg{
-        height: 70rem;
-        width: 168rem;
-      }
-    }
-  }
-  .head-img{
-    width: 100%;
-    height: 408rem;
-    margin-top: 12rem;
-  }
-}
-
 .banner {
   padding: 10rem 30rem 10rem;
   overflow: hidden;
