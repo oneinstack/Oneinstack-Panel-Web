@@ -13,6 +13,7 @@ export const index = () => {
   const conf = reactive({
     openEye: false,
     checkedAge: true,
+    checkedReceive: false,
     checkedAgree: true,
     userName: '',
     password: '',

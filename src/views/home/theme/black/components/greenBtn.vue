@@ -44,6 +44,7 @@
         justify-content: center;
         align-items: center;
         z-index: 3;
+        font-weight: 600;
     }
 }
 </style>
