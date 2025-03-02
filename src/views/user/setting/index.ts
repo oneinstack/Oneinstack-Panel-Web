@@ -100,7 +100,7 @@ export const index = () => {
       {
         name: 'Transaction',
         imgUrl: 'ct-tran',
-        url: ''
+        url: '/user/wallet/withDraw'
       },
       {
         name: 'Bet History',
@@ -207,6 +207,8 @@ export const index = () => {
     outPopup: false,
     total_money: 0,
     handle(item: any) {
+      console.log('8888');
+      
       item.url && System.router.push(item.url)
       item.func && item.func()
     },

@@ -123,12 +123,16 @@ export const index = () => {
                   conf.infoObj = obj
                   conf.infoObj.walletIndex = itemIndex
                   conf.currentCoinIndex = itemIndex
+                  console.log(conf.infoObj);
+                  
                   nextTick(() => {
                     conf.getpayPlatformList()
                   })
                 }
               }
             })
+            console.log(this.rechargeWalletList);
+            
           }
         }
       })
@@ -140,8 +144,11 @@ export const index = () => {
         coin: conf.infoObj.coinCode,
         success: (res: any) => {
           if (res.code == 200) {
-            let data = res.data
+            let data = res.data;
+            
             data?.forEach((item: any, index: number) => {
+              item.id = item.payMethodCode
+              item.name = item.payMethodType
               item.isClicked = false
               if (index == 0) {
                 item.isClicked = true
@@ -202,6 +209,7 @@ export const index = () => {
 
     //click支付方式
     handelChangePaymentMethod(obj: any) {
+      conf.modalName = undefined
       conf.choosePaymentItem = obj
       conf.payMethodCode = obj?.payMethodCode
       conf.paymentMethodsList?.forEach((item: any) => {
@@ -220,6 +228,11 @@ export const index = () => {
         conf.handleSelectChannel(conf.paymentChannelList[0])
       }
       conf.formData.inputValue = ''
+      console.log('888801');
+      console.log(conf.paymentMethodsList);
+      
+      console.log(obj);
+      
     },
 
     getUSDT() {

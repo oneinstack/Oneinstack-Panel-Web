@@ -21,7 +21,7 @@
                             </div>
                         </greenBtn>
                     </div>
-                    <div class="btn-item flex-center btn-with">
+                    <div class="btn-item flex-center btn-with" @click="conf.handle({url: '/user/wallet/withDraw'})">
                         <div class="btn-txt">
                             <img src="/static/img/home/black/ct-with.png" />
                             <span>Withdrawal</span>
