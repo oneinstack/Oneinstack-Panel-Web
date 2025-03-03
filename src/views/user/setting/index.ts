@@ -95,7 +95,7 @@ export const index = () => {
       {
         name: 'Fortune',
         imgUrl: 'ct-fortune',
-        url: ''
+        url: '/user/YuE-Bao/yueBao'
       },
       {
         name: 'Transaction',
