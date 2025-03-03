@@ -37,7 +37,7 @@ export const index = () => {
     vf: {} as any,
     // 输入框 -- 货币汇率转换
     vfFun: (e: any, name: any) => {
-      conf.vf[name](e)
+      if(e) conf.vf[name](e)
       nextTick(() => {
         if (parseFloat(conf.topInputValue) > parseFloat(conf.firstSelectInfo.walletMoney)) {
           conf.topInputValue = parseFloat(conf.firstSelectInfo.walletMoney)
@@ -182,6 +182,17 @@ export const index = () => {
       } else {
         conf.secondPopupShow = !conf.secondPopupShow
       }
+    },
+
+    changeItem(type: string, e: any) {
+      if(type == 'top') {
+        const index = conf.topSelectList.findIndex((item:any) => item.id == e.id)
+        conf.handleOpt(index, 'top', conf.topSelectList)
+      } else {
+        const bIndex = conf.bottomSelectList.findIndex((item:any) => item.id == e.id)
+        conf.handleOpt(bIndex, 'bottom', conf.bottomSelectList)
+      }
+      
     },
 
     // 下拉框选择option的click事件

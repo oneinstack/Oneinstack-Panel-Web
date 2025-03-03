@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import coinPopup from './com/coinPopup.vue'
-import selectPopup from './com/selectPopup.vue'
+import coinPopup from './com/black/coinPopup.vue'
+import selectPopup from './com/black/selectPopup.vue'
 import greenBtn from '@/views/home/theme/black/components/greenBtn.vue'
 import sutil from '@/sstore/sutil'
 import { index } from './withDraw'

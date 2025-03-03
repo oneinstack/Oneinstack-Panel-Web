@@ -90,7 +90,7 @@ export const index = () => {
       {
         name: 'Exchange',
         imgUrl: 'ct-change',
-        url: ''
+        url: '/user/wallet/exchange'
       },
       {
         name: 'Fortune',

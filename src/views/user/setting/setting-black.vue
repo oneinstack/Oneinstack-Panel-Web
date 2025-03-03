@@ -30,7 +30,7 @@
                 </div>
                 <div class="change-list">
                     <template v-for="item in conf.blackMenuList.slice(0, 4)" :key="item.name">
-                        <div class="change-item">
+                        <div class="change-item" @click="conf.handle(item)">
                             <img :src="`/static/img/home/black/${item.imgUrl}.png`" />
                             <span>{{ item.name }}</span>
                         </div>
@@ -39,7 +39,7 @@
             </div>
             <div class="menu-box">
                 <template v-for="item in conf.blackMenuList.slice(4, 7)" :key="item.name">
-                    <div style="height: 80rem;">
+                    <div style="height: 80rem;" @click="conf.handle(item)">
                         <menuItem :menuInfo="item" />
                     </div>
                 </template>

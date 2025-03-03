@@ -19,7 +19,8 @@
                     <div class="select-item flex-b-c" :class="{ 'select-active': item.id == selectId }"
                         @click="emit('change', item)">
                         <div class="lang-left">
-                            <img class="left-img" :src="item.nationalFlag" />
+                            <img class="left-img" src="/static/img/USDT.png" v-if="item.walletCoin == 'USDT'" />
+                            <img class="left-img" :src="item.nationalFlag" v-else />
                             <span>{{ item.walletCoin }}</span>
                         </div>
                         <div>
@@ -44,7 +45,7 @@ const props = defineProps({
         default: [] as any[]
     },
     selectId: {
-
+        default: ''
     }
 })
 
