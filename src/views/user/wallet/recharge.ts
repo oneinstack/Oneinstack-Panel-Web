@@ -85,6 +85,10 @@ export const index = () => {
     webUrl: '',
     vf: {} as any,
     vfFun: (e: any, name: string) => {
+      console.log(e);
+      
+      console.log(conf.formData.rechargeAmount);
+      
       conf.vf[name](e)
       nextTick(() => {
         conf.defaultAmountList?.forEach((item: any) => {
@@ -155,6 +159,8 @@ export const index = () => {
                 }
               }
             })
+            console.log(conf.rechargeWalletList);
+            
           }
         }
       })
@@ -175,11 +181,16 @@ export const index = () => {
             }
             conf.paymentMethodsList?.forEach((item: any, index: number) => {
               item.isClicked = false
+              item.name = item.payMethodName
               if (index == 0) {
                 item.isClicked = true
                 conf.formData.payMethodCode = item.payMethodCode
               }
             })
+            console.log(conf.paymentMethodsList);
+            const iten = conf.paymentMethodsList.find((v:any) => v.isClicked)
+            console.log(iten);
+            
             nextTick(() => {
               conf.getPaymentVendorData()
             })
@@ -193,6 +204,7 @@ export const index = () => {
 
     //选择支付方式change
     handelChangePaymentMethod(obj: any) {
+      conf.modalName = undefined
       conf.payMentLoading = true
       conf.paymentMethodsList?.forEach((item: any) => {
         item.isClicked = false
@@ -229,6 +241,8 @@ export const index = () => {
 
     //获取支付厂商、支付通道数据
     getPaymentVendorData() {
+      console.log('8889999');
+      
       conf.paymentVendorList = []
       conf.paymentList = []
       apis.rechargePayList({
@@ -236,11 +250,18 @@ export const index = () => {
         coin: conf.infoObj.coinCode,
         success: (res: any) => {
           if (res.code == 200) {
+            let data = res.data || []
+            data?.forEach((item: any, index: number) => {
+              item.isClicked = false
+              item.name = item.appShowName
+            })
             conf.paymentList = res.data
             conf.payMentLoading = false
             if (conf.formData.payMethodCode == 'ONLINE_PAYMENT') {
               conf.paymentVendorList = res.data || []
               conf.paymentVendorList.length == 1 && conf.handleSelectModal('vendor', conf.paymentVendorList[0])
+              console.log(conf.paymentVendorList);
+              
             } else {
               conf.paymentChannelList = res.data || []
               conf.paymentChannelList.length == 1 && conf.handleSelectModal('channel', conf.paymentChannelList[0])

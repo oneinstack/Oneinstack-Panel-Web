@@ -3,17 +3,17 @@
         @close="emit('close')">
         <div class="popup-content">
             <div class="title flex-center">
-                <span>{{ $t('me.switchLanguage') }}</span>
+                <span>Select</span>
                 <div class="arrow flex-center" @click.stop="emit('close')">
                     <van-icon size="28rem" color="#fff" name="cross" />
                 </div>
             </div>
             <div class="select-list">
                 <template v-for="item of getList" :key="item.id">
-                    <div class="select-item flex-b-c" :class="{ 'select-active': item.id == selectId }"
+                    <div class="select-item flex-b-c" :class="{ 'select-active': item.isClicked || item.isChecked }"
                         @click="emit('change', item)">
                         <div class="lang-left">
-                            <img class="left-img" :src="item.nationalFlag" />
+                            <img class="left-img" :src="item.imgUrl" v-if="item.imgUrl" />
                             <span>{{ item.name }}</span>
                         </div>
                         <div class="icon"></div>
@@ -34,9 +34,6 @@ const props = defineProps({
     },
     dataArr: {
         default: [] as any[]
-    },
-    selectId: {
-
     }
 })
 
@@ -96,6 +93,8 @@ const getList: any = computed(() => {
 
                 .left-img {
                     height: 42rem;
+                    width: 42rem;
+                    border-radius: 50%;
                     margin-right: 20rem;
                 }
             }

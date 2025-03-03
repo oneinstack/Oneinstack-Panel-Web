@@ -14,7 +14,7 @@
             <div class="menu-box">
                 <div class="top-btn">
                     <div class="btn-item">
-                        <greenBtn>
+                        <greenBtn @click="conf.handle({url: '/user/wallet/Recharge'})">
                             <div class="btn-txt">
                                 <img src="/static/img/home/black/ct-deposit.png" />
                                 <span>Deposit</span>

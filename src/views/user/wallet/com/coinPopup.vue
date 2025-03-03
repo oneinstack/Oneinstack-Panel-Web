@@ -3,7 +3,7 @@
         @close="emit('close')">
         <div class="popup-content">
             <div class="title flex-center">
-                <span>{{ $t('me.switchLanguage') }}</span>
+                <span>Select</span>
                 <div class="arrow flex-center" @click.stop="emit('close')">
                     <van-icon size="28rem" color="#fff" name="cross" />
                 </div>
@@ -23,7 +23,7 @@
                             <span>{{ item.walletCoin }}</span>
                         </div>
                         <div>
-                            {{ item.walletMoney }}
+                            {{ item.coinSymbol + item.walletMoney }}
                         </div>
                     </div>
                 </template>
