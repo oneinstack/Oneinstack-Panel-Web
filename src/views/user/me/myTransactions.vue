@@ -50,7 +50,7 @@
               </div>
             </div>
             <div class="right-money">
-              <div class="money">{{ conf.getCoin(item.walletCoin) + item.money }}</div>
+              <div class="money">{{ (item.coinSymbol || '') + item.money }}</div>
               <!-- <div class="money">{{item.tradeTypeName}}</div> -->
             </div>
           </div>

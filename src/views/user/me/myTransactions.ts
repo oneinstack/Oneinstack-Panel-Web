@@ -13,6 +13,7 @@ export const index = () => {
     total: 0,
     detailData: [] as any[],
     scrollHeight: 300,
+    popupType: '',
     typeList: [
       {
         value: 1,
@@ -110,12 +111,20 @@ export const index = () => {
     tradeLable: i18n.t('tradeType.1'),
     getList() {
       System.loading()
+      svalue.getCoinlist()
       apis.meTrade({
         current: conf.pageNum,
         size: conf.pageSize,
         tradeType: conf.tradeType,
         tradeStatus: conf.tradeStatus,
         success: (res: any) => {
+          res.data.records.forEach((item:any) => {
+            let _data = svalue.coinlist.find((it) => it.coinCode == item.walletCoin)
+            if (_data) {
+              item.coinSymbol =  _data.coinSymbol
+              item.nationalFlag =  _data.nationalFlag
+            }
+          })
           conf.detailData = [...conf.detailData, ...res.data.records]
           conf.total = res.data.total || 0
         },
@@ -126,6 +135,7 @@ export const index = () => {
     },
 
     handleChange(type: any, val: any) {
+      conf.popupType = ''
       switch (type) {
         case 'type':
           conf.typeList.forEach((item) => {
@@ -162,8 +172,6 @@ export const index = () => {
     },
 
     getTime(val: any) {
-      console.log(val)
-
       let _time = String(new Date(val))
       return String(_time).split('(')[0]
     },

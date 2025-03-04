@@ -100,7 +100,7 @@ export const index = () => {
       {
         name: 'Transaction',
         imgUrl: 'ct-tran',
-        url: '/user/wallet/withDraw'
+        url: '/user/me/myTransactions'
       },
       {
         name: 'Bet History',

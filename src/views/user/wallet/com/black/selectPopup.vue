@@ -10,11 +10,11 @@
             </div>
             <div class="select-list">
                 <template v-for="item of getList" :key="item.id">
-                    <div class="select-item flex-b-c" :class="{ 'select-active': item.isClicked || item.isChecked }"
+                    <div class="select-item flex-b-c" :class="{ 'select-active': item.isClicked || item.isChecked || item.isCheck }"
                         @click="emit('change', item)">
                         <div class="lang-left">
                             <img class="left-img" :src="item.imgUrl" v-if="item.imgUrl" />
-                            <span>{{ item.name }}</span>
+                            <span>{{ item.name || item.label }}</span>
                         </div>
                         <div class="icon"></div>
                     </div>
@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive } from 'vue';
+import { computed, onMounted, reactive } from 'vue';
 
 
 const props = defineProps({
@@ -52,7 +52,10 @@ const getList: any = computed(() => {
     }
     return props.dataArr;
 })
-
+onMounted(() => {
+    console.log('998888');
+    
+})
 </script>
 
 <style lang="less" scoped>
@@ -79,6 +82,8 @@ const getList: any = computed(() => {
 
     .select-list {
         padding: 0 24rem 24rem;
+        max-height: 50vh;
+        overflow-y: auto;
 
         .select-item {
             height: 90rem;
