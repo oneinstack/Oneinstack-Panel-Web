@@ -109,7 +109,9 @@ export const index = ({ chooseRef }: any) => {
         const item = data[i]
         item.betTime = new Date(item.betTime).Format()
         item.betOpenTime = new Date(item.betOpenTime).Format()
-        item.coinSymbol = coinList.find((v) => v.coinCode === item.betCoinCode)?.coinSymbol
+        let coinitem = coinList.find((v) => v.coinCode === item.betCoinCode)
+        item.coinSymbol = coinitem?.coinSymbol
+        item.nationalFlag = coinitem?.nationalFlag
         const lotteryItem = await slottery.findLotteryItem({ id: item.betLotteryId })
         const plotteryItem = lotteryItem.parent
         item.lotteryTypeCode = plotteryItem?.lotteryTypeVO.lotteryTypeCode

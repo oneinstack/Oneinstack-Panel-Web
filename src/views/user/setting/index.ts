@@ -105,7 +105,7 @@ export const index = () => {
       {
         name: 'Bet History',
         imgUrl: 'ct-bet',
-        url: ''
+        url: '/user/myBet/index'
       },
       {
         name: 'Notification',
