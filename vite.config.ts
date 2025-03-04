@@ -19,7 +19,8 @@ export default ({ mode, command }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@chat': path.resolve(__dirname, './src/modules/chat')
+        '@chat': path.resolve(__dirname, './src/modules/chat'),
+        '@public': path.resolve(__dirname, './public')
       }
     },
     server: {

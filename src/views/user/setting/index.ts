@@ -123,7 +123,7 @@ export const index = () => {
         name: 'Agency Center',
         imgUrl: 'ct-agency',
         isArrowRight: true,
-        url: ''
+        url: '/user/invite/index'
       },
       {
         name: 'Settings',

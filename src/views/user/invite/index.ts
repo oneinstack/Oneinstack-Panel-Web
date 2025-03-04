@@ -7,6 +7,17 @@ import { onMounted, reactive } from 'vue'
 
 export const index = () => {
   const conf = reactive({
+    blackTopMenu:[
+      {
+        name:'Dashboard',
+        value:1,
+      },
+      {
+        name:'My Reward',
+        value:2,
+      },
+    ] as any,
+    activeMenu:1 as number,
     userInfo: null as any,
     contentData: [] as any[],
     dataList: {
@@ -87,6 +98,10 @@ export const index = () => {
       conf.searchParams.time1 = interval.value ? interval.value[0] : null
       conf.searchParams.time2 = interval.value ? interval.value[1] : null
       conf.searchParams.levels = levels.length ? levels.map((item: any) => item.value).join() : null
+    },
+
+    handleMenuChange: (obj:any) => {
+      conf.activeMenu = obj.value
     },
 
     getData: () => {
