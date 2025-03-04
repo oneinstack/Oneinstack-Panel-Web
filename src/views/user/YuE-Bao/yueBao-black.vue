@@ -1,6 +1,6 @@
 <template>
   <x-page>
-    <template #title>fortune</template>
+    <template #title>Fortune</template>
     <template #right>
       <div class="arrow flex-center" style="margin-right: 30rem;" @click="conf.gomytask">
         <van-icon size="20rem" color="#fff" name="info-o" />
@@ -35,21 +35,21 @@
       </div>
       <div class="transfer-btn">
         <div class="btn-item">
-          <greenBtn>
+          <greenBtn @click="conf.modalName = 'in'">
             <div class="btn-txt">
               <img src="/static/theme/black/fortune-in.png" />
               <span>Transfer In</span>
             </div>
           </greenBtn>
         </div>
-        <div class="btn-item flex-center btn-with">
+        <div class="btn-item flex-center btn-with" @click="conf.modalName = 'out'">
           <div class="btn-txt">
             <img src="/static/theme/black/fortune-out.png" />
             <span>Transfer Out</span>
           </div>
         </div>
       </div>
-      <div class="content">
+      <div class="content" v-if="!conf.tableData.totalNum">
         <div class="no-yet">
           <img class="coin-img" src="/static/theme/black/fortune-coin.png" />
           <div class="no-yet">No Amount yet</div>
@@ -91,11 +91,31 @@
         </div>
       </div>
     </div>
+    <!-- 转入 -->
+    <transferPopup
+      :show="conf.modalName == 'in'"
+      :defaultCoin="conf.coinlist"
+      :walletlist="conf.walletlist"
+      :tableData="conf.tableData"
+      @close="conf.modalName = ''"
+      @change="conf.getInfo"
+    />
+    <!-- 转出 -->
+    <transferPopup
+      :show="conf.modalName == 'out'"
+      :active="1"
+      :defaultCoin="conf.coinlist"
+      :walletlist="conf.walletlist"
+      :tableData="conf.tableData"
+      @close="conf.modalName = ''"
+      @change="conf.getInfo"
+    />
   </x-page>
 </template>
 
 <script setup lang="ts">
 import greenBtn from '@/views/home/theme/black/components/greenBtn.vue'
+import transferPopup from './components/transferPopup.vue'
 import { index } from './yueBao'
 import sutil from '@/sstore/sutil'
 

@@ -11,6 +11,8 @@ export const index = () => {
     tableData: {} as any,
     appInfo: {} as any,
     coinlist: {} as any,
+    walletlist: [] as any[],
+    modalName: '',
 
     //请求查询余额宝币种
     // getcheckCoin(){
@@ -21,6 +23,7 @@ export const index = () => {
 
     //请求余额信息
     getInfo: async () => {
+      conf.modalName = ''
       System.loading()
       const { data } = await apis.yebWalletDetail({
         uid: sconfig.userInfo.uid,
@@ -31,6 +34,31 @@ export const index = () => {
 
       data.fixYearRate = Number(data.fixYearRate) <= 0 ? '0.0000' : data.fixYearRate
       conf.tableData = data
+      data.totalNum = Number(data.totalBalance)
+      conf.getWallet()
+      
+    },
+
+    // 获取钱包余额
+    getWallet: async () => {
+      let arr = await svalue.getCoinlist()
+      arr.forEach((item) => {
+        if (item.isDefault) conf.coinlist = item
+      })
+      // 获取钱包余额
+      const { data } = await apis.walletlist()
+      conf.walletlist = data || []
+      conf.walletlist?.forEach((item: any, itemIndex: number) => {
+        let index = arr.findIndex((into: any) => into.coinCode == item.walletCoin)
+        if (index != -1) {
+          let obj = {
+            ...arr[index],
+            ...item
+          }
+          if(obj.isDefault) conf.coinlist = obj
+          conf.walletlist[itemIndex] = obj
+        }
+      })
     },
 
     getTime() {
@@ -62,12 +90,7 @@ export const index = () => {
   })
 
   const init = async () => {
-    let obj = await svalue.getCoinlist()
-    obj.forEach((item) => {
-      if (item.isDefault) conf.coinlist = item
-    })
     conf.appInfo = await svalue.getAppConfiguration()
-
     conf.init()
   }
   onMounted(() => {

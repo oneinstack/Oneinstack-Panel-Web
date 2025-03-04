@@ -52,6 +52,7 @@ const conf = reactive({
         align-items: center;
         z-index: 3;
         font-weight: 600;
+        font-family: Poppins;
     }
 }
 </style>
