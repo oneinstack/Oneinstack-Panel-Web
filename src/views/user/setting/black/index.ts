@@ -22,12 +22,12 @@ export const index = () => {
         {
           name: 'Payment Methods',
           src:'/static/theme/black/setting/Payment.png',
-          url: '',
+          url: '/user/me/bankCard',
         },
         {
           name: 'About Us',
           src:'/static/theme/black/setting/About.png',
-          url: '',
+          url: '/user/about/about',
         },
     ],
     handleNavigate: (item: any) => {

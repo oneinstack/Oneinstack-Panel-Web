@@ -6,8 +6,12 @@ import System from '@/utils/System'
 import { info } from 'node:console'
 import { title } from 'node:process'
 import { onMounted, reactive } from 'vue'
+import { Scope } from 'tools-vue3'
+
 
 export const index = () => {
+  const mconf = Scope.getConf()
+
   const conf = reactive({
     socialPlatforms: [
         { name: 'Facebook', icon: '/icons/facebook.svg' },
@@ -37,11 +41,12 @@ export const index = () => {
           type: 'decrease'
         }
       ] as any,
+      qrcode:'' as string,
 
       copyToClipboard:(type:any) => {
         const text = type === 'link' 
-          ? 'https://bcgame.im/i-32a7vmavy-n/' 
-          : '32a7vmavy'
+          ? conf.qrcode + mconf.userInfo?.userInvitationCode
+          : mconf.userInfo?.userInvitationCode
         navigator.clipboard.writeText(text)
           .then(() => {
             System.toast(i18n.t('invite.CopySuccessful') || 'success', 'success')
@@ -50,6 +55,7 @@ export const index = () => {
   })
 
   onMounted(() => {
+    conf.qrcode = location.origin + '/#/register?code='
 
   })
   return conf

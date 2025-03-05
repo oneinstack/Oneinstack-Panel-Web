@@ -258,6 +258,10 @@ export default [
   {
     path: '/user/setting/black/verify',
     component: '/user/setting/black/verify'
+  },
+  {
+    path: '/user/setting/black/add',
+    component: '/user/setting/black/add'
   }
 
 ]

@@ -17,14 +17,14 @@
     <div class="referral-section">
       <div class="section-title">Referral Link</div>
       <div class="copy-container">
-        <span class="link">https://bcgame.im/i-32a7vmavy-n/</span>
+        <span class="link">{{conf.qrcode + mconf.userInfo?.userInvitationCode || ''}}</span>
         <button class="copy-btn" @click="conf.copyToClipboard('link')">Copy</button>
       </div>
     </div>
     <div class="referral-section">
       <div class="section-title">Referral Code</div>
       <div class="copy-container">
-        <span class="code">32a7vmavy</span>
+        <span class="code">{{mconf.userInfo?.userInvitationCode || ''}}</span>
         <button class="copy-btn" @click="conf.copyToClipboard('code')">Copy</button>
       </div>
     </div>
@@ -106,8 +106,11 @@
 </template>
 
 <script setup lang="ts">
+import { Scope } from 'tools-vue3'
 import { index } from './Dashboard'
 const conf = index()
+
+const mconf = Scope.getConf()
 </script>
 
 <style scoped lang="less">

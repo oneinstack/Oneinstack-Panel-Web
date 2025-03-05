@@ -31,6 +31,15 @@ export const index = () => {
       conf.vf[name](e)
     },
 
+    infoPopupObj:{
+      show: false,
+    } as any,
+
+    //显示国家代码选择器
+    showCountryPicker: () => {
+      conf.infoPopupObj.show = true
+    },
+
     //获取手机区号列表数据
     getAreaCode: async () => {
       System.loading()
@@ -90,6 +99,7 @@ export const index = () => {
       conf.formData.area_code = conf.areaCodeList[index].areaCode
       conf.selectAreaCodeObj = conf.areaCodeList[index]
       conf.modalShow = false
+      conf.infoPopupObj.show = false
     },
 
     //获取验证码btn

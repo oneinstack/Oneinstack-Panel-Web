@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import greenBtn from '@/views/home/theme/black/components/greenBtn.vue'
-import { index } from './accountInfo'
+import { index as currentIndex } from './accountInfo'
+import { index } from '@/views/user/Password/Change'
+import sconfig from '@/sstore/sconfig'
+
 const conf = index()
+const currentConf = currentIndex()
 </script>
 
 <template>
@@ -15,13 +19,13 @@ const conf = index()
         <div class="section-title">Profile Info</div>
         <div class="profile-content">
           <div class="avatar-name">
-            <img :src="conf.userAvatar" class="avatar" alt="" />
+            <img :src="sconfig.userInfo.userImgUrl" class="avatar" alt="" />
             <div class="user-info">
-              <div class="username">{{ conf.username }}</div>
-              <div class="user-id">User ID: {{ conf.userId }}</div>
+              <div class="username">{{ sconfig.userInfo.userNickname }}</div>
+              <div class="user-id">User ID: {{ sconfig.userInfo.uid }}</div>
             </div>
           </div>
-          <button class="edit-btn" @click="conf.handleNavigate">
+          <button class="edit-btn" @click="currentConf.handleNavigate('edit',null)">
             <greenBtn>
               <span>Edit</span>
             </greenBtn>
@@ -34,20 +38,30 @@ const conf = index()
 
         <div class="contact-item">
           <div class="item-label">E-mail Verification</div>
-          <div class="email-input">
-            <input type="email" v-model="conf.email" disabled />
-          </div>
-          <button class="verify-btn">
-            <greenBtn>
-              <span>Verify</span>
-            </greenBtn>
-          </button>
+          <template v-if="!conf.email">
+            <div class="phone-desc">Verify your email, you can use email as your second login method.</div>
+            <button class="add-btn" @click="currentConf.handleNavigate('add','Email')">
+              <greenBtn>
+                <span>Add</span>
+              </greenBtn>
+            </button>
+          </template>
+          <template v-else> 
+            <div class="email-input">
+              <input type="email" v-model="currentConf.email" disabled />
+            </div>
+            <button class="verify-btn">
+              <greenBtn>
+                <span>Verify</span>
+              </greenBtn>
+            </button>
+          </template>
         </div>
 
         <div class="contact-item">
           <div class="item-label">Phone Number</div>
           <div class="phone-desc">Verify your phone number and you can use the phone as your second login method.</div>
-          <button class="add-btn">
+          <button class="add-btn" @click="currentConf.handleNavigate('add','Phone')">
             <greenBtn>
               <span>Add</span>
             </greenBtn>

@@ -8,18 +8,23 @@ import { onMounted, reactive } from 'vue'
 
 export const index = () => {
   const conf = reactive({
-    userAvatar: '/static/theme/black/setting/Account.png',
-    username: 'lddbweevqtcc',
-    userId: '69023432',
-    email: '123456789@gmail.com',
-    handleNavigate: (url:string,type:any) => {
-      type && Cookie.set('passwordType',type)
-      let newUrl = '/user/setting/black/' + url
-      System.router.push(newUrl)
+    selectedCode: '+1' as string,
+    phoneNumber: '' as string,
+    isValidPhone: false as boolean,
+    
+    //处理手机号验证
+    handleVerify: () => {
+      if (!conf.isValidPhone) return
+
+    },
+
+    // 验证手机号格式
+    validatePhone: () => {
+      conf.isValidPhone = conf.phoneNumber.length >= 10
+
     },
   })
   onMounted(() => {
-    
   })
 
   return conf

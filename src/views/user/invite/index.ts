@@ -4,6 +4,7 @@ import { sconfig } from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import System from '@/utils/System'
 import { onMounted, reactive } from 'vue'
+import { Scope } from 'tools-vue3'
 
 export const index = () => {
   const conf = reactive({
@@ -151,6 +152,6 @@ export const index = () => {
   onMounted(() => {
     init()
   })
-
+  Scope.setConf(conf)
   return conf
 }
