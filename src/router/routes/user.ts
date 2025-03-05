@@ -212,6 +212,10 @@ export default [
     component: '/user/me/myCommission'
   },
   {
+    path: '/user/promotion/promotion',
+    component: '/user/promotion/promotion'
+  },
+  {
     path: '/user/promotion/detail',
     component: '/user/promotion/detail'
   },

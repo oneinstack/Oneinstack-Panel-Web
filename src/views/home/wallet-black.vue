@@ -173,7 +173,6 @@ const conf = reactive({
 <style lang="less" scoped>
 .head {
   background: #323838;
-  padding: 0rem 24rem;
 }
 
 .banner {

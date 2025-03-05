@@ -10,7 +10,9 @@
         </div>
       </div>
     </div>
-    <img class="head-img" src="/static/img/home/black/casino-top.png" />
+    <div style="padding: 0rem 24rem;">
+      <img class="head-img" src="/static/img/home/black/casino-top.png" />
+    </div>
   </div>
 </template>
 <script setup lang="ts">
@@ -32,10 +34,11 @@ onMounted(() => {
 </script>
 <style lang="less" scoped>
 .head {
-  padding: 16rem 24rem 0rem;
+  padding: 16rem 0rem 0rem;
   background: linear-gradient(180deg, #204734 0%, #222627 100%);
 
   .head-daily {
+    padding: 0rem 24rem;
     display: flex;
     align-items: center;
     justify-content: space-between;

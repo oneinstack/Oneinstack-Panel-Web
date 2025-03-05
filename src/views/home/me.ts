@@ -51,7 +51,7 @@ export const index = () => {
     defaultCoin: {
       coinSymbol: '',
       coinTousdt: 0
-    }, //接口返回默认币种钱包
+    } as any, //接口返回默认币种钱包
     swiperList: [] as any[],
     showNumberBox: false,
     userWalletList: [] as any[],
@@ -186,9 +186,183 @@ export const index = () => {
         ]
       ]
     },
+    coinPopup: false,
+    defaultInfo: {} as any,
+    // 黑色主题菜单
+    menuList: [
+      {
+        name: 'BG ToKen',
+        num: '+0.50%',
+        imgUrl: 'logo-img',
+        rNum: '1BG',
+        rPrice: '$0.0041148',
+        isArrowRight: true
+      },
+      {
+        name: 'BG Pocker',
+        imgUrl: 'me-pocker',
+        isArrowRight: false
+      },
+      {
+        name: 'Casino',
+        imgUrl: 'me-casino',
+        isArrowRight: false,
+        isMore: false,
+        secondList: [
+          {
+            name: 'Favorites',
+            imgUrl: 'cs-favorites',
+          },
+          {
+            name: 'Recent',
+            imgUrl: 'cs-recent',
+          },
+          {
+            name: 'Originals',
+            imgUrl: 'cs-originals',
+          },
+          {
+            name: 'Top Picks',
+            imgUrl: 'cs-picks',
+          },
+          {
+            name: 'Slots',
+            imgUrl: 'cs-slots',
+          },
+          {
+            name: 'Live Casino',
+            imgUrl: 'cs-live',
+          },
+          {
+            name: 'Hot Games',
+            imgUrl: 'cs-hot',
+          },
+          {
+            name: 'Feature Buy-in',
+            imgUrl: 'cs-feature',
+          },
+          {
+            name: 'New Releases',
+            imgUrl: 'cs-new',
+          },
+          {
+            name: 'Table Game',
+            imgUrl: 'cs-table',
+          },
+          {
+            name: 'Game Shows',
+            imgUrl: 'cs-game',
+          }
+        ]
+      },
+      {
+        name: 'Lottery',
+        imgUrl: 'me-lottery',
+        isArrowRight: false
+      },
+      {
+        name: 'Sports',
+        imgUrl: 'me-sports',
+        isArrowRight: false
+      },
+      {
+        name: 'Promotions',
+        imgUrl: 'me-promotions',
+        isArrowRight: false,
+        secondList: [
+          {
+            name: 'Check In',
+            imgUrl: 'pt-check',
+          },
+          {
+            name: 'Lucky Box',
+            imgUrl: 'pt-lucky',
+          },
+          {
+            name: 'Lucky Wheel',
+            imgUrl: 'pt-wheel',
+          },
+          {
+            name: 'Promotion',
+            imgUrl: 'pt-check',
+            url: '/user/promotion/promotion'
+          }
+        ]
+      },
+      {
+        name: 'VIP Clup',
+        imgUrl: 'me-club',
+      },
+      {
+        name: 'Bonus',
+        imgUrl: 'me-bonus',
+      },
+      {
+        name: 'Agency Center',
+        imgUrl: 'me-center',
+        url: '/user/invite/index'
+      },
+      {
+        name: 'About us',
+        imgUrl: 'me-about',
+        isArrowRight: true,
+        url: '/user/about/about'
+      },
+      {
+        name: 'Live Support',
+        imgUrl: 'me-live',
+        isArrowRight: true,
+        func: () => {
+          svalue.toService()
+        }
+      },
+      {
+        name: 'English',
+        imgUrl: 'lang',
+        id: 'en-us',
+        isArrowRight: true,
+        func: () => {
+          conf.langPopup = true
+        }
+      },
+      {
+        name: 'INR',
+        imgUrl: 'coin',
+        img: '',
+        isArrowRight: true,
+        func: () => {
+          conf.coinPopup = true
+        }
+      }
+    ] as any[],
+    showOpen(e: any) {
+      if (!e.secondList) return
+      const index = conf.menuList.findIndex((item: any) => item.name === e.name);
+      conf.menuList[index].isMore = !conf.menuList[index].isMore;
+    },
     handle(item: any) {
       item.url && System.router.push(item.url)
       item.func && item.func()
+    },
+
+    handleDefaultwallet(e: any) {
+      System.loading()
+      conf.coinPopup = false
+      apis.defaultwallet({
+        coinCode: e.coinCode,
+        success: (res: any) => {
+          sconfig.userInfo.defaultWalletId = e.id
+          Cookie.set('userInfo', sconfig.userInfo)
+          conf.defaultInfo = e
+
+          const index = conf.menuList.findIndex((item) => item.imgUrl == 'coin')
+          conf.menuList[index].name = e.coinCode
+          conf.menuList[index].img = e.nationalFlag
+        },
+        final: () => {
+          System.loading(false)
+        }
+      })
     },
 
     pageToSettings() {
@@ -200,6 +374,8 @@ export const index = () => {
       await i18n.setLang(item.id)
       System.loading(false)
       conf.langPopup = false
+      conf.menuList[11].name = item?.name
+      conf.menuList[11].id = item?.id
     },
     async goLogin(url: string) {
       if (!sconfig.userInfo) url = '/login'
@@ -229,9 +405,13 @@ export const index = () => {
     async getWalletList(arr: any) {
       let wlist = await svalue.getWalletlist()
       conf.userWalletList = wlist
+      conf.defaultInfo = await svalue.getDefaultWallet()
+      const index = conf.menuList.findIndex((item) => item.imgUrl == 'coin')
+      conf.menuList[index].name = conf.defaultInfo.coinCode
+      conf.menuList[index].img = conf.defaultInfo.nationalFlag
+      
       conf.coinLosding = false
-      let defaultWalletId = sconfig.userInfo.defaultWalletId
-      let obj = wlist.find((item: any) => item.id == defaultWalletId)
+      let obj = wlist.find((item: any) => item.id == conf.defaultInfo.id)
       if (obj) {
         sapp.globalData.defaultWalletInfo = obj
       }
@@ -264,6 +444,10 @@ export const index = () => {
   })
 
   const init = async () => {
+    const item = conf.langArr.find((v) => v.id == conf.language)
+    conf.menuList[11].name = item?.name
+    conf.menuList[11].id = item?.id
+    
     System.loading(false)
     conf.initData()
     conf.userGradedInfo()

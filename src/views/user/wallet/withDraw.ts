@@ -109,8 +109,8 @@ export const index = () => {
               let defaultInfo = await svalue.getDefaultWallet()
               currentWallet = defaultInfo.coinCode
             }
-            this.rechargeWalletList = res.data || []
-            this.rechargeWalletList?.forEach((item, itemIndex) => {
+            conf.rechargeWalletList = res.data || []
+            conf.rechargeWalletList?.forEach((item, itemIndex) => {
               let index = arr.findIndex((into) => into.coinCode == item.walletCoin)
               if (index != -1) {
                 let obj = {

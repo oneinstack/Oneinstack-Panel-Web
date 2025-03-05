@@ -2,6 +2,8 @@
     <div class="menu flex-b-c" @click="emit('change', menuInfo)">
         <div class="l-name">
             <img v-if="menuInfo.imgUrl == 'logo-img'" class="logo-img" :src="`/static/img/home/black/${menuInfo.imgUrl}.png`" />
+            <img v-else-if="menuInfo.imgUrl == 'lang'" class="l-img" :src="`/static/img/me/${menuInfo.id}.png`" />
+            <img v-else-if="menuInfo.imgUrl == 'coin'" class="l-img" :src="menuInfo.img" />
             <img v-else class="l-img" :src="`/static/img/home/black/${menuInfo.imgUrl}.png`" />
             <div class="l-content">
                 <div>{{ menuInfo.name }}</div>

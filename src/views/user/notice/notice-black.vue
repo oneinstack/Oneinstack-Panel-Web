@@ -3,17 +3,12 @@
         <template #title>Notification</template>
         <template #top>
             <div class="nav-list">
-                <div class="nav-item" @click="conf.navIndex = 0">
-                    <span>Promotions</span>
-                </div>
-                <div class="nav-item" @click="conf.navIndex = 1">
-                    <span>Promotions</span>
-                </div>
-                <div class="nav-item" @click="conf.navIndex = 2">
-                    <span>Promotions</span>
-                    <div class="badge flex-center">1</div>
-                </div>
-                <div :style="{ left: `calc( ${conf.navIndex} * 100% / 3)` }" class="nav-active"></div>
+                <custNav :dataArr="conf.navList" :active="conf.navIndex" @change="conf.changeItem">
+                    <template v-slot="{ item }">
+                        <span>{{ item.name }}</span>
+                        <div class="badge flex-center" v-if="item.badge">{{ item.badge }}</div>
+                    </template>
+                </custNav>
             </div>
         </template>
         <div class="notic-content">
@@ -27,16 +22,21 @@
                         <div class="title">3rd party Games Maintenance</div>
                     </div>
                     <div class="arrow flex-center" @click="conf.moreShow = !conf.moreShow">
-                        <van-icon size="24rem" color="#fff" name="arrow" style="transition: 0.3s" :class="{ 'rotate-90': conf.moreShow }" />
+                        <van-icon size="24rem" color="#fff" name="arrow" style="transition: 0.3s"
+                            :class="{ 'rotate-90': conf.moreShow }" />
                     </div>
                 </div>
                 <div class="txt">
-                    <div>We would like to inform you that our services for allthird-party slot providers, including slots and live games,will undergo scheduled maintenance.</div>
+                    <div>We would like to inform you that our services for allthird-party slot providers, including
+                        slots and
+                        live games,will undergo scheduled maintenance.</div>
                     <div style="margin-top: 20rem;" v-if="conf.moreShow">
-                        Please be advised that during this maintenance period,third-party slots and live games will be unavailable.
+                        Please be advised that during this maintenance period,third-party slots and live games will be
+                        unavailable.
                     </div>
                     <div style="margin-top: 20rem;" v-if="conf.moreShow">
-                        Please be advised that during this maintenance period,third-party slots and live games will be unavailable.
+                        Please be advised that during this maintenance period,third-party slots and live games will be
+                        unavailable.
                     </div>
                 </div>
                 <div class="del">
@@ -48,12 +48,31 @@
 </template>
 
 <script setup lang="ts">
+import custNav from '../setting/com/custNav.vue';
 import { reactive } from 'vue';
 
 
 const conf = reactive({
     navIndex: 2,
-    moreShow: false
+    moreShow: false,
+    navList: [
+        {
+            name: 'Promotions',
+            badge: 0
+        },
+        {
+            name: 'Transaction',
+            badge: 0
+        },
+        {
+            name: 'System',
+            badge: 1
+        }
+    ],
+    changeItem({ item, index }: any) {
+        console.log(item);
+        console.log(index);
+    }
 })
 
 </script>
@@ -61,48 +80,20 @@ const conf = reactive({
 <style lang="less" scoped>
 .nav-list {
     margin: 24rem;
-    display: flex;
-    background: #323838;
-    height: 68rem;
-    border-radius: 14rem;
-    position: relative;
 
-    .nav-item {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        color: #BFBFBF;
-        font-size: 24rem;
-        position: relative;
-        z-index: 3;
-
-        .badge {
-            background: #9FE871;
-            border-radius: 12rem;
-            font-size: 20rem;
-            color: #000;
-            padding: 0rem 20rem;
-            margin-left: 10rem;
-            height: 32rem;
-        }
-    }
-
-    .nav-active {
-        background: #394143;
-        border-radius: 14rem;
-        font-weight: 600;
-        color: #fff;
-        position: absolute;
-        top: 0;
-        height: 100%;
-        width: calc(100% / 3);
-        transition-duration: 0.2s;
+    .badge {
+        background: #9FE871;
+        border-radius: 12rem;
+        font-size: 20rem;
+        color: #000;
+        padding: 0rem 20rem;
+        margin-left: 10rem;
+        height: 32rem;
     }
 }
 
 .notic-content {
-    padding: 24rem;
+    padding: 0rem 24rem;
 
     .notic-item {
         background: #323738;
@@ -114,10 +105,12 @@ const conf = reactive({
         .top-title {
             .l-content {
                 margin-right: 30rem;
-                .time{
+
+                .time {
                     display: flex;
                     align-items: center;
-                    .unRead{
+
+                    .unRead {
                         background: #1CF187;
                         width: 16rem;
                         height: 16rem;
@@ -125,7 +118,8 @@ const conf = reactive({
                         margin-left: 20rem;
                     }
                 }
-                .title{
+
+                .title {
                     font-family: Poppins;
                     font-weight: 600;
                     font-size: 28rem;
@@ -141,15 +135,18 @@ const conf = reactive({
                 border-radius: 12rem;
             }
         }
-        .txt{
+
+        .txt {
             padding-right: 20rem;
             margin-top: 20rem;
         }
-        .del{
+
+        .del {
             display: flex;
             justify-content: flex-end;
             margin-top: 40rem;
-            img{
+
+            img {
                 height: 40rem;
             }
         }

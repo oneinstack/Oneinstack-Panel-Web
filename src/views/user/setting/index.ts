@@ -169,8 +169,6 @@ export const index = () => {
         imgUrl: 'ct-live',
         isArrowRight: true,
         func: () => {
-          console.log('88899')
-
           svalue.toService()
         }
       },
@@ -219,8 +217,6 @@ export const index = () => {
     outPopup: false,
     total_money: 0,
     handle(item: any) {
-      console.log('8888')
-
       item.url && System.router.push(item.url)
       item.func && item.func()
     },
@@ -241,6 +237,9 @@ export const index = () => {
       conf.outPopup = false
       conf.total_money = 0
       System.toast('out success', 'success')
+      if(Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
+        return System.router.replace('/home/home')
+      }
       timer.once(() => sutil.pageBack(), 2000)
     },
     hrefUrl: location.origin,
@@ -268,11 +267,8 @@ export const index = () => {
       })
       const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')
       conf.blackMenuList[index].rName = conf.defaultWallet.coinCode
-      console.log(conf.walletList)
-      console.log(conf.defaultWallet)
     },
     handleDefaultwallet(e: any) {
-      console.log(e)
       System.loading()
       conf.popup.close()
       apis.defaultwallet({

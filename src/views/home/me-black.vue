@@ -9,14 +9,15 @@
         <menuItem :menuInfo="conf.menuList[0]" />
       </div>
       <template v-for="item in conf.menuList.slice(1, 6)">
-        <div class="second-list" :style="{'height': item.isMore ? (item.list.length+1)*80 + 'rem' : '80rem'}">
+        <div class="second-list"
+          :style="{ 'height': item.isMore ? (item.secondList.length + 1) * 80 + 'rem' : '80rem' }">
           <div class="menu-item" :class="{ 'menu-active': item.isMore }">
             <menuItem :menuInfo="item" @change="conf.showOpen" />
           </div>
 
-          <template v-for="it in item.list">
+          <template v-for="it in item.secondList">
             <div style="height: 80rem;">
-              <menuItem :menuInfo="it" />
+              <menuItem :menuInfo="it" @change="conf.handle(it)" />
             </div>
           </template>
         </div>
@@ -30,20 +31,41 @@
       </div>
       <template v-for="item in conf.menuList.slice(9, 11)">
         <div class="menu-item">
-          <menuItem :menuInfo="item" @change="conf.goPage" />
+          <menuItem :menuInfo="item" @change="conf.handle(item)" />
         </div>
       </template>
       <div class="line-two">
         <template v-for="item in conf.menuList.slice(11)">
           <div class="line-item">
             <div class="menu-item">
-              <menuItem :menuInfo="item" />
+              <menuItem :menuInfo="item" @change="conf.handle(item)" />
             </div>
           </div>
         </template>
       </div>
-
     </div>
+    <custPopup :show="conf.langPopup" @close="conf.langPopup = false">
+      <div class="lang-list">
+        <template v-for="item of conf.langArr" :key="item.id">
+          <div class="select-item flex-b-c" :class="{ 'select-active': item.id == conf.language }"
+            @click="conf.changeLang(item)">
+            <div class="lang-left">
+              <img class="left-img" :src="`/static/img/me/${item.id}.png`" />
+              <span>{{ item.name }}</span>
+            </div>
+            <div class="icon"></div>
+          </div>
+        </template>
+      </div>
+    </custPopup>
+    <!-- 选择默认钱包 -->
+    <coinPopup
+      :show="conf.coinPopup"
+      :dataArr="conf.userWalletList"
+      :selectId="conf.defaultInfo.id"
+      @close="conf.coinPopup = false"
+      @change="conf.handleDefaultwallet"
+    />
   </x-page>
 </template>
 <script lang="ts" setup>
@@ -53,143 +75,19 @@ import topInfo from './theme/black/components/topInfo.vue'
 import menuItem from './theme/black/components/menuItem.vue';
 import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
-import { url } from 'inspector';
 import System from '@/utils/System';
+import { svalue } from '@/sstore/svalue';
+import { index } from './me'
+import custPopup from '../user/setting/com/custPopup.vue';
+import coinPopup from '../user/wallet/com/black/coinPopup.vue';
 
-const conf = reactive({
-  selectList: 'Casino',
-  menuList: [
-    {
-      name: 'BG ToKen',
-      num: '+0.50%',
-      imgUrl: 'logo-img',
-      rNum: '1BG',
-      rPrice: '$0.0041148',
-      isArrowRight: true
-    },
-    {
-      name: 'BG Pocker',
-      imgUrl: 'me-pocker',
-      isArrowRight: false
-    },
-    {
-      name: 'Casino',
-      imgUrl: 'me-casino',
-      isArrowRight: false,
-      isMore: false,
-      list: [
-        {
-          name: 'Favorites',
-          imgUrl: 'cs-favorites',
-        },
-        {
-          name: 'Recent',
-          imgUrl: 'cs-recent',
-        },
-        {
-          name: 'Originals',
-          imgUrl: 'cs-originals',
-        },
-        {
-          name: 'Top Picks',
-          imgUrl: 'cs-picks',
-        },
-        {
-          name: 'Slots',
-          imgUrl: 'cs-slots',
-        },
-        {
-          name: 'Live Casino',
-          imgUrl: 'cs-live',
-        },
-        {
-          name: 'Hot Games',
-          imgUrl: 'cs-hot',
-        },
-        {
-          name: 'Feature Buy-in',
-          imgUrl: 'cs-feature',
-        },
-        {
-          name: 'New Releases',
-          imgUrl: 'cs-new',
-        },
-        {
-          name: 'Table Game',
-          imgUrl: 'cs-table',
-        },
-        {
-          name: 'Game Shows',
-          imgUrl: 'cs-game',
-        }
-      ]
-    },
-    {
-      name: 'Lottery',
-      imgUrl: 'me-lottery',
-      isArrowRight: false
-    },
-    {
-      name: 'Sports',
-      imgUrl: 'me-sports',
-      isArrowRight: false
-    },
-    {
-      name: 'Promotions',
-      imgUrl: 'me-promotions',
-      isArrowRight: false,
-    },
-    {
-      name: 'VIP Clup',
-      imgUrl: 'me-club',
-    },
-    {
-      name: 'Bonus',
-      imgUrl: 'me-bonus',
-    },
-    {
-      name: 'Agency Center',
-      imgUrl: 'me-center',
-    },
-    {
-      name: 'About us',
-      imgUrl: 'me-about',
-      isArrowRight: true,
-      url: '/user/about/about'
-    },
-    {
-      name: 'Live Support',
-      imgUrl: 'me-live',
-      isArrowRight: true
-    },
-    {
-      name: 'English',
-      imgUrl: 'logo-img',
-      isArrowRight: true
-    },
-    {
-      name: 'INR',
-      imgUrl: 'logo-img',
-      isArrowRight: true
-    }
-  ] as any[],
-  showOpen(e: any) {
-    if(!e.list) return
-    const index = conf.menuList.findIndex((item: any) => item.name === e.name);
-    conf.menuList[index].isMore = !conf.menuList[index].isMore;
-  },
-  goPage(e: any) {
-    console.log(e);
-    e.url && System.router.push(e.url);
-  }
-})
+const conf = index()
 
 </script>
 
 <style lang="less" scoped>
 .head {
   background: #323838;
-  padding: 0rem 24rem;
 }
 
 .menu-content {
@@ -225,7 +123,7 @@ const conf = reactive({
     border-radius: 16rem;
     margin-bottom: 10rem;
     transition: all .2s;
-		overflow: hidden;
+    overflow: hidden;
   }
 
   .line-two {
@@ -239,6 +137,44 @@ const conf = reactive({
       &:first-of-type {
         margin-right: 16rem;
       }
+    }
+  }
+}
+
+.lang-list {
+  padding: 0 24rem 24rem;
+
+  .select-item {
+    height: 90rem;
+    padding: 0rem 16rem;
+    color: #fff;
+    font-size: 26rem;
+    margin-bottom: 10rem;
+
+    .lang-left {
+      display: flex;
+      align-items: center;
+
+      .left-img {
+        height: 42rem;
+        margin-right: 20rem;
+      }
+    }
+
+    .icon {
+      border: 3rem solid #36393A;
+      width: 40rem;
+      height: 40rem;
+      border-radius: 50%;
+    }
+  }
+
+  .select-active {
+    background: #323738;
+    border-radius: 12rem;
+
+    .icon {
+      border: 8rem solid #1CF187;
     }
   }
 }

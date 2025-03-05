@@ -2,10 +2,10 @@
     <div class="info">
         <img class="logo-img" src="/static/img/home/black/logo-img.png" />
         <div class="wallet">
-            <div class="w-money">
+            <div class="w-money" @click="conf.coinPopup = true">
                 <div class="money">
-                    <img class="cion-img" src="/static/img/home/black/profit.png" />
-                    <span>20.00</span>
+                    <img class="cion-img" :src="conf.defaultWallet.nationalFlag" />
+                    <span>{{ sutil.dataHandling(conf.defaultWallet.walletMoney) }}</span>
                 </div>
                 <van-icon size="24rem" color="#bfbfbf" name="arrow-down" />
             </div>
@@ -25,23 +25,74 @@
             </div>
             <div class="badge">2</div>
         </div>
-        <img @click="conf.goPage('/user/setting/setting')" class="user-img"
-            :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
-                ? sconfig.userInfo.userImgUrl
-                : '/static/img/default-header.png'
+        <img @click="conf.goPage('/user/setting/setting')" class="user-img" :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
+            ? sconfig.userInfo.userImgUrl
+            : '/static/img/default-header.png'
             " />
     </div>
+    <!-- 选择默认钱包 -->
+    <coinPopup
+      :show="conf.coinPopup"
+      :dataArr="conf.walletList"
+      :selectId="conf.defaultWallet.id"
+      @close="conf.coinPopup = false"
+      @change="conf.handleDefaultwallet"
+    />
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
 import greenBtn from './greenBtn.vue';
+import coinPopup from '@/views/user/wallet/com/black/coinPopup.vue';
 import System from '@/utils/System';
 import sconfig from '@/sstore/sconfig';
+import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue';
+import { apis } from '@/api';
 
 const conf = reactive({
+    coinPopup: false,
+    walletList:[] as  any[],
+    defaultWallet: {} as any,
     goPage(url: string) {
         System.router.push(url)
-    }
+    },
+    async getWallet() {
+        conf.walletList = await svalue.getWalletlist()
+        const coinArr = await svalue.getCoinlist()
+        console.log(conf.walletList);
+        
+        conf.walletList?.forEach((item, itemIndex) => {
+            let index = coinArr.findIndex((into) => into.coinCode == item.walletCoin)
+            if (index != -1) {
+                let obj = {
+                    ...coinArr[index],
+                    ...item
+                }
+                conf.walletList[itemIndex] = obj
+                if (item.id == sconfig.userInfo.defaultWalletId) conf.defaultWallet = obj
+            }
+        })
+        console.log(conf.defaultWallet);
+    },
+    handleDefaultwallet(e: any) {
+      System.loading()
+      conf.coinPopup = false
+      apis.defaultwallet({
+        coinCode: e.coinCode,
+        success: (res: any) => {
+          sconfig.userInfo.defaultWalletId = e.id
+          Cookie.set('userInfo', sconfig.userInfo)
+          conf.defaultWallet = e
+        },
+        final: () => {
+          System.loading(false)
+        }
+      })
+    },
+})
+
+onMounted(() => {
+    conf.getWallet()
 })
 
 </script>
@@ -51,6 +102,7 @@ const conf = reactive({
     display: flex;
     align-items: center;
     width: 100%;
+    padding: 0 24rem;
 
     .logo-img {
         height: 60rem;
