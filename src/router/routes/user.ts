@@ -238,6 +238,26 @@ export default [
   {
     path: '/user/Feedback/detail',
     component: '/user/Feedback/detail'
+  },
+  {
+    path: '/user/setting/black/index',
+    component: '/user/setting/black/index'
+  },
+  {
+    path: '/user/setting/black/accountInfo',
+    component: '/user/setting/black/accountInfo'
+  },
+  {
+    path: '/user/setting/black/edit',
+    component: '/user/setting/black/edit'
+  },
+  {
+    path: '/user/setting/black/security',
+    component: '/user/setting/black/security'
+  },
+  {
+    path: '/user/setting/black/verify',
+    component: '/user/setting/black/verify'
   }
 
 ]

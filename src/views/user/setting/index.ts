@@ -129,7 +129,7 @@ export const index = () => {
         name: 'Settings',
         imgUrl: 'ct-setting',
         isArrowRight: true,
-        url: ''
+        url: '/user/setting/black/index'
       },
       {
         name: 'Language',
