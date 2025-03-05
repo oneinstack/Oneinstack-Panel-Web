@@ -150,7 +150,7 @@ export const index = () => {
                   conf.infoObj.walletIndex = itemIndex
                   conf.currentCoinIndex = itemIndex
                   nextTick(() => {
-                    this.getPaymentMethodsData()
+                    conf.getPaymentMethodsData()
                   })
                 }
               }
@@ -532,7 +532,7 @@ export const index = () => {
                   }, 2000)
                 }
                 if (
-                  this.formData.payMethodCode == 'ONLINE_PAYMENT' &&
+                  conf.formData.payMethodCode == 'ONLINE_PAYMENT' &&
                   (!sconfig.userInfo?.userWithdrawName || !sconfig.userInfo?.userIdCard)
                 ) {
                   !sconfig.userInfo.userWithdrawName &&

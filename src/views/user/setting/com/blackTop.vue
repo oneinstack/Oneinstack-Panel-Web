@@ -3,16 +3,14 @@
         <img class="center-bg" src="/static/theme/black/center-bg.png" />
         <div class="user-info flex-b-c">
             <div class="l-user">
-                <img class="user-img" :src="
-                    sconfig.userInfo && sconfig.userInfo.userImgUrl
-                ? sconfig.userInfo.userImgUrl
-                : '/static/img/default-header.png' "
-                />
+                <img class="user-img" :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
+                        ? sconfig.userInfo.userImgUrl
+                        : '/static/img/default-header.png'" />
                 <div class="name">
                     <div>{{
                         sconfig.userInfo.userNickname || sconfig.userInfo.userName || sconfig.userInfo.email ||
                         $t('me.userName')
-                        }}</div>
+                    }}</div>
                     <div class="uid">
                         <span>UID: {{ sconfig.userInfo.uid || '******' }}</span>
                         <div class="copy">
@@ -24,14 +22,14 @@
             <van-icon size="28rem" color="#fff" name="arrow" />
         </div>
         <div class="vip-box">
-            <div class="vip-current">VIP0</div>
+            <div class="vip-current">VIP{{ conf.userVipLevel }}</div>
             <div class="right-clup">
                 <span style="margin-right: 6rem;">VIP Club</span>
                 <van-icon size="24rem" color="#1CF187" name="arrow" />
             </div>
             <div class="vip-next flex-b-c">
                 <div class="vip-tage">
-                    <div class="finish" style="width: 0%;">
+                    <div class="finish" :style="{width: conf.gradedPercentage + '%'}">
                         <div class="icon-big flex-center">
                             <div class="icon-small"></div>
                         </div>
@@ -43,7 +41,32 @@
     </div>
 </template>
 <script setup lang="ts">
+import { apis } from '@/api';
 import sconfig from '@/sstore/sconfig';
+import { onMounted, reactive } from 'vue';
+
+const conf = reactive({
+    gradedPercentage: 0,
+    userVipLevel: 0,
+    integral: '',
+    async userGradedInfo() {
+        if (!sconfig.userInfo) return
+        const { data } = await apis.userGradedInfo()
+        console.log(data);
+        
+        console.log(data);
+
+        conf.gradedPercentage = data.gradedPercentage
+        conf.userVipLevel = data.userVipLevel > data.theMax ? data.theMax : data.userVipLevel
+        let n = parseFloat(data.integral)
+        conf.integral = n.toFixed(2)
+    }
+})
+
+onMounted(() => {
+    conf.userGradedInfo()
+})
+
 </script>
 <style lang="less" scoped>
 .top-info {

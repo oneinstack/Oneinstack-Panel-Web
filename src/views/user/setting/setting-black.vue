@@ -14,14 +14,14 @@
             <div class="menu-box">
                 <div class="top-btn">
                     <div class="btn-item">
-                        <greenBtn @click="conf.handle({url: '/user/wallet/Recharge'})">
+                        <greenBtn @click="conf.handle({ url: '/user/wallet/Recharge' })">
                             <div class="btn-txt">
                                 <img src="/static/img/home/black/ct-deposit.png" />
                                 <span>Deposit</span>
                             </div>
                         </greenBtn>
                     </div>
-                    <div class="btn-item flex-center btn-with" @click="conf.handle({url: '/user/wallet/withDraw'})">
+                    <div class="btn-item flex-center btn-with" @click="conf.handle({ url: '/user/wallet/withDraw' })">
                         <div class="btn-txt">
                             <img src="/static/img/home/black/ct-with.png" />
                             <span>Withdrawal</span>
@@ -66,23 +66,20 @@
                     </div>
                 </div>
             </div>
-            <div class="menu-box">
-                <div style="height: 80rem;">
-                    <menuItem :menuInfo="conf.blackMenuList[11]" />
+
+            <div class="menu-box" v-for="item in conf.blackMenuList.slice(11)" :key="item.name">
+                <div style="height: 80rem;" @click="conf.handle(item)">
+                    <menuItem :menuInfo="item" />
                 </div>
             </div>
-            <div class="menu-box">
-                <div style="height: 80rem;">
-                    <menuItem :menuInfo="conf.blackMenuList[12]" />
-                </div>
-            </div>
+            
             <div class="out flex-center" @click="conf.goOutLogin">
                 <img class="gift-img" src="/static/img/home/black/login-out.png" />
                 <span>Sign Out</span>
             </div>
         </div>
         <!-- 多语言和主题弹框 -->
-        <van-popup class="popup-bottom-center" :show="conf.popup.show" position="bottom" borderRadius='16' :round="true"
+        <van-popup class="popup-bottom-center" :show="conf.popup.show && conf.popup.type != 'wallet'" position="bottom" borderRadius='16' :round="true"
             @close="conf.popup.close">
             <div v-if="conf.popup.type == 'lang'" class="popup-content">
                 <div class="title flex-center">
@@ -93,7 +90,8 @@
                 </div>
                 <div class="select-list">
                     <template v-for="item of conf.langArr" :key="item.id">
-                        <div class="select-item flex-b-c" :class="{'select-active': item.id == conf.language}" @click="conf.changeLang(item)">
+                        <div class="select-item flex-b-c" :class="{ 'select-active': item.id == conf.language }"
+                            @click="conf.changeLang(item)">
                             <div class="lang-left">
                                 <img class="left-img" :src="`/static/img/me/${item.id}.png`" />
                                 <span>{{ item.name }}</span>
@@ -112,20 +110,41 @@
                 </div>
                 <div class="select-list">
                     <template v-for="item of conf.themeArr" :key="item.id">
-                        <div class="select-item flex-b-c" :class="{'select-active': item.id == conf.currentTheme}" @click="conf.changeTheme(item)">
+                        <div class="select-item flex-b-c" :class="{ 'select-active': item.id == conf.currentTheme }"
+                            @click="conf.changeTheme(item)">
                             <span>{{ $t(item.name) }}</span>
                             <div class="icon"></div>
                         </div>
                     </template>
                 </div>
             </div>
+            <div v-else-if="conf.popup.type == 'refer'" class="popup-content">
+                <div class="title flex-center">
+                    <span></span>
+                    <div class="arrow flex-center" @click.stop="conf.popup.close">
+                        <van-icon size="28rem" color="#fff" name="cross" />
+                    </div>
+                </div>
+                <refer />
+            </div>
         </van-popup>
+
+        <!-- 选择默认钱包 -->
+        <coinPopup
+            :show="conf.popup.type == 'wallet'"
+            :dataArr="conf.walletList"
+            :selectId="conf.defaultWallet.id"
+            @close="conf.popup.close"
+            @change="conf.handleDefaultwallet"
+        />
     </x-page>
 </template>
 <script setup lang="ts">
 import topInfo from './com/blackTop.vue';
 import menuItem from '@/views/home/theme/black/components/menuItem.vue';
 import greenBtn from '@/views/home/theme/black/components/greenBtn.vue';
+import coinPopup from '../wallet/com/black/coinPopup.vue';
+import refer from './com/refer.vue';
 import { index } from './index'
 const conf = index()
 </script>
@@ -305,10 +324,11 @@ const conf = index()
             font-size: 26rem;
             margin-bottom: 10rem;
 
-            .lang-left{
+            .lang-left {
                 display: flex;
                 align-items: center;
-                .left-img{
+
+                .left-img {
                     height: 42rem;
                     margin-right: 20rem;
                 }

@@ -1,8 +1,10 @@
+import { apis } from '@/api'
 import { EPage } from '@/enum/Enum'
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
 import stheme from '@/sstore/stheme'
 import sutil from '@/sstore/sutil'
+import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
 import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
@@ -111,13 +113,15 @@ export const index = () => {
         name: 'Notification',
         imgUrl: 'ct-notif',
         isArrowRight: true,
-        url: ''
+        url: '/user/notice/notice'
       },
       {
         name: 'Refer',
         imgUrl: 'ct-refer',
         isArrowRight: true,
-        url: ''
+        func: () => {
+          conf.popup.open('refer')
+        }
       },
       {
         name: 'Agency Center',
@@ -145,7 +149,10 @@ export const index = () => {
         name: 'Currency',
         imgUrl: 'ct-currency',
         isArrowRight: true,
-        rName: 'INR',
+        rName: '--',
+        func: () => {
+          conf.popup.open('wallet')
+        }
       },
       {
         name: 'Theme',
@@ -161,7 +168,11 @@ export const index = () => {
         name: 'Live Support',
         imgUrl: 'ct-live',
         isArrowRight: true,
-        url: ''
+        func: () => {
+          console.log('88899')
+
+          svalue.toService()
+        }
       },
       {
         name: 'Feedback',
@@ -192,23 +203,24 @@ export const index = () => {
       }
     ],
     popup: {
-      type: 'lang' as 'theme' | 'lang',
+      type: 'lang' as 'theme' | 'lang' | 'refer' | 'wallet',
       show: false,
       data: [] as any[],
-      open: (type: 'theme' | 'lang') => {
+      open: (type: 'theme' | 'lang' | 'refer' | 'wallet') => {
         conf.popup.type = type
         conf.popup.data = type == 'theme' ? conf.themeArr : conf.langArr
         conf.popup.show = true
       },
       close: () => {
+        conf.popup.type = 'lang'
         conf.popup.show = false
       }
     },
     outPopup: false,
     total_money: 0,
     handle(item: any) {
-      console.log('8888');
-      
+      console.log('8888')
+
       item.url && System.router.push(item.url)
       item.func && item.func()
     },
@@ -235,15 +247,59 @@ export const index = () => {
     copyTxt() {
       StrUtil.copyText(conf.hrefUrl)
       System.toast(i18n.t('invite.CopySuccessful'), 'success')
+    },
+    //获取用户钱包list
+    walletList: [] as any[],
+    defaultWallet: {} as any,
+    async getWalletList() {
+      conf.walletList = await svalue.getWalletlist()
+      const coinArr = await svalue.getCoinlist()
+      let defaultInfo = await svalue.getDefaultWallet()
+      conf.walletList?.forEach((item, itemIndex) => {
+        let index = coinArr.findIndex((into) => into.coinCode == item.walletCoin)
+        if (index != -1) {
+          let obj = {
+            ...coinArr[index],
+            ...item
+          }
+          conf.walletList[itemIndex] = obj
+          if (item.walletCoin == defaultInfo.coinCode) conf.defaultWallet = obj
+        }
+      })
+      const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')
+      conf.blackMenuList[index].rName = conf.defaultWallet.coinCode
+      console.log(conf.walletList)
+      console.log(conf.defaultWallet)
+    },
+    handleDefaultwallet(e: any) {
+      console.log(e)
+      System.loading()
+      conf.popup.close()
+      apis.defaultwallet({
+        coinCode: e.coinCode,
+        success: (res: any) => {
+          sconfig.userInfo.defaultWalletId = e.id
+          Cookie.set('userInfo', sconfig.userInfo)
+          conf.defaultWallet = e
+          const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')
+          conf.blackMenuList[index].rName = conf.defaultWallet.coinCode
+        },
+        final: () => {
+          System.loading(false)
+        }
+      })
     }
   })
 
   onMounted(() => {
     const item = conf.langArr.find((v) => v.id == conf.language)
-    console.log(item);
-    conf.blackMenuList[8].rName = item?.name
-    const theme:any = conf.themeArr.find((v) => v.id == conf.currentTheme)
-    conf.blackMenuList[10].rName = i18n.t(theme?.name)
+    if(Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
+      conf.getWalletList()
+      conf.blackMenuList[8].rName = item?.name
+      const theme: any = conf.themeArr.find((v) => v.id == conf.currentTheme)
+      conf.blackMenuList[10].rName = i18n.t(theme?.name)
+    }
+    
   })
 
   const event = Scope.Event()

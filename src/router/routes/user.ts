@@ -262,6 +262,9 @@ export default [
   {
     path: '/user/setting/black/add',
     component: '/user/setting/black/add'
+  },
+  {
+    path: '/user/notice/notice',
+    component: '/user/notice/notice'
   }
-
 ]
