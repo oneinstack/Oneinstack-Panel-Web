@@ -2,11 +2,7 @@
   <div class="win">
     <gameTitle name="Latest round & Race" />
     <div class="type-list">
-      <template v-for="(item, index) in conf.typeList" :key="index">
-        <div class="type-item">
-          <div class="type-name" :class="{ 'type-active': conf.typeActive == item.id }">{{ item.name }}</div>
-        </div>
-      </template>
+      <custNav :dataArr="conf.typeList" />
     </div>
     <div class="bet-list">
       <div class="bet-item">
@@ -18,14 +14,14 @@
         <div class="bet-item">
           <div class="item">
             <img class="game-img" src="/static/img/home/black/mine.png" />
-            <text style="text-align: center;">
+            <span style="text-align: center;">
               <van-text-ellipsis rows="1" :content="item.customMessage" />
-            </text>
+            </span>
           </div>
           <div class="item">
-            <text style="width: 80%;text-align: center;">
+            <span style="width: 80%;text-align: center;">
               <van-text-ellipsis rows="1" :content="item.userName" />
-            </text>
+            </span>
           </div>
           <div class="item">
             -{{ item.coinSymbol + item.betPrizeMoney }}
@@ -37,7 +33,7 @@
   </div>
 </template>
 <script setup lang="ts">
-
+import custNav from '@/views/user/setting/com/custNav.vue'
 import { onMounted, onUnmounted, reactive, ref } from 'vue'
 import gameTitle from './gameTitle.vue'
 import { Scope } from 'tools-vue3'
@@ -75,32 +71,7 @@ onMounted(() => {
 }
 
 .type-list {
-  display: flex;
-  background: #323838;
-  height: 68rem;
-  border-radius: 14rem;
   margin: 20rem 24rem 20rem 0rem;
-
-  .type-item {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #BFBFBF;
-    font-size: 24rem;
-
-  }
-
-  .type-active {
-    background: #394143;
-    width: 100%;
-    height: 100%;
-    border-radius: 14rem;
-    color: #FFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 }
 
 .bet-list {
@@ -112,6 +83,7 @@ onMounted(() => {
     display: flex;
     height: 80rem;
     color: #BFBFBF;
+    padding: 0rem 30rem;
 
     .item {
       flex: 1;

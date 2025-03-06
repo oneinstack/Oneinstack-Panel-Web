@@ -3,7 +3,7 @@
         <template #title>Notification</template>
         <template #top>
             <div class="nav-list">
-                <custNav :dataArr="conf.navList" :active="conf.navIndex" @change="conf.changeItem">
+                <custNav :isCust="true" :dataArr="conf.navList" :active="conf.navIndex" @change="conf.changeItem">
                     <template v-slot="{ item }">
                         <span>{{ item.name }}</span>
                         <div class="badge flex-center" v-if="item.badge">{{ item.badge }}</div>

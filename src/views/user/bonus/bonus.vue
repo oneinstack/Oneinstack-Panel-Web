@@ -22,11 +22,7 @@
             <bonusBox :bonusList="conf.bonusList" />
             <!-- 导航栏 -->
             <div class="nav">
-                <custNav :dataArr="conf.navList" @change="conf.changeNav">
-                    <template v-slot="{ item }">
-                        <span>{{ item.name }}</span>
-                    </template>
-                </custNav>
+                <custNav :dataArr="conf.navList" @change="conf.changeNav" />
             </div>
             <!-- 内容 -->
             <div class="concent">

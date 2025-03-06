@@ -176,9 +176,19 @@ import signRemind from './components/signRemind.vue'
 import signPop from './components/signPop.vue'
 import { ref } from 'vue'
 import { index } from './tasks'
+import { Scope } from 'tools-vue3'
+import { EPage } from '@/enum/Enum'
 
 const signPopRefs = ref<any>()
 const conf = index({ signPopRefs })
+const event = Scope.Event()
+event.on(EPage.scroll, (e) => {
+  if (e.top > 60) {
+    conf.bgcolor = 'linear-gradient(180deg, #EB602D 0%, #FFA64F 160%)'
+  } else {
+    conf.bgcolor = 'transparent'
+  }
+})
 </script>
 
 <style lang="less" scoped>

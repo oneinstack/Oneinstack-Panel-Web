@@ -173,9 +173,20 @@ import signRemind from '@/views/user/tasks/theme/blue/components/signRemind.vue'
 import signPop from './theme/blue/components/signPop.vue'
 import { ref } from 'vue'
 import { index } from './tasks'
+import { Scope } from 'tools-vue3'
+import { EPage } from '@/enum/Enum'
+import stheme from '@/sstore/stheme'
 
 const signPopRefs = ref<any>()
 const conf = index({ signPopRefs })
+const event = Scope.Event()
+event.on(EPage.scroll, (e) => {
+  if (e.top > 60) {
+    conf.bgcolor = stheme.theme.blue.headerBgColor()
+  } else {
+    conf.bgcolor = 'transparent'
+  }
+})
 </script>
 
 <style lang="less" scoped>

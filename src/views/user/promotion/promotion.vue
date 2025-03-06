@@ -27,11 +27,7 @@
         </div>
       </div>
       <div style="margin: 20rem 0rem;">
-        <custNav :dataArr="conf.navList">
-          <template v-slot="{ item }">
-            <span>{{ item.name }}</span>
-          </template>
-        </custNav>
+        <custNav :dataArr="conf.navList" />
       </div>
       <template v-for="item in conf.activityList" :key="item.id">
         <div class="pt-item" @click="conf.goContent(item)">

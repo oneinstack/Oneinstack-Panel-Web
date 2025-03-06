@@ -7,9 +7,9 @@ export const index = () => {
   const conf = reactive({
     typeList: [
       { name: i18n.t('point.all'), id: '' },
-      { name: i18n.t('task.ongoing'), id: '0' },
-      { name: i18n.t('task.failed'), id: '-1' },
-      { name: i18n.t('task.finished'), id: '1' }
+      { name: i18n.t('task.ongoing'), id: 0 },
+      { name: i18n.t('task.failed'), id: -1 },
+      { name: i18n.t('task.finished'), id: 1 }
     ],
     navLeft: 40,
     navIndex: 0,

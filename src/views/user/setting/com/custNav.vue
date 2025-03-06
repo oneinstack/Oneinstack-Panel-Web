@@ -1,8 +1,9 @@
 <template>
     <div class="cust-list">
         <template v-for="(item, index) in dataArr" :key="index">
-            <div class="nav-item" @click="conf.change(item, index)">
-                <slot :item="item"></slot>
+            <div class="nav-item" :class="{'active': conf.navIndex == index}" @click="conf.change(item, index)">
+                <slot :item="item" v-if="isCust"></slot>
+                <span v-else>{{ item.name || item.label }}</span>
             </div>
         </template>
         <div :style="{ left: `calc( ${conf.navIndex} * 100% / ${dataArr.length})`, width: `calc(100% / ${dataArr.length})` }"
@@ -25,6 +26,12 @@ const props = defineProps({
      */
     active: {
         default: 0
+    },
+    /**
+     * 自定义显示内容样式
+     */
+    isCust: {
+        default: false
     }
 })
 
@@ -64,13 +71,16 @@ watch(
         font-size: 24rem;
         position: relative;
         z-index: 3;
+
+        &.active{
+            font-weight: 600;
+            color: #fff;
+        }
     }
 
     .nav-active {
         background: #394143;
         border-radius: 14rem;
-        font-weight: 600;
-        color: #fff;
         position: absolute;
         top: 0;
         height: 100%;

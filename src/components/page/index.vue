@@ -171,7 +171,7 @@ const conf = reactive({
    */
   setBgColor: () => {
     if (Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
-      conf.bgColor = '#222627'
+      conf.bgColor = props.bgcolor ||  '#222627'
       conf.headerBgColor = props.headerBgColor || stheme.theme.black.headerBgColor()
       conf.backColor = props.backColor || '#464F50'
       conf.backType = 'black'

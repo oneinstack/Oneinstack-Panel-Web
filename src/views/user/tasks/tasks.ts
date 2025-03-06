@@ -311,6 +311,7 @@ export const index = ({ signPopRefs }: any) => {
       return lastMonth
     },
     prevMonth() {
+      if(conf.selectDateNo) return
       if (conf.months >= 2) return (conf.selectDateNo = true)
       // conf.calendar = []
       conf.nextDateNo = false
@@ -327,6 +328,7 @@ export const index = ({ signPopRefs }: any) => {
     },
     nextMonth() {
       // conf.calendar = []
+      if(conf.nextDateNo) return
       conf.selectDateNo = false
       conf.showDate.setDate(1)
       conf.showDate.setMonth(conf.showDate.getMonth() + 1)
@@ -378,14 +380,6 @@ export const index = ({ signPopRefs }: any) => {
       conf.getTaskList()
     } else {
       System.router.push('/login')
-    }
-  })
-  const event = Scope.Event()
-  event.on(EPage.scroll, (e) => {
-    if (e.top > 60) {
-      conf.bgcolor = 'linear-gradient(180deg, #EB602D 0%, #FFA64F 160%)'
-    } else {
-      conf.bgcolor = 'transparent'
     }
   })
 

@@ -31,6 +31,9 @@ export const index = ({ props }: any) => {
       if (!reward) return 1
       let arr = JSON.parse(reward)
       return arr
+    },
+    goMyTask() {
+      System.router.push('/user/tasks/myTask')
     }
   })
 
