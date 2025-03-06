@@ -152,10 +152,21 @@ const conf = index()
           width: 20rem;
           height: 20rem;
           background: #6e96c6;
-          border: 6rem solid #536c87;
           border-radius: 50%;
-          box-shadow: 0 0 20rem #42505e;
+          border: 6rem solid #536C87;; /* 透明边框 */
           z-index: 999;
+         
+
+          &::before {
+            content: "";
+            position: absolute;
+            top: -12rem;
+            left: -12rem;
+            right: -12rem;
+            bottom: -12rem;
+            border: 6rem solid #42505E; /* 透明边框 */
+            border-radius: 50%;
+          }
         }
       }
     }
