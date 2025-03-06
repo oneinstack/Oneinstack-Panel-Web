@@ -28,7 +28,7 @@
 
         <div class="progress-bar">
           <div class="progress-track">
-            <div class="progress-fill" style="width: 50%"></div>
+            <div class="progress-fill" style="width: 0%"></div>
             <div class="progress-dot"></div>
           </div>
         </div>
@@ -146,7 +146,7 @@ const conf = index()
 
         .progress-dot {
           position: absolute;
-          left: calc(50% - 7rem);
+          left: 7rem;
           top: 50%;
           transform: translateY(-50%);
           width: 20rem;
