@@ -282,5 +282,9 @@ export default [
   {
     path: '/user/vip/levelSystem',
     component: '/user/vip/levelSystem'
+  },
+  {
+    path: '/user/bonus/bonus',
+    component: '/user/bonus/bonus'
   }
 ]

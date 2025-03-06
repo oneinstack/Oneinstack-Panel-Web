@@ -292,10 +292,12 @@ export const index = () => {
       {
         name: 'VIP Clup',
         imgUrl: 'me-club',
+        url: '/user/vip/club'
       },
       {
         name: 'Bonus',
         imgUrl: 'me-bonus',
+        url: '/user/bonus/bonus'
       },
       {
         name: 'Agency Center',

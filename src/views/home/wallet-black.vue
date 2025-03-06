@@ -40,6 +40,18 @@
       </div>
     </div>
 
+    <!-- 刮刮乐 -->
+    <div class="popular" style="padding-top: 0rem;">
+      <gameTitle name="Scratch" :showPage="false" />
+      <div class="popular-list">
+        <template v-for="item in conf.scratchList" :key="item.id">
+          <div class="scratch-item" @click="conf.goPage('/user/scratch/purchase?id=' + item.id, 2)">
+            <scratchImg :item="item"></scratchImg>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <!-- Recent Winners -->
     <recentWin />
 
@@ -67,10 +79,15 @@ import search from './theme/black/components/search.vue';
 import gameTitle from './theme/black/home-com/gameTitle.vue';
 import drawItem from './theme/black/lott-com/drawItem.vue';
 import popularItem from './theme/black/lott-com/popularItem.vue';
+import scratchImg from './home-com/scratch-img.vue';
 import recentWin from './theme/black/lott-com/recentWin.vue';
 import topWin from './theme/black/lott-com/topWin.vue';
 import resultItem from './theme/black/lott-com/resultItem.vue';
-import { reactive } from 'vue';
+import { onMounted, reactive } from 'vue';
+import { svalue } from '@/sstore/svalue';
+import { apis } from '@/api';
+import sconfig from '@/sstore/sconfig';
+import System from '@/utils/System';
 
 const conf = reactive({
   drawList: [
@@ -166,7 +183,28 @@ const conf = reactive({
       lotteryTypeCode: 'MARK_SIX',
       openCode: '12,09,01,29,08,25,09'
     }
-  ]
+  ],
+  scratchList: [] as any[],
+   // 刮刮乐列表
+   async getScratchTicketlList() {
+    await svalue.getCoinlist()
+    const {data} = await apis.scratchTicketlList()
+    conf.scratchList = data
+    console.log(conf.scratchList);
+  },
+  goPage(url: any, type: any) {
+    if (type === 2) {
+      if (!sconfig.userInfo) {
+        System.router.push('/login')
+        return
+      }
+    }
+    System.router.push(url)
+  },
+})
+
+onMounted(() => {
+  conf.getScratchTicketlList()
 })
 
 </script>
@@ -221,6 +259,18 @@ const conf = reactive({
     flex-wrap: wrap;
     padding-right: 24rem;
     margin-top: 10rem;
+
+    .scratch-item{
+      width: 49%;
+      margin-right: 2%;
+      margin-bottom: 16rem;
+      height: 350rem;
+      border-radius: 20rem;
+      overflow: hidden;
+      &:nth-child(2n+2) {
+        margin-right: 0rem;
+      }
+    }
   }
 }
 

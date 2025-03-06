@@ -1,9 +1,13 @@
 <template>
   <x-page no-header tabbar>
-    <div class="head">
-      <x-statusbar />
-      <topInfo />
-    </div>
+    <template #top>
+      <div style="width: 100%;">
+        <div class="head">
+          <x-statusbar />
+          <topInfo />
+        </div>
+      </div>
+    </template>
     <div class="menu-content">
       <div class="token">
         <menuItem :menuInfo="conf.menuList[0]" />
@@ -25,7 +29,7 @@
       <div class="menu-more">
         <template v-for="item in conf.menuList.slice(6, 9)">
           <div style="height: 80rem;">
-            <menuItem :menuInfo="item" />
+            <menuItem :menuInfo="item" @change="conf.handle(item)" />
           </div>
         </template>
       </div>

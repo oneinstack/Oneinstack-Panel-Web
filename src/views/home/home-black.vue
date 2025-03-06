@@ -97,7 +97,6 @@ const conf = reactive({
   localGameArr: [] as any[],
   slotsGamesList: [] as any[],
   redpacketList: [] as any[],
-  scratchList: [] as any[],
   swiperList: [] as any[],
 
   //红包雨img => click => 获取红包雨列表
@@ -150,13 +149,6 @@ const conf = reactive({
     const res = await apis.lotteryList()
     conf.localGameArr = res.data
   },
-  // 刮刮乐列表
-  async getScratchTicketlList() {
-    await svalue.getCoinlist()
-    const res = await apis.scratchTicketlList()
-    conf.scratchList = res.data
-  },
-
   // 获取轮播图
   async getActivityList(languageId: any) {
     const res = await apis.announcementList({
@@ -228,7 +220,6 @@ onMounted(() => {
   const run = async () => {
     conf.getConfiguration()
     conf.getLotteryList()
-    conf.getScratchTicketlList()
 
     conf.getLanguageList()
     conf.loadVirtualData()
