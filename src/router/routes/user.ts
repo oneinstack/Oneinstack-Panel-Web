@@ -270,5 +270,17 @@ export default [
   {
     path: '/user/notice/notice',
     component: '/user/notice/notice'
+  },
+  {
+    path: '/user/myProfile/index',
+    component: '/user/myProfile/index'
+  },
+  {
+    path: '/user/vip/club',
+    component: '/user/vip/club'
+  },
+  {
+    path: '/user/vip/levelSystem',
+    component: '/user/vip/levelSystem'
   }
 ]

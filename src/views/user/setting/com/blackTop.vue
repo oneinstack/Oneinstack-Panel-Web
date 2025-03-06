@@ -1,7 +1,7 @@
 <template>
     <div class="top-info">
         <img class="center-bg" src="/static/theme/black/center-bg.png" />
-        <div class="user-info flex-b-c">
+        <div class="user-info flex-b-c" @click="conf.handleNavigate('/user/myProfile/index')">
             <div class="l-user">
                 <img class="user-img" :src="sconfig.userInfo && sconfig.userInfo.userImgUrl
                         ? sconfig.userInfo.userImgUrl
@@ -23,7 +23,7 @@
         </div>
         <div class="vip-box">
             <div class="vip-current">VIP{{ conf.userVipLevel }}</div>
-            <div class="right-clup">
+            <div class="right-clup" @click="conf.handleNavigate('/user/vip/club')">
                 <span style="margin-right: 6rem;">VIP Club</span>
                 <van-icon size="24rem" color="#1CF187" name="arrow" />
             </div>
@@ -44,6 +44,8 @@
 import { apis } from '@/api';
 import sconfig from '@/sstore/sconfig';
 import { onMounted, reactive } from 'vue';
+import System from '@/utils/System'
+
 
 const conf = reactive({
     gradedPercentage: 0,
@@ -60,7 +62,11 @@ const conf = reactive({
         conf.userVipLevel = data.userVipLevel > data.theMax ? data.theMax : data.userVipLevel
         let n = parseFloat(data.integral)
         conf.integral = n.toFixed(2)
-    }
+    },
+
+    handleNavigate: (url:string) => {
+      System.router.push(url)
+    },
 })
 
 onMounted(() => {
