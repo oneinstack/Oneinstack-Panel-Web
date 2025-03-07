@@ -6,7 +6,7 @@ const conf = index()
 </script>
 
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>{{ $t('bankCradModule.titleName') }}</template>
     <!-- content -->
     <div class="content-view">

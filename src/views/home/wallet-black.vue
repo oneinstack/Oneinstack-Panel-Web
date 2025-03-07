@@ -1,5 +1,5 @@
 <template>
-  <x-page no-header tabbar>
+  <x-page no-header tabbar pageType="black">
     <template #top>
       <div style="width: 100%;">
         <div class="head">

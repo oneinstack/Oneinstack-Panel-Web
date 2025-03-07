@@ -1,5 +1,5 @@
 <template>
-	<x-page noFooter>
+	<x-page noFooter pageType="black">
 		<template #title>
 			{{ $t('signInModule.promotions') }}
 		</template>

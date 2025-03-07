@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>Fortune</template>
     <template #right>
       <div class="arrow flex-center" style="margin-right: 30rem;" @click="conf.gomytask">
@@ -9,7 +9,7 @@
     <div class="f-box">
       <div class="content">
         <div class="top-his">
-          <div class="history">
+          <div class="history" @click="conf.goPage('/user/YuE-Bao/myYueBao')">
             <img src="/static/theme/black/fortune-his.png" />
             <span>History</span>
           </div>

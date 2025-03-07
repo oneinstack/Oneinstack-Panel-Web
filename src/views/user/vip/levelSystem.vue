@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>
       {{ 'VIP Level System' }}
     </template>

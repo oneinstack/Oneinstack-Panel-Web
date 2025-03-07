@@ -11,7 +11,7 @@ const conf = index()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer pageType="black">
     <template #title>
       {{ $t('agencyCenterModule.titleName') }}
     </template>

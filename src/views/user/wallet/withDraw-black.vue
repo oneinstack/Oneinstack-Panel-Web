@@ -11,7 +11,7 @@ const conf = index()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer pageType="black">
     <template #title>{{ $t('WithdrawModule.titleName') }}</template>
     <!-- 选择充值钱包信息 -->
     <div class="content">

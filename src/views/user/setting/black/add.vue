@@ -5,7 +5,7 @@ const bindConf = bindIndex()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer pageType="black">
     <template #title>
       {{ 'Add' }}
     </template>

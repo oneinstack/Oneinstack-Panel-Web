@@ -1,5 +1,5 @@
 <template>
-    <x-page :headerBgColor="conf.bgcolor" :topfill="false" backColor="#1F3E30">
+    <x-page :headerBgColor="conf.bgcolor" :topfill="false" backColor="#1F3E30" pageType="black">
         <!-- 顶部个人信息 -->
         <topInfo />
         <div></div>
@@ -72,15 +72,15 @@
                     <menuItem :menuInfo="item" />
                 </div>
             </div>
-            
+
             <div class="out flex-center" @click="conf.goOutLogin">
                 <img class="gift-img" src="/static/img/home/black/login-out.png" />
                 <span>Sign Out</span>
             </div>
         </div>
         <!-- 多语言和主题弹框 -->
-        <van-popup class="popup-bottom-center" :show="conf.popup.show && conf.popup.type != 'wallet'" position="bottom" borderRadius='16' :round="true"
-            @close="conf.popup.close">
+        <van-popup class="popup-bottom-center" :show="conf.popup.show && conf.popup.type != 'wallet'" position="bottom"
+            borderRadius='16' :round="true" @close="conf.popup.close">
             <div v-if="conf.popup.type == 'lang'" class="popup-content">
                 <div class="title flex-center">
                     <span>{{ $t('me.switchLanguage') }}</span>
@@ -130,13 +130,8 @@
         </van-popup>
 
         <!-- 选择默认钱包 -->
-        <coinPopup
-            :show="conf.popup.type == 'wallet'"
-            :dataArr="conf.walletList"
-            :selectId="conf.defaultWallet.id"
-            @close="conf.popup.close"
-            @change="conf.handleDefaultwallet"
-        />
+        <coinPopup :show="conf.popup.type == 'wallet'" :dataArr="conf.walletList" :selectId="conf.defaultWallet.id"
+            @close="conf.popup.close" @change="conf.handleDefaultwallet" />
     </x-page>
 </template>
 <script setup lang="ts">
@@ -146,7 +141,18 @@ import greenBtn from '@/views/home/theme/black/components/greenBtn.vue';
 import coinPopup from '../wallet/com/black/coinPopup.vue';
 import refer from './com/refer.vue';
 import { index } from './index'
+import { Scope } from 'tools-vue3';
+import { EPage } from '@/enum/Enum';
+import stheme from '@/sstore/stheme';
 const conf = index()
+const event = Scope.Event()
+event.on(EPage.scroll, (e) => {
+    if (e.top > 80) {
+        conf.bgcolor = stheme.theme.black.headerBgColor()
+    } else {
+        conf.bgcolor = 'transparent'
+    }
+})
 </script>
 <style lang="less" scoped>
 .content {

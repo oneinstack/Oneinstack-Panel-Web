@@ -1,5 +1,5 @@
 <template>
-  <x-page no-footer :fixed="false">
+  <x-page no-footer :fixed="false" pageType="black">
     <template #title>{{ $t('me.Transactions') }}</template>
     <!-- header -->
     <template #top>

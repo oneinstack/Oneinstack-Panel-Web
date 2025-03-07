@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>
       <div class="page-title">
         <img src="/static/theme/black/vip/vipClub.png" alt="VIP" class="crown-icon" />

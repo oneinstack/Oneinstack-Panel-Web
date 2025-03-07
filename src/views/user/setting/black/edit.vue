@@ -9,7 +9,7 @@ const conf = index({uploaderRef})
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer pageType="black">
     <template #title>
       {{ 'Edit Profile' }}
     </template>

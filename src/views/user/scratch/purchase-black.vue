@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true">
+  <x-page :no-footer="true" pageType="black">
     <template #title>
       {{ $t('scratch.scratch') }}
     </template>
@@ -43,7 +43,7 @@
           </div>
           <div class="btn-right">
             <div class="btn-item" @click="conf.goPlay">{{ $t('scratch.howPlay') }}</div>
-            <div class="btn-item" style="margin-left: 12rem; padding: 0rem 24rem;width: 200rem;"
+            <div class="btn-item" style="margin-left: 12rem; padding: 0rem;width: 180rem;"
               @click="conf.changePurchase">
                 <greenBtn>
                   <sapn>{{ $t('scratch.playNow') }}</sapn>

@@ -1,5 +1,5 @@
 <template>
-  <x-page :no-footer="true" :fixed="false">
+  <x-page :no-footer="true" :fixed="false" pageType="black">
     <template #title>
       {{ $t('task.mytask') }}
     </template>

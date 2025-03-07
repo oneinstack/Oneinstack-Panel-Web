@@ -7,7 +7,7 @@ const conf = index()
 </script>
 
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>{{ conf.titleName }}</template>
     <!-- content -->
     <div class="content-view">

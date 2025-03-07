@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>Promotion</template>
     <div class="pt-contennt">
       <div class="bonus-box">

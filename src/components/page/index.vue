@@ -10,7 +10,7 @@
           :class="{ 'c-head-nav-bottom': conf.scrollTop > 5 }">
           <div class="back" @click="conf.goBack">
             <div v-if="showBack">
-              <div class="back-black" :style="{background: conf.backColor}" v-if="conf.backType == 'black'">
+              <div class="back-black" :style="{background: conf.backColor}" v-if="conf.pageType == 'black'">
                 <van-icon size="28rem" color="#fff" name="arrow-left" />
               </div>
               <van-icon v-else class="back-img" :name="backIcon" :color="conf.backColor" :size="backIconSize" />
@@ -120,12 +120,18 @@ const props = defineProps({
    */
   tabbar: {
     default: false
+  },
+  /**
+   * 页面类型
+   */
+  pageType: {
+    default: ''
   }
 })
 
 const scrollRef = ref<any>()
 const conf = reactive({
-  backType: '',
+  pageType: props.pageType,
   bgColor: props.bgcolor || uspage.bgcolor,
   headerBgColor: props.headerBgColor || uspage.header.bgColor,
   backColor: props.backColor || uspage.header.backColor,
@@ -170,11 +176,10 @@ const conf = reactive({
    * 设置背景颜色
    */
   setBgColor: () => {
-    if (Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
+    if (props.pageType) {
       conf.bgColor = props.bgcolor ||  '#222627'
       conf.headerBgColor = props.headerBgColor || stheme.theme.black.headerBgColor()
       conf.backColor = props.backColor || '#464F50'
-      conf.backType = 'black'
       uspage.tabbar.height = '120rem'
     }
     document.documentElement.style.setProperty('--bgcolor', conf.bgColor)

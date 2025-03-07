@@ -10,7 +10,7 @@ const conf = index()
 </script>
 
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>{{ $t('swapModule.titleName') }}</template>
     <div class="change-box">
       <changeItem 

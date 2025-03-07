@@ -1,5 +1,5 @@
 <template>
-  <x-page no-header tabbar>
+  <x-page no-header tabbar  pageType="black">
     <div>
       <x-statusbar />
       <!-- 头部 -->
@@ -10,40 +10,6 @@
 
       <!-- 游戏列表导航 -->
       <gamesBox />
-
-      <!-- 彩票 -->
-      <!-- <div class="lottery" v-if="conf.localGameArr.length > 0">
-        <div class="game-type-name">
-          <img src="/static/img/fire.png" />
-          {{ $t('home.LOTTERY') }}
-        </div>
-        <div class="lottery-item">
-          <div class="lottery-list" v-scroll>
-            <div v-for="(item, itemIndex) in conf.localGameArr" :key="itemIndex">
-              <lotteryItem :item="item" @clickItem="conf.handleIntoLocalGame(item, 0)" style="margin-left: 10rem" />
-            </div>
-          </div>
-        </div>
-      </div> -->
-
-      <!-- 刮刮乐 -->
-      <!-- <div class="scratch-box">
-        <div class="game-type-name2">
-          <div>{{ $t('home.scratch') }}</div>
-          <div class="see-all" @click="conf.goPage('/user/scratch/scratch', 2)">{{ $t('home.more') }}</div>
-        </div>
-        <div class="scratch-game">
-          <template v-for="(item, itemIndex) in conf.scratchList">
-            <div
-              class="scratch-item"
-              @click="conf.goPage('/user/scratch/purchase?id=' + item.id, 2)"
-              v-if="itemIndex < 4"
-            >
-              <scratchImg :item="item"></scratchImg>
-            </div>
-          </template>
-        </div>
-      </div> -->
 
       <!-- 排行榜-->
       <WinList v-if="conf.virtualData" />

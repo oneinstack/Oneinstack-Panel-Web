@@ -1,8 +1,6 @@
 import { apis } from '@/api'
-import { EPage } from '@/enum/Enum'
 import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
-import stheme from '@/sstore/stheme'
 import sutil from '@/sstore/sutil'
 import { svalue } from '@/sstore/svalue'
 import System from '@/utils/System'
@@ -176,7 +174,7 @@ export const index = () => {
         name: 'Feedback',
         imgUrl: 'ct-feedback',
         isArrowRight: true,
-        url: ''
+        url: '/user/Feedback/index'
       }
     ],
     currentTheme: Cookie.get('pageTheme') || '',
@@ -296,15 +294,6 @@ export const index = () => {
       conf.blackMenuList[10].rName = i18n.t(theme?.name)
     }
     
-  })
-
-  const event = Scope.Event()
-  event.on(EPage.scroll, (e) => {
-    if (e.top > 80) {
-      conf.bgcolor = stheme.theme.black.headerBgColor()
-    } else {
-      conf.bgcolor = 'transparent'
-    }
   })
   return conf
 }

@@ -9,7 +9,7 @@ const currentConf = currentIndex()
 </script>
 
 <template>
-  <x-page no-footer>
+  <x-page no-footer pageType="black">
     <template #title>
       {{ 'Account Info' }}
     </template>

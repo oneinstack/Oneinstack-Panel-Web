@@ -1,5 +1,5 @@
 <template>
-  <x-page>
+  <x-page pageType="black">
     <template #title>{{ $t('rechargeModule.titleName') }}</template>
     <div class="r-content">
       <div class="flex-b-c curr">

@@ -59,7 +59,6 @@ const conf = reactive({
     async getWallet() {
         conf.walletList = await svalue.getWalletlist()
         const coinArr = await svalue.getCoinlist()
-        console.log(conf.walletList);
         
         conf.walletList?.forEach((item, itemIndex) => {
             let index = coinArr.findIndex((into) => into.coinCode == item.walletCoin)
@@ -72,7 +71,6 @@ const conf = reactive({
                 if (item.id == sconfig.userInfo.defaultWalletId) conf.defaultWallet = obj
             }
         })
-        console.log(conf.defaultWallet);
     },
     handleDefaultwallet(e: any) {
       System.loading()

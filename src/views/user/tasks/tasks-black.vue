@@ -1,5 +1,5 @@
 <template>
-  <x-page no-footer :headerBgColor="conf.bgcolor" :topfill="false" backColor="#00000033">
+  <x-page no-footer :headerBgColor="conf.bgcolor" :topfill="false" backColor="#00000033" pageType="black">
     <template #title>
       {{ $t('task.Task') }}
     </template>
