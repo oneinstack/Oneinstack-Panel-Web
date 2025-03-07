@@ -286,6 +286,11 @@ export const index = () => {
             name: 'Promotion',
             imgUrl: 'pt-check',
             url: '/user/promotion/promotion'
+          },
+          {
+            name: 'Daily Contest',
+            imgUrl: 'pt-check',
+            url: '/user/dailyContest/index'
           }
         ]
       },

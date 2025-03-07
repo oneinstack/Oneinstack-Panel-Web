@@ -286,5 +286,9 @@ export default [
   {
     path: '/user/bonus/bonus',
     component: '/user/bonus/bonus'
+  },
+  {
+    path: '/user/dailyContest/index',
+    component: '/user/dailyContest/index'
   }
 ]
