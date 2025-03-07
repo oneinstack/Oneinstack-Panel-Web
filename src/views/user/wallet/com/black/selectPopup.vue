@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue';
+import { computed, reactive } from 'vue';
 
 
 const props = defineProps({
@@ -51,10 +51,6 @@ const getList: any = computed(() => {
         )
     }
     return props.dataArr;
-})
-onMounted(() => {
-    console.log('998888');
-    
 })
 </script>
 

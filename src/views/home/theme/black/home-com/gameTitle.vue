@@ -2,7 +2,7 @@
     <div class="title">
         <div class="l-name">{{ name }}</div>
         <div class="r-btn" v-show="showRight">
-            <div class="btn" :style="{padding: !showPage ? '10rem 14rem': '6rem 20rem'}">
+            <div class="btn" @click="emit('changeAll')" :style="{padding: !showPage ? '10rem 14rem': '6rem 20rem'}">
                 <div class="name">All</div>
                 <van-icon size="24rem" name="arrow" />
             </div>
@@ -28,6 +28,8 @@ const props = defineProps({
         default: true
     }
 })
+
+const emit = defineEmits(['changeAll'])
 
 </script>
 <style lang="less" scoped>

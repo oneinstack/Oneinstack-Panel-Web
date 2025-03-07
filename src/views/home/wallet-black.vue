@@ -32,7 +32,7 @@
 
     <!-- popular -->
     <div class="popular">
-      <gameTitle name="Popular" :showPage="false" />
+      <gameTitle name="Popular" :showPage="false" @changeAll="conf.goPage('/game/popular/popular')" />
       <div class="popular-list">
         <template v-for="item in conf.popular" :key="item.name">
           <popularItem :item="item" />
@@ -192,7 +192,7 @@ const conf = reactive({
     conf.scratchList = data
     console.log(conf.scratchList);
   },
-  goPage(url: any, type: any) {
+  goPage(url: any, type = 1) {
     if (type === 2) {
       if (!sconfig.userInfo) {
         System.router.push('/login')

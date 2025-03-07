@@ -65,7 +65,6 @@ const emit = defineEmits(['change', 'focus', 'input', 'changeMoney'])
 const conf = reactive({
     inputVal: '',
     input(e: any) {
-        console.log(e);
         emit('input', { type: e, val: conf.inputVal })
     },
     changeMoney(item: any) {
@@ -75,11 +74,8 @@ const conf = reactive({
 })
 
 onMounted(() => {
-    console.log(props.defaultList);
     if (props.defaultList.length) conf.changeMoney(props.defaultList[0])
     if(props.lable){
-        console.log(props.lable);
-        
         conf.inputVal = props.lable
     }
 })

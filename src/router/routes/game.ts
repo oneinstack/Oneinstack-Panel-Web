@@ -46,5 +46,9 @@ export default [
   {
     path: '/game/Animals/record',
     component: '/game/Animals/record'
+  },
+  {
+    path: '/game/popular/popular',
+    component: '/game/popular/popular'
   }
 ]

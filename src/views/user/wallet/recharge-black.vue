@@ -85,10 +85,16 @@
         <div class="qrCode-view b-30">
           <img :src="conf.scanCodeInfo.scanCodePayImgUrl" class="qrCode-img" />
           <div class="qrCode-info">
-            <span>{{ conf.scanCodeInfo.scanCodePayAccount }}</span>
-            <span class="copy-btn" @click="conf.handleCopyCode(conf.scanCodeInfo.scanCodePayAccount)">
-              {{ $t('consumptionDetails.Copy') }}
-            </span>
+            <div class="qrcode-title">Deposit Code</div>
+            <div class="copy-text">
+              <span>{{ conf.scanCodeInfo.scanCodePayAccount }}</span>
+            </div>
+            <div class="copy-btn flex-center" @click="conf.handleCopyCode(conf.scanCodeInfo.scanCodePayAccount)">
+              <div class="copy-icon">
+                <div class="copy-drack"></div>
+              </div>
+              <span>Copy Code</span>
+            </div>
           </div>
         </div>
       </template>
@@ -97,15 +103,23 @@
       <template v-if="conf.formData.payMethodCode == 'USDT_PAYMENT' && conf.qrCodeObj.USDTPayUrl">
         <div class="qrCode-view">
           <div
-            style="padding: 20rem; background-color: #f9f9f9; border-radius: 10rem; width: 340rem; margin: 0 auto"
+            style="padding: 8rem 8rem 0rem; background-color: #f9f9f9; border-radius: 8rem;"
           >
-            <qrcode-vue class="image" :value="conf.qrcode" :size="conf.size" />
+            <qrcode-vue class="image" :value="conf.qrcode" :size="130" />
           </div>
           <div class="qrCode-info">
-            <span>{{ conf.qrCodeObj.USDTPayUrl }}</span>
-            <span class="copy-btn" @click="conf.handleCopyCode(conf.qrCodeObj.USDTPayUrl)">
-              {{ $t('consumptionDetails.Copy') }}
-            </span>
+            <div class="qrcode-title">Deposit Address</div>
+            <div class="copy-text">
+              <dev>
+                  <span>{{ conf.qrCodeObj.USDTPayUrl.slice(0,4) }}</span>{{ conf.qrCodeObj.USDTPayUrl.slice(4,(conf.qrCodeObj.USDTPayUrl.length / 2) - 2) }}<span>{{ conf.qrCodeObj.USDTPayUrl.slice((conf.qrCodeObj.USDTPayUrl.length / 2) - 2,(conf.qrCodeObj.USDTPayUrl.length / 2) + 2) }}</span>{{ conf.qrCodeObj.USDTPayUrl.slice((conf.qrCodeObj.USDTPayUrl.length / 2) + 2,conf.qrCodeObj.USDTPayUrl.length-4) }}<span>{{ conf.qrCodeObj.USDTPayUrl.slice(conf.qrCodeObj.USDTPayUrl.length-4) }}</span>
+              </dev>
+            </div>
+            <div class="copy-btn flex-center" @click="conf.handleCopyCode(conf.qrCodeObj.USDTPayUrl)">
+              <div class="copy-icon">
+                <div class="copy-drack"></div>
+              </div>
+              <span>Copy Address</span>
+            </div>
           </div>
         </div>
       </template>
@@ -290,21 +304,70 @@ const conf = index()
     font-size: 20rem;
 }
 .qrCode-view {
-  text-align: center;
-  padding: 30rem 0rem;
+  display: flex;
+  padding-bottom: 30rem;
   color: #bfbfbf;
 
-  .qrCode-img {
-    width: 340rem;
-    height: 340rem;
-    padding: 20rem;
-    background-color: #3A4142;
-    border-radius: 10rem;
+  .qrCode-info{
+    font-family: Poppins;
+    font-weight: 500;
+    font-size: 24rem;
+    color: #fff;
+    margin-left: 24rem;
+    padding: 8rem 0rem;
+    flex: 1;
+    
+    .qrcode-title{
+      color: #BFBFBF;
+      font-size: 28rem;
+      margin-bottom: 10rem;
+    }
+    .copy-text{
+      background: #292D2E;
+      border-radius: 16rem;
+      height: 100rem;
+      padding: 0rem 20rem;
+      word-break: break-all;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      span{
+        color: #1CF187;
+      }
+    }
+    .copy-btn{
+      background: #4A5354;
+      height: 70rem;
+      border-radius: 16rem;
+      margin-top: 16rem;
+
+      div {
+        border: 2rem solid #fff;
+        width: 18rem;
+        height: 20rem;
+        border-radius: 4rem;
+      }
+
+      .copy-icon {
+        position: relative;
+        margin-right: 10rem;
+
+        .copy-drack {
+          position: absolute;
+          top: 2rem;
+          left: -6rem;
+          background: #fff;
+        }
+      }
+    }
   }
 
-  .copy-btn {
-    margin-left: 20rem;
-    color: #1CF187;
+  .qrCode-img {
+    width: 260rem;
+    height: 260rem;
+    padding: 8rem;
+    background-color: #fff;
+    border-radius: 8rem;
   }
 }
 .popup-mask {

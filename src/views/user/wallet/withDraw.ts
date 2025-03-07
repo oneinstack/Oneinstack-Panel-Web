@@ -50,11 +50,11 @@ export const index = () => {
     swiperList: [] as any[],
     // 提现金额 -- 输入框input事件
     vfFun: (e: any, name: any) => {
-      conf.vf[name](e)
+      if(e) conf.vf[name](e)
       nextTick(() => {
         conf.formData.service = sutil.Mul(conf.formData.inputValue, conf.service_charge)
         const o1 = 'USDT'
-        if (parseFloat(e.detail.value) > parseFloat(conf.infoObj.walletMoney)) {
+        if (parseFloat(conf.formData.inputValue) > parseFloat(conf.infoObj.walletMoney)) {
           conf.formData.inputValue = sutil.formatNumber(parseInt(conf.infoObj.walletMoney), 2)
           conf.formData.service = sutil.formatNumber(sutil.Mul(conf.formData.inputValue, conf.service_charge))
         }
@@ -73,6 +73,17 @@ export const index = () => {
           conf.getUSDT()
         }
       })
+    },
+
+    changeMoney(type: any) {
+      if(type == 0) conf.formData.inputValue = conf.minVal
+      else {
+        const waleltNum = Number(conf.infoObj.walletMoney)
+        let maxNum = waleltNum > conf.maxVal ? conf.maxVal : waleltNum
+        let changeNum = Math.floor(sutil.Mul(maxNum,type))
+        conf.formData.inputValue = changeNum > conf.minVal ? changeNum : conf.minVal
+      }
+      conf.vfFun(null, 'inputValue')
     },
 
     //返回
@@ -123,16 +134,12 @@ export const index = () => {
                   conf.infoObj = obj
                   conf.infoObj.walletIndex = itemIndex
                   conf.currentCoinIndex = itemIndex
-                  console.log(conf.infoObj);
-                  
                   nextTick(() => {
                     conf.getpayPlatformList()
                   })
                 }
               }
             })
-            console.log(this.rechargeWalletList);
-            
           }
         }
       })
@@ -228,11 +235,6 @@ export const index = () => {
         conf.handleSelectChannel(conf.paymentChannelList[0])
       }
       conf.formData.inputValue = ''
-      console.log('888801');
-      console.log(conf.paymentMethodsList);
-      
-      console.log(obj);
-      
     },
 
     getUSDT() {
@@ -292,7 +294,7 @@ export const index = () => {
     // 数据提交
     handleDataSubmit() {
       if (!conf.selectChannelInfo.userPayMethodId) {
-        System.toast(i18n.t('WithdrawModule.cardTip')) //请选择支付方式
+        System.toast(i18n.t('rechargeModule.card')) //请选择支付方式
         return
       }
       if (!conf.formData.inputValue) {
@@ -327,6 +329,8 @@ export const index = () => {
           apis.payouts({
             ...obj,
             success: (res: any) => {
+              console.log(res);
+              
               if (res.code == 200) {
                 conf.hideModal()
                 System.toast(i18n.t(`code.${res.code}`) || 'success', 'success')
