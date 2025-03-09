@@ -66,10 +66,6 @@ const conf = reactive({
       typeCode: 'Games',
     })
     conf.gameList = data
-    console.log('666');
-    console.log(conf.gameList);
-
-
   }
 })
 

@@ -52,6 +52,7 @@ export const sstatus = reactive({
   },
   lastIndex: 0,
   // 导航栏选中的项显示在中间
+  // n 内容框宽 i 点击的项 w 单项的宽度
   getscrollLeft(leftRefs:any,n: number, i: number, w: number,aniShow = true) {
     sstatus.lastIndex = i
     let num = (window.innerWidth - sutil.rem2px(n)) / 2
@@ -65,7 +66,6 @@ export const sstatus = reactive({
       left: scrollLeft,
       behavior: 'smooth'
     })
-    
   }
 })
 

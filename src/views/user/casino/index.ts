@@ -37,7 +37,7 @@ export const index = ({ DGameTipRef }: any) => {
       size: 10
     },
     initData: {} as any,
-    loading: true,
+    loading: false,
     list: [] as any[],
     getData: async () => {
       System.loading()
@@ -55,8 +55,6 @@ export const index = ({ DGameTipRef }: any) => {
         conf.initData[item.gamePlatformCode].push(item)
       })
       conf.tabs.list = Object.keys(conf.initData).map((item) => ({ gamePlatformCode: item }))
-      console.log(conf.tabs.list);
-      console.log(conf.initData);
       
       conf.nextPage()
     },
@@ -92,6 +90,7 @@ export const index = ({ DGameTipRef }: any) => {
     }
   })
   const init = async () => {
+    conf.tabs.active = System.getRouterParams().second || 'All'
     conf.getData()
   }
   onMounted(() => {

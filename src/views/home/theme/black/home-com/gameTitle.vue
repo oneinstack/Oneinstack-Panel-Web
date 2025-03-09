@@ -6,10 +6,10 @@
                 <div class="name">All</div>
                 <van-icon size="24rem" name="arrow" />
             </div>
-            <div class="btn" style="margin-left: 20rem;" v-if="showPage">
-                <van-icon size="24rem" color="#8a8a8a" name="arrow-left" />
+            <div class="btn" style="margin-left: 20rem;" v-if="showPage" @click="emit('nextPage','pre')">
+                <van-icon size="24rem" :color="preStatus ? '#fff' : '#8a8a8a'" name="arrow-left" />
             </div>
-            <div class="btn" v-if="showPage">
+            <div class="btn" v-if="showPage" @click="emit('nextPage','next')">
                 <van-icon size="24rem" name="arrow" />
             </div>
         </div>
@@ -26,10 +26,13 @@ const props = defineProps({
     },
     showPage: {
         default: true
+    },
+    preStatus: {
+        default: 0
     }
 })
 
-const emit = defineEmits(['changeAll'])
+const emit = defineEmits(['changeAll','nextPage'])
 
 </script>
 <style lang="less" scoped>

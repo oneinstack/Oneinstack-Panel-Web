@@ -47,12 +47,6 @@ const conf = reactive({
             url: '/user/casino/index?type=Fishing',
             type: 'Fishing',
             imgName: 'fish'
-        },
-        {
-            name: 'Popilar',
-            url: '/user/casino/index?type=Fishing',
-            type: 'Popilar',
-            imgName: 'Popilar'
         }
     ],
     changeNav(type: any) {

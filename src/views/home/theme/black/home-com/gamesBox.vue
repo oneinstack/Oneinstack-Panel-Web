@@ -2,11 +2,16 @@
   <div class="games">
     <!-- 导航栏 -->
      <gamesNav @change="conf.changeNav" />
-    <template v-for="item in conf.navList.slice(1)" :key="item.type">
+    <template v-for="(item,index) in conf.navList.slice(1)" :key="item.type">
       <div class="games-content" v-if="conf.initData[item.type]">
-        <gameTitle :name="item.name" />
-        <div class="content-list" v-scroll>
-          <template v-for="(it, index) in conf.initData[item.type]" :key="index">
+        <gameTitle 
+          :name="item.name"
+          :preStatus="conf.pageItem[index]"
+          @nextPage="conf.changePage($event,index)"
+          @changeAll="mconf.goPage(item.url)"
+        />
+        <div class="content-list" :ref="setRef" v-scroll>
+          <template v-for="(it, i2) in conf.initData[item.type]" :key="i2">
             <div class="games-content-item" @click="mconf.handleClickGameTip(item)">
               <x-load-img :src="it.imgUrl"></x-load-img>
               <div class="user">
@@ -19,10 +24,15 @@
       </div>
     </template>
     <div class="games-content" v-if="conf.gameList.length">
-        <gameTitle name="Game Providers" />
-        <div class="content-list" v-scroll>
+        <gameTitle 
+          name="Game Providers"
+          :preStatus="conf.pageItem[4]"
+          @nextPage="conf.changePage($event,4)"
+          @changeAll="mconf.goPage('/user/casino/index')"
+        />
+        <div class="content-list" :ref="setRef" v-scroll>
           <template v-for="(it, index) in conf.gameList" :key="index">
-            <div class="games-content-type">
+            <div class="games-content-type" @click="mconf.goPage(`/user/casino/index?second=${it.gamePlatformCode}`)">
               <img
                 mode="heightFix"
                 class="type-img"
@@ -40,17 +50,30 @@ import { apis } from '@/api'
 import i18n from '@/lang'
 import { svalue } from '@/sstore/svalue'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import gameTitle from './gameTitle.vue'
 import gamesNav from '../components/gamesNav.vue'
 import System from '@/utils/System'
+import sstatus from '@/sstore/sstatus'
+import sutil from '@/sstore/sutil'
 const mconf = Scope.getConf()
+
+// 声明 refs 数组，用于存储所有的 ref
+const refs = ref<any[]>([]);
+// setRef 用于把每个元素的 DOM 引用推入 refs 数组
+const setRef = (el: any) => {
+  if (el) {
+    refs.value.push(el);
+  }
+};
+
 const conf = reactive({
   isLoading: false,
   gameList: [] as any[],
   initData: {} as any,
   initType: {} as any,
   navList: [] as any[],
+  pageItem:{0: 0,1: 0,2: 0,3: 0,4: 0} as any,
   changeNav(e: any) {
     conf.gameList = []
     if (Array.isArray(e)) {
@@ -58,6 +81,10 @@ const conf = reactive({
       conf.getGamesData(e[0].type)
       return
     }
+    console.log(conf.navList);
+    console.log('99887');
+    
+    
     conf.getGamesData(e)
   },
 
@@ -83,6 +110,20 @@ const conf = reactive({
       conf.initType[item.gamePlatformCode].push(item)
     })
     conf.gameList = Object.keys(conf.initType).map((item) => ({ gamePlatformCode: item }))
+  },
+  // 下一页/上一页滚动条滚动到对应位置
+  changePage(type: string,index: any) {
+    conf.pageItem[index] = 0
+    let leftNum = refs.value[index].scrollLeft + sutil.rem2px(690)
+    if(type == 'pre') {
+      const preLeft = refs.value[index].scrollLeft - sutil.rem2px(690)
+      leftNum = preLeft > 0 ? preLeft : 0
+    }
+    if(leftNum > 0) conf.pageItem[index] = 1
+    refs.value[index].scrollTo({
+      left: leftNum,
+      behavior: 'smooth'
+    })
   }
 })
 
@@ -100,6 +141,7 @@ const conf = reactive({
     .content-list {
       display: flex;
       margin-top: 10rem;
+      overflow-x: scroll;
 
       .games-content-item {
         flex-shrink: 0;

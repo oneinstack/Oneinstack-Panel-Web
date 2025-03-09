@@ -103,7 +103,7 @@ const conf = reactive({
       conf.downloadUrl = appConfig.app_androidurl
     }
   },
-  goPage(url: any, type: any) {
+  goPage(url: any, type = 1) {
     if (type === 2) {
       if (!sconfig.userInfo) {
         System.router.push('/login')
