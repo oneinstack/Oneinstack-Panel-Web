@@ -6,9 +6,6 @@
       <topStatus v-if="sconfig.userInfo" :swiperList="conf.swiperList" />
       <topStatusNo v-else />
       
-      <!-- 搜索框 -->
-      <search />
-
       <!-- 游戏列表导航 -->
       <gamesBox />
 
@@ -47,12 +44,9 @@ import DNotify from './home-com/DNotify.vue'
 import gamesBox from './theme/black/home-com/gamesBox.vue'
 import lotteryItem from './home-com/lotteryItem.vue'
 import rightFloat from './home-com/right-float.vue'
-import scratchImg from './home-com/scratch-img.vue'
 import slotsGamesItem from './home-com/slotsGamesItem.vue'
 import TopWinList from './home-com/topWinList.vue'
 import WinList from './theme/black/home-com/winList.vue'
-import greenBtn from './theme/black/components/greenBtn.vue'
-import search from './theme/black/components/search.vue'
 import topStatusNo from './theme/black/home-com/topStatusNo.vue'
 import topStatus from './theme/black/home-com/topStatus.vue'
 

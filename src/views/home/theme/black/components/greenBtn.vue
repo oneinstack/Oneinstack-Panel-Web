@@ -1,6 +1,6 @@
 <template>
     <div class="g-btn" @click="conf.change">
-        <div class="top"></div>
+        <div class="top" :class="{'top-ative': conf.clickStatus}"></div>
         <div class="bottom"></div>
         <div class="txt">
             <slot></slot>
@@ -12,7 +12,12 @@ import { reactive } from 'vue';
 
 const emit = defineEmits(['click'])
 const conf = reactive({
+    clickStatus: false,
     change() {
+        conf.clickStatus = true
+        setTimeout(() => {
+            conf.clickStatus = false
+        }, 600)
         emit('click')
     }
 })
@@ -30,6 +35,9 @@ const conf = reactive({
         height: calc(100% - 4rem);
         box-shadow: 2px 2px 4px 0px #28C6654D;
         background: linear-gradient(90deg, #26F188 0%, #9FE781 100%);
+    }
+    .top-ative{
+        height: 100%;
     }
 
     .bottom {

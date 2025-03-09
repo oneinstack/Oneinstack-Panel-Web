@@ -7,7 +7,7 @@
           <topInfo />
         </div>
         <!-- 搜索框 -->
-        <search typeName="Casino" />
+        <search typeName="Game" @input="(e:any) => {conf.keyword = e}" />
 
         <!-- 游戏导航栏 -->
         <div style="padding-left: 24rem;">
@@ -37,7 +37,7 @@
       </div>
     </template>
     <div class="content-list">
-      <template v-for="(it, index) in conf.gameList" :key="index">
+      <template v-for="(it, index) in getList" :key="index">
         <div class="games-content-item">
           <x-load-img :src="it.imgUrl"></x-load-img>
           <div class="user">
@@ -79,7 +79,7 @@
 import topInfo from './theme/black/components/topInfo.vue'
 import search from './theme/black/components/search.vue';
 import gamesNav from './theme/black/components/gamesNav.vue';
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import System from '@/utils/System';
 import { apis } from '@/api';
 
@@ -90,6 +90,7 @@ const conf = reactive({
   initType: {} as any,
   navList: [] as any[],
   popupShow: false,
+  keyword: '',
   changeNav(e: any) {
     conf.gameList = []
     if (Array.isArray(e)) {
@@ -121,12 +122,18 @@ const conf = reactive({
       conf.initType[item.gamePlatformCode].push(item)
     })
     conf.gameList = res.data
-    console.log('5555');
-
-    console.log(conf.gameList);
-    console.log(conf.initData);
     // conf.gameList = res.data
   }
+})
+
+const getList: any = computed(() => {
+    if (conf.keyword) {
+        return conf.gameList.filter(
+            (item) =>
+                item.gameEnglishName.includes(conf.keyword) || item.gameName.includes(conf.keyword)
+        )
+    }
+    return conf.gameList;
 })
 
 </script>

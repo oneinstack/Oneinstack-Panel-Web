@@ -1,5 +1,5 @@
 <template>
-    <div class="top-info">
+    <div class="top-info" v-if="sconfig.userInfo">
         <img class="center-bg" src="/static/theme/black/center-bg.png" />
         <div class="user-info flex-b-c" @click="conf.handleNavigate('/user/myProfile/index')">
             <div class="l-user">
@@ -13,7 +13,7 @@
                     }}</div>
                     <div class="uid">
                         <span>UID: {{ sconfig.userInfo.uid || '******' }}</span>
-                        <div class="copy">
+                        <div class="copy" @click="conf.copyTxt">
                             <div class="copy-drack"></div>
                         </div>
                     </div>
@@ -45,12 +45,17 @@ import { apis } from '@/api';
 import sconfig from '@/sstore/sconfig';
 import { onMounted, reactive } from 'vue';
 import System from '@/utils/System'
+import i18n from '@/lang';
 
 
 const conf = reactive({
     gradedPercentage: 0,
     userVipLevel: 0,
     integral: '',
+    copyTxt() {
+      StrUtil.copyText(sconfig.userInfo.uid)
+      System.toast(i18n.t('invite.CopySuccessful'), 'success')
+    },
     async userGradedInfo() {
         if (!sconfig.userInfo) return
         const { data } = await apis.userGradedInfo()

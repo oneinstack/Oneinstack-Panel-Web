@@ -1,7 +1,27 @@
 <template>
+  <!-- 搜索框 -->
+  <search @input="(e:any) => {conf.keyword = e}" />
+
   <div class="games">
     <!-- 导航栏 -->
-     <gamesNav @change="conf.changeNav" />
+    <gamesNav @change="conf.changeNav" />
+    <div class="games-content" v-if="conf.keyword">
+      <gameTitle  
+        name=""
+        :showRight="false"
+      />
+      <div class="content-list" :ref="setRef" v-scroll>
+        <template v-for="(it, i2) in getList" :key="i2">
+          <div class="games-content-item" @click="mconf.handleClickGameTip(it)">
+            <x-load-img :src="it.imgUrl"></x-load-img>
+            <div class="user">
+              <img class="user-img" src="/static/img/home/black/online-user.png" />
+              <div class="num">145</div>
+            </div>
+          </div>
+        </template>
+      </div>
+      </div>
     <template v-for="(item,index) in conf.navList.slice(1)" :key="item.type">
       <div class="games-content" v-if="conf.initData[item.type]">
         <gameTitle 
@@ -12,7 +32,7 @@
         />
         <div class="content-list" :ref="setRef" v-scroll>
           <template v-for="(it, i2) in conf.initData[item.type]" :key="i2">
-            <div class="games-content-item" @click="mconf.handleClickGameTip(item)">
+            <div class="games-content-item" @click="mconf.handleClickGameTip(it)">
               <x-load-img :src="it.imgUrl"></x-load-img>
               <div class="user">
                 <img class="user-img" src="/static/img/home/black/online-user.png" />
@@ -50,7 +70,8 @@ import { apis } from '@/api'
 import i18n from '@/lang'
 import { svalue } from '@/sstore/svalue'
 import { Scope } from 'tools-vue3'
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import search from '../components/search.vue'
 import gameTitle from './gameTitle.vue'
 import gamesNav from '../components/gamesNav.vue'
 import System from '@/utils/System'
@@ -68,6 +89,7 @@ const setRef = (el: any) => {
 };
 
 const conf = reactive({
+  keyword: '',
   isLoading: false,
   gameList: [] as any[],
   initData: {} as any,
@@ -109,7 +131,7 @@ const conf = reactive({
       conf.initType[item.gamePlatformCode] = conf.initType[item.gamePlatformCode] || []
       conf.initType[item.gamePlatformCode].push(item)
     })
-    conf.gameList = Object.keys(conf.initType).map((item) => ({ gamePlatformCode: item }))
+    conf.gameList = Object.keys(conf.initType).map((item) => ({ gamePlatformCode: item })) 
   },
   // 下一页/上一页滚动条滚动到对应位置
   changePage(type: string,index: any) {
@@ -125,6 +147,15 @@ const conf = reactive({
       behavior: 'smooth'
     })
   }
+})
+
+const getList: any = computed(() => {
+    if (conf.keyword) {
+        return conf.initData[''].filter(
+            (item:any) =>
+                item.gameEnglishName.includes(conf.keyword) || item.gameName.includes(conf.keyword)
+        )
+    }
 })
 
 // onMounted(() => {

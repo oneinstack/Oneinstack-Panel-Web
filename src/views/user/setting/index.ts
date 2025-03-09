@@ -247,12 +247,16 @@ export const index = () => {
     },
     //获取用户钱包list
     walletList: [] as any[],
-    defaultWallet: {} as any,
+    defaultWallet: {coinSymbol: '₹'} as any,
     async getWalletList() {
+      if (!sconfig.userInfo) return
+      conf.total_money = 0
       conf.walletList = await svalue.getWalletlist()
       const coinArr = await svalue.getCoinlist()
-      let defaultInfo = await svalue.getDefaultWallet()
+      let defaultInfo:any = await svalue.getDefaultWallet()
+      
       conf.walletList?.forEach((item, itemIndex) => {
+        
         let index = coinArr.findIndex((into) => into.coinCode == item.walletCoin)
         if (index != -1) {
           let obj = {
@@ -261,6 +265,12 @@ export const index = () => {
           }
           conf.walletList[itemIndex] = obj
           if (item.walletCoin == defaultInfo.coinCode) conf.defaultWallet = obj
+          // 计算默认币种对应的钱包总金额
+          item.defaultCoinMoney = sutil.division(
+            sutil.Mul(item.walletMoney, defaultInfo.coinTousdt),
+            obj.coinTousdt
+          )
+          conf.total_money = sutil.addNum(conf.total_money, item.defaultCoinMoney)
         }
       })
       const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')

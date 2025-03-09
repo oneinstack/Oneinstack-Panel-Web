@@ -9,7 +9,7 @@
                     <img src="/static/img/home/black/ct-money.png" />
                     <span>Total Amount</span>
                 </div>
-                <div>$0.00</div>
+                <div>{{conf.defaultWallet.coinSymbol + conf.total_money}}</div>
             </div>
             <div class="menu-box">
                 <div class="top-btn">

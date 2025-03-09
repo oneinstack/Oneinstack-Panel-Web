@@ -16,7 +16,7 @@
             </div>
         </div>
         <div class="nav">
-            <div class="nav-item">
+            <div class="nav-item" @click="conf.goPage('/user/notice/notice')">
                 <img class="nav-img" src="/static/img/home/black/notice.png" />
             </div>
             <div class="line"></div>

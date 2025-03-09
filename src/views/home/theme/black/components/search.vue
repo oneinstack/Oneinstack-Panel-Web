@@ -2,24 +2,32 @@
     <div class="search">
         <div class="l-type" v-if="typeName">
             <div class="type">
-                <span>Casino</span>
+                <span>{{ typeName }}</span>
                 <van-icon size="24rem" color="#fff" name="arrow-down" />
             </div>
             <div class="line"></div>
         </div>
         <div class="r-input flex-center">
             <van-icon size="36rem" color="#BFBFBF" name="search" />
-            <input class="place" placeholder="Search Game" placeholder-class="input-placeholder" />
+            <input class="place" placeholder="Search Game" v-model.trim="conf.val" @input="emit('input',conf.val)" />
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import { reactive } from 'vue';
+
 
 const props = defineProps({
     typeName: {
         default: '' as any
     }
+})
+
+const emit = defineEmits(['input'])
+
+const conf = reactive({
+    val: ''
 })
 
 </script>
