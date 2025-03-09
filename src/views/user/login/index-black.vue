@@ -1,5 +1,5 @@
 <template>
-  <x-page noHeader noFooter>
+  <x-page noHeader noFooter pageType="black">
     <div class="login-page">
       <x-statusbar />
       <BgImg name="Sign In" />

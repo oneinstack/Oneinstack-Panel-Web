@@ -1,5 +1,5 @@
 <template>
-  <x-page noHeader noFooter>
+  <x-page noHeader noFooter pageType="black">
     <div class="register-page">
       <x-statusbar />
       <bgImg name="Sign Up" />

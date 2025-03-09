@@ -3,7 +3,8 @@
     <div>
       <x-statusbar />
       <!-- 头部 -->
-      <topStatus />
+      <topStatus v-if="sconfig.userInfo" :swiperList="conf.swiperList" />
+      <topStatusNo v-else />
       
       <!-- 搜索框 -->
       <search />
@@ -52,6 +53,7 @@ import TopWinList from './home-com/topWinList.vue'
 import WinList from './theme/black/home-com/winList.vue'
 import greenBtn from './theme/black/components/greenBtn.vue'
 import search from './theme/black/components/search.vue'
+import topStatusNo from './theme/black/home-com/topStatusNo.vue'
 import topStatus from './theme/black/home-com/topStatus.vue'
 
 const timer = Scope.Timer()
@@ -194,25 +196,6 @@ onMounted(() => {
 })
 </script>
 <style lang="less" scoped>
-.banner {
-  padding: 10rem 30rem 10rem;
-  overflow: hidden;
-  --van-swipe-indicator-inactive-opacity: 1;
-  --van-swipe-indicator-inactive-background: rgba(58, 58, 60, 0.3);
-  .banner-list {
-    height: 290rem;
-    border-radius: 10rem;
-    .banner-item {
-      border-radius: 10rem;
-
-      .banner-img {
-        width: 100%;
-        height: 100%;
-      }
-    }
-  }
-}
-
 .lottery {
   margin: 20rem 30rem 0rem;
 

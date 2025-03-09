@@ -8,22 +8,18 @@
       <div class="bet-item">
         <div class="item">Game</div>
         <div class="item">Player</div>
-        <div class="item">Profit</div>
+        <div class="item" style="justify-content: flex-end;">Profit</div>
       </div>
       <template v-for="(item, index) in conf.betList" :key="index">
         <div class="bet-item">
           <div class="item">
             <img class="game-img" src="/static/img/home/black/mine.png" />
-            <span style="text-align: center;">
-              <van-text-ellipsis rows="1" :content="item.customMessage" />
-            </span>
+            <span class="ellipsis">{{item.customMessage}}</span>
           </div>
           <div class="item">
-            <span style="width: 80%;text-align: center;">
-              <van-text-ellipsis rows="1" :content="item.userName" />
-            </span>
+            <span class="ellipsis">{{item.userName}}</span>
           </div>
-          <div class="item">
+          <div class="item" style="justify-content: flex-end;">
             -{{ item.coinSymbol + item.betPrizeMoney }}
             <img class="profit-img" src="/static/img/home/black/profit.png" />
           </div>
@@ -86,10 +82,11 @@ onMounted(() => {
     padding: 0rem 30rem;
 
     .item {
-      flex: 1;
+      width: 33.3%;
       display: flex;
       align-items: center;
-      justify-content: center;
+      // justify-content: center;
+      // justify-content: space-between;
       .game-img{
         width: 28rem;
         height: 28rem;
@@ -98,6 +95,14 @@ onMounted(() => {
       .profit-img{
         height: 24rem;
         margin-left: 10rem;
+      }
+      .ellipsis {
+        white-space: nowrap;
+        /* 防止文本换行 */
+        overflow: hidden;
+        /* 隐藏溢出的内容 */
+        text-overflow: ellipsis;
+        width: 150rem;
       }
     }
 

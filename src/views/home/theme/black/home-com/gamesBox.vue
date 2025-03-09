@@ -44,7 +44,6 @@ import { onMounted, reactive } from 'vue'
 import gameTitle from './gameTitle.vue'
 import gamesNav from '../components/gamesNav.vue'
 import System from '@/utils/System'
-import { log } from 'node:console'
 const mconf = Scope.getConf()
 const conf = reactive({
   isLoading: false,
@@ -84,11 +83,6 @@ const conf = reactive({
       conf.initType[item.gamePlatformCode].push(item)
     })
     conf.gameList = Object.keys(conf.initType).map((item) => ({ gamePlatformCode: item }))
-    console.log('5555');
-    
-    console.log(conf.gameList);
-    console.log(conf.initData);
-    // conf.gameList = res.data
   }
 })
 
