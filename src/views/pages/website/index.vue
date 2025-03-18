@@ -7,6 +7,7 @@ import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/Api'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
 const conf = reactive({
   tabs: {
@@ -104,24 +105,38 @@ const conf = reactive({
     onConfirm: () => {
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
-      		let otherDomain =''
-      		if(conf.form.data.value.otherDomain){
-      			otherDomain = conf.form.data.value.otherDomain?.split('\n')
-      		}else{
-      			otherDomain=''
-      		}
-      		
-        
-        conf.form.data.value.domain = otherDomain!=''
+        let otherDomain = ''
+        if (conf.form.data.value.otherDomain) {
+          otherDomain = conf.form.data.value.otherDomain?.split('\n')
+        } else {
+          otherDomain = ''
+        }
+
+
+        conf.form.data.value.domain = otherDomain != ''
           ? `${conf.form.data.value.hostDomain.trim()},${otherDomain}`
           : conf.form.data.value.hostDomain
-        console.log(conf.form.data.value)
-        conf.drawer.loading = true
-        const api = conf.drawer.type === 'add' ? Api.addWebsite : Api.updateWebsite
-        await api(conf.form.data.value)
-        conf.drawer.loading = false
-        conf.drawer.show = false
-        conf.website.getData()
+
+        try {
+          conf.drawer.loading = true
+          const api = conf.drawer.type === 'add' ? Api.addWebsite : Api.updateWebsite
+          const { data } = await api(conf.form.data.value)
+          console.log('message', data)
+          ElMessage({
+            type: 'success',
+            message: conf.drawer.type === 'add' ? '创建网站成功' : '更新网站成功'
+          })
+          conf.drawer.show = false
+          conf.website.getData()
+        } catch (error: any) {
+          ElMessage({
+            type: 'error',
+            message: error.message || '操作失败'
+          })
+        } finally {
+          conf.drawer.loading = false
+        }
+
       })
     },
     onClose: () => {
@@ -148,11 +163,20 @@ const conf = reactive({
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
                   {
-                    pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})(\:\d{2,})?$/,
+                    pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
                     message: '域名格式错误',
                     trigger: 'blur'
                   }
-                ]
+                ],
+                change: (value) => {
+                  // 当域名改变时，自动设置目录
+                  const domainPattern = /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/;
+                  if (value && !conf.form.data.value.root_dir && domainPattern.test(value)) {
+                    // 如果有端口号，去掉端口号
+                    const domainWithoutPort = value.split(':')[0];
+                    conf.form.data.value.root_dir = `${domainWithoutPort}`;
+                  }
+                }
               },
               {
                 label: '其他域名',
@@ -245,15 +269,11 @@ conf.website.getData()
 
 <template>
   <div class="website-container">
-    <card-tabs
-      :list="conf.tabs.list"
-      :active-index="conf.tabs.activeIndex"
-      :click-active="conf.tabs.clickActive"
-    />
+    <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <div class="tool-bar">
-      <el-space class="btn-group" :size="14" style="width: 100%;" >
-        <el-button type="primary" @click="conf.website.handleAdd" >添加站点</el-button>
-		
+      <el-space class="btn-group" :size="14" style="width: 100%;">
+        <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+
         <!-- <el-dropdown>
             <el-button type="primary">
               <span class="el-dropdown-link">
@@ -272,22 +292,24 @@ conf.website.getData()
                 <el-dropdown-item>关联数据库</el-dropdown-item>
               </el-dropdown-menu>
             </template>
-          </el-dropdown>
-          <el-button type="primary">
-            <span>漏洞扫描（0）</span>
-          </el-button>
-          <el-button type="primary">
-            <span style="font-size: 14px; margin-right: 8px">nignx</span>
-            <el-icon><CaretBottom /></el-icon>
-          </el-button>
-          <el-dropdown>
-            <el-button type="primary">
-              <span class="el-dropdown-link">
-                全部分类
-                <el-icon class="el-icon--right"><arrow-down /></el-icon>
-              </span>
-            </el-button>
-            <template #dropdown>
+</el-dropdown>
+<el-button type="primary">
+  <span>漏洞扫描（0）</span>
+</el-button>
+<el-button type="primary">
+  <span style="font-size: 14px; margin-right: 8px">nignx</span>
+  <el-icon>
+    <CaretBottom />
+  </el-icon>
+</el-button>
+<el-dropdown>
+  <el-button type="primary">
+    <span class="el-dropdown-link">
+      全部分类
+      <el-icon class="el-icon--right"><arrow-down /></el-icon>
+    </span>
+  </el-button>
+  <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item>修改默认页面</el-dropdown-item>
                 <el-dropdown-item>默认站点</el-dropdown-item>
@@ -298,48 +320,31 @@ conf.website.getData()
                 <el-dropdown-item>关联数据库</el-dropdown-item>
               </el-dropdown-menu>
             </template>
-          </el-dropdown> -->
-		
+</el-dropdown> -->
+
       </el-space>
       <div class="demo-form-inline">
-       <el-space class="btn-group" :size="14" >
-       	<search-input
-       	  v-model="conf.website.params.name"
-       	  placeholder="请输入域名"
-       	  style="margin-right: 18px"
-       	  @search="conf.website.getData()"
-       	/>
-       	<el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
-       	<!-- <el-button :icon="Setting" type="primary" /> -->
-       </el-space>
+        <el-space class="btn-group" :size="14">
+          <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
+            @search="conf.website.getData()" />
+          <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+          <!-- <el-button :icon="Setting" type="primary" /> -->
+        </el-space>
       </div>
     </div>
     <div class="box2">
-      <custom-table
-        v-model:page="conf.website.params.page"
-        :loading="conf.website.loading"
-        :data="conf.website.data"
-        :columns="conf.website.columns"
-        :auto-pagination="false"
-        :total="conf.website.total"
-        :page-size="conf.website.params.pageSize"
-        @update:page="conf.website.getData"
-		
-      >
+      <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据" :data="conf.website.data"
+        :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
+        :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
         <template #action="{ row }">
           <el-button type="primary" link @click="conf.drawer.open('edit', row)">设置</el-button>
           <el-button type="danger" link @click="conf.dialog.open('delete', row)">删除</el-button>
         </template>
       </custom-table>
     </div>
-
-    <custom-drawer
-      :visible="conf.drawer.show"
-      :title="conf.drawer.title"
-      :loading="conf.drawer.loading"
-      :on-close="conf.drawer.onClose"
-      :on-confirm="conf.drawer.onConfirm"
-    >
+    <!--创建网站弹窗-->
+    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据" :loading="conf.drawer.loading"
+      :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
       <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
         <template #send_url="{ row }">
           <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
@@ -366,7 +371,4 @@ conf.website.getData()
   </div>
 </template>
 
-<style scoped lang="less">
-	
-
-</style>
+<style scoped lang="less"></style>

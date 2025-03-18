@@ -180,7 +180,7 @@ defineExpose({
 
 <template>
   <div>
-    <div class="box1">
+    <div class="box1" style="border-radius: 4px;">
       <div class="flex items-center" style="width: 100%; flex: 0.8">
         <div class="back-level hover-opacity" @click="conf.handleBackLevel()">
           <el-icon size="24"><ArrowLeft /></el-icon>
