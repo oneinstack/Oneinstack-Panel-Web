@@ -258,6 +258,9 @@ onMounted(() => {
 </template>
 
 <style scoped lang="less">
+.box1{
+  border-radius: 4px;
+}
 .miscellaneous {
   width: 100%;
   height: 60px;

@@ -266,6 +266,12 @@ const BindButton = ()=>{
 <style scoped lang="less">
 	@import '@/styles/element.less';
 	@import '@/styles/common.less';
+  .lang{
+  width: 30px; 
+  height: 25px;
+  margin: 0 5px 0 15px;
+}
+
 .layout-container {
   background: rgb(var(--bg-color));
   height: 100vh;
@@ -378,6 +384,7 @@ const BindButton = ()=>{
           height: 50px;
           border-radius: 2px;
           position: relative;
+          margin-bottom: 8%;
 
           &::before {
             content: '';

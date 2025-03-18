@@ -6,7 +6,7 @@ import CustomForm, { type FormItem, type Props as FormProps } from '@/components
 import { FormInstance } from 'element-plus'
 import { Api } from '@/api/Api'
 import { Scope } from 'tools-vue3'
-import { ArrowDown } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 
 const emit = defineEmits<ChildEmits>()
 
@@ -40,36 +40,81 @@ const installForm = reactive<FormProps['data']>({
   items: []
 })
 
-const handleSelectVersion = (v: string, item: any) => {
-  installForm.value.key = item.key
-  installForm.value.version = v
+// 先添加卸载方法到 script 部分
+const handleUninstall = (item: any) => {
+  // const { data: res } = await Api.installSoft({ key: item.key, uninstall: true })
+  // 移除本地存储的版本信息
+  // delete installedVersions.value[item.key]
+  // localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
+  // handleCheckInstallLog(res.installName)
+  ElMessage({
+    type: 'warning',
+    message: '卸载功能开发中...'
+  })
 }
 
+// 在 script setup 中添加
+const versionDialog = reactive({
+  show: false,
+  currentItem: null as any,
+  onClose: () => {
+    versionDialog.show = false
+    versionDialog.currentItem = null
+  },
+  onConfirm: () => {
+    versionDialog.show = false
+    handleClickInstall(versionDialog.currentItem)
+  }
+})
+
+// 修改原有的点击安装按钮事件
+const handleInstallClick = (item: any) => {
+  if (item.versions.length > 1) {
+    versionDialog.currentItem = item
+    versionDialog.show = true
+  } else {
+    handleClickInstall(item)
+  }
+}
+
+// 在 template 中添加版本选择弹窗
 const handleClickInstall = (item: any) => {
-  console.log('installForm.value.key', installForm.value.key,installForm.value.key!='',item.versions[0],item)
- 
-  if (installForm.value.version!='') {
-    if(item && item.versions && item.versions.includes(installForm.value.version)) {
-      handleSelectVersion( installForm.value.version, item)
-    }else{
+  console.log('installForm.value.key', installForm.value.key, installForm.value.key != '', item.versions[0], item)
+
+  if (installForm.value.version != '') {
+    if (item && item.versions && item.versions.includes(installForm.value.version)) {
+      handleSelectVersion(installForm.value.version, item)
+    } else {
       handleSelectVersion(item.versions[0], item)
     }
-  }else{
+  } else {
     handleSelectVersion(item.versions[0], item)
   }
+
+  // 修改表单验证消息
   if (!item.params) return handleInstall()
   const config = JSON.parse(item.params)
   installForm.items = (config as []).map<FormItem>((item: any) => ({
     label: item.name,
     type: 'input',
     prop: item.key,
-    rules: [{ required: item.required === 'true', message: `请输入${item.name}`, trigger: 'blur' }]
+    rules: [{ required: item.required === 'true', message: `${'请输入'}${item.name}`, trigger: 'blur' }]
   }))
   drawer.show = true
 }
 
+const handleSelectVersion = (v: string, item: any) => {
+  installForm.value.key = item.key
+  installForm.value.version = v
+}
+// 在 script setup 顶部添加
+const installedVersions = ref(JSON.parse(localStorage.getItem('installedVersions') || '{}'))
+
 const handleInstall = async () => {
   const { data: res } = await Api.installSoft(installForm.value)
+  // 保存安装的版本信息
+  installedVersions.value[installForm.value.key] = installForm.value.version
+  localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
   handleCheckInstallLog(res.installName)
 }
 
@@ -128,23 +173,22 @@ const handleCheckInstallLog = async (value: string) => {
               <div>
                 <el-dropdown :disabled="!(item.versions.length > 1)">
                   <span class="flex items-center" style="color: var(--font-color-gray-light)">
-                    <span>安装版本：</span>
-                    {{ installForm.value.key === item.key ? installForm.value.version : item.versions[0] }}
-                    <el-icon v-if="item.versions.length > 1" class="el-icon--right">
-                      <arrow-down />
-                    </el-icon>
+                    <template v-if="item.status === 0">
+                      未安装
+                    </template>
+                    <template v-else>
+                      <span>已安装版本：</span>
+                      {{ installedVersions[item.key]}}
+                    </template>
                   </span>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item v-for="(v, i) in item.versions" :key="i" @click="handleSelectVersion(v, item)">
-                        {{ v }}
-                      </el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
                 </el-dropdown>
               </div>
-              <div class="btn" :class="{ installed: item.installed }" @click="handleClickInstall(item)">
-                {{ item.installed ? '已安装' : '安装' }}
+              <!-- 修改安装按钮的点击事件 -->
+              <div class="btn" :class="{
+      installed: item.status === 2 || installedVersions[item.key],
+      uninstall: item.status === 2 || installedVersions[item.key]
+    }" @click="(item.status === 2 || installedVersions[item.key]) ? handleUninstall(item) : handleInstallClick(item)">
+                {{ (item.status === 2 || installedVersions[item.key]) ? '卸载' : '安装' }}
               </div>
             </div>
           </div>
@@ -163,6 +207,22 @@ const handleCheckInstallLog = async (value: string) => {
     >
       <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
     </custom-drawer>
+     <!-- 在原有弹窗之前添加版本选择弹窗 -->
+     <custom-dialog v-model:show="versionDialog.show" title="版本选择" :on-close="versionDialog.onClose">
+      <div class="version-select-container">
+        <div class="version-label">版本</div>
+        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%"
+          popper-class="version-select-dropdown">
+          <el-option v-for="version in versionDialog.currentItem?.versions" :key="version" :label="version"
+            :value="version" />
+        </el-select>
+      </div>
+      <template #footer>
+        <el-button @click="versionDialog.onClose">取消</el-button>
+        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
+      </template>
+    </custom-dialog>
+    <!-- 原有的安装日志弹窗 -->
     <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose">
       <el-input v-model="dialog.content" type="textarea" readonly style="min-height: 200px" />
     </custom-dialog>
@@ -170,6 +230,40 @@ const handleCheckInstallLog = async (value: string) => {
 </template>
 
 <style scoped lang="less">
+.below {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center; // 添加这行
+  margin-top: 20px;
+  color: var(--font-color-gray-light);
+
+  .version-info {
+    display: flex;
+    align-items: center;
+  }
+}
+
+.version-select-container {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  min-width: 300px;
+  gap: 12px;
+
+  .version-label {
+    font-size: 14px;
+    color: var(--font-color-black);
+    white-space: nowrap;
+  }
+
+  .el-select {
+    width: 100%;
+    flex: 1;
+  }
+}
+
+
 .title {
   font-weight: 500;
   font-size: 18px;

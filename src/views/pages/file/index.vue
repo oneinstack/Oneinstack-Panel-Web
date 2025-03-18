@@ -8,6 +8,7 @@ import CustomDrawer from '@/components/custom-drawer.vue'
 import { Api } from '@/api/Api'
 import CustomForm from '@/components/custom-form.vue'
 
+
 export type DrawerType = 'file' | 'dir'
 export type DrawerOpenType = 'create' | 'editPER' | 'editUser'
 
@@ -326,9 +327,9 @@ const conf = reactive({
 
 <style scoped lang="less">
 
-
 .file-container {
   .box1 {
+    border-radius: 4px;
     margin-top: 0;
     justify-content: flex-start;
 

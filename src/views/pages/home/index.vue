@@ -420,11 +420,22 @@ const conf = reactive({
           break
         case 2:
           {
-            const { total, free, used, usedPercent } = res.disk_usage[0]
-            conf.statusData.usage.total = sutil.bytesTransform(total).strValue
-            conf.statusData.usage.used = sutil.bytesTransform(used).strValue
-            conf.statusData.usage.available = sutil.bytesTransform(free).strValue
-            conf.statusData.usage.usedPercent = usedPercent
+            const rootDisk = res.disk_usage.find((disk: { path: string }) => disk.path === '/')
+            if (!rootDisk) {
+              // 如果没找到根目录，使用第一个磁盘信息
+              const { total, free, used, usedPercent } = res.disk_usage[0]
+              conf.statusData.usage.total = sutil.bytesTransform(total).strValue
+              conf.statusData.usage.used = sutil.bytesTransform(used).strValue
+              conf.statusData.usage.available = sutil.bytesTransform(free).strValue
+              conf.statusData.usage.usedPercent = usedPercent
+            } else {
+              // 使用根目录磁盘信息
+              const { total, free, used, usedPercent } = rootDisk
+              conf.statusData.usage.total = sutil.bytesTransform(total).strValue
+              conf.statusData.usage.used = sutil.bytesTransform(used).strValue
+              conf.statusData.usage.available = sutil.bytesTransform(free).strValue
+              conf.statusData.usage.usedPercent = usedPercent
+            }
           }
           break
         case 3:
