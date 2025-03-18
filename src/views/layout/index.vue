@@ -193,7 +193,7 @@ const BindButton = ()=>{
     </el-header>
     <el-container class="layout-container__body">
       <div class="layout-container__body-left" :class="{ 'isCollapse': !conf.isCollapse }">
-        <div class="column fit-height fit-width" style="gap: 26px; align-items: center">
+        <div class="column fit-height fit-width" style="gap: 78px; align-items: center">
           <div class="col column nav-bar fit-width">
             <div class="col relative fit-width">
               <div class="absolute fit-height fit-width">
@@ -239,7 +239,7 @@ const BindButton = ()=>{
                               ? item.activeColor[sapp.theme]
                               : conf.defaultColor[sapp.theme]
                           "
-                          size="26"
+                          size="24"
                         />
                         <span class="menu-item-name">{{ item.name }}</span>
                       </el-menu-item>
@@ -266,6 +266,9 @@ const BindButton = ()=>{
 <style scoped lang="less">
 	@import '@/styles/element.less';
 	@import '@/styles/common.less';
+  .theme-switch{
+     margin-left: 14px;
+  }
   .lang{
   width: 30px; 
   height: 25px;
@@ -333,11 +336,12 @@ const BindButton = ()=>{
       }
 
       .nav-bar {
-        padding: 26px 0 0;
+        padding: 1.625rem 0 0;  // 26px -> 1.625rem
         background-color: rgb(var(--bg-card-color));
-        border-radius: 0 16px 16px 0;
+        border-radius: 1rem;    // 16px -> 1rem
         position: relative;
         overflow: hidden;
+        margin-left: 1.5rem;   // 20px -> 1.25rem
 
         :deep(.el-scrollbar__bar.is-horizontal) {
           display: none;
@@ -345,7 +349,7 @@ const BindButton = ()=>{
 
         .icon-collapse {
           width: 100%;
-          height: 67px;
+          height: 4.1875rem;    // 67px -> 4.1875rem
           background-color: rgb(var(--bg-card-color));
           cursor: pointer;
         }
@@ -362,7 +366,7 @@ const BindButton = ()=>{
 
         .menu-item-name {
           font-family: PingFang SC;
-          font-size: 16px;
+          font-size: 14px;
           color: var(--menu-item-name-color);
           margin-left: 16px;
           transition: color 0.3s;
@@ -384,7 +388,21 @@ const BindButton = ()=>{
           height: 50px;
           border-radius: 2px;
           position: relative;
-          margin-bottom: 8%;
+          margin-bottom: 5%;
+          padding: 0 24px !important;
+          // 添加以下样式
+          display: flex;
+          align-items: center;
+
+          // 折叠时的样式
+          .el-menu--collapse & {
+            justify-content: center;
+            width: 78px !important;
+            margin: 0 auto;
+            .menu-item-name {
+              display: none;
+            }
+          }
 
           &::before {
             content: '';

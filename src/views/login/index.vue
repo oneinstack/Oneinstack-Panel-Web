@@ -128,7 +128,8 @@ const conf = reactive({
   align-items: center;
   background-color: #ffffff;
   padding: 62px;
-  border-radius: 10px;
+  border-radius: 40px;
+  box-shadow: 0px 12px 32px 1px rgba(0,0,0,0.11);
 }
 .input-box{
   width: 300px;

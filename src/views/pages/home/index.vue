@@ -499,7 +499,7 @@ onMounted(() => {
     <div class="column fit-height fit-width">
       <div class="col column fit-width">
         <div class="col relative fit-width">
-          <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px">
+          <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px;">
            <div class="basic-card__title">概览</div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">

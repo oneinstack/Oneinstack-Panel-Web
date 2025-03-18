@@ -99,8 +99,8 @@ withDefaults(defineProps<Props>(), {
   align-items: center;
 
   .login-content-left {
-    min-width: 550px;
-    padding: 32px 0;
+    min-width: 34.375rem;
+    padding: 2rem 0;
     // width: 657px;
     height: 100%;
     // background: url('/static/images/login-bg.webp') no-repeat;
@@ -146,7 +146,7 @@ withDefaults(defineProps<Props>(), {
     justify-content: center;
     align-items: center;
     position: relative;
-
+    margin-left: 3.75rem;
     &__main {
       // width: 434px;
       display: flex;
