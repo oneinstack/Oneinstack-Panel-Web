@@ -25,8 +25,8 @@ const conf = reactive({
     { prop: 'user', label: '用户',width: '180' },
     { prop: 'group', label: '用户组',width: '120' },
     { prop: 'size', label: '大小',width: '130', sortable: true },
-    { prop: 'modTime', label: '修改时间', sortable: true },
-    { prop: 'action', label: '操作',width:'270' }
+    { prop: 'modTime', label: '修改时间',width: '160', sortable: true },
+    { prop: 'action', label: '操作',width:'200',align: 'center'},
   ],
   fileList: [],
   loading: false,
@@ -166,6 +166,9 @@ const conf = reactive({
       conf.fileDialog.row.path = conf.selectFolder.path
       conf.selectFolder.show = false
     }
+  },
+  getWidth : ()=>{
+    
   }
 })
 
@@ -262,10 +265,10 @@ defineExpose({
     <div class="box2">
       <custom-table :data="conf.fileList" :columns="conf.columns" :loading="conf.loading">
         <template #name="{ row }">
-          <div class="flex items-center" style="gap: 10px">
-            <v-s-icon :name="row.isDir ? 'folder' : 'txt'" size="22" />
-            <el-link @click="conf.handleFileClick(row)">
-              <span class="ellipsis" style="max-width: 120px">{{ row.name }}</span>
+          <div class="flex items-center file-name-cell" style="gap: 10px">
+            <v-s-icon class="file-icon" :name="row.isDir ? 'folder' : 'txt'" size="22" />
+            <el-link class="file-link" @click="conf.handleFileClick(row)">
+              <span class="ellipsis file-name">{{ row.name }}</span>
             </el-link>
           </div>
         </template>
@@ -283,10 +286,22 @@ defineExpose({
         <template #action="{ row }">
           <el-button type="primary" link @click="conf.handleFileClick(row)">打开</el-button>
           <el-button type="primary" link @click="conf.handleFileDownload(row)">下载</el-button>
-          <el-button type="primary" link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
+          <!-- <el-button type="primary" link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
             编辑权限
-          </el-button>
-          <el-button type="danger" link @click="conf.fileDialog.open('delete', row)">删除</el-button>
+          </el-button> -->
+          <!-- <el-button type="danger" link @click="conf.fileDialog.open('delete', row)">删除</el-button> -->
+          <el-dropdown class="dropdown-more">
+            <el-button type="primary" link>
+              更多
+              <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="conf.fileDialog.open('delete', row)">删除</el-dropdown-item>
+                <el-dropdown-item @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">编辑权限</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </template>
       </custom-table>
     </div>
@@ -369,10 +384,27 @@ defineExpose({
   padding-inline-end: 22px;
   border-right: 1px solid var(--font-color-gray);
 }
-
+.file-name-cell{
+  flex-wrap: nowrap;
+  width: 100%;
+}
+.file-icon {
+  flex-shrink: 0; // 防止图标被压缩
+}
+.file-name{
+  display: block;
+  width: 100%;
+}
+.dropdown-more{
+  vertical-align: middle;
+  margin-left: 12px;
+}
 .refresh-btn,
 .search-btn {
   width: 36px;
   height: 36px;
+}
+.el-button:focus-visible {
+  outline: none;
 }
 </style>

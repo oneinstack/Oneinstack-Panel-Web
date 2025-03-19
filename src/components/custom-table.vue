@@ -67,11 +67,13 @@ const collectionHeaderCellClassName = (row:any) => {
       :data="autoPagination ? conf.visibleData : data"
       @selection-change="selectionChange"
 	    empty-text="暂无数据"
+      class="custom-table"
+      row-class-name="hover-row"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
       </template>
-      <el-table-column v-if="selection" type="selection" width="55"/>
+      <el-table-column v-if="selection" type="selection" width="55" align="center"/>
       <el-table-column
         v-for="(item, col) in columns"
         :key="item.prop"
@@ -119,4 +121,20 @@ const collectionHeaderCellClassName = (row:any) => {
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+:deep(.hover-row:hover) {
+  border-radius: 5px;
+  td.el-table__cell {
+    border-top: 1px solid var(--el-color-primary);
+    border-bottom: 1px solid var(--el-color-primary);
+    position: relative;
+    z-index: 1;
+  }
+  td.el-table__cell:first-child {
+    border-left: 1px solid var(--el-color-primary);
+  }
+  td.el-table__cell:last-child {
+    border-right: 1px solid var(--el-color-primary);
+  }
+}
+</style>

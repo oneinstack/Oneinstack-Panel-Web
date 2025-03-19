@@ -415,10 +415,10 @@ onMounted(() => {
     </el-card>
     </div>
     <div class="box2">
-      <el-table ref="tableRef" :header-cell-style="{'border-right':'1px solid #8B8B8B30','text-align':'center'}" class="fileTable" :data="tableData" border style="width: 100%"
+      <el-table ref="tableRef" class="fileTable" :data="tableData" border style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
         :row-key="(row: any) => row.id" empty-text="暂无数据">
-        <el-table-column type="selection" width="55" :reserve-selection="true" :selectable="selectFilter" />
+        <el-table-column type="selection" width="55" :reserve-selection="true" :selectable="selectFilter" align="center"/>
         <el-table-column prop="name" label="任务名称" width="180"></el-table-column>
         <el-table-column prop="enabled" label="状态" width="180">
           <template #default="scope">
@@ -454,7 +454,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="操作">
+        <el-table-column prop="address" label="操作" align="center">
           <template #default="scope">
             <el-button link type="primary" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
               开启 </el-button>
