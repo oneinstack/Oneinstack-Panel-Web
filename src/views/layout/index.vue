@@ -171,13 +171,13 @@ const BindButton = ()=>{
 
 <template>
   <el-container class="layout-container">
-    <el-header class="layout-container__header">
+    <!-- <el-header class="layout-container__header">
       <div class="layout-container__header-left">
         <img class="logo" src="/static/images/logo.jpeg" alt="" />
         <img class="logo-text" :src="`/static/images/logo-text-${sapp.theme}.png`" alt="" />
       </div>
       <div class="layout-container__header-right">
-        <!-- <search-input v-model="conf.searchValue" placeholder="请输入关键词进行搜索" /> -->
+        <search-input v-model="conf.searchValue" placeholder="请输入关键词进行搜索" />
         <img class="avatar-img" src="/static/images/avatar.png" alt="" />
         <el-dropdown placement="bottom">
 			<img class="arrow-down" src="/static/images/arrow-down.png" alt="" />
@@ -190,13 +190,17 @@ const BindButton = ()=>{
     </el-dropdown>
        
       </div>
-    </el-header>
+    </el-header> -->
     <el-container class="layout-container__body">
       <div class="layout-container__body-left" :class="{ 'isCollapse': !conf.isCollapse }">
         <div class="column fit-height fit-width" style="gap: 78px; align-items: center">
           <div class="col column nav-bar fit-width">
             <div class="col relative fit-width">
               <div class="absolute fit-height fit-width">
+                <div class="layout-container__logo">
+                  <img class="logo" src="/static/images/small-logo.png" alt="" />
+                  <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p>
+                </div>
                 <el-scrollbar height="100%">
                   <el-menu :collapse="conf.isCollapse" :default-active="route.path.match(/\/\w*/)?.[0]" router>
                     <template v-for="item in conf.navList" :key="item.path">
@@ -327,10 +331,14 @@ const BindButton = ()=>{
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding-bottom: 31px;
+      // padding-bottom: 31px;
       transition: width 0.3s;
       width: 78px;
-
+      background: rgb(var(--bg-card-color));
+      padding: 20px 4px;
+      border-radius: 1rem;    // 16px -> 1rem
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
       &.isCollapse {
         width: 206px;
       }
@@ -338,10 +346,9 @@ const BindButton = ()=>{
       .nav-bar {
         padding: 1.625rem 0 0;  // 26px -> 1.625rem
         background-color: rgb(var(--bg-card-color));
-        border-radius: 1rem;    // 16px -> 1rem
         position: relative;
         overflow: hidden;
-        margin-left: 1.5rem;   // 20px -> 1.25rem
+        // margin-left: 1.5rem;   // 20px -> 1.25rem
 
         :deep(.el-scrollbar__bar.is-horizontal) {
           display: none;
@@ -354,7 +361,20 @@ const BindButton = ()=>{
           cursor: pointer;
         }
       }
-
+      .layout-container__logo{
+        display: flex;
+        align-items: center;
+        padding: 0 10px;
+        .logo{
+          height: 50px;
+          width: 50px;
+        }
+        .logo-text{
+          font-size: 20px;
+          font-weight: bolder;
+          color: var(--font-color-black);
+        }
+      }
       .el-menu {
         width: 100%;
         height: 100%;
@@ -386,9 +406,10 @@ const BindButton = ()=>{
         :deep(.el-sub-menu__title) {
           width: 190px;
           height: 50px;
+          line-height: 50px;
           border-radius: 2px;
           position: relative;
-          margin-bottom: 5%;
+          margin-bottom: 5px;
           padding: 0 24px !important;
           // 添加以下样式
           display: flex;
@@ -457,7 +478,8 @@ const BindButton = ()=>{
     &-main {
       width: 100%;
       height: 100%;
-      padding: 0 30px 0 24px;
+      padding: 20px 30px 20px 24px;
+      margin-left: 0;
     }
   }
 }
