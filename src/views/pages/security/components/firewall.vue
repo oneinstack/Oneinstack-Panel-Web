@@ -200,7 +200,8 @@ onMounted(() => {
         <div>地区规划：0</div>
         <div>IP规则：0</div>
       </div> -->
-      <el-table :data="tableData" border style="width: 100%" empty-text="暂无数据" :row-key="(row) => row.id" :header-cell-style="{'border-right':'1px solid #8B8B8B30','text-align':'center'}">
+      <el-table :data="tableData" style="width: 100%" empty-text="暂无数据" :row-key="(row) => row.id">
+        <el-table-column type="selection" width="55"/>
         <el-table-column prop="direction" label="方向" width="100">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">

@@ -6,6 +6,7 @@ export interface ColumnItem {
   label: string
   prop: string
   width?: string | number
+  align?: string
   placeholder?: string
   formatter?: (row: any) => string
   sortable?: boolean
@@ -29,7 +30,7 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
-  selection: false,
+  selection: true,
   pageSize: 10,
   total: 0,
   autoPagination: true,
@@ -64,12 +65,8 @@ const collectionHeaderCellClassName = (row:any) => {
   <div v-loading="loading" class="table-content">
     <el-table
       :data="autoPagination ? conf.visibleData : data"
-      border
-      style="width: 100%;text-align: center;"
       @selection-change="selectionChange"
 	    empty-text="暂无数据"
-      :cell-style="{'text-align':'center'}"
-      :header-cell-style="{'border-right':'1px solid #8B8B8B30','text-align':'center'}"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
@@ -81,6 +78,7 @@ const collectionHeaderCellClassName = (row:any) => {
         :prop="item.prop"
         :label="item.label"
         :width="item.width"
+        :align="item.align || 'left'"
         :sortable="item.sortable"
         :sort-method="item.sortMethod"
       >

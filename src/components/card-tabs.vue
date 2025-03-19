@@ -35,9 +35,10 @@ defineProps<Props>()
 
   .item {
     width: 93px;
-	margin-right: 6px;
-    height: 100%;
+	  margin-right: 6px;
+    height: 100%; 
     border-radius: 5px;
+    padding: 14px;
     text-align: center;
     cursor: pointer;
     display: flex;

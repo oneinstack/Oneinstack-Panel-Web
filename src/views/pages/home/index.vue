@@ -467,7 +467,7 @@ const conf = reactive({
     getData: async () => {
       const { data: res } = await Api.getSysRemark()
       conf.memo.data = res
-      conf.category[3].value = res.content
+      conf.category[3].value = res.content || '当前内容为空，点击编辑'
     },
     update: async () => {
       await Api.updateSysRemark(conf.memo.data)
@@ -500,7 +500,7 @@ onMounted(() => {
       <div class="col column fit-width">
         <div class="col relative fit-width">
           <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px;">
-           <div class="basic-card__title">概览</div>
+           <div class="basic-card__title card">概览</div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">
                 <div class="category-item" @click="item.linkFn?.()">
@@ -915,5 +915,16 @@ onMounted(() => {
       box-shadow: none;
     }
   }
+}
+.card{
+  background: rgb(var(--bg-card-color));
+  height: 64px;
+  width: 100%;
+  display: flex; // 添加这行
+  align-items: center; // 添加这行，使内容垂直居中
+  flex-shrink: 0;
+  border-radius: 16px;
+  padding: 21px 46px;
+  font-size: 22px;
 }
 </style>

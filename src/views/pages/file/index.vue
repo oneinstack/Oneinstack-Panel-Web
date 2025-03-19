@@ -278,7 +278,7 @@ const conf = reactive({
 <template>
   <div class="file-container relative">
     <div class="absolute fit-width" style="padding-bottom: 30px">
-      <div class="box1">
+      <!-- <div class="box1">
         <div
           v-for="(item, index) in conf.tab.list"
           :key="index"
@@ -300,7 +300,7 @@ const conf = reactive({
           </el-icon>
         </div>
         <div class="add-btn hover-opacity" @click.stop="conf.tab.handleAddTab">+</div>
-      </div>
+      </div> -->
       <file-list
         v-for="(_, index) in conf.tab.list"
         v-show="conf.tab.list[index].active"
