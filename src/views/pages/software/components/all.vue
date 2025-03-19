@@ -156,14 +156,14 @@ const handleCheckInstallLog = async (value: string) => {
                 <div>
                   <span class="menuTitle">{{ item.name }}</span>
                   <span v-if="item.tags" class="remark">（{{ item.tags }}）</span>
-                  <span
+                  <!-- <span
                     v-if="item.status !== 0"
                     class="status ml-2"
                     :class="{ error: item.status === 3, success: item.status === 2, installing: item.status === 1 }"
                     @click="handleCheckInstallLog(item.log)"
                   >
                     {{ item.status === 1 ? '安装中' : item.status === 2 ? '已安装' : '安装失败' }}
-                  </span>
+                  </span> -->
                 </div>
                 <div class="tip">{{ item.describe }}</div>
               </div>

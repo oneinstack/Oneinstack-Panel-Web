@@ -26,6 +26,7 @@ interface Props {
 
 interface Emits {
   (e: 'update:page', page: number): void
+  (e: 'selection-change', selection: any[]): void  // 添加多选事件
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -59,16 +60,19 @@ const collectionHeaderCellClassName = (row:any) => {
     return {'text-align':'center'};
   }
 }
+// 添加处理选择变化的方法
+const handleSelectionChange = (selection: any[]) => {
+  emit('selection-change', selection)
+}
 </script>
 
 <template>
   <div v-loading="loading" class="table-content">
     <el-table
       :data="autoPagination ? conf.visibleData : data"
+
       @selection-change="selectionChange"
 	    empty-text="暂无数据"
-      class="custom-table"
-      row-class-name="hover-row"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />

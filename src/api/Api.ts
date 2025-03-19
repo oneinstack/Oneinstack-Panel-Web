@@ -64,6 +64,10 @@ export const Api = {
   getSoftRunState: (obj: any) => {
     return http.post('/soft/exploration', obj)
   },
+  /** 获取网站模块依赖状态 */
+  getWebsiteInfo: () => {
+    return http.post('/v1/website/info')
+  },
   /** 获取网站列表 */
   getWebsiteList: (obj: any) => {
     return http.post('/website/list', obj)

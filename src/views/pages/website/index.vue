@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Refresh, Setting, ArrowDown, CaretBottom } from '@element-plus/icons-vue'
+import { Refresh, Setting, ArrowDown, CaretBottom, Download } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/Api'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
-
+import dayjs from 'dayjs'
 const conf = reactive({
+
   tabs: {
     activeIndex: 0,
     list: [
@@ -39,17 +40,18 @@ const conf = reactive({
         index: 5,
         value: 'proxy'
       },
-      {
-        name: 'HTML项目',
-        index: 6,
-        value: 'static'
-      }
+      // {
+      //   name: 'HTML项目',
+      //   index: 6,
+      //   value: 'static'
+      // }
       // {
       //   name: '其他项目',
       //   index: 7
       // }
     ],
     clickActive: (item: any) => {
+      conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
       conf.tabs.activeIndex = item.index
       conf.website.params.type = item.value
       conf.website.getData()
@@ -58,13 +60,25 @@ const conf = reactive({
   website: {
     data: [],
     total: 0,
+    selection: [], // 存储选中的行
     columns: [
       { prop: 'name', label: '网站名', width: 200 },
-      { prop: 'domain', label: '域名', width: 200 },
-      { prop: 'root_dir', label: '根目录' },
+      { prop: 'domain', label: '其他域名', width: 250 },
+      { prop: 'dir', label: '目录', width: 200 },
+      { prop: 'type', label: '类型', width: 200 },
       { prop: 'remark', label: '备注', width: 200 },
-      { prop: 'action', label: '操作' }
+      {
+        prop: 'create_time', label: '创建时间', width: 200,
+        // 添加格式化方法
+        formatter: (row: any) => {
+          return row.create_time ? dayjs(row.create_time).format('YYYY-MM-DD HH:mm:ss') : '-'
+        }
+      },
+      { prop: 'action', label: '操作', }
     ],
+    handleSelectionChange: (selection: any[]) => {
+      conf.website.selection = selection as never[]
+    },
     params: {
       type: 'php',
       page: 1,
@@ -81,6 +95,18 @@ const conf = reactive({
     handleAdd: () => {
       conf.drawer.open('add')
       conf.form.data.value.type = conf.website.params.type
+    },
+    websiteInfo: false, // 添加状态
+    getWebsiteInfo: async () => {
+      try {
+        const { data } = await Api.getWebsiteInfo()
+        conf.website.websiteInfo = data // 保存数据
+        console.log('获取网站依赖状态', data)
+        return data
+      } catch (error) {
+        ElMessage.error('获取网站信息失败')
+        return null
+      }
     }
   },
   drawer: {
@@ -105,20 +131,21 @@ const conf = reactive({
     onConfirm: () => {
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
-        let otherDomain = ''
-        if (conf.form.data.value.otherDomain) {
-          otherDomain = conf.form.data.value.otherDomain?.split('\n')
-        } else {
-          otherDomain = ''
-        }
+        // let domain = ''
+        // if (conf.form.data.value.domain) {
+        //   domain = conf.form.data.value.domain?.split('\n')
+        // } else {
+        //   domain = ''
+        // }
 
 
-        conf.form.data.value.domain = otherDomain != ''
-          ? `${conf.form.data.value.hostDomain.trim()},${otherDomain}`
-          : conf.form.data.value.hostDomain
+        // conf.form.data.value.domain = domain != ''
+        //   ? `${conf.form.data.value.domain.trim()},${domain}`
+        //   : conf.form.data.value.domain
 
         try {
           conf.drawer.loading = true
+
           const api = conf.drawer.type === 'add' ? Api.addWebsite : Api.updateWebsite
           const { data } = await api(conf.form.data.value)
           console.log('message', data)
@@ -129,10 +156,10 @@ const conf = reactive({
           conf.drawer.show = false
           conf.website.getData()
         } catch (error: any) {
-          ElMessage({
-            type: 'error',
-            message: error.message || '操作失败'
-          })
+          // ElMessage({
+          //   type: 'error',
+          //   message: error.message || '操作失败'
+          // })
         } finally {
           conf.drawer.loading = false
         }
@@ -159,7 +186,7 @@ const conf = reactive({
                 label: '主域名',
                 type: 'input',
                 placeholder: '支持域名:端口',
-                prop: 'hostDomain',
+                prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
                   {
@@ -168,29 +195,25 @@ const conf = reactive({
                     trigger: 'blur'
                   }
                 ],
-                change: (value) => {
-                  // 当域名改变时，自动设置目录
-                  const domainPattern = /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/;
-                  if (value && !conf.form.data.value.root_dir && domainPattern.test(value)) {
-                    // 如果有端口号，去掉端口号
-                    const domainWithoutPort = value.split(':')[0];
-                    conf.form.data.value.root_dir = `${domainWithoutPort}`;
-                  }
+                change: (value: string) => {  // 使用 change 替代 input
+                  if (!value) return;
+                  const domainWithoutPort = value.split(':')[0];
+                  conf.form.data.value.dir = `/${domainWithoutPort}`;
                 }
               },
               {
                 label: '其他域名',
                 type: 'textarea',
                 placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
-                prop: 'otherDomain'
+                prop: 'domain'
               },
               {
-                label: '根目录',
+                label: '目录',
                 type: 'input',
-                prop: 'root_dir',
+                prop: 'dir',
                 rules: [
                   { required: true, message: '请选择根目录', trigger: 'blur' },
-                  { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
+                  // { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
                 ]
               },
               {
@@ -207,7 +230,7 @@ const conf = reactive({
                 label: '主域名',
                 type: 'input',
                 placeholder: '支持域名:端口',
-                prop: 'hostDomain',
+                prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
                   { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
@@ -217,7 +240,7 @@ const conf = reactive({
                 label: '其他域名',
                 type: 'textarea',
                 placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
-                prop: 'otherDomain'
+                prop: 'domain'
               },
               {
                 label: '代理地址',
@@ -260,9 +283,17 @@ const conf = reactive({
       await Api.delWebsite({ id: conf.dialog.row.id })
       conf.website.getData()
       conf.dialog.show = false
-    }
+    },
+
   }
 })
+const handleInstall = () => {
+  conf.website.websiteInfo = true
+  ElMessage({
+    type: 'warning',
+    message: '功能开发中...'
+  })
+}
 
 conf.website.getData()
 </script>
@@ -270,11 +301,13 @@ conf.website.getData()
 <template>
   <div class="website-container">
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-    <div class="tool-bar">
-      <el-space class="btn-group" :size="14" style="width: 100%;">
-        <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+    <div class="main-content">
+      <div :class="{ 'blur-mask': !conf.website.websiteInfo }">
+        <div class="tool-bar">
+          <el-space class="btn-group" :size="14">
+            <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
 
-        <!-- <el-dropdown>
+            <!-- <el-dropdown>
             <el-button type="primary">
               <span class="el-dropdown-link">
                 高级设置
@@ -322,29 +355,57 @@ conf.website.getData()
             </template>
 </el-dropdown> -->
 
-      </el-space>
-      <div class="demo-form-inline">
-        <el-space class="btn-group" :size="14">
-          <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
-            @search="conf.website.getData()" />
-          <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
-          <!-- <el-button :icon="Setting" type="primary" /> -->
-        </el-space>
+          </el-space>
+          <div class="demo-form-inline">
+            <el-space class="btn-group" :size="14">
+              <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
+                @search="conf.website.getData()" />
+              <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+              <!-- <el-button :icon="Setting" type="primary" /> -->
+            </el-space>
+          </div>
+        </div>
+        <div class="box2">
+          <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
+            :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
+            :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
+            @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
+            <template #action="{ row }">
+              <el-button type="primary" link style="margin-right: 8px">统计</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="primary" link style="margin-right: 8px"
+                @click="conf.dialog.open('delete', row)">设置</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="danger" link
+                style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
+                @click="conf.dialog.open('delete', row)">
+                删除
+              </el-button>
+            </template>
+          </custom-table>
+          <!-- 添加提示信息 -->
+        </div>
       </div>
     </div>
-    <div class="box2">
-      <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据" :data="conf.website.data"
-        :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
-        :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
-        <template #action="{ row }">
-          <el-button type="primary" link @click="conf.drawer.open('edit', row)">设置</el-button>
-          <el-button type="danger" link @click="conf.dialog.open('delete', row)">删除</el-button>
-        </template>
-      </custom-table>
+
+    <div v-if="!conf.website.websiteInfo" class="mask-tip">
+      <img src="./../../../../public/static/images/ins-Plugin.png" alt="" class="tip-image">
+      <div class="tip-text">
+        未安装运行环境，请点击下方按钮<span class="highlight">安装Nginx</span>否则无法使用改页面
+      </div>
+      <el-button type="primary" class="install-btn" @click="handleInstall">
+        安装Nginx
+        <el-icon class="el-icon--right">
+          <Download />
+        </el-icon>
+      </el-button>
     </div>
+
     <!--创建网站弹窗-->
-    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据" :loading="conf.drawer.loading"
-      :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
+    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
+      :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
       <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
         <template #send_url="{ row }">
           <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
@@ -371,4 +432,57 @@ conf.website.getData()
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.main-content {
+  position: relative; // 添加相对定位
+}
+.blur-mask {
+  filter: blur(10px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.mask-tip {
+  position: absolute;
+  top: 15%;
+  left: 6%;
+  // transform: translate(-50%, -50%);
+  z-index: 10;
+  width: 100%;
+  max-width: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+  .tip-image {
+    width: 359px;
+    height: auto;
+    margin-bottom: 8px;
+  }
+
+  .tip-text {
+    letter-spacing: 2px;
+    font-weight: 400;
+    color: #000;
+    font-size: 14px;
+    line-height: 1.5;
+
+    .highlight {
+      font-size: 18px;
+      color: #FF9900;
+      margin: 0 2px;
+    }
+  }
+
+  .install-btn {
+    padding: 18px 22px;
+    font-size: 14px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+</style>

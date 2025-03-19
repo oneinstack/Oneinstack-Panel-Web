@@ -25,13 +25,14 @@ export default class HttpConfig {
         msg = xhr?.data?.message || ''
         
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
+      // console.log('code',code,msg)
       switch (code) {
         case HttpCode.LOGIN_EXPIRED:
           System.er(msg, { type: 'error' })
           sconfig.logout(true)
           break
         case HttpCode.NETWORK_ERROR:
-          System.er('网络异常，请稍后再试', { type: 'error' })
+          System.er(`${msg}`, { type: 'error' })
           break
         case HttpCode.REQUEST_TIMEOUT:
           System.er('请求超时，请稍后再试', { type: 'error' })
