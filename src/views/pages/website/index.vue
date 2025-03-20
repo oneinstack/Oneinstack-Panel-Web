@@ -74,7 +74,7 @@ const conf = reactive({
           return row.create_time ? dayjs(row.create_time).format('YYYY-MM-DD HH:mm:ss') : '-'
         }
       },
-      { prop: 'action', label: '操作', }
+      { prop: 'action', label: '操作',align: 'center' }
     ],
     handleSelectionChange: (selection: any[]) => {
       conf.website.selection = selection as never[]

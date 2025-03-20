@@ -77,7 +77,7 @@ const conf = reactive({
             { prop: 'password', label: '密码' },
             { prop: 'capacity', label: '容量', placeholder: '未配置' },
             { prop: 'p_addr', label: '数据库位置' },
-            { prop: 'action', label: '操作' }
+            { prop: 'action', label: '操作',align:'center' }
           ]
         case 'redis':
           return [

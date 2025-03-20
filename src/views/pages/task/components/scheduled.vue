@@ -415,7 +415,7 @@ onMounted(() => {
     </el-card>
     </div>
     <div class="box2">
-      <el-table ref="tableRef" class="fileTable" :data="tableData" border style="width: 100%"
+      <el-table ref="tableRef" class="fileTable" :data="tableData" style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
         :row-key="(row: any) => row.id" empty-text="暂无数据">
         <el-table-column type="selection" width="55" :reserve-selection="true" :selectable="selectFilter" align="center"/>

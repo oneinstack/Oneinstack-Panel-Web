@@ -25,7 +25,23 @@
     }
   }
 }
-
+:deep(.el-table__row) {
+  position: relative;
+}
+:deep(.el-table__row:hover::after) {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid rgb(var(--primary-color));
+  pointer-events: none;
+  z-index: 1;
+}
+:deep(.el-table__row:last-child:hover::after) {
+  border-bottom: 2px solid rgb(var(--primary-color));
+}
 :deep(.el-textarea),
 :deep(.el-input),
 :deep(.el-select) {
