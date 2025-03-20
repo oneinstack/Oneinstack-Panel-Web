@@ -66,7 +66,7 @@ const conf = reactive({
       { prop: 'domain', label: '其他域名', width: 250 },
       { prop: 'dir', label: '目录', width: 200 },
       { prop: 'type', label: '类型', width: 200 },
-      { prop: 'remark', label: '备注', width: 200 },
+      { prop: 'remark', label: '备注' },
       {
         prop: 'create_time', label: '创建时间', width: 200,
         // 添加格式化方法
@@ -74,7 +74,7 @@ const conf = reactive({
           return row.create_time ? dayjs(row.create_time).format('YYYY-MM-DD HH:mm:ss') : '-'
         }
       },
-      { prop: 'action', label: '操作',align: 'center' }
+      { prop: 'action', label: '操作',align: 'center',width: 240,fixed: 'right' },
     ],
     handleSelectionChange: (selection: any[]) => {
       conf.website.selection = selection as never[]

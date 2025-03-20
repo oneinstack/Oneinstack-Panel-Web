@@ -7,6 +7,7 @@ export interface ColumnItem {
   prop: string
   width?: string | number
   align?: string
+  fixed?: string
   placeholder?: string
   formatter?: (row: any) => string
   sortable?: boolean
@@ -86,6 +87,7 @@ const handleSelectionChange = (selection: any[]) => {
         :prop="item.prop"
         :label="item.label"
         :width="item.width"
+        :fixed="item.fixed"
         :align="item.align || 'left'"
         :sortable="item.sortable"
         :sort-method="item.sortMethod"

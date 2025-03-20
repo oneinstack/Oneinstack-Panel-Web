@@ -20,13 +20,13 @@ const emit = defineEmits<Emits>()
 const conf = reactive({
   path: ['/'],
   columns: [
-    { prop: 'name', label: '文件名称', sortable: true },
-    { prop: 'permissions', label: '权限', width: '120' },
+    { prop: 'name', label: '文件名称', sortable: true,width: '500' },
+    { prop: 'permissions', label: '权限', width: '180' },
     { prop: 'user', label: '用户',width: '180' },
-    { prop: 'group', label: '用户组',width: '120' },
-    { prop: 'size', label: '大小',width: '130', sortable: true },
+    { prop: 'group', label: '用户组',width: '180' },
+    { prop: 'size', label: '大小',width: '150', sortable: true },
     { prop: 'modTime', label: '修改时间',width: '160', sortable: true },
-    { prop: 'action', label: '操作',width:'200',align: 'center'},
+    { prop: 'action', label: '操作',width:'200',align: 'center',fixed: 'right'},
   ],
   fileList: [],
   loading: false,
@@ -387,6 +387,7 @@ defineExpose({
 .file-name-cell{
   flex-wrap: nowrap;
   width: 100%;
+  min-width: 100px;
 }
 .file-icon {
   flex-shrink: 0; // 防止图标被压缩

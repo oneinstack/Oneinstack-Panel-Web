@@ -239,7 +239,7 @@ onMounted(() => {
         <el-pagination
           v-model:current-page="pagination.currentPage"
           background
-          layout="total, prev, pager, next"
+          layout="prev, pager, next"
           :total="pagination.total"
           @current-change="handleCurrentChange"
         />
