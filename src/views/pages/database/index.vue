@@ -6,7 +6,7 @@ import { ElMessage, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
-
+import { checkIPStr } from "@/utils/validator";
 export interface ConfProps {
   conf: typeof conf
 }
@@ -140,7 +140,9 @@ const conf = reactive({
     data: {
       value: {
         encoding: 'utf8',
-        type: 'mysql'
+        type: 'mysql',
+        password:'',
+        auth:'all',
       } as any,
       items: computed<FormItem[]>(() => {
         switch (conf.list.params.type) {
@@ -161,28 +163,52 @@ const conf = reactive({
               {
                 label: '密码',
                 prop: 'password',
-                type: 'password',
+                type: 'custom',
                 rules: [{ required: true, message: '请输入密码', trigger: 'blur' }]
               },
               {
-                label: '添加至',
-                prop: 'id',
-                asyncOptions: async () => {
-                  const { data } = await Api.getConnlist(conf.list.params)
-                  conf.form.data.value.id = data[0].id
-                  return data.map((item: any) => ({
-                    label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
-                    value: item.id
-                  }))
-                },
+                label: '权限',
+                prop: 'auth',
+                // asyncOptions: async () => {
+                //   const { data } = await Api.getConnlist(conf.list.params)
+                //   conf.form.data.value.id = data[0].id
+                //   return data.map((item: any) => ({
+                //     label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
+                //     value: item.id
+                //   }))
+                // },
+                options:[
+                  {
+                    label: '所有人(%)',
+                    value: 'all'
+                  },
+                  {
+                    label: '指定IP',
+                    value: 'IP'
+                  }
+                ],
                 type: 'select',
                 rules: [{ required: true, message: '请选择', trigger: 'change' }]
+              },
+              {
+                label: '        ',
+                prop: 'authIP',
+                type: 'custom',
+                rules: [{ validator: checkIPStr, trigger: 'blur' }]
               }
             ]
           default:
             return []
         }
       })
+    },
+    handleRandomPassword: () => {
+      const str = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+      let password = ''
+      for (let i = 0; i < 8; i++) {
+        password += str.charAt(Math.floor(Math.random() * str.length))
+      }
+      conf.form.data.value.password = password
     }
   }
 })
@@ -218,6 +244,21 @@ conf.list.params.type = routeName
               </template>
             </el-input>
           </template>
+          <template #password="{ row }">
+            <el-input v-model="conf.form.data.value.password" :placeholder="row.placeholder" type="password" show-password>
+              <template #append>
+                <el-button
+                  @click="conf.form.handleRandomPassword()"
+                >
+                随机密码
+                </el-button>
+              </template>
+            </el-input>
+          </template>
+          <template v-if="conf.form.data.value.auth == 'IP'" #authIP="{ row }">
+            <el-input v-model="conf.form.data.value.authIP" :placeholder="row.placeholder" type="textarea" />
+            <span class="auth-ip-tip">多个 ip 以逗号分隔，例：172.16.10.111,172.16.10.112</span>
+          </template>
         </custom-form>
       </template>
     </custom-drawer>
@@ -243,5 +284,9 @@ conf.list.params.type = routeName
       color: var(--font-color-gray-light);
     }
   }
+}
+.auth-ip-tip{
+  font-size: 12px;
+  color: var(--font-color-gray-light);
 }
 </style>
