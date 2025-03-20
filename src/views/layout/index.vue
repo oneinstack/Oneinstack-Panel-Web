@@ -197,7 +197,7 @@ const BindButton = ()=>{
           <div class="col column nav-bar fit-width">
             <div class="col relative fit-width">
               <div class="absolute fit-height fit-width">
-                <div class="layout-container__logo">
+                <div class="layout-container__logo" :class="{ 'collapse': conf.isCollapse }">
                   <img class="logo" src="/static/images/small-logo.png" alt="" />
                   <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p>
                 </div>
@@ -364,7 +364,7 @@ const BindButton = ()=>{
       .layout-container__logo{
         display: flex;
         align-items: center;
-        padding: 0 10px;
+        padding: 0 4px;
         .logo{
           height: 50px;
           width: 50px;
@@ -374,6 +374,9 @@ const BindButton = ()=>{
           font-weight: bolder;
           color: var(--font-color-black);
         }
+      }
+      .collapse{
+        justify-content: center;
       }
       .el-menu {
         width: 100%;

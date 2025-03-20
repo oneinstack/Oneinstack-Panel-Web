@@ -46,7 +46,7 @@ defineProps<Props>()
     justify-content: center;
     color: var(--font-color-black);
     transition: background 0.3s;
-
+    white-space: nowrap;
     &:hover {
       background: rgba(var(--primary-color), 0.1);
     }

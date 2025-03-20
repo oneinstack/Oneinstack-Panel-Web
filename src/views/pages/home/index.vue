@@ -1,289 +1,336 @@
 <script setup lang="ts">
-import memo from './components/memo.vue'
-import { markRaw, onMounted, reactive } from 'vue'
-import sapp from '@/sstore/sapp'
-import { Api } from '@/api/Api'
-import sutil from '@/sstore/sutil'
-import { Scope } from 'tools-vue3'
-import { EChartsOption } from 'echarts'
-import * as echarts from 'echarts'
-import basicChart from '@/components/echarts/basic-chart.vue'
-import { ElMessage } from 'element-plus'
-import System from '@/utils/System'
+import memo from "./components/memo.vue";
+import { markRaw, onMounted, reactive } from "vue";
+import sapp from "@/sstore/sapp";
+import { Api } from "@/api/Api";
+import sutil from "@/sstore/sutil";
+import { Scope } from "tools-vue3";
+import { EChartsOption } from "echarts";
+import * as echarts from "echarts";
+import basicChart from "@/components/echarts/basic-chart.vue";
+import { ElMessage } from "element-plus";
+import System from "@/utils/System";
 
-type MonitorType = 'network' | 'disk'
+type MonitorType = "network" | "disk";
 
 interface Options {
-  label: string
-  value: string | number | object
+  label: string;
+  value: string | number | object;
 }
 
 interface ChartData {
-  times: string[]
-  ascend: { value: number; strValue: string }[]
-  descend: { value: number; strValue: string }[]
+  times: string[];
+  ascend: { value: number; strValue: string }[];
+  descend: { value: number; strValue: string }[];
 }
 
 const conf = reactive({
   themeColor: {
-    light: ['#F7911C'],
-    dark: ['#EAB170']
+    light: ["#154AFC"],
+    dark: ["#EAB170"],
   },
   category: [
     {
-      name: '网站-全部',
-      icon: 'home-website',
+      name: "网站-全部",
+      icon: "home-website",
+      className:'b',
       value: 0,
-      linkFn: () => System.router.push('/website')
+      linkFn: () => System.router.push("/website"),
     },
     {
-      name: '数据-全部',
-      icon: 'home-data',
+      name: "数据-全部",
+      icon: "home-data",
+      className:'g',
       value: 0,
-      linkFn: () => System.router.push('/database')
+      linkFn: () => System.router.push("/database"),
     },
     {
-      name: '安全风险',
-      icon: 'home-software',
-      value: 0
+      name: "安全风险",
+      icon: "home-software",
+      className:'y',
+      value: 0,
     },
     {
-      name: '备忘录',
-      icon: 'home-mome',
-      value: '当前内容为空，点击编辑',
-      linkFn: () => conf.memo.open()
-    }
+      name: "备忘录",
+      icon: "home-mome",
+      className:'o',
+      value: "当前内容为空，点击编辑",
+      linkFn: () => conf.memo.open(),
+    },
   ],
   getSysCount: async () => {
-    const { data: wbsiteCount } = await Api.getWebsiteCount()
-    const { data: databaseCount } = await Api.getDatabaseCount()
-    conf.category[0].value = wbsiteCount
-    conf.category[1].value = databaseCount
+    const { data: wbsiteCount } = await Api.getWebsiteCount();
+    const { data: databaseCount } = await Api.getDatabaseCount();
+    conf.category[0].value = wbsiteCount;
+    conf.category[1].value = databaseCount;
   },
   monitorData: {
-    selectedType: 'network' as MonitorType,
+    selectedType: "network" as MonitorType,
     selectedCard: {
-      label: 'all',
-      value: 0
+      label: "all",
+      value: 0,
     },
     network: [
       {
-        label: '上行',
-        value: '--'
+        label: "上行",
+        value: "--",
       },
       {
-        label: '下行',
-        value: '--'
+        label: "下行",
+        value: "--",
       },
       {
-        label: '总发送',
-        value: '--'
+        label: "总发送",
+        value: "--",
       },
       {
-        label: '总接收',
-        value: '--'
-      }
+        label: "总接收",
+        value: "--",
+      },
     ] as Options[],
     disk: [
       {
-        label: '读取',
-        value: '--'
+        label: "读取",
+        value: "--",
       },
       {
-        label: '写入',
-        value: '--'
+        label: "写入",
+        value: "--",
       },
       {
-        label: '读取',
-        value: '--'
+        label: "读取",
+        value: "--",
       },
       {
-        label: '写入',
-        value: '--'
-      }
+        label: "写入",
+        value: "--",
+      },
     ] as Options[],
     options: [] as Options[],
     handleChangeType: (type: MonitorType) => {
-      conf.monitorData.selectedType = type
+      conf.monitorData.selectedType = type;
       conf.monitorData.chartData = {
         times: [],
         ascend: [],
-        descend: []
-      }
-      conf.monitorData.update(true)
+        descend: [],
+      };
+      conf.monitorData.update(true);
     },
     handleChangeCard: () => conf.monitorData.update(),
     chartData: {
       times: [],
       ascend: [],
-      descend: []
+      descend: [],
     } as ChartData,
     chartOptions: null as EChartsOption | null,
-    draw: ({ ascend, descend }: { ascend: ChartData['ascend'][0]; descend: ChartData['descend'][0] }) => {
-      conf.monitorData.chartData.times.push(new Date().toLocaleTimeString())
-      conf.monitorData.chartData.ascend.push(ascend)
-      conf.monitorData.chartData.descend.push(descend)
+    draw: ({
+      ascend,
+      descend,
+    }: {
+      ascend: ChartData["ascend"][0];
+      descend: ChartData["descend"][0];
+    }) => {
+      conf.monitorData.chartData.times.push(new Date().toLocaleTimeString());
+      conf.monitorData.chartData.ascend.push(ascend);
+      conf.monitorData.chartData.descend.push(descend);
       conf.monitorData.chartOptions = {
-        color: ['#FFAD79', '#79D1FF'],
+        color: ["#FFA279", "#154AFC"],
         tooltip: {
-          trigger: 'axis',
+          trigger: "axis",
           axisPointer: {
-            type: 'cross',
+            type: "cross",
             label: {
-              backgroundColor: '#6a7985'
-            }
+              backgroundColor: "#6a7985",
+            },
           },
           formatter: (params: any) => {
-            const { name, marker: marker1, data: data1, seriesName: seriesName1 } = params[0]
-            const { marker: marker2, data: data2, seriesName: seriesName2 } = params[1]
-            return `${name} </br> ${seriesName1} ${marker1} ${data1.strValue}/s </br> ${seriesName2} ${marker2} ${data2.strValue}/s`
-          }
+            const {
+              name,
+              marker: marker1,
+              data: data1,
+              seriesName: seriesName1,
+            } = params[0];
+            const {
+              marker: marker2,
+              data: data2,
+              seriesName: seriesName2,
+            } = params[1];
+            return `${name} </br> ${seriesName1} ${marker1} ${data1.strValue}/s </br> ${seriesName2} ${marker2} ${data2.strValue}/s`;
+          },
         },
         grid: {
           left: 0,
-          right: '4%',
-          top: '5%',
-          bottom: '5% ',
-          containLabel: true
+          right: "4%",
+          top: "5%",
+          bottom: "5% ",
+          containLabel: true,
         },
         xAxis: [
           {
-            type: 'category',
+            type: "category",
             boundaryGap: false,
             data: conf.monitorData.chartData.times,
             axisLabel: {
               margin: 20,
-              color: sapp.theme == 'light' ? '#A2A2A2' : '#A2A2A2'
+              color: sapp.theme == "light" ? "#A2A2A2" : "#A2A2A2",
             },
             axisLine: {
-              show: false
+              show: false,
             },
             axisTick: {
-              show: false
-            }
-          }
+              show: false,
+            },
+          },
         ],
         yAxis: [
           {
-            type: 'value',
+            type: "value",
             axisLabel: {
               margin: 20,
-              color: sapp.theme == 'light' ? '#A2A2A2' : '#A2A2A2'
+              color: sapp.theme == "light" ? "#A2A2A2" : "#A2A2A2",
             },
             splitLine: {
               lineStyle: {
-                color: sapp.theme == 'light' ? '#D6D6D699' : '#435B7199',
-                type: [5]
-              }
-            }
-          }
+                color: sapp.theme == "light" ? "#D6D6D699" : "#435B7199",
+                type: [5],
+              },
+            },
+          },
         ],
         series: [
           {
-            name: conf.monitorData.selectedType == 'network' ? '上行' : '读取',
-            type: 'line',
+            name: conf.monitorData.selectedType == "network" ? "上行" : "读取",
+            type: "line",
             smooth: false,
             lineStyle: {
               width: 1,
-              color: '#FFAD79'
+              color: "#FFA279",
             },
             showSymbol: false,
             areaStyle: {
               opacity: 0.5,
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#FFAD79' },
-                { offset: 0.5, color: 'rgba(255,173,121,0.3)' },
-                { offset: 1, color: 'rgba(255,173,121,0.1)' }
-              ])
+                { offset: 0, color: "#FFA279" },
+                { offset: 0.5, color: "rgba(250, 150, 87, 0.55)" },
+                { offset: 1, color: "rgba(255, 162, 121, 1)" },
+              ]),
             },
             emphasis: {
-              focus: 'series'
+              focus: "series",
             },
-            data: conf.monitorData.chartData.ascend
+            data: conf.monitorData.chartData.ascend,
           },
           {
-            name: conf.monitorData.selectedType == 'network' ? '下行' : '写入',
-            type: 'line',
+            name: conf.monitorData.selectedType == "network" ? "下行" : "写入",
+            type: "line",
             smooth: false,
             lineStyle: {
               width: 1,
-              color: '#79D1FF'
+              color: "#154AFC",
             },
             showSymbol: false,
             areaStyle: {
               opacity: 0.5,
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#79D1FF' },
-                { offset: 0.5, color: 'rgba(121,240,255,0.3)' },
-                { offset: 1, color: 'rgba(121,240,255,0.1)' }
-              ])
+                { offset: 0, color: "#154AFC" },
+                { offset: 0.5, color: "rgba(21, 74, 252, 0.55)" },
+                { offset: 1, color: "rgba(44, 141, 237, 1)" },
+              ]),
             },
             emphasis: {
-              focus: 'series'
+              focus: "series",
             },
-            data: conf.monitorData.chartData.descend
-          }
-        ]
-      }
+            data: conf.monitorData.chartData.descend,
+          },
+        ],
+      };
     },
     update: async (isCardChange = false) => {
-      const { data: res } = await Api.getSysMonitor()
+      const { data: res } = await Api.getSysMonitor();
       if (!conf.monitorData.options.length || isCardChange) {
         conf.monitorData.options = (res[conf.monitorData.selectedType] as any[])
           .map((item: any, i: number) => {
-            const option = { label: item.Name, value: i }
-            if (item.Name == 'all') conf.monitorData.selectedCard = option
-            return option
+            const option = { label: item.Name, value: i };
+            if (item.Name == "all") conf.monitorData.selectedCard = option;
+            return option;
           })
-          .sort((a, b) => a.label.localeCompare(b.label))
+          .sort((a, b) => a.label.localeCompare(b.label));
       }
-      let ascend: ChartData['ascend'][0], descend: ChartData['descend'][0]
+      let ascend: ChartData["ascend"][0], descend: ChartData["descend"][0];
       switch (conf.monitorData.selectedType) {
-        case 'network':
+        case "network":
           {
-            const { SendRate, RecvRate, BytesSent, BytesRecv } = res.network.find(
-              (item: any) => item.Name == conf.monitorData.selectedCard.label
-            )
+            const { SendRate, RecvRate, BytesSent, BytesRecv } =
+              res.network.find(
+                (item: any) => item.Name == conf.monitorData.selectedCard.label
+              );
             ascend = {
               value: parseFloat((SendRate / 1024 / 1024).toFixed(2)),
-              strValue: sutil.bytesTransform(SendRate).strValue
-            }
+              strValue: sutil.bytesTransform(SendRate).strValue,
+            };
             descend = {
               value: parseFloat((RecvRate / 1024 / 1024).toFixed(2)),
-              strValue: sutil.bytesTransform(RecvRate).strValue
-            }
+              strValue: sutil.bytesTransform(RecvRate).strValue,
+            };
             conf.monitorData.network = [
-              { label: '上行', value: `${sutil.bytesTransform(SendRate).strValue}/s` },
-              { label: '下行', value: `${sutil.bytesTransform(RecvRate).strValue}/s` },
-              { label: '总发送', value: sutil.bytesTransform(BytesSent).strValue },
-              { label: '总接收', value: sutil.bytesTransform(BytesRecv).strValue }
-            ]
+              {
+                label: "上行",
+                value: `${sutil.bytesTransform(SendRate).strValue}/s`,
+              },
+              {
+                label: "下行",
+                value: `${sutil.bytesTransform(RecvRate).strValue}/s`,
+              },
+              {
+                label: "总发送",
+                value: sutil.bytesTransform(BytesSent).strValue,
+              },
+              {
+                label: "总接收",
+                value: sutil.bytesTransform(BytesRecv).strValue,
+              },
+            ];
           }
-          break
-        case 'disk':
+          break;
+        case "disk":
           {
-            const { ReadSpeed, WriteSpeed, ReadOpsPerSec, WriteOpsPerSec, AvgIoLatency } = res.disk.find(
+            const {
+              ReadSpeed,
+              WriteSpeed,
+              ReadOpsPerSec,
+              WriteOpsPerSec,
+              AvgIoLatency,
+            } = res.disk.find(
               (item: any) => item.Name == conf.monitorData.selectedCard.label
-            )
+            );
             ascend = {
               value: parseFloat((ReadSpeed / 1024 / 1024).toFixed(2)),
-              strValue: sutil.bytesTransform(ReadSpeed).strValue
-            }
+              strValue: sutil.bytesTransform(ReadSpeed).strValue,
+            };
             descend = {
               value: parseFloat((WriteSpeed / 1024 / 1024).toFixed(2)),
-              strValue: sutil.bytesTransform(WriteSpeed).strValue
-            }
+              strValue: sutil.bytesTransform(WriteSpeed).strValue,
+            };
             conf.monitorData.disk = [
-              { label: '读取', value: sutil.bytesTransform(ReadSpeed).strValue },
-              { label: '写入', value: sutil.bytesTransform(WriteSpeed).strValue },
-              { label: '读写次数', value: `${ReadOpsPerSec + WriteOpsPerSec}次/s` },
-              { label: '平均延迟', value: `${AvgIoLatency.toFixed(2)}ms` }
-            ]
+              {
+                label: "读取",
+                value: sutil.bytesTransform(ReadSpeed).strValue,
+              },
+              {
+                label: "写入",
+                value: sutil.bytesTransform(WriteSpeed).strValue,
+              },
+              {
+                label: "读写次数",
+                value: `${ReadOpsPerSec + WriteOpsPerSec}次/s`,
+              },
+              { label: "平均延迟", value: `${AvgIoLatency.toFixed(2)}ms` },
+            ];
           }
-          break
+          break;
       }
-      conf.monitorData.draw({ ascend, descend })
-    }
+      conf.monitorData.draw({ ascend, descend });
+    },
   },
   statusData: {
     chartOptions: null as EChartsOption | null,
@@ -291,19 +338,19 @@ const conf = reactive({
       const gaugeData = [
         {
           value: conf.statusData.usage.usedPercent,
-          name: conf.statusData.selected.label
-        }
-      ]
+          name: conf.statusData.selected.label,
+        },
+      ];
       conf.statusData.chartOptions = {
         series: [
           {
-            type: 'gauge',
+            type: "gauge",
             startAngle: 90,
             endAngle: -270,
-            radius: '100%',
+            radius: "100%",
             zlevel: 2,
             pointer: {
-              show: false
+              show: false,
             },
             progress: {
               show: true,
@@ -312,186 +359,206 @@ const conf = reactive({
               clip: false,
               itemStyle: {
                 borderWidth: 0,
-                color: conf.themeColor[sapp.theme][0]
-              }
+                color: conf.themeColor[sapp.theme][0],
+              },
             },
             axisLine: {
               lineStyle: {
                 width: 20,
-                color: [[1, `rgba(${sutil.getCssVariable('--category-item-bg-color')}, 0.88)`]]
-              }
+                color: [
+                  [
+                    1,
+                    `rgba(${sutil.getCssVariable("--category-item-bg-color")}, 0.88)`,
+                  ],
+                ],
+              },
             },
             splitLine: {
-              show: false
+              show: false,
             },
             axisTick: {
-              show: false
+              show: false,
             },
             axisLabel: {
               show: false,
-              distance: 50
+              distance: 50,
             },
             data: gaugeData,
             title: {
               fontSize: 14,
-              color: sutil.getCssVariable('--font-color-gray-light'),
-              offsetCenter: [0, '30%']
+              color: sutil.getCssVariable("--font-color-gray-light"),
+              offsetCenter: [0, "30%"],
             },
             detail: {
               width: 200,
               height: 200,
               borderWidth: 0,
-              offsetCenter: [0, '60%'],
+              offsetCenter: [0, "60%"],
               rich: {
                 a: {
                   fontSize: 24,
-                  color: sutil.getCssVariable('--font-color-black'),
-                  fontWeight: 500
+                  color: sutil.getCssVariable("--font-color-black"),
+                  fontWeight: 500,
                 },
                 b: {
                   fontSize: 18,
-                  color: sutil.getCssVariable('--font-color-black'),
+                  color: sutil.getCssVariable("--font-color-black"),
                   fontWeight: 500,
-                  padding: [5, 0, 0, 0]
-                }
+                  padding: [5, 0, 0, 0],
+                },
               },
               formatter: (value) => {
-                const int = value.toFixed(2).split('.')[0]
-                const flt = value.toFixed(2).split('.')[1]
-                return `{a|${int}}{b|.${flt}%}`
+                const int = value.toFixed(2).split(".")[0];
+                const flt = value.toFixed(2).split(".")[1];
+                return `{a|${int}}{b|.${flt}%}`;
               },
-              valueAnimation: true
-            }
+              valueAnimation: true,
+            },
           },
           {
-            animationType: 'scale',
-            color: `rgba(${sutil.getCssVariable('--category-item-bg-color')}, 0.88)`,
-            name: 'Access From',
-            type: 'pie',
-            radius: '75%',
+            animationType: "scale",
+            color: `rgba(${sutil.getCssVariable("--category-item-bg-color")}, 0.88)`,
+            name: "Access From",
+            type: "pie",
+            radius: "75%",
             label: {
-              show: false
+              show: false,
             },
             labelLine: {
-              show: false
+              show: false,
             },
-            data: [{ value: 100, name: 'Search Engine' }]
-          }
-        ]
-      }
+            data: [{ value: 100, name: "Search Engine" }],
+          },
+        ],
+      };
     },
     selected: {
       value: 1,
-      label: '内存'
+      label: "内存",
     },
     options: markRaw([
       {
         value: 1,
-        label: '内存'
+        label: "内存",
       },
       {
         value: 2,
-        label: '磁盘'
+        label: "磁盘",
       },
       {
         value: 3,
-        label: 'CPU'
-      }
+        label: "CPU",
+      },
     ]),
     usage: {
-      total: '--',
-      available: '--',
-      used: '--',
-      usedPercent: 0
-    } as { total: string; available: string; used: string; usedPercent: number },
-    cpuInfo: '',
+      total: "--",
+      available: "--",
+      used: "--",
+      usedPercent: 0,
+    } as {
+      total: string;
+      available: string;
+      used: string;
+      usedPercent: number;
+    },
+    cpuInfo: "",
     handleStatusChange: () => conf.statusData.update(),
     update: async () => {
-      const { data: res } = await Api.getSysinfo()
+      const { data: res } = await Api.getSysinfo();
       switch (conf.statusData.selected.value) {
         case 1:
           {
-            const { total, used, available, usedPercent } = res.memory_usage
-            conf.statusData.usage.total = sutil.bytesTransform(total).strValue
-            conf.statusData.usage.used = sutil.bytesTransform(used).strValue
-            conf.statusData.usage.available = sutil.bytesTransform(available).strValue
-            conf.statusData.usage.usedPercent = usedPercent
+            const { total, used, available, usedPercent } = res.memory_usage;
+            conf.statusData.usage.total = sutil.bytesTransform(total).strValue;
+            conf.statusData.usage.used = sutil.bytesTransform(used).strValue;
+            conf.statusData.usage.available =
+              sutil.bytesTransform(available).strValue;
+            conf.statusData.usage.usedPercent = usedPercent;
           }
-          break
+          break;
         case 2:
           {
-            const rootDisk = res.disk_usage.find((disk: { path: string }) => disk.path === '/')
+            const rootDisk = res.disk_usage.find(
+              (disk: { path: string }) => disk.path === "/"
+            );
             if (!rootDisk) {
               // 如果没找到根目录，使用第一个磁盘信息
-              const { total, free, used, usedPercent } = res.disk_usage[0]
-              conf.statusData.usage.total = sutil.bytesTransform(total).strValue
-              conf.statusData.usage.used = sutil.bytesTransform(used).strValue
-              conf.statusData.usage.available = sutil.bytesTransform(free).strValue
-              conf.statusData.usage.usedPercent = usedPercent
+              const { total, free, used, usedPercent } = res.disk_usage[0];
+              conf.statusData.usage.total =
+                sutil.bytesTransform(total).strValue;
+              conf.statusData.usage.used = sutil.bytesTransform(used).strValue;
+              conf.statusData.usage.available =
+                sutil.bytesTransform(free).strValue;
+              conf.statusData.usage.usedPercent = usedPercent;
             } else {
               // 使用根目录磁盘信息
-              const { total, free, used, usedPercent } = rootDisk
-              conf.statusData.usage.total = sutil.bytesTransform(total).strValue
-              conf.statusData.usage.used = sutil.bytesTransform(used).strValue
-              conf.statusData.usage.available = sutil.bytesTransform(free).strValue
-              conf.statusData.usage.usedPercent = usedPercent
+              const { total, free, used, usedPercent } = rootDisk;
+              conf.statusData.usage.total =
+                sutil.bytesTransform(total).strValue;
+              conf.statusData.usage.used = sutil.bytesTransform(used).strValue;
+              conf.statusData.usage.available =
+                sutil.bytesTransform(free).strValue;
+              conf.statusData.usage.usedPercent = usedPercent;
             }
           }
-          break
+          break;
         case 3:
           {
-            const [usedPercent] = res.cpu_usage
-            const { modelName, cores } = res.cpu_info[0]
-            conf.statusData.usage.total = '--'
-            conf.statusData.usage.used = '--'
-            conf.statusData.usage.available = '--'
-            conf.statusData.usage.usedPercent = usedPercent
-            conf.statusData.cpuInfo = `${modelName} ${cores}核`
+            const [usedPercent] = res.cpu_usage;
+            const { modelName, cores } = res.cpu_info[0];
+            conf.statusData.usage.total = "--";
+            conf.statusData.usage.used = "--";
+            conf.statusData.usage.available = "--";
+            conf.statusData.usage.usedPercent = usedPercent;
+            conf.statusData.cpuInfo = `${modelName} ${cores}核`;
           }
-          break
+          break;
       }
-      conf.statusData.draw()
-    }
+      conf.statusData.draw();
+    },
   },
   memo: {
     data: {
       id: 1,
-      content: ''
+      content: "",
     },
     show: false,
     open: async () => {
-      await conf.memo.getData()
-      conf.memo.show = true
+      await conf.memo.getData();
+      conf.memo.show = true;
     },
     close: () => (conf.memo.show = false),
     getData: async () => {
-      const { data: res } = await Api.getSysRemark()
-      conf.memo.data = res
-      conf.category[3].value = res.content || '当前内容为空，点击编辑'
+      const { data: res } = await Api.getSysRemark();
+      conf.memo.data = res;
+      conf.category[3].value = res.content || "当前内容为空，点击编辑";
     },
     update: async () => {
-      await Api.updateSysRemark(conf.memo.data)
-      ElMessage.success('保存成功')
-      conf.memo.getData()
-      conf.memo.show = false
-    }
-  }
-})
+      await Api.updateSysRemark(conf.memo.data);
+      ElMessage.success("保存成功");
+      conf.memo.getData();
+      conf.memo.show = false;
+    },
+  },
+});
 
-const timer = Scope.Timer()
+const timer = Scope.Timer();
 onMounted(() => {
   timer.on(
     () => {
-      conf.statusData.update()
-      conf.monitorData.update()
+      conf.statusData.update();
+      conf.monitorData.update();
     },
     5000,
     true
-  )
-  conf.monitorData.draw({ ascend: { value: 0, strValue: '0' }, descend: { value: 0, strValue: '0' } })
-  conf.getSysCount()
-  conf.memo.getData()
-})
+  );
+  conf.monitorData.draw({
+    ascend: { value: 0, strValue: "0" },
+    descend: { value: 0, strValue: "0" },
+  });
+  conf.getSysCount();
+  conf.memo.getData();
+});
 </script>
 
 <template>
@@ -499,16 +566,23 @@ onMounted(() => {
     <div class="column fit-height fit-width">
       <div class="col column fit-width">
         <div class="col relative fit-width">
-          <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px;">
-           <div class="basic-card__title card">概览</div>
+          <div
+            class="absolute fit-height fit-width flex column no-wrap"
+            style="gap: 24px"
+          >
+            <div class="basic-card__title card">概览</div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">
-                <div class="category-item" @click="item.linkFn?.()">
-                  <div class="icon">
-                    <v-s-icon :name="item.icon" size="52" :color="conf.themeColor[sapp.theme]" />
+                <div class="category-item" :class="item.className" @click="item.linkFn?.()">
+                  <div class="icon" :class="item.className">
+                    <v-s-icon
+                      :name="item.icon"
+                      size="52"
+                      :color="conf.themeColor[sapp.theme]"
+                    />
                   </div>
                   <div class="text column items-center">
-                    <span :class="{ 'link': typeof item.value === 'string' }">
+                    <span :class="{ link: typeof item.value === 'string' }">
                       {{ item.value }}
                     </span>
                     <div class="name">{{ item.name }}</div>
@@ -523,7 +597,11 @@ onMounted(() => {
                     <div class="basic-card__title">监控</div>
                     <div class="miscellaneous">
                       <div class="switch">
-                        <span>{{ conf.monitorData.selectedType == 'network' ? '网卡' : '磁盘' }}</span>
+                        <span>{{
+                          conf.monitorData.selectedType == "network"
+                            ? "网卡"
+                            : "磁盘"
+                        }}</span>
                         <el-select
                           v-model="conf.monitorData.selectedCard"
                           placeholder="请选择"
@@ -541,14 +619,22 @@ onMounted(() => {
                       <div class="menu">
                         <div
                           class="item"
-                          :class="conf.monitorData.selectedType == 'network' ? 'active' : ''"
+                          :class="
+                            conf.monitorData.selectedType == 'network'
+                              ? 'active'
+                              : ''
+                          "
                           @click="conf.monitorData.handleChangeType('network')"
                         >
                           流量
                         </div>
                         <div
                           class="item"
-                          :class="conf.monitorData.selectedType == 'disk' ? 'active' : ''"
+                          :class="
+                            conf.monitorData.selectedType == 'disk'
+                              ? 'active'
+                              : ''
+                          "
                           @click="conf.monitorData.handleChangeType('disk')"
                         >
                           磁盘IO
@@ -560,7 +646,9 @@ onMounted(() => {
                     <div class="flow">
                       <el-space class="lefts" :size="20" spacer="|">
                         <div
-                          v-for="item in conf.monitorData[conf.monitorData.selectedType]"
+                          v-for="item in conf.monitorData[
+                            conf.monitorData.selectedType
+                          ]"
                           :key="item.label"
                           class="item"
                         >
@@ -571,20 +659,34 @@ onMounted(() => {
                       <div class="rights">
                         <div class="upper">
                           <div class="yuan"></div>
-                          <span>{{ conf.monitorData.selectedType == 'network' ? '上行' : '读取' }}</span>
+                          <span>{{
+                            conf.monitorData.selectedType == "network"
+                              ? "上行"
+                              : "读取"
+                          }}</span>
                         </div>
                         <div class="below">
                           <div class="yuan"></div>
-                          <span>{{ conf.monitorData.selectedType == 'network' ? '下行' : '写入' }}</span>
+                          <span>{{
+                            conf.monitorData.selectedType == "network"
+                              ? "下行"
+                              : "写入"
+                          }}</span>
                         </div>
                       </div>
                     </div>
-                    <basic-chart :option="conf.monitorData.chartOptions as EChartsOption" class="chart-box" />
+                    <basic-chart
+                      :option="conf.monitorData.chartOptions as EChartsOption"
+                      class="chart-box"
+                    />
                   </div>
                 </div>
               </el-col>
               <el-col :lg="8" :md="8" :sm="24">
-                <div ref="statusCard" class="basic-card flex column no-wrap fit-height">
+                <div
+                  ref="statusCard"
+                  class="basic-card flex column no-wrap fit-height"
+                >
                   <div class="basic-card__header">
                     <div class="basic-card__title">状态</div>
                     <div class="status-right">
@@ -611,7 +713,8 @@ onMounted(() => {
                       />
                       <div class="status-title">
                         <span v-if="conf.statusData.selected.value !== 3">
-                          {{ conf.statusData.usage.used }} / {{ conf.statusData.usage.total }}
+                          {{ conf.statusData.usage.used }} /
+                          {{ conf.statusData.usage.total }}
                         </span>
                         <span v-else>{{ conf.statusData.cpuInfo }}</span>
                       </div>
@@ -632,7 +735,12 @@ onMounted(() => {
                         </div>
                         <div class="b2">
                           使用率：
-                          <span>{{ conf.statusData.usage.usedPercent.toFixed(2) }} %</span>
+                          <span
+                            >{{
+                              conf.statusData.usage.usedPercent.toFixed(2)
+                            }}
+                            %</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -645,7 +753,12 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" />
+    <memo
+      :show="conf.memo.show"
+      :memo="conf.memo.data"
+      :close="conf.memo.close"
+      :update="conf.memo.update"
+    />
   </div>
 </template>
 
@@ -677,7 +790,7 @@ onMounted(() => {
       color: var(--font-color-black);
 
       &::before {
-        content: '';
+        content: "";
         background: var(--el-color-primary);
         width: 5px;
         height: 22px;
@@ -709,13 +822,13 @@ onMounted(() => {
     border: 2px solid transparent;
     transition: border-color 0.3s;
 
-    &:hover {
-      border-color: rgba(var(--primary-color), 0.88);
+    // &:hover {
+    //   border-color: rgba(var(--primary-color), 0.88);
 
-      .icon {
-        border-color: rgba(var(--primary-color), 0.63);
-      }
-    }
+    //   .icon {
+    //     border-color: rgba(var(--primary-color), 0.63);
+    //   }
+    // }
 
     .icon {
       width: 102px;
@@ -840,13 +953,15 @@ onMounted(() => {
           width: 10px;
           height: 10px;
           border-radius: 50%;
-          background: rgb(var(--primary-color));
+          // background: rgb(var(--primary-color));
+          background: rgb(var(--orange-color));
           margin-right: 10px;
         }
       }
 
       .below .yuan {
-        background: rgb(var(--blue-color));
+        // background: rgb(var(--blue-color));
+        background: rgb(var(--primary-color));
         margin-left: 5px;
       }
     }
@@ -889,7 +1004,8 @@ onMounted(() => {
         color: var(--font-color-gray);
 
         span {
-          color: #EAB170;
+          // color: #eab170;
+          color: rgb(var(--primary-color));
         }
       }
 
@@ -898,7 +1014,8 @@ onMounted(() => {
         color: var(--font-color-gray);
 
         span {
-          color: #EAB170;
+          // color: #eab170;
+          color: rgb(var(--primary-color));
         }
       }
     }
@@ -916,7 +1033,7 @@ onMounted(() => {
     }
   }
 }
-.card{
+.card {
   background: rgb(var(--bg-card-color));
   height: 64px;
   width: 100%;
@@ -926,5 +1043,40 @@ onMounted(() => {
   border-radius: 16px;
   padding: 21px 46px;
   font-size: 22px;
+}
+.b {
+  &:hover {
+    border-color: rgba(var(--primary-color), 0.88);
+    .icon {
+      border-color: rgba(var(--primary-color), 0.63);
+    }
+  }
+}
+.g{
+  &:hover {
+    border-color: #39FFDC;
+    .icon {
+      border-color: #39FFDC;
+    }
+  }
+  
+}
+.y{
+  &:hover {
+    border-color: #ec851f;
+    .icon {
+      border-color: #ec851f;
+    }
+  }
+  
+}
+.o{
+  &:hover {
+    border-color: #e1602c;
+    .icon {
+      border-color: #e1602c;
+    }
+  }
+  
 }
 </style>
