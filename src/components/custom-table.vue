@@ -17,6 +17,7 @@ interface Props {
   loading?: boolean
   selection?: boolean
   selectionChange?: (newSelection: any[]) => void
+  pagination?: boolean
   pageSize?: number
   autoPagination?: boolean
   total?: number
@@ -32,6 +33,7 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   selection: true,
+  pagination: true,
   pageSize: 10,
   total: 0,
   autoPagination: true,
@@ -113,7 +115,7 @@ const handleSelectionChange = (selection: any[]) => {
         </template>
       </el-table-column>
     </el-table>
-    <div class="pagination">
+    <div v-if="pagination" class="pagination">
       <el-pagination
         background
         layout="prev, pager, next"

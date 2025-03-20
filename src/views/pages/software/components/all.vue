@@ -7,6 +7,7 @@ import { FormInstance } from 'element-plus'
 import { Api } from '@/api/Api'
 import { Scope } from 'tools-vue3'
 import { ElMessage } from 'element-plus'
+import sapp from '@/sstore/sapp'
 
 const emit = defineEmits<ChildEmits>()
 
@@ -139,15 +140,48 @@ const handleCheckInstallLog = async (value: string) => {
     true
   )
 }
+const handleChangeLayout = ()=>{
+  sapp.setLayout(sapp.layout == 'grid'? 'list' : 'grid')
+}
+const columns = [
+  {
+    prop: 'name',
+    label: '软件名称',
+    width: 280
+  },
+  {
+    prop: 'describe',
+    label: '简介',
+  },
+  {
+    prop: 'status',
+    label: '是否安装',
+    width: 180
+  },
+  {
+    prop: 'version',
+    label: '安装版本',
+    width: 180
+  },
+  {
+    prop: 'operation',
+    label: '操作',
+    width: 180,
+    align: 'center'
+  }
+]
 </script>
 
 <template>
   <div >
-    <div class="title">应用</div>
-    <div class="list">
+    <div class="title">
+      <p>应用</p>
+      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/>
+    </div>
+    <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
-          <div style="padding: 28px 26px">
+          <!-- <div style="padding: 28px 26px"> -->
             <div class="sundry">
               <div class="icon">
                 <img :src="item.icon" alt="" />
@@ -192,12 +226,28 @@ const handleCheckInstallLog = async (value: string) => {
               </div>
             </div>
           </div>
-        </div>
+        <!-- </div> -->
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
         <span>暂无应用</span>
       </div>
+    </div>
+    <div v-else class="table-content">
+      <custom-table :columns="columns" :data="list" :pagination="false">
+        <template #status="{ row }">
+          <span v-if="row.status === 0">未安装</span>
+          <span v-else-if="row.status === 2">已安装</span>
+          <span v-else>安装失败</span>
+        </template>
+        <template #operation="{ row }">
+          <el-link :type="(row.status === 2 || installedVersions[row.key])? 'danger' : 'primary'">
+            <span class="flex items-center"  @click="(row.status === 2 || installedVersions[row.key])? handleUninstall(row) : handleInstallClick(row)">
+              {{ (row.status === 2 || installedVersions[row.key])? '卸载' : '安装' }}
+            </span>
+          </el-link>
+        </template>
+      </custom-table>
     </div>
     <custom-drawer
       :visible="drawer.show"
@@ -268,6 +318,9 @@ const handleCheckInstallLog = async (value: string) => {
   font-weight: 500;
   font-size: 18px;
   color: var(--font-color-black);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .list {
@@ -276,16 +329,15 @@ const handleCheckInstallLog = async (value: string) => {
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 20px;
-
   .item {
-    width: 32%;
-    height: 220px;
+    width: calc((100% - (4 - 1) * 22px) / 4);
+    height: 173px;
     background: rgb(var(--bg-hover-color));
     border-radius: 8px;
-    margin-left: 2%;
-    margin-bottom: 22px;
+    margin-left: 22px;
+    margin-bottom: 20px;
     border: 2px solid transparent;
-
+    padding: 28px 26px;
     &:hover {
       border-color: var(--el-color-primary);
       cursor: pointer;
@@ -296,7 +348,7 @@ const handleCheckInstallLog = async (value: string) => {
     }
 
     .menuTitle {
-      font-size: 22px;
+      font-size: 18px;
       color: var(--font-color-black);
     }
 
@@ -312,8 +364,8 @@ const handleCheckInstallLog = async (value: string) => {
       align-items: center;
 
       .icon {
-        width: 86px;
-        height: 86px;
+        width: 47px;
+        height: 47px;
         background: #ffffff;
         border-radius: 8px;
         overflow: hidden;
@@ -392,7 +444,7 @@ const handleCheckInstallLog = async (value: string) => {
     }
   }
 
-  .item:nth-of-type(3n-2) {
+  .item:nth-of-type(4n + 1) {
     margin-left: 0;
   }
 
@@ -404,6 +456,9 @@ const handleCheckInstallLog = async (value: string) => {
     align-items: center;
     color: var(--font-color-gray-light);
   }
+}
+.table-content{
+  margin-top: 24px;
 }
 
 :deep(.el-textarea__inner) {

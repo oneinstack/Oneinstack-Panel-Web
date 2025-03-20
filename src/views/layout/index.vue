@@ -344,7 +344,7 @@ const BindButton = ()=>{
       }
 
       .nav-bar {
-        padding: 1.625rem 0 0;  // 26px -> 1.625rem
+        // padding: 1.625rem 0 0;  // 26px -> 1.625rem
         background-color: rgb(var(--bg-card-color));
         position: relative;
         overflow: hidden;

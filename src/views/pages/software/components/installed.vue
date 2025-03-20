@@ -2,7 +2,7 @@
 import { Api } from '@/api/Api'
 import { ChildProps } from '../index.vue'
 import { dayjs } from 'element-plus'
-
+import sapp from '@/sstore/sapp'
 const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
@@ -15,12 +15,44 @@ const hanldeCheckRunState = async (id: number) => {
 props.list.forEach(async (item) => {
   item.isRun = await hanldeCheckRunState(item.id)
 })
+const handleChangeLayout = ()=>{
+  sapp.setLayout(sapp.layout == 'grid'? 'list' : 'grid')
+}
+const columns = [
+  {
+    prop: 'name',
+    label: '软件名称',
+    width: 280
+  },
+  {
+    prop: 'describe',
+    label: '简介',
+  },
+  {
+    prop: 'status',
+    label: '是否安装',
+    width: 180
+  },
+  {
+    prop: 'version',
+    label: '安装版本',
+    width: 180
+  },
+  {
+    prop: 'operation',
+    label: '操作',
+    width: 180,
+    align: 'center'
+  }
+]
 </script>
 
 <template>
   <div>
-    <div class="title">已安装</div>
-    <div class="list">
+    <div class="title">
+      <p>已安装</p>
+      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/></div>
+    <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
           <div style="padding: 28px 30px">
@@ -72,6 +104,14 @@ props.list.forEach(async (item) => {
         <span>尚未安装任何应用</span>
       </div>
     </div>
+    <div v-else class="table-content">
+      <custom-table :columns="columns" :data="list" :pagination="false">
+        <template #status="{ row }">
+        </template>
+        <template #operation="{ row }">
+        </template>
+      </custom-table>
+    </div>
   </div>
 </template>
 
@@ -80,6 +120,9 @@ props.list.forEach(async (item) => {
   font-weight: 500;
   font-size: 18px;
   color: var(--font-color-black);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .list {
@@ -217,5 +260,8 @@ props.list.forEach(async (item) => {
       border-color: var(--el-color-primary);
     }
   }
+}
+.table-content{
+  margin-top: 24px;
 }
 </style>
