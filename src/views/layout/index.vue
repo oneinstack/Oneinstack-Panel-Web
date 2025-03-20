@@ -207,7 +207,7 @@ const BindButton = ()=>{
                       <el-sub-menu v-if="item.children" :index="item.path" :popper-offset="-110">
                         <template #title>
                           <v-s-icon
-                            :name="item.icon"
+                            :name="`${item.icon}-${sapp.theme}`"
                             :color="
                               item.path && route.path.includes(item.path)
                                 ? item.activeColor[sapp.theme]
@@ -224,7 +224,7 @@ const BindButton = ()=>{
                           @click="child.event?.()"
                         >
                           <v-s-icon
-                            :name="child.icon"
+                            :name="`${child.icon}-${sapp.theme}`"
                             :color="
                               child.path && route.path.includes(child.path)
                                 ? child.activeColor[sapp.theme]
@@ -237,7 +237,7 @@ const BindButton = ()=>{
                       </el-sub-menu>
                       <el-menu-item v-else :index="item.path" @click="item.event?.()">
                         <v-s-icon
-                          :name="item.icon"
+                          :name="`${item.icon}-${sapp.theme}`"
                           :color="
                             item.path && route.path.includes(item.path)
                               ? item.activeColor[sapp.theme]

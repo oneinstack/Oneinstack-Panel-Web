@@ -576,7 +576,7 @@ onMounted(() => {
                 <div class="category-item" :class="item.className" @click="item.linkFn?.()">
                   <div class="icon" :class="item.className">
                     <v-s-icon
-                      :name="item.icon"
+                      :name="`${item.icon}-${sapp.theme}`"
                       size="52"
                       :color="conf.themeColor[sapp.theme]"
                     />
