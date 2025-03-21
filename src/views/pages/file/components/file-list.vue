@@ -166,11 +166,13 @@ const conf = reactive({
         const res = await conf.linkDownload.instance?.validate();
         if (!res) return;
       }
-      const path = conf.path.join("/").replace(/\/\//g, "/");
-      const { data: msg } = await Api.deleteFile({
-        path: `${path}/${conf.fileDialog.row.name}`,
-      });
-      ElMessage.success(msg);
+      if (conf.fileDialog.type === "delete") {
+        const path = conf.path.join("/").replace(/\/\//g, "/");
+        const { data: msg } = await Api.deleteFile({
+          path: `${path}/${conf.fileDialog.row.name}`,
+        });
+        ElMessage.success(msg);
+      }
       conf.fileDialog.close();
       conf.refresh();
     },
