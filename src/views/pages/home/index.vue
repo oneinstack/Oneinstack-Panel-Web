@@ -27,7 +27,7 @@ interface ChartData {
 const conf = reactive({
   themeColor: {
     light: ["#154AFC"],
-    dark: ["#EAB170"],
+    dark: ["#154AFC"],
   },
   category: [
     {

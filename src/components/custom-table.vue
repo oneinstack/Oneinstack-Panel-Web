@@ -8,6 +8,7 @@ export interface ColumnItem {
   width?: string | number
   align?: string
   fixed?: string
+  tooltip?: boolean
   placeholder?: string
   formatter?: (row: any) => string
   sortable?: boolean
@@ -89,6 +90,7 @@ const handleSelectionChange = (selection: any[]) => {
         :width="item.width"
         :fixed="item.fixed"
         :align="item.align || 'left'"
+        :show-overflow-tooltip="item.tooltip"
         :sortable="item.sortable"
         :sort-method="item.sortMethod"
       >
