@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import { computed, reactive, toRaw } from 'vue'
+import { computed, reactive, toRaw, onMounted } from 'vue'
 import SearchInput from '@/components/search-input.vue'
 import { Refresh, Setting, ArrowDown, CaretBottom, Download } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
+import InstallDialog from './components/install-dialog.vue'
 import { Api } from '@/api/Api'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 const conf = reactive({
-
   tabs: {
     activeIndex: 0,
     list: [
@@ -51,7 +51,6 @@ const conf = reactive({
       // }
     ],
     clickActive: (item: any) => {
-      conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
       conf.tabs.activeIndex = item.index
       conf.website.params.type = item.value
       conf.website.getData()
@@ -100,12 +99,19 @@ const conf = reactive({
     getWebsiteInfo: async () => {
       try {
         const { data } = await Api.getWebsiteInfo()
-        conf.website.websiteInfo = data // 保存数据
-        console.log('获取网站依赖状态', data)
+        // 添加数据校验
+        if (!data && data !== false) {
+          conf.website.websiteInfo = false
+          console.log('网站依赖状态：未安装', data)
+          return false
+        }
+        conf.website.websiteInfo = data
+        console.log('网站依赖状态：已安装', data)
         return data
       } catch (error) {
+        conf.website.websiteInfo = false
         ElMessage.error('获取网站信息失败')
-        return null
+        return false
       }
     }
   },
@@ -287,13 +293,27 @@ const conf = reactive({
 
   }
 })
+const installDialog = reactive({//开启弹窗"
+  visible: false
+})
 const handleInstall = () => {
+  installDialog.visible = true
+  // conf.website.websiteInfo = true
+  // ElMessage({
+  //   type: 'warning',
+  //   message: '功能开发中...'
+  // })
+}
+const handleInstallConfirm = () => {
   conf.website.websiteInfo = true
   ElMessage({
-    type: 'warning',
-    message: '功能开发中...'
+    type: 'success',
+    message: '安装成功'
   })
 }
+onMounted(() => {
+  conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
+})
 
 conf.website.getData()
 </script>
@@ -376,7 +396,7 @@ conf.website.getData()
               <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
               <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
               <el-button type="primary" link style="margin-right: 8px"
-                @click="conf.dialog.open('delete', row)">设置</el-button>
+                @click="conf.drawer.open('edit', row)">设置</el-button>
               <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
               <el-button type="danger" link
                 style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
@@ -429,13 +449,22 @@ conf.website.getData()
         <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
       </template>
     </custom-dialog>
+    <!--安装插件弹窗-->
+    <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" />
   </div>
 </template>
 
 <style scoped lang="less">
+:deep(.el-dialog) {
+  padding: 0px !important;
+  .el-dialog__header{
+    padding: 0 !important;
+  }
+}
 .main-content {
   position: relative; // 添加相对定位
 }
+
 .blur-mask {
   filter: blur(10px);
   pointer-events: none;
@@ -444,7 +473,7 @@ conf.website.getData()
 
 .mask-tip {
   position: absolute;
-  top: 15%;
+  top: 22%;
   left: 6%;
   // transform: translate(-50%, -50%);
   z-index: 10;
@@ -471,7 +500,7 @@ conf.website.getData()
 
     .highlight {
       font-size: 18px;
-      color: #FF9900;
+      color: #1677FF;
       margin: 0 2px;
     }
   }
@@ -483,6 +512,7 @@ conf.website.getData()
     display: flex;
     align-items: center;
     gap: 4px;
+    margin-top: 1%;
   }
 }
 </style>
