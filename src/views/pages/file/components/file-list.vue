@@ -43,7 +43,7 @@ const conf = reactive({
       prop: "name",
       label: "文件名称",
       sortable: true,
-      width: "500",
+      width: "420",
       tooltip: true,
     },
     { prop: "permissions", label: "权限", width: "180" },
@@ -54,7 +54,7 @@ const conf = reactive({
     {
       prop: "action",
       label: "操作",
-      width: "200",
+      width: "280",
       align: "center",
       fixed: "right",
     },
