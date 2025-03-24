@@ -4,6 +4,8 @@ import { CircleClose } from '@element-plus/icons-vue'
 interface Props {
   title?: string
   width?: string
+  bodyBgColor?: string
+  footerBgColor?: string
   showClose?: boolean
   onClose?: () => void
 }
@@ -11,6 +13,7 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   title: 'title',
   width: '624px',
+  bodyBgColor:'transparent',
   showClose: false
 })
 
@@ -68,10 +71,12 @@ const show = defineModel<boolean>('show')
 
   &__body {
     padding: 16px 28px 0;
+    background: v-bind(bodyBgColor);
   }
 
   &__footer {
     padding: 28px;
+    background: v-bind(footerBgColor);
   }
 }
 </style>

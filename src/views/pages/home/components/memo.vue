@@ -15,8 +15,8 @@ defineProps<Props>()
 </script>
 
 <template>
-  <custom-dialog :show="show" title="备忘录" width="624px" :show-close="false" @update:show="close">
-    <el-input v-model="memo.content" type="textarea" placeholder="请输入备忘录内容" />
+  <custom-dialog :show="show" title="新建备忘录" width="624px" :show-close="false" @update:show="close">
+    <el-input v-model="memo.content" type="textarea" :rows="20" placeholder="请输入备忘录内容" />
     <template #footer>
       <el-button type="primary" @click="update">保存</el-button>
       <el-button @click="close">取消</el-button>

@@ -12,6 +12,14 @@ export const Api = {
   getSysMonitor: () => {
     return http.get('/sys/monitor')
   },
+  /** 获取备忘录数量 */
+  getRemarkCount: () => {
+    return http.get('/sys/remarkcount')
+  },
+  /** 获取备忘录列表 */
+  getRemark: () => {
+    return http.get('/sys/remark')
+  },
   /** 获取备注信息 */
   getSysRemark: (id = 1) => {
     return http.get(`/sys/remark/${id}`)

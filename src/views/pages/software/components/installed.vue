@@ -7,13 +7,13 @@ const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
 
-const hanldeCheckRunState = async (id: number) => {
+const handleCheckRunState = async (id: number) => {
   const { data: isRun } = await Api.getSoftRunState({ id })
   return isRun
 }
 
 props.list.forEach(async (item) => {
-  item.isRun = await hanldeCheckRunState(item.id)
+  item.isRun = await handleCheckRunState(item.id)
 })
 const handleStart = () => {
   

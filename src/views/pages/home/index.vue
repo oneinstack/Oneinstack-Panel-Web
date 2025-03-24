@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import memo from "./components/memo.vue";
+import memoList from "./components/memoList.vue";
 import { markRaw, onMounted, reactive, ref, computed } from "vue";
 import sapp from "@/sstore/sapp";
 import { Api } from "@/api/Api";
@@ -560,9 +560,11 @@ const conf = reactive({
     },
     close: () => (conf.memo.show = false),
     getData: async () => {
-      const { data: res } = await Api.getSysRemark();
+      // const { data: res } = await Api.getSysRemark();
+      const { data : res } = await Api.getRemarkCount();
       conf.memo.data = res;
-      conf.category[3].value = res.content || "当前内容为空，点击编辑";
+      // conf.category[3].value = res.content || 0;
+      conf.category[3].value = res || 0;
     },
     update: async () => {
       await Api.updateSysRemark(conf.memo.data);
@@ -741,7 +743,8 @@ onMounted(() => {
         </div>
       </div>
     </div>
-    <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" />
+    <!-- <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" /> -->
+    <memo-list :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" />
     <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" />
   </div>
 </template>
