@@ -64,7 +64,14 @@ const conf = reactive({
       { prop: 'name', label: '网站名', width: 200 },
       { prop: 'domain', label: '其他域名', width: 250 },
       { prop: 'dir', label: '目录', width: 200 },
-      { prop: 'type', label: '类型', width: 200 },
+      { prop: 'type', label: '类型', width: 200, formatter:(row: any) =>{
+        const typeMap = {
+          php: 'PHP',
+          proxy: '代理',
+          static: '静态'
+        }
+        return typeMap[row.type as keyof typeof typeMap] || row.type
+      } },
       { prop: 'remark', label: '备注' },
       {
         prop: 'create_time', label: '创建时间', width: 200,
@@ -96,24 +103,24 @@ const conf = reactive({
       conf.form.data.value.type = conf.website.params.type
     },
     websiteInfo: false, // 添加状态
-    getWebsiteInfo: async () => {
-      try {
-        const { data } = await Api.getWebsiteInfo()
-        // 添加数据校验
-        if (!data && data !== false) {
-          conf.website.websiteInfo = false
-          console.log('网站依赖状态：未安装', data)
-          return false
-        }
-        conf.website.websiteInfo = data
-        console.log('网站依赖状态：已安装', data)
-        return data
-      } catch (error) {
-        conf.website.websiteInfo = false
-        ElMessage.error('获取网站信息失败')
-        return false
-      }
-    }
+    // getWebsiteInfo: async () => {
+    //   try {
+    //     const { data } = await Api.getWebsiteInfo()
+    //     // 添加数据校验
+    //     if (!data && data !== false) {
+    //       conf.website.websiteInfo = false
+    //       console.log('网站依赖状态：未安装', data)
+    //       return false
+    //     }
+    //     conf.website.websiteInfo = data
+    //     console.log('网站依赖状态：已安装', data)
+    //     return data
+    //   } catch (error) {
+    //     conf.website.websiteInfo = false
+    //     ElMessage.error('获取网站信息失败')
+    //     return false
+    //   }
+    // }
   },
   drawer: {
     show: false,
@@ -304,16 +311,16 @@ const handleInstall = () => {
     message: '功能开发中...'
   })
 }
-const handleInstallConfirm = () => {
-  conf.website.websiteInfo = true
-  ElMessage({
-    type: 'success',
-    message: '安装成功'
-  })
-}
-onMounted(() => {
-  conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
-})
+// const handleInstallConfirm = () => {
+//   conf.website.websiteInfo = true
+//   ElMessage({
+//     type: 'success',
+//     message: '安装成功'
+//   })
+// }
+// onMounted(() => {
+//   conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
+// })
 
 conf.website.getData()
 </script>
@@ -450,7 +457,7 @@ conf.website.getData()
       </template>
     </custom-dialog>
     <!--安装插件弹窗-->
-    <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" />
+    <!-- <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" /> -->
   </div>
 </template>
 
@@ -469,6 +476,7 @@ conf.website.getData()
   filter: blur(10px);
   pointer-events: none;
   user-select: none;
+  margin: 0 20px;
 }
 
 .mask-tip {

@@ -6,7 +6,7 @@ import sapp from '@/sstore/sapp'
 const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
-
+console.log('安装列表',props.list)
 const hanldeCheckRunState = async (id: number) => {
   const { data: isRun } = await Api.getSoftRunState({ id })
   return isRun
@@ -15,21 +15,6 @@ const hanldeCheckRunState = async (id: number) => {
 props.list.forEach(async (item) => {
   item.isRun = await hanldeCheckRunState(item.id)
 })
-const handleStart = () => {
-  
-}
-const handleRestart = () => {
-  
-}
-const handleStop = () => {
-  
-}
-const handleUninstall = () => {
-  
-}
-const handleSync = () => {
-  
-}
 const handleChangeLayout = ()=>{
   sapp.setLayout(sapp.layout == 'grid'? 'list' : 'grid')
 }
@@ -66,15 +51,7 @@ const columns = [
   <div>
     <div class="title">
       <p>已安装</p>
-      <div class="right">
-        <el-button type="primary" class="btn" @click="handleStart">一键启动</el-button>
-        <el-button type="primary" class="btn" @click="handleRestart">一键重启</el-button>
-        <el-button type="primary" class="btn" @click="handleStop">一键停止</el-button>
-        <el-button type="primary" class="btn" @click="handleUninstall">一键卸载</el-button>
-        <el-button type="primary" class="btn" @click="handleSync">同步</el-button>
-        <v-s-icon name="layout" size="22" class="cursor-pointer icon" @click="handleChangeLayout"/>
-      </div>
-      </div>
+      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/></div>
     <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
@@ -97,7 +74,7 @@ const columns = [
                   </div>
                 </div>
                 <div class="tip">
-                  <div class="btn">版本：1.21.4</div>
+                  <div class="btn">版本：{{ item.versions[0] }}</div>
                   <div class="btn">服务端口：80</div>
                   <div class="btn">服务端口：443</div>
                 </div>
@@ -146,28 +123,20 @@ const columns = [
   display: flex;
   justify-content: space-between;
   align-items: center;
-  .right{
-      display: flex;
-      align-items: center;
-      .icon{
-        margin-left: 12px;
-      }
-  }
 }
 
 .list {
   width: 100%;
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
   margin-top: 20px;
 
   .item {
-    width: 49%;
+    width: 100%;
     height: 220px;
     background: rgb(var(--bg-hover-color));
     border-radius: 8px;
-    margin-left: 2%;
     margin-bottom: 22px;
     border: 2px solid transparent;
 

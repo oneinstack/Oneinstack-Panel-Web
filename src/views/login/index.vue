@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, useTemplateRef,ref } from 'vue'
+import { reactive, useTemplateRef, ref } from 'vue'
 import LoginContainer from './components/login-container.vue'
 import System from '@/utils/System'
 import { Api } from '@/api/Api'
@@ -35,7 +35,7 @@ const conf = reactive({
       })
       console.log(res)
       ElMessage.success('登录成功')
-      
+
       sconfig.login(res)
       setTimeout(() => {
         System.router.push('/')
@@ -61,39 +61,42 @@ const conf = reactive({
 <template>
   <login-container :loading="conf.loading" currentActive="login">
     <template #default="{ className }">
-      <div class="logo-box flex justify-center fit-width" :class="{'mobile-logo': isMobile}" style="padding: 100px 0 60px;">
-        <transition name="logo-fade" mode="out-in">
+      <div class="logo-box flex justify-center fit-width" :class="{ 'mobile-logo': isMobile }">
+        <!-- <transition name="logo-fade" mode="out-in">
           <img v-if="isMobile" src="/static/images/logo-pc.png" alt="logo" width="320" height="60" key="pc-logo" />
           <img v-else src="/static/images/logo-app.png" alt="logo" width="180" height="180" key="mobile-logo" />
-        </transition>
+        </transition> -->
       </div>
-      <div class="" :class="{'login-title-box': isMobile}">
-        <div class="login-title flex" :class="{'mobile-title': isMobile}">
-			 <!-- {{i18n.t('welcome')}} -->
+      <div class="" :class="{ 'login-title-box': isMobile }">
+        <div class="login-title flex" :class="{ 'mobile-title': isMobile }">
+          <!-- {{i18n.t('welcome')}} -->
           <transition name="fade" mode="out-in">
-			 
-            <div style="flex: 1;" :key="!isMobile ? 1 : 0">{{ isMobile ? '欢迎使用': '欢迎来到Oneinstack' }}</div>
+            <img v-if="isMobile" src="/static/images/logo-pc.png" alt="logo" width="202.62" height="35.32"
+              key="pc-logo" />
+            <img v-else src="/static/images/logo-app.png" alt="logo" width="180" height="180" key="mobile-logo" />
           </transition>
         </div>
         <el-form ref="formRef" :model="conf.form" :rules="conf.rules" class="fit-width">
-          <el-form-item :class="[className.formItemGap, {'input-box': !isMobile}]" prop="username" >
-            <el-input v-model="conf.form.username" placeholder="输入您的账号" clearable  :class="{'pc-input': isMobile}">
+          <el-form-item :class="[className.formItemGap, { 'input-box': !isMobile }]" prop="username">
+            <el-input v-model="conf.form.username" placeholder="输入您的账户/手机号/邮箱号" clearable
+              :class="{ 'pc-input': isMobile }">
               <template #prefix>
-                <v-s-icon name="user" size="30" />
+                <v-s-icon name="user" size="20" />
               </template>
             </el-input>
           </el-form-item>
-          <el-form-item prop="password" :class="{'input-box': !isMobile}">
-            <el-input v-model="conf.form.password" placeholder="输入您的密码" type="password" clearable :class="{'pc-input': isMobile}" >
+          <el-form-item prop="password" :class="{ 'input-box': !isMobile }">
+            <el-input v-model="conf.form.password" placeholder="输入您的密码" type="password" clearable
+              :class="{ 'pc-input': isMobile }">
               <template #prefix>
-                <v-s-icon name="password" size="30" />
+                <v-s-icon name="password" size="20" />
               </template>
             </el-input>
           </el-form-item>
           <div class="flex justify-between">
             <el-checkbox v-model="conf.form.remember" label="记住密码" />
           </div>
-          <button :class="[className.loginBtn, {'mobile-btn': isMobile}]" @click.prevent="conf.handleLogin">登录</button>
+          <button :class="[className.loginBtn, { 'mobile-btn': isMobile }]" @click.prevent="conf.handleLogin">登录</button>
         </el-form>
       </div>
       <!-- <div :class="className.other">
@@ -106,45 +109,72 @@ const conf = reactive({
 </template>
 
 <style scoped lang="less">
-@primary-color: #f7911c;
+@primary-color: #1677FF;
 @font-gray: #a2a2a2;
 @border-gray: #e3e3e3;
 @bg-color: #f5f5f5;
 
-.login-title{
+:deep(.el-input__wrapper.is-focus){
+  border-bottom: 1px solid #1677FF !important;
+}
+
+:deep(.el-checkbox) {
+  --el-checkbox-font-size: 0.75rem; // 12px
+}
+:deep(.el-checkbox__label) {
+  padding-left: 6px;
+  font-weight: 400;
+}
+:deep(.el-checkbox__inner){
+  width: 0.625rem; // 10px
+  height: 0.625rem; // 10px
+}
+:deep(.el-checkbox__inner:after) {
+  width: 0.125rem !important; // 2px
+  left: 0.1875rem !important; // 3px
+  top: 0.0625rem !important; // 1px
+  height: 0.3125rem !important; // 5px
+}
+
+.login-title {
   display: flex;
   font-size: 32px;
   font-weight: 600;
   color: #2b2b2b;
-  margin-bottom: 20px;
+  margin-bottom: 40px;
   text-align: left;
-  justify-content: flex-start;
+  justify-content: center;
   width: 100%;
 }
-.login-title-box{
-  width: 560px;
+
+.login-title-box {
+  width: 415px;
+  height: 451px;
   display: flex;
   flex-direction: column;
   align-items: center;
   background-color: #ffffff;
-  padding: 62px;
+  padding: 49px 58px 54px 58px;
   border-radius: 40px;
-  box-shadow: 0px 12px 32px 1px rgba(0,0,0,0.11);
+  box-shadow: 0px 12px 32px 1px rgba(0, 0, 0, 0.11);
 }
-.input-box{
+
+.input-box {
   width: 300px;
-height: 62px;
-background: #FAF4EC;
-border-radius: 20px 20px 20px 20px;
-padding:  0 20px;
+  height: 62px;
+  background: #FAF4EC;
+  border-radius: 20px 20px 20px 20px;
+  padding: 0 20px;
 }
-.pc-input{
+
+.pc-input {
   // border-bottom: none;
   border-bottom: 1px solid #f5f5f5
 }
+
 .login-content-right__main {
   &-logo {
-    margin-bottom: 80px;
+    margin-bottom: 5rem; // 80px
   }
 
   &-other {

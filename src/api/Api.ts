@@ -56,6 +56,10 @@ export const Api = {
   installSoft: (obj: any) => {
     return http.post('/soft/install', obj)
   },
+  /** 卸载软件 */
+  uninstallSoft: (obj: any) => {
+    return http.post('/soft/remove', obj)
+  },
   /** 获取安装日志 */
   getInstallLog: (obj: any) => {
     return http.get('/soft/getlog', obj)

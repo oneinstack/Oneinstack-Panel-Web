@@ -24,9 +24,9 @@ onMounted(() => {
     } else {
       if (!splineScript) {
         const script = document.createElement('script')
-        script.style.width='80px'
+        script.style.width = '80px'
         script.type = 'module'
-        script.src = 'https://unpkg.com/@splinetool/viewer@1.9.68/build/spline-viewer.js'
+        script.src = 'https://unpkg.com/@splinetool/viewer@1.9.80/build/spline-viewer.js'
         script.onload = () => {
           if (splineViewer) {
             (splineViewer as HTMLElement).style.display = 'block'
@@ -62,18 +62,16 @@ withDefaults(defineProps<Props>(), {
 <template>
   <div v-loading="loading" class="login-container">
     <div class="login-content-left" v-if="!isMobile">
-      <spline-viewer url="/static/scene.splinecode"></spline-viewer>
+      <spline-viewer url="https://prod.spline.design/nEzSxPOHnLSytI2e/scene.splinecode"></spline-viewer>
     </div>
 
     <div class="login-content-right">
       <div class="login-content-right__main">
-        <slot
-          :className="{
-            loginBtn: 'login-content-right__main-login-btn',
-            other: 'login-content-right__main-other',
-            formItemGap: 'login-content-right__main-form-item-gap'
-          }"
-        />
+        <slot :className="{
+    loginBtn: 'login-content-right__main-login-btn',
+    other: 'login-content-right__main-other',
+    formItemGap: 'login-content-right__main-form-item-gap'
+  }" />
       </div>
     </div>
   </div>
@@ -82,7 +80,7 @@ withDefaults(defineProps<Props>(), {
 
 
 <style scoped lang="less">
-@primary-color: #f7911c;
+@primary-color: #1C9AF7;
 @error-color: #ff4848;
 @font-gray: #a2a2a2;
 @border-gray: #e3e3e3;
@@ -92,19 +90,19 @@ withDefaults(defineProps<Props>(), {
   width: 100%;
   height: 100vh;
   // background-color: @bg-color;
-  background: rgb(255, 250 , 243);
+  background: #F5F7FF;
   // background: url('/static/images/login-bg.png') no-repeat;
   display: flex;
-  justify-content: center;
+  justify-content: space-evenly;
   align-items: center;
 
   .login-content-left {
-    min-width: 34.375rem;
+    min-width: 37.5rem;
     padding: 2rem 0;
     // width: 657px;
     height: 100%;
     // background: url('/static/images/login-bg.webp') no-repeat;
-    background: rgb(255, 250 , 243);
+    background: #F5F7FF;
     background-size: 100% 100%;
     // position: relative;
 
@@ -114,7 +112,7 @@ withDefaults(defineProps<Props>(), {
       right: 0;
       transform: translate(0, -50%);
       // width: 163px;
-      height: 210px;
+      height: 13.125rem; // 210px
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -122,12 +120,12 @@ withDefaults(defineProps<Props>(), {
       &-login,
       &-register {
         flex: 0.5;
-        border-radius: 30px 0 0 30px;
+        border-radius: 1.875rem 0 0 1.875rem; // 30px
         cursor: pointer;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 24px;
+        font-size: 1.5rem; // 24px
         color: #fff;
 
         &.active {
@@ -142,11 +140,11 @@ withDefaults(defineProps<Props>(), {
   .login-content-right {
     // flex: 1;
     height: 100%;
-    // display: flex;
+    display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    margin-left: 3.75rem;
+
     &__main {
       // width: 434px;
       display: flex;
@@ -155,13 +153,13 @@ withDefaults(defineProps<Props>(), {
       align-items: center;
 
       :deep(.login-content-right__main-login-btn) {
-        margin-top: 48px;
-        width: 100%;
-        height: 58px;
-        background: linear-gradient(180deg, @primary-color 0%, #ff4848 100%);
+        margin-top: 3rem; // 48px
+        width: 18.8125rem; // 301px
+        height: 2.8125rem; // 45px
+        background: linear-gradient(168deg, #1C9AF7 0%, #484FFF 100%);
         border-radius: 10px;
         font-weight: 500;
-        font-size: 20px;
+        font-size: 1rem;
         color: #ffffff;
         cursor: pointer;
         transition: box-shadow 0.3s;
@@ -173,11 +171,11 @@ withDefaults(defineProps<Props>(), {
       }
 
       :deep(.login-content-right__main-form-item-gap) {
-        margin-bottom: 50px;
+        margin-bottom: 2.5rem;
       }
 
       :deep(.login-content-right__main-other) {
-        margin-top: 53px;
+        margin-top: 3.3125rem;
         width: 100%;
         display: flex;
         flex-direction: column;
@@ -238,6 +236,10 @@ withDefaults(defineProps<Props>(), {
   --el-link-text-color: @font-gray;
   --el-link-font-weight: 400;
   --el-link-hover-text-color: @primary-color;
+}
+
+:deep(.el-form-item) {
+  margin-bottom: 15px;
 }
 
 :deep(.el-form-item.is-error) {
