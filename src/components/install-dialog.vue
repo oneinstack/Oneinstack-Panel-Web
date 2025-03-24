@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { reactive, ref, computed } from 'vue'
+import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
-import sapp from '@/sstore/sapp' // 假设 sapp 存储了主题信息
-
-// 获取当前主题
-const currentTheme = computed(() => sapp.theme)
 
 const props = defineProps({
   visible: {
@@ -68,10 +64,8 @@ const togglePackage = (pkg: Package) => {
   <el-dialog :model-value="visible" @update:model-value="emit('update:visible', $event)" width="1018px"
     :close-on-click-modal="false" @close="handleClose" :show-close="false">
     <div class="install-dialog">
-      <img v-if="currentTheme === 'light'" src="../../../../../public/static/images/bj-install-light.png" alt="" class="background-image">
-      <img v-else src="../../../../../public/static/images/bj-install-dark.png" alt="" class="background-image">
-      <v-s-icon v-if="currentTheme === 'light'" name="off-light" size="32" classs="close" @click="handleClose" />
-      <v-s-icon v-else name="off-dark" size="32" classs="close" @click="handleClose" />
+      <img src="../../../../../public/static/images/bj-install.png" alt="" class="background-image">
+      <v-s-icon name="off" size="32" classs="close" @click="handleClose" />
       <span class="top">根据您的使用情况，推荐<span class="theme-color">安装以下套件</span></span>
       <div class="top-text">我们为您推荐安装以下一键套件，请您需选择或在<span class='theme-color'>软件商店</span>中自动选择，推荐安装 <strong
           class='theme-color'>LNMP</strong></div>
@@ -95,8 +89,7 @@ const togglePackage = (pkg: Package) => {
                 </div>
                 <div class="status-indicator">
                   <div v-if="!pkg.checked" class="package-extra"></div>
-                  <v-s-icon v-else-if="currentTheme === 'light'" name="rund-while" size="15" class="check-icon" />
-                  <v-s-icon v-else name="rund-an" size="15" class="check-icon" />
+                  <v-s-icon v-else name="rund-while" size="15" class="check-icon" />
                 </div>
               </div>
               <div></div>
@@ -104,8 +97,8 @@ const togglePackage = (pkg: Package) => {
             <div class="install-options">
               <div class="mb-2 flex items-center text-sm">
                 <el-radio-group v-model="radio1" class="ml-4">
-                  <el-radio label="1" size="large" class="text">急速安装</el-radio>
-                  <el-radio label="2" size="large" class="text">编译安装</el-radio>
+                  <el-radio label="1" size="large">急速安装</el-radio>
+                  <el-radio label="2" size="large">编译安装</el-radio>
                 </el-radio-group>
               </div>
             </div>
@@ -129,8 +122,7 @@ const togglePackage = (pkg: Package) => {
                 </div>
                 <div class="status-indicator">
                   <div v-if="!pkg.checked" class="package-extra"></div>
-                  <v-s-icon v-else-if="currentTheme === 'light'" name="rund-while" size="15" class="check-icon" />
-                  <v-s-icon v-else name="rund-an" size="15" class="check-icon" />
+                  <v-s-icon v-else name="rund-while" size="15" class="check-icon" />
                 </div>
               </div>
               <div></div>
@@ -138,8 +130,8 @@ const togglePackage = (pkg: Package) => {
 
             <div class="install-options">
               <el-radio-group v-model="radio2" class="ml-4">
-                <el-radio label="1" size="large" class="text">急速安装</el-radio>
-                <el-radio label="2" size="large" class="text">编译安装</el-radio>
+                <el-radio label="1" size="large">急速安装</el-radio>
+                <el-radio label="2" size="large">编译安装</el-radio>
               </el-radio-group>
             </div>
           </div>
@@ -163,16 +155,15 @@ const togglePackage = (pkg: Package) => {
                 </div>
                 <div class="status-indicator">
                   <div v-if="!pkg.checked" class="package-extra"></div>
-                  <v-s-icon v-else-if="currentTheme === 'light'" name="rund-while" size="15" class="check-icon" />
-                  <v-s-icon v-else name="rund-an" size="15" class="check-icon" />
+                  <v-s-icon v-else name="rund-while" size="15" class="check-icon" />
                 </div>
               </div>
               <div></div>
             </div>
             <div class="install-options">
               <el-radio-group v-model="radio3" class="ml-4">
-                <el-radio label="1" size="large" class="text">急速安装</el-radio>
-                <el-radio label="2" size="large" class="text">编译安装</el-radio>
+                <el-radio label="1" size="large">急速安装</el-radio>
+                <el-radio label="2" size="large">编译安装</el-radio>
               </el-radio-group>
             </div>
           </div>
@@ -208,17 +199,12 @@ const togglePackage = (pkg: Package) => {
 </template>
 
 <style scoped lang="less">
-.ml-4{
-  .text{
-    color: var(--dialog-install-color);
-  }
-}
 .install-options {
-  padding-left: 1.4375rem;
+  padding-left: 23px;
 }
 
 .install-dialog {
-  padding: 1.875rem 1.875rem 0 1.875rem;
+  padding: 30px 30px 0 30px;
   position: relative;
   z-index: 1;
 
@@ -231,77 +217,77 @@ const togglePackage = (pkg: Package) => {
 
   .close {
     position: absolute;
-    top: 1.75rem;
-    right:  1.75rem;
+    top: 28px;
+    right: 28px;
     cursor: pointer;
   }
 
   .top {
-    font-size: 1.125rem;
-    color: var(--font-color-black);
+    font-size: 18px;
+    color: #2B2B2B;
     font-weight: bold;
   }
 
   .top-text {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: var(--dialog-color);
+    margin-top: 8px;
+    font-size: 14px;
+    color: #969696;
 
   }
 
   .tab-container {
     display: flex;
     justify-content: flex-start;
-    margin-top: 2rem;
-    padding-bottom: 1.5625rem;
-    border-bottom: 1px dashed var(--dialog-color); // 添加虚线边框
+    margin-top: 32px;
+    padding-bottom: 25px;
+    border-bottom: 1px dashed #c9c9c9; // 添加虚线边框
     
     &-box {
-      margin-right: 3.4375rem;
+      margin-right: 55px;
     }
   }
 
   .tab-item {
     display: flex;
-    font-size: 1rem;
-    color: var(--font-color-black);
+    font-size: 16px;
+    color: #333;
     align-items: center;
   }
 
   .tab-indicator {
-    width: 0.1875rem; // 3px / 16
-    height: 0.8125rem; // 13px / 16
-    background-color: var(--el-color-primary);
-    margin-right: 0.5rem; // 8px / 16
-    border-radius: 0.375rem; // 6px / 16
-    margin-right: 0.875rem; // 14px / 16
+    width: 3px;
+    height: 13px;
+    background-color: #1677FF; // 橙色指示器
+    margin-right: 8px;
+    border-radius: 6px;
+    margin-right: 14px;
   }
 
   .package-list {
-    margin-top: 1.75rem;
+    margin-top: 28px;
   }
 
   .package-item {
     display: flex;
     align-items: center;
-    padding: 0.5rem;
-    border: 1px solid var(--dialog-border);
+    padding: 8px;
+    border: 1px solid #f0f0f0;
     border-radius: 4px;
     margin-bottom: 8px;
     transition: border-color 0.3s;
 
     &.selected {
-      border-color:  var(--el-color-primary); // 主题色边框
-      background-color: rgba(var(--primary-color), 0.05); // 添加轻微的背景色
+      border-color: #1677FF; // 主题色边框
+      background-color: rgba(22, 119, 255, 0.05); // 添加轻微的背景色
     }
   }
 
   .package-icon {
-    width: 1.6875rem; // 27px / 16
-    height: 1.6875rem; // 27px / 16
+    width: 27px;
+    height: 27px;
     background-color: #ccc; // 用于替代软件图标的小盒子
-    margin-right: 1.1875rem; // 19px / 16
-    border-radius: 0.25rem; // 4px / 16
+    margin-right: 19px;
+    border-radius: 4px;
   }
 
   .package-info {
@@ -312,8 +298,8 @@ const togglePackage = (pkg: Package) => {
 
   .package-down {
     box-sizing: content-box;
-    width: 2.1875rem; // 35px / 16
-    margin-left: 2.1875rem; // 35px / 16
+    width: 35px;
+    margin-left: 35px;
     border-left: 1px solid #B7B6B7;
     display: flex;
     justify-content: space-evenly;
@@ -325,15 +311,15 @@ const togglePackage = (pkg: Package) => {
   }
 
   .theme-color {
-    color: var(--el-color-primary); // 主题色为蓝色
+    color: #1677FF; // 主题色为蓝色
   }
 }
 
 .package-wrapper {
   display: flex;
   align-items: center;
-  gap: 0.75rem; // 12px / 16
-  margin-bottom: 0.75rem; // 12px / 16
+  gap: 12px;
+  margin-bottom: 12px;
 
   .package-item {
     flex: 1;
@@ -341,13 +327,13 @@ const togglePackage = (pkg: Package) => {
   }
 
   .status-indicator {
-    width: 0.9375rem; // 15px / 16
-    height: 0.9375rem; // 15px / 16
+    width: 15px;
+    height: 15px;
     position: relative;
 
     .package-extra {
-      width: 0.875rem; // 14px / 16
-      height: 0.875rem; // 14px / 16
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       border: 1px solid #B7B6B7;
       position: absolute;
@@ -373,7 +359,7 @@ const togglePackage = (pkg: Package) => {
 
   &:hover {
     .package-extra {
-      border-color: var(--el-color-primary);
+      border-color: #1677FF;
     }
   }
 
@@ -389,26 +375,6 @@ const togglePackage = (pkg: Package) => {
   }
 }
 .template-footer{
-  padding: 0.9375rem 1.875rem 1.875rem 0; // 15px / 16, 30px / 16
-}
-// 媒体查询适配
-@media (max-width: 768px) {
-  .install-dialog {
-    padding: 1rem;
-
-    .tab-container {
-      flex-direction: column;
-      margin-top: 1rem;
-
-      &-box {
-        margin-right: 0;
-        margin-bottom: 1rem;
-      }
-    }
-
-    .package-item {
-      padding: 0.25rem;
-    }
-  }
+ padding: 15px 30px 30px 0;
 }
 </style>

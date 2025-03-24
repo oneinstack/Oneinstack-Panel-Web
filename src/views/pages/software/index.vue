@@ -165,7 +165,10 @@ conf.list.getData()
 </template>
 
 <style scoped lang="less">
-
+// :deep(.el-select__wrapper) {
+//   background: var(--select-bg-color) !important;
+//   border: 1px solid var(--select-border-color)!important;
+// }
 
 .category {
   height: 60px;

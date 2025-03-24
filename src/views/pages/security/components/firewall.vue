@@ -15,7 +15,7 @@ const wall_value = ref(false)
 const ping_value = ref(false)
 const isAdd = ref(true)
 const currentRow = ref({})
-
+const lastClickTime = ref(0); // 记录上次点击时间
 
 
 const tableData = ref([])
@@ -54,25 +54,36 @@ const dialog = reactive({
     timer && timer.clear()
   }
 })
-const handleOpenPing =async (value: string) => {
-  console.log(value,'value')
-  if(value === 'ping'){
-    const { data: res_wall} = await Api.openPing('')
-    console.log(res_wall,'res_wall')
-    if (res_wall){
-      let ping_val = !ping_value.value
-      ping_value.value = !ping_val
-    }
-   
-  }else{
-    const { data: res_ping } = await Api.stopFirewall('')
-    if(res_ping) {
-      let wall_val = !wall_value.value
-      wall_value.value = !wall_val
-    }
-   
+const handleOpenPing = async (value: string) => {
+  console.log(value, 'value');
+  const now = Date.now();
+  if (now - lastClickTime.value < 1000) {
+    ElMessage.warning('请勿频繁切换');
+    return;
   }
-}
+  lastClickTime.value = now;
+
+  try {
+    let res;
+    if (value === 'ping') {
+      res = await Api.openPing('');
+    } else {
+      res = await Api.stopFirewall('');
+    }
+
+    // 根据实际 API 返回结构处理
+    if (res.code === 0) {
+      // 如果操作成功，重新获取最新状态
+      await getFirewallInfo();
+      ElMessage.success(res.message || '操作成功');
+    } else {
+      ElMessage.error(res.message || '操作失败');
+    }
+  } catch (error) {
+    ElMessage.error('操作失败');
+  }
+};
+
 let searchValue = ref('')
 const pagination = reactive({
   currentPage: 1,

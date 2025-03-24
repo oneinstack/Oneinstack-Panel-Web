@@ -40,11 +40,11 @@ const conf = reactive({
         index: 5,
         value: 'proxy'
       },
-      // {
-      //   name: 'HTML项目',
-      //   index: 6,
-      //   value: 'static'
-      // }
+      {
+        name: 'HTML项目',
+        index: 6,
+        value: 'static'
+      }
       // {
       //   name: '其他项目',
       //   index: 7
@@ -297,12 +297,12 @@ const installDialog = reactive({//开启弹窗"
   visible: false
 })
 const handleInstall = () => {
-  installDialog.visible = true
-  // conf.website.websiteInfo = true
-  // ElMessage({
-  //   type: 'warning',
-  //   message: '功能开发中...'
-  // })
+  // installDialog.visible = true
+  conf.website.websiteInfo = true
+  ElMessage({
+    type: 'warning',
+    message: '功能开发中...'
+  })
 }
 const handleInstallConfirm = () => {
   conf.website.websiteInfo = true

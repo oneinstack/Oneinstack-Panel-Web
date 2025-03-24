@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive ,ref} from 'vue'
+import { reactive ,ref,nextTick} from 'vue'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
@@ -8,6 +8,8 @@ import { Api } from '@/api/Api'
 import { Scope } from 'tools-vue3'
 import { ElMessage } from 'element-plus'
 import sapp from '@/sstore/sapp'
+// 在文件顶部添加 ElInput 的导入
+import { ElInput } from 'element-plus'
 
 const emit = defineEmits<ChildEmits>()
 
@@ -127,6 +129,8 @@ const dialog = reactive({
     emit('refresh')
   }
 })
+// 添加 ref
+const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null)
 
 const timer = Scope.Timer()
 const handleCheckInstallLog = async (value: string) => {
@@ -135,6 +139,18 @@ const handleCheckInstallLog = async (value: string) => {
     async () => {
       const { data: res2 } = await Api.getInstallLog({ fn: value })
       dialog.content = res2.logs
+      // 添加自动滚动
+      await nextTick()
+      const textarea = logTextareaRef.value?.$el?.querySelector('textarea')
+      if (textarea) {
+        // 使用 requestAnimationFrame 实现平滑滚动
+        requestAnimationFrame(() => {
+          textarea.scrollTo({
+            top: textarea.scrollHeight,
+            behavior: 'smooth'
+          })
+        })
+      }
     },
     2000,
     true
@@ -274,12 +290,25 @@ const columns = [
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
     <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose">
-      <el-input v-model="dialog.content" type="textarea" readonly style="min-height: 200px" />
+      <el-input 
+        ref="logTextareaRef"
+        v-model="dialog.content" 
+        type="textarea" 
+        readonly 
+        style="min-height: 200px; scroll-behavior: smooth;" 
+      />
     </custom-dialog>
   </div>
 </template>
 
 <style scoped lang="less">
+:deep(.el-select__wrapper) {
+  background: var(--select-bg-color) !important;
+  border: 1px solid var(--select-border-color) !important;
+}
+:deep(.el-select__wrapper.is-focused){
+  box-shadow: none!important;
+}
 .below {
   display: flex;
   flex-direction: row;
