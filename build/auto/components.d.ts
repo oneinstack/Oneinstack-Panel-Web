@@ -58,6 +58,7 @@ declare module 'vue' {
     ElTree: typeof import('element-plus/es')['ElTree']
     ElUpload: typeof import('element-plus/es')['ElUpload']
     FilePanel: typeof import('./../../src/components/file-panel.vue')['default']
+    InstallDialog: typeof import('./../../src/components/install-dialog.vue')['default']
     RouteEvent: typeof import('./../../src/components/routeEvent/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
