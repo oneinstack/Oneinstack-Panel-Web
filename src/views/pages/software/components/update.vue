@@ -189,7 +189,7 @@ const columns = [
     }
   }
 
-  .item:nth-of-type(3n-2) {
+  .item:nth-of-type(2n-1) {
     margin-left: 0;
   }
 
