@@ -159,6 +159,7 @@ const Beturn =()=>{
                 type: 'success',
                 message: '退出成功'
               })
+              sapp.clearWebsiteInfo()//清空插件状态信息
               sconfig.logout(true)
             }
           })

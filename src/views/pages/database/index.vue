@@ -1,14 +1,22 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, reactive } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { Api } from '@/api/Api'
 import { ElMessage, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
 import { checkIPStr } from "@/utils/validator";
+import sapp from '@/sstore/sapp'
 export interface ConfProps {
   conf: typeof conf
+}
+const websiteInfo = sapp.websiteInfo//查看相关插件是否安装
+const handleInstall = () => {
+  ElMessage({
+    type: 'warning',
+    message: '功能开发中...'
+  })
 }
 
 const conf = reactive({
@@ -219,6 +227,7 @@ conf.list.params.type = routeName
 </script>
 
 <template>
+  <install-mask :is-installed="websiteInfo" install-text="安装Mysql" @install="handleInstall">
   <div class="database-container">
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <router-view :conf="conf" />
@@ -263,6 +272,7 @@ conf.list.params.type = routeName
       </template>
     </custom-drawer>
   </div>
+</install-mask>
 </template>
 
 <style scoped lang="less">

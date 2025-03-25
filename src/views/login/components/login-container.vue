@@ -62,7 +62,7 @@ withDefaults(defineProps<Props>(), {
 <template>
   <div v-loading="loading" class="login-container">
     <div class="login-content-left" v-if="!isMobile">
-      <spline-viewer url="https://prod.spline.design/nEzSxPOHnLSytI2e/scene.splinecode"></spline-viewer>
+      <spline-viewer url="/static/scene.splinecode"></spline-viewer>
     </div>
 
     <div class="login-content-right">

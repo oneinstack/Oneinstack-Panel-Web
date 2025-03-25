@@ -3,9 +3,10 @@ import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
 import { CircleClose, ArrowDown, Setting, Hide, View, CopyDocument, CaretBottom } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
+import { ElMessage } from 'element-plus' // 添加这行导入
+import InstallMask from '@/components/InstallMask.vue'
 
 const { conf } = defineProps<ConfProps>()
-
 conf.list.getData()
 </script>
 

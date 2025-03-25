@@ -1,15 +1,16 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw, onMounted } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Refresh, Setting, ArrowDown, CaretBottom, Download } from '@element-plus/icons-vue'
+import { Refresh } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
-import InstallDialog from './components/install-dialog.vue'
 import { Api } from '@/api/Api'
 import type { FormItem } from '@/components/custom-form.vue'
+import InstallMask from '@/components/InstallMask.vue'
 import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
+import sapp from '@/sstore/sapp'
 const conf = reactive({
   tabs: {
     activeIndex: 0,
@@ -62,16 +63,18 @@ const conf = reactive({
     selection: [], // 存储选中的行
     columns: [
       { prop: 'name', label: '网站名', width: 200 },
-      { prop: 'domain', label: '其他域名', width: 250 },
-      { prop: 'dir', label: '目录', width: 200 },
-      { prop: 'type', label: '类型', width: 200, formatter:(row: any) =>{
-        const typeMap = {
-          php: 'PHP',
-          proxy: '代理',
-          static: '静态'
+      // { prop: 'domain', label: '其他域名', width: 250 },
+      { prop: 'dir', label: '目录', width: 400 },
+      {
+        prop: 'type', label: '类型', width: 200, formatter: (row: any) => {
+          const typeMap = {
+            php: 'PHP',
+            proxy: '代理',
+            static: '静态'
+          }
+          return typeMap[row.type as keyof typeof typeMap] || row.type
         }
-        return typeMap[row.type as keyof typeof typeMap] || row.type
-      } },
+      },
       { prop: 'remark', label: '备注' },
       {
         prop: 'create_time', label: '创建时间', width: 200,
@@ -80,7 +83,7 @@ const conf = reactive({
           return row.create_time ? dayjs(row.create_time).format('YYYY-MM-DD HH:mm:ss') : '-'
         }
       },
-      { prop: 'action', label: '操作',align: 'center',width: 240,fixed: 'right' },
+      { prop: 'action', label: '操作', align: 'center', width: 240, fixed: 'right' },
     ],
     handleSelectionChange: (selection: any[]) => {
       conf.website.selection = selection as never[]
@@ -102,7 +105,7 @@ const conf = reactive({
       conf.drawer.open('add')
       conf.form.data.value.type = conf.website.params.type
     },
-    websiteInfo: false, // 添加状态
+    websiteInfo: sapp.websiteInfo, // 添加状态
     // getWebsiteInfo: async () => {
     //   try {
     //     const { data } = await Api.getWebsiteInfo()
@@ -327,14 +330,15 @@ conf.website.getData()
 
 <template>
   <div class="website-container">
-    <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-    <div class="main-content">
-      <div :class="{ 'blur-mask': !conf.website.websiteInfo }">
-        <div class="tool-bar">
-          <el-space class="btn-group" :size="14">
-            <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+    <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
+      <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
+      <div class="main-content">
+        <div :class="{ 'blur-mask': !conf.website.websiteInfo }">
+          <div class="tool-bar">
+            <el-space class="btn-group" :size="14">
+              <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
 
-            <!-- <el-dropdown>
+              <!-- <el-dropdown>
             <el-button type="primary">
               <span class="el-dropdown-link">
                 高级设置
@@ -382,42 +386,42 @@ conf.website.getData()
             </template>
 </el-dropdown> -->
 
-          </el-space>
-          <div class="demo-form-inline">
-            <el-space class="btn-group" :size="14">
-              <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
-                @search="conf.website.getData()" />
-              <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
-              <!-- <el-button :icon="Setting" type="primary" /> -->
             </el-space>
+            <div class="demo-form-inline">
+              <el-space class="btn-group" :size="14">
+                <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
+                  @search="conf.website.getData()" />
+                <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+                <!-- <el-button :icon="Setting" type="primary" /> -->
+              </el-space>
+            </div>
+          </div>
+          <div class="box2">
+            <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
+              :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
+              :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
+              @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
+              <template #action="{ row }">
+                <el-button type="primary" link style="margin-right: 8px">统计</el-button>
+                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+                <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
+                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+                <el-button type="primary" link style="margin-right: 8px"
+                  @click="conf.drawer.open('edit', row)">设置</el-button>
+                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+                <el-button type="danger" link
+                  style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
+                  @click="conf.dialog.open('delete', row)">
+                  删除
+                </el-button>
+              </template>
+            </custom-table>
+            <!-- 添加提示信息 -->
           </div>
         </div>
-        <div class="box2">
-          <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
-            :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
-            :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
-            @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
-            <template #action="{ row }">
-              <el-button type="primary" link style="margin-right: 8px">统计</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-              <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-              <el-button type="primary" link style="margin-right: 8px"
-                @click="conf.drawer.open('edit', row)">设置</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-              <el-button type="danger" link
-                style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
-                @click="conf.dialog.open('delete', row)">
-                删除
-              </el-button>
-            </template>
-          </custom-table>
-          <!-- 添加提示信息 -->
-        </div>
       </div>
-    </div>
 
-    <div v-if="!conf.website.websiteInfo" class="mask-tip">
+      <!-- <div v-if="!conf.website.websiteInfo" class="mask-tip">
       <img src="./../../../../public/static/images/ins-Plugin.png" alt="" class="tip-image">
       <div class="tip-text">
         未安装运行环境，请点击下方按钮<span class="highlight">安装Nginx</span>否则无法使用改页面
@@ -428,46 +432,49 @@ conf.website.getData()
           <Download />
         </el-icon>
       </el-button>
-    </div>
+    </div> -->
 
-    <!--创建网站弹窗-->
-    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
-      :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
-      <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
-        <template #send_url="{ row }">
-          <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
-            <template #prepend>
-              <el-select v-model="conf.form.data.value.pact" style="width: 80px">
-                <el-option label="http" value="http://" />
-                <el-option label="https" value="https://" />
-              </el-select>
-            </template>
-          </el-input>
+      <!--创建网站弹窗-->
+      <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
+        :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
+        <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
+          <template #send_url="{ row }">
+            <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
+              <template #prepend>
+                <el-select v-model="conf.form.data.value.pact" style="width: 80px">
+                  <el-option label="http" value="http://" />
+                  <el-option label="https" value="https://" />
+                </el-select>
+              </template>
+            </el-input>
+          </template>
+        </custom-form>
+      </custom-drawer>
+
+      <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
+        <template v-if="conf.dialog.type === 'delete'">
+          <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
         </template>
-      </custom-form>
-    </custom-drawer>
-
-    <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
-      <template v-if="conf.dialog.type === 'delete'">
-        <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
-      </template>
-      <template #footer>
-        <el-button @click="conf.dialog.close">取消</el-button>
-        <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
-      </template>
-    </custom-dialog>
-    <!--安装插件弹窗-->
-    <!-- <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" /> -->
+        <template #footer>
+          <el-button @click="conf.dialog.close">取消</el-button>
+          <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
+        </template>
+      </custom-dialog>
+      <!--安装插件弹窗-->
+      <!-- <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" /> -->
+    </install-mask>
   </div>
 </template>
 
 <style scoped lang="less">
 :deep(.el-dialog) {
   padding: 0px !important;
-  .el-dialog__header{
+
+  .el-dialog__header {
     padding: 0 !important;
   }
 }
+
 .main-content {
   position: relative; // 添加相对定位
 }

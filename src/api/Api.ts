@@ -78,7 +78,7 @@ export const Api = {
   },
   /** 获取网站模块依赖状态 */
   getWebsiteInfo: () => {
-    return http.post('/v1/website/info')
+    return http.post('/website/info')
   },
   /** 获取网站列表 */
   getWebsiteList: (obj: any) => {
