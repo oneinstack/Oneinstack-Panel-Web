@@ -200,7 +200,9 @@ const BindButton = ()=>{
               <div class="absolute fit-height fit-width">
                 <div class="layout-container__logo" :class="{ 'collapse': conf.isCollapse }">
                   <img class="logo" src="/static/images/small-logo.png" alt="" />
-                  <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p>
+                  <img class="logo-text" v-if="!conf.isCollapse && sapp.theme == 'light'" src="/static/images/logo-text-light.png" alt="" />
+                  <img class="logo-text" v-else src="/static/images/logo-text-dark.png" alt="" />
+                  <!-- <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p> -->
                 </div>
                 <el-scrollbar height="100%">
                   <el-menu :collapse="conf.isCollapse" :default-active="route.path.match(/\/\w*/)?.[0]" router>
@@ -371,9 +373,11 @@ const BindButton = ()=>{
           width: 50px;
         }
         .logo-text{
-          font-size: 20px;
-          font-weight: bolder;
-          color: var(--font-color-black);
+          // font-size: 20px;
+          // font-weight: bolder;
+          // color: var(--font-color-black);
+          height: 12px;
+          width: 92px;
         }
       }
       .collapse{

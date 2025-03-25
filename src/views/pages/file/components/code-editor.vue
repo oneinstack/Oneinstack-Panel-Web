@@ -77,11 +77,13 @@
                         </el-tooltip>
                     </div>
                     <el-divider class="divider-mini" />
+                    <!--
+                        @node-expand="handleNodeExpand"
+                    -->
                     <el-tree-v2
                         ref="treeRef"
                         :data="treeData"
                         :props="treeProps"
-                        @node-expand="handleNodeExpand"
                         class="monaco-editor-tree monaco-editor-background"
                         :height="treeHeight"
                         :indent="6"
