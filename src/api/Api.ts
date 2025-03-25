@@ -17,8 +17,12 @@ export const Api = {
     return http.get('/sys/remarkcount')
   },
   /** 获取备忘录列表 */
-  getRemark: () => {
+  getRemarkList: () => {
     return http.get('/sys/remark')
+  },
+  /** 删除备忘录 */
+  deleteRemark: (id: number) => {
+    return http.post('/sys/remark/del', { id })
   },
   /** 获取备注信息 */
   getSysRemark: (id = 1) => {

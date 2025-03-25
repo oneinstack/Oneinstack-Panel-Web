@@ -14,6 +14,7 @@ withDefaults(defineProps<Props>(), {
   title: 'title',
   width: '624px',
   bodyBgColor:'transparent',
+  footerBgColor: 'transparent',
   showClose: false
 })
 
