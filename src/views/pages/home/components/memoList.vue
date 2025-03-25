@@ -9,11 +9,12 @@
     :show-close="false"
     @update:show="conf.memoList.close"
   >
-    <div>
+    <div class="content">
       <el-collapse
         v-model="conf.memoList.activeName"
         accordion
         @change="conf.memoList.changeCollapse"
+        v-if="conf.memoList.list.length > 0"
       >
         <el-collapse-item
           title=""
@@ -50,6 +51,7 @@
           </div>
         </el-collapse-item>
       </el-collapse>
+      <el-empty v-else description="暂无数据" />
     </div>
 
     <template #footer>
@@ -129,6 +131,9 @@ defineExpose({
     margin-left: 6px;
     font-weight: bolder;
   }
+}
+.content{
+  min-height: 200px;
 }
 .collapse-content {
   margin-top: 12px;

@@ -12,37 +12,38 @@ import { ElMessage } from "element-plus";
 import System from "@/utils/System";
 import InstallDialog from "@/components/install-dialog.vue";
 
-const installDialog = reactive({//关闭插件弹窗"
-  visible: false
-})
+const installDialog = reactive({
+  //关闭插件弹窗"
+  visible: false,
+});
 
 const getWebsiteInfo = async () => {
   try {
-    const { data } = await Api.getWebsiteInfo()
+    const { data } = await Api.getWebsiteInfo();
     // 添加数据校验
     if (data === false && !sapp.installDialogHasShown) {
-      installDialog.visible = true;//打开插件弹窗
+      installDialog.visible = true; //打开插件弹窗
       sapp.installDialogHasShown = true; // 标记为已显示
       // console.log(installDialog.visible)
-    };
-    sapp.setWebsiteInfo(data)//将数据存储到pinia
-    console.log('网站依赖状态：已安装', data)
-    return data
+    }
+    sapp.setWebsiteInfo(data); //将数据存储到pinia
+    console.log("网站依赖状态：已安装", data);
+    return data;
   } catch (error) {
-
-    ElMessage.error('获取网站信息失败')
-    return false
+    ElMessage.error("获取网站信息失败");
+    return false;
   }
-}
+};
 
-const handleInstallConfirm = () => {//模拟安装的过程
+const handleInstallConfirm = () => {
+  //模拟安装的过程
   // conf.website.websiteInfo = true
-  installDialog.visible = false
+  installDialog.visible = false;
   ElMessage({
-    type: 'success',
-    message: '安装成功'
-  })
-}
+    type: "success",
+    message: "安装成功",
+  });
+};
 type MonitorType = "network" | "disk";
 
 interface Options {
@@ -59,33 +60,33 @@ const memoListRef = ref();
 const conf = reactive({
   themeColor: {
     light: ["#154AFC"],
-    dark: ["#EAB170"],
+    dark: ["#154AFC"],
   },
   category: [
     {
       name: "网站-全部",
       icon: "home-website",
-      className: 'b',
+      className: "b",
       value: 0,
       linkFn: () => System.router.push("/website"),
     },
     {
       name: "数据-全部",
       icon: "home-data",
-      className: 'g',
+      className: "g",
       value: 0,
       linkFn: () => System.router.push("/database"),
     },
     {
       name: "安全风险",
       icon: "home-software",
-      className: 'y',
+      className: "y",
       value: 0,
     },
     {
       name: "备忘录",
-      icon: "home-mome",
-      className: 'o',
+      icon: "home-memo",
+      className: "o",
       value: "当前内容为空，点击编辑",
       linkFn: () => memoListRef.value.open(),
     },
@@ -236,16 +237,21 @@ const conf = reactive({
             smooth: false,
             lineStyle: {
               width: 1,
-              color: "#FFA279",
+              color: sapp.theme == "light" ? "#FFA279" : "#f7966f",
             },
             showSymbol: false,
             areaStyle: {
               opacity: 0.5,
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: "#FFA279" },
-                { offset: 0.5, color: "rgba(250, 150, 87, 0.55)" },
-                { offset: 1, color: "rgba(255, 162, 121, 1)" },
-              ]),
+              color:
+                sapp.theme == "light"
+                  ? new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                      { offset: 0, color: "#FFA279" },
+                      { offset: 1, color: "rgba(250, 150, 87, 0.55)" },
+                    ])
+                  : new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                      { offset: 0, color: "#FFAD79" },
+                      { offset: 1, color: "rgba(250, 150, 87, 0.55)" },
+                    ]),
             },
             emphasis: {
               focus: "series",
@@ -258,16 +264,21 @@ const conf = reactive({
             smooth: false,
             lineStyle: {
               width: 1,
-              color: "#154AFC",
+              color: sapp.theme == "light" ? "#154AFC" : "#79D1FF",
             },
             showSymbol: false,
             areaStyle: {
               opacity: 0.5,
-              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: "#154AFC" },
-                { offset: 0.5, color: "rgba(21, 74, 252, 0.55)" },
-                { offset: 1, color: "rgba(44, 141, 237, 1)" },
-              ]),
+              color:
+                sapp.theme == "light"
+                  ? new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                      { offset: 0, color: "#154AFC" },
+                      { offset: 1, color: "rgba(21, 74, 252, 0.55)" },
+                    ])
+                  : new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                      { offset: 0, color: "#79D1FF" },
+                      { offset: 1, color: "rgba(121, 209, 255, 0.55)" },
+                    ]),
             },
             emphasis: {
               focus: "series",
@@ -562,7 +573,7 @@ const conf = reactive({
     },
     close: () => (conf.memo.show = false),
     getData: async () => {
-      const { data : res } = await Api.getRemarkCount();
+      const { data: res } = await Api.getRemarkCount();
       conf.memo.data = res;
       conf.category[3].value = res || 0;
     },
@@ -576,11 +587,12 @@ const conf = reactive({
 });
 
 const timer = Scope.Timer();
-const dialogBgColor = computed(() => {//弹窗的明暗主题
-  return sapp.theme === 'dark' ? '#1F3243' : '#fff';
+const dialogBgColor = computed(() => {
+  //弹窗的明暗主题
+  return sapp.theme === "dark" ? "#1F3243" : "#fff";
 });
 onMounted(() => {
-  getWebsiteInfo();//查看用户是否安装了相关的插件
+  getWebsiteInfo(); //查看用户是否安装了相关的插件
   timer.on(
     () => {
       conf.statusData.update();
@@ -603,13 +615,24 @@ onMounted(() => {
     <div class="column fit-height fit-width">
       <div class="col column fit-width">
         <div class="col relative fit-width">
-          <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px">
+          <div
+            class="absolute fit-height fit-width flex column no-wrap"
+            style="gap: 24px"
+          >
             <div class="basic-card__title card">概览</div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">
-                <div class="category-item" :class="item.className" @click="item.linkFn?.()">
+                <div
+                  class="category-item"
+                  :class="item.className"
+                  @click="item.linkFn?.()"
+                >
                   <div class="icon" :class="item.className">
-                    <v-s-icon :name="`${item.icon}-${sapp.theme}`" size="52" :color="conf.themeColor[sapp.theme]" />
+                    <v-s-icon
+                      :name="`${item.icon}-${sapp.theme}`"
+                      size="52"
+                      :color="conf.themeColor[sapp.theme]"
+                    />
                   </div>
                   <div class="text column items-center">
                     <span :class="{ link: typeof item.value === 'string' }">
@@ -628,27 +651,45 @@ onMounted(() => {
                     <div class="miscellaneous">
                       <div class="switch">
                         <span>{{
-              conf.monitorData.selectedType == "network"
-                ? "网卡"
-                : "磁盘"
-            }}</span>
-                        <el-select v-model="conf.monitorData.selectedCard" placeholder="请选择" style="width: 100%"
-                          @change="conf.monitorData.handleChangeCard">
-                          <el-option v-for="item in conf.monitorData.options" :key="item.label" :label="item.label"
-                            :value="item" />
+                          conf.monitorData.selectedType == "network"
+                            ? "网卡"
+                            : "磁盘"
+                        }}</span>
+                        <el-select
+                          v-model="conf.monitorData.selectedCard"
+                          placeholder="请选择"
+                          style="width: 100%"
+                          @change="conf.monitorData.handleChangeCard"
+                        >
+                          <el-option
+                            v-for="item in conf.monitorData.options"
+                            :key="item.label"
+                            :label="item.label"
+                            :value="item"
+                          />
                         </el-select>
                       </div>
                       <div class="menu">
-                        <div class="item" :class="conf.monitorData.selectedType == 'network'
-              ? 'active'
-              : ''
-              " @click="conf.monitorData.handleChangeType('network')">
+                        <div
+                          class="item"
+                          :class="
+                            conf.monitorData.selectedType == 'network'
+                              ? 'active'
+                              : ''
+                          "
+                          @click="conf.monitorData.handleChangeType('network')"
+                        >
                           流量
                         </div>
-                        <div class="item" :class="conf.monitorData.selectedType == 'disk'
-              ? 'active'
-              : ''
-              " @click="conf.monitorData.handleChangeType('disk')">
+                        <div
+                          class="item"
+                          :class="
+                            conf.monitorData.selectedType == 'disk'
+                              ? 'active'
+                              : ''
+                          "
+                          @click="conf.monitorData.handleChangeType('disk')"
+                        >
                           磁盘IO
                         </div>
                       </div>
@@ -657,9 +698,13 @@ onMounted(() => {
                   <div class="basic-card__body flex column no-wrap fit-height">
                     <div class="flow">
                       <el-space class="lefts" :size="20" spacer="|">
-                        <div v-for="item in conf.monitorData[
-              conf.monitorData.selectedType
-            ]" :key="item.label" class="item">
+                        <div
+                          v-for="item in conf.monitorData[
+                            conf.monitorData.selectedType
+                          ]"
+                          :key="item.label"
+                          class="item"
+                        >
                           <span class="label">{{ item.label }}：</span>
                           <span class="value">{{ item.value }}</span>
                         </div>
@@ -668,41 +713,57 @@ onMounted(() => {
                         <div class="upper">
                           <div class="yuan"></div>
                           <span>{{
-              conf.monitorData.selectedType == "network"
-                ? "上行"
-                : "读取"
-            }}</span>
+                            conf.monitorData.selectedType == "network"
+                              ? "上行"
+                              : "读取"
+                          }}</span>
                         </div>
                         <div class="below">
                           <div class="yuan"></div>
                           <span>{{
-                conf.monitorData.selectedType == "network"
-                  ? "下行"
-                  : "写入"
-              }}</span>
+                            conf.monitorData.selectedType == "network"
+                              ? "下行"
+                              : "写入"
+                          }}</span>
                         </div>
                       </div>
                     </div>
-                    <basic-chart :option="conf.monitorData.chartOptions as EChartsOption" class="chart-box" />
+                    <basic-chart
+                      :option="conf.monitorData.chartOptions as EChartsOption"
+                      class="chart-box"
+                    />
                   </div>
                 </div>
               </el-col>
               <el-col :lg="8" :md="8" :sm="24">
-                <div ref="statusCard" class="basic-card flex column no-wrap fit-height">
+                <div
+                  ref="statusCard"
+                  class="basic-card flex column no-wrap fit-height"
+                >
                   <div class="basic-card__header">
                     <div class="basic-card__title">状态</div>
                     <div class="status-right">
-                      <el-select v-model="conf.statusData.selected" placeholder="选择状态"
-                        style="width: 100px; margin-right: 10px" @change="conf.statusData.handleStatusChange">
-                        <el-option v-for="item in conf.statusData.options" :key="item.value" :label="item.label"
-                          :value="item" />
+                      <el-select
+                        v-model="conf.statusData.selected"
+                        placeholder="选择状态"
+                        style="width: 100px; margin-right: 10px"
+                        @change="conf.statusData.handleStatusChange"
+                      >
+                        <el-option
+                          v-for="item in conf.statusData.options"
+                          :key="item.value"
+                          :label="item.label"
+                          :value="item"
+                        />
                       </el-select>
                     </div>
                   </div>
                   <div class="basic-card__body" style="flex: 1">
                     <div class="norule">
-                      <basic-chart :option="conf.statusData.chartOptions as EChartsOption"
-                        style="width: 256px; height: 256px" />
+                      <basic-chart
+                        :option="conf.statusData.chartOptions as EChartsOption"
+                        style="width: 256px; height: 256px"
+                      />
                       <div class="status-title">
                         <span v-if="conf.statusData.selected.value !== 3">
                           {{ conf.statusData.usage.used }} /
@@ -727,10 +788,12 @@ onMounted(() => {
                         </div>
                         <div class="b2">
                           使用率：
-                          <span>{{
-              conf.statusData.usage.usedPercent.toFixed(2)
+                          <span
+                            >{{
+                              conf.statusData.usage.usedPercent.toFixed(2)
                             }}
-                            %</span>
+                            %</span
+                          >
                         </div>
                       </div>
                     </div>
@@ -744,8 +807,18 @@ onMounted(() => {
       </div>
     </div>
     <!-- <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" /> -->
-    <memo-list ref="memoListRef" :show="conf.memo.show" :memo="conf.memo.data" :list="conf.memo.list" :close="conf.memo.close" :update="conf.memo.update" />
-    <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" />
+    <memo-list
+      ref="memoListRef"
+      :show="conf.memo.show"
+      :memo="conf.memo.data"
+      :list="conf.memo.list"
+      :close="conf.memo.close"
+      :update="conf.memo.update"
+    />
+    <install-dialog
+      v-model:visible="installDialog.visible"
+      @confirm="handleInstallConfirm"
+    />
   </div>
 </template>
 
@@ -1054,13 +1127,12 @@ onMounted(() => {
 
 .g {
   &:hover {
-    border-color: #39FFDC;
+    border-color: #39ffdc;
 
     .icon {
-      border-color: #39FFDC;
+      border-color: #39ffdc;
     }
   }
-
 }
 
 .y {
@@ -1071,7 +1143,6 @@ onMounted(() => {
       border-color: #ec851f;
     }
   }
-
 }
 
 .o {
@@ -1082,6 +1153,5 @@ onMounted(() => {
       border-color: #e1602c;
     }
   }
-
 }
 </style>
