@@ -205,24 +205,27 @@ const conf = reactive({
                 prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
-                  {
-                    pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                    message: '域名格式错误',
-                    trigger: 'blur'
-                  }
+                  // {
+                  //   pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
+                  //   message: '域名格式错误',
+                  //   trigger: 'blur'
+                  // }
                 ],
                 change: (value: string) => {  // 使用 change 替代 input
-                  if (!value) return;
+                  if (!value || value.length === 0) {  // 添加长度判断
+                    conf.form.data.value.dir = "";
+                    return;
+                  }
                   const domainWithoutPort = value.split(':')[0];
-                  conf.form.data.value.dir = `/${domainWithoutPort}`;
-                }
+                  conf.form.data.value.dir = `${domainWithoutPort}`;
+                },
               },
-              {
-                label: '其他域名',
-                type: 'textarea',
-                placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
-                prop: 'domain'
-              },
+              // {
+              //   label: '其他域名',
+              //   type: 'textarea',
+              //   placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
+              //   prop: 'domain'1
+              // },
               {
                 label: '目录',
                 type: 'input',
@@ -249,22 +252,22 @@ const conf = reactive({
                 prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
-                  { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
+                  // { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
                 ]
               },
-              {
-                label: '其他域名',
-                type: 'textarea',
-                placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
-                prop: 'domain'
-              },
-              {
-                label: '代理地址',
-                type: 'custom',
-                placeholder: '例：127.0.0.1:8080',
-                prop: 'send_url',
-                rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
-              },
+              // {
+              //   label: '其他域名',
+              //   type: 'textarea',
+              //   placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
+              //   prop: 'domain'
+              // },
+              // {
+              //   label: '代理地址',
+              //   type: 'custom',
+              //   placeholder: '例：127.0.0.1:8080',
+              //   prop: 'send_url',
+              //   rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
+              // },
               {
                 label: '备注',
                 type: 'textarea',
