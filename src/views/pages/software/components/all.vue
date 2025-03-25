@@ -1,47 +1,50 @@
 <script setup lang="ts">
-import { reactive ,ref,nextTick} from 'vue'
-import { ChildEmits, ChildProps } from '../index.vue'
-import CustomDrawer from '@/components/custom-drawer.vue'
-import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
-import { FormInstance } from 'element-plus'
-import { Api } from '@/api/Api'
-import { Scope } from 'tools-vue3'
-import { ElMessage } from 'element-plus'
-import sapp from '@/sstore/sapp'
+import { reactive, ref, nextTick } from "vue";
+import { ChildEmits, ChildProps } from "../index.vue";
+import CustomDrawer from "@/components/custom-drawer.vue";
+import CustomForm, {
+  type FormItem,
+  type Props as FormProps,
+} from "@/components/custom-form.vue";
+import { FormInstance } from "element-plus";
+import { Api } from "@/api/Api";
+import { Scope } from "tools-vue3";
+import { ElMessage } from "element-plus";
+import sapp from "@/sstore/sapp";
 // 在文件顶部添加 ElInput 的导入
-import { ElInput } from 'element-plus'
+import { ElInput } from "element-plus";
 
-const emit = defineEmits<ChildEmits>()
+const emit = defineEmits<ChildEmits>();
 
 withDefaults(defineProps<ChildProps>(), {
-  list: () => []
-})
-const formRef = ref<FormInstance | null>(null)
+  list: () => [],
+});
+const formRef = ref<FormInstance | null>(null);
 const drawer = reactive({
   show: false,
-  title: '安装',
+  title: "安装",
   onClose: () => {
-    formRef.value?.clearValidate()
-    formRef.value?.resetFields()
-    drawer.show = false
+    formRef.value?.clearValidate();
+    formRef.value?.resetFields();
+    drawer.show = false;
   },
   onConfirm: () => {
-    formRef.value?.validate((valid:any) => {
-      if (!valid) return
-      handleInstall()
-      drawer.show = false
-    })
-  }
-})
+    formRef.value?.validate((valid: any) => {
+      if (!valid) return;
+      handleInstall();
+      drawer.show = false;
+    });
+  },
+});
 
 // let formRef: FormInstance
-const installForm = reactive<FormProps['data']>({
+const installForm = reactive<FormProps["data"]>({
   value: {
-    key: '',
-    version: ''
+    key: "",
+    version: "",
   },
-  items: []
-})
+  items: [],
+});
 
 // 先添加卸载方法到 script 部分
 const handleUninstall = (item: any) => {
@@ -51,162 +54,188 @@ const handleUninstall = (item: any) => {
   // localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
   // handleCheckInstallLog(res.installName)
   ElMessage({
-    type: 'warning',
-    message: '卸载功能开发中...'
-  })
-}
+    type: "warning",
+    message: "卸载功能开发中...",
+  });
+};
 
 // 在 script setup 中添加
 const versionDialog = reactive({
   show: false,
   currentItem: null as any,
   onClose: () => {
-    versionDialog.show = false
-    versionDialog.currentItem = null
+    versionDialog.show = false;
+    versionDialog.currentItem = null;
   },
   onConfirm: () => {
-    versionDialog.show = false
-    handleClickInstall(versionDialog.currentItem)
-  }
-})
+    versionDialog.show = false;
+    handleClickInstall(versionDialog.currentItem);
+  },
+});
 
 // 修改原有的点击安装按钮事件
 const handleInstallClick = (item: any) => {
   if (item.versions.length > 1) {
-    versionDialog.currentItem = item
-    versionDialog.show = true
+    versionDialog.currentItem = item;
+    versionDialog.show = true;
   } else {
-    handleClickInstall(item)
+    handleClickInstall(item);
   }
-}
+};
 
 // 在 template 中添加版本选择弹窗
 const handleClickInstall = (item: any) => {
-  console.log('installForm.value.key', installForm.value.key, installForm.value.key != '', item.versions[0], item)
+  console.log(
+    "installForm.value.key",
+    installForm.value.key,
+    installForm.value.key != "",
+    item.versions[0],
+    item
+  );
 
-  if (installForm.value.version != '') {
-    if (item && item.versions && item.versions.includes(installForm.value.version)) {
-      handleSelectVersion(installForm.value.version, item)
+  if (installForm.value.version != "") {
+    if (
+      item &&
+      item.versions &&
+      item.versions.includes(installForm.value.version)
+    ) {
+      handleSelectVersion(installForm.value.version, item);
     } else {
-      handleSelectVersion(item.versions[0], item)
+      handleSelectVersion(item.versions[0], item);
     }
   } else {
-    handleSelectVersion(item.versions[0], item)
+    handleSelectVersion(item.versions[0], item);
   }
 
   // 修改表单验证消息
-  if (!item.params) return handleInstall()
-  const config = JSON.parse(item.params)
+  if (!item.params) return handleInstall();
+  const config = JSON.parse(item.params);
   installForm.items = (config as []).map<FormItem>((item: any) => ({
     label: item.name,
-    type: 'input',
+    type: "input",
     prop: item.key,
-    rules: [{ required: item.required === 'true', message: `${'请输入'}${item.name}`, trigger: 'blur' }]
-  }))
-  drawer.show = true
-}
+    rules: [
+      {
+        required: item.required === "true",
+        message: `${"请输入"}${item.name}`,
+        trigger: "blur",
+      },
+    ],
+  }));
+  drawer.show = true;
+};
 
 const handleSelectVersion = (v: string, item: any) => {
-  installForm.value.key = item.key
-  installForm.value.version = v
-}
+  installForm.value.key = item.key;
+  installForm.value.version = v;
+};
 // 在 script setup 顶部添加
-const installedVersions = ref(JSON.parse(localStorage.getItem('installedVersions') || '{}'))
+const installedVersions = ref(
+  JSON.parse(localStorage.getItem("installedVersions") || "{}")
+);
 
 const handleInstall = async () => {
-  const { data: res } = await Api.installSoft(installForm.value)
+  const { data: res } = await Api.installSoft(installForm.value);
   // 保存安装的版本信息
-  installedVersions.value[installForm.value.key] = installForm.value.version
-  localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
-  handleCheckInstallLog(res.installName)
-}
+  installedVersions.value[installForm.value.key] = installForm.value.version;
+  localStorage.setItem(
+    "installedVersions",
+    JSON.stringify(installedVersions.value)
+  );
+  handleCheckInstallLog(res.installName);
+};
 
 const dialog = reactive({
   show: false,
-  content: '',
+  content: "",
   onClose: () => {
-    timer && timer.clear()
-    emit('refresh')
-  }
-})
+    timer && timer.clear();
+    emit("refresh");
+  },
+});
 // 添加 ref
-const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null)
+const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null);
 
-const timer = Scope.Timer()
+const timer = Scope.Timer();
 const handleCheckInstallLog = async (value: string) => {
-  dialog.show = true
+  dialog.show = true;
   timer.on(
     async () => {
-      const { data: res2 } = await Api.getInstallLog({ fn: value })
-      dialog.content = res2.logs
+      const { data: res2 } = await Api.getInstallLog({ fn: value });
+      dialog.content = res2.logs;
       // 添加自动滚动
-      await nextTick()
-      const textarea = logTextareaRef.value?.$el?.querySelector('textarea')
+      await nextTick();
+      const textarea = logTextareaRef.value?.$el?.querySelector("textarea");
       if (textarea) {
         // 使用 requestAnimationFrame 实现平滑滚动
         requestAnimationFrame(() => {
           textarea.scrollTo({
             top: textarea.scrollHeight,
-            behavior: 'smooth'
-          })
-        })
+            behavior: "smooth",
+          });
+        });
       }
     },
     2000,
     true
-  )
-}
-const handleChangeLayout = ()=>{
-  sapp.setLayout(sapp.layout == 'grid'? 'list' : 'grid')
-}
+  );
+};
+const handleChangeLayout = () => {
+  sapp.setLayout(sapp.layout == "grid" ? "list" : "grid");
+};
 const columns = [
   {
-    prop: 'name',
-    label: '软件名称',
-    width: 280
+    prop: "name",
+    label: "软件名称",
+    width: 280,
   },
   {
-    prop: 'describe',
-    label: '简介',
+    prop: "describe",
+    label: "简介",
   },
   {
-    prop: 'status',
-    label: '是否安装',
-    width: 180
-  },
-  {
-    prop: 'version',
-    label: '安装版本',
-    width: 180
-  },
-  {
-    prop: 'operation',
-    label: '操作',
+    prop: "status",
+    label: "是否安装",
     width: 180,
-    align: 'center'
-  }
-]
+  },
+  {
+    prop: "version",
+    label: "安装版本",
+    width: 180,
+  },
+  {
+    prop: "operation",
+    label: "操作",
+    width: 180,
+    align: "center",
+  },
+];
 </script>
 
 <template>
-  <div >
+  <div>
     <div class="title">
       <p>应用</p>
-      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/>
+      <v-s-icon
+        name="layout"
+        size="22"
+        class="cursor-pointer"
+        @click="handleChangeLayout"
+      />
     </div>
     <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
           <!-- <div style="padding: 28px 26px"> -->
-            <div class="sundry">
-              <div class="icon">
-                <img :src="item.icon" alt="" />
-              </div>
-              <div class="content">
-                <div>
-                  <span class="menuTitle">{{ item.name }}</span>
-                  <span v-if="item.tags" class="remark">（{{ item.tags }}）</span>
-                  <!-- <span
+          <div class="sundry">
+            <div class="icon">
+              <img :src="item.icon" alt="" />
+            </div>
+            <div class="content">
+              <div>
+                <span class="menuTitle">{{ item.name }}</span>
+                <span v-if="item.tags" class="remark">（{{ item.tags }}）</span>
+                <!-- <span
                     v-if="item.status !== 0"
                     class="status ml-2"
                     :class="{ error: item.status === 3, success: item.status === 2, installing: item.status === 1 }"
@@ -214,34 +243,47 @@ const columns = [
                   >
                     {{ item.status === 1 ? '安装中' : item.status === 2 ? '已安装' : '安装失败' }}
                   </span> -->
-                </div>
-                <div class="tip">{{ item.describe }}</div>
               </div>
-            </div>
-            <div class="xian" />
-            <div class="below">
-              <div>
-                <el-dropdown :disabled="!(item.versions.length > 1)">
-                  <span class="flex items-center" style="color: var(--font-color-gray-light)">
-                    <template v-if="item.status === 0">
-                      未安装
-                    </template>
-                    <template v-else>
-                      <span>已安装版本：</span>
-                      {{ installedVersions[item.key]}}
-                    </template>
-                  </span>
-                </el-dropdown>
-              </div>
-              <!-- 修改安装按钮的点击事件 -->
-              <div class="btn" :class="{
-      installed: item.status === 2 || installedVersions[item.key],
-      uninstall: item.status === 2 || installedVersions[item.key]
-    }" @click="(item.status === 2 || installedVersions[item.key]) ? handleUninstall(item) : handleInstallClick(item)">
-                {{ (item.status === 2 || installedVersions[item.key]) ? '卸载' : '安装' }}
-              </div>
+              <div class="tip">{{ item.describe }}</div>
             </div>
           </div>
+          <div class="xian" />
+          <div class="below">
+            <div>
+              <el-dropdown :disabled="!(item.versions.length > 1)">
+                <span
+                  class="flex items-center"
+                  style="color: var(--font-color-gray-light)"
+                >
+                  <template v-if="item.status === 0"> 未安装 </template>
+                  <template v-else>
+                    <span>已安装版本：</span>
+                    {{ installedVersions[item.key] }}
+                  </template>
+                </span>
+              </el-dropdown>
+            </div>
+            <!-- 修改安装按钮的点击事件 -->
+            <div
+              class="btn"
+              :class="{
+                installed: item.status === 2 || installedVersions[item.key],
+                uninstall: item.status === 2 || installedVersions[item.key],
+              }"
+              @click="
+                item.status === 2 || installedVersions[item.key]
+                  ? handleUninstall(item)
+                  : handleInstallClick(item)
+              "
+            >
+              {{
+                item.status === 2 || installedVersions[item.key]
+                  ? "卸载"
+                  : "安装"
+              }}
+            </div>
+          </div>
+        </div>
         <!-- </div> -->
       </template>
       <div v-else class="no-data">
@@ -257,9 +299,24 @@ const columns = [
           <span v-else>安装失败</span>
         </template>
         <template #operation="{ row }">
-          <el-link :type="(row.status === 2 || installedVersions[row.key])? 'danger' : 'primary'">
-            <span class="flex items-center"  @click="(row.status === 2 || installedVersions[row.key])? handleUninstall(row) : handleInstallClick(row)">
-              {{ (row.status === 2 || installedVersions[row.key])? '卸载' : '安装' }}
+          <el-link
+            :type="
+              row.status === 2 || installedVersions[row.key]
+                ? 'danger'
+                : 'primary'
+            "
+          >
+            <span
+              class="flex items-center"
+              @click="
+                row.status === 2 || installedVersions[row.key]
+                  ? handleUninstall(row)
+                  : handleInstallClick(row)
+              "
+            >
+              {{
+                row.status === 2 || installedVersions[row.key] ? "卸载" : "安装"
+              }}
             </span>
           </el-link>
         </template>
@@ -273,29 +330,47 @@ const columns = [
     >
       <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
     </custom-drawer>
-     <!-- 在原有弹窗之前添加版本选择弹窗 -->
-     <custom-dialog v-model:show="versionDialog.show" title="版本选择" :on-close="versionDialog.onClose">
+    <!-- 在原有弹窗之前添加版本选择弹窗 -->
+    <custom-dialog
+      v-model:show="versionDialog.show"
+      title="版本选择"
+      :on-close="versionDialog.onClose"
+    >
       <div class="version-select-container">
         <div class="version-label">版本</div>
-        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%"
-          popper-class="version-select-dropdown">
-          <el-option v-for="version in versionDialog.currentItem?.versions" :key="version" :label="version"
-            :value="version" />
+        <el-select
+          v-model="installForm.value.version"
+          placeholder="请选择版本"
+          style="width: 100%"
+          popper-class="version-select-dropdown"
+        >
+          <el-option
+            v-for="version in versionDialog.currentItem?.versions"
+            :key="version"
+            :label="version"
+            :value="version"
+          />
         </el-select>
       </div>
       <template #footer>
         <el-button @click="versionDialog.onClose">取消</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
+        <el-button type="primary" @click="versionDialog.onConfirm"
+          >安装</el-button
+        >
       </template>
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
-    <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose">
-      <el-input 
+    <custom-dialog
+      v-model:show="dialog.show"
+      title="安装日志"
+      :on-close="dialog.onClose"
+    >
+      <el-input
         ref="logTextareaRef"
-        v-model="dialog.content" 
-        type="textarea" 
-        readonly 
-        style="min-height: 200px; scroll-behavior: smooth;" 
+        v-model="dialog.content"
+        type="textarea"
+        readonly
+        style="min-height: 200px; scroll-behavior: smooth"
       />
     </custom-dialog>
   </div>
@@ -306,8 +381,8 @@ const columns = [
   background: var(--select-bg-color) !important;
   border: 1px solid var(--select-border-color) !important;
 }
-:deep(.el-select__wrapper.is-focused){
-  box-shadow: none!important;
+:deep(.el-select__wrapper.is-focused) {
+  box-shadow: none !important;
 }
 .below {
   display: flex;
@@ -341,7 +416,6 @@ const columns = [
     flex: 1;
   }
 }
-
 
 .title {
   font-weight: 500;
@@ -472,11 +546,38 @@ const columns = [
       }
     }
   }
-
   .item:nth-of-type(4n + 1) {
     margin-left: 0;
   }
-
+  @media screen and (max-width: 1440px) {
+    .item {
+      width: calc((100% - (3 - 1) * 22px) / 3);
+      margin-left: 22px;
+    }
+    .item:nth-of-type(4n + 1) {
+      margin-left: 22px;
+    }
+    .item:nth-of-type(3n + 1) {
+      margin-left: 0;
+    }
+  }
+  @media screen and (max-width: 1280px) {
+    .item {
+      width: calc((100% - (2 - 1) * 22px) / 2);
+    }
+    .item:nth-of-type(4n + 1),.item:nth-of-type(3n + 1) {
+      margin-left: 22px;
+    }
+    .item:nth-of-type(2n + 1) {
+      margin-left: 0;
+    }
+  }
+  @media screen and (max-width: 1024px) {
+    .item {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
   .no-data {
     width: 100%;
     display: flex;
@@ -486,7 +587,7 @@ const columns = [
     color: var(--font-color-gray-light);
   }
 }
-.table-content{
+.table-content {
   margin-top: 24px;
 }
 

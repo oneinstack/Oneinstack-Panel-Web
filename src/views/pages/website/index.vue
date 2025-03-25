@@ -62,8 +62,8 @@ const conf = reactive({
     selection: [], // 存储选中的行
     columns: [
       { prop: 'name', label: '网站名', width: 200 },
-      { prop: 'domain', label: '其他域名', width: 250 },
-      { prop: 'dir', label: '目录', width: 200 },
+      // { prop: 'domain', label: '其他域名', width: 250 },
+      { prop: 'dir', label: '目录', width: 350 },
       { prop: 'type', label: '类型', width: 200 },
       { prop: 'remark', label: '备注' },
       {
