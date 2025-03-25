@@ -55,7 +55,7 @@ interface ChartData {
   ascend: { value: number; strValue: string }[];
   descend: { value: number; strValue: string }[];
 }
-
+const memoListRef = ref();
 const conf = reactive({
   themeColor: {
     light: ["#154AFC"],
@@ -87,7 +87,7 @@ const conf = reactive({
       icon: "home-mome",
       className: 'o',
       value: "当前内容为空，点击编辑",
-      linkFn: () => conf.memo.open(),
+      linkFn: () => memoListRef.value.open(),
     },
   ],
   getSysCount: async () => {
@@ -555,16 +555,15 @@ const conf = reactive({
       content: "",
     },
     show: false,
+    list: [],
     open: async () => {
-      await conf.memo.getData();
+      // await conf.memo.getMemoList();
       conf.memo.show = true;
     },
     close: () => (conf.memo.show = false),
     getData: async () => {
-      // const { data: res } = await Api.getSysRemark();
       const { data : res } = await Api.getRemarkCount();
       conf.memo.data = res;
-      // conf.category[3].value = res.content || 0;
       conf.category[3].value = res || 0;
     },
     update: async () => {
@@ -745,7 +744,7 @@ onMounted(() => {
       </div>
     </div>
     <!-- <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" /> -->
-    <memo-list :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" />
+    <memo-list ref="memoListRef" :show="conf.memo.show" :memo="conf.memo.data" :list="conf.memo.list" :close="conf.memo.close" :update="conf.memo.update" />
     <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" />
   </div>
 </template>

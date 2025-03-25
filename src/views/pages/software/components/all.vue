@@ -9,21 +9,21 @@ import { Scope } from 'tools-vue3'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import sapp from '@/sstore/sapp'
 // 在文件顶部添加 ElInput 的导入
-import { ElInput } from 'element-plus'
+import { ElInput } from "element-plus";
 
-const emit = defineEmits<ChildEmits>()
+const emit = defineEmits<ChildEmits>();
 
 withDefaults(defineProps<ChildProps>(), {
-  list: () => []
-})
-const formRef = ref<FormInstance | null>(null)
+  list: () => [],
+});
+const formRef = ref<FormInstance | null>(null);
 const drawer = reactive({
   show: false,
-  title: '安装',
+  title: "安装",
   onClose: () => {
-    formRef.value?.clearValidate()
-    formRef.value?.resetFields()
-    drawer.show = false
+    formRef.value?.clearValidate();
+    formRef.value?.resetFields();
+    drawer.show = false;
   },
   onConfirm: () => {
     formRef.value?.validate((valid: any) => {
@@ -35,13 +35,13 @@ const drawer = reactive({
 })
 
 // let formRef: FormInstance
-const installForm = reactive<FormProps['data']>({
+const installForm = reactive<FormProps["data"]>({
   value: {
-    key: '',
-    version: ''
+    key: "",
+    version: "",
   },
-  items: []
-})
+  items: [],
+});
 
 // 先添加卸载方法到 script 部分
 const uninstallDialog = reactive({
@@ -89,95 +89,116 @@ const versionDialog = reactive({
   show: false,
   currentItem: null as any,
   onClose: () => {
-    versionDialog.show = false
-    versionDialog.currentItem = null
+    versionDialog.show = false;
+    versionDialog.currentItem = null;
   },
   onConfirm: () => {
-    versionDialog.show = false
-    handleClickInstall(versionDialog.currentItem)
-  }
-})
+    versionDialog.show = false;
+    handleClickInstall(versionDialog.currentItem);
+  },
+});
 
 // 修改原有的点击安装按钮事件
 const handleInstallClick = (item: any) => {
   if (item.versions.length > 1) {
-    versionDialog.currentItem = item
-    versionDialog.show = true
+    versionDialog.currentItem = item;
+    versionDialog.show = true;
   } else {
-    handleClickInstall(item)
+    handleClickInstall(item);
   }
-}
+};
 
 // 在 template 中添加版本选择弹窗
 const handleClickInstall = (item: any) => {
-  console.log('installForm.value.key', installForm.value.key, installForm.value.key != '', item.versions[0], item)
+  console.log(
+    "installForm.value.key",
+    installForm.value.key,
+    installForm.value.key != "",
+    item.versions[0],
+    item
+  );
 
-  if (installForm.value.version != '') {
-    if (item && item.versions && item.versions.includes(installForm.value.version)) {
-      handleSelectVersion(installForm.value.version, item)
+  if (installForm.value.version != "") {
+    if (
+      item &&
+      item.versions &&
+      item.versions.includes(installForm.value.version)
+    ) {
+      handleSelectVersion(installForm.value.version, item);
     } else {
-      handleSelectVersion(item.versions[0], item)
+      handleSelectVersion(item.versions[0], item);
     }
   } else {
-    handleSelectVersion(item.versions[0], item)
+    handleSelectVersion(item.versions[0], item);
   }
 
   // 修改表单验证消息
-  if (!item.params) return handleInstall()
-  const config = JSON.parse(item.params)
+  if (!item.params) return handleInstall();
+  const config = JSON.parse(item.params);
   installForm.items = (config as []).map<FormItem>((item: any) => ({
     label: item.name,
-    type: 'input',
+    type: "input",
     prop: item.key,
-    rules: [{ required: item.required === 'true', message: `${'请输入'}${item.name}`, trigger: 'blur' }]
-  }))
-  drawer.show = true
-}
+    rules: [
+      {
+        required: item.required === "true",
+        message: `${"请输入"}${item.name}`,
+        trigger: "blur",
+      },
+    ],
+  }));
+  drawer.show = true;
+};
 
 const handleSelectVersion = (v: string, item: any) => {
-  installForm.value.key = item.key
-  installForm.value.version = v
-}
+  installForm.value.key = item.key;
+  installForm.value.version = v;
+};
 // 在 script setup 顶部添加
-const installedVersions = ref(JSON.parse(localStorage.getItem('installedVersions') || '{}'))
+const installedVersions = ref(
+  JSON.parse(localStorage.getItem("installedVersions") || "{}")
+);
 
 const handleInstall = async () => {
-  const { data: res } = await Api.installSoft(installForm.value)
+  const { data: res } = await Api.installSoft(installForm.value);
   // 保存安装的版本信息
-  installedVersions.value[installForm.value.key] = installForm.value.version
-  localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
-  handleCheckInstallLog(res.installName)
-}
+  installedVersions.value[installForm.value.key] = installForm.value.version;
+  localStorage.setItem(
+    "installedVersions",
+    JSON.stringify(installedVersions.value)
+  );
+  handleCheckInstallLog(res.installName);
+};
 
 const dialog = reactive({
   show: false,
-  content: '',
+  content: "",
   onClose: () => {
-    timer && timer.clear()
-    emit('refresh')
-  }
-})
+    timer && timer.clear();
+    emit("refresh");
+  },
+});
 // 添加 ref
-const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null)
+const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null);
 
-const timer = Scope.Timer()
+const timer = Scope.Timer();
 const handleCheckInstallLog = async (value: string) => {
-  dialog.show = true
+  dialog.show = true;
   timer.on(
     async () => {
-      const { data: res2 } = await Api.getInstallLog({ fn: value })
-      dialog.content = res2.logs
+      const { data: res2 } = await Api.getInstallLog({ fn: value });
+      dialog.content = res2.logs;
       // 添加自动滚动
-      await nextTick()
-      const textarea = logTextareaRef.value?.$el?.querySelector('textarea')
+      await nextTick();
+      const textarea = logTextareaRef.value?.$el?.querySelector("textarea");
       if (textarea) {
         // 使用 requestAnimationFrame 实现平滑滚动
         requestAnimationFrame(() => {
           textarea.scrollTo({
             top: textarea.scrollHeight,
-            behavior: 'smooth'
-          })
-        })
+            behavior: "smooth",
+          });
+        });
       }
     },
     2000,
@@ -189,31 +210,31 @@ const handleChangeLayout = () => {
 }
 const columns = [
   {
-    prop: 'name',
-    label: '软件名称',
-    width: 280
+    prop: "name",
+    label: "软件名称",
+    width: 280,
   },
   {
-    prop: 'describe',
-    label: '简介',
+    prop: "describe",
+    label: "简介",
   },
   {
-    prop: 'status',
-    label: '是否安装',
-    width: 180
-  },
-  {
-    prop: 'version',
-    label: '安装版本',
-    width: 180
-  },
-  {
-    prop: 'operation',
-    label: '操作',
+    prop: "status",
+    label: "是否安装",
     width: 180,
-    align: 'center'
-  }
-]
+  },
+  {
+    prop: "version",
+    label: "安装版本",
+    width: 180,
+  },
+  {
+    prop: "operation",
+    label: "操作",
+    width: 180,
+    align: "center",
+  },
+];
 </script>
 
 <template>
@@ -302,15 +323,25 @@ const columns = [
     <custom-dialog v-model:show="versionDialog.show" title="版本选择" :on-close="versionDialog.onClose">
       <div class="version-select-container">
         <div class="version-label">版本</div>
-        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%"
-          popper-class="version-select-dropdown">
-          <el-option v-for="version in versionDialog.currentItem?.versions" :key="version" :label="version"
-            :value="version" />
+        <el-select
+          v-model="installForm.value.version"
+          placeholder="请选择版本"
+          style="width: 100%"
+          popper-class="version-select-dropdown"
+        >
+          <el-option
+            v-for="version in versionDialog.currentItem?.versions"
+            :key="version"
+            :label="version"
+            :value="version"
+          />
         </el-select>
       </div>
       <template #footer>
         <el-button @click="versionDialog.onClose">取消</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
+        <el-button type="primary" @click="versionDialog.onConfirm"
+          >安装</el-button
+        >
       </template>
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
@@ -338,7 +369,6 @@ const columns = [
   background: var(--select-bg-color) !important;
   border: 1px solid var(--select-border-color) !important;
 }
-
 :deep(.el-select__wrapper.is-focused) {
   box-shadow: none !important;
 }
@@ -375,7 +405,6 @@ const columns = [
     flex: 1;
   }
 }
-
 
 .title {
   font-weight: 500;
@@ -508,11 +537,38 @@ const columns = [
       }
     }
   }
-
   .item:nth-of-type(4n + 1) {
     margin-left: 0;
   }
-
+  @media screen and (max-width: 1440px) {
+    .item {
+      width: calc((100% - (3 - 1) * 22px) / 3);
+      margin-left: 22px;
+    }
+    .item:nth-of-type(4n + 1) {
+      margin-left: 22px;
+    }
+    .item:nth-of-type(3n + 1) {
+      margin-left: 0;
+    }
+  }
+  @media screen and (max-width: 1280px) {
+    .item {
+      width: calc((100% - (2 - 1) * 22px) / 2);
+    }
+    .item:nth-of-type(4n + 1),.item:nth-of-type(3n + 1) {
+      margin-left: 22px;
+    }
+    .item:nth-of-type(2n + 1) {
+      margin-left: 0;
+    }
+  }
+  @media screen and (max-width: 1024px) {
+    .item {
+      width: 100%;
+      margin-left: 0;
+    }
+  }
   .no-data {
     width: 100%;
     display: flex;
@@ -522,7 +578,6 @@ const columns = [
     color: var(--font-color-gray-light);
   }
 }
-
 .table-content {
   margin-top: 24px;
 }

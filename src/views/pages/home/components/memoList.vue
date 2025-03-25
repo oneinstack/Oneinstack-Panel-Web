@@ -1,19 +1,29 @@
 <template>
   <custom-dialog
-    :show="show"
+    :show="conf.memoList.show"
     title="备忘录"
-    width="624px"
+    width="1022px"
+    height="722px"
     body-bg-color="rgb(var(--category-item-bg-color))"
     footer-bg-color="rgb(var(--category-item-bg-color))"
     :show-close="false"
-    @update:show="close"
+    @update:show="conf.memoList.close"
   >
     <div>
-      <el-collapse v-model="activeName" accordion>
-        <el-collapse-item title="" :name="i" v-for="i in 4">
-          <template #title> Consistency{{ i }} </template>
+      <el-collapse
+        v-model="conf.memoList.activeName"
+        accordion
+        @change="conf.memoList.changeCollapse"
+      >
+        <el-collapse-item
+          title=""
+          :name="item.id"
+          v-for="item in conf.memoList.list"
+        >
+          <template #title> {{ item.content }} </template>
           <template #icon="{ isActive }">
             <div class="icon-ele">
+              <span class="time">{{ timeFormat(item.create_time) }}</span>
               <el-icon v-if="isActive"><ArrowUp /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
@@ -22,19 +32,19 @@
             </div>
           </template>
           <div class="collapse-content">
-            Consistent with real life: in line with the process and logic of
-            real life, and comply with languages and habits that the users are
-            used to;
+            {{ item.content }}
           </div>
           <div class="collapse-content-footer">
-            <el-button type="danger" plain @click="conf.memo.open"
+            <el-button type="danger" plain @click="conf.memoList.delete()"
               >删除</el-button
             >
-            <div class="icon-ele" @click="activeName = 0">
-              <el-icon v-if="activeName == i"><ArrowUp /></el-icon>
+            <div class="icon-ele" @click="conf.memoList.activeName = 0">
+              <el-icon v-if="conf.memoList.activeName == item.id"
+                ><ArrowUp
+              /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ activeName == i ? "收起" : "展开" }}
+                {{ conf.memoList.activeName == item.id ? "收起" : "展开" }}
               </span>
             </div>
           </div>
@@ -43,61 +53,65 @@
     </div>
 
     <template #footer>
-      <el-button @click="close">取消</el-button>
-      <el-button type="primary" @click="conf.memo.open">新建</el-button>
+      <el-button @click="conf.memoList.close">取消</el-button>
+      <el-button type="primary" @click="memoRef.open(conf.memoList.data)">新建</el-button>
     </template>
   </custom-dialog>
   <memo
-    :show="conf.memo.show"
-    :memo="conf.memo.data"
-    :close="conf.memo.close"
-    :update="conf.memo.update"
+    ref="memoRef"
+    @update="conf.memoList.getMemoList()"
   />
 </template>
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue';
+import { ref, reactive } from "vue";
 import { ArrowUp, ArrowDown } from "@element-plus/icons-vue";
 import Memo from "./memo.vue";
 import CustomDialog from "@/components/custom-dialog.vue";
 import { ElMessage } from "element-plus";
 import { Api } from "@/api/Api";
-const activeName = ref(1);
-interface Props {
-  show: boolean;
-  memo: {
-    id: number;
-    content: string;
-  };
-  close: () => void;
-  update: () => void;
-}
-
-defineProps<Props>();
+import { timeFormat } from "@/utils/index";
+const memoRef = ref();
 const conf = reactive({
-  memo: {
+  memoList: {
     data: {
-      id: 1,
+      id: null,
       content: "",
     },
-    list: [],
+    list: [] as any,
     show: false,
+    activeName: 0,
     open: async () => {
-      await conf.memo.getData();
-      conf.memo.show = true;
+      conf.memoList.show = true;
+      conf.memoList.getMemoList();
     },
-    close: () => (conf.memo.show = false),
-    getData: async () => {
-      const { data: res } = await Api.getSysRemark();
-      // conf.memo.data = res;
-      conf.memo.list = res;
+    close: () => (conf.memoList.show = false),
+    changeCollapse: async (val: number) => {
+      conf.memoList.activeName = val;
+      if (val) {
+        conf.memoList.data = conf.memoList.list.find(
+          (item: any) => item.id == conf.memoList.activeName
+        )!;
+      }
     },
-    update: async () => {
-      await Api.updateSysRemark(conf.memo.data);
-      ElMessage.success("保存成功");
-      //   conf.memo.getData();
-      conf.memo.show = false;
+    getMemoList: async () => {
+      console.log("getMemoList");
+      const { data: res } = await Api.getRemarkList();
+      conf.memoList.list = res;
+      if (conf.memoList.list && conf.memoList.list.length > 0 ) {
+        conf.memoList.activeName = conf.memoList.list[0].id;
+      }
+    },
+    delete: async () => {
+      if (conf.memoList.data.id) {
+        await Api.deleteRemark(conf.memoList.data.id);
+        ElMessage.success("删除成功");
+        conf.memoList.getMemoList();
+      }
     },
   },
+});
+defineExpose({
+  open: conf.memoList.open,
 });
 </script>
 <style lang="less" scoped>
@@ -106,8 +120,12 @@ const conf = reactive({
   color: rgb(var(--primary-color));
   display: flex;
   align-items: center;
-  cursor:pointer;
-  span{
+  cursor: pointer;
+  .time {
+    color: var(--font-color-gray-light);
+    margin-right: 21px;
+  }
+  span {
     margin-left: 6px;
     font-weight: bolder;
   }
@@ -126,7 +144,7 @@ const conf = reactive({
 :deep(.el-collapse-item__header) {
   border-top-left-radius: 6px;
   border-top-right-radius: 6px;
-  padding: 20px 22px;
+  padding: 0 22px;
   margin-top: 12px;
 }
 :deep(.el-collapse-item__wrap) {
@@ -136,5 +154,8 @@ const conf = reactive({
 }
 :deep(.el-collapse-item__content) {
   padding-bottom: 0;
+}
+:deep(.custom-dialog__body) {
+  height: 600px;
 }
 </style>
