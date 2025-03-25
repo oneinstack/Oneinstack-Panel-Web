@@ -15,10 +15,17 @@
                     <span>{{ $t('commons.button.edit') + ' - ' + form.path }}</span>
                 </div>
                 <el-space alignment="center" :size="1" class="dialog-header-icon">
+                    <el-tooltip :content="loadTooltip()" placement="top">
+                        <el-button
+                            @click="toggleFullscreen"
+                            class="!border-none !bg-transparent !text-base !font-semibold !py-2 !px-1"
+                            :icon="FullScreen"
+                            style="margin-right: 10px"
+                        ></el-button>
+                    </el-tooltip>
                     <el-button
                         @click="handleClose"
                         class="close-btn"
-                        circle
                         :icon="Close"
                     ></el-button>
                 </el-space>
@@ -82,19 +89,16 @@
                         highlight-current
                     >
                         <template #default="{ node, data }">
-                            <!-- 目录 -->
                             <span v-if="data.isDir" style="display: inline-flex; align-items: center">
                                 <svg-icon className="table-icon" iconName="p-file-folder"></svg-icon>
                                 <small :title="node.label">{{ node.label }}</small>
                             </span>
-
-                            <!-- 文档 -->
                             <span
                                 v-else
                                 style="display: inline-flex; align-items: center"
                                 @click="getContent(data.path, data.extension)"
                             >
-                                <svg-icon className="table-icon" :iconName="getIconName(data.extension)"></svg-icon>
+                                <!-- <svg-icon className="table-icon" :iconName="getIconName(data.extension)"></svg-icon> -->
                                 <small :title="node.label" class="min-w-32">{{ node.label }}</small>
                             </span>
                         </template>
@@ -144,6 +148,7 @@
 
 <script lang="ts" setup>
 // import { GetFileContent, GetFilesTree, SaveFileContent } from '@/api/modules/files';
+import { Api } from "@/api/Api";
 import i18n from '@/lang';
 import * as monaco from 'monaco-editor';
 import { nextTick, onBeforeUnmount, reactive, ref, onMounted, computed } from 'vue';
@@ -158,10 +163,10 @@ import { ElMessageBox, ElTreeV2, ElMessage } from 'element-plus';
 // import { File } from '@/api/interface/file';
 // import { getIcon } from '@/utils/util';
 import { TreeKey, TreeNodeData } from 'element-plus/es/components/tree-v2/src/types';
-import { Top, Refresh, DArrowLeft, DArrowRight,Close } from '@element-plus/icons-vue';
+import { Top, Refresh, DArrowLeft, DArrowRight,Close,FullScreen } from '@element-plus/icons-vue';
 // import { loadBaseDir } from '@/api/modules/setting';
 
-let editor: monaco.editor.IStandaloneCodeEditor | undefined;
+let editor: monaco.editor.IStandaloneCodeEditor | any;
 
 self.MonacoEnvironment = {
     getWorker(workerId, label) {
@@ -227,9 +232,9 @@ const codeReq = reactive({ path: '', expand: false, page: 1, pageSize: 100 });
 const isShow = ref(true);
 const isEdit = ref(false);
 const oldFileContent = ref('');
-const dialogHeader = ref(null);
-const dialogForm = ref(null);
-const dialogFooter = ref(null);
+const dialogHeader = ref();
+const dialogForm = ref();
+const dialogFooter = ref();
 
 const toggleShow = () => {
     isShow.value = !isShow.value;
@@ -368,13 +373,12 @@ const changeTheme = () => {
         'vs-dark': 'monaco-editor-tree-dark',
         'hc-black': 'monaco-editor-tree-dark',
     };
-
     if (treeRef.value) {
         Object.values(themes).forEach((themeClass) => {
             treeRef.value.$el.classList.remove(themeClass);
         });
-        if (themes[config.theme]) {
-            treeRef.value.$el.classList.add(themes[config.theme]);
+        if (themes[config.theme as keyof typeof themes]) {
+            treeRef.value.$el.classList.add(themes[config.theme as keyof typeof themes]);
         }
     }
 
@@ -510,7 +514,7 @@ const onOpen = () => {
 
 const handleSearchResult = (res: any) => {
     if (res.data.length > 0 && res.data[0].children) {
-        treeData.value = res.data[0].children.map((item) => ({
+        treeData.value = res.data[0].children.map((item:any) => ({
             ...item,
             children: item.isDir ? item.children || [] : undefined,
         }));
@@ -596,12 +600,16 @@ let req = reactive(initTreeData());
 const loadedNodes = ref(new Set());
 
 const search = async (path: string) => {
-    req.path = path;
+    req.path = path || '/';
     if (req.search != '') {
         req.sortBy = 'name';
         req.sortOrder = 'ascending';
     }
     // return await GetFilesTree(req);
+    const { data: res } = await Api.getFileList(req);
+    console.log("🚀 ~ search ~ data:", res)
+    return { data:res.files };
+    // return await Api.getFileList(req);
 };
 
 const getUpData = async () => {
@@ -624,7 +632,7 @@ const getUpData = async () => {
     }
 };
 
-const treeRef = ref<InstanceType<typeof ElTreeV2>>();
+const treeRef = ref();
 
 const treeProps = {
     value: 'id',
@@ -632,7 +640,7 @@ const treeProps = {
     children: 'children',
 };
 
-const handleNodeExpand = async (node: any, data: TreeNode) => {
+const handleNodeExpand = async (node:any, data: TreeNode) => {
     if (!data.data.isDir || loadedNodes.value.has(data.data.path)) {
         return;
     }

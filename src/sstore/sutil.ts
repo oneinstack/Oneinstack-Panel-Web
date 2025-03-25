@@ -1,7 +1,7 @@
 import i18n from '@/lang'
 import { reactive } from 'vue'
 import System from '../utils/System'
-
+const { t } = i18n.global
 export const sutil = reactive({
   /**
    * 请求根地址
@@ -92,30 +92,30 @@ export const sutil = reactive({
     const interval = []
     if (all)
       interval.push({
-        label: i18n.t('dateOptions.AllDates'),
+        label: t('dateOptions.AllDates'),
         value: null,
         key: 'all'
       })
     interval.push({
-      label: i18n.t('dateOptions.Today'),
+      label: t('dateOptions.Today'),
       value: TimeUtil.somedayse(),
       key: 'today'
     })
     interval.push({
-      label: i18n.t('dateOptions.Yesterday'),
+      label: t('dateOptions.Yesterday'),
       value: TimeUtil.somedayse(-1),
       key: 'yesterday'
     })
 
-    const t = new Date()
+    const time = new Date()
 
     const _day = TimeUtil.somedayse
     // 本周起始时间-结束时间
-    const today = t.getDay()
+    const today = time.getDay()
     const startTime = _day(1 - today)[0]
     const endTime = _day(7 - today)[1]
     const thisWeek = {
-      label: i18n.t('dateOptions.ThisWeek'),
+      label: t('dateOptions.ThisWeek'),
       value: [startTime, endTime],
       key: 'thisWeek'
     }
@@ -125,7 +125,7 @@ export const sutil = reactive({
     const lastWeekSTime = _day(1 - today - 7)[0]
     const lastWeekETime = _day(7 - today - 7)[1]
     const lastWeek = {
-      label: i18n.t('dateOptions.LastWeek'),
+      label: t('dateOptions.LastWeek'),
       value: [lastWeekSTime, lastWeekETime],
       key: 'lastWeek'
     }
@@ -140,7 +140,7 @@ export const sutil = reactive({
     ms.setDate(ms.getDate() - 1)
     const mendTime = _day(0, ms)
     const thisMonth = {
-      label: i18n.t('dateOptions.ThisMonth'),
+      label: t('dateOptions.ThisMonth'),
       value: [mstartTime[0], mendTime[1]],
       key: 'thisMonth'
     }
@@ -161,7 +161,7 @@ export const sutil = reactive({
     const diff = now - time
 
     // //刚刚
-    // if (diff < 60 * 1000) return i18n.t('chatRoom.just_now')
+    // if (diff < 60 * 1000) return t('chatRoom.just_now')
 
     //今天
     if (diff < 24 * 60 * 60 * 1000) {
@@ -175,7 +175,7 @@ export const sutil = reactive({
       const _yd = new Date(TimeUtil.somedayse(-1)[0])
       const _dd = _yd.Format('dd')
       const _ddFormat = _formatTime.Format('dd')
-      if (_dd == _ddFormat) return i18n.t('chatRoom.yesterday')
+      if (_dd == _ddFormat) return t('chatRoom.yesterday')
     }
 
     //今年的显示月日

@@ -22,7 +22,7 @@ export default class Config {
 
     // 初始化i18n
     app.use(i18n as any)
-    await i18n.setLang()
+    // await i18n.setLang()
 
     // 初始化http
     HttpConfig.init(System.env)

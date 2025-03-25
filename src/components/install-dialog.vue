@@ -64,7 +64,7 @@ const togglePackage = (pkg: Package) => {
   <el-dialog :model-value="visible" @update:model-value="emit('update:visible', $event)" width="1018px"
     :close-on-click-modal="false" @close="handleClose" :show-close="false">
     <div class="install-dialog">
-      <img src="../../../../../public/static/images/bj-install.png" alt="" class="background-image">
+      <img src="/static/images/bj-install.png" alt="" class="background-image">
       <v-s-icon name="off" size="32" classs="close" @click="handleClose" />
       <span class="top">根据您的使用情况，推荐<span class="theme-color">安装以下套件</span></span>
       <div class="top-text">我们为您推荐安装以下一键套件，请您需选择或在<span class='theme-color'>软件商店</span>中自动选择，推荐安装 <strong

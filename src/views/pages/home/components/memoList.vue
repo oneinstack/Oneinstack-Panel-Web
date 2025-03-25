@@ -87,7 +87,7 @@ const conf = reactive({
       conf.memoList.getMemoList();
     },
     close: () => (conf.memoList.show = false),
-    changeCollapse: async (val: number) => {
+    changeCollapse: (val: any) => {
       conf.memoList.activeName = val;
       if (val) {
         conf.memoList.data = conf.memoList.list.find(
