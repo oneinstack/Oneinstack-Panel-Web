@@ -11,7 +11,7 @@ import {
   ArrowRight,
   Delete,
   RefreshRight,
-  Setting
+  Setting,
 } from "@element-plus/icons-vue";
 import {
   ElMessage,
@@ -19,11 +19,11 @@ import {
   UploadFile,
   UploadInstance,
 } from "element-plus";
-import { nextTick, onMounted, reactive, useTemplateRef, ref } from 'vue';
+import { nextTick, onMounted, reactive, useTemplateRef, ref } from "vue";
 import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
-
+import CodeEditor from "./code-editor.vue";
 interface Emits {
   (e: "update:path", value: string[]): void;
   (
@@ -35,7 +35,7 @@ interface Emits {
 }
 
 const emit = defineEmits<Emits>();
-
+const codeEditorRef = ref();
 const conf = reactive({
   path: ["/"],
   columns: [
@@ -76,9 +76,50 @@ const conf = reactive({
   },
   refresh: () => conf.getFileList(true),
   handleFileClick: (row: any) => {
-    if (!row.isDir) return;
-    conf.path.push(row.name);
-    conf.getFileList();
+    if (!row.isDir) {
+      conf.openCodeEditor(row.path, row.extension);
+    } else {
+      conf.path.push(row.name);
+      conf.getFileList();
+    }
+  },
+  fileEdit: {
+    path: "",
+    content: "",
+    name: "",
+    extension: "",
+    language: "plaintext"
+  },
+  openCodeEditor: (path: string, extension: string) => {
+    codeEditorRef.value.acceptParams(conf.fileEdit);
+    // codeReq.path = path;
+    // codeReq.expand = true;
+    // if (extension != "") {
+    //   Languages.forEach((language) => {
+    //     const ext = extension.substring(1);
+    //     if (language.value.indexOf(ext) > -1) {
+    //       fileEdit.language = language.label;
+    //     }
+    //   });
+    // }
+    // GetFileContent(codeReq)
+    //   .then((res) => {
+    //     fileEdit.content = res.data.content;
+    //     fileEdit.path = res.data.path;
+    //     fileEdit.name = res.data.name;
+    //     fileEdit.extension = res.data.extension;
+    //     codeEditorRef.value.acceptParams(fileEdit);
+    //   })
+    //   .catch(() => {});
+    // GetFileContent(codeReq)
+    //   .then((res:any) => {
+    //     conf.fileEdit.content = res.data.content;
+    //     conf.fileEdit.path = res.data.path;
+    //     conf.fileEdit.name = res.data.name;
+    //     conf.fileEdit.extension = res.data.extension;
+    //     codeEditorRef.value.acceptParams(conf.fileEdit);
+    //   })
+    //   .catch(() => {});
   },
   handleBackLevel: (index = conf.path.length - 2) => {
     if (conf.path.length === 1) return;
@@ -264,23 +305,23 @@ defineExpose({
     <div class="file-tool">
       <div class="left">
         <el-space :size="14" class="btn-group">
-        <el-dropdown>
-          <el-button type="primary">
-            上传/下载
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="conf.upload.handleOpenDialog"
-                >上传文件/文件夹</el-dropdown-item
-              >
-              <el-dropdown-item @click="conf.fileDialog.open('linkDownload')"
-                >URL链接下载</el-dropdown-item
-              >
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <!-- <el-dropdown>
+          <el-dropdown>
+            <el-button type="primary">
+              上传/下载
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="conf.upload.handleOpenDialog"
+                  >上传文件/文件夹</el-dropdown-item
+                >
+                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')"
+                  >URL链接下载</el-dropdown-item
+                >
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <!-- <el-dropdown>
           <el-button class="btn">
             新建
             <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -306,52 +347,51 @@ defineExpose({
         </el-dropdown>
         <el-button class="btn">终端</el-button>
         <el-button class="btn">/（根目录）29.47GB</el-button> -->
-      </el-space>
-      <div class="btns">
-        <el-dropdown>
-          <div class="btn">新建
-            <el-icon class="icon"><arrow-down /></el-icon></div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                @click="conf.handleOpenDrawer('create', 'file')"
-              >
-                <div class="flex items-center" style="gap: 10px">
-                  <v-s-icon name="txt" size="22" />
-                  <span>文件</span>
-                </div>
-              </el-dropdown-item>
-              <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
-                <div class="flex items-center" style="gap: 10px">
-                  <v-s-icon name="folder" size="22" />
-                  <span>文件夹</span>
-                </div>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <div class="btn">终端
-          <el-icon class="icon"><arrow-down /></el-icon>
+        </el-space>
+        <div class="btns">
+          <el-dropdown>
+            <div class="btn">
+              新建 <el-icon class="icon"><arrow-down /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  @click="conf.handleOpenDrawer('create', 'file')"
+                >
+                  <div class="flex items-center" style="gap: 10px">
+                    <v-s-icon name="txt" size="22" />
+                    <span>文件</span>
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item
+                  @click="conf.handleOpenDrawer('create', 'dir')"
+                >
+                  <div class="flex items-center" style="gap: 10px">
+                    <v-s-icon name="folder" size="22" />
+                    <span>文件夹</span>
+                  </div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <div class="btn">
+            终端
+            <el-icon class="icon"><arrow-down /></el-icon>
+          </div>
+          <div class="btn">/（根目录）29.47GB</div>
         </div>
-        <div class="btn">/（根目录）29.47GB</div>
-      </div>
       </div>
 
-      
       <div class="flex items-center">
-          <SearchInput class="search-input" placeholder="请输入域名或备注"/>
-          <el-button
-            class="refresh1-btn"
-            type="primary"
-            :icon="Refresh"
-            @click="conf.refresh"
-          />
-          <el-button
-            class="setting-btn"
-            type="primary"
-            :icon="Setting"
-          />
-        </div>
+        <SearchInput class="search-input" placeholder="请输入域名或备注" />
+        <el-button
+          class="refresh1-btn"
+          type="primary"
+          :icon="Refresh"
+          @click="conf.refresh"
+        />
+        <el-button class="setting-btn" type="primary" :icon="Setting" />
+      </div>
       <!-- <div class="demo-form-inline">
         <el-button type="primary">
           <span class="mr-1">回收站</span>
@@ -547,6 +587,7 @@ defineExpose({
         >
       </template>
     </custom-dialog>
+    <CodeEditor ref="codeEditorRef" />
   </div>
 </template>
 
@@ -556,11 +597,11 @@ defineExpose({
   align-items: center;
   justify-content: space-between;
   margin-block: 18px;
-  .left{
-  display: flex;
-  align-items: center;
+  .left {
+    display: flex;
+    align-items: center;
   }
-  .btns{
+  .btns {
     background: rgb(var(--bg-card-color));
     height: 40px;
     width: 382px;
@@ -568,7 +609,7 @@ defineExpose({
     align-items: center;
     margin-left: 16px;
     border-radius: 6px;
-    .btn{
+    .btn {
       height: 40px;
       padding: 10px 22px;
       display: flex;
@@ -577,14 +618,14 @@ defineExpose({
       border-radius: 6px;
       cursor: pointer;
       position: relative;
-      .icon{
+      .icon {
         margin-left: 18px;
       }
-      &:hover{
+      &:hover {
         color: rgb(var(--primary-color));
       }
       &::before {
-        content: '';
+        content: "";
         position: absolute;
         width: 1px;
         height: 20px;
@@ -597,7 +638,7 @@ defineExpose({
     }
   }
 }
-:deep(.el-input__wrapper){
+:deep(.el-input__wrapper) {
   height: 36px;
 }
 .back-level {
@@ -637,10 +678,12 @@ defineExpose({
 .el-button:focus-visible {
   outline: none;
 }
-:deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner,
-.el-breadcrumb__item:last-child .el-breadcrumb__inner a,
-.el-breadcrumb__item:last-child .el-breadcrumb__inner a:hover,
-.el-breadcrumb__item:last-child .el-breadcrumb__inner:hover) {
+:deep(
+    .el-breadcrumb__item:last-child .el-breadcrumb__inner,
+    .el-breadcrumb__item:last-child .el-breadcrumb__inner a,
+    .el-breadcrumb__item:last-child .el-breadcrumb__inner a:hover,
+    .el-breadcrumb__item:last-child .el-breadcrumb__inner:hover
+  ) {
   color: rgb(var(--primary-color));
 }
 </style>

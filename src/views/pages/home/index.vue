@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import memoList from "./components/memoList.vue";
-import { markRaw, onMounted, reactive, ref, computed } from "vue";
+import { markRaw, onMounted, reactive, ref, computed, watch } from 'vue';
 import sapp from "@/sstore/sapp";
 import { Api } from "@/api/Api";
 import sutil from "@/sstore/sutil";
@@ -395,6 +395,16 @@ const conf = reactive({
             pointer: {
               show: false,
             },
+            // progress: {
+            //   show: true,
+            //   overlap: false,
+            //   roundCap: true,
+            //   clip: false,
+            //   itemStyle: {
+            //     borderWidth: 0,
+            //     color: conf.themeColor[sapp.theme][0],
+            //   },
+            // },
             progress: {
               show: true,
               overlap: false,
@@ -402,7 +412,16 @@ const conf = reactive({
               clip: false,
               itemStyle: {
                 borderWidth: 0,
-                color: conf.themeColor[sapp.theme][0],
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  {
+                    offset: 0,
+                    color: "#71CEFF", // 起始颜色
+                  },
+                  {
+                    offset: 1,
+                    color: "#154AFC", // 结束颜色
+                  },
+                ]),
               },
             },
             axisLine: {
@@ -591,6 +610,13 @@ const dialogBgColor = computed(() => {
   //弹窗的明暗主题
   return sapp.theme === "dark" ? "#1F3243" : "#fff";
 });
+watch(
+  () => sapp.theme,
+  () => {
+    conf.monitorData.update();
+    conf.statusData.update();
+  }
+)
 onMounted(() => {
   getWebsiteInfo(); //查看用户是否安装了相关的插件
   timer.on(
