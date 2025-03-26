@@ -13,7 +13,6 @@
       <el-collapse
         v-model="conf.memoList.activeName"
         accordion
-        @change="conf.memoList.changeCollapse"
         v-if="conf.memoList.list.length > 0"
       >
         <el-collapse-item
@@ -36,8 +35,14 @@
             {{ item.content }}
           </div>
           <div class="collapse-content-footer">
-            <el-button type="danger" plain @click="conf.memoList.delete()"
+            <el-button type="danger" plain @click="conf.memoList.delete(item)"
               >删除</el-button
+            >
+            <el-button
+              type="warning"
+              plain
+              @click="memoRef.open({ content: item.content, id: item.id })"
+              >编辑</el-button
             >
             <div class="icon-ele" @click="conf.memoList.activeName = 0">
               <el-icon v-if="conf.memoList.activeName == item.id"
@@ -56,13 +61,12 @@
 
     <template #footer>
       <el-button @click="conf.memoList.close">取消</el-button>
-      <el-button type="primary" @click="memoRef.open(conf.memoList.data)">新建</el-button>
+      <el-button type="primary" @click="memoRef.open(conf.memoList.data)"
+        >新建</el-button
+      >
     </template>
   </custom-dialog>
-  <memo
-    ref="memoRef"
-    @update="conf.memoList.getMemoList()"
-  />
+  <memo ref="memoRef" @update="conf.memoList.getMemoList()" />
 </template>
 <script setup lang="ts">
 import { ref, reactive } from "vue";
@@ -87,14 +91,14 @@ const conf = reactive({
       conf.memoList.getMemoList();
     },
     close: () => (conf.memoList.show = false),
-    changeCollapse: (val: any) => {
-      conf.memoList.activeName = val;
-      if (val) {
-        conf.memoList.data = conf.memoList.list.find(
-          (item: any) => item.id == conf.memoList.activeName
-        )!;
-      }
-    },
+    // changeCollapse: (val: any) => {
+    //   conf.memoList.activeName = val;
+    //   if (val) {
+    //     conf.memoList.data = conf.memoList.list.find(
+    //       (item: any) => item.id == conf.memoList.activeName
+    //     )!;
+    //   }
+    // },
     getMemoList: async () => {
       conf.memoList.data = {
         id: null,
@@ -102,16 +106,15 @@ const conf = reactive({
       };
       const { data: res } = await Api.getRemarkList();
       conf.memoList.list = res;
-      if (conf.memoList.list && conf.memoList.list.length > 0 ) {
+      if (conf.memoList.list && conf.memoList.list.length > 0) {
         conf.memoList.activeName = conf.memoList.list[0].id;
       }
     },
-    delete: async () => {
-      if (conf.memoList.data.id) {
-        await Api.deleteRemark(conf.memoList.data.id);
-        ElMessage.success("删除成功");
-        conf.memoList.getMemoList();
-      }
+    delete: async (item: any) => {
+      if (!item.id) return;
+      await Api.deleteRemark(item.id);
+      ElMessage.success("删除成功");
+      conf.memoList.getMemoList();
     },
   },
 });
@@ -135,8 +138,9 @@ defineExpose({
     font-weight: bolder;
   }
 }
-.content{
-  min-height: 200px;
+.content {
+  height: 500px;
+  overflow-y: scroll;
 }
 .collapse-content {
   margin-top: 12px;

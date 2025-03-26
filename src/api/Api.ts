@@ -32,6 +32,10 @@ export const Api = {
   updateSysRemark: (obj: any) => {
     return http.post('/sys/remark/update', obj)
   },
+  /** 更新备注信息 */
+  addSysRemark: (obj: any) => {
+    return http.post('/sys/remark/add', obj)
+  },
   /** 获取网站统计 */
   getWebsiteCount: () => {
     return http.get('/sys/websitecount')

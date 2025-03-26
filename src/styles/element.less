@@ -1,3 +1,4 @@
+@input-height: 42px;
 :deep(.el-table) {
   // --el-table-border-color: transparent;
   --el-table-border-color: rgb(var(--category-item-bg-color));;
@@ -50,12 +51,12 @@
   --el-input-border-color: transparent;
   --el-select-border-color: transparent;
   --el-select-input-color: var(--font-color-black);
-  --el-input-height:42px;
+  --el-input-height:@input-height;
 
   &__wrapper {
     background: var(--el-input-bg-color);
     box-shadow: none;
-    height: 42px;
+    height: @input-height;
   }
 
   &__inner {
@@ -91,6 +92,8 @@
 
 :deep(.el-form-item__label) {
   color: var(--font-color-black);
+  height: @input-height;
+  align-items: center;
 }
 
 :deep(.el-pagination) {

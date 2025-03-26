@@ -14,7 +14,6 @@ const conf = reactive({
     open: async (item:any) => {
       conf.memo.show = true;
       conf.memo.data = item;
-      conf.memo.data.id = 1;
     },
     close: () => {
       conf.memo.show = false
@@ -23,11 +22,16 @@ const conf = reactive({
         content: "",
       };
     },
+    add: async () => {
+      await Api.addSysRemark(conf.memo.data);
+      ElMessage.success("保存成功");
+      conf.memo.show = false;
+      emit("update");
+    },
     update: async () => {
       await Api.updateSysRemark(conf.memo.data);
       ElMessage.success("保存成功");
       conf.memo.show = false;
-      // props.update();
       emit("update");
     },
   },
@@ -89,7 +93,7 @@ const handleKeydown = (e: KeyboardEvent | Event) => {
 <template>
   <custom-dialog
     :show="conf.memo.show"
-    title="新建备忘录"
+    :title="conf.memo.data.id ? '编辑备忘录':'新建备忘录'"
     width="624px"
     :show-close="false"
     @update:show="conf.memo.close"
@@ -102,7 +106,8 @@ const handleKeydown = (e: KeyboardEvent | Event) => {
       @keydown="handleKeydown"
     />
     <template #footer>
-      <el-button type="primary" @click="conf.memo.update">保存</el-button>
+      <el-button v-if="conf.memo.data.id" type="primary" @click="conf.memo.update">保存</el-button>
+      <el-button v-else type="primary" @click="conf.memo.add">保存</el-button>
       <el-button @click="conf.memo.close">取消</el-button>
     </template>
   </custom-dialog>
