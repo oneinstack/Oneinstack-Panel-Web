@@ -201,7 +201,7 @@ const BindButton = ()=>{
                 <div class="layout-container__logo" :class="{ 'collapse': conf.isCollapse }">
                   <img class="logo" src="/static/images/small-logo.png" alt="" />
                   <img class="logo-text" v-if="!conf.isCollapse && sapp.theme == 'light'" src="/static/images/logo-text-light.png" alt="" />
-                  <img class="logo-text" v-else src="/static/images/logo-text-dark.png" alt="" />
+                  <img class="logo-text" v-if="!conf.isCollapse && sapp.theme == 'dark'" src="/static/images/logo-text-dark.png" alt="" />
                   <!-- <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p> -->
                 </div>
                 <el-scrollbar height="100%">
