@@ -156,19 +156,21 @@ const handleSync = () => {
   }
 .list {
   width: 100%;
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
+  // display: grid;
+  // grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
+  // gap: 20px;
   margin-top: 20px;
 
   .item {
-    width: 100%;
-    height: 220px;
+    width: calc((100% - (2 - 1) * 20px) / 2);
+    // height: 220px;
     background: rgb(var(--bg-hover-color));
     border-radius: 8px;
     margin-bottom: 22px;
     border: 2px solid transparent;
-
+    margin-left: 20px;
     &:hover {
       border-color: var(--el-color-primary);
       cursor: pointer;
@@ -208,6 +210,7 @@ const handleSync = () => {
         img {
           width: 100%;
           height: 100%;
+          object-fit: contain;
         }
       }
 
@@ -232,17 +235,25 @@ const handleSync = () => {
 
     .below {
       display: flex;
-      flex-direction: row;
-      justify-content: space-between;
+      // flex-direction: row;
+      // justify-content: space-between;
+      // gap: 12px;
+      gap:11.6px;
       margin-top: 20px;
       color: var(--font-color-gray-light);
+      flex-wrap: wrap;
     }
   }
 
   .item:nth-of-type(2n - 1) {
     margin-left: 0;
   }
-
+  @media screen and (max-width: 1600px) {
+    .item {
+      width: 100%;
+      margin-left: 0;
+    }   
+  }
   .no-data {
     width: 100%;
     display: flex;

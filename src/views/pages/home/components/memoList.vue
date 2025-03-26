@@ -96,7 +96,10 @@ const conf = reactive({
       }
     },
     getMemoList: async () => {
-      console.log("getMemoList");
+      conf.memoList.data = {
+        id: null,
+        content: "",
+      };
       const { data: res } = await Api.getRemarkList();
       conf.memoList.list = res;
       if (conf.memoList.list && conf.memoList.list.length > 0 ) {

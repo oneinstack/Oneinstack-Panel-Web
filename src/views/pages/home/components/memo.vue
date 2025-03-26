@@ -16,7 +16,13 @@ const conf = reactive({
       conf.memo.data = item;
       conf.memo.data.id = 1;
     },
-    close: () => (conf.memo.show = false),
+    close: () => {
+      conf.memo.show = false
+      conf.memo.data = {
+        id: null,
+        content: "",
+      };
+    },
     update: async () => {
       await Api.updateSysRemark(conf.memo.data);
       ElMessage.success("保存成功");
