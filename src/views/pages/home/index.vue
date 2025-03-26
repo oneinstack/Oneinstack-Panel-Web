@@ -82,6 +82,7 @@ const conf = reactive({
       icon: "home-software",
       className: "y",
       value: 0,
+      linkFn: () => System.router.push("/security"),
     },
     {
       name: "备忘录",
