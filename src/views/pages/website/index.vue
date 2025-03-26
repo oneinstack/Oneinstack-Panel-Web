@@ -106,24 +106,24 @@ const conf = reactive({
       conf.form.data.value.type = conf.website.params.type
     },
     websiteInfo: sapp.websiteInfo, // 添加状态
-    // getWebsiteInfo: async () => {
-    //   try {
-    //     const { data } = await Api.getWebsiteInfo()
-    //     // 添加数据校验
-    //     if (!data && data !== false) {
-    //       conf.website.websiteInfo = false
-    //       console.log('网站依赖状态：未安装', data)
-    //       return false
-    //     }
-    //     conf.website.websiteInfo = data
-    //     console.log('网站依赖状态：已安装', data)
-    //     return data
-    //   } catch (error) {
-    //     conf.website.websiteInfo = false
-    //     ElMessage.error('获取网站信息失败')
-    //     return false
-    //   }
-    // }
+    getWebsiteInfo: async () => {
+      try {
+        const { data } = await Api.getWebsiteInfo();
+        // 添加数据校验
+        if (data === false && !sapp.installDialogHasShown) {
+          conf.website.websiteInfo = data;
+          sapp.installDialogHasShown = true; // 标记为已显示
+          // console.log(installDialog.visible)
+        }
+        sapp.setWebsiteInfo(data); //将数据存储到pinia
+        conf.website.websiteInfo = data;
+        console.log("网站依赖状态：已安装", data);
+        // return data;
+      } catch (error) {
+        ElMessage.error("获取网站信息失败");
+        return false;
+      }
+    }
   },
   drawer: {
     show: false,
@@ -306,9 +306,7 @@ const conf = reactive({
 
   }
 })
-const installDialog = reactive({//开启弹窗"
-  visible: false
-})
+
 const handleInstall = () => {
   // installDialog.visible = true
   conf.website.websiteInfo = true
@@ -324,18 +322,18 @@ const handleInstall = () => {
 //     message: '安装成功'
 //   })
 // }
-// onMounted(() => {
-//   conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
-// })
+onMounted(() => {
+  conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
+})
 
 conf.website.getData()
 </script>
 
 <template>
   <div class="website-container">
-    <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
-      <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-      <div class="main-content">
+    <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
+    <div class="main-content">
+      <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
         <div :class="{ 'blur-mask': !conf.website.websiteInfo }">
           <div class="tool-bar">
             <el-space class="btn-group" :size="14">
@@ -422,9 +420,10 @@ conf.website.getData()
             <!-- 添加提示信息 -->
           </div>
         </div>
-      </div>
+      </install-mask>
+    </div>
 
-      <!-- <div v-if="!conf.website.websiteInfo" class="mask-tip">
+    <!-- <div v-if="!conf.website.websiteInfo" class="mask-tip">
       <img src="./../../../../public/static/images/ins-Plugin.png" alt="" class="tip-image">
       <div class="tip-text">
         未安装运行环境，请点击下方按钮<span class="highlight">安装Nginx</span>否则无法使用改页面
@@ -437,35 +436,34 @@ conf.website.getData()
       </el-button>
     </div> -->
 
-      <!--创建网站弹窗-->
-      <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
-        :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
-        <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
-          <template #send_url="{ row }">
-            <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
-              <template #prepend>
-                <el-select v-model="conf.form.data.value.pact" style="width: 80px">
-                  <el-option label="http" value="http://" />
-                  <el-option label="https" value="https://" />
-                </el-select>
-              </template>
-            </el-input>
-          </template>
-        </custom-form>
-      </custom-drawer>
+    <!--创建网站弹窗-->
+    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
+      :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
+      <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
+        <template #send_url="{ row }">
+          <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
+            <template #prepend>
+              <el-select v-model="conf.form.data.value.pact" style="width: 80px">
+                <el-option label="http" value="http://" />
+                <el-option label="https" value="https://" />
+              </el-select>
+            </template>
+          </el-input>
+        </template>
+      </custom-form>
+    </custom-drawer>
 
-      <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
-        <template v-if="conf.dialog.type === 'delete'">
-          <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
-        </template>
-        <template #footer>
-          <el-button @click="conf.dialog.close">取消</el-button>
-          <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
-        </template>
-      </custom-dialog>
-      <!--安装插件弹窗-->
-      <!-- <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" /> -->
-    </install-mask>
+    <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
+      <template v-if="conf.dialog.type === 'delete'">
+        <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
+      </template>
+      <template #footer>
+        <el-button @click="conf.dialog.close">取消</el-button>
+        <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
+      </template>
+    </custom-dialog>
+    <!--安装插件弹窗-->
+    <!-- <install-dialog v-model:visible="installDialog.visible" @confirm="handleInstallConfirm" /> -->
   </div>
 </template>
 
@@ -486,7 +484,6 @@ conf.website.getData()
   filter: blur(10px);
   pointer-events: none;
   user-select: none;
-  margin: 0 20px;
 }
 
 .mask-tip {

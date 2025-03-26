@@ -60,11 +60,11 @@ const uninstallDialog = reactive({
     try {
       await Api.uninstallSoft({
         key: uninstallDialog.item.key,
-        version: installedVersions.value[uninstallDialog.item.key]
+        version: uninstallDialog.item.install_version
       })
       // 移除本地存储的版本信息
-      delete installedVersions.value[uninstallDialog.item.key]
-      localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
+      // delete installedVersions.value[uninstallDialog.item.key]
+      // localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
       // 提示卸载成功
       ElMessage({
         type: 'success',

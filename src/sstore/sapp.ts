@@ -7,7 +7,7 @@ export const sapp = reactive({
     sapp.theme = Cookie.get(EKey.pageTheme) || 'light'
   },
   installDialogHasShown: false, // 新增属性
-  websiteInfo: null as any,//新增插件信息状态
+  websiteInfo: null as any,//新增插件信息状态网站
   theme: 'light' as 'light' | 'dark',
   layout:'grid' as 'grid' | 'list',
   setTheme(theme: 'light' | 'dark') {

@@ -54,8 +54,8 @@
   
   .mask-tip {
     position: absolute;
-    top: 22%;
-    left: 6%;
+    top: 50%;
+    left: 0;
     z-index: 10;
     width: 100%;
     max-width: auto;

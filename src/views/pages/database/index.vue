@@ -11,7 +11,7 @@ import sapp from '@/sstore/sapp'
 export interface ConfProps {
   conf: typeof conf
 }
-const websiteInfo = sapp.websiteInfo//查看相关插件是否安装
+const websiteInfo = false//查看相关插件是否安装
 const handleInstall = () => {
   ElMessage({
     type: 'warning',
@@ -85,7 +85,7 @@ const conf = reactive({
             { prop: 'password', label: '密码' },
             { prop: 'capacity', label: '容量', placeholder: '未配置' },
             { prop: 'p_addr', label: '数据库位置' },
-            { prop: 'action', label: '操作',align:'center' }
+            { prop: 'action', label: '操作', align: 'center' }
           ]
         case 'redis':
           return [
@@ -149,8 +149,8 @@ const conf = reactive({
       value: {
         encoding: 'utf8',
         type: 'mysql',
-        password:'',
-        auth:'all',
+        password: '',
+        auth: 'all',
       } as any,
       items: computed<FormItem[]>(() => {
         switch (conf.list.params.type) {
@@ -185,7 +185,7 @@ const conf = reactive({
                 //     value: item.id
                 //   }))
                 // },
-                options:[
+                options: [
                   {
                     label: '所有人(%)',
                     value: 'all'
@@ -227,57 +227,49 @@ conf.list.params.type = routeName
 </script>
 
 <template>
-  <install-mask :is-installed="websiteInfo" install-text="安装Mysql" @install="handleInstall">
   <div class="database-container">
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <router-view :conf="conf" />
+    <!-- <install-mask :is-installed="websiteInfo" install-text="安装Mysql" @install="handleInstall"> -->
+      <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" :loading="conf.drawer.loading"
+        :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
+        <template v-if="conf.drawer.type === 'add'">
+          <custom-form :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
 
-    <custom-drawer
-      :visible="conf.drawer.show"
-      :title="conf.drawer.title"
-      :loading="conf.drawer.loading"
-      :on-close="conf.drawer.onClose"
-      :on-confirm="conf.drawer.onConfirm"
-    >
-      <template v-if="conf.drawer.type === 'add'">
-        <custom-form :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
-          <template #name="{ row }">
-            <el-input v-model="conf.form.data.value.name" :placeholder="row.placeholder">
-              <template #append>
-                <el-select v-model="conf.form.data.value.encoding" style="width: 120px">
-                  <el-option label="utf8" value="utf8" />
-                  <el-option label="utf8mb4" value="utf8mb4" />
-                  <el-option label="gbk" value="gbk" />
-                  <el-option label="big5" value="big5" />
-                </el-select>
-              </template>
-            </el-input>
-          </template>
-          <template #password="{ row }">
-            <el-input v-model="conf.form.data.value.password" :placeholder="row.placeholder" type="password" show-password>
-              <template #append>
-                <el-button
-                  @click="conf.form.handleRandomPassword()"
-                >
-                随机密码
-                </el-button>
-              </template>
-            </el-input>
-          </template>
-          <template v-if="conf.form.data.value.auth == 'IP'" #authIP="{ row }">
-            <el-input v-model="conf.form.data.value.authIP" :placeholder="row.placeholder" type="textarea" />
-            <span class="auth-ip-tip">多个 ip 以逗号分隔，例：172.16.10.111,172.16.10.112</span>
-          </template>
-        </custom-form>
-      </template>
-    </custom-drawer>
+            <template #name="{ row }">
+              <el-input v-model="conf.form.data.value.name" :placeholder="row.placeholder">
+                <template #append>
+                  <el-select v-model="conf.form.data.value.encoding" style="width: 120px">
+                    <el-option label="utf8" value="utf8" />
+                    <el-option label="utf8mb4" value="utf8mb4" />
+                    <el-option label="gbk" value="gbk" />
+                    <el-option label="big5" value="big5" />
+                  </el-select>
+                </template>
+              </el-input>
+            </template>
+            <template #password="{ row }">
+              <el-input v-model="conf.form.data.value.password" :placeholder="row.placeholder" type="password"
+                show-password>
+                <template #append>
+                  <el-button @click="conf.form.handleRandomPassword()">
+                    随机密码
+                  </el-button>
+                </template>
+              </el-input>
+            </template>
+            <template v-if="conf.form.data.value.auth == 'IP'" #authIP="{ row }">
+              <el-input v-model="conf.form.data.value.authIP" :placeholder="row.placeholder" type="textarea" />
+              <span class="auth-ip-tip">多个 ip 以逗号分隔，例：172.16.10.111,172.16.10.112</span>
+            </template>
+          </custom-form>
+        </template>
+      </custom-drawer>
+    <!-- </install-mask> -->
   </div>
-</install-mask>
 </template>
 
 <style scoped lang="less">
-
-
 .database-container {
   .tip {
     width: 100%;
@@ -295,7 +287,8 @@ conf.list.params.type = routeName
     }
   }
 }
-.auth-ip-tip{
+
+.auth-ip-tip {
   font-size: 12px;
   color: var(--font-color-gray-light);
 }

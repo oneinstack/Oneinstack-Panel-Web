@@ -17,23 +17,23 @@ const installDialog = reactive({
   visible: false,
 });
 
-const getWebsiteInfo = async () => {
-  try {
-    const { data } = await Api.getWebsiteInfo();
-    // 添加数据校验
-    if (data === false && !sapp.installDialogHasShown) {
-      installDialog.visible = true; //打开插件弹窗
-      sapp.installDialogHasShown = true; // 标记为已显示
-      // console.log(installDialog.visible)
-    }
-    sapp.setWebsiteInfo(data); //将数据存储到pinia
-    console.log("网站依赖状态：已安装", data);
-    return data;
-  } catch (error) {
-    ElMessage.error("获取网站信息失败");
-    return false;
-  }
-};
+// const getWebsiteInfo = async () => {
+//   try {
+//     const { data } = await Api.getWebsiteInfo();
+//     // 添加数据校验
+//     if (data === false && !sapp.installDialogHasShown) {
+//       installDialog.visible = true; //打开插件弹窗
+//       sapp.installDialogHasShown = true; // 标记为已显示
+//       // console.log(installDialog.visible)
+//     }
+//     sapp.setWebsiteInfo(data); //将数据存储到pinia
+//     console.log("网站依赖状态：已安装", data);
+//     return data;
+//   } catch (error) {
+//     ElMessage.error("获取网站信息失败");
+//     return false;
+//   }
+// };
 
 const handleInstallConfirm = () => {
   //模拟安装的过程
@@ -618,7 +618,7 @@ watch(
   }
 )
 onMounted(() => {
-  getWebsiteInfo(); //查看用户是否安装了相关的插件
+  // getWebsiteInfo(); //查看用户是否安装了相关的插件
   timer.on(
     () => {
       conf.statusData.update();
