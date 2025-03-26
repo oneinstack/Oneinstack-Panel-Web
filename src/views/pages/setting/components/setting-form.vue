@@ -27,6 +27,7 @@ export interface FormItem {
   action?: ActionBtn | ActionBtn[]
   tip?: string
   options?: any[]
+  className?: string
 }
 
 interface Props {
@@ -47,6 +48,10 @@ const props = defineProps<Props>()
           clearable
           :disabled="item.disabled"
         />
+        <el-select :class="item.className" v-else-if="item.type === 'select'" v-model="item.value" :disabled="item.disabled">
+          <el-option v-for="option in item.options" :key="option.value" :label="option.label" :value="option.value">
+          </el-option> 
+        </el-select>
         <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="item.disabled" />
         <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="item.disabled">
           <template #append>

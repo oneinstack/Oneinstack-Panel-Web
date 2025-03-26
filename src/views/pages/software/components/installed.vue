@@ -45,13 +45,36 @@ const columns = [
     align: 'center'
   }
 ]
+const handleStart = () => {
+  
+}
+const handleRestart = () => {
+  
+}
+const handleStop = () => {
+  
+}
+const handleUninstall = () => {
+  
+}
+const handleSync = () => {
+  
+}
 </script>
 
 <template>
   <div>
     <div class="title">
       <p>已安装</p>
-      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/></div>
+      <div class="right">
+        <el-button type="primary" class="btn" @click="handleStart">一键启动</el-button>
+        <el-button type="primary" class="btn" @click="handleRestart">一键重启</el-button>
+        <el-button type="primary" class="btn" @click="handleStop">一键停止</el-button>
+        <el-button type="primary" class="btn" @click="handleUninstall">一键卸载</el-button>
+        <el-button type="primary" class="btn" @click="handleSync">同步</el-button>
+        <v-s-icon name="layout" size="22" class="cursor-pointer icon" @click="handleChangeLayout"/>
+      </div>
+      </div>
     <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
@@ -124,7 +147,13 @@ const columns = [
   justify-content: space-between;
   align-items: center;
 }
-
+.right{
+      display: flex;
+      align-items: center;
+      .icon{
+        margin-left: 12px;
+      }
+  }
 .list {
   width: 100%;
   display: grid;

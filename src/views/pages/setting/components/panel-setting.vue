@@ -5,7 +5,8 @@ import { Api } from '@/api/Api'
 import { onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { watchEffect } from 'vue'
-
+import i18n from '@/lang';
+type langType = 'zh' | 'en'
 
 
 interface Props {
@@ -187,6 +188,37 @@ const conf = reactive<Config>({
       },
       tip: '设置面板密码，用于登录面板'
     },
+    
+    // {
+    //   label: '系统语言',
+    //   prop: 'language',
+    //   value: localStorage.getItem('lang') || 'zh',  // 获取当前语言设置
+    //   type: 'select',
+    //   disabled: false,
+    //   options: [
+    //     {
+    //       label: '简体中文',
+    //       value: 'zh'
+    //     },
+    //     {
+    //       label: 'English',
+    //       value: 'en'
+    //     }
+    //   ],
+    //   action: {
+    //     type: 'primary',
+    //     text: '保存',
+    //     click: async() => {
+    //       try {
+    //         const language = conf.settingData.find(item => item.prop === 'language')?.value || 'zh'
+    //         localStorage.setItem('lang',language as string)
+    //         i18n.global.locale.value = language as langType
+    //       } catch(error) {
+    //         ElMessage.error('修改失败')
+    //       }
+    //     }
+    //   },
+    // },
     // {
     //   label: '绑定宝塔账号',
     //   prop: '',
