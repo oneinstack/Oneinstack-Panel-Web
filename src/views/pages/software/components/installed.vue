@@ -3,10 +3,21 @@ import { Api } from '@/api/Api'
 import { ChildProps } from '../index.vue'
 import { dayjs } from 'element-plus'
 import sapp from '@/sstore/sapp'
+import { ref } from 'vue'
+
 const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
-console.log('安装列表',props.list)
+console.log('安装列表', props.list)
+
+const installedList = ref<any[]>([])
+
+props.list.forEach(item => {
+  if (item.installed) {
+    installedList.value.push(item)
+  }
+})
+console.log('已安装', installedList.value)
 const hanldeCheckRunState = async (id: number) => {
   const { data: isRun } = await Api.getSoftRunState({ id })
   return isRun
@@ -76,8 +87,8 @@ const handleSync = () => {
       </div>
       </div>
     <div v-if="sapp.layout == 'grid'" class="list">
-      <template v-if="list.length">
-        <div v-for="item in list" class="item">
+      <template v-if="installedList.length">
+        <div v-for="item in installedList" class="item">
           <div style="padding: 28px 30px">
             <div class="sundry">
               <div class="icon">
@@ -128,7 +139,7 @@ const handleSync = () => {
       </div>
     </div>
     <div v-else class="table-content">
-      <custom-table :columns="columns" :data="list" :pagination="false">
+      <custom-table :columns="columns" :data="installedList" :pagination="false">
         <template #status="{ row }">
         </template>
         <template #operation="{ row }">
@@ -162,6 +173,7 @@ const handleSync = () => {
   flex-wrap: wrap;
   gap: 22px;
   margin-top: 20px;
+  overflow: hidden; // 新增
 
   .item {
     width: calc((100% - (2 - 1) * 22px) / 2);

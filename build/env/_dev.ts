@@ -5,8 +5,4 @@ export default {
    */
   API: '/api',
   
-  /**
-   * 聊天地址
-   */
-  ChatUrl: 'https://im.bggame.live'
 }
