@@ -421,14 +421,13 @@ const columns = [
   flex-direction: row;
   flex-wrap: wrap;
   margin-top: 20px;
+  gap: 22px;
 
   .item {
     width: calc((100% - (4 - 1) * 22px) / 4);
     height: 173px;
     background: rgb(var(--bg-hover-color));
     border-radius: 8px;
-    margin-left: 22px;
-    margin-bottom: 20px;
     border: 2px solid transparent;
     padding: 28px 26px;
 
@@ -537,36 +536,19 @@ const columns = [
       }
     }
   }
-  .item:nth-of-type(4n + 1) {
-    margin-left: 0;
-  }
   @media screen and (max-width: 1440px) {
     .item {
       width: calc((100% - (3 - 1) * 22px) / 3);
-      margin-left: 22px;
-    }
-    .item:nth-of-type(4n + 1) {
-      margin-left: 22px;
-    }
-    .item:nth-of-type(3n + 1) {
-      margin-left: 0;
     }
   }
   @media screen and (max-width: 1280px) {
     .item {
       width: calc((100% - (2 - 1) * 22px) / 2);
     }
-    .item:nth-of-type(4n + 1),.item:nth-of-type(3n + 1) {
-      margin-left: 22px;
-    }
-    .item:nth-of-type(2n + 1) {
-      margin-left: 0;
-    }
   }
   @media screen and (max-width: 1024px) {
     .item {
       width: 100%;
-      margin-left: 0;
     }
   }
   .no-data {
