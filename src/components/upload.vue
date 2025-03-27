@@ -22,12 +22,26 @@
             :limit="1000"
           >
             <div class="el-upload__text">
-              请将需要上传的文件/文件夹拖到此处或点击上传
+              请将需要上传的文件/文件夹拖到此处或<el-link>点击上传文件</el-link>
             </div>
           </el-upload>
         </div>
       </slot>
     </div>
+    <el-upload
+      v-if="props.autoUpload"
+      action="#"
+      :auto-upload="false"
+      ref="uploadRef"
+      :on-change="fileOnChange"
+      :on-exceed="handleExceed"
+      :on-success="handleSuccess"
+      :show-file-list="false"
+      multiple
+      v-model:file-list="uploaderFiles"
+      :limit="1000"
+    >
+    </el-upload>
     <div v-if="props.isShowFileList">
       <template v-if="loading">
         <el-text>{{ uploadHelper }}</el-text>
@@ -38,7 +52,6 @@
           :percentage="uploadPercent"
         ></el-progress>
       </template>
-
       <p
         v-for="(item, index) in uploaderFiles"
         :key="index"
@@ -70,7 +83,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, reactive, ref, onMounted } from "vue";
+import { nextTick, reactive, ref, onMounted, watch } from "vue";
 import {
   UploadFile,
   UploadFiles,
@@ -78,11 +91,6 @@ import {
   UploadProps,
   UploadRawFile,
 } from "element-plus";
-// import {
-//   BatchCheckFiles,
-//   ChunkUploadFileData,
-//   UploadFileData,
-// } from "@/api/modules/files";
 import i18n from "@/lang";
 import { Close, Document, UploadFilled, Select } from "@element-plus/icons-vue";
 import { ElMessage, type FormInstance } from "element-plus";
@@ -104,8 +112,12 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+  autoUpload: {
+    type: Boolean,
+    default: false,
+  },
 });
-
+const emit = defineEmits(["upload-success"]);
 interface UploadFileProps {
   path: string;
   uploadType: "file" | "dir";
@@ -149,6 +161,9 @@ const handleDrop = async (event: DragEvent) => {
     await Promise.all(entries.map((entry) => traverseFileTree(entry)));
     if (!breakFlag.value) {
       uploaderFiles.value = uploaderFiles.value.concat(tmpFiles.value);
+      if (props.autoUpload && !props.isShowFileList) {
+        submit();
+      }
     } else {
       ElMessage.warning(i18n.global.t("file.uploadOverLimit"));
     }
@@ -233,7 +248,7 @@ const fileOnChange = (_uploadFile: UploadFile, uploadFiles: UploadFiles) => {
     reader.onload = async () => {};
     reader.onerror = () => {
       uploaderFiles.value = uploaderFiles.value.filter(
-        (file:UploadFile) => file.uid !== _uploadFile.uid
+        (file: UploadFile) => file.uid !== _uploadFile.uid
       );
       ElMessage.error(i18n.global.t("file.typeErrOrEmpty", [_uploadFile.name]));
     };
@@ -295,7 +310,7 @@ const handleFileUpload = (
   const files = uploaderFiles.value.slice();
   if (action === "skip") {
     const filteredFiles = files.filter(
-      (file:any) =>
+      (file: any) =>
         !skippedPaths.includes(
           `${props.path}/${file.raw.webkitRelativePath || file.name}`
         )
@@ -308,6 +323,7 @@ const handleFileUpload = (
 };
 
 const uploadFile = async (files: any[]) => {
+  if (props.path == "/") return ElMessage.warning("不允许上传根目录");
   if (files.length == 0) {
     clearFiles();
   } else {
@@ -336,6 +352,7 @@ const uploadFile = async (files: any[]) => {
     if (successCount === files.length) {
       clearFiles();
       ElMessage.success(i18n.global.t("file.uploadSuccess"));
+      emit("upload-success");
     }
   }
 };
@@ -405,7 +422,7 @@ const uploadSingleFile = async (file: { raw: string | Blob }) => {
 //   return uploadedChunkCount === chunkCount;
 // };
 
-const getUploadPath = (file:any) => {
+const getUploadPath = (file: any) => {
   return `${props.path}/${getPathWithoutFilename(file.raw.webkitRelativePath || file.name)}`;
 };
 
@@ -442,23 +459,17 @@ defineExpose({ acceptParams, clearFiles, submit });
   align-items: center;
   justify-content: center;
 }
+.drag {
+  height: 100%;
+  width: 100%;
+  background: var(--bg-color);
+}
 .flex-center {
   > div {
     width: 100%;
     background: rgb(var(--bg-color));
   }
 }
-.darg {
-  height: 100%;
-  width: 100%;
-  background: var(--bg-color);
-}
-.button-container {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
 .file-item {
   font-size: 14px;
   color: #888;

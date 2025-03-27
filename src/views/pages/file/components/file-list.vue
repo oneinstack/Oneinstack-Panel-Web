@@ -19,7 +19,7 @@ import {
   UploadFile,
   UploadInstance,
 } from "element-plus";
-import { nextTick, onMounted, reactive, useTemplateRef, ref } from "vue";
+import { nextTick, onMounted, reactive, useTemplateRef, ref, computed } from 'vue';
 import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
@@ -258,15 +258,17 @@ const conf = reactive({
 onMounted(() => {
   conf.getFileList();
 });
-
+const pathStr = computed(() => {
+  return conf.path.join("/").replace(/\/\//g, "/");
+});
 defineExpose({
   refresh: () => conf.refresh(),
 });
 </script>
 
 <template>
-  <div>
-    <Upload :is-show-file-list="false">
+  <div class="file-list">
+    <Upload :is-show-file-list="false" :auto-upload="true" :path="pathStr" @upload-success="conf.getFileList()">
       <template #drag-content>
         <div class="box1" style="border-radius: 4px">
           <div class="flex items-center" style="width: 100%; flex: 0.8">
@@ -555,7 +557,8 @@ defineExpose({
         </div> -->
         <Upload
           ref="uploadRef1"
-          :path="conf.path.join('/').replace(/\/\//g, '/')"
+          :path="pathStr"
+          @upload-success="conf.getFileList()"
         >
           <template #header>
             <div class="flex justify-end upload-header">
@@ -640,6 +643,10 @@ defineExpose({
   border: none;
   display: block;
   background: transparent;
+}
+.file-list {
+  height: 100%;
+  width: 100%;
 }
 .upload-header{
   margin-bottom: 18px;

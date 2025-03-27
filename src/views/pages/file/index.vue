@@ -304,7 +304,7 @@ const conf = reactive({
 
 <template>
   <div class="file-container relative">
-    <div class="absolute fit-width" style="padding-bottom: 30px">
+    <div class="absolute fit-width fit-height" style="padding-bottom: 30px">
       <!-- <div class="box1">
         <div
           v-for="(item, index) in conf.tab.list"
@@ -354,6 +354,7 @@ const conf = reactive({
 
 <style scoped lang="less">
 .file-container {
+  height: 100%;
   .box1 {
     border-radius: 4px;
     margin-top: 0;
