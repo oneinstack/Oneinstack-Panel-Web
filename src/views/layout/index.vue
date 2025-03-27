@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive,onMounted } from 'vue'
+import { reactive } from 'vue'
 import SearchInput from '@/components/search-input.vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import sapp from '@/sstore/sapp'
@@ -7,10 +7,6 @@ import { Fold, Expand } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import sconfig from '@/sstore/sconfig'
-onMounted(()=>{
-  console.log('layout',conf.navList)
-})
-
 
 interface ItemColor {
   light: string[]

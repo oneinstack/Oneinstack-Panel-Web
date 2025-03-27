@@ -6,7 +6,7 @@ import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import sapp from '@/sstore/sapp'
 import { ElMessage } from 'element-plus' // 添加这行导入
-
+import InstallMask from '@/components/InstallMask.vue'
 const { conf: parentConf } = defineProps<ConfProps>()
 
 const conf = reactive({
@@ -49,12 +49,10 @@ const handleTabClick = ({ paneName }: { paneName: string | number | undefined })
   conf.list.params.r_db = paneName
   conf.list.getData()
 }
-const redistatus = sapp.mysqlInfo?.redis ?? false // 判断redis依赖是否安装
+const redistatus = ref(sapp.mysqlInfo?.redis ?? false) // 判断redis依赖是否安装
 
 const handleInstall = () => {
-  // myslqstatus.value = true
-  // installDialog.visible = true
-  // conf.website.websiteInfo = true
+  redistatus.value = true
   ElMessage({
     type: 'warning',
     message: '功能开发中...'
@@ -63,8 +61,8 @@ const handleInstall = () => {
 </script>
 
 <template>
-  <div class="container" style="position: relative;">
-    <install-mask :is-installed="redistatus" installText="安装Redis" @install="handleInstall">
+  <div class="container">
+    <install-mask :is-installed="redistatus" installText="安装Redis"  @install="handleInstall">
       
     <div class="tool-bar">
       <el-space class="btn-group">

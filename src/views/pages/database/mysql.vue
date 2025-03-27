@@ -42,8 +42,8 @@ const handleInstall = () => {
 </script>
 
 <template>
-  <div class="main-content">
-    <install-mask :is-installed="myslqstatus" installText="安装Mysql" @install="handleInstall">
+  <div>
+    <install-mask :is-installed="myslqstatus" installText="安装Mysql"  @install="handleInstall">
       <div v-if="conf.showTips" class="tip">
         <div class="flex items-center fit-width">
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
@@ -150,15 +150,6 @@ const handleInstall = () => {
 </template>
 
 <style scoped lang="less">
-.main-content {
-  position: relative; // 添加相对定位
-}
-
-.blur-mask {
-  filter: blur(10px);
-  pointer-events: none;
-  user-select: none;
-}
 
 .database-container {
   .tip {

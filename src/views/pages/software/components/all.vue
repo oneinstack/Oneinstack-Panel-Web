@@ -8,6 +8,7 @@ import { Api } from '@/api/Api'
 import { Scope } from 'tools-vue3'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import sapp from '@/sstore/sapp'
+
 // 在文件顶部添加 ElInput 的导入
 import { ElInput } from "element-plus";
 
@@ -85,7 +86,7 @@ const handleUninstall = (item: any) => {
 }
 
 // 在 script setup 中添加
-const versionDialog = reactive({
+const versionDialog = reactive({//管理版本选择弹窗的状态和行为的响应式对象
   show: false,
   currentItem: null as any,
   onClose: () => {
@@ -176,7 +177,7 @@ const dialog = reactive({
   content: "",
   onClose: () => {
     timer && timer.clear();
-    emit("refresh");
+    emit("refresh");//刷新列表
   },
 });
 // 添加 ref
@@ -345,9 +346,9 @@ const columns = [
 
 <style scoped lang="less">
 .custom-icon {
-  width: 29px;
-  height: 29px;
-  margin-right: 8px;
+  width: 25px;
+  height: 25px;
+  margin-right: 10px;
 }
 :deep(.el-select__wrapper) {
   background: var(--select-bg-color) !important;

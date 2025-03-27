@@ -308,7 +308,7 @@ const conf = reactive({
 
 const handleInstall = () => {
   // installDialog.visible = true
-  conf.website.websiteInfo = true
+  // conf.website.websiteInfo = true
   ElMessage({
     type: 'warning',
     message: '功能开发中...'
@@ -331,7 +331,7 @@ conf.website.getData()
 <template>
   <div class="website-container">
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-    <div class="main-content">
+    <div>
       <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
@@ -474,9 +474,7 @@ conf.website.getData()
   }
 }
 
-.main-content {
-  position: relative; // 添加相对定位
-}
+
 
 .blur-mask {
   filter: blur(10px);
