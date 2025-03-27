@@ -18,14 +18,14 @@
                     <el-tooltip :content="loadTooltip()" placement="top">
                         <el-button
                             @click="toggleFullscreen"
-                            class="!border-none !bg-transparent !text-base !font-semibold !py-2 !px-1"
+                            circle
                             :icon="FullScreen"
                             style="margin-right: 10px"
                         ></el-button>
                     </el-tooltip>
                     <el-button
                         @click="handleClose"
-                        class="close-btn"
+                        circle
                         :icon="Close"
                     ></el-button>
                 </el-space>
@@ -85,6 +85,7 @@
                         :data="treeData"
                         :props="treeProps"
                         class="monaco-editor-tree monaco-editor-background"
+                        @node-expand="handleNodeExpand"
                         :height="treeHeight"
                         :indent="6"
                         :item-size="24"
@@ -209,7 +210,7 @@ interface TreeNode {
     level: number;
     parent?: TreeNode;
     // children?: File.FileTree[];
-    children?: [];
+    children?: any[];
     data: TreeNodeData;
     disabled?: boolean;
     name?: string;
@@ -702,6 +703,9 @@ defineExpose({ acceptParams });
 </script>
 
 <style scoped lang="less">
+:deep(.el-dialog){
+    background: rgb(var(--card-bg-color));
+}
 .dialog-header {
     display: flex;
     align-items: center;
@@ -757,7 +761,7 @@ defineExpose({ acceptParams });
 }
 
 .monaco-editor-tree {
-    color: var(--el-color-primary) !important;
+    color: rgb(var(--primary-color)) !important;
 }
 
 .monaco-editor-background {

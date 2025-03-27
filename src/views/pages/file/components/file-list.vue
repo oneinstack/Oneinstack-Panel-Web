@@ -23,6 +23,7 @@ import { nextTick, onMounted, reactive, useTemplateRef, ref, computed } from 'vu
 import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
+import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
 import { useRouter } from "vue-router";
@@ -575,10 +576,11 @@ defineExpose({
           :model="conf.fileDialog.row"
           :rules="{
             name: [
-              { required: true, message: '请输入文件名', trigger: 'blur' },
+              { required: true, message: '请输入文件名', trigger: 'change' },
             ],
             url: [
-              { required: true, message: '请输入url地址', trigger: 'blur' },
+              { required: true, message: 'URL链接不能为空', trigger: 'change' },
+              { validator: checkLink, trigger: 'change' },
             ],
           }"
           label-width="100px"
