@@ -69,7 +69,7 @@ const conf = reactive({
         </div>
       </div>
 
-      <el-table :data="conf.tableData" border style="width: 100%">
+      <el-table :data="conf.tableData">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="date" label="网站名" width="180" />
         <el-table-column prop="status" label="状态" width="180">

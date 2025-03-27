@@ -131,20 +131,4 @@ const handleSelectionChange = (selection: any[]) => {
   </div>
 </template>
 
-<style scoped lang="less">
-:deep(.hover-row:hover) {
-  border-radius: 5px;
-  td.el-table__cell {
-    border-top: 1px solid var(--el-color-primary);
-    border-bottom: 1px solid var(--el-color-primary);
-    position: relative;
-    z-index: 1;
-  }
-  td.el-table__cell:first-child {
-    border-left: 1px solid var(--el-color-primary);
-  }
-  td.el-table__cell:last-child {
-    border-right: 1px solid var(--el-color-primary);
-  }
-}
-</style>
+<style scoped lang="less"></style>
