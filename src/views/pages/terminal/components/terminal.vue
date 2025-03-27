@@ -389,7 +389,7 @@ const initSocket = () => {
 const socketOnOpen = () => {
   xterm?.write(`连接成功 \r\n`);
   // // 连接成功后添加输入提示
-  // xterm?.write('$ ');
+  xterm?.write('$ ');
 };
 
 // 修改 WebSocket 消息处理方法

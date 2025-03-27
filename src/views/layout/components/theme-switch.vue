@@ -48,7 +48,7 @@ const toggleTheme = (event: MouseEvent) => {
 }
 </script>
 
-<template>
+<template><!--光暗主题切换-->
   <div class="theme-switch" @click="toggleTheme">
     <div :class="{ active: theme === 'light' }" class="theme-switch__core">
       <v-s-icon name="day" :color="colors[theme][theme === 'light' ? 'select' : 'default']" size="16" />

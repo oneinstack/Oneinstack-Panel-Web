@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive,onMounted } from 'vue'
 import SearchInput from '@/components/search-input.vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import sapp from '@/sstore/sapp'
@@ -7,7 +7,9 @@ import { Fold, Expand } from '@element-plus/icons-vue'
 import { useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import sconfig from '@/sstore/sconfig'
-
+onMounted(()=>{
+  console.log('layout',conf.navList)
+})
 
 
 interface ItemColor {
@@ -23,7 +25,6 @@ interface NavItem {
   children?: NavItem[]
   event?: () => void
 }
-
 const route = useRoute()
 
 const conf = reactive({
@@ -88,6 +89,7 @@ const conf = reactive({
         dark: ['#eab170', '#ffffff']
       }
     },
+<<<<<<< Updated upstream
     {
       name: '日志',
       path: '/log',
@@ -97,6 +99,17 @@ const conf = reactive({
         dark: ['#eab170', '#ffffff']
       }
     },
+=======
+    // {
+    //   name: '日志',
+    //   path: '/log',
+    //   icon: 'log',
+    //   activeColor: {
+    //     light: ['#eab170', '#8B8B8B'],
+    //     dark: ['#eab170', '#ffffff']
+    //   }
+    // },
+>>>>>>> Stashed changes
     {
       name: '终端',
       path: '/terminal',
@@ -239,6 +252,7 @@ const BindButton = ()=>{
                         </el-menu-item>
                       </el-sub-menu>
                       <el-menu-item v-else :index="item.path" @click="item.event?.()">
+
                         <v-s-icon
                           :name="item.path && route.path.includes(item.path) ? `${item.icon}-${sapp.theme}` :`${item.icon}`"
                           :color="

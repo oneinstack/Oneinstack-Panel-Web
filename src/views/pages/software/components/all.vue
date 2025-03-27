@@ -161,13 +161,14 @@ const installedVersions = ref(
 
 const handleInstall = async () => {
   const { data: res } = await Api.installSoft(installForm.value);
+  console.log("res", res);
   // 保存安装的版本信息
-  installedVersions.value[installForm.value.key] = installForm.value.version;
-  localStorage.setItem(
-    "installedVersions",
-    JSON.stringify(installedVersions.value)
-  );
-  handleCheckInstallLog(res.installName);
+  // installedVersions.value[installForm.value.key] = installForm.value.version;//将installedVersions 对象转换为 JSON 字符串
+  // localStorage.setItem( //使用localStorage.setItem 将其保存到浏览器的 localStorage 中，这样即使刷新页面，这些版本信息也不会丢失。
+  //   "installedVersions",
+  //   JSON.stringify(installedVersions.value)
+  // );
+  handleCheckInstallLog(res.installName);//显示安装日志信息
 };
 
 const dialog = reactive({
@@ -183,6 +184,7 @@ const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null);
 
 const timer = Scope.Timer();
 const handleCheckInstallLog = async (value: string) => {
+  console.log("value", value);
   dialog.show = true;
   timer.on(
     async () => {
@@ -312,7 +314,7 @@ const columns = [
       </template>
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
-    <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose">
+    <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose" draggable>
       <el-input ref="logTextareaRef" v-model="dialog.content" type="textarea" readonly
         style="min-height: 200px; scroll-behavior: smooth;" />
     </custom-dialog>
