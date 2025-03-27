@@ -92,7 +92,7 @@
                     >
                         <template #default="{ node, data }">
                             <span v-if="data.isDir" style="display: inline-flex; align-items: center">
-                                <svg-icon className="table-icon" iconName="p-file-folder"></svg-icon>
+                                <!-- <svg-icon className="table-icon" iconName="p-file-folder"></svg-icon> -->
                                 <small :title="node.label">{{ node.label }}</small>
                             </span>
                             <span

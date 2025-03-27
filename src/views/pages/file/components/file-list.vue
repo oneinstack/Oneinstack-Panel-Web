@@ -24,6 +24,7 @@ import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
 import CodeEditor from "./code-editor.vue";
+import Upload from "@/components/upload.vue";
 interface Emits {
   (e: "update:path", value: string[]): void;
   (
@@ -36,6 +37,7 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 const codeEditorRef = ref();
+const uploadRef1 = ref<InstanceType<typeof Upload> | null>(null);
 const conf = reactive({
   path: ["/"],
   columns: [
@@ -88,7 +90,7 @@ const conf = reactive({
     content: "",
     name: "",
     extension: "",
-    language: "plaintext"
+    language: "plaintext",
   },
   openCodeEditor: (path: string, extension: string) => {
     codeEditorRef.value.acceptParams(conf.fileEdit);
@@ -201,8 +203,8 @@ const conf = reactive({
       conf.linkDownload.instance?.clearValidate();
     },
     confirm: async () => {
-      if (conf.fileDialog.type === "upload")
-        return conf.upload.instance?.submit();
+      if (conf.fileDialog.type === "upload") return uploadRef1.value?.submit();
+      // return conf.upload.instance?.submit();
       if (conf.fileDialog.type === "linkDownload") {
         const res = await conf.linkDownload.instance?.validate();
         if (!res) return;
@@ -220,6 +222,9 @@ const conf = reactive({
   },
   upload: {
     instance: useTemplateRef<UploadInstance>("uploadRef"),
+    state: {
+      uploadEle: null as HTMLElement | null,
+    },
     onChange: ({ status, response: res }: UploadFile) => {
       if (status === "success") ElMessage.success((res as any).data);
       else if (status === "fail") ElMessage.error((res as any).data);
@@ -261,67 +266,76 @@ defineExpose({
 
 <template>
   <div>
-    <div class="box1" style="border-radius: 4px">
-      <div class="flex items-center" style="width: 100%; flex: 0.8">
-        <div class="back-level hover-opacity" @click="conf.handleBackLevel()">
-          <el-icon size="24"><ArrowLeft /></el-icon>
-        </div>
-        <div style="flex: 1" @click.stop="conf.handleInputPath">
-          <el-breadcrumb v-if="!conf.isInputPath" :separator-icon="ArrowRight">
-            <el-breadcrumb-item
-              v-for="(item, index) in conf.path"
-              :key="index"
-              @click.stop="conf.handleBackLevel(index)"
+    <Upload :is-show-file-list="false">
+      <template #drag-content>
+        <div class="box1" style="border-radius: 4px">
+          <div class="flex items-center" style="width: 100%; flex: 0.8">
+            <div
+              class="back-level hover-opacity"
+              @click="conf.handleBackLevel()"
             >
-              {{ index === 0 ? "根目录" : item }}
-            </el-breadcrumb-item>
-          </el-breadcrumb>
-          <el-input
-            v-else
-            v-model="conf.inputPath"
-            ref="inputPathRef"
-            @blur="conf.handleInputPathConfirm"
-            @keyup.enter="conf.handleInputPathConfirm"
-          />
-        </div>
-      </div>
-      <el-space :size="42">
-        <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link>
-        <el-checkbox label="包含子目录" size="large" />
-        <div class="flex items-center">
-          <el-button
-            class="refresh-btn"
-            :icon="RefreshRight"
-            @click="conf.refresh"
-          />
-          <el-button
-            class="search-btn"
-            :icon="Search"
-            @click="conf.handleInputPathConfirm"
-          />
-        </div>
-      </el-space>
-    </div>
-    <div class="file-tool">
-      <div class="left">
-        <el-space :size="14" class="btn-group">
-          <el-dropdown>
-            <el-button type="primary">
-              上传/下载
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="conf.upload.handleOpenDialog"
-                  >上传文件/文件夹</el-dropdown-item
+              <el-icon size="24"><ArrowLeft /></el-icon>
+            </div>
+            <div style="flex: 1" @click.stop="conf.handleInputPath">
+              <el-breadcrumb
+                v-if="!conf.isInputPath"
+                :separator-icon="ArrowRight"
+              >
+                <el-breadcrumb-item
+                  v-for="(item, index) in conf.path"
+                  :key="index"
+                  @click.stop="conf.handleBackLevel(index)"
                 >
-                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')"
-                  >URL链接下载</el-dropdown-item
-                >
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <!-- <el-dropdown>
+                  {{ index === 0 ? "根目录" : item }}
+                </el-breadcrumb-item>
+              </el-breadcrumb>
+              <el-input
+                v-else
+                v-model="conf.inputPath"
+                ref="inputPathRef"
+                @blur="conf.handleInputPathConfirm"
+                @keyup.enter="conf.handleInputPathConfirm"
+              />
+            </div>
+          </div>
+          <el-space :size="42">
+            <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link>
+            <el-checkbox label="包含子目录" size="large" />
+            <div class="flex items-center">
+              <el-button
+                class="refresh-btn"
+                :icon="RefreshRight"
+                @click="conf.refresh"
+              />
+              <el-button
+                class="search-btn"
+                :icon="Search"
+                @click="conf.handleInputPathConfirm"
+              />
+            </div>
+          </el-space>
+        </div>
+        <div class="file-tool">
+          <div class="left">
+            <el-space :size="14" class="btn-group">
+              <el-dropdown>
+                <el-button type="primary">
+                  上传/下载
+                  <el-icon class="el-icon--right"><arrow-down /></el-icon>
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item @click="conf.upload.handleOpenDialog"
+                      >上传文件/文件夹</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      @click="conf.fileDialog.open('linkDownload')"
+                      >URL链接下载</el-dropdown-item
+                    >
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <!-- <el-dropdown>
           <el-button class="btn">
             新建
             <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -347,139 +361,156 @@ defineExpose({
         </el-dropdown>
         <el-button class="btn">终端</el-button>
         <el-button class="btn">/（根目录）29.47GB</el-button> -->
-        </el-space>
-        <div class="btns">
-          <el-dropdown>
-            <div class="btn">
-              新建 <el-icon class="icon"><arrow-down /></el-icon>
+            </el-space>
+            <div class="btns">
+              <el-dropdown>
+                <div class="btn">
+                  新建 <el-icon class="icon"><arrow-down /></el-icon>
+                </div>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      @click="conf.handleOpenDrawer('create', 'file')"
+                    >
+                      <div class="flex items-center" style="gap: 10px">
+                        <v-s-icon name="txt" size="22" />
+                        <span>文件</span>
+                      </div>
+                    </el-dropdown-item>
+                    <el-dropdown-item
+                      @click="conf.handleOpenDrawer('create', 'dir')"
+                    >
+                      <div class="flex items-center" style="gap: 10px">
+                        <v-s-icon name="folder" size="22" />
+                        <span>文件夹</span>
+                      </div>
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+              <div class="btn">
+                终端
+                <el-icon class="icon"><arrow-down /></el-icon>
+              </div>
+              <div class="btn">/（根目录）29.47GB</div>
             </div>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item
-                  @click="conf.handleOpenDrawer('create', 'file')"
-                >
-                  <div class="flex items-center" style="gap: 10px">
-                    <v-s-icon name="txt" size="22" />
-                    <span>文件</span>
-                  </div>
-                </el-dropdown-item>
-                <el-dropdown-item
-                  @click="conf.handleOpenDrawer('create', 'dir')"
-                >
-                  <div class="flex items-center" style="gap: 10px">
-                    <v-s-icon name="folder" size="22" />
-                    <span>文件夹</span>
-                  </div>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <div class="btn">
-            终端
-            <el-icon class="icon"><arrow-down /></el-icon>
           </div>
-          <div class="btn">/（根目录）29.47GB</div>
-        </div>
-      </div>
 
-      <div class="flex items-center">
-        <SearchInput class="search-input" placeholder="请输入域名或备注" />
-        <el-button
-          class="refresh1-btn"
-          type="primary"
-          :icon="Refresh"
-          @click="conf.refresh"
-        />
-        <el-button class="setting-btn" type="primary" :icon="Setting" />
-      </div>
-      <!-- <div class="demo-form-inline">
+          <div class="flex items-center">
+            <SearchInput class="search-input" placeholder="请输入域名或备注" />
+            <el-button
+              class="refresh1-btn"
+              type="primary"
+              :icon="Refresh"
+              @click="conf.refresh"
+            />
+            <el-button class="setting-btn" type="primary" :icon="Setting" />
+          </div>
+          <!-- <div class="demo-form-inline">
         <el-button type="primary">
           <span class="mr-1">回收站</span>
           <el-icon size="16"><Delete /></el-icon>
         </el-button>
       </div> -->
-    </div>
-    <div class="box2">
-      <custom-table
-        :data="conf.fileList"
-        :columns="conf.columns"
-        :loading="conf.loading"
-      >
-        <template #name="{ row }">
-          <div class="flex items-center file-name-cell" style="gap: 10px">
-            <v-s-icon
-              class="file-icon"
-              :name="row.isDir ? 'folder' : 'txt'"
-              size="22"
-            />
-            <el-link class="file-link" @click="conf.handleFileClick(row)">
-              <span class="ellipsis file-name">{{ row.name }}</span>
-            </el-link>
-          </div>
-        </template>
-        <template #permissions="{ row }">
-          <el-link
-            @click="
-              conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)
-            "
+        </div>
+        <div class="box2">
+          <custom-table
+            :data="conf.fileList"
+            :columns="conf.columns"
+            :loading="conf.loading"
           >
-            {{ row.permissions?.padEnd(4, "0") }}
-          </el-link>
-        </template>
-        <template #user="{ row }">
-          <el-link
-            @click="
-              conf.handleOpenDrawer('editUser', row.isDir ? 'dir' : 'file', row)
-            "
-            >{{ row.user }}</el-link
-          >
-        </template>
-        <template #group="{ row }">
-          <el-link
-            @click="
-              conf.handleOpenDrawer('editUser', row.isDir ? 'dir' : 'file', row)
-            "
-            >{{ row.group }}</el-link
-          >
-        </template>
-        <template #action="{ row }">
-          <el-button type="primary" link @click="conf.handleFileClick(row)"
-            >打开</el-button
-          >
-          <el-button type="primary" link @click="conf.handleFileDownload(row)"
-            >下载</el-button
-          >
-          <!-- <el-button type="primary" link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
+            <template #name="{ row }">
+              <div class="flex items-center file-name-cell" style="gap: 10px">
+                <v-s-icon
+                  class="file-icon"
+                  :name="row.isDir ? 'folder' : 'txt'"
+                  size="22"
+                />
+                <el-link class="file-link" @click="conf.handleFileClick(row)">
+                  <span class="ellipsis file-name">{{ row.name }}</span>
+                </el-link>
+              </div>
+            </template>
+            <template #permissions="{ row }">
+              <el-link
+                @click="
+                  conf.handleOpenDrawer(
+                    'editPER',
+                    row.isDir ? 'dir' : 'file',
+                    row
+                  )
+                "
+              >
+                {{ row.permissions?.padEnd(4, "0") }}
+              </el-link>
+            </template>
+            <template #user="{ row }">
+              <el-link
+                @click="
+                  conf.handleOpenDrawer(
+                    'editUser',
+                    row.isDir ? 'dir' : 'file',
+                    row
+                  )
+                "
+                >{{ row.user }}</el-link
+              >
+            </template>
+            <template #group="{ row }">
+              <el-link
+                @click="
+                  conf.handleOpenDrawer(
+                    'editUser',
+                    row.isDir ? 'dir' : 'file',
+                    row
+                  )
+                "
+                >{{ row.group }}</el-link
+              >
+            </template>
+            <template #action="{ row }">
+              <el-button type="primary" link @click="conf.handleFileClick(row)"
+                >打开</el-button
+              >
+              <el-button
+                type="primary"
+                link
+                @click="conf.handleFileDownload(row)"
+                >下载</el-button
+              >
+              <!-- <el-button type="primary" link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
             编辑权限
           </el-button> -->
-          <!-- <el-button type="danger" link @click="conf.fileDialog.open('delete', row)">删除</el-button> -->
-          <el-dropdown class="dropdown-more">
-            <el-button type="primary" link>
-              更多
-              <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="conf.fileDialog.open('delete', row)"
-                  >删除</el-dropdown-item
-                >
-                <el-dropdown-item
-                  @click="
-                    conf.handleOpenDrawer(
-                      'editPER',
-                      row.isDir ? 'dir' : 'file',
-                      row
-                    )
-                  "
-                  >编辑权限</el-dropdown-item
-                >
-              </el-dropdown-menu>
+              <!-- <el-button type="danger" link @click="conf.fileDialog.open('delete', row)">删除</el-button> -->
+              <el-dropdown class="dropdown-more">
+                <el-button type="primary" link>
+                  更多
+                  <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
+                </el-button>
+                <template #dropdown>
+                  <el-dropdown-menu>
+                    <el-dropdown-item
+                      @click="conf.fileDialog.open('delete', row)"
+                      >删除</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      @click="
+                        conf.handleOpenDrawer(
+                          'editPER',
+                          row.isDir ? 'dir' : 'file',
+                          row
+                        )
+                      "
+                      >编辑权限</el-dropdown-item
+                    >
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
             </template>
-          </el-dropdown>
-        </template>
-      </custom-table>
-    </div>
-
+          </custom-table>
+        </div>
+      </template>
+    </Upload>
     <custom-dialog
       v-model="conf.fileDialog.show"
       :title="conf.fileDialog.title"
@@ -502,7 +533,7 @@ defineExpose({
         </div>
       </template>
       <template v-else-if="conf.fileDialog.type === 'upload'">
-        <div class="flex column" style="gap: 18px">
+        <!-- <div class="flex column" style="gap: 18px">
           <div class="flex justify-end">
             <el-button type="info" @click="conf.upload.instance?.clearFiles()"
               >清空列表</el-button
@@ -517,10 +548,21 @@ defineExpose({
             multiple
             :action="`${System.env.API}/ftp/upload`"
             :on-change="conf.upload.onChange"
+            :before-upload="conf.upload.beforeUpload"
           >
             <div class="el-upload__text">请将需要上传的文件/文件夹拖到此处</div>
           </el-upload>
-        </div>
+        </div> -->
+        <Upload
+          ref="uploadRef1"
+          :path="conf.path.join('/').replace(/\/\//g, '/')"
+        >
+          <template #header>
+            <div class="flex justify-end upload-header">
+              <el-button type="info" @click="uploadRef1?.clearFiles()">清空列表</el-button>
+            </div>
+          </template>
+        </Upload>
       </template>
       <template v-else-if="conf.fileDialog.type === 'linkDownload'">
         <el-form
@@ -592,6 +634,16 @@ defineExpose({
 </template>
 
 <style scoped lang="less">
+:deep(.el-upload-dragger) {
+  height: 100%;
+  width: 100%;
+  border: none;
+  display: block;
+  background: transparent;
+}
+.upload-header{
+  margin-bottom: 18px;
+}
 .file-tool {
   display: flex;
   align-items: center;
