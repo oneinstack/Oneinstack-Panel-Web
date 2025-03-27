@@ -272,7 +272,8 @@ const conf = reactive({
         },
         {
           ifShow: (value: any) => value.isDir,
-          label: "同时修改子文件属性",
+          label: "",
+          options:'同时修改子文件属性',
           type: "checkbox",
           prop: "recursive",
         },
@@ -347,6 +348,7 @@ const conf = reactive({
         v-if="conf.drawer.visible"
         :data="conf.form[conf.drawer.openType]"
         :on-init="(ins) => (conf.form.instance = ins)"
+        label-width="80px"
       />
     </custom-drawer>
   </div>

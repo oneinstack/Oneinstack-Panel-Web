@@ -71,7 +71,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" style="padding: 20px">
+  <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" style="padding: 20px" v-bind="$attrs">
     <template v-for="(item, index) in data.items">
       <el-form-item v-if="item.ifShow?.(data.value) ?? true" :key="index" :label="item.label" :prop="item.prop">
         <template v-if="item.type === 'input' || item.type === 'password'">
@@ -94,7 +94,7 @@ onMounted(() => {
           </el-checkbox-group>
         </template>
         <template v-else-if="item.type === 'checkbox'">
-          <el-checkbox v-model="data.value[item.prop]" :label="item.label" @change="item.change" />
+          <el-checkbox v-model="data.value[item.prop]" :label="item.options || item.label" @change="item.change" />
         </template>
         <template v-else-if="item.type === 'textarea'">
           <el-input

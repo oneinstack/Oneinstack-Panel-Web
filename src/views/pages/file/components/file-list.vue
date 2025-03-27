@@ -25,6 +25,8 @@ import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
+import { useRouter } from "vue-router";
+const router = useRouter();
 interface Emits {
   (e: "update:path", value: string[]): void;
   (
@@ -390,7 +392,7 @@ defineExpose({
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-              <div class="btn">
+              <div class="btn" @click="router.push({path:'/terminal'})">
                 终端
                 <el-icon class="icon"><arrow-down /></el-icon>
               </div>
