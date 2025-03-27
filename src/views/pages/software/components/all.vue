@@ -49,7 +49,7 @@ const uninstallDialog = reactive({
   title: '卸载确认',
   item: null as any,
   open: (item: any) => {
-    console.log('uninstallDialog', item)
+    console.log('uninstallDialog111', item)
     uninstallDialog.item = item
     uninstallDialog.show = true
   },
@@ -59,7 +59,7 @@ const uninstallDialog = reactive({
   confirm: async () => {
     try {
       await Api.uninstallSoft({
-        key: uninstallDialog.item.key,
+        name: uninstallDialog.item.name,
         version: uninstallDialog.item.install_version
       })
       // 移除本地存储的版本信息
@@ -255,14 +255,6 @@ const columns = [
               <div>
                 <span class="menuTitle">{{ item.name }}</span>
                 <span v-if="item.tags" class="remark">（{{ item.tags }}）</span>
-                <!-- <span
-                    v-if="item.status !== 0"
-                    class="status ml-2"
-                    :class="{ error: item.status === 3, success: item.status === 2, installing: item.status === 1 }"
-                    @click="handleCheckInstallLog(item.log)"
-                  >
-                    {{ item.status === 1 ? '安装中' : item.status === 2 ? '已安装' : '安装失败' }}
-                  </span> -->
               </div>
               <div class="tip">{{ item.describe }}</div>
             </div>
@@ -284,10 +276,12 @@ const columns = [
             </div>
             <!-- 修改安装按钮的点击事件 -->
             <div class="btn" :class="{
-        installed: item.installed || installedVersions[item.key],
-        uninstall: item.installed || installedVersions[item.key]
-      }" @click="(item.installed || installedVersions[item.key]) ? handleUninstall(item) : handleInstallClick(item)">
-              {{ (item.installed || installedVersions[item.key]) ? '卸载' : '安装' }}
+        installed: item.status === 2,
+        uninstall: item.status === 2,
+        installing: item.status === 1
+      }" @click="item.status === 2 ? handleUninstall(item) : item.status === 1 ? handleCheckInstallLog(item.log) : handleInstallClick(item)">
+              <span class="default-text">{{ item.status === 1 ? '安装中' : item.status === 2 ? '卸载' : '安装' }}</span>
+              <span class="hover-text">{{ item.status === 1 ? '查看日志' : item.status === 2 ? '卸载' : '安装' }}</span>
             </div>
           </div>
         </div>
@@ -298,23 +292,6 @@ const columns = [
         <span>暂无应用</span>
       </div>
     </div>
-    <div v-else class="table-content">
-      <custom-table :columns="columns" :data="list" :pagination="false">
-        <template #status="{ row }">
-          <span v-if="row.status === 0">未安装</span>
-          <span v-else-if="row.status === 2">已安装</span>
-          <span v-else>安装失败</span>
-        </template>
-        <template #operation="{ row }">
-          <el-link :type="(row.status === 2 || installedVersions[row.key]) ? 'danger' : 'primary'">
-            <span class="flex items-center"
-              @click="(row.status === 2 || installedVersions[row.key]) ? handleUninstall(row) : handleInstallClick(row)">
-              {{ (row.status === 2 || installedVersions[row.key]) ? '卸载' : '安装' }}
-            </span>
-          </el-link>
-        </template>
-      </custom-table>
-    </div>
     <custom-drawer :visible="drawer.show" :title="drawer.title" :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm">
       <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
@@ -323,25 +300,15 @@ const columns = [
     <custom-dialog v-model:show="versionDialog.show" title="版本选择" :on-close="versionDialog.onClose">
       <div class="version-select-container">
         <div class="version-label">版本</div>
-        <el-select
-          v-model="installForm.value.version"
-          placeholder="请选择版本"
-          style="width: 100%"
-          popper-class="version-select-dropdown"
-        >
-          <el-option
-            v-for="version in versionDialog.currentItem?.versions"
-            :key="version"
-            :label="version"
-            :value="version"
-          />
+        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%"
+          popper-class="version-select-dropdown">
+          <el-option v-for="version in versionDialog.currentItem?.versions" :key="version" :label="version"
+            :value="version" />
         </el-select>
       </div>
       <template #footer>
         <el-button @click="versionDialog.onClose">取消</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm"
-          >安装</el-button
-        >
+        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
       </template>
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
@@ -349,12 +316,23 @@ const columns = [
       <el-input ref="logTextareaRef" v-model="dialog.content" type="textarea" readonly
         style="min-height: 200px; scroll-behavior: smooth;" />
     </custom-dialog>
-   <!-- 卸载提示 -->
+    <!-- 在卸载弹窗中添加调试信息 -->
     <custom-dialog v-model="uninstallDialog.show" :title="uninstallDialog.title">
-      <template>
-        <el-alert :title="`确定要卸载 ${uninstallDialog.item.name} 吗？卸载后所有关于${uninstallDialog.item.name}数据将被删除，需要重新安装。`"
-          type="warning" show-icon :closable="false" />
-      </template>
+     
+        <div v-if="uninstallDialog.item">
+          <div style="display: flex; align-items: center;">
+            <img
+              :src="sapp.theme === 'dark' ? '../../../../../public/static/images/mark.png' : '../../../../../public/static/images/markone.png'"
+              class="custom-icon" />
+            <p>确定要卸载 {{uninstallDialog.item.name}} {{ uninstallDialog.item.install_version }} 吗？卸载后所有关于{{uninstallDialog.item.name}}数据将被删除，需要重新安装。</p>
+          </div>
+          <!-- <el-alert :title=""
+            type="warning" show-icon :closable="false" /> -->
+        </div>
+        <div v-else>
+          <el-alert title="无法获取软件信息，请稍后再试" type="error" show-icon />
+        </div>
+
       <template #footer>
         <el-button @click="uninstallDialog.close">取消</el-button>
         <el-button type="primary" @click="uninstallDialog.confirm">确认</el-button>
@@ -364,11 +342,16 @@ const columns = [
 </template>
 
 <style scoped lang="less">
-
+.custom-icon {
+  width: 29px;
+  height: 29px;
+  margin-right: 8px;
+}
 :deep(.el-select__wrapper) {
   background: var(--select-bg-color) !important;
   border: 1px solid var(--select-border-color) !important;
 }
+
 :deep(.el-select__wrapper.is-focused) {
   box-shadow: none !important;
 }
@@ -515,6 +498,7 @@ const columns = [
       color: var(--font-color-gray-light);
 
       .btn {
+        position: relative;
         width: 69px;
         height: 34px;
         background: transparent;
@@ -528,6 +512,20 @@ const columns = [
         cursor: pointer;
         color: var(--el-color-primary);
 
+        .hover-text {
+          display: none;
+        }
+
+        &:hover {
+          .default-text {
+            display: none;
+          }
+
+          .hover-text {
+            display: inline;
+          }
+        }
+
         &:hover,
         &.installed {
           background: var(--el-color-primary);
@@ -536,21 +534,25 @@ const columns = [
       }
     }
   }
+
   @media screen and (max-width: 1440px) {
     .item {
       width: calc((100% - (3 - 1) * 22px) / 3);
     }
   }
+
   @media screen and (max-width: 1280px) {
     .item {
       width: calc((100% - (2 - 1) * 22px) / 2);
     }
   }
+
   @media screen and (max-width: 1024px) {
     .item {
       width: 100%;
     }
   }
+
   .no-data {
     width: 100%;
     display: flex;
@@ -560,6 +562,7 @@ const columns = [
     color: var(--font-color-gray-light);
   }
 }
+
 .table-content {
   margin-top: 24px;
 }

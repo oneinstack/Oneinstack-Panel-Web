@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive ,ref} from 'vue'
 import { ConfProps } from './index.vue'
 import { Api } from '@/api/Api'
 import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
+import sapp from '@/sstore/sapp'
+import { ElMessage } from 'element-plus' // 添加这行导入
 
 const { conf: parentConf } = defineProps<ConfProps>()
 
@@ -47,10 +49,23 @@ const handleTabClick = ({ paneName }: { paneName: string | number | undefined })
   conf.list.params.r_db = paneName
   conf.list.getData()
 }
+const redistatus = sapp.mysqlInfo?.redis ?? false // 判断redis依赖是否安装
+
+const handleInstall = () => {
+  // myslqstatus.value = true
+  // installDialog.visible = true
+  // conf.website.websiteInfo = true
+  ElMessage({
+    type: 'warning',
+    message: '功能开发中...'
+  })
+}
 </script>
 
 <template>
-  <div class="container">
+  <div class="container" style="position: relative;">
+    <install-mask :is-installed="redistatus" installText="安装Redis" @install="handleInstall">
+      
     <div class="tool-bar">
       <el-space class="btn-group">
         <!-- <el-button type="primary" @click="conf.drawer.open('add')">添加key</el-button> -->
@@ -96,6 +111,7 @@ const handleTabClick = ({ paneName }: { paneName: string | number | undefined })
         </template>
       </custom-table>
     </div>
+  </install-mask>
   </div>
 </template>
 

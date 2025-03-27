@@ -5,10 +5,33 @@ import { CircleClose, ArrowDown, Setting, Hide, View, CopyDocument, CaretBottom 
 import type { ConfProps } from './index.vue'
 import { ElMessage } from 'element-plus' // 添加这行导入
 import InstallMask from '@/components/InstallMask.vue'
+import { ref,onMounted} from 'vue'
+import { Api } from '@/api/Api'
 
 const { conf } = defineProps<ConfProps>()
 conf.list.getData()
+const getWebsiteInfo = async () => {
+  try {
+    const { data } = await Api.getMysqlInfo();
+    // 添加数据校验
+    console.log("数据库依赖状态：已安装", data);
+    myslqstatus.value = data.mysql
+    sapp.setmysqlInfo(data); //将数据存储到pinia
+    // return data;
+  } catch (error) {
+    ElMessage.error("获取网站信息失败");
+    return false;
+  }
+}
+
+onMounted(() => {
+  getWebsiteInfo();
+})
+
+const myslqstatus = ref(false)//判断mysql依赖是否安装
+
 const handleInstall = () => {
+  myslqstatus.value = true
   // installDialog.visible = true
   // conf.website.websiteInfo = true
   ElMessage({
@@ -20,8 +43,7 @@ const handleInstall = () => {
 
 <template>
   <div class="main-content">
-    <install-mask :is-installed="false" @install="handleInstall">
-      <div :class="{ 'blur-mask': !false}">
+    <install-mask :is-installed="myslqstatus" installText="安装Mysql" @install="handleInstall">
       <div v-if="conf.showTips" class="tip">
         <div class="flex items-center fit-width">
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
@@ -122,7 +144,7 @@ const handleInstall = () => {
           </custom-table>
         </div>
       </div>
-    </div>
+
     </install-mask>
   </div>
 </template>

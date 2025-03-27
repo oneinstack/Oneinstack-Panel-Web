@@ -49,12 +49,12 @@
     filter: blur(10px);
     pointer-events: none;
     user-select: none;
-    margin: 0 20px;
+    // margin: 0 20px;
   }
   
   .mask-tip {
     position: absolute;
-    top: 50%;
+    top: 30%;
     left: 0;
     z-index: 10;
     width: 100%;

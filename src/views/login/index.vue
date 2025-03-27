@@ -5,6 +5,7 @@ import System from '@/utils/System'
 import { Api } from '@/api/Api'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import sconfig from '@/sstore/sconfig'
+import sapp from "@/sstore/sapp";
 // import i18n from '@/lang/index.ts'
 
 const isMobile = ref(window.innerWidth <= 768 ? false : true)
@@ -33,12 +34,14 @@ const conf = reactive({
         ...conf.form,
         final: () => conf.loading = false
       })
-      console.log(res)
+      console.log('登陆',res)
       ElMessage.success('登录成功')
-
+      // 更新首次登录状态
+      sapp.setFirstLogin(res.firstLogin)
       sconfig.login(res)
       setTimeout(() => {
         System.router.push('/')
+        // 根据 firstLogin 控制插件弹窗
       }, 500)
       // getSystemInfo()
     })

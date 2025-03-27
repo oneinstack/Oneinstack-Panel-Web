@@ -110,9 +110,8 @@ const conf = reactive({
       try {
         const { data } = await Api.getWebsiteInfo();
         // 添加数据校验
-        if (data === false && !sapp.installDialogHasShown) {
+        if (data === false) {
           conf.website.websiteInfo = data;
-          sapp.installDialogHasShown = true; // 标记为已显示
           // console.log(installDialog.visible)
         }
         sapp.setWebsiteInfo(data); //将数据存储到pinia
@@ -205,11 +204,11 @@ const conf = reactive({
                 prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
-                  // {
-                  //   pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                  //   message: '域名格式错误',
-                  //   trigger: 'blur'
-                  // }
+                  {
+                    pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
+                    message: '域名格式错误',
+                    trigger: 'blur'
+                  }
                 ],
                 change: (value: string) => {  // 使用 change 替代 input
                   if (!value || value.length === 0) {  // 添加长度判断
@@ -252,7 +251,7 @@ const conf = reactive({
                 prop: 'name',
                 rules: [
                   { required: true, message: '请输入主域名', trigger: 'blur' },
-                  // { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
+                  { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
                 ]
               },
               // {
@@ -334,12 +333,11 @@ conf.website.getData()
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <div class="main-content">
       <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
-        <div :class="{ 'blur-mask': !conf.website.websiteInfo }">
-          <div class="tool-bar">
-            <el-space class="btn-group" :size="14">
-              <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+        <div class="tool-bar">
+          <el-space class="btn-group" :size="14">
+            <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
 
-              <!-- <el-dropdown>
+            <!-- <el-dropdown>
             <el-button type="primary">
               <span class="el-dropdown-link">
                 高级设置
@@ -387,39 +385,39 @@ conf.website.getData()
             </template>
 </el-dropdown> -->
 
+          </el-space>
+          <div class="demo-form-inline">
+            <el-space class="btn-group" :size="14">
+              <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
+                @search="conf.website.getData()" />
+              <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+              <!-- <el-button :icon="Setting" type="primary" /> -->
             </el-space>
-            <div class="demo-form-inline">
-              <el-space class="btn-group" :size="14">
-                <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
-                  @search="conf.website.getData()" />
-                <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
-                <!-- <el-button :icon="Setting" type="primary" /> -->
-              </el-space>
-            </div>
-          </div>
-          <div class="box2">
-            <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
-              :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
-              :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
-              @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
-              <template #action="{ row }">
-                <el-button type="primary" link style="margin-right: 8px">统计</el-button>
-                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-                <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
-                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-                <el-button type="primary" link style="margin-right: 8px"
-                  @click="conf.drawer.open('edit', row)">设置</el-button>
-                <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-                <el-button type="danger" link
-                  style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
-                  @click="conf.dialog.open('delete', row)">
-                  删除
-                </el-button>
-              </template>
-            </custom-table>
-            <!-- 添加提示信息 -->
           </div>
         </div>
+        <div class="box2">
+          <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
+            :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
+            :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
+            @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
+            <template #action="{ row }">
+              <el-button type="primary" link style="margin-right: 8px">统计</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="primary" link style="margin-right: 8px"
+                @click="conf.drawer.open('edit', row)">设置</el-button>
+              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
+              <el-button type="danger" link
+                style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
+                @click="conf.dialog.open('delete', row)">
+                删除
+              </el-button>
+            </template>
+          </custom-table>
+          <!-- 添加提示信息 -->
+        </div>
+
       </install-mask>
     </div>
 

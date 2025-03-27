@@ -12,10 +12,8 @@ import { ElMessage } from "element-plus";
 import System from "@/utils/System";
 import InstallDialog from "@/components/install-dialog.vue";
 
-const installDialog = reactive({
-  //关闭插件弹窗"
-  visible: false,
-});
+const installDialog = sapp.isFirstLogin
+console.log("installDialog", installDialog);
 
 // const getWebsiteInfo = async () => {
 //   try {
@@ -38,7 +36,7 @@ const installDialog = reactive({
 const handleInstallConfirm = () => {
   //模拟安装的过程
   // conf.website.websiteInfo = true
-  installDialog.visible = false;
+  // installDialog.visible = false;
   ElMessage({
     type: "success",
     message: "安装成功",
@@ -843,7 +841,7 @@ onMounted(() => {
       :update="conf.memo.update"
     />
     <install-dialog
-      v-model:visible="installDialog.visible"
+      v-model:visible="installDialog"
       @confirm="handleInstallConfirm"
     />
   </div>

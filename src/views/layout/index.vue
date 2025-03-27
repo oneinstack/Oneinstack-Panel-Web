@@ -194,7 +194,7 @@ const BindButton = ()=>{
     </el-header> -->
     <el-container class="layout-container__body">
       <div class="layout-container__body-left" :class="{ 'isCollapse': !conf.isCollapse }">
-        <div class="column fit-height fit-width" style="gap: 78px; align-items: center">
+        <div class="column fit-height fit-width" style="gap: 10px; align-items: center">
           <div class="col column nav-bar fit-width">
             <div class="col relative fit-width">
               <div class="absolute fit-height fit-width">
@@ -274,7 +274,7 @@ const BindButton = ()=>{
 	@import '@/styles/element.less';
 	@import '@/styles/common.less';
   .theme-switch{
-     margin-left: 14px;
+     margin-left: 0px;
   }
   .lang{
   width: 30px; 

@@ -88,6 +88,10 @@ export const Api = {
   getWebsiteInfo: () => {
     return http.post('/website/info')
   },
+  /** 获取数据库模块依赖状态 */
+  getMysqlInfo: () => {
+    return http.post('/storage/info')
+  },
   /** 获取网站列表 */
   getWebsiteList: (obj: any) => {
     return http.post('/website/list', obj)
@@ -184,8 +188,8 @@ export const Api = {
   updataPlanTask: (obj: any) => {
     return http.post('/cron/update', obj)
   },
-   /** 查看计划任务详情/日志 */
-   getPlanTaskLog: (obj: any) => {
+  /** 查看计划任务详情/日志 */
+  getPlanTaskLog: (obj: any) => {
     return http.post('/cron/log', obj)
   },
   /** 获取系统信息/面板设置 */
