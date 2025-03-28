@@ -1,0 +1,600 @@
+ .content {
+    position: sticky;
+	  display: flex; /* 使用 flexbox */
+	  flex-direction: column; /* 子元素垂直排列 */
+    z-index: 1;
+    width: 100%;
+    min-height: 70%;
+    margin-top: -80px;
+    background-color: #fff;
+    border-radius: 108px 108px 0 0;
+	  padding-top: 170px;
+	// overflow: auto;
+	// padding-bottom: 90px;
+  }
+
+  .top {
+    width: 100%;
+    height: 890px;
+    background: #fff;
+    position: relative;
+    /* 确保子元素可以绝对定位 */
+    overflow: hidden;
+    /* 防止视频超出区域 */
+    margin-top: -5%;
+  }
+  .ver{
+    margin-top: 45px; 
+    text-align: center;
+    font-size: 32px; 
+    font-weight: bold; 
+    color: #898989;
+  }
+  
+  .tops{
+	  text-align: center;
+	  font-size: 4.875rem;
+	  font-weight: bold;
+  }
+
+  .top-text {
+    position: absolute;
+    width: 70%;
+    height: auto;
+    top: 26%;
+    right: 0;
+    left: 0;
+    margin: 0 auto;
+
+  }
+
+  .top-box {
+    margin-left: 32px;
+  }
+  .editiontwo{
+    font-size: 20px;
+    margin-top: 68px;
+  }
+
+  .top-Download {
+    z-index: 2;
+    position: absolute;
+    width: 742px;
+    height: auto;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0px 8px 12px 0px rgba(0, 0, 0, 0.07);
+    bottom: 15px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    display: flex;
+    padding: 38px 38px 39px 38px;
+    align-items: center;
+  }
+
+  .footer-bottom-s{
+    display: flex; 
+    align-items: center; 
+    padding-top: 69px;
+  }
+
+  .fz42{
+    font-size: 30px;
+  }
+  #video-background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    object-fit: cover;
+    /* 确保视频填充整个区域，同时保持宽高比 */
+  }
+
+  .base-game-container {
+    width: 100%;
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* 自定义按钮样式 */
+  .custom-buttons {
+    width: 162px;
+    height: 50px;
+    background-color: var(--primary-color) !important;
+    /* 设置按钮背景颜色 */
+    border-color: var(--primary-color) !important;
+    /* 设置按钮边框颜色 */
+    border-radius: 10px !important;
+    font-size: 16px;
+    font-weight: bold;
+    overflow: hidden;
+  }
+
+  .ss-box {
+    padding: 34px 228px 30px 38px; 
+    display: flex;  // 改为 -webkit-box 显示
+    border-radius: 6px; 
+    justify-content: flex-start;
+    align-items: center; 
+    width: 80%; 
+    min-height: 100%; 
+    background-color: #F0F6F9;
+    color: #616161; 
+    font-size: 20px;
+    margin-right: 48px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;  // 允许在任意字符间断行
+  }
+
+  .custom-icon {
+    width: 26px;
+    height: 26px;
+    margin-right: 23px;
+  }
+  .custom-iconcopy{
+	  width: 31px;
+	  height: 31px;
+	  margin-right: 23px;
+  }
+  
+  .contents-text{
+  	  margin-left: 28px;
+  	  color: #2E2E2E;
+  	  font-weight: bold;
+  	  margin-right: 38px;
+      white-space: pre-wrap; // 添加这行
+  }
+  .contents-texts{
+  	  font-size: 32px;
+  	  color: var(--primary-color);
+  	  font-weight: bold;
+      white-space: pre-wrap; // 添加这行
+  }
+
+  .custom-buttons:hover {
+    background-color: var(--footer-button) !important;
+    /* 鼠标悬停时的背景颜色 */
+    border-color: var(--footer-button) !important;
+    /* 鼠标悬停时的边框颜色 */
+  }
+  
+  .content-download {
+    width: 100%;
+    height: auto;
+    padding: 0 189px;
+  }
+  
+  .edition {
+    font-size: 20px;
+    margin-top: 68px;
+  
+    &-top {
+      font-size: 24px;
+      font-weight: bold;
+      color: #000;
+    }
+  
+    &-bottom {
+      margin-top: 26px;
+      font-weight: 400;
+      color: #616161;
+    }
+  }
+  ::v-deep(.el-collapse){
+	  border-bottom: none;
+	  border-top: none;
+  }
+  ::v-deep(.el-divider__text) {
+    font-size: 20px;
+    color: var(--primary-color);
+    // border-bottom: 1px solid #FF8E0F;
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    /* 确保伪元素只应用于文本 */
+    padding: 0 80px;
+    text-decoration: underline;
+    font-weight: 400;
+  }
+  
+  ::v-deep(.el-collapse-item__header) {
+    border-bottom: none;
+	margin-top: 14px;
+  }
+  
+  ::v-deep(.el-collapse-item:last-child) {
+    margin-bottom: -1px;
+    margin-top: -1px;
+  }
+  ::v-deep(.el-collapse-item__wrap){
+    border-bottom: none;
+  }
+  ::v-deep(.no-arrow .el-collapse-item__arrow ){
+    display: none;
+  }
+  ::v-deep(.el-divider--horizontal){
+    margin: 0;
+  }
+  .minis{
+    width: 181px; 
+    height: 69px;
+  }
+  .ss{
+	  width: 100%; 
+	  height: auto; 
+	  display: flex; 
+	  align-items: center; 
+	  margin-top: 40px;
+  }
+  .ss-max{
+    width: 100%; 
+    height: 108px; 
+    display: flex; 
+    align-items: center; 
+    margin-top: 40px; 
+    margin-bottom: 80px;
+  }
+  .ss-max-bottom{
+    width: 100%; 
+    height: 108px; 
+    display: flex; 
+    align-items: center; 
+    margin-top: 40px;
+  }
+  
+  .app-content {
+    width: 100%;
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 53px;
+  }
+  
+  .qr-text-color{
+    color: #9A9A9A;
+  }
+  
+  .app-screenshot img {
+    max-width: 416px;
+    max-height: 844px;
+  }
+  
+  
+  .qr-title {
+    display: flex;
+    margin-bottom: 111px;
+  }
+  
+  .qr-title img{
+    max-width: 122px;
+	min-height: 122px;
+  }
+  .qr-text{
+    margin-left: 43px;
+  }
+  .qr-text h2{
+    font-size: 50px;
+    font-weight: bold;
+  }
+  
+  .app-qr{
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+    justify-content: center;
+    margin-left: 362px;
+  }
+  
+  .qr-code img {
+    max-width: 359px;
+    max-height: 359px
+  }
+  .qr-code p{
+    font-size: 24px;
+    color: #9d9d9d;
+    text-align: center;
+  }
+  
+  .string {
+    padding: 34px 36px 30px 38px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 60%;
+    height: 100%;
+    background-color: #F0F6F9;
+    color: #616161;
+    font-size: 20px;
+    margin-right: 48px;
+    border-radius: 6px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-all;
+  }
+  
+  /* 自定义按钮样式 */
+  .custom-buttons {
+    width: 181px;
+    height: 69px;
+    background-color: var(--primary-color) !important;
+    /* 设置按钮背景颜色 */
+    border-color: var(--primary-color) !important;
+    /* 设置按钮边框颜色 */
+    border-radius: 10px !important;
+    font-size: 20px;
+    font-weight: bold;
+    overflow: hidden;
+    box-shadow: 0px 8px 20px 0px rgba(0, 114, 208, 0.25);
+  }
+  
+  // .custom-buttons:hover {
+  //   background-color: #e0830c !important;
+  //   /* 鼠标悬停时的背景颜色 */
+  //   border-color: #e0830c !important;
+  //   /* 鼠标悬停时的边框颜色 */
+  // }
+  
+  .text {
+    width: 100%;
+    height: auto;
+    display: flex;
+    align-items: center;
+    margin-top: 50px;
+  
+    &-left {
+      width: 392px;
+      height: 306px;
+      background-color: #D9D9D9;
+    }
+  
+    &-right {
+      margin-left: 83px;
+      flex: 1;
+  
+      &-top {
+        color: #2e2e2e;
+        font-size: 36px;
+        font-weight: bold;
+        margin-bottom: 28px;
+      }
+  
+      &-center {
+        font-size: 26px;
+        color: #515151;
+        margin-bottom: 64px;
+        font-weight: bold;
+      }
+  
+      &-bottom {
+        margin-top: 12px;
+        font-size: 22px;
+        font-weight: bold;
+        color: #a7a7a7;
+      }
+    }
+  }
+  .samsungs{
+    width: 307px;
+    height: 193px;
+  }
+
+  .fz32{
+    font-size: 32px; 
+    font-weight: bold;
+  }
+  
+  .box {
+    display: flex;
+    padding-top: 40px;
+  }
+
+  .footer-bottom{
+    width: 100%; 
+    min-height: 50vh; 
+    padding: 0 189px; 
+    background-color: #fff;
+  }
+
+  .QA{
+    margin-top: 45px; 
+    border-top: none;
+  }
+
+  
+  ::v-deep(.el-collapse) {
+    border: none;
+    flex: 1
+  }
+  
+  ::v-deep(.el-collapse-item:last-child) {
+    margin-bottom: -1px;
+    margin-top: -1px;
+  }
+  
+  ::v-deep(.el-collapse-item__header) {
+    color: #686868;
+    font-size: 30px;
+    font-weight: 400;
+  }
+  
+  ::v-deep(.el-collapse-item__arrow) {
+    margin: 0 8px 0;
+  }
+
+
+  @media(max-width: 1414px) {
+    .top-text{
+      top: 19%;
+    }
+  }
+
+  @media(max-width: 961px) {
+    .top{
+      height: 606px;
+      margin-top: 7%;
+    }
+    .top-text{
+      top: 8%;
+    }
+    .tops{
+      font-size: 32px;
+    }
+    .ver{
+      font-size: 14px;
+      margin-top: 20px;
+    }
+    #video-background {
+      width: 100%;
+      height: 50%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      object-fit: cover;
+    }
+    .top-Download{
+      width: 90% !important;
+      flex-flow: column;
+    }
+    .content{
+      margin-top: -132px;
+    }
+    .top-box{
+      margin: 30px 0 0 0;
+      display: flex;
+      flex-flow: column wrap;
+      text-align: center;
+      align-items: center;
+    }
+    .content-download{
+      padding: 0 10px;
+    }
+    .contents-text{
+      font-size: 14px;
+      margin-right: 10px;
+      margin-left: 14px;
+    }
+    .contents-texts{
+      font-size: 14px;
+    }
+    .fz42{
+       display: flex;
+    }
+    .edition{
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    .edition-top{
+      font-size: 14px;
+      margin-left: 13px;
+    }
+    .edition-bottom{
+      margin: 10px 28px 0 28px;
+    }
+    .ss{
+      margin-top: 30px;
+      height: auto;
+      flex-flow: column;
+    }
+    .lineOrange{
+      margin-left: 0px;
+    }
+    .ss-box{
+      padding: 20px;
+      margin-right: 0;
+
+    }
+    .custom-buttons{
+      margin-top: 20px;
+    }
+    ::v-deep(.el-divider__text){
+      padding: 0 5px;
+      text-align: center;
+    }
+    .ss-max{
+      height: auto;
+      flex-flow: column;
+    }
+    .ss-max-bottom{
+      flex-flow: column;
+      height: auto;
+    }
+    .footer-bottom{
+      padding: 0 0px 0 20px;
+    }
+    .footer-bottom-s{
+      display: flex; 
+      align-items: center; 
+      padding-top: 56px;
+    }
+    .QA{
+      margin-top: 20px;
+    }
+    ::v-deep(.el-collapse-item__header){
+      font-size: 20px;
+    }
+
+    
+    
+  }
+
+  // 英文版本的样式
+  html[lang="en"] {
+    .top-Download {
+      width: 900px; // 增加宽度
+      .top-box {
+        div:first-child {
+          font-size: 17px; // 稍微调小字号以适应英文长度
+        }
+        
+        div:nth-child(2) {
+          font-size: 14px; // 调整描述文字大小
+          line-height: 1.4;
+        }
+      }
+    }
+
+    .fz42 {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .fz32{
+      font-size: 32px !important;
+    }
+    .fz42{
+      font-size: 32px !important;
+    }
+    .custom-buttons {
+      width: 162px;
+      height: 50px;
+      background-color: var(--primary-color) !important;
+      /* 设置按钮背景颜色 */
+      border-color: var(--primary-color) !important;
+      /* 设置按钮边框颜色 */
+      border-radius: 10px!important;
+      font-size: 14px;
+    }
+    .custom-iconcopy{
+      width: 25px;
+      height: 25px;
+      margin-right: 5px;
+     }
+     .editiontwo{
+      font-size: 20px;
+      margin-top: 18px;
+    }
+
+    .contents-texts{
+      padding-left: 3%;
+    }
+
+    .edition-bottom{
+      margin: 10px 13px 0 13px;
+      text-align: center;
+   }
+   
+    
+  }
+  

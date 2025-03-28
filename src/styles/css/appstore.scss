@@ -1,0 +1,385 @@
+.header{
+	width: 100%;
+	height: 40%;
+	display: flex;
+	&-left{
+		width: 55%;
+		height: 100%;
+		display: flex;
+		flex-flow: column wrap;
+		justify-content: space-around;
+		padding-left: 6%;
+		.top{
+			margin-top: 9%;
+		}
+	}
+	&-right{
+		width: 45%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		padding-right: 5%;
+		margin-top: -0.5%;
+	}
+}
+.max-text{
+	font-size: 36px;
+	// font-size: 36px;
+	font-weight: bold;
+}
+.mini-text{
+	font-size: 20px;
+	color: #696969;
+	margin-top: 10px;
+	}
+
+.custom-input{
+	width: 701px; 
+	height: 90px;
+	border: none;
+	border: none; /* 默认无边框 */
+	background: #ffffff; /* 背景色 */
+	box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.04); /* 阴影 */
+	border-radius: 10px; /* 圆角 */
+	margin-top: 5%;
+}
+
+.code-img {
+	width: 80%;
+	height: auto;
+	margin-bottom: 5px;
+   }
+
+.code-box {
+	flex: 1;
+	height: 100%;
+	display: flex;
+	justify-content: flex-end;
+	align-items: flex-start;
+	gap: 20px;
+  
+	> div {
+	  display: flex;
+	  flex-direction: column;
+	  align-items: center;
+	  width: 42%;
+	  margin-left: 0;
+	  margin-bottom: 2.5rem;
+	}
+   }
+
+::v-deep(.el-input__wrapper){
+	box-shadow: 0 0 0 0 #F5F5F5;
+	border-radius: 10px;
+}
+
+::v-deep(.el-input__wrapper.is-focus){
+	box-shadow: 0 0 0 1px var(--primary-color);
+}
+::v-deep(.el-input__wrapper:hover){
+	box-shadow: 0 0 0 1px var(--primary-color);
+}
+::v-deep(.el-input__inner){
+	font-size: 1vw;
+	letter-spacing: 0.1rem;
+}
+
+/* 自定义图标样式 */
+.custom-icon {
+  width: 26px; /* 图标宽度 */
+  height: 28px; /* 图标高度 */
+  margin-right: 10px; /* 图标与文本的间距 */
+  margin-left: 5px;
+}
+
+.section-box{
+	width: 100%; 
+	height: auto;
+	display: flex; 
+	flex-flow: column wrap; 
+	align-items: center; 
+	margin-top: 81px;
+}
+
+.section{
+	width: 100%;
+	height: 100%;
+	background-color: #F5F5F5;
+	margin-top: 2%;
+	border-radius: 56px 56px 0 0;
+	display: flex;
+	flex-flow: column wrap;
+	align-items: center;
+}
+ul {
+  list-style-type: none;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  margin-top: 64px;
+}
+li {
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+  margin-right: 30px;
+}
+
+.name-selected {
+  color: orange; /* 选中时字体变为橙色 */
+}
+.name-selecteds {
+  font-weight: bold;
+}
+.user-image {
+  margin-top: 11px;
+  width: 27px;
+  height: auto;
+}
+
+.el-row {
+    width: auto;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    /* 允许换行 */
+    justify-content: flex-start; /* 修改为从左往右排列 */
+    /* 水平居中 */
+    margin: 0 auto;
+    /* 水平居中 */
+    max-width: calc(3 * (427px + 30px));
+    /* 每行最多 3 个格子，包括间距 */
+  }
+
+  ::v-deep(.el-col-8) {
+    flex: 0 0 33.333333%;
+    max-width: 457px;
+  }
+
+  .base-about-container {
+    width: 100%;
+    height: 100%;
+    font-size: 18px;
+    background-color: #EFEFEF;
+  }
+
+  .footer-bottom {
+    width: 100%;
+    height: auto;
+    padding: 4% 10% 3% 10%;
+    background: #000;
+
+    .top {
+      display: flex;
+    }
+  }
+
+  .code-text {
+	font-size: 0.875rem;
+	color: #fff;
+	white-space: nowrap;
+	text-align: center;
+	font-weight: bold;
+	padding-bottom: 5px;
+   }
+
+
+  .footer-text {
+    width: 40%;
+    font-size: 1vw;
+    color: #fff;
+    margin-top: 1%;
+  }
+
+  .code-img {
+	width: 80%;
+	height: auto;
+	margin-bottom: 11px;
+   }
+
+  .footer-logo {
+    width: 322px;
+    height: 56px;
+  }
+
+  .copyright {
+    width: 100%;
+    height: auto;
+    // background-color: #000;
+    border-top: 1px solid #9D9D9D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #9D9D9D;
+    font-size: 1vw;
+    padding: 2% 0;
+  }
+  
+  .appbox{
+	 display: flex; 
+	 justify-content: center; 
+	 margin-bottom: 40px;
+  }
+  .content-text{
+	  margin-left: 28px; 
+	  color: #2E2E2E; 
+	  font-weight: bold; 
+	  margin-right: 38px;
+  }
+  .content-texts{
+	  font-size: 32px; 
+	  color: var(--primary-color); 
+	  font-weight: bold;
+  }
+  .box-max{
+	width: 427px; 
+	height: 245px; 
+	background-color: #fff; 
+	margin-top: 20px;
+	margin-bottom: 32px; 
+	border-radius: 14px; 
+	padding: 36px 30px;
+  }
+  @media (max-width: 1372px){
+	.el-row{
+		justify-content: center;
+	}
+	.box-max{
+		margin: 20px 10px 32px 10px;
+	}
+	  .header-right{
+	  		  display: none;
+	  }
+	  .header{
+		  display: flex;
+		  justify-content: center;
+		  align-items: center;
+		  text-align: center;
+	  }
+	  .custom-input{
+	  		  width: 90%;
+	  		  height: 70px;
+			  margin-bottom: 10%;
+	  }
+	  ::v-deep(.el-input__inner){
+	  	font-size: 14px;
+	  	letter-spacing: 0.1rem;
+	  }
+  }
+  
+  @media (max-width: 768px){
+	.code-box{
+		width: 50%;
+		height: 100%;
+		display: flex;
+		flex-flow: wrap column;
+		align-items: center;
+	    gap: 0;
+	}
+	.box-max{
+		width: 365px; 
+		height: 245px; 
+		background-color: #fff; 
+		margin-top: 20px;
+		margin-bottom: 32px; 
+		border-radius: 14px; 
+		padding: 36px 30px;
+	  }
+	  .el-row{
+		justify-content: center;
+	  }
+	  .header-right{
+		  display: none;
+	  }
+	  .header-left{
+		  width: 100%;
+		  padding: 0;
+	  }
+	  .custom-input{
+		  width: 90%;
+		  height: 100%;
+	  }
+	  ::v-deep(.el-input__inner){
+	  	font-size: 14px;
+	  	letter-spacing: 0.1rem;
+	  }
+	  /* 自定义图标样式 */
+	  .custom-icon {
+	    width: 13px; /* 图标宽度 */
+	    height: 13px; /* 图标高度 */
+	    margin-right: 10px; /* 图标与文本的间距 */
+	    margin-left: 5px;
+	  }
+	  .section{
+		  margin-top: 50px;
+	  }
+	  .section-box{
+		  width: 100%;
+		  margin-top: 60px;
+	  }
+	  ul{
+		  margin-top: 15px;
+		  padding-right: 17px;
+		  padding-left: 3px;
+	  }
+	  li{
+		  padding: 0;
+		  margin-right: 0;
+		  text-align: center;
+	  }
+	.footer-bottom {
+	    padding: 6% 10% 3% 10%;
+		.top{
+			display: flex;
+			flex-flow: column wrap;
+			align-items: center;
+			text-align: center;
+		}
+	}
+	    .copyright {
+	        width: 100%;
+	        height: auto;
+	        border-top: 1px solid #9D9D9D;
+	        display: flex;
+	        justify-content: space-between;
+	        align-items: center;
+	        color: #9D9D9D;
+	        font-size: 10px;
+	        padding: 2% 0;
+	    }
+	
+		.footer-logo{
+		        width: 80%;
+		        height: 20%;
+		        margin-bottom: 5%;
+		    }
+			
+		.footer-text{
+			        width: 100%;
+			        font-size: 14px;
+			        color: #fff;
+			        margin-top: 1%;
+			        text-align: center;
+					margin-bottom: 20px;
+		 }
+		 .code-text {
+		         font-size: 14px;
+		         margin: 8% 0 8% 0;
+		     }
+	  
+  }
+
+  html[lang="en"] {
+    .code-text {
+      white-space: break-spaces;
+    }
+    @media (max-width: 768px){
+      .code-text {
+        white-space: nowrap;
+      }
+    }
+  }

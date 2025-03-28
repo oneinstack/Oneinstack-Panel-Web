@@ -1,0 +1,12 @@
+.lineOrange{
+	width: 6px;
+	height: 30px;
+	background: var(--primary-color);
+	border-radius: 3px;
+}
+
+@media (max-width: 768px) {
+	.lineOrange {
+	  display: none;
+	}
+}

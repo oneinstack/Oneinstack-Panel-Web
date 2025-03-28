@@ -1,0 +1,894 @@
+ 
+.star{
+	margin-right: 9%
+ }
+ 
+ .icons{
+	 width: 30%; height: 30%; margin-right: 23%; margin-left: -15%;
+ }
+ .icons-en {
+  width: 25%;
+  height: 25%;
+  margin-right: 5%;
+  margin-left: -6%;
+}
+ .code-text {
+  font-size: 0.875rem;
+  color: #323232;
+  white-space: nowrap;
+  text-align: center;
+  font-weight: bold;
+  padding-bottom: 5px;
+}
+.code-box {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 40px;
+
+  > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 38%;
+    margin-left: 0;
+    margin-bottom: 2.5rem;
+    [lang="en"] & {
+      width: 42%;
+      margin-bottom: 1.5rem;
+    }
+  }
+}
+ .code-img {
+  width: 80%;
+  height: auto;
+  margin-bottom: 11px;
+ }
+ .footer-logo{
+	width: 322px; 
+	height: 56px;
+ }
+ .statistic-white {
+    --el-statistic-content-color: #fff !important;
+	--el-statistic-content-font-size: 1.5vw !important;
+  }
+  .statistic-red {
+    --el-statistic-content-color: #C71D23 !important;
+  	--el-statistic-content-font-size: 1.5vw !important;
+  }
+
+  @media (max-width: 768px) {
+    .statistic-white {
+      --el-statistic-content-color: #fff !important;
+      --el-statistic-content-font-size: 9px !important;
+    }
+
+    .statistic-red {
+      --el-statistic-content-color: #C71D23 !important;
+      --el-statistic-content-font-size: 9px !important;
+    }
+  }
+
+
+  .corner-box {
+    position: absolute;
+    z-index: 0;
+    width: 17%;
+    transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* 添加过渡效果 */
+  }
+  
+
+  .custom-buttonswhile {
+    padding: 15% 10%;
+	width: 13vw ;
+    background-color: #ffffff !important;
+    /* 设置按钮背景颜色 */
+    border-color: #ffffff !important;
+    /* 设置按钮边框颜色 */
+    border-radius: 10px !important;
+    font-size: 1.2vw;
+    color: #C71D23;
+	overflow: hidden;
+  }
+
+  .custom-buttonswhile:hover {
+    background-color: #e8eaf0 !important;
+    /* 鼠标悬停时的背景颜色 */
+    border-color: #e8eaf0 !important;
+    /* 鼠标悬停时的边框颜色 */
+  }
+
+  .custom-buttonsblue {
+    padding: 15% 5%;
+	width: 13vw ;
+    background-color: #000000 !important;
+    /* 设置按钮背景颜色 */
+    border-color: #000000 !important;
+    /* 设置按钮边框颜色 */
+    border-radius: 10px !important;
+    font-size: 1.2vw;
+	overflow: hidden;
+  }
+
+  .custom-buttonsblue:hover {
+    background-color: #464646 !important;
+    /* 鼠标悬停时的背景颜色 */
+    border-color: #464646 !important;
+    /* 鼠标悬停时的边框颜色 */
+  }
+
+  /* 自定义按钮样式 */
+  .custom-buttons  {
+    padding: 15% 10%;
+	width: 13vw;
+    background-color: var(--primary-color) !important;
+    /* 设置按钮背景颜色 */
+    border-color: var(--primary-color) !important;
+    /* 设置按钮边框颜色 */
+    border-radius: 10px !important;
+    font-size: 1.2vw;
+	overflow: hidden;
+	color: #fff;
+  }
+
+  .custom-buttons:hover {
+    background-color: var(--footer-button) !important;
+    /* 鼠标悬停时的背景颜色 */
+    border-color: var(--footer-button) !important;
+    /* 鼠标悬停时的边框颜色 */
+  }
+
+  /* 小屏幕设备（如手机） */
+  @media (max-width: 768px) {
+	.custom-buttonswhile,
+	.custom-buttonsblue,
+    .custom-buttons {
+      font-size: 10px;
+      width: 20vw;
+    }
+	.star{
+		font-size: 8px;
+	}
+	.img-box{
+		margin: 0 2% !important;
+	}
+  }
+
+
+  /* 自定义图标样式 */
+  .custom-icon {
+    width: 25%;
+    /* 图标宽度 */
+    height: 25%;
+    /* 图标高度 */
+    margin-right: 8%;
+    /* 图标与文字的间距 */
+    vertical-align: middle;
+    /* 垂直居中对齐 */
+  }
+
+  .copyright {
+    width: 100%;
+    height: auto;
+    // background-color: #000;
+    border-top: 1px solid #9D9D9D;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #9D9D9D;
+    font-size: 1vw;
+    padding: 2% 0;
+  }
+  
+  .footer-text{
+	  width:47%; 
+	  font-size: 1vw; 
+	  color: #323232; 
+	  margin-top: 1%;
+    font-weight: bold;
+  }
+
+  .footer-bottom {
+    width: 100%;
+    height: auto;
+    margin-top: -1%;
+    padding: 6% 10% 3% 10%;
+    background: #fff;
+
+    .top {
+      display: flex;
+    }
+  }
+
+  .custom-button {
+    width: 10%;
+    height: 20%;
+    padding: 1%;
+    background-color: white;
+    /* 背景颜色 */
+    color: var(--footer-button);
+    /* 文字颜色 */
+    border-color: var(--footer-button);
+    /* 边框颜色 */
+    font-size: 1.5vw;
+    position: absolute;
+    top: 55%;
+    left: 46%;
+    border-radius: 5px;
+    z-index: 2;
+    transition: transform 0.3s ease;
+    /* 添加过渡效果 */
+  }
+
+  .custom-button.hover-effect {
+    transform: translate(5%, 18%);
+    /* 向下和向右移动 */
+  }
+
+  /* 如果需要 hover 效果 */
+  .custom-button:hover {
+    background-color: #f5f5f5;
+    /* 悬停时的背景颜色 */
+    color: var(--footer-button);
+    /* 悬停时的文字颜色 */
+    border-color: var(--footer-button);
+    /* 悬停时的边框颜色 */
+  }
+
+  /* 如果需要 active 效果 */
+  .custom-button:active {
+    background-color: #e0e0e0;
+    /* 点击时的背景颜色 */
+    color: var(--primary-color);
+    /* 点击时的文字颜色 */
+    border-color: var(--primary-color);
+    /* 点击时的边框颜色 */
+  }
+
+  .footer {
+    width: 100%;
+    height: auto;
+    position: relative;
+
+    .text {
+      top: 25%;
+      left: 40%;
+      position: absolute;
+      font-size: 2vw;
+      z-index: 1;
+      color: #fff;
+    }
+
+    .img-bg {
+      width: 100%;
+      height: 20%
+    }
+
+    .line {
+      border-radius: 5px;
+      z-index: 1;
+      width: 10%;
+      height: 20%;
+      top: 56.8%;
+      left: 46.2%;
+      border: 2px solid #fff;
+      position: absolute;
+      transition: top 0.3s ease, left 0.3s ease;
+      /* 添加过渡效果 */
+    }
+  }
+
+  //=== 分割线内容 ===//
+  .img-time {
+    width: 40%;
+    height: 30%;
+    // border: 2px dashed #ccc;
+  }
+
+  .time-line {
+    width: 65%;
+    height: auto;
+
+
+    .left {
+      width: 99%;
+      padding: 5%;
+      border-bottom: 2px dashed #0F67FF;
+      border-left: 2px dashed #0F67FF;
+      border-radius: 0 0 0 10px;
+    }
+
+    .right {
+      width: 100%;
+      padding: 5%;
+      border-right: 2px dashed #0F67FF;
+      border-radius: 0 0px 10px 0px;
+    }
+
+    .bottom {
+      width: 100%;
+      padding: 5%;
+      border-right: 2px dashed #0F67FF;
+      border-radius: 0 10px 0 0;
+    }
+
+    .bottom-left {
+      width: 99%;
+      padding: 5%;
+      border-left: 2px dashed #0F67FF;
+      border-top: 2px dashed #0F67FF;
+      border-radius: 10px 0px 0 0px;
+    }
+  }
+
+  .time-list {
+    padding: 0 8%;
+    margin-top: 6%;
+
+    &-one {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    &-text {
+      width: 45%;
+
+      .top {
+        font-size: 2vw;
+        font-weight: bold;
+      }
+
+      .bottom {
+        margin-top: 3%;
+        font-size: 1.5vw;
+        color: #676767;
+        text-align: left;
+        font-style: normal;
+        text-transform: none;
+      }
+    }
+  }
+
+  .time-box {
+    width: 100%;
+    height: auto;
+    background: #fff;
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+    padding-bottom: 10%;
+
+    &-text {
+      padding-top: 8%;
+      width: 79%;
+      height: auto;
+      text-align: center;
+
+      &-top {
+        font-size: 2vw;
+        color: #3a3a3a;
+        font-weight: bold;
+      }
+
+      &-bottom {
+        margin-top: 3%;
+        font-size: 1.5vw;
+        color: #676767;
+        letter-spacing: 2.18px;
+        font-style: normal;
+        text-transform: none;
+      }
+    }
+  }
+
+
+
+  //----分割线---解决方案//
+  .option-box-name {
+    font-size: 3vw;
+    color: #292929;
+    margin-top: 10%;
+  }
+
+  .option-box-text {
+    margin-top: 3%;
+    font-size: 2vw;
+    color: #737373;
+    text-align: center;
+  }
+
+  .option {
+    width: 100%;
+    position: relative;
+    height: auto;
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: center;
+    background: var(--bs-emphasis-color);
+
+    &-head {
+      // padding-top: 7%;
+      padding: 7% 5% 0 5%;
+      text-align: center;
+      display: flex;
+      flex-flow: column wrap;
+      justify-content: center;
+      align-items: center;
+
+      &-top {
+        font-size: 2vw;
+        color: #3a3a3a;
+        font-weight: bold;
+      }
+
+      &-bottom {
+        width: 100%;
+        margin-top: 2%;
+        font-size: 1.5vw;
+        color: #676767;
+        font-style: normal;
+        text-transform: none;
+      }
+    }
+
+    &-box {
+      width: 80%;
+      height: auto;
+      padding-bottom: 6%;
+      border-radius: 0 0 22px 22px;
+      box-shadow: 0px 12px 32px 0px rgba(0, 0, 0, 0.05);
+      margin-top: 3%;
+      display: flex;
+      flex-flow: column wrap;
+      justify-content: flex-start;
+
+      &-orange {
+        width: 100%;
+        height: 3%;
+        background-color: var(--primary-color);
+      }
+
+      &-content {
+        width: 100%;
+        height: auto;
+        display: flex;
+        justify-content: space-evenly;
+        margin-top: 3%;
+      }
+    }
+
+    &-item {
+      width: 33.3%;
+      display: flex;
+      flex-flow: column wrap;
+      align-items: center;
+    }
+
+    &-icon {
+      width: 8vw;
+      /* 使用视口单位 */
+      height: 8vw;
+      /* 使用视口单位 */
+    }
+
+    &-box-name {
+      font-size: 1.5vw;
+      /* 使用视口单位 */
+      color: #292929;
+      margin-top: 10%;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    &-box-text {
+      margin-top: 3%;
+      font-size: 1.2vw;
+      /* 使用视口单位 */
+      color: #737373;
+    }
+
+  }
+
+  //------分割线安装次数模块-------//
+  .section-pc-text {
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-flow: column wrap;
+    align-items: center;
+    z-index: 3;
+
+    .one {
+      font-size: 2vw;
+      color: #3a3a3a;
+      text-align: center;
+      margin-top: 2%;
+      margin-bottom: 2%;
+      font-weight: bold;
+    }
+
+    .twodowon {
+      font-size: 6vw;
+      color: var(--primary-color);
+      text-align: center;
+      margin-bottom: 2%;
+      font-weight: bold;
+      letter-spacing: 1vw;
+    }
+
+    span {
+      font-size: 1.5vw;
+      color: #8c8c8c;
+    }
+
+    .three {
+      width: 68%;
+      text-align: center;
+      font-size: 1.5vw;
+      color: #676767;
+      font-style: normal;
+      text-transform: none;
+    }
+  }
+
+  .chart {
+    position: absolute;
+    width: 40%;
+    top: 27%;
+    left: -17%;
+    z-index: 2;
+  }
+
+  .section-pc {
+    width: 100%;
+    position: relative;
+    height: auto;
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: center;
+    background: var(--bs-emphasis-color);
+  }
+
+  .arc {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 10%;
+    height: auto;
+    z-index: 2;
+  }
+
+
+  .pc {
+    width: 80%;
+    margin-top: -20%;
+    z-index: 1;
+  }
+
+  //-----分割线电脑图片模块-----//
+  .img-text {
+    position: absolute;
+    top: 23%;
+    left: 18%;
+    color: #fff;
+  }
+
+  .img-box {
+    position: relative;
+    width: auto;
+    height: auto;
+    margin: 0 3%;
+  }
+
+  .img {
+    width: 40%;
+    height: 80%;
+    margin-left: 20px;
+  }
+
+  .buttonThree {
+    width: 100%;
+    margin-top: 3%;
+  }
+  .section-box {
+    position: relative;
+    width: 100%;
+    padding: 0% 0 26% 0;
+  }
+
+  .section-box>div {
+    position: relative;
+    /* 确保子元素可以使用 z-index */
+    z-index: 1;
+    color: #000;
+    display: flex;
+    justify-content: center;
+    height: auto;
+    font-weight: bold;
+    /* 设置其他标签的 z-index */
+  }
+
+  .logo-bj {
+
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    top: 50%;
+    left: 50%;
+    margin-top: -25%;
+    margin-left: -40%;
+    z-index: 0;
+
+  }
+
+  .section-box-text {
+    text-align: center;
+  }
+
+  .section-box-text>span {
+    color: var(--primary-color);
+    font-size: 6.5vw;
+    margin-top: 3%;
+  }
+
+  //=======动画效果======//
+  .section-box-text {
+    display: flex;
+    align-items: center;
+    gap: 5%;
+    margin-bottom: 2%;
+    font-weight: bold;
+    /* 代替内联样式设置间距 */
+  }
+
+  .section-box-text span {
+    color: var(--primary-color);
+    font-size: 6.5vw;
+    /* 默认无边框 */
+    padding: 0px 5px;
+    /* 添加内边距 */
+    transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    /* 平滑的缓动函数 */
+    will-change: transform, border;
+    /* 提高性能 */
+    display: inline-flex;
+    /* 确保可以应用 transform */
+    align-items: center;
+    justify-content: center;
+    backface-visibility: hidden;
+    /* 提升动画性能 */
+    position: relative;
+    /* 确保伪元素相对于 span 定位 */
+  }
+
+  .section-box-text span.active {
+    transform: scale(1.2);
+  }
+
+
+  @media (max-width: 768px){
+	  .icons{
+		  margin-left: 0;
+		  margin-right: 6%;
+	  }
+	  .time-box{
+		  padding-bottom: 0 !important;
+	  }
+	  .custom-button {
+		  position: static !important;
+	      width: 26%;
+	      height: 25%;
+	      padding: 1%;
+	      background-color: white;
+	      color: var(--primary-color);
+	      border-color: var(--primary-color);
+	      font-size: 14px;
+	      position: absolute;
+	      top: 60%;
+	      left: 38%;
+	      border-radius: 5px;
+	      z-index: 2;
+	      transition: transform 0.3sease;
+	  }
+	  .footer-bottom {
+	      padding: 6% 10% 3% 10%;
+	  }
+	  .footer .line{
+		  display: none;
+	  }
+	  .footer{
+	      width: 100%;
+	      height: 80px;
+	      position: relative;
+		  background: #fff;
+		  display: flex;
+		  flex-flow: column wrap;
+		  justify-content: space-evenly;
+		  align-items: center;
+	  }
+	  
+	  .footer .img-bg{
+		  display: none;
+	  }
+    .code-box > div{
+      margin-bottom: 0rem;
+      margin-top: 1rem;
+    }
+	  .footer .text {
+		  position: static;
+	      font-size: 20px;
+		  color: var(--primary-color);
+	  }
+	  .option-box-name {
+	      font-size: 11px !important;
+		  padding: 0 5%;
+	  }
+	  .option-box-text{
+		  font-size: 10px !important;
+		  margin-top: 5% !important;
+		  padding: 0 5%;
+	  }
+	  .option-box{
+		  width: 90% !important;
+	  }
+	
+	  .copyright {
+	    width: 100%;
+	    height: auto;
+	    // background-color: #000;
+	    border-top: 1px solid #9D9D9D;
+	    display: flex;
+	    justify-content: space-between;
+	    align-items: center;
+	    color: #9D9D9D;
+	    font-size: 10px;
+	    padding: 2% 0;
+	  }
+	  .code-text{
+		  font-size: 0.875rem;
+		  margin: 0% 0 8% 0;
+	  }
+	  .code-box{
+	      width: 50%;
+	      height: 100%;
+	      display: flex;
+	      flex-flow: wrap column;
+	      align-items: center;
+        gap: 0;
+	  }
+	  .code-img{
+		width: 100%;
+	    height: 100%;
+	  }
+	  .footer-logo{
+		  width: 80%;
+		  height: 20%;
+		  margin-bottom: 5%;
+	  }
+	  .footer-text{
+	  	  width:100%; 
+	  	  font-size: 14px; 
+	  	  color: #323232; 
+	  	  margin-top: 1%;
+		    text-align: center;
+	  }
+	  .footer-bottom .top{
+		  display: flex;
+		  flex-flow: column wrap;
+		  align-items: center;
+		  text-align: center;
+	  }
+	
+	  .option-icon{
+		  width: 60px !important;
+		  height: 60px !important;
+	  }
+	  .option-head-top{
+		  font-size: 20px !important;
+	  }
+	  .option-head-bottom{
+		  font-size: 14px !important;
+	  }
+	  .section-pc-text .two{
+		  font-size: 40px !important;
+	  }
+	  .section-pc-text .three{
+		  font-size: 14px !important;
+	  }
+	  .section-pc-text .one {
+	      font-size: 20px !important;
+	  }
+	  .time-box {
+	    width: 100%;
+	    height: auto;
+	    background: #fff;
+	    display: flex;
+	    flex-flow: column wrap;
+	    align-items: center;
+	    padding-bottom: 10%;
+	  
+	    &-text {
+	      padding-top: 8%;
+	      width: 79%;
+	      height: auto;
+	      text-align: center;
+	  
+	      &-top {
+	        font-size: 20px !important;
+	        color: #3a3a3a;
+	        font-weight: bold;
+	      }
+	  
+	      &-bottom {
+	        margin-top: 3%;
+	        font-size: 14px !important;
+	        color: #676767;
+	        letter-spacing: 0 !important;
+	        font-style: normal;
+	        text-transform: none;
+	      }
+	    }
+	  }
+	  
+	  .img-time {
+	    width: 80%;
+	    height: 70%;
+	    // border: 2px dashed #ccc;
+	  }
+	  .time-line {
+		  display: none;
+	  }
+	  .time-list {
+	    padding: 0 8%;
+	    margin-top: 6%;
+	  
+	    &-one {
+	      display: flex;
+		  flex-flow: column wrap;
+	      justify-content: space-between;
+	      align-items: center;
+		  margin-bottom: 8%;
+		  
+	    }
+		.twoss{
+			flex-flow: column-reverse wrap !important;
+		}
+	  
+	    &-text {
+	      width: 90% !important;
+	  
+	      .top {
+			margin-top: 5% !important;
+	        font-size: 20px !important; 
+	        font-weight: bold;
+			text-align: center;
+	      }
+	  
+	      .bottom {
+	        margin-top: 3%;
+	        font-size: 14px !important;
+	        color: #676767;
+	        text-align: left;
+	        font-style: normal;
+	        text-transform: none;
+	      }
+	    }
+	  }
+  }
+  html[lang="en"] {
+    .code-text {
+      white-space: break-spaces;
+    }
+    @media (max-width: 768px){
+      .code-text {
+        white-space: nowrap;
+      }
+    }
+  }
