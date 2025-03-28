@@ -401,7 +401,7 @@ defineExpose({
             </div>
           </div>
 
-          <div class="flex items-center">
+          <!-- <div class="flex items-center">
             <SearchInput class="search-input" placeholder="请输入域名或备注" />
             <el-button
               class="refresh1-btn"
@@ -410,7 +410,7 @@ defineExpose({
               @click="conf.refresh"
             />
             <el-button class="setting-btn" type="primary" :icon="Setting" />
-          </div>
+          </div> -->
           <!-- <div class="demo-form-inline">
         <el-button type="primary">
           <span class="mr-1">回收站</span>
