@@ -52,6 +52,18 @@ export const Api = {
   createFile: (obj: any) => {
     return http.post('/ftp/create', obj)
   },
+  /** 获取文件内容 */
+  fileContent: (obj: any) => {
+    return http.post('/ftp/content', obj)
+  },
+  /** 获取文件树 */
+  fileTree: (obj: any) => {
+    return http.post('/ftp/tree', obj)
+  },
+  /** 保存文件 */
+  saveFile: (obj: any) => {
+    return http.post('/ftp/save', obj)
+  },
   /** 上传文件 */
   uploadFile: (obj: any,callback:Function) => {
     return http.post(

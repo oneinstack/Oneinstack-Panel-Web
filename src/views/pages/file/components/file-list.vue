@@ -82,21 +82,16 @@ const conf = reactive({
   refresh: () => conf.getFileList(true),
   handleFileClick: (row: any) => {
     if (!row.isDir) {
-      conf.openCodeEditor(row.path, row.extension);
+      conf.openCodeEditor(row);
     } else {
       conf.path.push(row.name);
       conf.getFileList();
     }
   },
-  fileEdit: {
-    path: "",
-    content: "",
-    name: "",
-    extension: "",
-    language: "plaintext",
-  },
-  openCodeEditor: (path: string, extension: string) => {
-    codeEditorRef.value.acceptParams(conf.fileEdit);
+  openCodeEditor: (row:any) => {
+    const path = conf.path.join("/").replace(/\/\//g, "/");
+    const fullPath = `${path === "/" ? "" : path}/${row.name}`;
+    codeEditorRef.value.acceptParams({path,fullPath});
     // codeReq.path = path;
     // codeReq.expand = true;
     // if (extension != "") {
@@ -107,24 +102,21 @@ const conf = reactive({
     //     }
     //   });
     // }
-    // GetFileContent(codeReq)
-    //   .then((res) => {
-    //     fileEdit.content = res.data.content;
-    //     fileEdit.path = res.data.path;
-    //     fileEdit.name = res.data.name;
-    //     fileEdit.extension = res.data.extension;
-    //     codeEditorRef.value.acceptParams(fileEdit);
-    //   })
-    //   .catch(() => {});
-    // GetFileContent(codeReq)
-    //   .then((res:any) => {
-    //     conf.fileEdit.content = res.data.content;
-    //     conf.fileEdit.path = res.data.path;
-    //     conf.fileEdit.name = res.data.name;
-    //     conf.fileEdit.extension = res.data.extension;
-    //     codeEditorRef.value.acceptParams(conf.fileEdit);
-    //   })
-    //   .catch(() => {});
+    const fileEdit = reactive({
+      path: "",
+      name: "",
+      extension: "",
+      content: "",
+    });
+    Api.fileContent({ path:fullPath })
+      .then((res) => {
+        fileEdit.content = res.data.content;
+        fileEdit.path = res.data.path;
+        fileEdit.name = res.data.name;
+        fileEdit.extension = res.data.extension;
+        codeEditorRef.value.acceptParams(fileEdit);
+      })
+      .catch(() => {});
   },
   handleBackLevel: (index = conf.path.length - 2) => {
     if (conf.path.length === 1) return;
