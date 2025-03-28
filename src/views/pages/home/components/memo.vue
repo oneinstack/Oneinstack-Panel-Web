@@ -23,6 +23,7 @@ const conf = reactive({
       };
     },
     add: async () => {
+      if (!conf.memo.data.content.trim()) return ElMessage.warning("内容不能为空");
       await Api.addSysRemark(conf.memo.data);
       ElMessage.success("保存成功");
       conf.memo.show = false;
