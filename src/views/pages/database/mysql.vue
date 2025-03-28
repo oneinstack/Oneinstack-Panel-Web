@@ -7,7 +7,8 @@ import { ElMessage } from 'element-plus' // 添加这行导入
 import InstallMask from '@/components/InstallMask.vue'
 import { ref,onMounted} from 'vue'
 import { Api } from '@/api/Api'
-
+import { useRouter } from 'vue-router';
+const router = useRouter();
 const { conf } = defineProps<ConfProps>()
 conf.list.getData()
 const getWebsiteInfo = async () => {
@@ -49,7 +50,7 @@ const handleInstall = () => {
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
           <span class="ellipsis" style="margin-left: 32px; flex: 1;">
             请在添加数据库后，务必到[
-            <span style="color: var(--el-color-primary)">计划任务</span>
+            <span style="color: var(--el-color-primary)" @click="router.push('task')">计划任务</span>
             ]添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者MySQL命令行创建的数据库需要点击"从服务器获取"才能在计划任务中备份
           </span>
         </div>

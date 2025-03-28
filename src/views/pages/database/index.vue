@@ -152,7 +152,7 @@ const conf = reactive({
         password: '',
         auth: 'all',
       } as any,
-      items: computed<FormItem[]>(() => {
+      items: computed<FormItem[]>(():any => {
         switch (conf.list.params.type) {
           case 'mysql':
             return [
@@ -160,19 +160,19 @@ const conf = reactive({
                 label: '数据库名',
                 prop: 'name',
                 type: 'custom',
-                rules: [{ required: true, message: '请输入数据库名', trigger: 'blur' }]
+                rules: [{ required: true, message: '请输入数据库名', trigger: 'change' }]
               },
               {
                 label: '用户名',
                 prop: 'root',
                 type: 'input',
-                rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }]
+                rules: [{ required: true, message: '请输入用户名', trigger: 'change' }]
               },
               {
                 label: '密码',
                 prop: 'password',
                 type: 'custom',
-                rules: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+                rules: [{ required: true, message: '请输入密码', trigger: 'change' }]
               },
               {
                 label: '权限',
@@ -202,7 +202,7 @@ const conf = reactive({
                 label: '        ',
                 prop: 'authIP',
                 type: 'custom',
-                rules: [{ validator: checkIPStr, trigger: 'blur' }]
+                rules: conf.form.data.value.auth == 'all' ? [] : [{ validator: checkIPStr, trigger: 'blur' }]
               }
             ]
           default:
