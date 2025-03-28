@@ -154,10 +154,15 @@ defineExpose({
   align-items: center;
 }
 :deep(.el-collapse-item__header) {
-  border-top-left-radius: 6px;
-  border-top-right-radius: 6px;
+  border-radius: 6px;
   padding: 0 22px;
   margin-top: 12px;
+}
+:deep(.is-active) {
+  .el-collapse-item__header {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
 }
 :deep(.el-collapse-item__wrap) {
   border-bottom-left-radius: 6px;
