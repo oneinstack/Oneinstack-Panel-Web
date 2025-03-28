@@ -29,8 +29,9 @@ npm-debug.log*
 /node_modules
 /platforms
 /plugins
+version
 /www
-
+version
 package-lock.json
 stats.html
 
