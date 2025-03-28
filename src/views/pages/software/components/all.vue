@@ -175,8 +175,10 @@ const handleInstall = async () => {
 const dialog = reactive({
   show: false,
   content: "",
+  completed: false, // 添加安装完成状态
   onClose: () => {
     timer && timer.clear();
+    dialog.show = false; // 添加这行来关闭弹窗
     emit("refresh");//刷新列表
   },
 });
@@ -187,10 +189,17 @@ const timer = Scope.Timer();
 const handleCheckInstallLog = async (value: string) => {
   console.log("value", value);
   dialog.show = true;
+  dialog.completed = false; // 初始化安装状态
   timer.on(
     async () => {
       const { data: res2 } = await Api.getInstallLog({ fn: value });
-      dialog.content = res2.logs;
+      dialog.content = res2.logs.content;
+      dialog.completed = res2.logs.completed; // 更新安装状态
+      // 如果安装完成，清除定时器
+      if (dialog.completed) {
+        timer.clear();
+        return;
+      }
       // 添加自动滚动
       await nextTick();
       const textarea = logTextareaRef.value?.$el?.querySelector("textarea");
@@ -334,23 +343,29 @@ const columns = [
     <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose" draggable>
       <el-input ref="logTextareaRef" v-model="dialog.content" type="textarea" readonly
         style="min-height: 200px; scroll-behavior: smooth;" />
+      <template #footer>
+        <el-button v-if="dialog.completed" type="primary" @click="dialog.onClose">
+          安装完成
+        </el-button>
+      </template>
     </custom-dialog>
     <!-- 在卸载弹窗中添加调试信息 -->
     <custom-dialog v-model="uninstallDialog.show" :title="uninstallDialog.title">
-     
-        <div v-if="uninstallDialog.item">
-          <div style="display: flex; align-items: center;">
-            <img
-              :src="sapp.theme === 'dark' ? '../../../../../public/static/images/mark.png' : '../../../../../public/static/images/markone.png'"
-              class="custom-icon" />
-            <p>确定要卸载 {{uninstallDialog.item.name}} {{ uninstallDialog.item.install_version }} 吗？卸载后所有关于{{uninstallDialog.item.name}}数据将被删除，需要重新安装。</p>
-          </div>
-          <!-- <el-alert :title=""
+
+      <div v-if="uninstallDialog.item">
+        <div style="display: flex; align-items: center;">
+          <img
+            :src="sapp.theme === 'dark' ? '../../../../../public/static/images/mark.png' : '../../../../../public/static/images/markone.png'"
+            class="custom-icon" />
+          <p>确定要卸载 {{ uninstallDialog.item.name }} {{ uninstallDialog.item.install_version }}
+            吗？卸载后所有关于{{ uninstallDialog.item.name }}数据将被删除，需要重新安装。</p>
+        </div>
+        <!-- <el-alert :title=""
             type="warning" show-icon :closable="false" /> -->
-        </div>
-        <div v-else>
-          <el-alert title="无法获取软件信息，请稍后再试" type="error" show-icon />
-        </div>
+      </div>
+      <div v-else>
+        <el-alert title="无法获取软件信息，请稍后再试" type="error" show-icon />
+      </div>
 
       <template #footer>
         <el-button @click="uninstallDialog.close">取消</el-button>
@@ -366,6 +381,7 @@ const columns = [
   height: 25px;
   margin-right: 10px;
 }
+
 :deep(.el-select__wrapper) {
   background: var(--select-bg-color) !important;
   border: 1px solid var(--select-border-color) !important;

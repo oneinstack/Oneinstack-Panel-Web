@@ -206,7 +206,7 @@ const terminalOnData = (data: string) => {
 
     // 发送命令到服务器
     const encodedCommand = btoa(commandBuffer + '\n');
-    ws?.send(encodedCommand);
+    ws?.send(commandBuffer + '\n');
 
     // 保存命令历史
     if (commandBuffer) {

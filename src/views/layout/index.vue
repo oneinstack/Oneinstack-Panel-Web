@@ -85,15 +85,15 @@ const conf = reactive({
         dark: ['#eab170', '#ffffff']
       }
     },
-    {
-      name: '日志',
-      path: '/log',
-      icon: 'log',
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
-    },
+    // {
+    //   name: '日志',
+    //   path: '/log',
+    //   icon: 'log',
+    //   activeColor: {
+    //     light: ['#eab170', '#8B8B8B'],
+    //     dark: ['#eab170', '#ffffff']
+    //   }
+    // },
     {
       name: '终端',
       path: '/terminal',
