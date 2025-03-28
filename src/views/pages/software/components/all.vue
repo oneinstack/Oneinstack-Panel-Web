@@ -295,6 +295,22 @@ const columns = [
         <span>暂无应用</span>
       </div>
     </div>
+    <div v-else class="table-content">
+      <custom-table :columns="columns" :data="list" :pagination="false">
+        <template #status="{ row }">
+          <span v-if="row.status === 0">未安装</span>
+          <span v-else-if="row.status === 2">已安装</span>
+          <span v-else>安装失败</span>
+        </template>
+        <template #operation="{ row }">
+          <el-link :type="(row.status === 2 || installedVersions[row.key])? 'danger' : 'primary'">
+            <span class="flex items-center"  @click="(row.status === 2 || installedVersions[row.key])? handleUninstall(row) : handleInstallClick(row)">
+              {{ (row.status === 2 || installedVersions[row.key])? '卸载' : '安装' }}
+            </span>
+          </el-link>
+        </template>
+      </custom-table>
+    </div>
     <custom-drawer :visible="drawer.show" :title="drawer.title" :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm">
       <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
