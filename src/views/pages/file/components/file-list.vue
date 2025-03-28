@@ -19,7 +19,14 @@ import {
   UploadFile,
   UploadInstance,
 } from "element-plus";
-import { nextTick, onMounted, reactive, useTemplateRef, ref, computed } from 'vue';
+import {
+  nextTick,
+  onMounted,
+  reactive,
+  useTemplateRef,
+  ref,
+  computed,
+} from "vue";
 import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import sconfig from "@/sstore/sconfig";
@@ -88,10 +95,10 @@ const conf = reactive({
       conf.getFileList();
     }
   },
-  openCodeEditor: (row:any) => {
+  openCodeEditor: (row: any) => {
     const path = conf.path.join("/").replace(/\/\//g, "/");
     const fullPath = `${path === "/" ? "" : path}/${row.name}`;
-    codeEditorRef.value.acceptParams({path,fullPath});
+    codeEditorRef.value.acceptParams({ path, fullPath });
     // codeReq.path = path;
     // codeReq.expand = true;
     // if (extension != "") {
@@ -108,7 +115,7 @@ const conf = reactive({
       extension: "",
       content: "",
     });
-    Api.fileContent({ path:fullPath })
+    Api.fileContent({ path: fullPath })
       .then((res) => {
         fileEdit.content = res.data.content;
         fileEdit.path = res.data.path;
@@ -183,6 +190,11 @@ const conf = reactive({
           conf.fileDialog.confirmText = "开始上传";
           break;
         case "linkDownload":
+          conf.fileDialog.row = {
+            path: "",
+            url: "",
+            name: "",
+          };
           conf.fileDialog.title = `URL链接下载`;
           conf.fileDialog.confirmText = "确定";
           break;
@@ -203,6 +215,18 @@ const conf = reactive({
       if (conf.fileDialog.type === "linkDownload") {
         const res = await conf.linkDownload.instance?.validate();
         if (!res) return;
+        try {
+          await Api.urlDownloadFile({
+            url: conf.fileDialog.row.url,
+            path: conf.fileDialog.row.path,
+            name: conf.fileDialog.row.name,
+          });
+          conf.fileDialog.close();
+          conf.refresh();
+        } catch (error) {
+          ElMessage.error("下载失败");
+        }
+        return;
       }
       if (conf.fileDialog.type === "delete") {
         const path = conf.path.join("/").replace(/\/\//g, "/");
@@ -263,7 +287,12 @@ defineExpose({
 
 <template>
   <div class="file-list">
-    <Upload :is-show-file-list="false" :auto-upload="true" :path="pathStr" @upload-success="conf.getFileList()">
+    <Upload
+      :is-show-file-list="false"
+      :auto-upload="true"
+      :path="pathStr"
+      @upload-success="conf.getFileList()"
+    >
       <template #drag-content>
         <div class="box1" style="border-radius: 4px">
           <div class="flex items-center" style="width: 100%; flex: 0.8">
@@ -385,7 +414,7 @@ defineExpose({
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
-              <div class="btn" @click="router.push({path:'/terminal'})">
+              <div class="btn" @click="router.push({ path: '/terminal' })">
                 终端
                 <el-icon class="icon"><arrow-down /></el-icon>
               </div>
@@ -472,6 +501,7 @@ defineExpose({
               <el-button
                 type="primary"
                 link
+                :disabled="row.isDir ? true : false"
                 @click="conf.handleFileDownload(row)"
                 >下载</el-button
               >
@@ -557,7 +587,9 @@ defineExpose({
         >
           <template #header>
             <div class="flex justify-end upload-header">
-              <el-button type="info" @click="uploadRef1?.clearFiles()">清空列表</el-button>
+              <el-button type="info" @click="uploadRef1?.clearFiles()"
+                >清空列表</el-button
+              >
             </div>
           </template>
         </Upload>
@@ -644,7 +676,7 @@ defineExpose({
   height: 100%;
   width: 100%;
 }
-.upload-header{
+.upload-header {
   margin-bottom: 18px;
 }
 .file-tool {

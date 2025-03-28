@@ -90,6 +90,10 @@ export const Api = {
   downloadFile: (obj: any) => {
     return http.post('/ftp/download', { ...obj, isBlob: true })
   },
+  /** url链接下载文件 */
+  urlDownloadFile: (obj: any) => {
+    return http.post('/ftp/urldownload', obj)
+  }, 
   /** 修改文件权限 */
   updateFilePerm: (obj: any) => {
     return http.post('/ftp/modify', obj)
