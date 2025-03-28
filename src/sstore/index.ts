@@ -1,11 +1,8 @@
 import System from '@/utils/System'
 import { sapp } from './sapp'
-import { sbet } from './sbet'
 import { sconfig } from './sconfig'
 import { shome } from './shome'
-import { sim } from './sim'
 import { simdl } from './simdl'
-import { slottery } from './slottery'
 import { sshake } from './sshake'
 import { sstatus } from './sstatus'
 import { stween } from './stween'
@@ -19,17 +16,14 @@ sutil.store = {
   shome,
   stween,
   sutil,
-  slottery,
   svalue,
   svf,
   sconfig,
   sstatus,
-  sbet,
   sshake,
   sweb,
   sapp,
   stheme,
-  // sim,
   simdl
 }
 
@@ -49,15 +43,6 @@ export const load = () => {
 export const initApp = async () => {
   load()
   await sconfig.getSystemTime()
-
-  //非原生平台设置icon
-  if (!System.isNative) {
-    const appConfig = await svalue.getAppConfiguration()
-    let link = document.createElement('link')
-    link.rel = 'icon'
-    link.href = appConfig.app_logo
-    document.getElementsByTagName('head')[0].appendChild(link)
-  }
 }
 
 sutil.reset = reset

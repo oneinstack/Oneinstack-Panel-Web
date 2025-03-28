@@ -8,19 +8,15 @@ import { Scope } from 'tools-vue3'
 import { onMounted, reactive } from 'vue'
 
 export const index = () => {
+  const { t } = i18n
   const timer = Scope.Timer()
   const conf = reactive({
-    language: Cookie.get('language') || 'en-us',
+    language: Cookie.get('language') || 'zh-CN',
     menu1: [
       [
+        
         {
-          name: 'me.Password',
-          new: false,
-          url: '/user/Password/Change',
-          isShow: () => sconfig.userInfo
-        },
-        {
-          name: 'me.Theme',
+          name: t('me.theme'),
           new: false,
           func: () => {
             conf.popup.open('theme')
@@ -28,29 +24,18 @@ export const index = () => {
           isShow: true
         },
         {
-          name: 'me.Languages',
+          name: t('me.languages'),
           new: false,
           func: () => {
             conf.popup.open('lang')
           },
           isShow: true
         },
-        {
-          name: 'me.AboutUs',
-          new: false,
-          url: '/user/about/about',
-          isShow: true
-        },
-        {
-          name: 'me.Feedback',
-          new: false,
-          url: '/user/Feedback/index',
-          isShow: () => sconfig.userInfo
-        }
+        
       ],
       [
         {
-          name: 'me.logOut',
+          name: t('me.logout'),
           new: false,
           func: () => {
             conf.outPopup = true
@@ -60,6 +45,10 @@ export const index = () => {
       ]
     ],
     langArr: [
+      {
+        name: '简体中文',
+        id: 'zh-CN'
+      },
       {
         name: 'English',
         id: 'en-us'
@@ -85,98 +74,6 @@ export const index = () => {
         id: 'es-ES'
       }
     ],
-    bgcolor: 'transparent',
-    blackMenuList: [
-      {
-        name: 'Exchange',
-        imgUrl: 'ct-change',
-        url: '/user/wallet/exchange'
-      },
-      {
-        name: 'Fortune',
-        imgUrl: 'ct-fortune',
-        url: '/user/YuE-Bao/yueBao'
-      },
-      {
-        name: 'Transaction',
-        imgUrl: 'ct-tran',
-        url: '/user/me/myTransactions'
-      },
-      {
-        name: 'Bet History',
-        imgUrl: 'ct-bet',
-        url: '/user/myBet/index'
-      },
-      {
-        name: 'Notification',
-        imgUrl: 'ct-notif',
-        isArrowRight: true,
-        url: '/user/notice/notice'
-      },
-      {
-        name: 'Refer',
-        imgUrl: 'ct-refer',
-        isArrowRight: true,
-        func: () => {
-          conf.popup.open('refer')
-        }
-      },
-      {
-        name: 'Agency Center',
-        imgUrl: 'ct-agency',
-        isArrowRight: true,
-        url: '/user/invite/index'
-      },
-      {
-        name: 'Settings',
-        imgUrl: 'ct-setting',
-        isArrowRight: true,
-        url: '/user/setting/black/index'
-      },
-      {
-        name: 'Language',
-        imgUrl: 'ct-language',
-        isArrowRight: true,
-        rName: '',
-        func: () => {
-          conf.popup.open('lang')
-        },
-        isShow: true
-      },
-      {
-        name: 'Currency',
-        imgUrl: 'ct-currency',
-        isArrowRight: true,
-        rName: '--',
-        func: () => {
-          conf.popup.open('wallet')
-        }
-      },
-      {
-        name: 'Theme',
-        imgUrl: 'ct-theme',
-        isArrowRight: true,
-        rName: '',
-        func: () => {
-          conf.popup.open('theme')
-        },
-        isShow: true
-      },
-      {
-        name: 'Live Support',
-        imgUrl: 'ct-live',
-        isArrowRight: true,
-        func: () => {
-          svalue.toService()
-        }
-      },
-      {
-        name: 'Feedback',
-        imgUrl: 'ct-feedback',
-        isArrowRight: true,
-        url: '/user/Feedback/index'
-      }
-    ],
     currentTheme: Cookie.get('pageTheme') || '',
     themeArr: [
       {
@@ -191,12 +88,6 @@ export const index = () => {
         bg: '#E6F2FF',
         color: '#006FFF'
       },
-      {
-        name: 'me.blackTheme',
-        id: 'black',
-        bg: '#E6F2FF',
-        color: '#006FFF'
-      }
     ],
     popup: {
       type: 'lang' as 'theme' | 'lang' | 'refer' | 'wallet',
@@ -213,17 +104,15 @@ export const index = () => {
       }
     },
     outPopup: false,
-    total_money: 0,
     handle(item: any) {
-      item.url && System.router.push(item.url)
       item.func && item.func()
     },
     async changeLang(item: any) {
       conf.language = item.id
-      conf.blackMenuList[8].rName = item?.name
       System.loading()
       await i18n.setLang(item.id)
       System.loading(false)
+      window.location.reload()
       conf.popup.close()
     },
     changeTheme(item: any) {
@@ -233,77 +122,19 @@ export const index = () => {
     async goOutLogin() {
       sconfig.logout()
       conf.outPopup = false
-      conf.total_money = 0
       System.toast('out success', 'success')
       if(Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
         return System.router.replace('/home/home')
       }
       timer.once(() => sutil.pageBack(), 2000)
     },
-    hrefUrl: location.origin,
-    copyTxt() {
-      StrUtil.copyText(conf.hrefUrl)
-      System.toast(i18n.t('invite.CopySuccessful'), 'success')
-    },
-    //获取用户钱包list
-    walletList: [] as any[],
-    defaultWallet: {coinSymbol: '₹'} as any,
-    async getWalletList() {
-      if (!sconfig.userInfo) return
-      conf.total_money = 0
-      conf.walletList = await svalue.getWalletlist()
-      const coinArr = await svalue.getCoinlist()
-      let defaultInfo:any = await svalue.getDefaultWallet()
-      
-      conf.walletList?.forEach((item, itemIndex) => {
-        
-        let index = coinArr.findIndex((into) => into.coinCode == item.walletCoin)
-        if (index != -1) {
-          let obj = {
-            ...coinArr[index],
-            ...item
-          }
-          conf.walletList[itemIndex] = obj
-          if (item.walletCoin == defaultInfo.coinCode) conf.defaultWallet = obj
-          // 计算默认币种对应的钱包总金额
-          item.defaultCoinMoney = sutil.division(
-            sutil.Mul(item.walletMoney, defaultInfo.coinTousdt),
-            obj.coinTousdt
-          )
-          conf.total_money = sutil.addNum(conf.total_money, item.defaultCoinMoney)
-        }
-      })
-      const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')
-      conf.blackMenuList[index].rName = conf.defaultWallet.coinCode
-    },
-    handleDefaultwallet(e: any) {
-      System.loading()
-      conf.popup.close()
-      apis.defaultwallet({
-        coinCode: e.coinCode,
-        success: (res: any) => {
-          sconfig.userInfo.defaultWalletId = e.id
-          Cookie.set('userInfo', sconfig.userInfo)
-          conf.defaultWallet = e
-          const index = conf.blackMenuList.findIndex((item) => item.imgUrl == 'ct-currency')
-          conf.blackMenuList[index].rName = conf.defaultWallet.coinCode
-        },
-        final: () => {
-          System.loading(false)
-        }
-      })
-    }
   })
 
   onMounted(() => {
     const item = conf.langArr.find((v) => v.id == conf.language)
     if(Cookie.get('pageTheme') && Cookie.get('pageTheme') == 'black') {
-      conf.getWalletList()
-      conf.blackMenuList[8].rName = item?.name
       const theme: any = conf.themeArr.find((v) => v.id == conf.currentTheme)
-      conf.blackMenuList[10].rName = i18n.t(theme?.name)
     }
-    
   })
   return conf
 }

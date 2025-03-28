@@ -17,7 +17,7 @@ export const getPlugins = (env: globalType) => {
 
   const plugin: PluginOption[] = [
     viteLanguage({
-      path:'./src/lang/'
+      path:'./src/lang'
     }),
     viteVar(env as any),
     viteDef(env.env.pro),

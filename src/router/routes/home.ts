@@ -6,29 +6,29 @@ export default [
   {
     path: '/tabbar',
     redirect: '/home/home',
-    component: '/home/layout',
+    component: '/tabbar/layout',
     children: [
       {
         path: '/home/home',
-        component: '/home/home'
+        component: '/tabbar/home/index'
       },
       {
         path: '/home/me',
-        component: '/home/me'
+        component: '/tabbar/me/index'
       },
       {
-        path: '/home/promotions',
-        component: '/home/promotions'
+        path: '/home/app',
+        component: '/tabbar/app/index'
       },
       {
-        path: '/home/wallet',
-        component: '/home/wallet'
-      },
-      {
-        path: '/home/longQueue',
-        component: '/home/longQueue'
+        path: '/home/file',
+        component: '/tabbar/file/index'
       }
     ]
+  },
+  {
+    path: '/search',
+    component: '/search/index'
   },
   {
     path: '/login',

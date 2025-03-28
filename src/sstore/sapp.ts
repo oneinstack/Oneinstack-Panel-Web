@@ -37,10 +37,6 @@ export const sapp = reactive({
   setAppHeight: () => {
     if (!sapp.keyboard.show) {
       const _height = document.documentElement.clientHeight
-      //如果是点击input，则不设置高度
-      if (Date.now() - sapp.keyboard.clickInputTime < 1000) {
-        if (!sapp.whiteList.includes(System.getRouterPath())) return
-      }
       document.documentElement.style.setProperty('--height', `${_height}px`)
       sapp.app.height = _height
       CEvent.emit(EPage.changeHeight, _height)
@@ -72,16 +68,11 @@ export const sapp = reactive({
     })
   },
   /**
-   * 键盘高度影响的白名单列表
-   */
-  whiteList: ['/chat/chating'] as string[],
-  /**
    * 显示键盘事件通知
    */
   showKeyboard: (height: number) => {
     sapp.keyboard.show = true
     sapp.keyboard.height = height
-    if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty(
         '--height',
@@ -94,7 +85,6 @@ export const sapp = reactive({
    */
   hideKeyboard: () => {
     sapp.keyboard.show = false
-    if (!sapp.whiteList.includes(System.getRouterPath())) return
     FunUtil.throttle(() => {
       document.documentElement.style.setProperty('--height', `${sapp.app.height}px`)
     }, 100)

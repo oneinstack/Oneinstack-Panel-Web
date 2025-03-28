@@ -16,7 +16,6 @@
     "noEmit": true,
     "paths": {
       "@/*": ["./src/*"],
-      "@chat/*": ["./src/modules/chat/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]

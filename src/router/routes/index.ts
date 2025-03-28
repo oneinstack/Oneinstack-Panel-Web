@@ -1,6 +1,8 @@
 import home from './home'
 import user from './user'
-import game from './game'
-import chat from './chat'
+import server from './server'
+import file from './file'
 
-export default [...home, ...user, ...game, ...chat]
+
+
+export default [...home,...user,...server,...file]

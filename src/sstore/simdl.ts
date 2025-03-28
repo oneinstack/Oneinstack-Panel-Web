@@ -6,17 +6,9 @@ export const DialogName = {
    */
   loading: 'loading',
 
-  /**
-   * 红包详情
-   */
-  RedPackDetail: 'RedPackDetail'
 }
 
 export const simdl = {
-  /**
-   * 临时存储数据
-   * 结构{"loading":{},'RedPackDetail':''...}
-   */
   data:{} as any,
   list: [] as any[],
   listType: [] as any[],

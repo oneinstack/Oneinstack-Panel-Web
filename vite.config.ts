@@ -19,7 +19,6 @@ export default ({ mode, command }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        '@chat': path.resolve(__dirname, './src/modules/chat'),
         '@public': path.resolve(__dirname, './public')
       }
     },
@@ -27,6 +26,20 @@ export default ({ mode, command }) => {
       host: '0.0.0.0',
       port: env.port || 5100
     },
+    // server: {
+    //   host: '0.0.0.0',
+    //   port: env.port || 5100,
+    //   headers:{ 'Access-Control-Allow-Origin': '*',},
+    //   proxy: {
+    //     '/api': {
+    //       // 开发环境使用本地地址，生产环境使用线上地址
+    //       target:'http://162.14.64.127:8089',
+    //       secure: false,
+    //       changeOrigin: true,
+    //       rewrite: (path) => path.replace(/^\/api/, 'v1')
+    //     }
+    //   }
+    // },
     build: getBuild(env)
   })
 }

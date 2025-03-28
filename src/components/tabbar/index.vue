@@ -14,7 +14,6 @@
               <div
                 :id="`tabbar_item_${index}`"
                 class="tabbar__item"
-                :class="[{ 'tabbar__item--active': index === conf.currentTabbarIndex }]"
                 @click="conf.clickItem(item)"
               >
                 <div class="tabbar__item__icon">
@@ -22,6 +21,7 @@
                     :class="{ 'img': index == conf.currentTabbarIndex }"
                     :src="`${index == conf.currentTabbarIndex ? item.iconActive : item.icon}`"
                   />
+                  <p class="name" :class="`${index == conf.currentTabbarIndex ? 'tabbar__item_icon_active_name' : ''}`">{{ $t(item.name) }}</p>
                 </div>
               </div>
             </div>
@@ -40,10 +40,12 @@ import { onMounted, reactive } from 'vue'
 const event = Scope.Event()
 const props = defineProps({
   list: {
-    default: [] as { path: string; icon: string; iconActive: string; auth: boolean; index: number }[]
+    default: [] as { path: string; icon: string; iconActive: string; auth: boolean; index: number;name:string }[]
   }
 })
 const emit = defineEmits(['change'])
+
+console.log('props.list',props.list)
 
 const conf = reactive({
   currentTabbarIndex: null as number | null,
@@ -80,7 +82,8 @@ onMounted(() => {
 }
 .tabbar {
   width: 100%;
-  height: 166rem;
+  // height: 166rem;
+  height:138rem;
   // left: 0;
   background-color: transparent;
   position: relative;
@@ -103,6 +106,7 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: space-around;
+    background:#ffffff;
   }
 
   &__item {
@@ -125,15 +129,15 @@ onMounted(() => {
       top: 20%;
 
       img {
-        width: 44rem;
-        height: 44rem;
+        width: 48rem;
+        height: 48rem;
         pointer-events: none;
       }
     }
 
     .img {
-      width: 44rem;
-      height: 44rem;
+      width: 48rem;
+      height: 48rem;
     }
 
     &--active {
@@ -149,7 +153,7 @@ onMounted(() => {
     }
 
     &__icon {
-      font-size: 56rem;
+      // font-size: 56rem;
       width: 106rem;
       height: 106rem;
       border-radius: 50%;
@@ -158,6 +162,13 @@ onMounted(() => {
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
+      .name{
+        font-size: 20rem;
+      }
+      .tabbar__item_icon_active_name{
+        color:#F98F18;
+      }
     }
 
     &__text {

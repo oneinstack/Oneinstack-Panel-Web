@@ -38,14 +38,14 @@
                 <img class="left-img" :src="`/static/img/me/${item.id}.png`" />
                 <span>{{ item.name }}</span>
               </div>
-              <VSIcon v-if="item.id == conf.language" class="select-img" lib="blue" name="j-orange" :size="20" />
+              <!-- <VSIcon v-if="item.id == conf.language" class="select-img" lib="blue" name="j-orange" :size="20" /> -->
             </div>
           </div>
         </div>
       </div>
       <div v-else-if="conf.popup.type == 'theme'" class="lang-select">
         <div class="select-title">
-          <span>{{ $t('me.Theme') }}</span>
+          <span>{{ $t('me.theme') }}</span>
           <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" />
         </div>
         <div class="lang-list">
@@ -58,7 +58,7 @@
               <div class="lang-left" :style="item.id == conf.currentTheme && { color: item.color }">
                 <span>{{ $t(item.name) }}</span>
               </div>
-              <VSIcon v-if="item.id == conf.currentTheme" lib="blue" name="j-orange" :size="20" />
+              <!-- <VSIcon v-if="item.id == conf.currentTheme" lib="blue" name="j-orange" :size="20" /> -->
             </div>
           </div>
         </div>

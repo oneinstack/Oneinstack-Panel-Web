@@ -282,6 +282,7 @@ export default class System {
    */
   static setTheme = (theme: string) => {
     Cookie.set('pageTheme', theme)
+    document.documentElement.className = theme ? 'blue' : 'light'
     window.location.reload()
   }
 

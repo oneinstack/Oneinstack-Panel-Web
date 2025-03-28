@@ -1,13 +1,9 @@
-import ac from './_ac'
 import cdn from './_cdn'
 import cdnlocal from './_cdnlocal'
 import dev from './_dev'
-import kk from './_kk'
-import ll from './_ll'
 import lq from './_lq'
 import pro from './_pro'
 import proview from './_proview'
-import test from './_test'
 import _var from './_var'
 import h5 from './_h5'
 
@@ -18,10 +14,6 @@ const getConf = () => {
     cdnlocal,
     pro,
     proview,
-    ll,
-    ac,
-    kk,
-    test,
     lq,
     h5
   } as any
