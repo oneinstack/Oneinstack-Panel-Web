@@ -93,8 +93,7 @@ const conf = reactive({
     if (!row.isDir && extension && fileType.image.includes(extension)) {
       conf.handleFileDownload(row);
     }else if (!row.isDir) {
-      conf.path.push(row.name);
-      conf.getFileList();
+      conf.openCodeEditor(row);
     } else {
       conf.path.push(row.name);
       conf.getFileList();
