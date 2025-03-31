@@ -3,7 +3,7 @@ export default {
   /**
    * 接口地址
    */
-  API: 'http://162.14.64.127:8089/api',
+  API: '/api',
   
   /**
    * 聊天地址

@@ -51,8 +51,8 @@ export const sconfig = reactive({
   getSystemTime: async () => {
     if (!sconfig.systemTime) {
       const time1 = Date.now()
-      const res = await apis.getTime()
-      sconfig.systemTime = res.data + (Date.now() - time1)
+      // const res = await apis.getTime()
+      // sconfig.systemTime = res.data + (Date.now() - time1)
       sconfig.localTime = Date.now()
     }
     return sconfig.systemTime + (new Date().getTime() - sconfig.localTime)
