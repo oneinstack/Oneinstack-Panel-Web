@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive ,ref} from 'vue'
+import { reactive ,ref, onMounted} from 'vue'
 import { ConfProps } from './index.vue'
 import { Api } from '@/api/Api'
 import { WarningFilled } from '@element-plus/icons-vue'
@@ -49,8 +49,21 @@ const handleTabClick = ({ paneName }: { paneName: string | number | undefined })
   conf.list.params.r_db = paneName
   conf.list.getData()
 }
-const redistatus = ref(sapp.mysqlInfo?.redis ?? false) // 判断redis依赖是否安装
 
+const redistatus = ref(sapp.mysqlInfo?.redis ?? false) // 判断redis依赖是否安装
+const getWebsiteInfo = async () => {
+  try {
+    const { data } = await Api.getMysqlInfo();
+    // 添加数据校验
+    console.log("数据库依赖状态：已安装", data);
+    redistatus.value = data.redis
+    sapp.setmysqlInfo(data); //将数据存储到pinia
+    // return data;
+  } catch (error) {
+    ElMessage.error("获取网站信息失败");
+    return false;
+  }
+}
 const handleInstall = () => {
   redistatus.value = true
   ElMessage({
@@ -58,6 +71,9 @@ const handleInstall = () => {
     message: '功能开发中...'
   })
 }
+onMounted(() => {
+  getWebsiteInfo()
+})
 </script>
 
 <template>

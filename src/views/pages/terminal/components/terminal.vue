@@ -1,7 +1,7 @@
 <template>
   <div class="terminalPage">
     <div class="terminal-container">
-      <div class="terminal" ref="terminalDiv"></div>
+      <div class="terminal" ref="terminalDiv" ></div>
     </div>
   </div>
 </template>
@@ -12,166 +12,17 @@ import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 // import { WebLinksAddon } from 'xterm-addon-web-links';
 import { FitAddon } from 'xterm-addon-fit';
-
-
+import { linuxCommands, getCommandSuggestions, CommandInfo } from '../config/commands';
+// 添加状态变量
+let suggestions: CommandInfo[] = [];
+let currentSuggestionIndex = -1;
 // 定义终端容器的引用
 const terminalDiv = ref<HTMLElement | null>(null);
 const baseWsUrl = 'ws://162.14.64.127:8089/v1/ssh/open';
 const authorization = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo') || '')?.token : '';
 const wsUrl = `${baseWsUrl}?Authorization=${authorization}`;
-console.log('ws连接',wsUrl);
+// console.log('ws连接',wsUrl);
 // 添加命令提示库
-// const commandSuggestions = {
-//   'cat': { desc: '显示文件内容' },
-//   'cd': { desc: '切换目录' },
-//   'clear': { desc: '清屏' },
-//   'help': { desc: '显示帮助信息' },
-//   'ls': { desc: '列出目录内容' },
-//   'pwd': { desc: '显示当前工作目录' },
-//   // 可以添加更多命令
-// };
-// 模拟文件系统测试
-// const fileSystem = {
-//   '/': {
-//     type: 'dir',
-//     content: {
-//       'home': {
-//         type: 'dir',
-//         content: {
-//           'user': {
-//             type: 'dir',
-//             content: {
-//               'documents': {
-//                 type: 'dir',
-//                 content: {
-//                   'readme.txt': { type: 'file', content: '这是一个测试文件' },
-//                   'test.js': { type: 'file', content: 'console.log("Hello World!");' },
-//                   'project.zip': { type: 'file', content: 'ZIP文件内容' },
-//                   'image.png': { type: 'file', content: '图片文件内容' },
-//                   'script.sh': { type: 'file', content: '#!/bin/bash\necho "Hello"' },
-//                   'report.pdf': { type: 'file', content: 'PDF文档内容' },
-//                   'data.xlsx': { type: 'file', content: '表格内容' }
-//                 }
-//               },
-//               'downloads': {
-//                 type: 'dir',
-//                 content: {
-//                   'archive.tar.gz': { type: 'file', content: '压缩文件内容' },
-//                   'movie.mp4': { type: 'file', content: '视频文件内容' },
-//                   'setup.exe': { type: 'file', content: '可执行文件内容' }
-//                 }
-//               },
-//               'pictures': {
-//                 type: 'dir',
-//                 content: {
-//                   'avatar.jpg': { type: 'file', content: '照片内容' },
-//                   'logo.svg': { type: 'file', content: '矢量图内容' }
-//                 }
-//               }
-//             }
-//           }
-//         }
-//       },
-//       'usr': { type: 'dir', content: {} },
-//       'etc': { type: 'dir', content: {} }
-//     }
-//   }
-// };
-// 当前工作目录测试使用可以删除
-// let currentPath = '/home/user';
-// 添加状态变量测试使用可以删除
-// let suggestions: string[] = [];
-// let currentSuggestionIndex = -1;
-// 模拟命令处理器测试使用可以删除
-// const executeCommand = (command: string): string => {
-//   const args = command.trim().split(' ');
-//   const cmd = args[0];
-
-//   switch (cmd) {
-//     case 'pwd':
-//       return currentPath + '\n';
-
-//     case 'ls':
-//       const dir = getDirectoryFromPath(currentPath);
-//       if (!dir || dir.type !== 'dir') return 'Not a directory\n';
-
-//       let output = '';
-//       for (const [name, item] of Object.entries(dir.content)) {
-//         let colorCode = '\x1b[0m'; // 默认颜色
-
-//         if ((item as { type: string }).type === 'dir') {
-//           colorCode = '\x1b[34m'; // 目录使用蓝色
-//         } else if (name.match(/\.(zip|gz|rar|7z|bz2|tar)$/i)) {
-//           colorCode = '\x1b[31m'; // 压缩文件使用红色
-//         } else if (name.match(/\.(sh|exe|cmd|bat|py|js|pl|ps1|rb)$/i)) {
-//           colorCode = '\x1b[32m'; // 可执行文件使用绿色
-//         } else if (name.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp|ico|mp4|mov)$/i)) {
-//           colorCode = '\x1b[35m'; // 图片和视频文件使用洋红色
-//         } else if (name.match(/\.(txt|md|doc|docx|pdf|xlsx|xls|csv|ppt|pptx|odt|ods)$/i)) {
-//           colorCode = '\x1b[33m'; // 文档文件使用黄色
-//         }
-//         const prefix = (item as { type: string }).type === 'dir' ? 'd' : '-';
-//         output += `${prefix}rw-r--r--  1 user  staff  ${colorCode}${name}\x1b[0m\n`;
-//       }
-//       return output;
-
-//     case 'cd':
-//       const newPath = args[1] || '/home/user';
-//       if (newPath === '..') {
-//         const parentPath = currentPath.split('/').slice(0, -1).join('/');
-//         currentPath = parentPath || '/';
-//         return '';
-//       }
-//       const targetDir = getDirectoryFromPath(newPath.startsWith('/') ? newPath : `${currentPath}/${newPath}`);
-//       if (targetDir && targetDir.type === 'dir') {
-//         currentPath = newPath.startsWith('/') ? newPath : `${currentPath}/${newPath}`;
-//         return '';
-//       }
-//       return 'No such directory\n';
-
-//     case 'cat':
-//       if (!args[1]) return 'Please specify a file\n';
-//       const file = getFileFromPath(`${currentPath}/${args[1]}`);
-//       if (!file || file.type !== 'file') return 'No such file\n';
-//       return file.content + '\n';
-
-//     case 'clear':
-//       xterm?.clear();
-//       return '';
-
-//     case 'help':
-//       return 'Available commands:\n' +
-//         'pwd - Print working directory\n' +
-//         'ls - List directory contents\n' +
-//         'cd [dir] - Change directory\n' +
-//         'cat [file] - Show file contents\n' +
-//         'clear - Clear screen\n' +
-//         'help - Show this help\n';
-
-//     default:
-//       return `Command not found: ${cmd}\n`;
-//   }
-// };
-
-// 辅助函数：从路径获取目录或文件测试使用可以删除
-// const getDirectoryFromPath = (path: string) => {
-//   const parts = path.split('/').filter(p => p);
-//   let current: any = fileSystem['/'];
-
-//   for (const part of parts) {
-//     if (!current.content[part]) return null;
-//     current = current.content[part];
-//   }
-//   return current;
-// };
-
-// const getFileFromPath = (path: string) => {
-//   const parts = path.split('/').filter(p => p);
-//   const fileName = parts.pop();
-//   const dir = getDirectoryFromPath('/' + parts.join('/'));
-//   return dir?.content[fileName!];
-// };
-
 // 添加命令历史记录
 const commandHistory: string[] = [];
 let historyIndex = -1;
@@ -179,34 +30,52 @@ let historyIndex = -1;
 let xterm: Terminal | null = null;
 let fitAddon: FitAddon | null = null;
 let ws: WebSocket | null = null;
+// 添加一个变量来存储最后发送的命令
+let lastCommand = '';
 let commandBuffer = '';
 // 添加一个标志位，用于记录 WebSocket 是否已经连接
 let cursorPosition = 0;
 let isWebSocketConnected = false;
+
+// 添加一个辅助函数来计算字符串的显示长度
+const getStringDisplayLength = (str: string): number => {
+  return [...str].reduce((len, char) => len + (/[\u4e00-\u9fa5]/.test(char) ? 2 : 1), 0);
+};
 // 处理终端输入数据的方法
 const terminalOnData = (data: string) => {
-  // 更严格的输入验证，只允许直接输入的ASCII字符
-  if (!/^[\x00-\x7F]$/.test(data) || data.length > 1) {
-    return; // 如果是组合键输入或非单个ASCII字符，直接返回不处理
-  }
   // 处理退格键
   if (data === '\u007f') {
     if (cursorPosition > 0) {
-      commandBuffer = commandBuffer.slice(0, -1);
-      cursorPosition--;
-      xterm?.write('\b \b');
+      // 获取要删除的字符
+      const lastChar = [...commandBuffer].pop() || '';
+      // 删除最后一个字符
+      commandBuffer = [...commandBuffer].slice(0, -1).join('');
+      // 计算要删除的字符的显示宽度
+      const charWidth = /[\u4e00-\u9fa5]/.test(lastChar) ? 2 : 1;
+      cursorPosition -= charWidth;
+      // 执行退格操作
+      for (let i = 0; i < charWidth; i++) {
+        xterm?.write('\b \b');
+      }
     }
     return;
   }
 
-  // 处理回车键
-  if (data === '\r') {
-    // 添加换行符
-    xterm?.write('\r\n');
+  // 处理回车键- 同时处理 \r 和 \n
+  if (data === '\r' || data === '\n') {
+    // 如果命令缓冲区为空且最后一个命令也为空，说明可能是输入法的回车，直接返回
+    if (!commandBuffer && !lastCommand) {
+      return;
+    }
+    // 保存最后发送的命令
+    lastCommand = commandBuffer;
 
-    // 发送命令到服务器
-    const encodedCommand = btoa(commandBuffer + '\n');
-    ws?.send(commandBuffer + '\n');
+    // 使用 UTF-8 编码处理中文
+  const encoder = new TextEncoder();
+  const utf8Bytes = encoder.encode(commandBuffer + '\n');
+  // 将 Uint8Array 转换为数组
+  const base64Command = btoa(String.fromCharCode(...Array.from(utf8Bytes)));
+  ws?.send(base64Command);
 
     // 保存命令历史
     if (commandBuffer) {
@@ -218,77 +87,73 @@ const terminalOnData = (data: string) => {
     commandBuffer = '';
     cursorPosition = 0;
     return;
-    //测试版本可以删除
-    // xterm?.write('\r\n');
-    // if (commandBuffer.trim()) {
-    //   const output = executeCommand(commandBuffer);
-    //   xterm?.write(output);
-    // }
-    // xterm?.write('$ ');
-    // commandBuffer = '';
-    // cursorPosition = 0;
-    // return;
   }
 
-  // 处理普通字符输入
+  // 处理普通字符输入（包括中文）
   xterm?.write(data);
   commandBuffer += data;
-  cursorPosition++;
+  // 更新光标位置，使用实际显示长度
+  cursorPosition += getStringDisplayLength(data);
 };
+
 // 处理终端按键事件的方法
 const terminalOnKey = (event: { domEvent: KeyboardEvent }) => {
   const { domEvent } = event;
   const ctrlKey = checkCtrlKeyAllSystem(domEvent);
 
-  // 处理 Tab 键
+  // 处理 Tab 键处理逻辑
   if (domEvent.key === 'Tab') {
-    domEvent.preventDefault();// 阻止 Tab 键的默认行为
+    domEvent.preventDefault();
     domEvent.stopPropagation();
-    // if (suggestions.length === 0) {//这个可以删
-    //   const input = commandBuffer.trim();
-    //   suggestions = Object.keys(commandSuggestions).filter(cmd =>
-    //     cmd.startsWith(input)
-    //   );
-    //   if (suggestions.length > 0) {
-    //     if (suggestions.length === 1) {
-    //       // 只有一个匹配项时，直接补全剩余部分
-    //       const remainingText = suggestions[0].slice(input.length);
-    //       commandBuffer = suggestions[0];
-    //       cursorPosition = commandBuffer.length;
 
-    //       xterm?.write(remainingText);
-    //     } else {
-    //       // 多个匹配项，显示所有选项
-    //       xterm?.write('\r\n');
-
-    //       // 计算最长命令的长度，用于对齐描述
-    //       const maxLength = Math.max(...suggestions.map(cmd => cmd.length));
-    //       suggestions.forEach(cmd => {
-    //         const padding = ' '.repeat(maxLength - cmd.length + 2); // 添加固定间距
-    //         xterm?.write(`  ${cmd}${padding}- ${commandSuggestions[cmd as keyof typeof commandSuggestions].desc}\r\n`);
-    //       });
-    //       xterm?.write('$ ' + input); // 使用原始输入而不是整个命令
-    //     }
-    //     currentSuggestionIndex = 0;
-    //   }
-    // } else {
-    //   // 再次按 Tab，循环选择
-    //   currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
-    //   while (cursorPosition > 0) {
-    //     xterm?.write('\b \b');
-    //     cursorPosition--;
-    //   }
-    //   commandBuffer = suggestions[currentSuggestionIndex];
-    //   cursorPosition = commandBuffer.length;
-    //   xterm?.write(commandBuffer);
-    // }
+    if (suggestions.length === 0) {
+      suggestions = getCommandSuggestions(commandBuffer);
+      if (suggestions.length > 0) {
+        if (suggestions.length === 1) {
+          // 只有一个匹配项时，直接补全
+          const remainingText = suggestions[0].name.slice(commandBuffer.length);
+          commandBuffer = suggestions[0].name;
+          cursorPosition = commandBuffer.length;
+          xterm?.write(remainingText);
+        } else {
+          // 多个匹配项，显示所有选项
+          xterm?.write('\r\n');
+          // 将命令列表按每行7个进行分组显示
+          const commands = suggestions.map(cmd => cmd.name);
+          const maxLength = Math.max(...commands.map(cmd => cmd.length)) + 2;
+          let line = '';
+          commands.forEach((cmd, index) => {
+            // 补充空格以对齐
+            const paddedCmd = cmd.padEnd(maxLength, ' ');
+            line += paddedCmd;
+            // 每7个命令或最后一个命令时换行
+            if ((index + 1) % 7 === 0 || index === commands.length - 1) {
+              xterm?.write(line + '\r\n');
+              line = '';
+            }
+          });
+          xterm?.write('$ ' + commandBuffer);
+        }
+        currentSuggestionIndex = 0;
+      }
+    } else {
+      // 循环选择建议
+      currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
+      while (cursorPosition > 0) {
+        xterm?.write('\b \b');
+        cursorPosition--;
+      }
+      commandBuffer = suggestions[currentSuggestionIndex].name;
+      cursorPosition = commandBuffer.length;
+      xterm?.write(commandBuffer);
+    }
     return;
   }
 
   // 其他按键时重置建议列表
   if (domEvent.key !== 'Tab') {
-    // suggestions = [];
-    // currentSuggestionIndex = -1;
+    suggestions = [];
+    currentSuggestionIndex = -1;
   }
 
   // 处理左箭头键
@@ -379,11 +244,6 @@ const initSocket = () => {
     ws.onerror = socketOnError;
     isWebSocketConnected = true;
   }
-  // 模拟 WebSocket 连接可以删除
-  // setTimeout(() => {
-  //   socketOnOpen();
-  //   xterm?.write('$ ');
-  // }, 500);
 };
 // WebSocket 连接成功的回调方法
 const socketOnOpen = () => {
@@ -391,67 +251,34 @@ const socketOnOpen = () => {
   // // 连接成功后添加输入提示
   xterm?.write('$ ');
 };
-
-// 修改 WebSocket 消息处理方法
+// 添加一个变量来存储当前目录
+let currentPath = '~';
+// 修改 socketOnMessage 消息处理方法
 const socketOnMessage = async (event: MessageEvent) => {
   try {
-    const encodedText = event.data as string;
+    const text = event.data as string;
 
-    // 添加调试日志
-    console.log('收到的原始数据:', encodedText);
-
-    // 验证数据是否为 Base64
-    const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(encodedText);
-    let text;
-
-    if (isBase64) {
-      try {
-        text = atob(encodedText);
-      } catch (error) {
-        console.error('Base64 解码失败:', error);
-        text = encodedText; // 如果解码失败，使用原始数据
+    // 如果有最后发送的命令，检查响应是否包含该命令
+    if (lastCommand && text.includes(lastCommand)) {
+      // 找到命令在响应中的位置
+      const cmdIndex = text.indexOf(lastCommand);
+      // 只输出命令后面的部分
+      const output = text.substring(cmdIndex + lastCommand.length);
+      xterm?.write(output);
+      // 清除最后发送的命令
+      lastCommand = '';
+    } else {
+      // 处理命令提示符
+      if (text.endsWith('$ ') || text.endsWith('# ')) {
+        xterm?.write(text);
+        commandBuffer = '';
+        cursorPosition = 0;
+      } else {
+        // 处理命令输出
+        xterm?.write(text);
       }
-    } else {
-      text = encodedText; // 如果不是 Base64，直接使用原始数据
     }
-
-    console.log('解码后的数据:', text);
-
-    // 处理命令提示符
-    if (text.endsWith('$ ') || text.endsWith('# ')) {
-      xterm?.write(text);
-      commandBuffer = '';
-      cursorPosition = 0;
-    } else {
-      // 处理命令输出
-      const coloredText = text.replace(/([^\n]*)([\n\r]*)/g, (match, line, lineEnd) => {
-        if (!line) return lineEnd; // 处理空行
-
-        // 目录蓝色
-        if (line.match(/^d/)) {
-          return '\x1b[34m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 压缩文件红色
-        else if (line.match(/^-.*\.(zip|gz|rar|7z|bz2|tar)(\s|$)/i)) {
-          return '\x1b[31m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 可执行文件或脚本绿色
-        else if (line.match(/^-.*\.(sh|exe|cmd|bat|py|js|pl|ps1|rb)(\s|$)/i) || line.match(/^-.*\*\s/)) {
-          return '\x1b[32m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 图片文件洋红色
-        else if (line.match(/^-.*\.(jpg|jpeg|png|gif|bmp|svg|webp|ico)(\s|$)/i)) {
-          return '\x1b[35m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 文档文件黄色
-        else if (line.match(/^-.*\.(txt|md|doc|docx|pdf|xlsx|xls|csv|ppt|pptx|odt|ods)(\s|$)/i)) {
-          return '\x1b[33m' + line + '\x1b[0m' + lineEnd;
-        }
-        return match;
-      });
-
-      xterm?.write(coloredText);
-    }
+    console.log('收到服务器响应:', text);
   } catch (error) {
     console.error('处理 WebSocket 消息时出错:', error);
     xterm?.write('\r\n\x1b[91m处理服务器响应时出错\x1b[0m\r\n');
@@ -464,22 +291,14 @@ const initTerminal = () => {
     rows: 30, // 可视窗口的行数
     cols: 80, // 可视窗口的列数
     cursorBlink: true, // 光标是否闪烁
-    // 终端主题
-    theme: {
-      foreground: '#ffffff',
-      background: '#000000',
-      cursor: '#ffffff',
-      // 添加更多颜色定义
-      blue: '#0066ff',
-      cyan: '#00ffff',
-      green: '#33ff33',
-      magenta: '#ff00ff',
-      red: '#ff0000',
-      yellow: '#ffff00',
-    },
     fontFamily: 'Consolas, Courier, monospace',
     fontSize: 14,
+    lineHeight: 1.4,
     convertEol: true, // 确保换行符能正确转换
+    theme: {
+      foreground: '#a6abaa',  // 设置文字颜色
+      cursor: '#a6abaa',      // 设置光标颜色
+    }
   });
 
   if (terminalDiv.value) {
@@ -554,14 +373,38 @@ onMounted(() => {
 .terminalPage {
   padding: 0px;
   /* background-color: #fff; */
-  margin-top: 2%;
+  margin-top: 1%;
   border-radius: 5px;
-  height: calc(100vh - 200px);
-  /* 减去顶部margin和其他可能的间距 */
-  max-height: 750px;
-  /* 添加最大高度限制 */
+  height: calc(100vh - 100px); /* 默认高度 */
+  min-height: 500px;          /* 最小高度 */
+  max-height: 900px;          /* 最大高度 */
   display: flex;
   flex-direction: column;
+  
+}
+
+/* 小屏幕设备 (平板和小屏电脑, 小于 1024px) */
+@media screen and (max-width: 1024px) {
+  .terminalPage {
+    height: calc(100vh - 100px);
+    margin-top: 1%;
+  }
+}
+
+/* 中等屏幕设备 (大于等于 1024px) */
+@media screen and (min-width: 1024px) and (max-width: 1440px) {
+  .terminalPage {
+    height: calc(100vh - 100px);
+    margin-top: 1.5%;
+  }
+}
+
+/* 大屏幕设备 (大于等于 1440px) */
+@media screen and (min-width: 1440px) {
+  .terminalPage {
+    height: calc(100vh - 100px);
+    margin-top: 1.5%;
+  }
 }
 
 .terminal-container {
@@ -581,19 +424,20 @@ onMounted(() => {
 }
 
 :deep(.xterm-rows) {
-  padding: 0px 10px;
+  padding: 0px 10px 0 10px;
 }
 
 :deep(.xterm-viewport) {
   overflow-y: auto !important;
   scrollbar-width: thin;
   scrollbar-color: #666 #333;
+  border-radius: 5px;
 }
 
-:deep(.xterm-viewport::-webkit-scrollbar) {
+/* :deep(.xterm-viewport::-webkit-scrollbar) {
   width: 8px;
-}
-
+} */
+/* 
 :deep(.xterm-viewport::-webkit-scrollbar-track) {
   background: #333;
 }
@@ -601,5 +445,6 @@ onMounted(() => {
 :deep(.xterm-viewport::-webkit-scrollbar-thumb) {
   background-color: #666;
   border-radius: 4px;
-}
+} */
+
 </style>

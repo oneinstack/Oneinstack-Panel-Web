@@ -15,10 +15,15 @@
         </el-icon>
       </el-button>
     </div>
-    <custom-dialog v-model:show="dialog.show" title="安装中" :on-close="dialog.onClose" draggable
+    <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose" draggable
       :close-on-click-modal="false">
       <el-input ref="logTextareaRef" v-model="dialog.content" type="textarea" readonly
         style=" min-height: 280px; scroll-behavior: smooth;" />
+      <template #footer>
+        <el-button v-if="dialog.completed" type="primary" @click="dialog.onClose" :loading="dialog.loading">
+          {{ dialog.loading ? '正在刷新' : '安装完成' }}
+        </el-button>
+      </template>
     </custom-dialog>
     <el-dialog v-model="versionDialog.show" :title="`选择 ${versionDialog.currentItem?.name} 版本`" width="30%">
       <el-select v-model="installForm.value.version" placeholder="请选择版本">
@@ -38,7 +43,7 @@ import { defineProps, defineEmits, reactive, ref, nextTick } from 'vue'
 import { Download } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import { Scope } from 'tools-vue3'
-import { ElInput,ElMessage } from "element-plus";
+import { ElInput, ElMessage } from "element-plus";
 const props = defineProps({
   isInstalled: {
     type: Boolean,
@@ -128,17 +133,31 @@ const handleInstallClick = (item: any) => {
 const dialog = reactive({
   show: false,
   content: "",
+  completed: false, // 添加安装完成状态
+  loading: false, // 添加 loading 状态
   onClose: () => {
+    dialog.loading = true; // 开始加载动画
     timer && timer.clear();
-    // 添加淡出动画
-    const fadeOverlay = document.createElement('div');
-    fadeOverlay.className = 'fade-overlay';
-    document.body.appendChild(fadeOverlay);
+    
+     // 先显示成功提示
+     ElMessage({
+      type: 'success',
+      message: '安装成功，页面即将刷新...',
+      duration: 1500
+    });
 
-    // 延迟执行刷新，让动画有时间展示
+    // 添加淡出动画
     setTimeout(() => {
-      location.reload();
-    }, 600);
+      const fadeOverlay = document.createElement('div');
+      fadeOverlay.className = 'fade-overlay';
+      document.body.appendChild(fadeOverlay);
+      
+      // 等待提示显示和动画完成后再刷新
+      setTimeout(() => {
+        dialog.show = false;
+        location.reload();
+      }, 600);
+    }, 1000);
   },
 });
 // 添加 ref
@@ -150,7 +169,12 @@ const handleCheckInstallLog = async (value: string) => {
   timer.on(
     async () => {
       const { data: res2 } = await Api.getInstallLog({ fn: value });
-      dialog.content = res2.logs;
+      dialog.content = res2.logs.content; // 更新为正确的日志内容路径
+      dialog.completed = res2.logs.completed; // 更新安装完成状态
+      // 如果安装完成，清除定时器
+      if (dialog.completed) {
+        timer.clear();
+      }
       // 添加自动滚动
       await nextTick();
       const textarea = logTextareaRef.value?.$el?.querySelector("textarea");
@@ -253,6 +277,31 @@ const handleCheckInstallLog = async (value: string) => {
     align-items: center;
     gap: 4px;
     margin-top: 1%;
+  }
+}
+
+:deep(.fade-overlay) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  animation: fade-in-out 0.6s ease-in-out forwards;
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
   }
 }
 </style>
