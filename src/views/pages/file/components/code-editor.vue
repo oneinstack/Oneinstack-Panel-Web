@@ -241,6 +241,7 @@ import {
   FullScreen,
 } from "@element-plus/icons-vue";
 // import { loadBaseDir } from '@/api/modules/setting';
+import sapp from '@/sstore/sapp';
 
 let editor: monaco.editor.IStandaloneCodeEditor | any;
 
@@ -326,7 +327,7 @@ type WordWrapOptions = "off" | "on" | "wordWrapColumn" | "bounded";
 const isFullscreen = ref(false);
 
 const config = reactive<EditorConfig>({
-  theme: "vs-dark",
+  theme: sapp.theme == 'light' ? "vs" : "vs-dark",
   language: "plaintext",
   eol: monaco.editor.EndOfLineSequence.LF,
   wordWrap: "on",
@@ -457,6 +458,7 @@ const changeLanguage = () => {
 };
 
 const changeTheme = () => {
+  console.log(config.theme);  
   monaco.editor.setTheme(config.theme);
   const themes = {
     vs: "monaco-editor-tree-light",
@@ -473,6 +475,15 @@ const changeTheme = () => {
       );
     }
   }
+
+  // 等待 Monaco Editor 主题更新完成
+  nextTick(() => {
+    const monacoElement = document.querySelector('.monaco-editor');
+    if (monacoElement) {
+      const backgroundColor = window.getComputedStyle(monacoElement).backgroundColor;
+      document.documentElement.style.setProperty('--vscode-editor-background', backgroundColor);
+    }
+  });
 
   localStorage.setItem(codeThemeKey, config.theme);
 };
@@ -795,7 +806,7 @@ defineExpose({ acceptParams });
 
 <style scoped lang="less">
 :deep(.el-dialog) {
-  background: rgb(var(--card-bg-color));
+  background: rgb(var(--card-bg-color)) !important;
 }
 .dialog-header {
   display: flex;
@@ -853,11 +864,6 @@ defineExpose({ acceptParams });
 
 .monaco-editor-tree {
   color: rgb(var(--primary-color)) !important;
-}
-
-.monaco-editor-background {
-  outline-style: none;
-  background-color: var(--vscode-editor-background) !important;
 }
 
 .tree-widget {
