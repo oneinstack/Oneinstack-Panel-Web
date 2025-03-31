@@ -133,7 +133,6 @@
                 v-if="data.isDir"
                 style="display: inline-flex; align-items: center"
               >
-                <!-- <svg-icon className="table-icon" iconName="p-file-folder"></svg-icon> -->
                 <v-s-icon class="file-icon" :name="'folder'" size="22" />
                 <small :title="node.label">{{ node.label }}</small>
               </span>
@@ -142,7 +141,6 @@
                 style="display: inline-flex; align-items: center"
                 @click="getContent(data.path, data.extension)"
               >
-                <!-- <svg-icon className="table-icon" :iconName="getIconName(data.extension)"></svg-icon> -->
                 <v-s-icon class="file-icon" :name="'txt'" size="22" />
                 <small :title="node.label" class="min-w-32">{{
                   node.label
@@ -406,7 +404,7 @@ const loadTooltip = () => {
 };
 
 onMounted(() => {
-  loadPath();
+  // loadPath();
   updateHeights();
   window.addEventListener("resize", updateHeights);
 });
@@ -563,14 +561,13 @@ const saveContent = () => {
   }
 };
 
-const acceptParams = (props: EditProps) => {
+const acceptParams = (props: any) => {
   form.value.content = props.content;
   oldFileContent.value = props.content;
   form.value.path = props.path;
   directoryPath.value = getDirectoryPath(props.path);
   fileExtension.value = props.extension;
   fileName.value = props.name;
-  config.language = props.language;
   config.eol = monaco.editor.EndOfLineSequence.LF;
   config.theme = localStorage.getItem(codeThemeKey) || "vs-dark";
   config.wordWrap = (localStorage.getItem(warpKey) as WordWrapOptions) || "on";
@@ -580,8 +577,6 @@ const acceptParams = (props: EditProps) => {
       : true;
   open.value = true;
 };
-
-// const getIconName = (extension: string) => getIcon(extension);
 
 const loadPath = async () => {
   // const pathRes = await loadBaseDir();
@@ -615,14 +610,6 @@ const onOpen = () => {
 };
 
 const handleSearchResult = (res: any) => {
-  // if (res.data.length > 0 && res.data[0].children) {
-  //     treeData.value = res.data[0].children.map((item:any) => ({
-  //         ...item,
-  //         children: item.isDir ? item.children || [] : undefined,
-  //     }));
-  // } else {
-  //     treeData.value = [];
-  // }
   if (res.length > 0 && res[0].children) {
     treeData.value = res[0].children.map((item: any) => ({
       ...item,
@@ -637,7 +624,6 @@ const getRefresh = (path: string) => {
   loading.value = true;
   try {
     search(path).then((res) => {
-      // treeData.value = res.data[0].children;
       treeData.value = res[0].children;
       loadedNodes.value = new Set();
     });
@@ -655,15 +641,6 @@ const getContent = (path: string, extension: string) => {
   const fetchFileContent = () => {
     codeReq.path = path;
     codeReq.expand = true;
-
-    // if (extension !== '') {
-    // Languages.forEach((language) => {
-    //     const ext = extension.substring(1);
-    //     if (language.value.indexOf(ext) > -1) {
-    //         config.language = language.label;
-    //     }
-    // });
-    // }
 
     Api.fileContent(codeReq)
       .then((res) => {
@@ -730,7 +707,6 @@ const getUpData = async () => {
 
   try {
     const response = await search(newPath);
-    // treeData.value = response.data[0]?.children || [];
     treeData.value = response[0]?.children || [];
     loadedNodes.value = new Set();
   } catch (error) {
@@ -765,13 +741,6 @@ const handleNodeExpand = async (node: any, data: TreeNode) => {
   try {
     const response = await search(node.path);
     const newTreeData = JSON.parse(JSON.stringify(treeData.value));
-    // if (response.data.length > 0 && response.data[0].children) {
-    //     data.children = response.data[0].children;
-    //     loadedNodes.value.add(data.data.path);
-    //     updateNodeChildren(newTreeData, data.data.path, response.data[0].children);
-    // } else {
-    //     data.children = [];
-    // }
     if (response.length > 0 && response[0].children) {
       data.children = response[0].children;
       loadedNodes.value.add(data.data.path);

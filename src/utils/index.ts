@@ -39,3 +39,12 @@ export const fileType = {
   bash: [".sh"],
   powershell: [".ps1"],
 }
+export function getFileType(fileName: string) {
+  const ext = fileName.split(".").pop();
+  for (const key in fileType) {
+    if (fileType[key as keyof typeof fileType].includes(`.${ext}`)) {
+      return key;
+    }
+  }
+  return "other";
+}

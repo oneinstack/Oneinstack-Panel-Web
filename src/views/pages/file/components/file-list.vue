@@ -34,7 +34,8 @@ import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
 import { useRouter } from "vue-router";
-import { fileType } from '../../../../utils/index';
+import { fileType, getFileType } from '@/utils/index';
+import Preview from "./preview.vue";
 const router = useRouter();
 interface Emits {
   (e: "update:path", value: string[]): void;
@@ -48,6 +49,7 @@ interface Emits {
 
 const emit = defineEmits<Emits>();
 const codeEditorRef = ref();
+const previewRef = ref();
 const uploadRef1 = ref<InstanceType<typeof Upload> | null>(null);
 const conf = reactive({
   path: ["/"],
@@ -92,6 +94,7 @@ const conf = reactive({
     const extension = row.name.match(/\.[^.]+$/)?.[0]?.toLowerCase();
     if (!row.isDir && extension && fileType.image.includes(extension)) {
       conf.handleFileDownload(row);
+      conf.openPreview(row);
     }else if (!row.isDir) {
       conf.openCodeEditor(row);
     } else {
@@ -103,16 +106,6 @@ const conf = reactive({
     const path = conf.path.join("/").replace(/\/\//g, "/");
     const fullPath = `${path === "/" ? "" : path}/${row.name}`;
     codeEditorRef.value.acceptParams({ path, fullPath });
-    // codeReq.path = path;
-    // codeReq.expand = true;
-    // if (extension != "") {
-    //   Languages.forEach((language) => {
-    //     const ext = extension.substring(1);
-    //     if (language.value.indexOf(ext) > -1) {
-    //       fileEdit.language = language.label;
-    //     }
-    //   });
-    // }
     const fileEdit = reactive({
       path: "",
       name: "",
@@ -128,6 +121,11 @@ const conf = reactive({
         codeEditorRef.value.acceptParams(fileEdit);
       })
       .catch(() => {});
+  },
+  openPreview: (row: any) => {
+    const path = conf.path.join("/").replace(/\/\//g, "/");
+    const fullPath = `${path === "/"? "" : path}/${row.name}`;
+    previewRef.value.acceptParams({ path, fullPath,type:getFileType(row.name),name:row.name  });
   },
   handleBackLevel: (index = conf.path.length - 2) => {
     if (conf.path.length === 1) return;
@@ -665,6 +663,7 @@ defineExpose({
       </template>
     </custom-dialog>
     <CodeEditor ref="codeEditorRef" />
+    <Preview ref="previewRef" />
   </div>
 </template>
 
