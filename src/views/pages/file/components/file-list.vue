@@ -34,6 +34,7 @@ import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
 import { useRouter } from "vue-router";
+import { fileType } from '../../../../utils/index';
 const router = useRouter();
 interface Emits {
   (e: "update:path", value: string[]): void;
@@ -88,8 +89,12 @@ const conf = reactive({
   },
   refresh: () => conf.getFileList(true),
   handleFileClick: (row: any) => {
-    if (!row.isDir) {
-      conf.openCodeEditor(row);
+    const extension = row.name.match(/\.[^.]+$/)?.[0]?.toLowerCase();
+    if (!row.isDir && extension && fileType.image.includes(extension)) {
+      conf.handleFileDownload(row);
+    }else if (!row.isDir) {
+      conf.path.push(row.name);
+      conf.getFileList();
     } else {
       conf.path.push(row.name);
       conf.getFileList();

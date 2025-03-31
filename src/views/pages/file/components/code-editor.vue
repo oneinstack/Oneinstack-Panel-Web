@@ -134,11 +134,7 @@
                 style="display: inline-flex; align-items: center"
               >
                 <!-- <svg-icon className="table-icon" iconName="p-file-folder"></svg-icon> -->
-                <v-s-icon
-                  class="file-icon"
-                  :name="'folder'"
-                  size="22"
-                />
+                <v-s-icon class="file-icon" :name="'folder'" size="22" />
                 <small :title="node.label">{{ node.label }}</small>
               </span>
               <span
@@ -147,11 +143,7 @@
                 @click="getContent(data.path, data.extension)"
               >
                 <!-- <svg-icon className="table-icon" :iconName="getIconName(data.extension)"></svg-icon> -->
-                <v-s-icon
-                  class="file-icon"
-                  :name="'txt'"
-                  size="22"
-                />
+                <v-s-icon class="file-icon" :name="'txt'" size="22" />
                 <small :title="node.label" class="min-w-32">{{
                   node.label
                 }}</small>
@@ -241,8 +233,8 @@ import {
   FullScreen,
 } from "@element-plus/icons-vue";
 // import { loadBaseDir } from '@/api/modules/setting';
-import sapp from '@/sstore/sapp';
-
+import sapp from "@/sstore/sapp";
+import { fileType } from "@/utils/index";
 let editor: monaco.editor.IStandaloneCodeEditor | any;
 
 self.MonacoEnvironment = {
@@ -327,7 +319,7 @@ type WordWrapOptions = "off" | "on" | "wordWrapColumn" | "bounded";
 const isFullscreen = ref(false);
 
 const config = reactive<EditorConfig>({
-  theme: sapp.theme == 'light' ? "vs" : "vs-dark",
+  theme: sapp.theme == "light" ? "vs" : "vs-dark",
   language: "plaintext",
   eol: monaco.editor.EndOfLineSequence.LF,
   wordWrap: "on",
@@ -458,7 +450,7 @@ const changeLanguage = () => {
 };
 
 const changeTheme = () => {
-  console.log(config.theme);  
+  console.log(config.theme);
   monaco.editor.setTheme(config.theme);
   const themes = {
     vs: "monaco-editor-tree-light",
@@ -478,10 +470,14 @@ const changeTheme = () => {
 
   // 等待 Monaco Editor 主题更新完成
   nextTick(() => {
-    const monacoElement = document.querySelector('.monaco-editor');
+    const monacoElement = document.querySelector(".monaco-editor");
     if (monacoElement) {
-      const backgroundColor = window.getComputedStyle(monacoElement).backgroundColor;
-      document.documentElement.style.setProperty('--vscode-editor-background', backgroundColor);
+      const backgroundColor =
+        window.getComputedStyle(monacoElement).backgroundColor;
+      document.documentElement.style.setProperty(
+        "--vscode-editor-background",
+        backgroundColor
+      );
     }
   });
 
@@ -751,8 +747,18 @@ const treeProps = {
   label: "name",
   children: "children",
 };
-
+const handleFileDownload = async (data: any) => {
+  await Api.downloadFile({
+    path: data.path,
+    filename: data.name,
+  });
+  ElMessage.success("下载成功！");
+};
 const handleNodeExpand = async (node: any, data: TreeNode) => {
+  const extension = data.data.extension?.toLowerCase();
+  if (!data.data.isDir && extension && fileType.image.includes(extension)) {
+    return handleFileDownload(data.data);
+  }
   if (!data.data.isDir || loadedNodes.value.has(data.data.path)) {
     return;
   }
