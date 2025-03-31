@@ -34,7 +34,7 @@ import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
 import { useRouter } from "vue-router";
-import { fileType, getFileType } from '@/utils/index';
+import { fileType, getFileType } from "@/utils/index";
 import Preview from "./preview.vue";
 const router = useRouter();
 interface Emits {
@@ -53,6 +53,7 @@ const previewRef = ref();
 const uploadRef1 = ref<InstanceType<typeof Upload> | null>(null);
 const conf = reactive({
   path: ["/"],
+  keyWord: "",
   columns: [
     {
       prop: "name",
@@ -95,7 +96,7 @@ const conf = reactive({
     if (!row.isDir && extension && fileType.image.includes(extension)) {
       conf.handleFileDownload(row);
       conf.openPreview(row);
-    }else if (!row.isDir) {
+    } else if (!row.isDir) {
       conf.openCodeEditor(row);
     } else {
       conf.path.push(row.name);
@@ -124,8 +125,13 @@ const conf = reactive({
   },
   openPreview: (row: any) => {
     const path = conf.path.join("/").replace(/\/\//g, "/");
-    const fullPath = `${path === "/"? "" : path}/${row.name}`;
-    previewRef.value.acceptParams({ path, fullPath,type:getFileType(row.name),name:row.name  });
+    const fullPath = `${path === "/" ? "" : path}/${row.name}`;
+    previewRef.value.acceptParams({
+      path,
+      fullPath,
+      type: getFileType(row.name),
+      name: row.name,
+    });
   },
   handleBackLevel: (index = conf.path.length - 2) => {
     if (conf.path.length === 1) return;
@@ -327,7 +333,13 @@ defineExpose({
             </div>
           </div>
           <el-space :size="42">
-            <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link>
+            <!-- <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link> -->
+            <el-input
+              placeholder="搜索文件/目录"
+              size="large"
+              v-model="conf.keyWord"
+              ref="inputPathRef"
+            />
             <el-checkbox label="包含子目录" size="large" />
             <div class="flex items-center">
               <el-button

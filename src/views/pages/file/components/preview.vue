@@ -90,7 +90,6 @@ interface EditProps {
   type: string;
   path: string;
   name: string;
-  extension: string;
   url: string;
   fullPath: string; 
 }
@@ -99,7 +98,6 @@ let fileInfo = reactive<EditProps>({
   type: "",
   path: "",
   name: "",
-  extension: "",
   fullPath: ""
 });
 const open = ref(false);
@@ -131,9 +129,10 @@ const acceptParams = async (props: EditProps) => {
   fileInfo = props;
   isFullscreen.value = fileInfo.type === "excel";
   loading.value = true;
+  const token = sconfig.userInfo?.token;
   fileInfo.url = `${System.env.API}/ftp/download?path=${encodeURIComponent(
     props.fullPath
-  )}&timestamp=${new Date().getTime()}`;
+  )}&token=Bearer ${token}timestamp=${new Date().getTime()}`;
   console.log("🚀 ~ acceptParams ~ fileInfo.url:", fileInfo.url)
   open.value = true;
   loading.value = false;
