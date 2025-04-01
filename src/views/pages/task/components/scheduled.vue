@@ -468,7 +468,7 @@ onMounted(() => {
               icon="RefreshRight"
               @click="onSubmit"
             />
-            <DownloadNotice />
+            <!-- <download-notice /> -->
             <!-- <el-button :icon="Setting" type="primary" @click="onSubmit" /> -->
           </div>
         </div>

@@ -327,7 +327,7 @@ watchEffect(() => {
   <div class="basic-card" :class="{ isCard }">
     <div class="basic-card__header">
       <div class="basic-card__title">面板设置</div>
-      <download-notice />
+      <!-- <download-notice /> -->
     </div>
     <div class="basic-card__body">
       <setting-form :data="conf.settingData" />
@@ -372,7 +372,7 @@ watchEffect(() => {
   }
 
   &__body {
-    padding: 24px 0;
+    padding: 24px 0 0 0;
   }
 }
 </style>

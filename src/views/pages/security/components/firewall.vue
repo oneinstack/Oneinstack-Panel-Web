@@ -187,7 +187,7 @@ onMounted(() => {
           5.20MB
         </div> -->
       </div>
-      <DownloadNotice />
+      <!-- <download-notice /> -->
       <!-- <el-button>清空</el-button> -->
     </div>
     <div class="tool-bar">

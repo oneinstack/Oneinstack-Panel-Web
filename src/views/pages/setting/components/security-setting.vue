@@ -267,7 +267,7 @@ watchEffect(() => {
   }
 
   &__body {
-    padding: 24px 0;
+    padding: 24px 0 0 0;
   }
 }
 </style>

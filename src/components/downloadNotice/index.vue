@@ -1,6 +1,6 @@
 <template>
   <div class="download-notice" @click="notice.open">
-    <el-badge :value="notice.num" :max="99" class="item">
+    <el-badge :value="notice.num" :max="99" :class="notice.num ? 'item' : ''" :hidden="notice.num ? false : true">
       <slot name="icon" :data="notice">
         <el-icon class="icon" size="24"><Download /></el-icon>
       </slot>
@@ -54,7 +54,7 @@
         </el-collapse-item>
       </el-collapse>
       <div v-else class="empty">
-        <el-empty  description="暂无数据" />
+        <el-empty description="暂无数据" />
       </div>
     </div>
     <template #footer> </template>
@@ -70,9 +70,23 @@ import { notice } from "@/sstore/notice";
 </script>
 <style lang="less" scoped>
 .download-notice {
-  margin-right: 20px;
+  background: rgb(var(--primary-color));
+  position: fixed;
+  bottom: 20px;
+  right: 10px;
+  z-index: 9999;
+  border-radius: 50%;
+  height: 50px;
+  width: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  .item{
+    margin-top: 10px;
+  }
   .icon {
-    color: var(--font-color-gray-light);
+    color: #ffffff;
+    // color: var(--font-color-gray-light);
   }
 }
 
@@ -106,7 +120,7 @@ import { notice } from "@/sstore/notice";
   justify-content: space-between;
   align-items: center;
 }
-.empty{
+.empty {
   height: 100%;
   width: 100%;
   display: flex;

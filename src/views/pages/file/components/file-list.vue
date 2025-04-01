@@ -332,15 +332,15 @@ defineExpose({
               />
             </div>
           </div>
-          <el-space :size="42">
+          <el-space :size="16">
             <!-- <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link> -->
-            <el-input
+            <el-checkbox label="包含子目录" size="large" />
+            <SearchInput
               placeholder="搜索文件/目录"
               size="large"
               v-model="conf.keyWord"
               ref="inputPathRef"
             />
-            <el-checkbox label="包含子目录" size="large" />
             <div class="flex items-center">
               <el-button
                 class="refresh-btn"
@@ -353,7 +353,7 @@ defineExpose({
                 @click="conf.handleInputPathConfirm"
               /> -->
             </div>
-            <DownloadNotice />
+            <!-- <download-notice /> -->
           </el-space>
         </div>
         <div class="file-tool">

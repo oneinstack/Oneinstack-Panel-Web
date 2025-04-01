@@ -1,6 +1,7 @@
 <template>
   <x-route-event></x-route-event>
   <x-router-view :show="conf.show"></x-router-view>
+  <download-notice />
 </template>
 <script setup lang="ts">
 import { nextTick, reactive } from 'vue'

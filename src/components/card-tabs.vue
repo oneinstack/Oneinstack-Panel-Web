@@ -28,7 +28,7 @@ defineProps<Props>();
       </div>
     </div>
 
-    <download-notice></download-notice>
+    <!-- <download-notice></download-notice> -->
   </div>
 </template>
 
