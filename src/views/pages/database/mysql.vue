@@ -46,7 +46,7 @@ const handleInstall = () => {
   <div>
     <install-mask :is-installed="myslqstatus" installText="安装Mysql"  @install="handleInstall">
       <div v-if="conf.showTips" class="tip">
-        <div class="flex items-center fit-width">
+        <div class="flex items-center">
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
           <span class="ellipsis" style="margin-left: 32px; flex: 1;">
             请在添加数据库后，务必到[
@@ -162,7 +162,9 @@ const handleInstall = () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-
+    .flex {
+      width:95%;
+    }
     span {
       font-size: 16px;
       color: var(--font-color-gray-light);
