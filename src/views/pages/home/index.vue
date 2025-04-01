@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import memoList from "./components/memoList.vue";
-import { markRaw, onMounted, reactive, ref, computed, watch } from 'vue';
+import { markRaw, onMounted, reactive, ref, computed, watch } from "vue";
 import sapp from "@/sstore/sapp";
 import { Api } from "@/api/Api";
 import sutil from "@/sstore/sutil";
@@ -12,7 +12,7 @@ import { ElMessage } from "element-plus";
 import System from "@/utils/System";
 import InstallDialog from "@/components/install-dialog.vue";
 
-const installDialog = sapp.isFirstLogin
+const installDialog = sapp.isFirstLogin;
 console.log("installDialog", installDialog);
 
 // const getWebsiteInfo = async () => {
@@ -86,7 +86,7 @@ const conf = reactive({
       name: "备忘录",
       icon: "home-memo",
       className: "o",
-      value: "当前内容为空，点击编辑",
+      value: 0,
       linkFn: () => memoListRef.value.open(),
     },
   ],
@@ -592,7 +592,6 @@ const conf = reactive({
     close: () => (conf.memo.show = false),
     getData: async () => {
       const { data: res } = await Api.getRemarkCount();
-      conf.memo.data = res;
       conf.category[3].value = res || 0;
     },
     update: async () => {
@@ -615,7 +614,7 @@ watch(
     conf.monitorData.update();
     conf.statusData.update();
   }
-)
+);
 onMounted(() => {
   // getWebsiteInfo(); //查看用户是否安装了相关的插件
   timer.on(
@@ -644,7 +643,10 @@ onMounted(() => {
             class="absolute fit-height fit-width flex column no-wrap"
             style="gap: 24px"
           >
-            <div class="basic-card__title card">概览</div>
+            <div class="basic-card__title card">
+              <p>概述</p>
+              <download-notice />
+            </div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">
                 <div
@@ -832,14 +834,7 @@ onMounted(() => {
       </div>
     </div>
     <!-- <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" /> -->
-    <memo-list
-      ref="memoListRef"
-      :show="conf.memo.show"
-      :memo="conf.memo.data"
-      :list="conf.memo.list"
-      :close="conf.memo.close"
-      :update="conf.memo.update"
-    />
+    <memo-list ref="memoListRef" />
     <install-dialog
       v-model:visible="installDialog"
       @confirm="handleInstallConfirm"
@@ -882,7 +877,15 @@ onMounted(() => {
       font-weight: 500;
       font-size: 16px;
       color: var(--font-color-black);
-
+      p {
+        &::before {
+          content: "";
+          background: var(--el-color-primary);
+          width: 5px;
+          height: 22px;
+          margin-right: 18px;
+        }
+      }
       &::before {
         content: "";
         background: var(--el-color-primary);
@@ -1136,8 +1139,12 @@ onMounted(() => {
   align-items: center; // 添加这行，使内容垂直居中
   flex-shrink: 0;
   border-radius: 16px;
-  padding: 21px 46px;
+  padding: 0 46px;
   font-size: 22px;
+  justify-content: space-between;
+  &::before {
+    display: none;
+  }
 }
 
 .b {

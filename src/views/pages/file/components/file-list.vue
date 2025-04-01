@@ -347,12 +347,13 @@ defineExpose({
                 :icon="RefreshRight"
                 @click="conf.refresh"
               />
-              <el-button
+              <!-- <el-button
                 class="search-btn"
                 :icon="Search"
                 @click="conf.handleInputPathConfirm"
-              />
+              /> -->
             </div>
+            <DownloadNotice />
           </el-space>
         </div>
         <div class="file-tool">

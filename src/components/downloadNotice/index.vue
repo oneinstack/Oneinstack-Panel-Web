@@ -1,25 +1,28 @@
 <template>
+  <div class="download-notice" @click="notice.open">
+    <el-badge :value="notice.num" :max="99" class="item">
+      <slot name="icon" :data="notice">
+        <el-icon class="icon" size="24"><Download /></el-icon>
+      </slot>
+    </el-badge>
+  </div>
   <custom-dialog
-    :show="conf.memoList.show"
-    title="备忘录"
+    :show="notice.show"
+    title="下载任务"
     width="1022px"
     height="722px"
     body-bg-color="rgb(var(--category-item-bg-color))"
     footer-bg-color="rgb(var(--category-item-bg-color))"
     :show-close="false"
-    @update:show="conf.memoList.close"
+    @update:show="notice.close"
   >
     <div class="content">
       <el-collapse
-        v-model="conf.memoList.activeName"
+        v-model="notice.currentNotice"
         accordion
-        v-if="conf.memoList.list.length > 0"
+        v-if="notice.list.length > 0"
       >
-        <el-collapse-item
-          title=""
-          :name="item.id"
-          v-for="item in conf.memoList.list"
-        >
+        <el-collapse-item title="" :name="item.id" v-for="item in notice.list">
           <template #title> {{ item.content }} </template>
           <template #icon="{ isActive }">
             <div class="icon-ele">
@@ -35,96 +38,43 @@
             {{ item.content }}
           </div>
           <div class="collapse-content-footer">
-            <el-button type="danger" plain @click="conf.memoList.delete(item)"
+            <el-button type="danger" plain @click="notice.delete(item)"
               >删除</el-button
             >
-            <el-button
-              type="warning"
-              plain
-              @click="memoRef.open({ content: item.content, id: item.id })"
-              >编辑</el-button
-            >
-            <div class="icon-ele" @click="conf.memoList.activeName = 0">
-              <el-icon v-if="conf.memoList.activeName == item.id"
+            <div class="icon-ele" @click="notice.currentNotice = ''">
+              <el-icon v-if="notice.currentNotice == item.id"
                 ><ArrowUp
               /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ conf.memoList.activeName == item.id ? "收起" : "展开" }}
+                {{ notice.currentNotice == item.id ? "收起" : "展开" }}
               </span>
             </div>
           </div>
         </el-collapse-item>
       </el-collapse>
       <div v-else class="empty">
-        <el-empty description="暂无数据" />
+        <el-empty  description="暂无数据" />
       </div>
     </div>
-
-    <template #footer>
-      <el-button @click="conf.memoList.close">取消</el-button>
-      <el-button type="primary" @click="memoRef.open(conf.memoList.data)"
-        >新建</el-button
-      >
-    </template>
+    <template #footer> </template>
   </custom-dialog>
-  <memo ref="memoRef" @update="conf.memoList.getMemoList()" />
 </template>
 <script setup lang="ts">
 import { ref, reactive } from "vue";
-import { ArrowUp, ArrowDown } from "@element-plus/icons-vue";
-import Memo from "./memo.vue";
 import CustomDialog from "@/components/custom-dialog.vue";
 import { ElMessage } from "element-plus";
 import { Api } from "@/api/Api";
 import { timeFormat } from "@/utils/index";
-const memoRef = ref();
-const conf = reactive({
-  memoList: {
-    data: {
-      id: null,
-      content: "",
-    },
-    list: [] as any,
-    show: false,
-    activeName: 0,
-    open: async () => {
-      conf.memoList.show = true;
-      conf.memoList.getMemoList();
-    },
-    close: () => (conf.memoList.show = false),
-    // changeCollapse: (val: any) => {
-    //   conf.memoList.activeName = val;
-    //   if (val) {
-    //     conf.memoList.data = conf.memoList.list.find(
-    //       (item: any) => item.id == conf.memoList.activeName
-    //     )!;
-    //   }
-    // },
-    getMemoList: async () => {
-      conf.memoList.data = {
-        id: null,
-        content: "",
-      };
-      const { data: res } = await Api.getRemarkList();
-      conf.memoList.list = res;
-      if (conf.memoList.list && conf.memoList.list.length > 0) {
-        conf.memoList.activeName = conf.memoList.list[0].id;
-      }
-    },
-    delete: async (item: any) => {
-      if (!item.id) return;
-      await Api.deleteRemark(item.id);
-      ElMessage.success("删除成功");
-      conf.memoList.getMemoList();
-    },
-  },
-});
-defineExpose({
-  open: conf.memoList.open,
-});
+import { notice } from "@/sstore/notice";
 </script>
 <style lang="less" scoped>
+.download-notice {
+  .icon {
+    color: var(--font-color-gray-light);
+  }
+}
+
 .icon-ele {
   margin: 0 8px 0 auto;
   color: rgb(var(--primary-color));
@@ -155,7 +105,7 @@ defineExpose({
   justify-content: space-between;
   align-items: center;
 }
-.empty {
+.empty{
   height: 100%;
   width: 100%;
   display: flex;

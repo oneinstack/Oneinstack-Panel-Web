@@ -13,6 +13,7 @@ declare module 'vue' {
     CustomDrawer: typeof import('./../../src/components/custom-drawer.vue')['default']
     CustomForm: typeof import('./../../src/components/custom-form.vue')['default']
     CustomTable: typeof import('./../../src/components/custom-table.vue')['default']
+    DownloadNotice: typeof import('./../../src/components/downloadNotice/index.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']
@@ -65,10 +66,12 @@ declare module 'vue' {
     FilePanel: typeof import('./../../src/components/file-panel.vue')['default']
     InstallDialog: typeof import('./../../src/components/install-dialog.vue')['default']
     InstallMask: typeof import('./../../src/components/InstallMask.vue')['default']
+    NoticeDialog: typeof import('./../../src/components/noticeDialog/index.vue')['default']
     RouteEvent: typeof import('./../../src/components/routeEvent/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchInput: typeof import('./../../src/components/search-input.vue')['default']
+    TopBoxCard: typeof import('./../../src/components/topBoxCard/index.vue')['default']
     Upload: typeof import('./../../src/components/upload.vue')['default']
   }
   export interface ComponentCustomProperties {

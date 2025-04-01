@@ -187,6 +187,7 @@ onMounted(() => {
           5.20MB
         </div> -->
       </div>
+      <DownloadNotice />
       <!-- <el-button>清空</el-button> -->
     </div>
     <div class="tool-bar">
@@ -235,7 +236,12 @@ onMounted(() => {
           </template>
         </el-table-column>
         <el-table-column prop="ports" label="端口"  width="180" />
-        <el-table-column prop="strategy" label="策略类型" />
+        <el-table-column prop="strategy" label="策略类型">
+          <template #default="scope">
+              <span v-if="scope.row.strategy === 'allow'"> 放行</span>
+              <span v-if="scope.row.strategy === 'deny'">禁止</span>
+          </template>
+        </el-table-column>
         <el-table-column prop="ips" label="来源" />
         <!-- <el-table-column prop="remark" label="备注" /> -->
         <!-- <el-table-column prop="create_time" label="时间" /> -->

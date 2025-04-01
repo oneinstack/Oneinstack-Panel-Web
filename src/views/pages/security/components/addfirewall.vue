@@ -25,9 +25,9 @@
   >
     <el-form-item label="协议" prop="protocol" :required="true" >
       <el-select v-model="ruleForm.protocol"  placeholder="请选择协议类型">
-        <el-option label="tcp" value="tcp" />
-        <el-option label="udp" value="udp" />
-        <el-option label="icmp" value="icmp" />
+        <el-option label="TCP" value="tcp" />
+        <el-option label="UDP" value="udp" />
+        <!-- <el-option label="icmp" value="icmp" /> -->
       </el-select>
     </el-form-item>
     <el-form-item label="端口" prop="ports" :required="true">

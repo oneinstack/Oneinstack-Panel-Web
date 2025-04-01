@@ -38,6 +38,6 @@ onMounted(() => {
 .all-container {
   background: rgb(var(--bg-card-color));
   border-radius: 5px;
-  padding: 26px 30px;
+  padding: 0 30px 26px 30px;
 }
 </style>

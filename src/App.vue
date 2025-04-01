@@ -6,7 +6,6 @@
 import { nextTick, reactive } from 'vue'
 import { ERouter } from './enum/Enum'
 import sconfig from './sstore/sconfig'
-import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 
 
