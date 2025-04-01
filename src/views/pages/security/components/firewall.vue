@@ -245,10 +245,10 @@ onMounted(() => {
         <el-table-column prop="ips" label="来源" />
         <!-- <el-table-column prop="remark" label="备注" /> -->
         <!-- <el-table-column prop="create_time" label="时间" /> -->
-        <el-table-column prop="action" label="操作">
+        <el-table-column prop="action" label="操作" align="center">
           <template #default="scope">
-            <el-button link type="primary" size="small" @click="handleSet(scope.row)">设置</el-button>  
-            <el-button link type="primary" size="small" @click="handleDelete(scope.row)">删除</el-button>
+            <el-button link type="primary" @click="handleSet(scope.row)">设置</el-button>  
+            <el-button link type="primary" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

@@ -1142,7 +1142,7 @@ onMounted(() => {
   align-items: center; // 添加这行，使内容垂直居中
   flex-shrink: 0;
   border-radius: 16px;
-  padding: 0 46px;
+  padding: 0 10px 0 46px;
   font-size: 22px;
   justify-content: space-between;
   &::before {

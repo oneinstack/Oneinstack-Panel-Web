@@ -70,6 +70,7 @@ import { notice } from "@/sstore/notice";
 </script>
 <style lang="less" scoped>
 .download-notice {
+  margin-right: 20px;
   .icon {
     color: var(--font-color-gray-light);
   }

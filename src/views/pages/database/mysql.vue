@@ -117,7 +117,7 @@ const handleInstall = () => {
             :auto-pagination="false" :total="conf.list.total" :page-size="conf.list.params.pageSize"
             :columns="conf.list.columns" @update:page="conf.list.getData">
             <template #empty>
-              <div style="margin-top: 40px">
+              <div>
                 <span>
                   您的数据库列表为空，您可以
                   <a class="cursor-pointer" style="color: var(--el-color-primary); text-decoration: underline"
