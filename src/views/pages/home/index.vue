@@ -644,7 +644,7 @@ onMounted(() => {
             style="gap: 24px"
           >
             <div class="basic-card__title card">
-              <p>概述</p>
+              <div class="title">概述</div>
               <download-notice />
             </div>
             <el-row :gutter="20">
@@ -877,8 +877,11 @@ onMounted(() => {
       font-weight: 500;
       font-size: 16px;
       color: var(--font-color-black);
-      p {
+      .title {
+        position: relative;
+        display: flex;
         &::before {
+          display: block;
           content: "";
           background: var(--el-color-primary);
           width: 5px;

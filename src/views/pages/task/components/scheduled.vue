@@ -421,7 +421,7 @@ onMounted(() => {
   <div class="container">
     <div class="card-box">
       <el-card>
-        <div class="" style="display: flex">
+        <div class="card-content">
           <el-space class="btn-group">
             <el-button class="large-btn" type="primary" @click="addTask"
               >添加任务</el-button
@@ -662,6 +662,19 @@ onMounted(() => {
   </div>
 </template>
 <style scoped lang="less">
+.container {
+  margin-top: 0;
+  :deep(.el-card__body) {
+    padding: 0 16px;
+    .card-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      height: 64px;
+    }
+  }
+}
 .abox {
   display: flex;
   align-items: center;
@@ -669,7 +682,7 @@ onMounted(() => {
   justify-content: center;
   /* 水平居中 */
 }
-.demo-form-inline{
+.demo-form-inline {
   align-items: center;
 }
 .refresh-btn {

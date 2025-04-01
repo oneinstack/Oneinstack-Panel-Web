@@ -132,7 +132,7 @@ const acceptParams = async (props: EditProps) => {
   const token = sconfig.userInfo?.token;
   fileInfo.url = `${System.env.API}/ftp/download?path=${encodeURIComponent(
     props.fullPath
-  )}&token=Bearer ${token}timestamp=${new Date().getTime()}`;
+  )}&timestamp=${new Date().getTime()}`;
   console.log("🚀 ~ acceptParams ~ fileInfo.url:", fileInfo.url)
   open.value = true;
   loading.value = false;
