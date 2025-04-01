@@ -31,8 +31,8 @@ export default class HttpConfig {
       else System.toast(msg, 'error')
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
       if (code == 401) {
-        sconfig.logout()
-        System.router.replace('/login')
+        // sconfig.logout()
+        // System.router.replace('/login')
         // const sapp = sutil.getStore('sapp')
         // if (!sapp.isNav) {
         //   System.router.replace('/login')

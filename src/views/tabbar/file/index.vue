@@ -13,15 +13,28 @@
             </van-badge>
           </div>
           <div class="icon-item">
-            <van-badge :content="''" color="#FF5805" @click="showMenu = !showMenu">
+            <!-- <van-badge :content="''" color="#FF5805" @click="showMenu = !showMenu">
               <van-image class="icon" width="40rem" height="40rem" :src="`/static/img/file/more.png`" />
-            </van-badge>
-            <div v-if="showMenu" class="drop-menu">
+            </van-badge> -->
+            <van-popover v-model:show="showMenu" placement="bottom-end">
+              <div class="drop-menu">
+                <div class="menu-item" v-for="menu in menuList" @click="onMenu(menu)">
+                  <van-image class="icon" width="48rem" height="48rem" :src="menu.icon" />
+                  <p class="menu-name">{{ menu.name }}</p>
+                </div>
+              </div>
+              <template #reference>
+                <van-badge :content="''" color="#FF5805" @click.stop="showMenu = !showMenu">
+                  <van-image class="icon" width="40rem" height="40rem" :src="`/static/img/file/more.png`" />
+                </van-badge>
+              </template>
+            </van-popover>
+            <!-- <div v-if="showMenu" class="drop-menu">
               <div class="menu-item" v-for="menu in menuList" @click="onMenu(menu)">
                 <van-image class="icon" width="48rem" height="48rem" :src="menu.icon" />
                 <p class="menu-name">{{ menu.name }}</p>
               </div>
-            </div>
+            </div> -->
           </div>
         </template>
       </van-nav-bar>
@@ -41,7 +54,7 @@
         </div>
       </div>
     </div>
-    <div class="content" :class="checkedList.length > 0 ? 'pdb-100':''">
+    <div class="content" :class="checkedList.length > 0 ? 'pdb-100' : ''">
       <p class="menu">
         {{ checkSortTypeName ? checkSortTypeName : '智能排序' }}
         <van-icon name="filter-o" @click="showSortPopup" />
@@ -55,10 +68,10 @@
         </template>
       </file-card>
     </div>
-    <OperationList v-show="checkedList.length > 0" @on-item="onItem"/>
-    <SortPopup ref="sortPopupRef" @change="changeSortType"/>
-    <DetailPopup ref="detailPopupRef" :detail="fileDetail"/>
-    <AddOrRenamePopup ref="addOrRenamePopupRef"/>
+    <OperationList v-show="checkedList.length > 0" @on-item="onItem" />
+    <SortPopup ref="sortPopupRef" @change="changeSortType" />
+    <DetailPopup ref="detailPopupRef" :detail="fileDetail" />
+    <AddOrRenamePopup ref="addOrRenamePopupRef" />
   </x-page>
 </template>
 <script lang="ts" setup>
@@ -66,7 +79,7 @@ import { computed, reactive, ref } from 'vue'
 import { index } from './file'
 import { useRouter } from 'vue-router'
 import SortPopup from './components/sortPopup.vue'
-import DetailPopup from './components/detailPopup.vue' 
+import DetailPopup from './components/detailPopup.vue'
 import OperationList from './components/operationList.vue'
 import AddOrRenamePopup from './components/addOrRenamePopup.vue'
 const router = useRouter()
@@ -134,8 +147,8 @@ fileList.forEach((item: any) => {
   item.height = '72rem'
 })
 const cancelChecked = () => {
-  fileList.forEach((item:any)=>{
-    item.checked = false;
+  fileList.forEach((item: any) => {
+    item.checked = false
   })
   isChecked.value = false
   showMenu.value = false
@@ -155,12 +168,13 @@ const onMenu = (menu: any) => {
   switch (menu.id) {
     case 1:
       isChecked.value = true
+      showMenu.value = false
       break
     case 2:
-      openAddOrRenamePopup('upload');
+      openAddOrRenamePopup('upload')
       break
     case 3:
-      openAddOrRenamePopup('add');
+      openAddOrRenamePopup('add')
       break
     case 4:
       break
@@ -171,37 +185,37 @@ const onItem = (item: any) => {
     case 1:
       break
     case 2:
-      openAddOrRenamePopup('rename');
+      openAddOrRenamePopup('rename')
       break
     case 3:
       break
     case 4:
       break
     case 5:
-      openDetailPopup();
+      openDetailPopup()
       break
   }
 }
 
 const detailPopupRef = ref()
-const openDetailPopup = ()=>{
+const openDetailPopup = () => {
   detailPopupRef.value.open()
 }
 
 const addOrRenamePopupRef = ref()
-const openAddOrRenamePopup = (type:string)=>{
+const openAddOrRenamePopup = (type: string) => {
   addOrRenamePopupRef.value.open(type)
 }
 
-const sortPopupRef = ref();
-const showSortPopup = ()=>{
-  sortPopupRef.value.open();
+const sortPopupRef = ref()
+const showSortPopup = () => {
+  sortPopupRef.value.open()
 }
 const checkSortTypeName = ref<string>('')
-const changeSortType = (item:any)=>{
+const changeSortType = (item: any) => {
   checkSortTypeName.value = item.name
 }
-const fileDetail = ref({});
+const fileDetail = ref({})
 </script>
 
 <style lang="less" scoped>
@@ -236,29 +250,6 @@ const fileDetail = ref({});
     align-items: center;
     margin-left: 32rem;
     position: relative;
-    .drop-menu {
-      position: absolute;
-      right: 18rem;
-      top: 40rem;
-      width: 272rem;
-      height: 448rem;
-      border-radius: 10rem;
-      background: #ffffff;
-      box-shadow: #000000 0px 4px 15px;
-      .menu-item {
-        display: flex;
-        align-items: center;
-        height: 112rem;
-        border-bottom: 2rem solid #f7f7f7;
-        .icon {
-          margin-left: 32rem;
-        }
-      }
-      .menu-name {
-        margin-left: 28rem;
-        font-size: 24rem;
-      }
-    }
   }
   .search {
     margin-top: 32rem;
@@ -294,6 +285,26 @@ const fileDetail = ref({});
     .active {
       font-weight: 800;
     }
+  }
+}
+.drop-menu {
+  width: 272rem;
+  height: 448rem;
+  border-radius: 10rem;
+  background: #ffffff;
+  box-shadow: #000000 0px 4px 15px;
+  .menu-item {
+    display: flex;
+    align-items: center;
+    height: 112rem;
+    border-bottom: 2rem solid #f7f7f7;
+    .icon {
+      margin-left: 32rem;
+    }
+  }
+  .menu-name {
+    margin-left: 28rem;
+    font-size: 24rem;
   }
 }
 
@@ -362,8 +373,7 @@ const fileDetail = ref({});
     }
   }
 }
-.pdb-100{
+.pdb-100 {
   padding-bottom: 100rem;
 }
-
 </style>
