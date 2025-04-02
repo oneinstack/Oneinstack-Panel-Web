@@ -132,7 +132,6 @@ const acceptParams = async (props: EditProps) => {
   fileInfo.url = `${System.env.API}/ftp/download?path=${encodeURIComponent(
     props.fullPath
   )}&timestamp=${new Date().getTime()}`;
-  console.log("🚀 ~ acceptParams ~ fileInfo.url:", fileInfo.url)
   open.value = true;
   loading.value = false;
 };

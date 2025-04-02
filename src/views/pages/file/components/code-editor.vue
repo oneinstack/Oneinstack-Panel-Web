@@ -7,6 +7,7 @@
     width="80%"
     @opened="onOpen"
     center
+    align-center
     :fullscreen="isFullscreen"
   >
     <template #header>
@@ -434,7 +435,6 @@ const changeLanguage = () => {
 };
 
 const changeTheme = () => {
-  console.log(config.theme);
   monaco.editor.setTheme(config.theme);
   const themes = {
     vs: "monaco-editor-tree-light",

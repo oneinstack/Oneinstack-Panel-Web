@@ -51,7 +51,6 @@ const conf = reactive({
   pageSize: props.pageSize,
   visibleData: computed<any>(() => props.data.slice((conf.page - 1) * conf.pageSize, conf.page * conf.pageSize)),
   handleCurrentChange: (page: number) => {
-    console.log("🚀 ~ page:", page)
     conf.page = page
     emit('update:page', page)
   },
