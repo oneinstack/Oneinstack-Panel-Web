@@ -66,12 +66,10 @@ declare module 'vue' {
     FilePanel: typeof import('./../../src/components/file-panel.vue')['default']
     InstallDialog: typeof import('./../../src/components/install-dialog.vue')['default']
     InstallMask: typeof import('./../../src/components/InstallMask.vue')['default']
-    NoticeDialog: typeof import('./../../src/components/noticeDialog/index.vue')['default']
     RouteEvent: typeof import('./../../src/components/routeEvent/index.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchInput: typeof import('./../../src/components/search-input.vue')['default']
-    TopBoxCard: typeof import('./../../src/components/topBoxCard/index.vue')['default']
     Upload: typeof import('./../../src/components/upload.vue')['default']
   }
   export interface ComponentCustomProperties {

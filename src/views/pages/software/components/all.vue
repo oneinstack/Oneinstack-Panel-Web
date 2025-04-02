@@ -355,7 +355,7 @@ const columns = [
       <div v-if="uninstallDialog.item">
         <div style="display: flex; align-items: center;">
           <img
-            :src="sapp.theme === 'dark' ? '../../../../../public/static/images/mark.png' : '../../../../../public/static/images/markone.png'"
+            :src="sapp.theme === 'dark' ? '/static/images/mark.png' : '/static/images/markone.png'"
             class="custom-icon" />
           <p>确定要卸载 {{ uninstallDialog.item.name }} {{ uninstallDialog.item.install_version }}
             吗？卸载后所有关于{{ uninstallDialog.item.name }}数据将被删除，需要重新安装。</p>

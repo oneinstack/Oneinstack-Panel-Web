@@ -645,7 +645,7 @@ onMounted(() => {
           >
             <div class="basic-card__title card">
               <div class="title">概述</div>
-              <download-notice />
+              <!-- <download-notice /> -->
             </div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">

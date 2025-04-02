@@ -17,7 +17,7 @@
           <el-tooltip
             :content="loadTooltip()"
             placement="top"
-            v-if="fileInfo.type !== '.excel'"
+            v-if="fileInfo.type !== 'excel'"
           >
             <el-icon @click="toggleFullscreen"><FullScreen /></el-icon>
           </el-tooltip>
@@ -129,7 +129,6 @@ const acceptParams = async (props: EditProps) => {
   fileInfo = props;
   isFullscreen.value = fileInfo.type === "excel";
   loading.value = true;
-  const token = sconfig.userInfo?.token;
   fileInfo.url = `${System.env.API}/ftp/download?path=${encodeURIComponent(
     props.fullPath
   )}&timestamp=${new Date().getTime()}`;

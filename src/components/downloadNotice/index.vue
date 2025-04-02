@@ -1,6 +1,11 @@
 <template>
   <div class="download-notice" @click="notice.open">
-    <el-badge :value="notice.num" :max="99" :class="notice.num ? 'item' : ''" :hidden="notice.num ? false : true">
+    <el-badge
+      :value="notice.num"
+      :max="99"
+      :class="notice.num ? 'item' : ''"
+      :hidden="notice.num ? false : true"
+    >
       <slot name="icon" :data="notice">
         <el-icon class="icon" size="24"><Download /></el-icon>
       </slot>
@@ -38,9 +43,6 @@
             {{ item.content }}
           </div>
           <div class="collapse-content-footer">
-            <el-button type="danger" plain @click="notice.delete(item)"
-              >删除</el-button
-            >
             <div class="icon-ele" @click="notice.currentNotice = ''">
               <el-icon v-if="notice.currentNotice == item.id"
                 ><ArrowUp
@@ -61,12 +63,28 @@
   </custom-dialog>
 </template>
 <script setup lang="ts">
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted, watch } from "vue";
 import CustomDialog from "@/components/custom-dialog.vue";
 import { ElMessage } from "element-plus";
 import { Api } from "@/api/Api";
 import { timeFormat } from "@/utils/index";
 import { notice } from "@/sstore/notice";
+let timer = null as any;
+watch(
+  () => notice.num,
+  () => {
+    getData();
+  }
+);
+const getData = async () => {
+  if (notice.num > 0) {
+    timer = setInterval(() => {
+      notice.getList();
+    }, 3000);
+  } else {
+    clearInterval(timer);
+  }
+};
 </script>
 <style lang="less" scoped>
 .download-notice {
@@ -74,14 +92,14 @@ import { notice } from "@/sstore/notice";
   position: fixed;
   bottom: 20px;
   right: 10px;
-  z-index: 9999;
+  z-index: 99;
   border-radius: 50%;
   height: 50px;
   width: 50px;
   display: flex;
   justify-content: center;
   align-items: center;
-  .item{
+  .item {
     margin-top: 10px;
   }
   .icon {

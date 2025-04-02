@@ -175,6 +175,9 @@ conf.list.getData()
   background: rgba(var(--category-item-bg-color), 0.6);
   border-radius: 4px;
   margin-bottom: 24px;
+  :deep(.el-tabs) {
+    height: 35px;
+  }
 }
 
 :deep(.el-tabs__nav-wrap) {
