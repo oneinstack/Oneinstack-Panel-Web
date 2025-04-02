@@ -4,9 +4,9 @@
     :show-close="false"
     :before-close="handleClose"
     destroy-on-close
-    width="70%"
+    width="80%"
     @opened="onOpen"
-    :top="'5vh'"
+    center
     :fullscreen="isFullscreen"
   >
     <template #header>
@@ -202,7 +202,6 @@
 </template>
 
 <script lang="ts" setup>
-// import { GetFileContent, GetFilesTree, SaveFileContent } from '@/api/modules/files';
 import { Api } from "@/api/Api";
 import i18n from "@/lang";
 import * as monaco from "monaco-editor";
@@ -220,10 +219,7 @@ import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import htmlWorker from "monaco-editor/esm/vs/language/html/html.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import EditorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
-
 import { ElMessageBox, ElTreeV2, ElMessage } from "element-plus";
-// import { File } from '@/api/interface/file';
-// import { getIcon } from '@/utils/util';
 import {
   TreeKey,
   TreeNodeData,
@@ -236,7 +232,6 @@ import {
   Close,
   FullScreen,
 } from "@element-plus/icons-vue";
-// import { loadBaseDir } from '@/api/modules/setting';
 import sapp from "@/sstore/sapp";
 import { fileType } from "@/utils/index";
 let editor: monaco.editor.IStandaloneCodeEditor | any;
@@ -259,14 +254,6 @@ self.MonacoEnvironment = {
   },
 };
 
-interface EditProps {
-  language: string;
-  content: string;
-  path: string;
-  name: string;
-  extension: string;
-}
-
 interface EditorConfig {
   theme: string;
   language: string;
@@ -279,7 +266,6 @@ interface TreeNode {
   key: TreeKey;
   level: number;
   parent?: TreeNode;
-  // children?: File.FileTree[];
   children?: any[];
   data: TreeNodeData;
   disabled?: boolean;
@@ -312,11 +298,6 @@ const dialogFooter = ref();
 const toggleShow = () => {
   isShow.value = !isShow.value;
 };
-
-// const globalStore = GlobalStore();
-// const mobile = computed(() => {
-//     return globalStore.isMobile();
-// });
 
 type WordWrapOptions = "off" | "on" | "wordWrapColumn" | "bounded";
 
@@ -410,7 +391,6 @@ const loadTooltip = () => {
 };
 
 onMounted(() => {
-  // loadPath();
   updateHeights();
   window.addEventListener("resize", updateHeights);
 });
@@ -485,7 +465,7 @@ const changeTheme = () => {
     }
   });
 
-  localStorage.setItem(codeThemeKey, config.theme);
+  // localStorage.setItem(codeThemeKey, config.theme);
 };
 
 const changeEOL = () => {
@@ -582,11 +562,6 @@ const acceptParams = (props: any) => {
       ? localStorage.getItem(minimapKey) === "true"
       : true;
   open.value = true;
-};
-
-const loadPath = async () => {
-  // const pathRes = await loadBaseDir();
-  // baseDir.value = pathRes.data;
 };
 
 const getDirectoryPath = (filePath: string) => {
@@ -794,7 +769,11 @@ defineExpose({ acceptParams });
   flex: 1;
   margin-right: 0.5rem;
 }
-
+.dialog-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
 .tree-container {
   width: 33.333333%;
   @media (min-width: 640px) {
