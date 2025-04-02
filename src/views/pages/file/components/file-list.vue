@@ -33,7 +33,7 @@ import sconfig from "@/sstore/sconfig";
 import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
-import { useRoute,useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { fileType, getFileType } from "@/utils/index";
 import Preview from "./preview.vue";
 const router = useRouter();
@@ -96,7 +96,15 @@ const conf = reactive({
   refresh: () => conf.getFileList(true),
   handleFileClick: (row: any) => {
     const extension = row.name.match(/\.[^.]+$/)?.[0]?.toLowerCase();
-    if (!row.isDir && extension && fileType.image.includes(extension)) {
+    if (
+      (!row.isDir &&
+        extension &&
+        (fileType.image.includes(extension) ||
+          fileType.video.includes(extension) ||
+          fileType.audio.includes(extension) ||
+          fileType.word.includes(extension))) ||
+      fileType.excel.includes(extension)
+    ) {
       conf.handleFileDownload(row);
       conf.openPreview(row);
     } else if (!row.isDir) {
@@ -294,11 +302,11 @@ const pathStr = computed(() => {
 let isFirstMount = true;
 onMounted(() => {
   if (route.query.root_dir) {
-      const rootDir = decodeURIComponent(route.query.root_dir as string);
-      conf.inputPath = rootDir;
-      conf.handleInputPathConfirm();
-      conf.refresh()
-      isFirstMount = false;
+    const rootDir = decodeURIComponent(route.query.root_dir as string);
+    conf.inputPath = rootDir;
+    conf.handleInputPathConfirm();
+    conf.refresh();
+    isFirstMount = false;
   }
 });
 defineExpose({

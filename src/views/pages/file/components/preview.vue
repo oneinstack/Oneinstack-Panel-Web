@@ -7,12 +7,12 @@
     append-to-body
     @opened="onOpen"
     :class="isFullscreen ? 'full' : 'normal'"
-    :top="'5vh'"
+    align-center
     :fullscreen="isFullscreen"
   >
     <template #header>
       <div class="header">
-        <span>{{ $t("commons.button.preview") + " - " + fileInfo.path }}</span>
+        <span>{{ $t("commons.button.preview") + " - " + fileInfo.fullPath }}</span>
         <el-space alignment="center" :size="10" class="dialog-header-icon">
           <el-tooltip
             :content="loadTooltip()"
@@ -88,7 +88,6 @@ import sconfig from "@/sstore/sconfig";
 import { Api } from "@/api/Api";
 interface EditProps {
   type: string;
-  path: string;
   name: string;
   url: string;
   fullPath: string; 
@@ -96,7 +95,6 @@ interface EditProps {
 let fileInfo = reactive<EditProps>({
   url: "",
   type: "",
-  path: "",
   name: "",
   fullPath: ""
 });
@@ -125,7 +123,7 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value;
 };
 
-const acceptParams = async (props: EditProps) => {
+const acceptParams = async (props: any) => {
   fileInfo = props;
   isFullscreen.value = fileInfo.type === "excel";
   loading.value = true;

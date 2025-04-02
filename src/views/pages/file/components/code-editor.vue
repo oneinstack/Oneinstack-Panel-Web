@@ -199,6 +199,7 @@
         }}</el-button>
       </div>
     </template>
+    <Preview ref="previewRef" />
   </el-dialog>
 </template>
 
@@ -234,7 +235,9 @@ import {
   FullScreen,
 } from "@element-plus/icons-vue";
 import sapp from "@/sstore/sapp";
-import { fileType } from "@/utils/index";
+import { fileType, getFileType } from "@/utils/index";
+import Preview from "./preview.vue";
+import path from "path";
 let editor: monaco.editor.IStandaloneCodeEditor | any;
 
 self.MonacoEnvironment = {
@@ -703,10 +706,27 @@ const handleFileDownload = async (data: any) => {
   });
   ElMessage.success("下载成功！");
 };
+const previewRef = ref<InstanceType<typeof Preview> | null>(null);
 const handleNodeExpand = async (node: any, data: TreeNode) => {
   const extension = data.data.extension?.toLowerCase();
-  if (!data.data.isDir && extension && fileType.image.includes(extension)) {
-    return handleFileDownload(data.data);
+  if (
+    !data.data.isDir &&
+    extension &&
+    (fileType.image.includes(extension) ||
+      fileType.video.includes(extension) ||
+      fileType.audio.includes(extension) ||
+      fileType.word.includes(extension) ||
+      fileType.excel.includes(extension))
+  ) {
+    const type = getFileType(data.data.extension);
+    previewRef.value?.acceptParams({
+      type: type,
+      path: data.data.path,
+      fullPath: data.data.path,
+      name: data.data.name,
+    });
+    handleFileDownload(data.data);
+    return;
   }
   if (!data.data.isDir || loadedNodes.value.has(data.data.path)) {
     return;
