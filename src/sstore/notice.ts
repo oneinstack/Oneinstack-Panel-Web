@@ -20,17 +20,17 @@ export const notice = reactive({
           {
             title: "公告标题",
             content: "公告内容",
-            install: false,
+            install: Math.random() > 0.5,
           },
           {
             title: "公告标题",
             content: "公告内容",
-            install: false,
+            install: Math.random() > 0.5,
           },
           {
             title: "公告标题",
             content: "公告内容",
-            install: false,
+            install: Math.random() > 0.5,
           },
         ],
       });

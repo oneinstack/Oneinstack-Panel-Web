@@ -77,7 +77,7 @@ watch(
   }
 );
 const getData = async () => {
-  if (notice.num > 0) {
+  if (notice.num) {
     timer = setInterval(() => {
       notice.getList();
     }, 3000);
