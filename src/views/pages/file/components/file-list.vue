@@ -51,6 +51,7 @@ const emit = defineEmits<Emits>();
 const codeEditorRef = ref();
 const previewRef = ref();
 const uploadRef1 = ref<InstanceType<typeof Upload> | null>(null);
+const tableRef = ref<InstanceType<typeof CustomTable> | null>(null);
 const conf = reactive({
   path: ["/"],
   keyWord: "",
@@ -78,6 +79,7 @@ const conf = reactive({
   fileList: [],
   loading: false,
   getFileList: async (refresh = false) => {
+    tableRef.value?.handleCurrentChange(1);
     if (!refresh) emit("update:path", conf.path);
     const path = conf.path.join("/").replace(/\/\//g, "/");
     conf.loading = true;
@@ -456,6 +458,7 @@ defineExpose({
         </div>
         <div class="box2">
           <custom-table
+            ref="tableRef"
             :data="conf.fileList"
             :columns="conf.columns"
             :loading="conf.loading"

@@ -51,6 +51,7 @@ const conf = reactive({
   pageSize: props.pageSize,
   visibleData: computed<any>(() => props.data.slice((conf.page - 1) * conf.pageSize, conf.page * conf.pageSize)),
   handleCurrentChange: (page: number) => {
+    console.log("🚀 ~ page:", page)
     conf.page = page
     emit('update:page', page)
   },
@@ -68,6 +69,11 @@ const collectionHeaderCellClassName = (row:any) => {
 const handleSelectionChange = (selection: any[]) => {
   emit('selection-change', selection)
 }
+defineExpose({
+  handleCurrentChange: conf.handleCurrentChange,
+  collectionHeaderCellClassName,
+  handleSelectionChange
+})
 </script>
 
 <template>
@@ -125,6 +131,7 @@ const handleSelectionChange = (selection: any[]) => {
         layout="prev, pager, next"
         :total="conf.total"
         :page-size="conf.pageSize"
+        :current-page="conf.page"
         @current-change="conf.handleCurrentChange"
       />
     </div>

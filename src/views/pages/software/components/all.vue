@@ -154,6 +154,7 @@ const handleClickInstall = (item: any) => {
 const handleSelectVersion = (v: string, item: any) => {
   installForm.value.key = item.key;
   installForm.value.version = v;
+  installForm.value.name = item.name; 
 };
 // 在 script setup 顶部添加
 const installedVersions = ref(
@@ -169,7 +170,7 @@ const handleInstall = async () => {
   //   "installedVersions",
   //   JSON.stringify(installedVersions.value)
   // );
-  handleCheckInstallLog(res.installName);//显示安装日志信息
+  handleCheckInstallLog(res.installName,installForm.value.name);//显示安装日志信息
 };
 
 const dialog = reactive({
@@ -186,13 +187,13 @@ const dialog = reactive({
 const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null);
 
 const timer = Scope.Timer();
-const handleCheckInstallLog = async (value: string) => {
-  console.log("value", value);
+const handleCheckInstallLog = async (log:string,name:string) => {
+  console.log("value", log);
   dialog.show = true;
   dialog.completed = false; // 初始化安装状态
   timer.on(
     async () => {
-      const { data: res2 } = await Api.getInstallLog({ fn: value });
+      const { data: res2 } = await Api.getInstallLog({ fn: log,name: name });
       dialog.content = res2.logs.content;
       dialog.completed = res2.logs.completed; // 更新安装状态
       // 如果安装完成，清除定时器
@@ -213,7 +214,7 @@ const handleCheckInstallLog = async (value: string) => {
         });
       }
     },
-    2000,
+    5000,
     true
   )
 }
@@ -291,7 +292,7 @@ const columns = [
         installed: item.status === 2,
         uninstall: item.status === 2,
         installing: item.status === 1
-      }" @click="item.status === 2 ? handleUninstall(item) : item.status === 1 ? handleCheckInstallLog(item.log) : handleInstallClick(item)">
+      }" @click="item.status === 2 ? handleUninstall(item) : item.status === 1 ? handleCheckInstallLog(item.log,item.name) : handleInstallClick(item)">
               <span class="default-text">{{ item.status === 1 ? '安装中' : item.status === 2 ? '卸载' : '安装' }}</span>
               <span class="hover-text">{{ item.status === 1 ? '查看日志' : item.status === 2 ? '卸载' : '安装' }}</span>
             </div>
