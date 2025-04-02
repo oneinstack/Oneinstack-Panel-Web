@@ -33,10 +33,11 @@ import sconfig from "@/sstore/sconfig";
 import { checkLink } from "@/utils/validator";
 import CodeEditor from "./code-editor.vue";
 import Upload from "@/components/upload.vue";
-import { useRouter } from "vue-router";
+import { useRoute,useRouter } from "vue-router";
 import { fileType, getFileType } from "@/utils/index";
 import Preview from "./preview.vue";
 const router = useRouter();
+const route = useRoute();
 interface Emits {
   (e: "update:path", value: string[]): void;
   (
@@ -289,6 +290,16 @@ onMounted(() => {
 });
 const pathStr = computed(() => {
   return conf.path.join("/").replace(/\/\//g, "/");
+});
+let isFirstMount = true;
+onMounted(() => {
+  if (route.query.root_dir) {
+      const rootDir = decodeURIComponent(route.query.root_dir as string);
+      conf.inputPath = rootDir;
+      conf.handleInputPathConfirm();
+      conf.refresh()
+      isFirstMount = false;
+  }
 });
 defineExpose({
   refresh: () => conf.refresh(),

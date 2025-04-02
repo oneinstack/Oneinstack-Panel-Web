@@ -28,7 +28,12 @@
       </div>
     </template>
     <div ref="dialogForm">
-      <el-form :inline="true" :model="config" class="form-config">
+      <el-form
+        :inline="true"
+        :model="config"
+        class="form-config"
+        label-position="right"
+      >
         <el-form-item :label="$t('file.theme')">
           <el-select
             v-model="config.theme"
@@ -58,35 +63,36 @@
           </el-select>
         </el-form-item>
         <el-form-item :label="$t('file.wordWrap')">
-          <el-select
+          <el-switch
             v-model="config.wordWrap"
             @change="changeWarp()"
-            class="select-wrap"
-          >
-            <el-option
-              :label="$t('commons.button.enable')"
-              value="on"
-            ></el-option>
-            <el-option
-              :label="$t('commons.button.disable')"
-              value="off"
-            ></el-option>
-          </el-select>
+            inline-prompt
+            :active-value="'on'"
+            :inactive-value="'off'"
+            :active-text="$t('commons.button.enable')"
+            :inactive-text="$t('commons.button.disable')"
+          />
         </el-form-item>
         <el-form-item :label="$t('file.minimap')">
-          <el-select
+          <el-switch
             v-model="config.minimap"
             @change="changeMinimap()"
-            class="select-minimap"
-          >
-            <el-option
-              :label="$t('commons.button.enable')"
-              :value="true"
-            ></el-option>
-            <el-option
-              :label="$t('commons.button.disable')"
-              :value="false"
-            ></el-option>
+            inline-prompt
+            :active-text="$t('commons.button.enable')"
+            :inactive-text="$t('commons.button.disable')"
+          />
+        </el-form-item>
+        <el-form-item :label="''">
+          <el-checkbox v-model="req.dirOnly">是否只显示目录</el-checkbox>
+        </el-form-item>
+        <el-form-item :label="''">
+          <el-checkbox v-model="req.containSub">是否包含子目录</el-checkbox>
+        </el-form-item>
+        <el-form-item :label="'每个文件夹最大数量'">
+          <el-select v-model="req.maxPerFolder" class="select-minimap">
+            <el-option :label="'100'" :value="100"></el-option>
+            <el-option :label="'500'" :value="500"></el-option>
+            <el-option :label="'1000'" :value="1000"></el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -610,8 +616,8 @@ const onOpen = () => {
 };
 
 const handleSearchResult = (res: any) => {
-  if (res.length > 0 && res[0].children) {
-    treeData.value = res[0].children.map((item: any) => ({
+  if (res.data[0].children.length > 0 && res.data[0].children) {
+    treeData.value = res.data[0].children.map((item: any) => ({
       ...item,
       children: item.isDir ? item.children || [] : undefined,
     }));
@@ -624,7 +630,7 @@ const getRefresh = (path: string) => {
   loading.value = true;
   try {
     search(path).then((res) => {
-      treeData.value = res[0].children;
+      treeData.value = res.data[0].children;
       loadedNodes.value = new Set();
     });
   } finally {
@@ -672,15 +678,11 @@ const getContent = (path: string, extension: string) => {
 
 const initTreeData = () => ({
   path: "/",
-  expand: true,
   showHidden: true,
-  page: 1,
-  pageSize: 1000,
-  search: "",
-  containSub: true,
-  dir: false,
-  sortBy: "name",
-  sortOrder: "ascending",
+  dirOnly: false, //是否只显示目录
+  containSub: false, //是否包含子目录
+  maxDepth: 2, //最大深度
+  maxPerFolder: 500, //每个文件夹的最大数量
 });
 
 let req = reactive(initTreeData());
@@ -689,10 +691,6 @@ const loadedNodes = ref(new Set());
 
 const search = async (path: string) => {
   req.path = path || "/";
-  if (req.search != "") {
-    req.sortBy = "name";
-    req.sortOrder = "ascending";
-  }
   return await Api.fileTree(req);
 };
 
@@ -706,8 +704,8 @@ const getUpData = async () => {
   let newPath = pathParts.join("/") || "/";
 
   try {
-    const response = await search(newPath);
-    treeData.value = response[0]?.children || [];
+    const res = await search(newPath);
+    treeData.value = res.data[0]?.children || [];
     loadedNodes.value = new Set();
   } catch (error) {
     ElMessage.error(i18n.global.t("commons.msg.notRecords"));
@@ -739,12 +737,12 @@ const handleNodeExpand = async (node: any, data: TreeNode) => {
     return;
   }
   try {
-    const response = await search(node.path);
+    const res = await search(node.path);
     const newTreeData = JSON.parse(JSON.stringify(treeData.value));
-    if (response.length > 0 && response[0].children) {
-      data.children = response[0].children;
+    if (res.data[0].children.length > 0 && res.data[0].children) {
+      data.children = res.data[0].children;
       loadedNodes.value.add(data.data.path);
-      updateNodeChildren(newTreeData, data.data.path, response[0].children);
+      updateNodeChildren(newTreeData, data.data.path, res.data[0].children);
     } else {
       data.children = [];
     }

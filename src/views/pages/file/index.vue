@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Close } from "@element-plus/icons-vue";
 import { ElMessage, FormInstance } from "element-plus";
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
+import { useRoute } from "vue-router";
 import FileList from "./components/file-list.vue";
 import sapp from "@/sstore/sapp";
 import CustomDrawer from "@/components/custom-drawer.vue";
@@ -273,7 +274,7 @@ const conf = reactive({
         {
           ifShow: (value: any) => value.isDir,
           label: "",
-          options:'同时修改子文件属性',
+          options: "同时修改子文件属性",
           type: "checkbox",
           prop: "recursive",
         },

@@ -1,24 +1,26 @@
 <script setup lang="ts">
-import { computed, reactive, toRaw, onMounted } from 'vue'
-import SearchInput from '@/components/search-input.vue'
-import { Refresh } from '@element-plus/icons-vue'
-import CardTabs from '@/components/card-tabs.vue'
-import CustomTable from '@/components/custom-table.vue'
-import { Api } from '@/api/Api'
-import type { FormItem } from '@/components/custom-form.vue'
-import InstallMask from '@/components/InstallMask.vue'
-import { FormInstance } from 'element-plus'
-import { ElMessage } from 'element-plus'
-import dayjs from 'dayjs'
-import sapp from '@/sstore/sapp'
+import { computed, reactive, toRaw, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import SearchInput from "@/components/search-input.vue";
+import { Refresh } from "@element-plus/icons-vue";
+import CardTabs from "@/components/card-tabs.vue";
+import CustomTable from "@/components/custom-table.vue";
+import { Api } from "@/api/Api";
+import type { FormItem } from "@/components/custom-form.vue";
+import InstallMask from "@/components/InstallMask.vue";
+import { FormInstance } from "element-plus";
+import { ElMessage } from "element-plus";
+import dayjs from "dayjs";
+import sapp from "@/sstore/sapp";
+const router = useRouter();
 const conf = reactive({
   tabs: {
     activeIndex: 0,
     list: [
       {
-        name: 'PHP项目',
+        name: "PHP项目",
         index: 0,
-        value: 'php'
+        value: "php",
       },
       // {
       //   name: 'JAVA项目',
@@ -37,73 +39,94 @@ const conf = reactive({
       //   index: 4
       // },
       {
-        name: '反向代理',
+        name: "反向代理",
         index: 5,
-        value: 'proxy'
+        value: "proxy",
       },
       {
-        name: 'HTML项目',
+        name: "HTML项目",
         index: 6,
-        value: 'static'
-      }
+        value: "static",
+      },
       // {
       //   name: '其他项目',
       //   index: 7
       // }
     ],
     clickActive: (item: any) => {
-      conf.tabs.activeIndex = item.index
-      conf.website.params.type = item.value
-      conf.website.getData()
-    }
+      conf.tabs.activeIndex = item.index;
+      conf.website.params.type = item.value;
+      conf.website.getData();
+    },
   },
   website: {
     data: [],
     total: 0,
     selection: [], // 存储选中的行
     columns: [
-      { prop: 'name', label: '网站名', width: 200 },
+      { prop: "name", label: "网站名", width: 200 },
       // { prop: 'domain', label: '其他域名', width: 250 },
-      { prop: 'dir', label: '目录', width: 400 },
+      { prop: "dir", label: "目录", width: 400 },
       {
-        prop: 'type', label: '类型', width: 200, formatter: (row: any) => {
+        prop: "type",
+        label: "类型",
+        width: 200,
+        formatter: (row: any) => {
           const typeMap = {
-            php: 'PHP',
-            proxy: '代理',
-            static: '静态'
-          }
-          return typeMap[row.type as keyof typeof typeMap] || row.type
-        }
+            php: "PHP",
+            proxy: "代理",
+            static: "静态",
+          };
+          return typeMap[row.type as keyof typeof typeMap] || row.type;
+        },
       },
-      { prop: 'remark', label: '备注' },
+      { prop: "remark", label: "备注" },
       {
-        prop: 'create_time', label: '创建时间', width: 200,
+        prop: "create_time",
+        label: "创建时间",
+        width: 200,
         // 添加格式化方法
         formatter: (row: any) => {
-          return row.create_time ? dayjs(row.create_time).format('YYYY-MM-DD HH:mm:ss') : '-'
-        }
+          return row.create_time
+            ? dayjs(row.create_time).format("YYYY-MM-DD HH:mm:ss")
+            : "-";
+        },
       },
-      { prop: 'action', label: '操作', align: 'center', width: 240, fixed: 'right' },
+      {
+        prop: "action",
+        label: "操作",
+        align: "center",
+        width: 240,
+        fixed: "right",
+      },
     ],
+    goPath: (root_dir: any) => {
+      router.push({
+        path: `/file`,
+        query: {
+          root_dir: root_dir,
+        }
+      });
+    },
     handleSelectionChange: (selection: any[]) => {
-      conf.website.selection = selection as never[]
+      conf.website.selection = selection as never[];
     },
     params: {
-      type: 'php',
+      type: "php",
       page: 1,
-      pageSize: 10
+      pageSize: 10,
     } as any,
     loading: true,
     getData: async () => {
-      conf.website.loading = true
-      const { data: res } = await Api.getWebsiteList(conf.website.params)
-      conf.website.loading = false
-      conf.website.total = res.total
-      conf.website.data = res.data
+      conf.website.loading = true;
+      const { data: res } = await Api.getWebsiteList(conf.website.params);
+      conf.website.loading = false;
+      conf.website.total = res.total;
+      conf.website.data = res.data;
     },
     handleAdd: () => {
-      conf.drawer.open('add')
-      conf.form.data.value.type = conf.website.params.type
+      conf.drawer.open("add");
+      conf.form.data.value.type = conf.website.params.type;
     },
     websiteInfo: sapp.websiteInfo, // 添加状态
     getWebsiteInfo: async () => {
@@ -122,30 +145,30 @@ const conf = reactive({
         ElMessage.error("获取网站信息失败");
         return false;
       }
-    }
+    },
   },
   drawer: {
     show: false,
-    title: '创建网站',
-    type: 'add',
+    title: "创建网站",
+    type: "add",
     loading: false,
-    open: (type: 'add' | 'edit', row?: any) => {
-      conf.drawer.title = '创建网站'
-      conf.drawer.type = type
-      if (type === 'edit') {
-        conf.drawer.title = '设置网站'
-        const cloneRow = structuredClone(toRaw(row))
-        const domain = cloneRow.domain?.split(',')
-        conf.form.data.value = cloneRow
-        conf.form.data.value.hostDomain = domain[0].trim()
-        domain.shift()
-        conf.form.data.value.otherDomain = domain.join('\n')
+    open: (type: "add" | "edit", row?: any) => {
+      conf.drawer.title = "创建网站";
+      conf.drawer.type = type;
+      if (type === "edit") {
+        conf.drawer.title = "设置网站";
+        const cloneRow = structuredClone(toRaw(row));
+        const domain = cloneRow.domain?.split(",");
+        conf.form.data.value = cloneRow;
+        conf.form.data.value.hostDomain = domain[0].trim();
+        domain.shift();
+        conf.form.data.value.otherDomain = domain.join("\n");
       }
-      conf.drawer.show = true
+      conf.drawer.show = true;
     },
     onConfirm: () => {
       conf.form.instance?.validate(async (valid) => {
-        if (!valid) return
+        if (!valid) return;
         // let domain = ''
         // if (conf.form.data.value.domain) {
         //   domain = conf.form.data.value.domain?.split('\n')
@@ -153,40 +176,40 @@ const conf = reactive({
         //   domain = ''
         // }
 
-
         // conf.form.data.value.domain = domain != ''
         //   ? `${conf.form.data.value.domain.trim()},${domain}`
         //   : conf.form.data.value.domain
 
         try {
-          conf.drawer.loading = true
+          conf.drawer.loading = true;
 
-          const api = conf.drawer.type === 'add' ? Api.addWebsite : Api.updateWebsite
-          const { data } = await api(conf.form.data.value)
-          console.log('message', data)
+          const api =
+            conf.drawer.type === "add" ? Api.addWebsite : Api.updateWebsite;
+          const { data } = await api(conf.form.data.value);
+          console.log("message", data);
           ElMessage({
-            type: 'success',
-            message: conf.drawer.type === 'add' ? '创建网站成功' : '更新网站成功'
-          })
-          conf.drawer.show = false
-          conf.website.getData()
+            type: "success",
+            message:
+              conf.drawer.type === "add" ? "创建网站成功" : "更新网站成功",
+          });
+          conf.drawer.show = false;
+          conf.website.getData();
         } catch (error: any) {
           // ElMessage({
           //   type: 'error',
           //   message: error.message || '操作失败'
           // })
         } finally {
-          conf.drawer.loading = false
+          conf.drawer.loading = false;
         }
-
-      })
+      });
     },
     onClose: () => {
-      conf.form.data.value = {}
-      conf.form.instance?.resetFields()
-      conf.form.instance?.clearValidate()
-      conf.drawer.show = false
-    }
+      conf.form.data.value = {};
+      conf.form.instance?.resetFields();
+      conf.form.instance?.clearValidate();
+      conf.drawer.show = false;
+    },
   },
   form: {
     instance: null as FormInstance | null,
@@ -194,28 +217,31 @@ const conf = reactive({
       value: {} as any,
       items: computed<FormItem[]>(() => {
         switch (conf.website.params.type) {
-          case 'php':
-          case 'static':
+          case "php":
+          case "static":
             return [
               {
-                label: '主域名',
-                type: 'input',
-                placeholder: '支持域名:端口',
-                prop: 'name',
+                label: "主域名",
+                type: "input",
+                placeholder: "支持域名:端口",
+                prop: "name",
                 rules: [
-                  { required: true, message: '请输入主域名', trigger: 'blur' },
+                  { required: true, message: "请输入主域名", trigger: "blur" },
                   {
-                    pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                    message: '域名格式错误',
-                    trigger: 'blur'
-                  }
+                    pattern:
+                      /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
+                    message: "域名格式错误",
+                    trigger: "blur",
+                  },
                 ],
-                change: (value: string) => {  // 使用 change 替代 input
-                  if (!value || value.length === 0) {  // 添加长度判断
+                change: (value: string) => {
+                  // 使用 change 替代 input
+                  if (!value || value.length === 0) {
+                    // 添加长度判断
                     conf.form.data.value.dir = "";
                     return;
                   }
-                  const domainWithoutPort = value.split(':')[0];
+                  const domainWithoutPort = value.split(":")[0];
                   conf.form.data.value.dir = `${domainWithoutPort}`;
                 },
               },
@@ -226,33 +252,37 @@ const conf = reactive({
               //   prop: 'domain'1
               // },
               {
-                label: '目录',
-                type: 'input',
-                prop: 'dir',
+                label: "目录",
+                type: "input",
+                prop: "dir",
                 rules: [
-                  { required: true, message: '请选择根目录', trigger: 'blur' },
+                  { required: true, message: "请选择根目录", trigger: "blur" },
                   // { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
-                ]
+                ],
               },
               {
-                label: '备注',
-                type: 'textarea',
-                prop: 'remark'
-              }
-            ]
-          case 'proxy':
-            conf.form.data.value.pact = 'http'
-            conf.form.data.value.tar_url = '$http_host'
+                label: "备注",
+                type: "textarea",
+                prop: "remark",
+              },
+            ];
+          case "proxy":
+            conf.form.data.value.pact = "http";
+            conf.form.data.value.tar_url = "$http_host";
             return [
               {
-                label: '主域名',
-                type: 'input',
-                placeholder: '支持域名:端口',
-                prop: 'name',
+                label: "主域名",
+                type: "input",
+                placeholder: "支持域名:端口",
+                prop: "name",
                 rules: [
-                  { required: true, message: '请输入主域名', trigger: 'blur' },
-                  { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
-                ]
+                  { required: true, message: "请输入主域名", trigger: "blur" },
+                  {
+                    pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/,
+                    message: "域名格式错误",
+                    trigger: "blur",
+                  },
+                ],
               },
               // {
               //   label: '其他域名',
@@ -260,60 +290,59 @@ const conf = reactive({
               //   placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
               //   prop: 'domain'
               // },
-              // {
-              //   label: '代理地址',
-              //   type: 'custom',
-              //   placeholder: '例：127.0.0.1:8080',
-              //   prop: 'send_url',
-              //   rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
-              // },
               {
-                label: '备注',
-                type: 'textarea',
-                prop: 'remark'
-              }
-            ]
+                label: '代理地址',
+                type: 'custom',
+                placeholder: '例：127.0.0.1:8080',
+                prop: 'send_url',
+                rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
+              },
+              {
+                label: "备注",
+                type: "textarea",
+                prop: "remark",
+              },
+            ];
           default:
-            return []
+            return [];
         }
-      })
-    }
+      }),
+    },
   },
   dialog: {
     show: false,
-    title: '网站删除确认',
-    type: 'delete',
+    title: "网站删除确认",
+    type: "delete",
     row: {} as any,
-    open: (type: 'delete', row?: any) => {
-      conf.dialog.type = type
-      conf.dialog.row = row
+    open: (type: "delete", row?: any) => {
+      conf.dialog.type = type;
+      conf.dialog.row = row;
       switch (type) {
-        case 'delete':
-          conf.dialog.title = '网站删除确认'
-          break
+        case "delete":
+          conf.dialog.title = "网站删除确认";
+          break;
       }
-      conf.dialog.show = true
+      conf.dialog.show = true;
     },
     close: () => {
-      conf.dialog.show = false
+      conf.dialog.show = false;
     },
     confirm: async () => {
-      await Api.delWebsite({ id: conf.dialog.row.id })
-      conf.website.getData()
-      conf.dialog.show = false
+      await Api.delWebsite({ id: conf.dialog.row.id });
+      conf.website.getData();
+      conf.dialog.show = false;
     },
-
-  }
-})
+  },
+});
 
 const handleInstall = () => {
   // installDialog.visible = true
   // conf.website.websiteInfo = true
   ElMessage({
-    type: 'warning',
-    message: '功能开发中...'
-  })
-}
+    type: "warning",
+    message: "功能开发中...",
+  });
+};
 // const handleInstallConfirm = () => {
 //   conf.website.websiteInfo = true
 //   ElMessage({
@@ -322,20 +351,29 @@ const handleInstall = () => {
 //   })
 // }
 onMounted(() => {
-  conf.website.getWebsiteInfo() // 添加这行来初始化获取网站信息
-})
+  conf.website.getWebsiteInfo(); // 添加这行来初始化获取网站信息
+});
 
-conf.website.getData()
+conf.website.getData();
 </script>
 
 <template>
   <div class="website-container">
-    <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
+    <card-tabs
+      :list="conf.tabs.list"
+      :active-index="conf.tabs.activeIndex"
+      :click-active="conf.tabs.clickActive"
+    />
     <div>
-      <install-mask :is-installed="conf.website.websiteInfo" @install="handleInstall">
+      <install-mask
+        :is-installed="conf.website.websiteInfo"
+        @install="handleInstall"
+      >
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
-            <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+            <el-button type="primary" @click="conf.website.handleAdd"
+              >添加站点</el-button
+            >
 
             <!-- <el-dropdown>
             <el-button type="primary">
@@ -384,40 +422,92 @@ conf.website.getData()
               </el-dropdown-menu>
             </template>
 </el-dropdown> -->
-
           </el-space>
           <div class="demo-form-inline">
             <el-space class="btn-group" :size="14">
-              <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
-                @search="conf.website.getData()" />
-              <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+              <search-input
+                v-model="conf.website.params.name"
+                placeholder="请输入域名"
+                style="margin-right: 18px"
+                @search="conf.website.getData()"
+              />
+              <el-button
+                :icon="Refresh"
+                type="primary"
+                @click="conf.website.getData()"
+              />
               <!-- <el-button :icon="Setting" type="primary" /> -->
             </el-space>
           </div>
         </div>
         <div class="box2">
-          <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据"
-            :data="conf.website.data" :columns="conf.website.columns" :auto-pagination="false"
-            :total="conf.website.total" :page-size="conf.website.params.pageSize" :selection="true"
-            @selection-change="conf.website.handleSelectionChange" @update:page="conf.website.getData">
+          <custom-table
+            v-model:page="conf.website.params.page"
+            :loading="conf.website.loading"
+            empty-text="暂无数据"
+            :data="conf.website.data"
+            :columns="conf.website.columns"
+            :auto-pagination="false"
+            :total="conf.website.total"
+            :page-size="conf.website.params.pageSize"
+            :selection="true"
+            @selection-change="conf.website.handleSelectionChange"
+            @update:page="conf.website.getData"
+          >
+            <template #dir="{ row }">
+              <el-link @click="conf.website.goPath(row.root_dir)">{{ row.root_dir }}</el-link>
+            </template>
             <template #action="{ row }">
-              <el-button type="primary" link style="margin-right: 8px">统计</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-              <el-button type="primary" link style="margin-right: 8px">WAF</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
               <el-button type="primary" link style="margin-right: 8px"
-                @click="conf.drawer.open('edit', row)">设置</el-button>
-              <span style="border-right: 1px solid #D9D9D9; height: 12px; margin-right: 8px"></span>
-              <el-button type="danger" link
-                style="color: #FF4D4F;--el-button-hover-text-color: #D9363E;--el-button-disabled-text-color: #FFCCC7"
-                @click="conf.dialog.open('delete', row)">
+                >统计</el-button
+              >
+              <span
+                style="
+                  border-right: 1px solid #d9d9d9;
+                  height: 12px;
+                  margin-right: 8px;
+                "
+              ></span>
+              <el-button type="primary" link style="margin-right: 8px"
+                >WAF</el-button
+              >
+              <span
+                style="
+                  border-right: 1px solid #d9d9d9;
+                  height: 12px;
+                  margin-right: 8px;
+                "
+              ></span>
+              <el-button
+                type="primary"
+                link
+                style="margin-right: 8px"
+                @click="conf.drawer.open('edit', row)"
+                >设置</el-button
+              >
+              <span
+                style="
+                  border-right: 1px solid #d9d9d9;
+                  height: 12px;
+                  margin-right: 8px;
+                "
+              ></span>
+              <el-button
+                type="danger"
+                link
+                style="
+                  color: #ff4d4f;
+                  --el-button-hover-text-color: #d9363e;
+                  --el-button-disabled-text-color: #ffccc7;
+                "
+                @click="conf.dialog.open('delete', row)"
+              >
                 删除
               </el-button>
             </template>
           </custom-table>
           <!-- 添加提示信息 -->
         </div>
-
       </install-mask>
     </div>
 
@@ -435,13 +525,29 @@ conf.website.getData()
     </div> -->
 
     <!--创建网站弹窗-->
-    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据"
-      :loading="conf.drawer.loading" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
-      <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
+    <custom-drawer
+      :visible="conf.drawer.show"
+      :title="conf.drawer.title"
+      empty-text="暂无数据"
+      :loading="conf.drawer.loading"
+      :on-close="conf.drawer.onClose"
+      :on-confirm="conf.drawer.onConfirm"
+    >
+      <custom-form
+        v-if="conf.drawer.show"
+        :data="conf.form.data"
+        :on-init="(el) => (conf.form.instance = el)"
+      >
         <template #send_url="{ row }">
-          <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
+          <el-input
+            v-model="conf.form.data.value.send_url"
+            :placeholder="row.placeholder"
+          >
             <template #prepend>
-              <el-select v-model="conf.form.data.value.pact" style="width: 80px">
+              <el-select
+                v-model="conf.form.data.value.pact"
+                style="width: 80px"
+              >
                 <el-option label="http" value="http://" />
                 <el-option label="https" value="https://" />
               </el-select>
@@ -453,7 +559,12 @@ conf.website.getData()
 
     <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
       <template v-if="conf.dialog.type === 'delete'">
-        <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
+        <el-alert
+          title="确定删除所选网站？"
+          type="warning"
+          show-icon
+          :closable="false"
+        />
       </template>
       <template #footer>
         <el-button @click="conf.dialog.close">取消</el-button>
@@ -473,8 +584,6 @@ conf.website.getData()
     padding: 0 !important;
   }
 }
-
-
 
 .blur-mask {
   filter: blur(10px);
@@ -511,7 +620,7 @@ conf.website.getData()
 
     .highlight {
       font-size: 18px;
-      color: #1677FF;
+      color: #1677ff;
       margin: 0 2px;
     }
   }
