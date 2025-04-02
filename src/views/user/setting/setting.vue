@@ -85,6 +85,7 @@ const conf = index()
 .menu-list {
   padding: 32rem;
   position: relative;
+  background: var(--bg-color);
 }
 
 .menu-item {
