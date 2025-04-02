@@ -215,7 +215,8 @@ const BindButton = ()=>{
                             "
                             size="26"
                           />
-                          <span class="menu-item-name">{{ item.name }}</span>
+                          <!-- <span class="menu-item-name">{{ item.name }}</span> -->
+                          <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
                         </template>
                         <el-menu-item
                           v-for="child in item.children"
@@ -232,7 +233,8 @@ const BindButton = ()=>{
                             "
                             size="26"
                           />
-                          <span class="menu-item-name">{{ child.name }}</span>
+                          <!-- <span class="menu-item-name">{{ child.name }}</span> -->
+                          <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
                         </el-menu-item>
                       </el-sub-menu>
                       <el-menu-item v-else :index="item.path" @click="item.event?.()">
@@ -246,7 +248,8 @@ const BindButton = ()=>{
                           "
                           size="24"
                         />
-                        <span class="menu-item-name">{{ item.name }}</span>
+                        <!-- <span class="menu-item-name">{{ item.name }}</span> -->
+                        <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
                       </el-menu-item>
                     </template>
                   </el-menu>

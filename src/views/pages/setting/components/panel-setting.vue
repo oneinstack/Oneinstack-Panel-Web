@@ -189,36 +189,39 @@ const conf = reactive<Config>({
       tip: '设置面板密码，用于登录面板'
     },
     
-    // {
-    //   label: '系统语言',
-    //   prop: 'language',
-    //   value: localStorage.getItem('lang') || 'zh',  // 获取当前语言设置
-    //   type: 'select',
-    //   disabled: false,
-    //   options: [
-    //     {
-    //       label: '简体中文',
-    //       value: 'zh'
-    //     },
-    //     {
-    //       label: 'English',
-    //       value: 'en'
-    //     }
-    //   ],
-    //   action: {
-    //     type: 'primary',
-    //     text: '保存',
-    //     click: async() => {
-    //       try {
-    //         const language = conf.settingData.find(item => item.prop === 'language')?.value || 'zh'
-    //         localStorage.setItem('lang',language as string)
-    //         i18n.global.locale.value = language as langType
-    //       } catch(error) {
-    //         ElMessage.error('修改失败')
-    //       }
-    //     }
-    //   },
-    // },
+    {
+      label: '系统语言',
+      prop: 'language',
+      value: localStorage.getItem('lang') || 'zh',  // 获取当前语言设置
+      type: 'select',
+      disabled: false,
+      className: 'w-300',
+      placeholder: '请选择语言',
+      options: [
+        {
+          label: '简体中文',
+          value: 'zh'
+        },
+        {
+          label: 'English',
+          value: 'en'
+        }
+      ],
+      action: {
+        type: 'primary',
+        text: '保存',
+        click: async() => {
+          try {
+            const language = conf.settingData.find(item => item.prop === 'language')?.value || 'zh'
+            localStorage.setItem('lang',language as string)
+            i18n.global.locale.value = language as langType
+          } catch(error) {
+            ElMessage.error('修改失败')
+          }
+        }
+      },
+      tip: '设置面板语言'
+    },
     // {
     //   label: '绑定宝塔账号',
     //   prop: '',
@@ -307,6 +310,9 @@ const getSystemInfo = async () => {
   conf.settingData.forEach(item => {
     if (res) {  // 检查 res.data 是否存在
       item.value = res[item.prop] || res.user?.[item.prop] || ''
+      if (item.prop === 'language') {
+        item.value = localStorage.getItem('lang') || 'zh'
+      }
       if (item.prop === 'password') {
         // const passwordlen = res[item.prop] || res.user?.[item.prop].length || 6
         // 如果 prop 是 password，将值设置为 '******'
@@ -336,6 +342,9 @@ watchEffect(() => {
 </template>
 
 <style scoped lang="less">
+:deep(.w-300) {
+  width: 295px;
+}
 .basic-card {
   width: 100%;
 

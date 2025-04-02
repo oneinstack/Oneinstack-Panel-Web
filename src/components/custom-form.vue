@@ -85,7 +85,7 @@ onMounted(() => {
         </template>
         <template v-else-if="item.type === 'select'">
           <el-select v-model="data.value[item.prop]" @change="item.change">
-            <el-option v-for="val in item.options" :key="val.value" :label="val.label" :value="val.value" />
+            <el-option v-for="val in item.options" :key="val.value" :label="val.label" :value="val.value" :placeholder="item.placeholder" />
           </el-select>
         </template>
         <template v-else-if="item.type === 'checkbox-group'">

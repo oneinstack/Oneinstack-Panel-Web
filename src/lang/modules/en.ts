@@ -1,4 +1,17 @@
 export default {
+    menu: {
+        home: 'Home',
+        website: 'Website',
+        database: 'Database',
+        security: 'Security',
+        file: 'File',
+        log: 'Log',
+        terminal: 'Terminal',
+        task: 'Schedule',
+        software: 'App Store',
+        setting: 'Settings',
+        exit: 'Exit'
+    },
     commons: {
         true: 'true',
         false: 'false',

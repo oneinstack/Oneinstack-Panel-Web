@@ -1,4 +1,29 @@
 export default {
+    menu: {
+        home: '首页',
+        website: '网站',
+        database: '数据库',
+        security: '安全',
+        file: '文件',
+        log: '日志',
+        terminal: '终端',
+        task: '计划任务',
+        software: '软件商店',
+        setting:'面板设置',
+        exit:'退出'
+    },
+    home:{
+        summarize:'概述',
+        all: '全部',
+        memo: '备忘录',
+        securityRisk: '安全风险',
+        data: '数据',
+        network: '网卡',
+        flow: '流量',
+        cpu: 'CPU',
+        memory: '内存',
+        disk: '磁盘',
+    },
     commons: {
         true: '是',
         false: '否',

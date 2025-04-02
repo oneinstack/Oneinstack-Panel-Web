@@ -1,3 +1,4 @@
+import { pl } from 'element-plus/es/locale';
 <script setup lang="ts">
 type FormItemType =
   | 'input'
@@ -28,6 +29,7 @@ export interface FormItem {
   tip?: string
   options?: any[]
   className?: string
+  placeholder?: string
 }
 
 interface Props {
@@ -48,7 +50,7 @@ const props = defineProps<Props>()
           clearable
           :disabled="item.disabled"
         />
-        <el-select :class="item.className" v-else-if="item.type === 'select'" v-model="item.value" :disabled="item.disabled">
+        <el-select :class="item.className" v-else-if="item.type === 'select'" v-model="item.value" :disabled="item.disabled" :placeholder="item.placeholder">
           <el-option v-for="option in item.options" :key="option.value" :label="option.label" :value="option.value">
           </el-option> 
         </el-select>
