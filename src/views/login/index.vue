@@ -99,7 +99,7 @@ const conf = reactive({
           <div class="flex justify-between">
             <el-checkbox v-model="conf.form.remember" label="记住密码" />
           </div>
-          <button :class="[className.loginBtn, { 'mobile-btn': isMobile }]" @click.prevent="conf.handleLogin">登录</button>
+          <button :class="[className.loginBtn, { 'mobile-btn': isMobile }]" @click.prevent="conf.handleLogin">{{ $t('commons.button.login') }}</button>
         </el-form>
       </div>
       <!-- <div :class="className.other">

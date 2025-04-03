@@ -1,3 +1,5 @@
+import { stat, write } from "fs";
+
 export default {
     menu: {
         home: 'Home',
@@ -11,6 +13,32 @@ export default {
         software: 'App Store',
         setting: 'Settings',
         exit: 'Exit'
+    },
+    home:{
+        overview:'Overview',
+        all: 'All',
+        memo: 'Memo',
+        securityRisk: 'Security Risk',
+        data: 'Data',
+        monitor: 'Monitor',
+        status: 'Status',
+        network: 'Network',
+        flow: 'Traffic',
+        cpu: 'CPU',
+        memory: 'Memory',
+        disk: 'Disk',
+        read:'Read',
+        write:'Write',
+        upstream: 'Upstream',
+        downstream: 'Downstream',
+        totalSend: 'Total Send',
+        totalReceive: 'Total Received',
+        readCount: 'Read Count',
+        averageDelay: 'Average Delay',
+        total: 'Total',
+        used: 'Used',
+        available: 'Available',
+        usage: 'Usage',
     },
     commons: {
         true: 'true',

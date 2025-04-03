@@ -11,8 +11,10 @@ import basicChart from "@/components/echarts/basic-chart.vue";
 import { ElMessage } from "element-plus";
 import System from "@/utils/System";
 import InstallDialog from "@/components/install-dialog.vue";
+import { useI18n } from "vue-i18n";
 
 const installDialog = sapp.isFirstLogin;
+const { t } = useI18n();
 console.log("installDialog", installDialog);
 
 // const getWebsiteInfo = async () => {
@@ -62,28 +64,28 @@ const conf = reactive({
   },
   category: [
     {
-      name: "网站-全部",
+      name: `${t('menu.website')}-${t('home.all')}`,
       icon: "home-website",
       className: "b",
       value: 0,
       linkFn: () => System.router.push("/website"),
     },
     {
-      name: "数据-全部",
+      name: `${t('home.data')}-${t('home.all')}`,
       icon: "home-data",
       className: "g",
       value: 0,
       linkFn: () => System.router.push("/database"),
     },
     {
-      name: "安全风险",
+      name: t('home.securityRisk'),
       icon: "home-software",
       className: "y",
       value: 0,
       linkFn: () => System.router.push("/security"),
     },
     {
-      name: "备忘录",
+      name:t('home.memo'),
       icon: "home-memo",
       className: "o",
       value: 0,
@@ -316,19 +318,19 @@ const conf = reactive({
             };
             conf.monitorData.network = [
               {
-                label: "上行",
+                label: t('home.upstream'),
                 value: `${sutil.bytesTransform(SendRate).strValue}/s`,
               },
               {
-                label: "下行",
+                label: t('home.downstream'),
                 value: `${sutil.bytesTransform(RecvRate).strValue}/s`,
               },
               {
-                label: "总发送",
+                label: t('home.totalSend'),
                 value: sutil.bytesTransform(BytesSent).strValue,
               },
               {
-                label: "总接收",
+                label: t('home.totalReceive'),
                 value: sutil.bytesTransform(BytesRecv).strValue,
               },
             ];
@@ -355,18 +357,18 @@ const conf = reactive({
             };
             conf.monitorData.disk = [
               {
-                label: "读取",
+                label: t('home.read'),
                 value: sutil.bytesTransform(ReadSpeed).strValue,
               },
               {
-                label: "写入",
+                label: t('home.write'),
                 value: sutil.bytesTransform(WriteSpeed).strValue,
               },
               {
-                label: "读写次数",
+                label: t('home.readCount'),
                 value: `${ReadOpsPerSec + WriteOpsPerSec}次/s`,
               },
-              { label: "平均延迟", value: `${AvgIoLatency.toFixed(2)}ms` },
+              { label: t('home.averageDelay'), value: `${AvgIoLatency.toFixed(2)}ms` },
             ];
           }
           break;
@@ -495,20 +497,20 @@ const conf = reactive({
     },
     selected: {
       value: 1,
-      label: "内存",
+      label: t('home.memory'),
     },
     options: markRaw([
       {
         value: 1,
-        label: "内存",
+        label: t('home.memory'),
       },
       {
         value: 2,
-        label: "磁盘",
+        label: t('home.disk'),
       },
       {
         value: 3,
-        label: "CPU",
+        label: t('home.cpu'),
       },
     ]),
     usage: {
@@ -644,7 +646,7 @@ onMounted(() => {
             style="gap: 24px"
           >
             <div class="basic-card__title card">
-              <div class="title">概述</div>
+              <div class="title">{{$t('home.overview')}}</div>
               <!-- <download-notice /> -->
             </div>
             <el-row :gutter="20">
@@ -674,13 +676,13 @@ onMounted(() => {
               <el-col :lg="16" :md="16" :sm="24">
                 <div class="basic-card flex column no-wrap fit-height">
                   <div class="basic-card__header">
-                    <div class="basic-card__title">监控</div>
+                    <div class="basic-card__title">{{ $t('home.monitor') }}</div>
                     <div class="miscellaneous">
                       <div class="switch">
                         <span>{{
                           conf.monitorData.selectedType == "network"
-                            ? "网卡"
-                            : "磁盘"
+                            ? $t('home.network')
+                            : $t('home.disk')
                         }}</span>
                         <el-select
                           v-model="conf.monitorData.selectedCard"
@@ -706,7 +708,7 @@ onMounted(() => {
                           "
                           @click="conf.monitorData.handleChangeType('network')"
                         >
-                          流量
+                          {{$t('home.flow')}}
                         </div>
                         <div
                           class="item"
@@ -717,7 +719,7 @@ onMounted(() => {
                           "
                           @click="conf.monitorData.handleChangeType('disk')"
                         >
-                          磁盘IO
+                          {{$t('home.disk')}}IO
                         </div>
                       </div>
                     </div>
@@ -741,16 +743,16 @@ onMounted(() => {
                           <div class="yuan"></div>
                           <span>{{
                             conf.monitorData.selectedType == "network"
-                              ? "上行"
-                              : "读取"
+                              ? $t('home.upstream')
+                              : $t('home.read')
                           }}</span>
                         </div>
                         <div class="below">
                           <div class="yuan"></div>
                           <span>{{
                             conf.monitorData.selectedType == "network"
-                              ? "下行"
-                              : "写入"
+                              ? $t('home.downstream')
+                              : $t('home.write')
                           }}</span>
                         </div>
                       </div>
@@ -768,7 +770,7 @@ onMounted(() => {
                   class="basic-card flex column no-wrap fit-height"
                 >
                   <div class="basic-card__header">
-                    <div class="basic-card__title">状态</div>
+                    <div class="basic-card__title">{{$t('home.status')}}</div>
                     <div class="status-right">
                       <el-select
                         v-model="conf.statusData.selected"
@@ -800,21 +802,21 @@ onMounted(() => {
                       </div>
                       <div class="status-menu" style="margin-bottom: 20px">
                         <div class="b1">
-                          总数：
+                          {{$t('home.total')}}：
                           <span>{{ conf.statusData.usage.total }}</span>
                         </div>
                         <div class="b2">
-                          已用：
+                          {{$t('home.used')}}：
                           <span>{{ conf.statusData.usage.used }}</span>
                         </div>
                       </div>
                       <div class="status-menu">
                         <div class="b1">
-                          可用：
+                          {{$t('home.available')}}：
                           <span>{{ conf.statusData.usage.available }}</span>
                         </div>
                         <div class="b2">
-                          使用率：
+                          {{$t('home.usage')}}：
                           <span
                             >{{
                               conf.statusData.usage.usedPercent.toFixed(2)
