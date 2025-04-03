@@ -1,7 +1,7 @@
 <template>
   <x-page no-header tabbar no-footer>
-    <x-statusbar />
     <div class="top">
+      <x-statusbar />
       <van-nav-bar title="服务器" left-arrow @click-left="router.back()"></van-nav-bar>
       <div class="card-list">
         <div class="card-item" v-for="item in list">
@@ -116,17 +116,19 @@ list.forEach((item) => {
   const _icon = item.icon
   item.icon = `/static/img/server/${_icon}.png`
 })
-const goPage = (type:string)=>{
+const goPage = (type: string) => {
   router.push({
-    path:"/useRate",
-    query:{
-      type:type
+    path: '/useRate',
+    query: {
+      type: type
     }
   })
 }
 </script>
 <style lang="less" scoped>
 .top {
+  position: fixed;
+  top: 0;
   height: calc(434rem + 132rem);
   width: 100%;
   background: url('/static/img/server/detail-top-bg.png');
@@ -180,7 +182,7 @@ const goPage = (type:string)=>{
   }
 }
 .content {
-  margin-top: 24rem;
+  margin-top: calc(24rem + 566rem + 32rem);
   padding: 0 32rem;
   height: 100%;
   overflow-y: scroll;

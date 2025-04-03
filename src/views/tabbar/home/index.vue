@@ -1,10 +1,14 @@
 <template>
   <x-page no-header tabbar>
-    <x-statusbar />
-    <div class="header">
+    <div class="header head-fixed">
+      <x-statusbar />
       <UserInfo />
       <Search />
     </div>
+    <!-- <div class="header">
+      <UserInfo />
+      <Search />
+    </div> -->
     <div class="content">
       <div class="server_status">
         <div class="item-title">
@@ -133,9 +137,11 @@ fileList.forEach((item:any, index) => {
 
 <style lang="less" scoped>
 .header {
+  position: fixed;
+  top: 0;
   height: 432rem;
-  max-width: 750rem;
-  background: url('../../../public/static/img/home/home.png');
+  width: 100%;
+  background: url('/static/img/home/home.png');
   background-size: 100% 100%;
   padding: 0 36rem;
 }
@@ -145,6 +151,7 @@ fileList.forEach((item:any, index) => {
   border-radius: 32rem;
   margin-top: -24rem;
   padding: 0 32rem 68rem 32rem;
+  margin-top: 432rem;
   overflow: scroll;
   .server_status,
   .application,
