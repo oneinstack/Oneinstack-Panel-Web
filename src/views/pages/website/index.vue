@@ -12,15 +12,18 @@ import { FormInstance } from "element-plus";
 import { ElMessage } from "element-plus";
 import dayjs from "dayjs";
 import sapp from "@/sstore/sapp";
+import { useI18n } from "vue-i18n";
 const router = useRouter();
+const {t} = useI18n();
 const conf = reactive({
   tabs: {
     activeIndex: 0,
     list: [
       {
-        name: "PHP项目",
+        // name: "PHP项目",
         index: 0,
         value: "php",
+        name:t('website.phpProject')
       },
       // {
       //   name: 'JAVA项目',
@@ -39,14 +42,16 @@ const conf = reactive({
       //   index: 4
       // },
       {
-        name: "反向代理",
+        // name: "反向代理",
         index: 5,
         value: "proxy",
+        name:t('website.reverseProxy')
       },
       {
-        name: "HTML项目",
+        // name: "HTML项目",
         index: 6,
         value: "static",
+        name:t('website.htmlProject')
       },
       // {
       //   name: '其他项目',
@@ -372,7 +377,7 @@ conf.website.getData();
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
             <el-button type="primary" @click="conf.website.handleAdd"
-              >添加站点</el-button
+              >{{ $t(('website.addWebsite')) }}</el-button
             >
 
             <!-- <el-dropdown>
@@ -483,7 +488,7 @@ conf.website.getData();
                 link
                 style="margin-right: 8px"
                 @click="conf.drawer.open('edit', row)"
-                >设置</el-button
+                >{{ $t('commons.button.setting') }}</el-button
               >
               <span
                 style="
@@ -502,7 +507,7 @@ conf.website.getData();
                 "
                 @click="conf.dialog.open('delete', row)"
               >
-                删除
+              {{ $t('commons.button.delete') }}
               </el-button>
             </template>
           </custom-table>

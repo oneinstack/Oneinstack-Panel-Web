@@ -47,7 +47,7 @@ defineProps<Props>();
     align-items: center;
     height: 46px;
     .item {
-      width: 93px;
+      min-width: 93px;
       margin-right: 6px;
       height: 100%;
       border-radius: 5px;
