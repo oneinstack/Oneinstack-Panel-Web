@@ -48,6 +48,7 @@ export default {
         fit2cloud: 'FIT2CLOUD',
         lingxia: 'Lingxia',
         button: {
+            new: 'New',
             run: 'Run',
             create: 'Create ',
             add: 'Add ',
@@ -195,6 +196,9 @@ export default {
         login: {
             username: 'Username',
             password: 'Password',
+            usernamePlaceholder: 'Enter your account/phone/email',
+            passwordPlaceholder: 'Enter your password',
+            remeber: 'Remember Password',
             welcome: 'Welcome back, please enter your username and password to log in!',
             errorAuthInfo: 'The user name or password you entered is incorrect, please re-enter!',
             errorMfaInfo: 'Incorrect authentication information, please try again!',

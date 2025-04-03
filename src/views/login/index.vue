@@ -81,7 +81,7 @@ const conf = reactive({
         </div>
         <el-form ref="formRef" :model="conf.form" :rules="conf.rules" class="fit-width">
           <el-form-item :class="[className.formItemGap, { 'input-box': !isMobile }]" prop="username">
-            <el-input v-model.trim="conf.form.username" placeholder="输入您的账户/手机号/邮箱号" clearable
+            <el-input v-model.trim="conf.form.username" :placeholder="$t('commons.login.usernamePlaceholder')" clearable
               :class="{ 'pc-input': isMobile }">
               <template #prefix>
                 <v-s-icon name="user" size="20" />
@@ -89,7 +89,7 @@ const conf = reactive({
             </el-input>
           </el-form-item>
           <el-form-item prop="password" :class="{ 'input-box': !isMobile }">
-            <el-input v-model.trim="conf.form.password" placeholder="输入您的密码" type="password" clearable
+            <el-input v-model.trim="conf.form.password" :placeholder="$t('commons.login.passwordPlaceholder')" type="password" clearable
               :class="{ 'pc-input': isMobile }">
               <template #prefix>
                 <v-s-icon name="password" size="20" />
@@ -97,7 +97,7 @@ const conf = reactive({
             </el-input>
           </el-form-item>
           <div class="flex justify-between">
-            <el-checkbox v-model="conf.form.remember" label="记住密码" />
+            <el-checkbox v-model="conf.form.remember" :label="$t('commons.login.remeber')" />
           </div>
           <button :class="[className.loginBtn, { 'mobile-btn': isMobile }]" @click.prevent="conf.handleLogin">{{ $t('commons.button.login') }}</button>
         </el-form>

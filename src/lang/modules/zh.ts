@@ -44,6 +44,7 @@ export default {
         colon: '：',
         example: '例：',
         button: {
+            new: '新建',
             run: '运行',
             create: '创建',
             add: '添加',
@@ -192,6 +193,8 @@ export default {
         login: {
             username: '用户名',
             password: '密码',
+            usernamePlaceholder: '输入您的账号/手机号/邮箱',
+            passwordPlaceholder: '输入您的密码',
             remeber: '记住密码',
             welcome: '欢迎回来，请输入用户名和密码登录！',
             errorAuthInfo: '您输入的用户名或密码不正确，请重新输入！',

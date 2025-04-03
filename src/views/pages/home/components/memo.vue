@@ -95,7 +95,7 @@ const handleKeydown = (e: KeyboardEvent | Event) => {
 <template>
   <custom-dialog
     :show="conf.memo.show"
-    :title="conf.memo.data.id ? '编辑备忘录':'新建备忘录'"
+    :title="conf.memo.data.id ? $t('commons.button.edit') + $t('home.memo'):$t('commons.button.new') + $t('home.memo')"
     width="624px"
     :show-close="false"
     @update:show="conf.memo.close"
@@ -108,9 +108,9 @@ const handleKeydown = (e: KeyboardEvent | Event) => {
       @keydown="handleKeydown"
     />
     <template #footer>
-      <el-button v-if="conf.memo.data.id" type="primary" @click="conf.memo.update">保存</el-button>
-      <el-button v-else type="primary" @click="conf.memo.add">保存</el-button>
-      <el-button @click="conf.memo.close">取消</el-button>
+      <el-button v-if="conf.memo.data.id" type="primary" @click="conf.memo.update">{{$t('commons.button.save')}}</el-button>
+      <el-button v-else type="primary" @click="conf.memo.add">{{$t('commons.button.save')}}</el-button>
+      <el-button @click="conf.memo.close">{{$t('commons.button.cancel')}}</el-button>
     </template>
   </custom-dialog>
 </template>

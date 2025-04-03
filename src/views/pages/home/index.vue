@@ -106,37 +106,37 @@ const conf = reactive({
     },
     network: [
       {
-        label: "上行",
+        label: t('home.upstream'),
         value: "--",
       },
       {
-        label: "下行",
+        label: t('home.downstream'),
         value: "--",
       },
       {
-        label: "总发送",
+        label: t('home.totalSend'),
         value: "--",
       },
       {
-        label: "总接收",
+        label: t('home.totalReceive'),
         value: "--",
       },
     ] as Options[],
     disk: [
       {
-        label: "读取",
+        label: t('home.read'),
         value: "--",
       },
       {
-        label: "写入",
+        label: t('home.write'),
         value: "--",
       },
       {
-        label: "读取",
+        label: t('home.read'),
         value: "--",
       },
       {
-        label: "写入",
+        label: t('home.write'),
         value: "--",
       },
     ] as Options[],
@@ -233,7 +233,7 @@ const conf = reactive({
         ],
         series: [
           {
-            name: conf.monitorData.selectedType == "network" ? "上行" : "读取",
+            name: conf.monitorData.selectedType == "network" ? t('home.upstream') : t('home.read'),
             type: "line",
             smooth: false,
             lineStyle: {
@@ -260,7 +260,7 @@ const conf = reactive({
             data: conf.monitorData.chartData.ascend,
           },
           {
-            name: conf.monitorData.selectedType == "network" ? "下行" : "写入",
+            name: conf.monitorData.selectedType == "network" ? t('home.downstream') : t('home.write'),
             type: "line",
             smooth: false,
             lineStyle: {

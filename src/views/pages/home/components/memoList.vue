@@ -1,7 +1,7 @@
 <template>
   <custom-dialog
     :show="conf.memoList.show"
-    title="备忘录"
+    :title="$t('home.memo')"
     width="1022px"
     height="722px"
     body-bg-color="rgb(var(--category-item-bg-color))"
@@ -27,7 +27,7 @@
               <el-icon v-if="isActive"><ArrowUp /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ isActive ? "收起" : "展开" }}
+                {{ isActive ? $t('commons.button.collapse') : $t('commons.button.expand') }}
               </span>
             </div>
           </template>
@@ -36,13 +36,13 @@
           </div>
           <div class="collapse-content-footer">
             <el-button type="danger" plain @click="conf.memoList.delete(item)"
-              >删除</el-button
+              >{{ $t('commons.button.delete') }}</el-button
             >
             <el-button
               type="warning"
               plain
               @click="memoRef.open({ content: item.content, id: item.id })"
-              >编辑</el-button
+              >{{ $t('commons.button.edit') }}</el-button
             >
             <div class="icon-ele" @click="conf.memoList.activeName = 0">
               <el-icon v-if="conf.memoList.activeName == item.id"
@@ -50,7 +50,7 @@
               /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ conf.memoList.activeName == item.id ? "收起" : "展开" }}
+                {{ conf.memoList.activeName == item.id ? $t('commons.button.collapse') : $t('commons.button.expand') }}
               </span>
             </div>
           </div>
@@ -62,9 +62,9 @@
     </div>
 
     <template #footer>
-      <el-button @click="conf.memoList.close">取消</el-button>
+      <el-button @click="conf.memoList.close">{{$t('commons.button.cancel')}}</el-button>
       <el-button type="primary" @click="memoRef.open(conf.memoList.data)"
-        >新建</el-button
+        >{{$t('commons.button.new')}}</el-button
       >
     </template>
   </custom-dialog>
