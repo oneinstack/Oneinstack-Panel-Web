@@ -1,3 +1,5 @@
+import { create } from "domain";
+
 export default {
     menu: {
         home: '首页',
@@ -44,7 +46,9 @@ export default {
         htmlProject: 'HTML 项目',
         addWebsite: '添加站点',
         newWebsite: '新建站点',
-        domain: '域名',
+        createWebsite: '创建网站',
+        settingWebsite: '设置网站',
+        mainDomain: '主域名',
         proxyAddress: '代理地址',
         directory: '目录',
         websiteName: '网站名',
@@ -57,6 +61,7 @@ export default {
         colon: '：',
         example: '例：',
         remark: '备注',
+        action: '操作',
         button: {
             new: '新建',
             run: '运行',

@@ -69,12 +69,12 @@ const conf = reactive({
     total: 0,
     selection: [], // 存储选中的行
     columns: [
-      { prop: "name", label: "网站名", width: 200 },
+      { prop: "name", label: t('website.websiteName'), width: 200 },
       // { prop: 'domain', label: '其他域名', width: 250 },
-      { prop: "dir", label: "目录", width: 400 },
+      { prop: "dir", label: t('website.directory'), width: 400 },
       {
         prop: "type",
-        label: "类型",
+        label: t('website.type'),
         width: 200,
         formatter: (row: any) => {
           const typeMap = {
@@ -85,10 +85,10 @@ const conf = reactive({
           return typeMap[row.type as keyof typeof typeMap] || row.type;
         },
       },
-      { prop: "remark", label: "备注" },
+      { prop: "remark", label: t('commons.remark') },
       {
         prop: "create_time",
-        label: "创建时间",
+        label: t('website.createTime'),
         width: 200,
         // 添加格式化方法
         formatter: (row: any) => {
@@ -99,7 +99,7 @@ const conf = reactive({
       },
       {
         prop: "action",
-        label: "操作",
+        label: t('commons.action'),
         align: "center",
         width: 240,
         fixed: "right",
@@ -154,14 +154,14 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: "创建网站",
+    title: t('website.createWebsite'),
     type: "add",
     loading: false,
     open: (type: "add" | "edit", row?: any) => {
-      conf.drawer.title = "创建网站";
+      conf.drawer.title = t('website.createWebsite');
       conf.drawer.type = type;
       if (type === "edit") {
-        conf.drawer.title = "设置网站";
+        conf.drawer.title = t('website.settingWebsite');
         const cloneRow = structuredClone(toRaw(row));
         const domain = cloneRow.domain?.split(",");
         conf.form.data.value = cloneRow;
@@ -226,7 +226,7 @@ const conf = reactive({
           case "static":
             return [
               {
-                label: "主域名",
+                label: t('website.mainDomain'),
                 type: "input",
                 placeholder: "支持域名:端口",
                 prop: "name",
@@ -257,7 +257,7 @@ const conf = reactive({
               //   prop: 'domain'1
               // },
               {
-                label: "目录",
+                label: t('website.directory'),
                 type: "input",
                 prop: "dir",
                 rules: [
@@ -266,7 +266,7 @@ const conf = reactive({
                 ],
               },
               {
-                label: "备注",
+                label: t('commons.remark'),
                 type: "textarea",
                 prop: "remark",
               },
@@ -276,7 +276,7 @@ const conf = reactive({
             conf.form.data.value.tar_url = "$http_host";
             return [
               {
-                label: "主域名",
+                label: t('website.mainDomain'),
                 type: "input",
                 placeholder: "支持域名:端口",
                 prop: "name",
@@ -296,14 +296,14 @@ const conf = reactive({
               //   prop: 'domain'
               // },
               {
-                label: '代理地址',
+                label: t('website.proxyAddress'),
                 type: 'custom',
                 placeholder: '例：127.0.0.1:8080',
                 prop: 'send_url',
                 rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
               },
               {
-                label: "备注",
+                label: t('commons.remark'),
                 type: "textarea",
                 prop: "remark",
               },
