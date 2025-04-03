@@ -31,7 +31,7 @@ export const langObj: any = {
 
 //@ts-ignore
 i18n.setLang = async (lang: string = Cookie.get('language') || 'zh-CN') => {
-  const modules = import.meta.glob('@/lang/**/*.ts')
+  // const modules = import.meta.glob('@/lang/**/*.ts')
   // const module: any = await modules[`/src/lang/${lang}.ts`]()
   // i18n.global.setLocaleMessage(lang, module.default)
   i18n.global.locale = lang as any
