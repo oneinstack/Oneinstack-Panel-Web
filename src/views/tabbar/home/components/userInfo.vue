@@ -10,7 +10,7 @@
       </div>
     </div>
     <div class="right">
-      <van-image width="40rem" height="40rem" src="https://fastly.jsdelivr.net/npm/@vant/assets/cat.jpeg" />
+      <van-icon name="scan" size="40rem" />
     </div>
   </div>
 </template>
@@ -26,7 +26,7 @@
     display: flex;
     align-items: center;
     .avatar {
-      border: 4rem solid #ffffff;
+      border: 4rem solid var(--card-bg-color);
       border-radius: 50%;
       height: 96rem;
       width: 96rem;
@@ -35,7 +35,7 @@
       align-items: center;
     }
     .info {
-      color: #ffffff;
+      color: var(--font-light-color);
       margin-left: 32rem;
       display: flex;
       flex-direction: column;
@@ -50,7 +50,7 @@
     }
   }
   .right {
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-radius: 8rem;
     width: 64rem;
     height: 64rem;

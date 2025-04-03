@@ -1,0 +1,111 @@
+<template>
+  <div class="application">
+    <div class="item-title">
+      <p class="name">应用程序</p>
+    </div>
+    <div class="app-list">
+      <template v-for="(item, index) in appList">
+        <div v-if="index < 7" class="app_card">
+          <div class="icon_box">
+            <van-image width="68rem" height="68rem" :src="item.icon" />
+          </div>
+          <p class="name">{{ item.name }}</p>
+        </div>
+        <div v-else class="app_card">
+          <div class="icon_box">
+            <van-image width="68rem" height="68rem" :src="item.icon" />
+          </div>
+          <p class="name">更多应用</p>
+        </div>
+      </template>
+    </div>
+  </div>
+</template>
+<script setup lang="ts">
+import { reactive } from 'vue'
+const appList = reactive([
+  {
+    icon: 'cpu',
+    name: 'OpenResty'
+  },
+  {
+    icon: 'ram',
+    name: 'MySQL'
+  },
+  {
+    icon: 'disk',
+    name: 'Halo'
+  },
+  {
+    icon: 'cpu',
+    name: 'OpenResty'
+  },
+  {
+    icon: 'ram',
+    name: 'MySQL'
+  },
+  {
+    icon: 'disk',
+    name: 'Halo'
+  },
+  {
+    icon: 'ram',
+    name: 'MySQL'
+  },
+  {
+    icon: 'disk',
+    name: 'Halo'
+  }
+])
+</script>
+<style lang="less" scoped>
+.application {
+  .item-title {
+    margin-top: 44rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .name {
+      font-size: 32rem;
+      font-family: 'PingFang SC-Medium';
+      font-weight: 700;
+      position: relative;
+      display: inline-block; // 关键：让元素宽度自适应内容
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -4rem; // 调整边框与文字间距
+        width: 44rem; // 继承文字宽度
+        height: 8rem;
+        background: var(--primary-color);
+        border-radius: 5rem;
+      }
+    }
+    .more {
+      color: var(--font-gray-color);
+    }
+  }
+  .app-list {
+    display: flex;
+    flex-wrap: wrap;
+    .app_card {
+      margin-top: 32rem;
+      margin-right: 40rem;
+      text-align: center;
+      .icon_box {
+        width: 140rem;
+        height: 140rem;
+        background: var(--card-bg-color);
+      }
+      .name {
+        margin-top: 16rem;
+      }
+    }
+    .app_card:nth-of-type(4n) {
+      margin-right: 0;
+    }
+  }
+}
+</style>

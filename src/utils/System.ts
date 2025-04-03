@@ -47,6 +47,8 @@ export default class System {
 
     // 初始化环境变量
     System.env = JSON.parse('#{global}')
+    // 初始化主题
+    System.setTheme(localStorage.getItem('pageTheme') || Cookie.get('pageTheme') || 'light')
   }
 
   /**

@@ -1,17 +1,27 @@
 <template>
-  <div class="card-list">
-    <div class="item_card" v-for="(item, index) in serverList">
-      <div class="icon_box">
-        <van-image width="68rem" height="68rem" :src="item.icon" />
+  <div class="server_status">
+    <div class="item-title">
+      <p class="name">{{ $t('home.serverStatus') }}</p>
+      <p class="more" @click="goDetail()">
+        更多
+        <span><van-icon name="arrow" /></span>
+      </p>
+    </div>
+    <div class="card-list">
+      <div class="item_card" v-for="(item, index) in serverList">
+        <div class="icon_box">
+          <van-image width="68rem" height="68rem" :src="item.icon" />
+        </div>
+        <p class="rate" :class="serverNameClass[index]">{{ item.rate }}%</p>
+        <p class="name">{{ item.name }}</p>
       </div>
-      <p class="rate" :class="serverNameClass[index]">{{ item.rate }}%</p>
-      <p class="name">{{ item.name }}</p>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { reactive,onMounted } from "vue";
+import { reactive, onMounted } from 'vue'
 import { apis } from '@/api/index'
+import { useRouter } from 'vue-router'
 const serverList = reactive([
   {
     icon: 'cpu',
@@ -38,7 +48,7 @@ const serverNameClass: any = {
   1: 'yellow',
   2: 'blue'
 }
-const getServerList = async (type:number) => {
+const getServerList = async (type: number) => {
   const { data: res } = await apis.getSysInfo()
   switch (type) {
     case 1:
@@ -87,6 +97,12 @@ const getServerList = async (type:number) => {
       break
   }
 }
+const router = useRouter()
+const goDetail = () => {
+  router.push({
+    path: '/serverDetail'
+  })
+}
 onMounted(() => {
   getServerList(1)
   getServerList(2)
@@ -94,6 +110,55 @@ onMounted(() => {
 })
 </script>
 <style lang="less" scoped>
+.server_status {
+  .item-title {
+    margin-top: 44rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    .name {
+      font-size: 32rem;
+      font-family: 'PingFang SC-Medium';
+      font-weight: 700;
+      position: relative;
+      display: inline-block; // 关键：让元素宽度自适应内容
+
+      &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        bottom: -4rem; // 调整边框与文字间距
+        width: 44rem; // 继承文字宽度
+        height: 8rem;
+        background: var(--primary-color);
+        border-radius: 5rem;
+      }
+    }
+    .more {
+      color: var(--font-gray-color);
+    }
+  }
+  .app-list {
+    display: flex;
+    flex-wrap: wrap;
+    .app_card {
+      margin-top: 32rem;
+      margin-right: 40rem;
+      text-align: center;
+      .icon_box {
+        width: 140rem;
+        height: 140rem;
+        background: var(--card-bg-color);
+      }
+      .name {
+        margin-top: 16rem;
+      }
+    }
+    .app_card:nth-of-type(4n) {
+      margin-right: 0;
+    }
+  }
+}
 .card-list {
   display: flex;
   justify-content: space-between;
@@ -101,7 +166,7 @@ onMounted(() => {
     margin-top: 32rem;
     width: 212rem;
     height: 262rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -116,10 +181,19 @@ onMounted(() => {
       margin-top: 44rem;
     }
     .name {
-      color: #acacac;
+      color: var(--font-gray-color);
       font-size: 24rem;
       margin-top: 14rem;
     }
   }
+}
+.green {
+  color: var(--success-color);
+}
+.yellow {
+  color: var(--warning-color);
+}
+.blue {
+  color: var(--primary-color);
 }
 </style>
