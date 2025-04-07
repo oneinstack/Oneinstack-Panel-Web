@@ -66,6 +66,16 @@ export default {
         delMsg: 'Are you sure to delete the selected website?',   
         delTitle: 'Website Deletion Confirmation',
     },
+    database:{
+        tipLeft:'After adding a database, please make sure to add a scheduled backup task in',
+        tipSpan:'Scheduled Tasks',
+        tipRight:'to ensure your data security. Note: Databases created through third-party tools or MySQL command line need to click "Get from Server" to be backed up in scheduled tasks',
+        install: 'Install',
+        addDatabase: 'Add Database',
+        remoteDatabase: 'Remote Database',
+        tableNoData: 'Your database list is empty, you can',
+        tableNoDataAdd: 'add a database',
+    },
     commons: {
         true: 'true',
         false: 'false',

@@ -1,4 +1,5 @@
 import { create } from "domain";
+import { install } from "vue-demi";
 
 export default {
     menu: {
@@ -65,6 +66,16 @@ export default {
         directoryValid: '目录格式错误',
         delMsg: '确定删除所选网站？',   
         delTitle: '网站删除确认',
+    },
+    database:{
+        tipLeft:'请在添加数据库后，务必到',
+        tipSpan:'计划任务',
+        tipRight:'添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者MySQL命令行创建的数据库需要点击"从服务器获取"才能在计划任务中备份',
+        install: '安装',
+        addDatabase: '添加数据库',
+        remoteDatabase: '远程数据库',
+        tableNoData: '您的数据库列表为空，您可以',
+        tableNoDataAdd: '添加一个数据库',
     },
     commons: {
         true: '是',

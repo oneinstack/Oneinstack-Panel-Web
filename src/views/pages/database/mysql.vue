@@ -8,6 +8,8 @@ import InstallMask from '@/components/InstallMask.vue'
 import { ref,onMounted} from 'vue'
 import { Api } from '@/api/Api'
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n();
 const router = useRouter();
 const { conf } = defineProps<ConfProps>()
 conf.list.getData()
@@ -44,7 +46,7 @@ const handleInstall = () => {
 
 <template>
   <div>
-    <install-mask :is-installed="myslqstatus" installText="安装Mysql"  @install="handleInstall">
+    <install-mask :is-installed="myslqstatus" :installText="`${t('database.install')}MySQL`"  @install="handleInstall">
       <div v-if="conf.showTips" class="tip">
         <div class="flex items-center">
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />

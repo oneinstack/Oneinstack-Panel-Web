@@ -6,7 +6,7 @@ export function timeFormat(
   return dayjs(time).format(format);
 }
 export const fileType = {
-  image: [".jpg", ".peg", ".png", ".gif",".svg"],
+  image: [".jpg", ".peg", ".png", ".gif",".svg",".jpeg"],
   video: [".mp4", ".avi", ".rmvb", ".flv", ".mkv"],
   audio: [".mp3", ".wav", ".flac", ".aac"],
   pdf: [".pdf"],

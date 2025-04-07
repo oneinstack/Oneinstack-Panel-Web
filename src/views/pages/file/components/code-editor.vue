@@ -35,7 +35,7 @@
         class="form-config"
         label-position="right"
       >
-        <el-form-item :label="$t('file.theme')">
+        <!-- <el-form-item :label="$t('file.theme')">
           <el-select
             v-model="config.theme"
             @change="changeTheme()"
@@ -48,8 +48,8 @@
               :label="item.label"
             />
           </el-select>
-        </el-form-item>
-        <el-form-item :label="$t('file.eol')">
+        </el-form-item> -->
+        <!-- <el-form-item :label="$t('file.eol')">
           <el-select
             v-model="config.eol"
             @change="changeEOL()"
@@ -62,7 +62,7 @@
               :label="eol.label"
             />
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
         <el-form-item :label="$t('file.wordWrap')">
           <el-switch
             v-model="config.wordWrap"
@@ -89,13 +89,13 @@
         <el-form-item :label="''">
           <el-checkbox v-model="req.containSub">是否包含子目录</el-checkbox>
         </el-form-item>
-        <el-form-item :label="'每个文件夹最大数量'">
+        <!-- <el-form-item :label="'每个文件夹最大数量'">
           <el-select v-model="req.maxPerFolder" class="select-minimap">
             <el-option :label="'100'" :value="100"></el-option>
             <el-option :label="'500'" :value="500"></el-option>
             <el-option :label="'1000'" :value="1000"></el-option>
           </el-select>
-        </el-form-item>
+        </el-form-item> -->
       </el-form>
     </div>
     <div v-loading="loading">
@@ -308,38 +308,38 @@ type WordWrapOptions = "off" | "on" | "wordWrapColumn" | "bounded";
 const isFullscreen = ref(false);
 
 const config = reactive<EditorConfig>({
-  theme: sapp.theme == "light" ? "vs" : "vs-dark",
+  theme: "hc-black",
   language: "plaintext",
   eol: monaco.editor.EndOfLineSequence.LF,
   wordWrap: "on",
   minimap: false,
 });
 
-const eols = [
-  {
-    label: "LF (Linux)",
-    value: monaco.editor.EndOfLineSequence.LF,
-  },
-  {
-    label: "CRLF (Windows)",
-    value: monaco.editor.EndOfLineSequence.CRLF,
-  },
-];
+// const eols = [
+//   {
+//     label: "LF (Linux)",
+//     value: monaco.editor.EndOfLineSequence.LF,
+//   },
+//   {
+//     label: "CRLF (Windows)",
+//     value: monaco.editor.EndOfLineSequence.CRLF,
+//   },
+// ];
 
-const themes = [
-  {
-    label: "Visual Studio",
-    value: "vs",
-  },
-  {
-    label: "Visual Studio Dark",
-    value: "vs-dark",
-  },
-  {
-    label: "High Contrast Dark",
-    value: "hc-black",
-  },
-];
+// const themes = [
+//   {
+//     label: "Visual Studio",
+//     value: "vs",
+//   },
+//   {
+//     label: "Visual Studio Dark",
+//     value: "vs-dark",
+//   },
+//   {
+//     label: "High Contrast Dark",
+//     value: "hc-black",
+//   },
+// ];
 
 let form = ref({
   content: "",
@@ -558,7 +558,7 @@ const acceptParams = (props: any) => {
   fileExtension.value = props.extension;
   fileName.value = props.name;
   config.eol = monaco.editor.EndOfLineSequence.LF;
-  config.theme = localStorage.getItem(codeThemeKey) || "vs-dark";
+  config.theme = localStorage.getItem(codeThemeKey) || "hc-black";
   config.wordWrap = (localStorage.getItem(warpKey) as WordWrapOptions) || "on";
   config.minimap =
     localStorage.getItem(minimapKey) !== null
@@ -780,6 +780,8 @@ defineExpose({ acceptParams });
   display: flex;
   align-items: center;
   justify-content: space-between;
+  background: rgb(var(--category-item-bg-color));
+  padding:12px;
 }
 
 .dialog-title {

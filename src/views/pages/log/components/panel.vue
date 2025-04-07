@@ -89,8 +89,8 @@ const conf = reactive({
         <el-table-column prop="address" label="SSL证书" />
         <el-table-column prop="address" label="操作">
           <template #default>
-            <el-button link type="primary" size="small">设置</el-button>
-            <el-button link type="primary" size="small">删除</el-button>
+            <el-button link type="primary">设置</el-button>
+            <el-button link type="primary">删除</el-button>
           </template>
         </el-table-column>
       </el-table>

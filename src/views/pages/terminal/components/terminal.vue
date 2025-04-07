@@ -100,7 +100,8 @@ const terminalOnData = (data: string) => {
 const terminalOnKey = (event: { domEvent: KeyboardEvent }) => {
   const { domEvent } = event;
   const ctrlKey = checkCtrlKeyAllSystem(domEvent);
-
+  console.log("suggestions",commandBuffer);
+  
   // 处理 Tab 键处理逻辑
   if (domEvent.key === 'Tab') {
     domEvent.preventDefault();
