@@ -481,6 +481,7 @@ defineExpose({
             :data="conf.fileList"
             :columns="conf.columns"
             :loading="conf.loading"
+            :page-size="19"
           >
             <template #name="{ row }">
               <div class="flex items-center file-name-cell" style="gap: 10px">
@@ -703,6 +704,10 @@ defineExpose({
 </template>
 
 <style scoped lang="less">
+:deep(.custom-dialog__body){
+  height: 600px;
+  overflow: scroll;
+}
 :deep(.el-upload-dragger) {
   height: 100%;
   width: 100%;
@@ -765,6 +770,9 @@ defineExpose({
 }
 :deep(.el-input__wrapper) {
   height: 36px;
+}
+:deep(.el-table .el-table__cell){
+  padding: 2px 14px;
 }
 .back-level {
   display: flex;

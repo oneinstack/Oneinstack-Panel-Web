@@ -100,55 +100,65 @@ const terminalOnData = (data: string) => {
 const terminalOnKey = (event: { domEvent: KeyboardEvent }) => {
   const { domEvent } = event;
   const ctrlKey = checkCtrlKeyAllSystem(domEvent);
-  console.log("suggestions",commandBuffer);
-  
   // 处理 Tab 键处理逻辑
   if (domEvent.key === 'Tab') {
     domEvent.preventDefault();
     domEvent.stopPropagation();
+    // 获取当前输入的命令和参数
+    const parts = commandBuffer.split(' ');
+    const currentInput = parts[parts.length - 1];
 
-    if (suggestions.length === 0) {
-      suggestions = getCommandSuggestions(commandBuffer);
-      if (suggestions.length > 0) {
-        if (suggestions.length === 1) {
-          // 只有一个匹配项时，直接补全
-          const remainingText = suggestions[0].name.slice(commandBuffer.length);
-          commandBuffer = suggestions[0].name;
-          cursorPosition = commandBuffer.length;
-          xterm?.write(remainingText);
-        } else {
-          // 多个匹配项，显示所有选项
-          xterm?.write('\r\n');
-          // 将命令列表按每行7个进行分组显示
-          const commands = suggestions.map(cmd => cmd.name);
-          const maxLength = Math.max(...commands.map(cmd => cmd.length)) + 2;
-          let line = '';
-          commands.forEach((cmd, index) => {
-            // 补充空格以对齐
-            const paddedCmd = cmd.padEnd(maxLength, ' ');
-            line += paddedCmd;
-            // 每7个命令或最后一个命令时换行
-            if ((index + 1) % 7 === 0 || index === commands.length - 1) {
-              xterm?.write(line + '\r\n');
-              line = '';
-            }
-          });
-          xterm?.write('$ ' + commandBuffer);
-        }
-        currentSuggestionIndex = 0;
-      }
-    } else {
-      // 循环选择建议
-      currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
-      while (cursorPosition > 0) {
-        xterm?.write('\b \b');
-        cursorPosition--;
-      }
-      commandBuffer = suggestions[currentSuggestionIndex].name;
-      cursorPosition = commandBuffer.length;
-      xterm?.write(commandBuffer);
+    // 发送 Tab 补全请求到服务器
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      const tabChar = '\t';
+      const encoder = new TextEncoder();
+      const utf8Bytes = encoder.encode(tabChar);
+      const base64Command = btoa(String.fromCharCode(...Array.from(utf8Bytes)));
+      ws.send(base64Command);
     }
     return;
+    // if (suggestions.length === 0) {
+    //   suggestions = getCommandSuggestions(commandBuffer);
+    //   if (suggestions.length > 0) {
+    //     if (suggestions.length === 1) {
+    //       // 只有一个匹配项时，直接补全
+    //       const remainingText = suggestions[0].name.slice(commandBuffer.length);
+    //       commandBuffer = suggestions[0].name;
+    //       cursorPosition = commandBuffer.length;
+    //       xterm?.write(remainingText);
+    //     } else {
+    //       // 多个匹配项，显示所有选项
+    //       xterm?.write('\r\n');
+    //       // 将命令列表按每行7个进行分组显示
+    //       const commands = suggestions.map(cmd => cmd.name);
+    //       const maxLength = Math.max(...commands.map(cmd => cmd.length)) + 2;
+    //       let line = '';
+    //       commands.forEach((cmd, index) => {
+    //         // 补充空格以对齐
+    //         const paddedCmd = cmd.padEnd(maxLength, ' ');
+    //         line += paddedCmd;
+    //         // 每7个命令或最后一个命令时换行
+    //         if ((index + 1) % 7 === 0 || index === commands.length - 1) {
+    //           xterm?.write(line + '\r\n');
+    //           line = '';
+    //         }
+    //       });
+    //       xterm?.write('$ ' + commandBuffer);
+    //     }
+    //     currentSuggestionIndex = 0;
+    //   }
+    // } else {
+    //   // 循环选择建议
+    //   currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
+    //   while (cursorPosition > 0) {
+    //     xterm?.write('\b \b');
+    //     cursorPosition--;
+    //   }
+    //   commandBuffer = suggestions[currentSuggestionIndex].name;
+    //   cursorPosition = commandBuffer.length;
+    //   xterm?.write(commandBuffer);
+    // }
+    // return;
   }
 
   // 其他按键时重置建议列表
@@ -423,7 +433,9 @@ onMounted(() => {
   height: 100%;
   overflow: auto;
 }
-
+:deep(.xterm) {
+  padding: 5px;
+}
 :deep(.xterm-rows) {
   padding: 0px 10px 0 10px;
 }

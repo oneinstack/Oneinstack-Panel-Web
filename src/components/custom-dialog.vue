@@ -29,6 +29,7 @@ const show = defineModel<boolean>('show')
     :show-close="showClose"
     class="custom-dialog"
     @close="onClose && onClose()"
+    align-center
   >
     <template #header="{ close, titleId }">
       <div class="custom-dialog__header">
