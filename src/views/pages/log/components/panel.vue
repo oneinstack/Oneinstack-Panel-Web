@@ -71,8 +71,8 @@ const conf = reactive({
 
       <el-table :data="conf.tableData">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="date" label="网站名" width="180" />
-        <el-table-column prop="status" label="状态" width="180">
+        <el-table-column prop="date" label="用户" width="180" />
+        <el-table-column prop="status" label="操作类型" width="180">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
               <a style="color: #64ffc9; text-decoration: underline" v-if="scope.row.status == 1">运行中</a>
@@ -80,14 +80,9 @@ const conf = reactive({
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="备份" />
-        <el-table-column prop="address" label="根目录" />
-        <el-table-column prop="address" label="日流量" />
-        <el-table-column prop="address" label="到期时间" />
-        <el-table-column prop="address" label="备注" />
-        <el-table-column prop="address" label="PHP" />
-        <el-table-column prop="address" label="SSL证书" />
-        <el-table-column prop="address" label="操作">
+        <el-table-column prop="address" label="详情" />
+        <el-table-column prop="address" label="操作时间" />
+        <el-table-column prop="address" label="操作" align="center">
           <template #default>
             <el-button link type="primary">设置</el-button>
             <el-button link type="primary">删除</el-button>
