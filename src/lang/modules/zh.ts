@@ -54,6 +54,9 @@ export default {
         websiteName: '网站名',
         type: '类型',
         createTime: '创建时间',
+        statistics: '统计',
+        searchPlaceholder: '请输入域名',
+        domainPlaceholder: '支持域名:端口',
     },
     commons: {
         true: '是',
@@ -62,6 +65,7 @@ export default {
         example: '例：',
         remark: '备注',
         action: '操作',
+        noData: '暂无数据',
         button: {
             new: '新建',
             run: '运行',

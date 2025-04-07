@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import sapp from '@/sstore/sapp'
 import { computed, reactive } from 'vue'
-
+import { useI18n } from 'vue-i18n';
+const {t} = useI18n();
 export interface ColumnItem {
   label: string
   prop: string
@@ -81,7 +82,7 @@ defineExpose({
       :data="autoPagination ? conf.visibleData : data"
 
       @selection-change="selectionChange"
-	    empty-text="暂无数据"
+	    :empty-text="t('commons.noData')"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />

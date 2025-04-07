@@ -26,7 +26,7 @@ const props = withDefaults(defineProps<Props>(), {
       <div class="drawerHeader">
         <div class="back" @click="onClose">
           <el-icon><Back /></el-icon>
-          <span>返回</span>
+          <span>{{ $t('commons.button.back') }}</span>
         </div>
         <span class="title">{{ props.title }}</span>
       </div>

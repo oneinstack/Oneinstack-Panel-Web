@@ -56,7 +56,7 @@
         </el-collapse-item>
       </el-collapse>
       <div v-else class="empty">
-        <el-empty description="暂无数据" />
+        <el-empty :description="t('commons.noData')" />
       </div>
     </div>
     <template #footer> </template>
@@ -69,6 +69,8 @@ import { ElMessage } from "element-plus";
 import { Api } from "@/api/Api";
 import { timeFormat } from "@/utils/index";
 import { notice } from "@/sstore/notice";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 let timer = null as any;
 watch(
   () => notice.num,

@@ -54,6 +54,9 @@ export default {
         websiteName: 'Website Name',
         type: 'Type',
         createTime: 'Create Time',
+        statistics: 'Statistics',
+        searchPlaceholder: 'Please enter domain name',
+        domainPlaceholder: 'Support domain:port',
     },
     commons: {
         true: 'true',
@@ -62,6 +65,7 @@ export default {
         example: 'For example, ',
         remark: 'Remark',
         action: 'Action',
+        noData: 'No data',
         button: {
             new: 'New',
             run: 'Run',

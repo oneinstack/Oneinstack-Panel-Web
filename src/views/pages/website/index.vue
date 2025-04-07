@@ -228,7 +228,7 @@ const conf = reactive({
               {
                 label: t('website.mainDomain'),
                 type: "input",
-                placeholder: "支持域名:端口",
+                placeholder: t('website.domainPlaceholder'),
                 prop: "name",
                 rules: [
                   { required: true, message: "请输入主域名", trigger: "blur" },
@@ -261,7 +261,7 @@ const conf = reactive({
                 type: "input",
                 prop: "dir",
                 rules: [
-                  { required: true, message: "请选择根目录", trigger: "blur" },
+                  { required: true, message: "请输入目录", trigger: "blur" },
                   // { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
                 ],
               },
@@ -432,7 +432,7 @@ conf.website.getData();
             <el-space class="btn-group" :size="14">
               <search-input
                 v-model="conf.website.params.name"
-                placeholder="请输入域名"
+                :placeholder="$t('website.searchPlaceholder')"
                 style="margin-right: 18px"
                 @search="conf.website.getData()"
               />
@@ -464,7 +464,7 @@ conf.website.getData();
             </template>
             <template #action="{ row }">
               <el-button type="primary" link style="margin-right: 8px"
-                >统计</el-button
+                >{{ $t('website.statistics') }}</el-button
               >
               <span
                 style="
@@ -533,10 +533,12 @@ conf.website.getData();
     <custom-drawer
       :visible="conf.drawer.show"
       :title="conf.drawer.title"
-      empty-text="暂无数据"
+      :empty-text="t('commons.noData')"
       :loading="conf.drawer.loading"
       :on-close="conf.drawer.onClose"
       :on-confirm="conf.drawer.onConfirm"
+      :cancel-text="t('commons.button.cancel')"
+      :confirm-text="t('commons.button.confirm')"
     >
       <custom-form
         v-if="conf.drawer.show"
@@ -572,8 +574,8 @@ conf.website.getData();
         />
       </template>
       <template #footer>
-        <el-button @click="conf.dialog.close">取消</el-button>
-        <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
+        <el-button @click="conf.dialog.close">{{ $t('commons.button.cancel') }}</el-button>
+        <el-button type="primary" @click="conf.dialog.confirm">{{ $t('commons.button.confirm') }}</el-button>
       </template>
     </custom-dialog>
     <!--安装插件弹窗-->
