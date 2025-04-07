@@ -231,11 +231,11 @@ const conf = reactive({
                 placeholder: t('website.domainPlaceholder'),
                 prop: "name",
                 rules: [
-                  { required: true, message: "请输入主域名", trigger: "blur" },
+                  { required: true, message: t('website.domainHelper'), trigger: "blur" },
                   {
                     pattern:
                       /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                    message: "域名格式错误",
+                    message: t('website.domainVaild'),
                     trigger: "blur",
                   },
                 ],
@@ -261,7 +261,7 @@ const conf = reactive({
                 type: "input",
                 prop: "dir",
                 rules: [
-                  { required: true, message: "请输入目录", trigger: "blur" },
+                  { required: true, message: t('website.directoryHelper'), trigger: "blur" },
                   // { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
                 ],
               },
@@ -278,13 +278,13 @@ const conf = reactive({
               {
                 label: t('website.mainDomain'),
                 type: "input",
-                placeholder: "支持域名:端口",
+                placeholder: t('website.domainPlaceholder'),
                 prop: "name",
                 rules: [
-                  { required: true, message: "请输入主域名", trigger: "blur" },
+                  { required: true, message: t('website.domainHelper'), trigger: "blur" },
                   {
                     pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/,
-                    message: "域名格式错误",
+                    message: t('website.domainVaild'),
                     trigger: "blur",
                   },
                 ],
@@ -298,9 +298,9 @@ const conf = reactive({
               {
                 label: t('website.proxyAddress'),
                 type: 'custom',
-                placeholder: '例：127.0.0.1:8080',
+                placeholder: `${t('commons.example')}：127.0.0.1:8080`,
                 prop: 'send_url',
-                rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
+                rules: [{ required: true, message:  t('website.proxyAddressHelper'), trigger: 'blur' }]
               },
               {
                 label: t('commons.remark'),
@@ -316,7 +316,7 @@ const conf = reactive({
   },
   dialog: {
     show: false,
-    title: "网站删除确认",
+    title: t('website.delTitle'),
     type: "delete",
     row: {} as any,
     open: (type: "delete", row?: any) => {
@@ -324,7 +324,7 @@ const conf = reactive({
       conf.dialog.row = row;
       switch (type) {
         case "delete":
-          conf.dialog.title = "网站删除确认";
+          conf.dialog.title = t('website.delTitle');
           break;
       }
       conf.dialog.show = true;
@@ -449,7 +449,7 @@ conf.website.getData();
           <custom-table
             v-model:page="conf.website.params.page"
             :loading="conf.website.loading"
-            empty-text="暂无数据"
+            :empty-text="t('commons.noData')"
             :data="conf.website.data"
             :columns="conf.website.columns"
             :auto-pagination="false"
@@ -567,7 +567,7 @@ conf.website.getData();
     <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
       <template v-if="conf.dialog.type === 'delete'">
         <el-alert
-          title="确定删除所选网站？"
+          :title="$t('website.delMsg')"
           type="warning"
           show-icon
           :closable="false"
