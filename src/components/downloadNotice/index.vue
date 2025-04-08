@@ -7,13 +7,13 @@
       :hidden="notice.num ? false : true"
     >
       <slot name="icon" :data="notice">
-        <el-icon class="icon" size="24"><Download /></el-icon>
+        <el-icon class="icon" size="24"><Bell /></el-icon>
       </slot>
     </el-badge>
   </div>
   <custom-dialog
     :show="notice.show"
-    title="下载任务"
+    title="消息通知"
     width="1022px"
     height="722px"
     body-bg-color="rgb(var(--category-item-bg-color))"

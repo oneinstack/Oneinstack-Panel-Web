@@ -574,7 +574,6 @@ onMounted(() => {
             <el-button
               link
               type="primary"
-              size="small"
               @click="enableSingleTask(scope.row)"
               v-if="!scope.row.enabled"
             >
@@ -583,7 +582,6 @@ onMounted(() => {
             <el-button
               link
               type="primary"
-              size="small"
               @click="disableSingleTask(scope.row)"
               v-if="scope.row.enabled"
             >
@@ -592,7 +590,6 @@ onMounted(() => {
             <el-button
               link
               type="primary"
-              size="small"
               @click="deleteSingleTask(scope.row)"
             >
               删除
@@ -600,7 +597,6 @@ onMounted(() => {
             <el-button
               link
               type="primary"
-              size="small"
               @click="updateSingleTask(scope.row)"
             >
               更新
@@ -608,7 +604,6 @@ onMounted(() => {
             <el-button
               link
               type="primary"
-              size="small"
               @click="updateSingleTaskLog(scope.row)"
             >
               查看日志
