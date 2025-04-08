@@ -18,7 +18,7 @@ const colors = {
 
 const toggleTheme = (event: MouseEvent) => {
   // @ts-ignore
-  localStorage.setItem('code-theme', theme.value == 'light'? 'vs-dark' : 'vs');
+  // localStorage.setItem('code-theme', theme.value == 'light'? 'vs-dark' : 'vs');
   if (!document.startViewTransition) return sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
 
   const x = event.clientX

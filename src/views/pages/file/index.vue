@@ -8,7 +8,8 @@ import sapp from "@/sstore/sapp";
 import CustomDrawer from "@/components/custom-drawer.vue";
 import { Api } from "@/api/Api";
 import CustomForm from "@/components/custom-form.vue";
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 export type DrawerType = "file" | "dir";
 export type DrawerOpenType = "create" | "editPER" | "editUser";
 
@@ -74,12 +75,12 @@ const conf = reactive({
     visible: false,
     openType: "create" as DrawerOpenType,
     type: "file" as DrawerType,
-    title: "创建",
+    title: t("commons.button.create"),
     open: (openType: DrawerOpenType, type: DrawerType, row?: any) => {
       conf.drawer.openType = openType;
       switch (openType) {
         case "create":
-          conf.drawer.title = "创建";
+          conf.drawer.title = t("commons.button.create");
           break;
         case "editPER":
         case "editUser":
@@ -100,7 +101,7 @@ const conf = reactive({
           conf.form.editUser.value.user = row.user;
           conf.form.editUser.value.group = row.group;
           conf.drawer.title =
-            openType === "editPER" ? "编辑权限" : "修改用户和用户组";
+            openType === "editPER" ? t('file.editPermissions') : t('file.changeOwner');
           break;
       }
       conf.drawer.type = type;
@@ -156,10 +157,16 @@ const conf = reactive({
       },
       items: [
         {
-          label: "名称",
+          label: t("file.name"),
           type: "input",
           prop: "name",
-          rules: [{ required: true, message: "请输入名称", trigger: "blur" }],
+          rules: [
+            {
+              required: true,
+              message: t("commons.rule.name"),
+              trigger: "blur",
+            },
+          ],
         },
       ],
     },
@@ -173,20 +180,20 @@ const conf = reactive({
       },
       items: [
         {
-          label: "所有者",
+          label: t("file.owner"),
           type: "checkbox-group",
           prop: "owner",
           options: [
             {
-              label: "读取",
+              label: t('file.rRole'),
               value: "0400",
             },
             {
-              label: "写入",
+              label: t("file.wRole"),
               value: "0200",
             },
             {
-              label: "可执行",
+              label: t('file.xRole'),
               value: "0100",
             },
           ],
@@ -199,20 +206,20 @@ const conf = reactive({
           },
         },
         {
-          label: "用户组",
+          label: t("file.userGroup"),
           type: "checkbox-group",
           prop: "group",
           options: [
             {
-              label: "读取",
+              label: t('file.rRole'),
               value: "0040",
             },
             {
-              label: "写入",
+              label: t("file.wRole"),
               value: "0020",
             },
             {
-              label: "可执行",
+              label: t('file.xRole'),
               value: "0010",
             },
           ],
@@ -225,20 +232,20 @@ const conf = reactive({
           },
         },
         {
-          label: "公共",
+          label: t("file.public"),
           type: "checkbox-group",
           prop: "public",
           options: [
             {
-              label: "读取",
+              label: t('file.rRole'),
               value: "0004",
             },
             {
-              label: "写入",
+              label: t("file.wRole"),
               value: "0002",
             },
             {
-              label: "可执行",
+              label: t("file.xRole"),
               value: "0001",
             },
           ],
@@ -251,12 +258,12 @@ const conf = reactive({
           },
         },
         {
-          label: "权限",
+          label: t("file.role"),
           type: "input",
           prop: "perm",
           rules: [
-            { required: true, message: "请输入权限", trigger: "blur" },
-            { pattern: /^[0-7]{4}$/, message: "权限错误", trigger: "blur" },
+            { required: true, message: t('commons.rule.role'), trigger: "blur" },
+            { pattern: /^[0-7]{4}$/, message: t('commons.rule.role'), trigger: "blur" },
           ],
           change: (value: string) => {
             if (value.length !== 4) return;
@@ -274,7 +281,7 @@ const conf = reactive({
         {
           ifShow: (value: any) => value.isDir,
           label: "",
-          options: "同时修改子文件属性",
+          options: t('file.containSub'),
           type: "checkbox",
           prop: "recursive",
         },
@@ -287,16 +294,16 @@ const conf = reactive({
       },
       items: [
         {
-          label: "用户",
+          label:t('file.user'),
           type: "input",
           prop: "user",
-          rules: [{ required: true, message: "请输入用户", trigger: "blur" }],
+          rules: [{ required: true, message: t('commons.rule.user'), trigger: "blur" }],
         },
         {
-          label: "用户组",
+          label: t('file.userGroup'),
           type: "input",
           prop: "group",
-          rules: [{ required: true, message: "请输入用户组", trigger: "blur" }],
+          rules: [{ required: true, message: t('commons.rule.userGroup'), trigger: "blur" }],
         },
       ],
     },
@@ -344,12 +351,14 @@ const conf = reactive({
       :title="conf.drawer.title"
       :on-close="conf.drawer.close"
       :on-confirm="conf.drawer.confirm"
+      :cancel-text="$t('commons.button.cancel')"
+      :confirm-text="$t('commons.button.confirm')"
     >
       <custom-form
         v-if="conf.drawer.visible"
         :data="conf.form[conf.drawer.openType]"
         :on-init="(ins) => (conf.form.instance = ins)"
-        label-width="80px"
+        label-width="100px"
       />
     </custom-drawer>
   </div>

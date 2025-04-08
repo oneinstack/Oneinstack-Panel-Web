@@ -84,10 +84,10 @@
           />
         </el-form-item>
         <el-form-item :label="''">
-          <el-checkbox v-model="req.dirOnly">是否只显示目录</el-checkbox>
+          <el-checkbox v-model="req.dirOnly">{{ $t('file.dirOnly') }}</el-checkbox>
         </el-form-item>
         <el-form-item :label="''">
-          <el-checkbox v-model="req.containSub">是否包含子目录</el-checkbox>
+          <el-checkbox v-model="req.containSub">{{ $t('file.isContainSub') }}</el-checkbox>
         </el-form-item>
         <!-- <el-form-item :label="'每个文件夹最大数量'">
           <el-select v-model="req.maxPerFolder" class="select-minimap">
@@ -238,6 +238,8 @@ import sapp from "@/sstore/sapp";
 import { fileType, getFileType } from "@/utils/index";
 import Preview from "./preview.vue";
 import path from "path";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 let editor: monaco.editor.IStandaloneCodeEditor | any;
 
 self.MonacoEnvironment = {
@@ -358,9 +360,9 @@ const handleClose = () => {
   };
 
   if (isEdit.value) {
-    ElMessageBox.confirm(i18n.global.t("file.saveContentAndClose"), {
-      confirmButtonText: i18n.global.t("commons.button.save"),
-      cancelButtonText: i18n.global.t("commons.button.notSave"),
+    ElMessageBox.confirm(t("file.saveContentAndClose"), {
+      confirmButtonText: t("commons.button.save"),
+      cancelButtonText: t("commons.button.notSave"),
       type: "info",
       distinguishCancelAndClose: true,
     })
@@ -381,15 +383,15 @@ const handleReset = () => {
     form.value.content = oldFileContent.value;
     editor.setValue(oldFileContent.value);
     isEdit.value = false;
-    ElMessage.success(i18n.global.t("commons.msg.resetSuccess"));
+    ElMessage.success(t("commons.msg.resetSuccess"));
     loading.value = false;
   } else {
-    ElMessage.info(i18n.global.t("file.noEdit"));
+    ElMessage.info(t("file.noEdit"));
   }
 };
 
 const loadTooltip = () => {
-  return i18n.global.t(
+  return t(
     "commons.button." + (isFullscreen.value ? "quitFullscreen" : "fullscreen")
   );
 };
@@ -540,13 +542,13 @@ const saveContent = () => {
         loading.value = false;
         isEdit.value = false;
         oldFileContent.value = form.value.content;
-        ElMessage.success(i18n.global.t("commons.msg.updateSuccess"));
+        ElMessage.success(t("commons.msg.updateSuccess"));
       })
       .catch(() => {
         loading.value = false;
       });
   } else {
-    ElMessage.info(i18n.global.t("file.noEdit"));
+    ElMessage.info(t("file.noEdit"));
   }
 };
 
@@ -558,7 +560,8 @@ const acceptParams = (props: any) => {
   fileExtension.value = props.extension;
   fileName.value = props.name;
   config.eol = monaco.editor.EndOfLineSequence.LF;
-  config.theme = localStorage.getItem(codeThemeKey) || "hc-black";
+  // config.theme = localStorage.getItem(codeThemeKey) || "hc-black";
+  config.theme = "hc-black";
   config.wordWrap = (localStorage.getItem(warpKey) as WordWrapOptions) || "on";
   config.minimap =
     localStorage.getItem(minimapKey) !== null
@@ -613,7 +616,7 @@ const getRefresh = (path: string) => {
     });
   } finally {
     loading.value = false;
-    ElMessage.success(i18n.global.t("commons.msg.refreshSuccess"));
+    ElMessage.success(t("commons.msg.refreshSuccess"));
   }
 };
 
@@ -639,9 +642,9 @@ const getContent = (path: string, extension: string) => {
   };
 
   if (isEdit.value) {
-    ElMessageBox.confirm(i18n.global.t("file.saveAndOpenNewFile"), {
-      confirmButtonText: i18n.global.t("commons.button.open"),
-      cancelButtonText: i18n.global.t("commons.button.cancel"),
+    ElMessageBox.confirm(t("file.saveAndOpenNewFile"), {
+      confirmButtonText: t("commons.button.open"),
+      cancelButtonText: t("commons.button.cancel"),
       type: "info",
     })
       .then(() => {
@@ -674,7 +677,7 @@ const search = async (path: string) => {
 
 const getUpData = async () => {
   if ("/" === directoryPath.value) {
-    ElMessage.info(i18n.global.t("commons.msg.rootInfoErr"));
+    ElMessage.info(t("commons.msg.rootInfoErr"));
     return;
   }
   let pathParts = directoryPath.value.split("/");
@@ -686,7 +689,7 @@ const getUpData = async () => {
     treeData.value = res.data[0]?.children || [];
     loadedNodes.value = new Set();
   } catch (error) {
-    ElMessage.error(i18n.global.t("commons.msg.notRecords"));
+    ElMessage.error(t("commons.msg.notRecords"));
   } finally {
     directoryPath.value = newPath;
   }
@@ -743,7 +746,7 @@ const handleNodeExpand = async (node: any, data: TreeNode) => {
     }
     treeData.value = newTreeData;
   } catch (error) {
-    ElMessage.error(i18n.global.t("commons.msg.notRecords"));
+    ElMessage.error(t("commons.msg.notRecords"));
   }
 };
 

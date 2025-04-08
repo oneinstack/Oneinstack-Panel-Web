@@ -36,6 +36,8 @@ import Upload from "@/components/upload.vue";
 import { useRoute, useRouter } from "vue-router";
 import { fileType, getFileType } from "@/utils/index";
 import Preview from "./preview.vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
 interface Emits {
@@ -59,19 +61,19 @@ const conf = reactive({
   columns: [
     {
       prop: "name",
-      label: "文件名称",
+      label: t('file.fileName'),
       sortable: true,
       width: "420",
       tooltip: true,
     },
-    { prop: "permissions", label: "权限", width: "180" },
-    { prop: "user", label: "用户", width: "180" },
-    { prop: "group", label: "用户组", width: "180" },
-    { prop: "size", label: "大小", width: "150", sortable: true },
-    { prop: "modTime", label: "修改时间", width: "160", sortable: true },
+    { prop: "permissions", label: t('file.mode'), width: "180" },
+    { prop: "user", label: t('file.user'), width: "140" },
+    { prop: "group", label: t('file.userGroup'), width: "140" },
+    { prop: "size", label: t('file.size'), width: "180", sortable: true },
+    { prop: "modTime", label: t('file.updateTime'),width:"235", sortable: true },
     {
       prop: "action",
-      label: "操作",
+      label: t('commons.action'),
       width: "280",
       align: "center",
       fixed: "right",
@@ -190,23 +192,23 @@ const conf = reactive({
     row: {} as any,
     show: false,
     type: "delete",
-    title: "删除文件",
-    confirmText: "确定",
-    cancelText: "取消",
+    title: t('file.deleteFile'),
+    confirmText: t('commons.button.confirm'),
+    cancelText: t('commons.button.cancel'),
     open: (type: "delete" | "upload" | "linkDownload", row?: any) => {
       switch (type) {
         case "delete":
           conf.fileDialog.row = row;
-          conf.fileDialog.title = "删除文件";
-          conf.fileDialog.confirmText = "确定";
+          conf.fileDialog.title = t('file.deleteFile');
+          conf.fileDialog.confirmText = t('commons.button.confirm');
           break;
         case "upload":
           const path = conf.path.join("/").replace(/\/\//g, "/");
           conf.fileDialog.row = {
             path,
           };
-          conf.fileDialog.title = `上传文件到[${path}]`;
-          conf.fileDialog.confirmText = "开始上传";
+          conf.fileDialog.title = `${t('file.uploadTo')}[${path}]`;
+          conf.fileDialog.confirmText = t('file.startUpload');
           break;
         case "linkDownload":
           conf.fileDialog.row = {
@@ -214,8 +216,8 @@ const conf = reactive({
             url: "",
             name: "",
           };
-          conf.fileDialog.title = `URL链接下载`;
-          conf.fileDialog.confirmText = "确定";
+          conf.fileDialog.title = `${t('file.linkDownload')}`;
+          conf.fileDialog.confirmText = t('commons.button.confirm');
           break;
       }
       conf.fileDialog.type = type;
@@ -272,7 +274,7 @@ const conf = reactive({
     },
     handleOpenDialog: () => {
       if (conf.path.length === 1)
-        return ElMessage.error("不能直接上传文件到系统根目录!");
+        return ElMessage.error(t('file.notAllowUpload'));
       conf.fileDialog.open("upload");
     },
   },
@@ -347,7 +349,7 @@ defineExpose({
                   :key="index"
                   @click.stop="conf.handleBackLevel(index)"
                 >
-                  {{ index === 0 ? "根目录" : item }}
+                  {{ index === 0 ? t('file.root') : item }}
                 </el-breadcrumb-item>
               </el-breadcrumb>
               <el-input
@@ -361,9 +363,9 @@ defineExpose({
           </div>
           <el-space :size="16">
             <!-- <el-link @click.stop="conf.handleInputPath">搜索文件/目录</el-link> -->
-            <el-checkbox label="包含子目录" size="large" />
+            <el-checkbox :label="$t('file.includeSubdir')" size="large" />
             <SearchInput
-              placeholder="搜索文件/目录"
+              :placeholder="$t('file.searchPloaceholder')"
               size="large"
               v-model="conf.keyWord"
               ref="inputPathRef"
@@ -388,17 +390,17 @@ defineExpose({
             <el-space :size="14" class="btn-group">
               <el-dropdown>
                 <el-button type="primary">
-                  上传/下载
+                  {{ $t('file.upload') }}/{{ $t('file.download') }}
                   <el-icon class="el-icon--right"><arrow-down /></el-icon>
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item @click="conf.upload.handleOpenDialog"
-                      >上传文件/文件夹</el-dropdown-item
+                      >{{ $t('file.upload') }} {{$t('file.file')}}/{{ $t('file.dir') }}</el-dropdown-item
                     >
                     <el-dropdown-item
                       @click="conf.fileDialog.open('linkDownload')"
-                      >URL链接下载</el-dropdown-item
+                      >{{ $t('file.linkDownload') }}</el-dropdown-item
                     >
                   </el-dropdown-menu>
                 </template>
@@ -433,7 +435,7 @@ defineExpose({
             <div class="btns">
               <el-dropdown>
                 <div class="btn">
-                  新建 <el-icon class="icon"><arrow-down /></el-icon>
+                  {{$t('commons.button.add')}} <el-icon class="icon"><arrow-down /></el-icon>
                 </div>
                 <template #dropdown>
                   <el-dropdown-menu>
@@ -442,7 +444,7 @@ defineExpose({
                     >
                       <div class="flex items-center" style="gap: 10px">
                         <v-s-icon name="txt" size="22" />
-                        <span>文件</span>
+                        <span>{{ $t('file.file') }}</span>
                       </div>
                     </el-dropdown-item>
                     <el-dropdown-item
@@ -450,17 +452,17 @@ defineExpose({
                     >
                       <div class="flex items-center" style="gap: 10px">
                         <v-s-icon name="folder" size="22" />
-                        <span>文件夹</span>
+                        <span>{{ $t('file.dir') }}</span>
                       </div>
                     </el-dropdown-item>
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
               <div class="btn" @click="router.push({ path: '/terminal' })">
-                终端
+                {{ $t('file.terminal') }}
                 <el-icon class="icon"><arrow-down /></el-icon>
               </div>
-              <div class="btn">/（根目录）29.47GB</div>
+              <div class="btn">/（{{$t('file.root')}}）29.47GB</div>
             </div>
           </div>
 
@@ -540,14 +542,14 @@ defineExpose({
             </template>
             <template #action="{ row }">
               <el-button type="primary" link @click="conf.handleFileClick(row)"
-                >打开</el-button
+                >{{ $t('commons.button.open') }}</el-button
               >
               <el-button
                 type="primary"
                 link
                 :disabled="row.isDir ? true : false"
                 @click="conf.handleFileDownload(row)"
-                >下载</el-button
+                >{{ $t('commons.button.download') }}</el-button
               >
               <!-- <el-button type="primary" link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
             编辑权限
@@ -555,14 +557,14 @@ defineExpose({
               <!-- <el-button type="danger" link @click="conf.fileDialog.open('delete', row)">删除</el-button> -->
               <el-dropdown class="dropdown-more">
                 <el-button type="primary" link>
-                  更多
+                  {{ $t('commons.button.more') }}
                   <!-- <el-icon class="el-icon--right"><arrow-down /></el-icon> -->
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
                     <el-dropdown-item
                       @click="conf.fileDialog.open('delete', row)"
-                      >删除</el-dropdown-item
+                      >{{ $t('commons.button.delete') }}</el-dropdown-item
                     >
                     <el-dropdown-item
                       @click="
@@ -572,7 +574,7 @@ defineExpose({
                           row
                         )
                       "
-                      >编辑权限</el-dropdown-item
+                      >{{ $t('commons.button.editAuth') }}</el-dropdown-item
                     >
                   </el-dropdown-menu>
                 </template>
@@ -588,7 +590,7 @@ defineExpose({
     >
       <template v-if="conf.fileDialog.type === 'delete'">
         <el-alert
-          title="确定删除所选文件？"
+          :title="$t('file.deleteHelper')"
           type="warning"
           show-icon
           :closable="false"
@@ -627,12 +629,13 @@ defineExpose({
         <Upload
           ref="uploadRef1"
           :path="pathStr"
+          :class-name="'normal'"
           @upload-success="conf.getFileList()"
         >
           <template #header>
             <div class="flex justify-end upload-header">
               <el-button type="info" @click="uploadRef1?.clearFiles()"
-                >清空列表</el-button
+                >{{ $t('file.clearList') }}</el-button
               >
             </div>
           </template>
@@ -644,27 +647,27 @@ defineExpose({
           :model="conf.fileDialog.row"
           :rules="{
             name: [
-              { required: true, message: '请输入文件名', trigger: 'change' },
+              { required: true, message: t('commons.rule.name'), trigger: 'change' },
             ],
             url: [
-              { required: true, message: 'URL链接不能为空', trigger: 'change' },
+              { required: true, message: t('commons.rule.link'), trigger: 'change' },
               { validator: checkLink, trigger: 'change' },
             ],
           }"
-          label-width="100px"
+          label-width="110px"
         >
-          <el-form-item label="URL地址" prop="url">
+          <el-form-item :label="$t('file.downloadUrl')" prop="url">
             <el-input
               v-model="conf.fileDialog.row.url"
-              placeholder="在此处粘贴或输入url地址"
+              :placeholder="$t('file.linkPlaceholder')"
               clearable
               @input="getFileName"
             />
           </el-form-item>
-          <el-form-item label="下载到" prop="path">
+          <el-form-item :label="$t('file.uploadTo')" prop="path">
             <el-input
               v-model="conf.fileDialog.row.path"
-              placeholder="请选择下载路径"
+              :placeholder="$t('file.downloadPlaceholder')"
             >
               <template #append>
                 <v-s-icon
@@ -675,10 +678,10 @@ defineExpose({
               </template>
             </el-input>
           </el-form-item>
-          <el-form-item label="文件名" prop="name">
+          <el-form-item :label="$t('file.fileName')" prop="name">
             <el-input
               v-model="conf.fileDialog.row.name"
-              placeholder="请输入保存文件名"
+              :placeholder="$t('file.fileNamePlaceholder')"
               clearable
             />
           </el-form-item>
@@ -697,11 +700,11 @@ defineExpose({
       </template>
     </custom-dialog>
 
-    <custom-dialog v-model="conf.selectFolder.show" title="选择文件夹">
+    <custom-dialog v-model="conf.selectFolder.show" :title="$t('file.selectFolder')">
       <file-panel @select="(path) => (conf.selectFolder.path = path)" />
       <template #footer>
         <el-button type="primary" @click="conf.selectFolder.confirm"
-          >确定</el-button
+          >{{ $t('commons.button.confirm') }}</el-button
         >
       </template>
     </custom-dialog>
@@ -722,6 +725,9 @@ defineExpose({
   display: block;
   background: transparent;
 }
+:deep(.normal) {
+  height: auto;
+}
 .file-list {
   height: 100%;
   width: 100%;
@@ -741,7 +747,7 @@ defineExpose({
   .btns {
     background: rgb(var(--bg-card-color));
     height: 40px;
-    width: 382px;
+    // width: 382px;
     display: flex;
     align-items: center;
     margin-left: 16px;

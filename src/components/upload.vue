@@ -3,6 +3,7 @@
     <slot name="header"></slot>
     <div
       class="el-upload-dragger"
+      :class="props.className"
       @dragover="handleDragover"
       @drop="handleDrop"
       @dragleave="handleDragleave"
@@ -22,7 +23,7 @@
             :limit="1000"
           >
             <div class="el-upload__text">
-              请将需要上传的文件/文件夹拖到此处或<el-link>点击上传文件</el-link>
+              {{$t('file.uploadText')}}<el-link> {{ $t('file.clickUpload')}}</el-link>
             </div>
           </el-upload>
         </div>
@@ -95,6 +96,8 @@ import i18n from "@/lang";
 import { Close, Document, UploadFilled, Select } from "@element-plus/icons-vue";
 import { ElMessage, type FormInstance } from "element-plus";
 import { Api } from "@/api/Api";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = defineProps({
   path: {
     type: String,
@@ -116,6 +119,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  className: {
+    type: String,
+    default: "",
+  }
 });
 const emit = defineEmits(["upload-success"]);
 interface UploadFileProps {
@@ -165,7 +172,7 @@ const handleDrop = async (event: DragEvent) => {
         submit();
       }
     } else {
-      ElMessage.warning(i18n.global.t("file.uploadOverLimit"));
+      ElMessage.warning(t("file.uploadOverLimit"));
     }
     initTempFiles();
   }
@@ -250,7 +257,7 @@ const fileOnChange = (_uploadFile: UploadFile, uploadFiles: UploadFiles) => {
       uploaderFiles.value = uploaderFiles.value.filter(
         (file: UploadFile) => file.uid !== _uploadFile.uid
       );
-      ElMessage.error(i18n.global.t("file.typeErrOrEmpty", [_uploadFile.name]));
+      ElMessage.error(t("file.typeErrOrEmpty", [_uploadFile.name]));
     };
   } else {
     uploaderFiles.value = uploadFiles;
@@ -264,7 +271,7 @@ const clearFiles = () => {
 
 const handleExceed: UploadProps["onExceed"] = () => {
   clearFiles();
-  ElMessage.warning(i18n.global.t("file.uploadOverLimit"));
+  ElMessage.warning(t("file.uploadOverLimit"));
 };
 
 const handleSuccess: UploadProps["onSuccess"] = (res, file) => {
@@ -323,7 +330,7 @@ const handleFileUpload = (
 };
 
 const uploadFile = async (files: any[]) => {
-  if (props.path == "/") return ElMessage.warning("不允许上传根目录");
+  if (props.path == "/") return ElMessage.warning(t('file.notAllowUpload'));
   if (files.length == 0) {
     clearFiles();
   } else {
@@ -331,7 +338,7 @@ const uploadFile = async (files: any[]) => {
     let successCount = 0;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
-      uploadHelper.value = i18n.global.t("file.fileUploadStart", [file.name]);
+      uploadHelper.value = t("file.fileUploadStart", [file.name]);
 
       //   let isSuccess =
       //     file.size <= MAX_SINGLE_FILE_SIZE
@@ -351,7 +358,7 @@ const uploadFile = async (files: any[]) => {
 
     if (successCount === files.length) {
       clearFiles();
-      ElMessage.success(i18n.global.t("file.uploadSuccess"));
+      ElMessage.success(t("file.uploadSuccess"));
       emit("upload-success");
     }
   }

@@ -12,7 +12,7 @@ export function checkIPStr(rule: any, value: string, callback: any) {
 export function checkLink(rule: any, value: string, callback: any) {
   const linkRegex = /^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/;
   if (value && !linkRegex.test(value)) {
-    callback(new Error("请输入正确的URL地址"));
+    callback(new Error((t("commons.rule.link")) ));
   } else {
     callback();
   }
