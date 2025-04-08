@@ -292,7 +292,13 @@ const conf = reactive({
   },
   getWidth: () => {},
 });
-
+const getFileName = (url: string) => {
+    // 处理文件名
+    const paths = url.split('/');
+    const fullFileName = paths[paths.length - 1];
+    conf.fileDialog.row.name = fullFileName;
+  
+};
 onMounted(() => {
   conf.getFileList();
 });
@@ -652,6 +658,7 @@ defineExpose({
               v-model="conf.fileDialog.row.url"
               placeholder="在此处粘贴或输入url地址"
               clearable
+              @input="getFileName"
             />
           </el-form-item>
           <el-form-item label="下载到" prop="path">
@@ -704,7 +711,7 @@ defineExpose({
 </template>
 
 <style scoped lang="less">
-:deep(.custom-dialog__body){
+:deep(.custom-dialog__body) {
   height: 600px;
   overflow: scroll;
 }
@@ -771,7 +778,7 @@ defineExpose({
 :deep(.el-input__wrapper) {
   height: 36px;
 }
-:deep(.el-table .el-table__cell){
+:deep(.el-table .el-table__cell) {
   padding: 2px 14px;
 }
 .back-level {
