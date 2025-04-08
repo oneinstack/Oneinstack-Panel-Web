@@ -255,7 +255,7 @@ conf.list.params.type = routeName
                 show-password>
                 <template #append>
                   <el-button @click="conf.form.handleRandomPassword()">
-                    {{ $t('commons.login.randomPassword') }}
+                    {{ $t('commons.button.random') }}
                   </el-button>
                 </template>
               </el-input>

@@ -11,7 +11,7 @@
       <div class="firewall-dialog-header">
         <div class="firewall-dialog-header-title">
           <span class="firewall-dialog-header-title-text">{{
-            props.type ? "添加防火墙" : "更新防火墙"
+            props.type ? $t('security.addFirewall') : $t('security.updateFirewall')
           }}</span>
         </div>
       </div>
@@ -27,21 +27,21 @@
         status-icon
         label-width="50px"
       >
-        <el-form-item label="协议" prop="protocol" :required="true">
+        <el-form-item :label="$t('security.protocol')" prop="protocol" :required="true">
           <el-select v-model="ruleForm.protocol" placeholder="请选择协议类型">
             <el-option label="TCP" value="tcp" />
             <el-option label="UDP" value="udp" />
             <!-- <el-option label="icmp" value="icmp" /> -->
           </el-select>
         </el-form-item>
-        <el-form-item label="端口" prop="ports" :required="true">
+        <el-form-item :label="$t('security.port')" prop="ports" :required="true">
           <el-input
             v-model="ruleForm.ports"
-            placeholder="支持多个端口，如:80,88"
+            :placeholder="$t('security.ports') + $t('commons.example') + '80,88'"
           />
         </el-form-item>
         <el-form-item
-          label="来源"
+          :label="$t('security.source')"
           prop="ips"
           :required="ruleForm.ips === 'true'"
         >
@@ -49,26 +49,26 @@
             v-model="ruleForm.ips"
             @change="$refs.ruleFormRef?.validateField('ips')"
           >
-            <el-radio value="">全部IP</el-radio>
-            <el-radio value="true">部分IP</el-radio>
+            <el-radio value="">{{$t('security.allIP')}}</el-radio>
+            <el-radio value="true">{{$t('security.partIP')}}</el-radio>
           </el-radio-group>
           <el-input
             v-if="ruleForm.ips === 'true'"
             v-model="ipsdata"
-            placeholder="支持多个IP地址，如：192.168.1.1,192.168.1.0/24"
+            :placeholder="$t('security.ports') + $t('commons.example') + '192.168.1.1,192.168.1.0/24'"
             @blur="$refs.ruleFormRef?.validateField('ips')"
           />
         </el-form-item>
-        <el-form-item label="策略" prop="strategy" :required="true">
-          <el-select v-model="ruleForm.strategy" placeholder="请选择策略类型">
-            <el-option label="放行" value="allow" />
-            <el-option label="禁止" value="deny" />
+        <el-form-item :label="$t('security.policy')" prop="strategy" :required="true">
+          <el-select v-model="ruleForm.strategy" :placeholder="$t('security.policyPlaceholder')">
+            <el-option :label="$t('security.allow')" value="allow" />
+            <el-option :label="$t('security.forbid')" value="deny" />
           </el-select>
         </el-form-item>
-        <el-form-item label="方向" prop="direction" :required="true">
-          <el-select v-model="ruleForm.direction" placeholder="请选择规则方向">
-            <el-option label="入站" value="in" />
-            <el-option label="出站" value="out" />
+        <el-form-item :label="$t('security.direction')" prop="direction" :required="true">
+          <el-select v-model="ruleForm.direction" :placeholder="$t('security.directionPlaceholder')">
+            <el-option :label="$t('security.inbound')" value="in" />
+            <el-option :label="$t('security.outbound')" value="out" />
           </el-select>
         </el-form-item>
         <!-- <el-form-item label="状态" prop="state" :required="true">
@@ -82,12 +82,12 @@
       </el-select>
     </el-form-item> -->
 
-        <el-form-item label="备注" prop="remark">
-          <el-input v-model="ruleForm.remark" placeholder="可为空" />
+        <el-form-item :label="$t('commons.remark')" prop="remark">
+          <el-input v-model="ruleForm.remark" :placeholder="$t('security.remarkPlaceholder')" />
         </el-form-item>
         <div class="textbox">
           <div class="tagbox">*</div>
-          支持添加多个端口,如:80,88
+          {{$t('security.addPorts')}}{{$t('commons.example')}}:80,88
         </div>
         <!-- <div class="textbox">
       <div class="tagbox">* </div>
@@ -97,8 +97,8 @@
     </template>
     <template #footer>
       <div style="flex: auto">
-        <el-button @click="cancelClick">取消</el-button>
-        <el-button type="primary" @click="confirmClick">确定</el-button>
+        <el-button @click="cancelClick">{{$t('commons.button.cancel')}}</el-button>
+        <el-button type="primary" @click="confirmClick">{{$t('commons.button.confirm')}}</el-button>
       </div>
     </template>
   </el-dialog>
@@ -111,7 +111,8 @@ import { ElMessageBox, ElMessage } from "element-plus";
 import type { DrawerProps } from "element-plus";
 import { Api } from "@/api/Api";
 import { log } from "console";
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const drawer2 = ref(false);
 const direction = ref<DrawerProps["direction"]>("rtl");
 const radio1 = ref("Option 1");
@@ -127,16 +128,16 @@ const ruleForm = ref({
 });
 const ruleFormRef = ref<FormInstance>();
 const rules = ref<FormRules>({
-  protocol: [{ required: true, message: "请选择协议类型", trigger: "change" }],
+  protocol: [{ required: true, message: t('commons.rule.protocol'), trigger: "change" }],
   ports: [
-    { required: true, message: "请输入端口", trigger: "blur" },
+    { required: true, message: t('commons.rule.port'), trigger: "blur" },
     {
       validator: (rule, value, callback) => {
         const portPattern = /^(\d+(-\d+)?)(,\d+(-\d+)?)*$/;
         if (!value || portPattern.test(value)) {
           callback();
         } else {
-          callback(new Error("端口格式不正确"));
+          callback(new Error(t('commons.rule.port')));
         }
       },
       trigger: "blur",
@@ -147,14 +148,14 @@ const rules = ref<FormRules>({
       validator: (rule, value, callback) => {
         if (ruleForm.value.ips === "true") {
           if (!ipsdata.value) {
-            callback(new Error("请输入IP地址"));
+            callback(new Error(t('commons.rule.ip')));
             return;
           }
           // 修改后的正则表达式，支持 IP 范围
           const ipPattern =
             /^((\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?|(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3})(,((\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?|(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}))*$/;
           if (!ipPattern.test(ipsdata.value)) {
-            callback(new Error("IP地址格式不正确"));
+            callback(new Error(t('commons.rule.ip')));
             return;
           }
           // 进一步验证 IP 范围的合理性
@@ -178,9 +179,9 @@ const rules = ref<FormRules>({
       trigger: "blur",
     },
   ],
-  strategy: [{ required: true, message: "请选择策略类型", trigger: "change" }],
-  direction: [{ required: true, message: "请选择规则方向", trigger: "change" }],
-  state: [{ required: true, message: "请选择状态", trigger: "change" }],
+  strategy: [{ required: true, message: t('commons.rule.policyType'), trigger: "change" }],
+  direction: [{ required: true, message: t('commons.rule.direction'), trigger: "change" }],
+  state: [{ required: true, message: t('commons.rule.state'), trigger: "change" }],
 });
 const ipsdata = ref("");
 const isValidPorts = ref(true);
