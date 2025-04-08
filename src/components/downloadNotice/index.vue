@@ -1,5 +1,5 @@
 <template>
-  <div class="download-notice" @click="notice.open">
+  <div v-draggable class="download-notice" @click="notice.open">
     <el-badge
       :value="notice.num"
       :max="99"
