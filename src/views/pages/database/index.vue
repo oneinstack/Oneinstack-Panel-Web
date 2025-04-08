@@ -8,6 +8,8 @@ import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
 import { checkIPStr } from "@/utils/validator";
 import sapp from '@/sstore/sapp'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n();
 export interface ConfProps {
   conf: typeof conf
 }
@@ -80,19 +82,19 @@ const conf = reactive({
       switch (conf.list.params.type) {
         case 'mysql':
           return [
-            { prop: 'name', label: '数据库名' },
-            { prop: 'user', label: '用户名' },
-            { prop: 'password', label: '密码' },
-            { prop: 'capacity', label: '容量', placeholder: '未配置' },
-            { prop: 'p_addr', label: '数据库位置' },
-            { prop: 'action', label: '操作', align: 'center' }
+            { prop: 'name', label: t('database.databaseName') },
+            { prop: 'user', label: t('commons.login.username') },
+            { prop: 'password', label: t('commons.login.password') },
+            { prop: 'capacity', label: t('database.capacity'), placeholder: '未配置' },
+            { prop: 'p_addr', label: t('database.databaseLocation') },
+            { prop: 'action', label: t('commons.action'), align: 'center' }
           ]
         case 'redis':
           return [
-            { prop: 'key', label: '键' },
-            { prop: 'type', label: '类型' },
-            { prop: 'length', label: '长度' },
-            { prop: 'expiration', label: '有效期' }
+            { prop: 'key', label: t('database.key') },
+            { prop: 'type', label: t('database.type') },
+            { prop: 'length', label: t('database.length') },
+            { prop: 'expiration', label: t('database.validity') }
           ]
         default:
           return []
@@ -118,13 +120,13 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: '添加数据库',
+    title: t('database.addDatabase'),
     type: 'add',
     loading: false,
     open: (type: 'add') => {
       conf.drawer.type = type
       conf.drawer.show = true
-      conf.drawer.title = '添加数据库'
+      conf.drawer.title = t(type === 'add' ? t('database.addDatabase') : t('database.editDatabase'))
     },
     onClose: () => {
       conf.form.instance?.clearValidate()
@@ -157,25 +159,25 @@ const conf = reactive({
           case 'mysql':
             return [
               {
-                label: '数据库名',
+                label: t('database.databaseName'),
                 prop: 'name',
                 type: 'custom',
-                rules: [{ required: true, message: '请输入数据库名', trigger: 'change' }]
+                rules: [{ required: true, message: t('commons.rule.database'), trigger: 'change' }]
               },
               {
-                label: '用户名',
+                label: t('commons.login.username'),
                 prop: 'root',
                 type: 'input',
-                rules: [{ required: true, message: '请输入用户名', trigger: 'change' }]
+                rules: [{ required: true, message: t('commons.rule.username'), trigger: 'change' }]
               },
               {
-                label: '密码',
+                label: t('commons.login.password'),
                 prop: 'password',
                 type: 'custom',
-                rules: [{ required: true, message: '请输入密码', trigger: 'change' }]
+                rules: [{ required: true, message: t('commons.rule.password'), trigger: 'change' }]
               },
               {
-                label: '权限',
+                label: t('database.role'),
                 prop: 'auth',
                 // asyncOptions: async () => {
                 //   const { data } = await Api.getConnlist(conf.list.params)
@@ -187,16 +189,16 @@ const conf = reactive({
                 // },
                 options: [
                   {
-                    label: '所有人(%)',
+                    label: t('database.allPersons')+'(%)',
                     value: 'all'
                   },
                   {
-                    label: '指定IP',
+                    label: t('database.ip'),
                     value: 'IP'
                   }
                 ],
                 type: 'select',
-                rules: [{ required: true, message: '请选择', trigger: 'change' }]
+                rules: [{ required: true, message: t('commons.rule.select'), trigger: 'change' }]
               },
               {
                 label: '        ',
@@ -222,7 +224,7 @@ const conf = reactive({
 })
 
 const routeName = (System.getRouterPath() as string).match(/(?<=\/database\/)\w*/)?.[0]
-conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)!.index
+conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)?.index as any
 conf.list.params.type = routeName
 </script>
 
@@ -231,7 +233,7 @@ conf.list.params.type = routeName
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <router-view :conf="conf" />
     <!-- <install-mask :is-installed="websiteInfo" install-text="安装Mysql" @install="handleInstall"> -->
-      <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" :loading="conf.drawer.loading"
+      <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" :loading="conf.drawer.loading" :cancel-text="$t('commons.button.cancel')" :confirm-text="$t('commons.button.confirm')"
         :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
         <template v-if="conf.drawer.type === 'add'">
           <custom-form :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
@@ -253,14 +255,14 @@ conf.list.params.type = routeName
                 show-password>
                 <template #append>
                   <el-button @click="conf.form.handleRandomPassword()">
-                    随机密码
+                    {{ $t('commons.login.randomPassword') }}
                   </el-button>
                 </template>
               </el-input>
             </template>
             <template v-if="conf.form.data.value.auth == 'IP'" #authIP="{ row }">
               <el-input v-model="conf.form.data.value.authIP" :placeholder="row.placeholder" type="textarea" />
-              <span class="auth-ip-tip">多个 ip 以逗号分隔，例：172.16.10.111,172.16.10.112</span>
+              <span class="auth-ip-tip">{{$t('database.ipTip')}}，{{$t('commons.example')}}172.16.10.111,172.16.10.112</span>
             </template>
           </custom-form>
         </template>

@@ -5,7 +5,8 @@ import { Api } from '@/api/Api'
 import { ElMessage, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
-
+import { useI18n } from 'vue-i18n'
+const {t} = useI18n();
 const conf = reactive({
   themeColor: {
     light: ['#F7911C'],
@@ -18,12 +19,12 @@ const conf = reactive({
       type: 'mysql'
     },
     columns: [
-      { prop: 'addr', label: '数据库地址' },
-      { prop: 'port', label: '端口' },
-      { prop: 'root', label: '用户名' },
-      { prop: 'password', label: '密码' },
-      { prop: 'remark', label: '备注' },
-      { prop: 'action', label: '操作' }
+      { prop: 'addr', label: t('database.databaseAddress')  },
+      { prop: 'port', label: t('database.port') },
+      { prop: 'root', label: t('commons.login.username')  },
+      { prop: 'password', label: t('commons.login.password')  },
+      { prop: 'remark', label: t('commons.remark') },
+      { prop: 'action', label: t('commons.action'),align:'center' }
     ],
     getData: async () => {
       conf.list.loading = true
@@ -45,13 +46,13 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: '添加数据库',
+    title: t('commons.button.add') + t('database.database'),
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
-      conf.drawer.title = '添加数据库'
+      conf.drawer.title = t('commons.button.add') + t('database.database')
       if (type === 'edit') {
-        conf.drawer.title = '编辑数据库'
+        conf.drawer.title = t('commons.button.edit') + t('database.database')
         const cloneRow = structuredClone(toRaw(row))
         conf.form.data.value = cloneRow
       }
@@ -87,31 +88,31 @@ const conf = reactive({
           case 'mysql':
             return [
               {
-                label: '数据库地址',
+                label: t('database.databaseAddress'),
                 prop: 'addr',
                 type: 'input',
-                rules: [{ required: true, message: '请输入数据库地址', trigger: 'blur' }]
+                rules: [{ required: true, message: t('commons.rule.databaseAddress'), trigger: 'blur' }]
               },
               {
-                label: '端口',
+                label: t('database.port'),
                 prop: 'port',
                 type: 'input',
-                rules: [{ required: true, message: '请输入端口', trigger: 'blur' }]
+                rules: [{ required: true, message: t('commons.rule.port'), trigger: 'blur' }]
               },
               {
-                label: '用户名',
+                label: t('commons.login.username'),
                 prop: 'root',
                 type: 'input',
-                rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }]
+                rules: [{ required: true, message: t('commons.rule.username'), trigger: 'blur' }]
               },
               {
-                label: '密码',
+                label: t('commons.login.password'),
                 prop: 'password',
                 type: 'password',
-                rules: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+                rules: [{ required: true, message: t('commons.rule.password'), trigger: 'blur' }]
               },
               {
-                label: '备注',
+                label: t('commons.remark'),
                 prop: 'remark',
                 type: 'textarea'
               }
@@ -132,28 +133,28 @@ conf.list.getData()
     <div class="container">
       <div class="tool-bar">
         <div class="btn-group">
-          <el-button type="primary" @click="conf.drawer.open('add')">添加远程服务器</el-button>
+          <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('commons.button.add') }}{{ $t('database.remoteServer') }}</el-button>
         </div>
       </div>
       <div class="box2">
         <div class="drawerHeader">
           <div class="back" @click="System.router.back()">
             <el-icon><Back /></el-icon>
-            <span>返回</span>
+            <span>{{ $t('commons.button.back') }}</span>
           </div>
-          <span class="title">远程服务器</span>
+          <span class="title">{{ $t('commons.button.add') }}{{ $t('database.remoteServer') }}</span>
         </div>
         <custom-table :loading="conf.list.loading" :data="conf.list.data" :columns="conf.list.columns">
           <template #empty>
             <div style="margin-top: 40px">
               <span>
-                您的远程服务器列表为空，您可以
+                {{ $t('database.tableRemoteNoData')  }}
                 <a
                   class="cursor-pointer"
                   style="color: var(--el-color-primary); text-decoration: underline"
                   @click="conf.drawer.open('add')"
                 >
-                  添加一个远程服务器
+                  {{ $t('commons.button.add') }}{{ $t('database.remoteServer') }}
                 </a>
               </span>
             </div>
@@ -177,8 +178,8 @@ conf.list.getData()
             </div>
           </template>
           <template #action="{ row }">
-            <el-button type="primary" link @click="conf.drawer.open('edit', row)">编辑</el-button>
-            <el-button type="primary" link @click="conf.list.syncData(row.id)">同步</el-button>
+            <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ $t('commons.button.edit') }}</el-button>
+            <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ $t('commons.button.sync') }}</el-button>
           </template>
         </custom-table>
       </div>

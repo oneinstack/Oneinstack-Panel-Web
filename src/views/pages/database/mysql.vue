@@ -51,9 +51,9 @@ const handleInstall = () => {
         <div class="flex items-center">
           <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
           <span class="ellipsis" style="margin-left: 32px; flex: 1;">
-            请在添加数据库后，务必到[
-            <span style="color: var(--el-color-primary)" @click="router.push('/task')">计划任务</span>
-            ]添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者MySQL命令行创建的数据库需要点击"从服务器获取"才能在计划任务中备份
+            {{ $t('database.tipLeft') }}
+            <span style="color: var(--el-color-primary)" @click="router.push('/task')">{{ $t('database.tipSpan') }}</span>
+            {{ $t('database.tipRight')  }}
           </span>
         </div>
         <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false"
@@ -64,9 +64,9 @@ const handleInstall = () => {
       <div class="container">
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
-            <el-button type="primary" @click="conf.drawer.open('add')">添加数据库</el-button>
+            <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('commons.button.add') }}{{ $t('database.database') }}</el-button>
             <!-- <el-button type="primary">root密码</el-button> -->
-            <el-button type="primary" @click="System.router.push('/database/remote')">远程数据库</el-button>
+            <el-button type="primary" @click="System.router.push('/database/remote')">{{ $t('database.remoteDatabase') }}</el-button>
             <!-- <el-button type="primary">phpMyAdmin</el-button>
         <el-dropdown>
           <el-button type="primary">
@@ -109,7 +109,7 @@ const handleInstall = () => {
 </el-dropdown> -->
           </el-space>
           <div class="demo-form-inline">
-            <search-input v-model="conf.list.params.name" placeholder="请输入数据库名称" style="margin-right: 18px"
+            <search-input v-model="conf.list.params.name" :placeholder="$t('database.searchPlaceholder')" style="margin-right: 18px"
               @search="conf.list.getData" />
             <el-button :icon="Setting" type="primary" />
           </div>
@@ -121,10 +121,10 @@ const handleInstall = () => {
             <template #empty>
               <div>
                 <span>
-                  您的数据库列表为空，您可以
+                  {{ $t('database.tableNoData') }}
                   <a class="cursor-pointer" style="color: var(--el-color-primary); text-decoration: underline"
                     @click="conf.drawer.open('add')">
-                    添加一个数据库
+                    {{ $t('database.tableNoDataAdd')  }}
                   </a>
                 </span>
               </div>

@@ -83,20 +83,20 @@ onMounted(() => {
     <div class="tool-bar">
       <el-space class="btn-group">
         <!-- <el-button type="primary" @click="conf.drawer.open('add')">添加key</el-button> -->
-        <el-button type="primary" @click="System.router.push('/database/remote')">远程服务器</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote')">{{ $t('database.remoteServer') }}</el-button>
         <!-- <el-button type="primary">备份列表</el-button>
         <el-button type="primary">清空数据库</el-button> -->
       </el-space>
       <div class="demo-form-inline flex" style="gap: 16px">
         <span class="flex items-center" style="color: var(--el-color-primary); gap: 8px">
           <el-icon :size="18"><WarningFilled /></el-icon>
-          当前所有操作都关联至
+          {{ $t('database.relevance') }}
         </span>
         <el-select
           v-model="conf.list.params.id"
           placeholder="请选择一个服务器"
           style="width: 200px"
-          no-data-text='暂无数据'
+          :no-data-text="$t('commons.noData')"
           @change="conf.server.onChange"
         >
           <el-option v-for="item in conf.server.options" v-bind="item" />
@@ -120,7 +120,7 @@ onMounted(() => {
         <template #empty>
           <div class="no-data">
             <img src="/static/images/empty.webp" alt="" />
-            <span>暂无数据</span>
+            <span>{{ $t('commons.noData') }}</span>
           </div>
         </template>
       </custom-table>
