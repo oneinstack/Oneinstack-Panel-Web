@@ -222,7 +222,7 @@ const conf = reactive<Config>({
           value: "hi",
         },
         {
-          label: "印度尼西亚语",
+          label: "Bahasa Indonesia",
           value: "id",
         },
         {
