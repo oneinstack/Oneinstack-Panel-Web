@@ -14,7 +14,7 @@ import dayjs from "dayjs";
 import sapp from "@/sstore/sapp";
 import { useI18n } from "vue-i18n";
 const router = useRouter();
-const {t} = useI18n();
+const { t } = useI18n();
 const conf = reactive({
   tabs: {
     activeIndex: 0,
@@ -23,7 +23,7 @@ const conf = reactive({
         // name: "PHP项目",
         index: 0,
         value: "php",
-        name:t('website.phpProject')
+        name: t("website.phpProject"),
       },
       // {
       //   name: 'JAVA项目',
@@ -45,13 +45,13 @@ const conf = reactive({
         // name: "反向代理",
         index: 5,
         value: "proxy",
-        name:t('website.reverseProxy')
+        name: t("website.reverseProxy"),
       },
       {
         // name: "HTML项目",
         index: 6,
         value: "static",
-        name:t('website.htmlProject')
+        name: t("website.htmlProject"),
       },
       // {
       //   name: '其他项目',
@@ -69,12 +69,12 @@ const conf = reactive({
     total: 0,
     selection: [], // 存储选中的行
     columns: [
-      { prop: "name", label: t('website.websiteName'), width: 200 },
+      { prop: "name", label: t("website.websiteName"), width: 200 },
       // { prop: 'domain', label: '其他域名', width: 250 },
-      { prop: "dir", label: t('website.directory'), width: 400 },
+      { prop: "dir", label: t("website.directory"), width: 400 },
       {
         prop: "type",
-        label: t('website.type'),
+        label: t("website.type"),
         width: 200,
         formatter: (row: any) => {
           const typeMap = {
@@ -85,10 +85,10 @@ const conf = reactive({
           return typeMap[row.type as keyof typeof typeMap] || row.type;
         },
       },
-      { prop: "remark", label: t('commons.remark') },
+      { prop: "remark", label: t("commons.remark") },
       {
         prop: "create_time",
-        label: t('website.createTime'),
+        label: t("website.createTime"),
         width: 200,
         // 添加格式化方法
         formatter: (row: any) => {
@@ -99,7 +99,7 @@ const conf = reactive({
       },
       {
         prop: "action",
-        label: t('commons.action'),
+        label: t("commons.action"),
         align: "center",
         width: 240,
         fixed: "right",
@@ -110,7 +110,7 @@ const conf = reactive({
         path: `/file`,
         query: {
           root_dir: root_dir,
-        }
+        },
       });
     },
     handleSelectionChange: (selection: any[]) => {
@@ -154,14 +154,14 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: t('website.createWebsite'),
+    title: t("website.createWebsite"),
     type: "add",
     loading: false,
     open: (type: "add" | "edit", row?: any) => {
-      conf.drawer.title = t('website.createWebsite');
+      conf.drawer.title = t("website.createWebsite");
       conf.drawer.type = type;
       if (type === "edit") {
-        conf.drawer.title = t('website.settingWebsite');
+        conf.drawer.title = t("website.settingWebsite");
         const cloneRow = structuredClone(toRaw(row));
         const domain = cloneRow.domain?.split(",");
         conf.form.data.value = cloneRow;
@@ -226,16 +226,20 @@ const conf = reactive({
           case "static":
             return [
               {
-                label: t('website.mainDomain'),
+                label: t("website.mainDomain"),
                 type: "input",
-                placeholder: t('website.domainPlaceholder'),
+                placeholder: t("website.domainPlaceholder"),
                 prop: "name",
                 rules: [
-                  { required: true, message: t('website.domainHelper'), trigger: "blur" },
+                  {
+                    required: true,
+                    message: t("website.domainHelper"),
+                    trigger: "blur",
+                  },
                   {
                     pattern:
                       /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                    message: t('website.domainVaild'),
+                    message: t("website.domainVaild"),
                     trigger: "blur",
                   },
                 ],
@@ -257,16 +261,20 @@ const conf = reactive({
               //   prop: 'domain'1
               // },
               {
-                label: t('website.directory'),
+                label: t("website.directory"),
                 type: "input",
                 prop: "dir",
                 rules: [
-                  { required: true, message: t('website.directoryHelper'), trigger: "blur" },
+                  {
+                    required: true,
+                    message: t("website.directoryHelper"),
+                    trigger: "blur",
+                  },
                   // { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
                 ],
               },
               {
-                label: t('commons.remark'),
+                label: t("commons.remark"),
                 type: "textarea",
                 prop: "remark",
               },
@@ -276,15 +284,19 @@ const conf = reactive({
             conf.form.data.value.tar_url = "$http_host";
             return [
               {
-                label: t('website.mainDomain'),
+                label: t("website.mainDomain"),
                 type: "input",
-                placeholder: t('website.domainPlaceholder'),
+                placeholder: t("website.domainPlaceholder"),
                 prop: "name",
                 rules: [
-                  { required: true, message: t('website.domainHelper'), trigger: "blur" },
+                  {
+                    required: true,
+                    message: t("website.domainHelper"),
+                    trigger: "blur",
+                  },
                   {
                     pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/,
-                    message: t('website.domainVaild'),
+                    message: t("website.domainVaild"),
                     trigger: "blur",
                   },
                 ],
@@ -296,14 +308,20 @@ const conf = reactive({
               //   prop: 'domain'
               // },
               {
-                label: t('website.proxyAddress'),
-                type: 'custom',
-                placeholder: `${t('commons.example')}：127.0.0.1:8080`,
-                prop: 'send_url',
-                rules: [{ required: true, message:  t('website.proxyAddressHelper'), trigger: 'blur' }]
+                label: t("website.proxyAddress"),
+                type: "custom",
+                placeholder: `${t("commons.example")}：127.0.0.1:8080`,
+                prop: "send_url",
+                rules: [
+                  {
+                    required: true,
+                    message: t("website.proxyAddressHelper"),
+                    trigger: "blur",
+                  },
+                ],
               },
               {
-                label: t('commons.remark'),
+                label: t("commons.remark"),
                 type: "textarea",
                 prop: "remark",
               },
@@ -316,7 +334,7 @@ const conf = reactive({
   },
   dialog: {
     show: false,
-    title: t('website.delTitle'),
+    title: t("website.delTitle"),
     type: "delete",
     row: {} as any,
     open: (type: "delete", row?: any) => {
@@ -324,7 +342,7 @@ const conf = reactive({
       conf.dialog.row = row;
       switch (type) {
         case "delete":
-          conf.dialog.title = t('website.delTitle');
+          conf.dialog.title = t("website.delTitle");
           break;
       }
       conf.dialog.show = true;
@@ -363,24 +381,23 @@ conf.website.getData();
 </script>
 
 <template>
-  <div class="website-container">
+  <div class="website-container flex-col">
     <card-tabs
       :list="conf.tabs.list"
       :active-index="conf.tabs.activeIndex"
       :click-active="conf.tabs.clickActive"
     />
-    <div>
-      <install-mask
-        :is-installed="conf.website.websiteInfo"
-        @install="handleInstall"
-      >
-        <div class="tool-bar">
-          <el-space class="btn-group" :size="14">
-            <el-button type="primary" @click="conf.website.handleAdd"
-              >{{ $t(('website.addWebsite')) }}</el-button
-            >
+    <install-mask
+      :is-installed="conf.website.websiteInfo"
+      @install="handleInstall"
+    >
+      <div class="tool-bar">
+        <el-space class="btn-group" :size="14">
+          <el-button type="primary" @click="conf.website.handleAdd">{{
+            $t("website.addWebsite")
+          }}</el-button>
 
-            <!-- <el-dropdown>
+          <!-- <el-dropdown>
             <el-button type="primary">
               <span class="el-dropdown-link">
                 高级设置
@@ -427,108 +444,95 @@ conf.website.getData();
               </el-dropdown-menu>
             </template>
 </el-dropdown> -->
+        </el-space>
+        <div class="demo-form-inline">
+          <el-space class="btn-group" :size="14">
+            <search-input
+              v-model="conf.website.params.name"
+              :placeholder="$t('website.searchPlaceholder')"
+              style="margin-right: 18px"
+              @search="conf.website.getData()"
+            />
+            <el-button
+              :icon="Refresh"
+              type="primary"
+              @click="conf.website.getData()"
+            />
+            <!-- <el-button :icon="Setting" type="primary" /> -->
           </el-space>
-          <div class="demo-form-inline">
-            <el-space class="btn-group" :size="14">
-              <search-input
-                v-model="conf.website.params.name"
-                :placeholder="$t('website.searchPlaceholder')"
-                style="margin-right: 18px"
-                @search="conf.website.getData()"
-              />
-              <el-button
-                :icon="Refresh"
-                type="primary"
-                @click="conf.website.getData()"
-              />
-              <!-- <el-button :icon="Setting" type="primary" /> -->
-            </el-space>
-          </div>
         </div>
-        <div class="box2">
-          <custom-table
-            v-model:page="conf.website.params.page"
-            :loading="conf.website.loading"
-            :empty-text="t('commons.noData')"
-            :data="conf.website.data"
-            :columns="conf.website.columns"
-            :auto-pagination="false"
-            :total="conf.website.total"
-            :page-size="conf.website.params.pageSize"
-            :selection="true"
-            @selection-change="conf.website.handleSelectionChange"
-            @update:page="conf.website.getData"
-          >
-            <template #dir="{ row }">
-              <el-link @click="conf.website.goPath(row.root_dir)">{{ row.root_dir }}</el-link>
-            </template>
-            <template #action="{ row }">
-              <el-button type="primary" link style="margin-right: 8px"
-                >{{ $t('website.statistics') }}</el-button
-              >
-              <span
-                style="
-                  border-right: 1px solid #d9d9d9;
-                  height: 12px;
-                  margin-right: 8px;
-                "
-              ></span>
-              <el-button type="primary" link style="margin-right: 8px"
-                >WAF</el-button
-              >
-              <span
-                style="
-                  border-right: 1px solid #d9d9d9;
-                  height: 12px;
-                  margin-right: 8px;
-                "
-              ></span>
-              <el-button
-                type="primary"
-                link
-                style="margin-right: 8px"
-                @click="conf.drawer.open('edit', row)"
-                >{{ $t('commons.button.setting') }}</el-button
-              >
-              <span
-                style="
-                  border-right: 1px solid #d9d9d9;
-                  height: 12px;
-                  margin-right: 8px;
-                "
-              ></span>
-              <el-button
-                type="danger"
-                link
-                style="
-                  color: #ff4d4f;
-                  --el-button-hover-text-color: #d9363e;
-                  --el-button-disabled-text-color: #ffccc7;
-                "
-                @click="conf.dialog.open('delete', row)"
-              >
-              {{ $t('commons.button.delete') }}
-              </el-button>
-            </template>
-          </custom-table>
-          <!-- 添加提示信息 -->
-        </div>
-      </install-mask>
-    </div>
-
-    <!-- <div v-if="!conf.website.websiteInfo" class="mask-tip">
-      <img src="./../../../../public/static/images/ins-Plugin.png" alt="" class="tip-image">
-      <div class="tip-text">
-        未安装运行环境，请点击下方按钮<span class="highlight">安装Nginx</span>否则无法使用改页面
       </div>
-      <el-button type="primary" class="install-btn" @click="handleInstall">
-        安装Nginx
-        <el-icon class="el-icon--right">
-          <Download />
-        </el-icon>
-      </el-button>
-    </div> -->
-
+      <div class="box2 flex-col" style="flex:1">
+        <custom-table
+          v-model:page="conf.website.params.page"
+          :loading="conf.website.loading"
+          :empty-text="t('commons.noData')"
+          :data="conf.website.data"
+          :columns="conf.website.columns"
+          :auto-pagination="false"
+          :total="conf.website.total"
+          :page-size="conf.website.params.pageSize"
+          :selection="true"
+          @selection-change="conf.website.handleSelectionChange"
+          @update:page="conf.website.getData"
+        >
+          <template #dir="{ row }">
+            <el-link @click="conf.website.goPath(row.root_dir)">{{
+              row.root_dir
+            }}</el-link>
+          </template>
+          <template #action="{ row }">
+            <el-button type="primary" link style="margin-right: 8px">{{
+              $t("website.statistics")
+            }}</el-button>
+            <span
+              style="
+                border-right: 1px solid #d9d9d9;
+                height: 12px;
+                margin-right: 8px;
+              "
+            ></span>
+            <el-button type="primary" link style="margin-right: 8px"
+              >WAF</el-button
+            >
+            <span
+              style="
+                border-right: 1px solid #d9d9d9;
+                height: 12px;
+                margin-right: 8px;
+              "
+            ></span>
+            <el-button
+              type="primary"
+              link
+              style="margin-right: 8px"
+              @click="conf.drawer.open('edit', row)"
+              >{{ $t("commons.button.setting") }}</el-button
+            >
+            <span
+              style="
+                border-right: 1px solid #d9d9d9;
+                height: 12px;
+                margin-right: 8px;
+              "
+            ></span>
+            <el-button
+              type="danger"
+              link
+              style="
+                color: #ff4d4f;
+                --el-button-hover-text-color: #d9363e;
+                --el-button-disabled-text-color: #ffccc7;
+              "
+              @click="conf.dialog.open('delete', row)"
+            >
+              {{ $t("commons.button.delete") }}
+            </el-button>
+          </template>
+        </custom-table>
+        <!-- 添加提示信息 -->
+      </div>
+    </install-mask>
     <!--创建网站弹窗-->
     <custom-drawer
       :visible="conf.drawer.show"
@@ -574,8 +578,12 @@ conf.website.getData();
         />
       </template>
       <template #footer>
-        <el-button @click="conf.dialog.close">{{ $t('commons.button.cancel') }}</el-button>
-        <el-button type="primary" @click="conf.dialog.confirm">{{ $t('commons.button.confirm') }}</el-button>
+        <el-button @click="conf.dialog.close">{{
+          $t("commons.button.cancel")
+        }}</el-button>
+        <el-button type="primary" @click="conf.dialog.confirm">{{
+          $t("commons.button.confirm")
+        }}</el-button>
       </template>
     </custom-dialog>
     <!--安装插件弹窗-->
@@ -591,7 +599,9 @@ conf.website.getData();
     padding: 0 !important;
   }
 }
-
+.website-container {
+  height: 100%;
+}
 .blur-mask {
   filter: blur(10px);
   pointer-events: none;

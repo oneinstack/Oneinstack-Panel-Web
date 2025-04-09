@@ -129,14 +129,14 @@ conf.list.getData()
 </script>
 
 <template>
-  <div class="database-container">
-    <div class="container">
+  <div class="database-container flex-col">
+    <div class="container flex-col">
       <div class="tool-bar">
         <div class="btn-group">
           <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('commons.button.add') }}{{ $t('database.remoteServer') }}</el-button>
         </div>
       </div>
-      <div class="box2">
+      <div class="box2 flex-col" style="flex: 1;">
         <div class="drawerHeader">
           <div class="back" @click="System.router.back()">
             <el-icon><Back /></el-icon>
@@ -200,7 +200,13 @@ conf.list.getData()
 </template>
 
 <style scoped lang="less">
-
+.database-container {
+  height: 100%;
+  .container{
+    margin-top: 24px;
+    flex:1;
+  }
+}
 
 .drawerHeader {
   padding: 20px 0;
