@@ -1,62 +1,63 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import SearchInput from '@/components/search-input.vue'
-import ThemeSwitch from './components/theme-switch.vue'
-import sapp from '@/sstore/sapp'
-import { Fold, Expand } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import sconfig from '@/sstore/sconfig'
-
+import { reactive } from "vue";
+import SearchInput from "@/components/search-input.vue";
+import ThemeSwitch from "./components/theme-switch.vue";
+import sapp from "@/sstore/sapp";
+import { Fold, Expand } from "@element-plus/icons-vue";
+import { useRoute } from "vue-router";
+import { ElMessage, ElMessageBox } from "element-plus";
+import sconfig from "@/sstore/sconfig";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 interface ItemColor {
-  light: string[]
-  dark: string[]
+  light: string[];
+  dark: string[];
 }
 
 interface NavItem {
-  name: string
-  path: string
-  icon: string
-  activeColor: ItemColor
-  children?: NavItem[]
-  event?: () => void
+  name: string;
+  path: string;
+  icon: string;
+  activeColor: ItemColor;
+  children?: NavItem[];
+  event?: () => void;
 }
-const route = useRoute()
+const route = useRoute();
 
 const conf = reactive({
   isCollapse: false,
-  searchValue: '',
+  searchValue: "",
   defaultColor: {
-    light: ['#8B8B8B', '#8B8B8B'],
-    dark: ['#8B8B8B', '#8B8B8B']
+    light: ["#8B8B8B", "#8B8B8B"],
+    dark: ["#8B8B8B", "#8B8B8B"],
   },
   navList: [
     {
-      name: '首页',
-      path: '/home',
-      icon: 'home',
+      name: "首页",
+      path: "/home",
+      icon: "home",
       activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+        light: ["#eab170", "#8B8B8B"],
+        dark: ["#eab170", "#ffffff"],
+      },
     },
     {
-      name: '网站',
-      path: '/website',
-      icon: 'website',
+      name: "网站",
+      path: "/website",
+      icon: "website",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
+      },
     },
     {
-      name: '数据库',
-      path: '/database',
-      icon: 'database',
+      name: "数据库",
+      path: "/database",
+      icon: "database",
       activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+        light: ["#eab170", "#8B8B8B"],
+        dark: ["#eab170", "#ffffff"],
+      },
     },
     // {
     //   name: '监控',
@@ -68,103 +69,103 @@ const conf = reactive({
     //   }
     // },
     {
-      name: '安全',
-      path: '/security',
-      icon: 'security',
+      name: "安全",
+      path: "/security",
+      icon: "security",
       activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+        light: ["#eab170", "#8B8B8B"],
+        dark: ["#eab170", "#ffffff"],
+      },
     },
     {
-      name: '文件',
-      path: '/file',
-      icon: 'file',
+      name: "文件",
+      path: "/file",
+      icon: "file",
       activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+        light: ["#eab170", "#8B8B8B"],
+        dark: ["#eab170", "#ffffff"],
+      },
     },
     {
-      name: '日志',
-      path: '/log',
-      icon: 'log',
+      name: "日志",
+      path: "/log",
+      icon: "log",
       activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+        light: ["#eab170", "#8B8B8B"],
+        dark: ["#eab170", "#ffffff"],
+      },
     },
     {
-      name: '终端',
-      path: '/terminal',
-      icon: 'terminal',
+      name: "终端",
+      path: "/terminal",
+      icon: "terminal",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
+      },
     },
     {
-      name: '计划任务',
-      path: '/task',
-      icon: 'task',
+      name: "计划任务",
+      path: "/task",
+      icon: "task",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
+      },
     },
     {
-      name: '软件商店',
-      path: '/software',
-      icon: 'software',
+      name: "软件商店",
+      path: "/software",
+      icon: "software",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
+      },
     },
     {
-      name: '面板设置',
-      path: '/setting',
-      icon: 'setting',
+      name: "面板设置",
+      path: "/setting",
+      icon: "setting",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
+      },
     },
     {
-      name: '退出',
-      path: '',
-      icon: 'exit',
+      name: "退出",
+      path: "",
+      icon: "exit",
       activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
+        light: ["#8B8B8B", "#eab170"],
+        dark: ["#ffffff", "#eab170"],
       },
       event: async () => {
-        Beturn()
+        Beturn();
+      },
+    },
+  ] as NavItem[],
+});
+const Beturn = () => {
+  ElMessageBox.confirm(t("commons.msg.logout"), t("commons.msg.logout"), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
+    type: "warning",
+  })
+    .then((res) => {
+      if (res === "confirm") {
+        ElMessage({
+          type: "success",
+          message: t("commons.msg.logoutSuccess"),
+        });
+        sapp.clearWebsiteInfo(); //清空插件状态信息
+        sconfig.logout(true);
       }
-    }
-  ] as NavItem[]
-})
-const Beturn =()=>{
-  ElMessageBox.confirm('退出面板登录，是否继续？', '退出登录', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        })
-          .then((res) => {
-            if (res === 'confirm') {
-              ElMessage({
-                type: 'success',
-                message: '退出成功'
-              })
-              sapp.clearWebsiteInfo()//清空插件状态信息
-              sconfig.logout(true)
-            }
-          })
-          .catch(() => {})
-}
-const BindButton = ()=>{
-  conf.isCollapse = !conf.isCollapse
-}
+    })
+    .catch(() => {});
+};
+const BindButton = () => {
+  conf.isCollapse = !conf.isCollapse;
+};
 </script>
 
 <template>
@@ -190,24 +191,60 @@ const BindButton = ()=>{
       </div>
     </el-header> -->
     <el-container class="layout-container__body">
-      <div class="layout-container__body-left" :class="{ 'isCollapse': !conf.isCollapse }">
-        <div class="column fit-height fit-width" style="gap: 10px; align-items: center">
+      <div
+        class="layout-container__body-left"
+        :class="{ isCollapse: !conf.isCollapse }"
+      >
+        <div
+          class="column fit-height fit-width"
+          style="gap: 10px; align-items: center"
+        >
           <div class="col column nav-bar fit-width">
             <div class="col relative fit-width">
               <div class="absolute fit-height fit-width">
-                <div class="layout-container__logo" :class="{ 'collapse': conf.isCollapse }">
-                  <img class="logo" src="/static/images/small-logo.png" alt="" />
-                  <img class="logo-text" v-if="!conf.isCollapse && sapp.theme == 'light'" src="/static/images/logo-text-light.png" alt="" />
-                  <img class="logo-text" v-if="!conf.isCollapse && sapp.theme == 'dark'" src="/static/images/logo-text-dark.png" alt="" />
+                <div
+                  class="layout-container__logo"
+                  :class="{ collapse: conf.isCollapse }"
+                >
+                  <img
+                    class="logo"
+                    src="/static/images/small-logo.png"
+                    alt=""
+                  />
+                  <img
+                    class="logo-text"
+                    v-if="!conf.isCollapse && sapp.theme == 'light'"
+                    src="/static/images/logo-text-light.png"
+                    alt=""
+                  />
+                  <img
+                    class="logo-text"
+                    v-if="!conf.isCollapse && sapp.theme == 'dark'"
+                    src="/static/images/logo-text-dark.png"
+                    alt=""
+                  />
                   <!-- <p class="logo-text" v-if="!conf.isCollapse">Oneinstack</p> -->
                 </div>
                 <el-scrollbar height="100%">
-                  <el-menu :collapse="conf.isCollapse" :default-active="route.path.match(/\/\w*/)?.[0]" router>
+                  <el-menu
+                    :collapse="conf.isCollapse"
+                    :default-active="route.path.match(/\/\w*/)?.[0]"
+                    router
+                  >
                     <template v-for="item in conf.navList" :key="item.path">
-                      <el-sub-menu v-if="item.children" :index="item.path" :popper-offset="-110">
+                      <el-sub-menu
+                        v-if="item.children"
+                        :index="item.path"
+                        :popper-offset="-110"
+                      >
                         <template #title>
                           <v-s-icon
-                            :name="item.path && route.path.includes(item.path) ? `${item.icon}-${sapp.theme}` :`${item.icon}`"
+                          style="flex-shrink: 0"
+                            :name="
+                              item.path && route.path.includes(item.path)
+                                ? `${item.icon}-${sapp.theme}`
+                                : `${item.icon}`
+                            "
                             :color="
                               item.path && route.path.includes(item.path)
                                 ? item.activeColor[sapp.theme]
@@ -216,7 +253,9 @@ const BindButton = ()=>{
                             size="26"
                           />
                           <!-- <span class="menu-item-name">{{ item.name }}</span> -->
-                          <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
+                          <span class="menu-item-name ellipsis">{{
+                            $t("menu." + item.icon)
+                          }}</span>
                         </template>
                         <el-menu-item
                           v-for="child in item.children"
@@ -225,7 +264,12 @@ const BindButton = ()=>{
                           @click="child.event?.()"
                         >
                           <v-s-icon
-                            :name="item.path && route.path.includes(child.path) ? `${item.icon}-${sapp.theme}` :`${item.icon}`"
+                            style="flex-shrink: 0"
+                            :name="
+                              item.path && route.path.includes(child.path)
+                                ? `${item.icon}-${sapp.theme}`
+                                : `${item.icon}`
+                            "
                             :color="
                               child.path && route.path.includes(child.path)
                                 ? child.activeColor[sapp.theme]
@@ -234,13 +278,23 @@ const BindButton = ()=>{
                             size="26"
                           />
                           <!-- <span class="menu-item-name">{{ child.name }}</span> -->
-                          <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
+                          <span class="menu-item-name ellipsis">{{
+                            $t("menu." + item.icon)
+                          }}</span>
                         </el-menu-item>
                       </el-sub-menu>
-                      <el-menu-item v-else :index="item.path" @click="item.event?.()">
-
+                      <el-menu-item
+                        v-else
+                        :index="item.path"
+                        @click="item.event?.()"
+                      >
                         <v-s-icon
-                          :name="item.path && route.path.includes(item.path) ? `${item.icon}-${sapp.theme}` :`${item.icon}`"
+                        style="flex-shrink: 0"
+                          :name="
+                            item.path && route.path.includes(item.path)
+                              ? `${item.icon}-${sapp.theme}`
+                              : `${item.icon}`
+                          "
                           :color="
                             item.path && route.path.includes(item.path)
                               ? item.activeColor[sapp.theme]
@@ -249,14 +303,21 @@ const BindButton = ()=>{
                           size="24"
                         />
                         <!-- <span class="menu-item-name">{{ item.name }}</span> -->
-                        <span class="menu-item-name">{{ $t('menu.' + item.icon) }}</span>
+                        <span class="menu-item-name ellipsis">{{
+                          $t("menu." + item.icon)
+                        }}</span>
                       </el-menu-item>
                     </template>
                   </el-menu>
                 </el-scrollbar>
               </div>
             </div>
-            <el-icon class="icon-collapse" color="#7A7F86" :size="18" @click="BindButton">
+            <el-icon
+              class="icon-collapse"
+              color="#7A7F86"
+              :size="18"
+              @click="BindButton"
+            >
               <Fold v-if="!conf.isCollapse" />
               <Expand v-else />
             </el-icon>
@@ -272,13 +333,13 @@ const BindButton = ()=>{
 </template>
 
 <style scoped lang="less">
-	@import '@/styles/element.less';
-	@import '@/styles/common.less';
-  .theme-switch{
-     margin-left: 0px;
-  }
-  .lang{
-  width: 30px; 
+@import "@/styles/element.less";
+@import "@/styles/common.less";
+.theme-switch {
+  margin-left: 0px;
+}
+.lang {
+  width: 30px;
   height: 25px;
   margin: 0 5px 0 15px;
 }
@@ -340,9 +401,9 @@ const BindButton = ()=>{
       width: 78px;
       background: rgb(var(--bg-card-color));
       padding: 20px 4px;
-      border-radius: 1rem;    // 16px -> 1rem
-        border-top-left-radius: 0;
-        border-bottom-left-radius: 0;
+      border-radius: 1rem; // 16px -> 1rem
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
       &.isCollapse {
         width: 206px;
       }
@@ -360,20 +421,20 @@ const BindButton = ()=>{
 
         .icon-collapse {
           width: 100%;
-          height: 4.1875rem;    // 67px -> 4.1875rem
+          height: 4.1875rem; // 67px -> 4.1875rem
           background-color: rgb(var(--bg-card-color));
           cursor: pointer;
         }
       }
-      .layout-container__logo{
+      .layout-container__logo {
         display: flex;
         align-items: center;
         padding: 0 4px;
-        .logo{
+        .logo {
           height: 50px;
           width: 50px;
         }
-        .logo-text{
+        .logo-text {
           // font-size: 20px;
           // font-weight: bolder;
           // color: var(--font-color-black);
@@ -381,7 +442,7 @@ const BindButton = ()=>{
           width: 92px;
         }
       }
-      .collapse{
+      .collapse {
         justify-content: center;
       }
       .el-menu {
@@ -435,7 +496,7 @@ const BindButton = ()=>{
           }
 
           &::before {
-            content: '';
+            content: "";
             position: absolute;
             left: 0;
             top: 50%;

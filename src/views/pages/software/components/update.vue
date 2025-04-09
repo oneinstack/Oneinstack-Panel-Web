@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ChildProps } from '../index.vue'
 import sapp from '@/sstore/sapp'
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
@@ -10,37 +11,37 @@ const handleChangeLayout = ()=>{
 }
 const columns = [
   {
-    prop: 'name',
-    label: '软件名称',
-    width: 280
+    prop: "name",
+    label: t("software.name"),
+    width: 280,
   },
   {
-    prop: 'describe',
-    label: '简介',
+    prop: "describe",
+    label: t("software.describe"),
   },
   {
-    prop: 'status',
-    label: '是否安装',
-    width: 180
-  },
-  {
-    prop: 'version',
-    label: '安装版本',
-    width: 180
-  },
-  {
-    prop: 'operation',
-    label: '操作',
+    prop: "status",
+    label: t("software.isInstalled"),
     width: 180,
-    align: 'center'
-  }
-]
+  },
+  {
+    prop: "version",
+    label: t("software.installedVersion"),
+    width: 180,
+  },
+  {
+    prop: "operation",
+    label: t("commons.action"),
+    width: 180,
+    align: "center",
+  },
+];
 </script>
 
 <template>
   <div>
     <div class="title">
-      <p>可升级</p>
+      <p>{{$t('software.upgradable')}}</p>
       <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/>
     </div>
     <div v-if="sapp.layout == 'grid'" class="list">
@@ -55,31 +56,31 @@ const columns = [
                 <div class="flex justify-between" style="gap: 16px">
                   <div>
                     <span class="menuTitle">{{ item.name }}</span>
-                    <span class="remark">（已启动）</span>
+                    <span class="remark">（{{$t('software.started')}}）</span>
                   </div>
                   <div class="flex" style="gap: 16px">
-                    <div class="btn primary">安装目录</div>
-                    <div class="btn primary">日志</div>
+                    <div class="btn primary">{{ $t("commons.button.installedDir") }}</div>
+                    <div class="btn primary">{{ $t("commons.button.log") }}</div>
                   </div>
                 </div>
                 <div class="tip">
-                  <div class="btn">版本：1.21.4</div>
-                  <div class="btn">服务端口：80</div>
-                  <div class="btn">服务端口：443</div>
+                  <div class="btn">{{ $t("software.version") }}：1.21.4</div>
+                  <div class="btn">{{ $t("software.serverPort") }}：80</div>
+                  <div class="btn">{{ $t("software.serverPort") }}：443</div>
                 </div>
-                <span style="color: var(--font-color-gray); margin-top: 10px">已安装：194天1小时</span>
+                <span style="color: var(--font-color-gray); margin-top: 10px">{{ $t("software.installed") }}：194天1小时</span>
               </div>
             </div>
             <div class="xian" />
             <div class="below">
-              <div class="btn round">升级</div>
+              <div class="btn round">{{$t('commons.button.upgrade')}}</div>
             </div>
           </div>
         </div>
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>暂无需要升级的应用</span>
+        <span>{{ $t("software.noUpgradeApps") }}</span>
       </div>
     </div>
     <div v-else class="table-content">

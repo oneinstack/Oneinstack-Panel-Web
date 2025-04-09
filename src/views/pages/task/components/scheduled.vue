@@ -11,7 +11,8 @@ import { Api } from "@/api/Api";
 import AddTask from "./add-task.vue";
 import formatCron from "@/utils/cronutils";
 import System from "@/utils/System";
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const tableRef =
   ref<InstanceType<(typeof import("element-plus"))["ElTable"]>>();
 
@@ -95,8 +96,8 @@ const enabledClick = () => {
     "计划任务暂停后将无法继续运行，您真的要停用这个计划任务吗？",
     "设置计划任务状态",
     {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
+      confirmButtonText: t("commons.button.confirm"),
+      cancelButtonText: t("commons.button.cancel"),
       type: "warning",
     }
   )
@@ -144,7 +145,7 @@ const formatDate = (dateStr: string) => {
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
   const seconds = String(date.getSeconds()).padStart(2, "0");
-  return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`;
+  return `${year}${t('commons.units.year')}${month}${t('commons.units.month')}${day}${t('commons.units.day')} ${hours}:${minutes}:${seconds}`;
 };
 
 const addTaskVisible = ref(false);
@@ -185,23 +186,23 @@ const batchDelete = async () => {
     ElMessage.warning("请选择要删除的任务");
     return;
   }
-  ElMessageBox.confirm("确定要删除选中的任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t('commons.msg.delConfirmSelectTask'), t("commons.tip"), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       const ids = multipleSelection.value.map((item: Task) => item.id);
       try {
         await Api.deletePlanTask({ ids });
-        ElMessage.success("删除成功");
+        ElMessage.success(t("commons.msg.delSuccess"));
         getData();
       } catch (error) {
-        ElMessage.error("删除失败");
+        ElMessage.error(t("commons.msg.delFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消删除");
+      ElMessage.info(t("commons.msg.delCancel"));
     });
 };
 
@@ -211,27 +212,27 @@ const batchDisable = async () => {
     (item) => item.enabled === true
   );
   if (validSelection.length === 0) {
-    ElMessage.warning("请选择运行中的任务进行禁止");
+    ElMessage.warning(t('commons.msg.disSelectRunningTask'));
     return;
   }
-  ElMessageBox.confirm("确定要禁止选中的任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t("commons.msg.disableConfirmSelectTask"), t("commons.tip"), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       const ids = validSelection.map((item) => item.id);
       try {
         await Api.disablePlanTask({ ids });
-        ElMessage.success("禁止成功");
+        ElMessage.success(t("commons.msg.disableSuccess"));
         getData();
         clearTableSelection();
       } catch (error) {
-        ElMessage.error("禁止失败");
+        ElMessage.error(t("commons.msg.disableFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消禁止");
+      ElMessage.info(t("commons.msg.disableCancel"));
     });
 };
 
@@ -241,99 +242,99 @@ const batchEnable = async () => {
     (item) => item.enabled === false
   );
   if (validSelection.length === 0) {
-    ElMessage.warning("请选择已停用的任务进行开启");
+    ElMessage.warning(t("commons.msg.openSelectDisTask"));
     return;
   }
-  ElMessageBox.confirm("确定要开启选中的任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t('commons.msg.openConfirmSelectTask'), t('commons.tip'), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       const ids = validSelection.map((item) => item.id);
       try {
         await Api.enablePlanTask({ ids });
-        ElMessage.success("开启成功");
+        ElMessage.success(t("commons.msg.openSuccess"));
         getData();
         clearTableSelection();
       } catch (error) {
-        ElMessage.error("开启失败");
+        ElMessage.error(t("commons.msg.openFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消开启");
+      ElMessage.info(t("commons.msg.openCancel"));
     });
 };
 
 // 单条数据删除方法
 const deleteSingleTask = async (row: any) => {
-  ElMessageBox.confirm("确定要删除该任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t('commons.msg.delConfirmTask'), t('commons.tip'), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       try {
         await Api.deletePlanTask({ ids: [row.id] });
-        ElMessage.success("删除成功");
+        ElMessage.success(t("commons.msg.deleteSuccess"));
         getData();
         clearTableSelection();
       } catch (error) {
-        ElMessage.error("删除失败");
+        ElMessage.error(t("commons.msg.deleteFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消删除");
+      ElMessage.info(t("commons.msg.deleteCancel"));
     });
 };
 
 // 单条数据禁用方法
 const disableSingleTask = async (row: any) => {
   if (row.enabled === false) {
-    ElMessage.warning("该任务已停用，无需再次禁用");
+    ElMessage.warning(t('commons.msg.alreadyDisabledTask'));
     return;
   }
-  ElMessageBox.confirm("确定要禁用该任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t('commons.msg.disableConfirmTask'), t("commons.tip"), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       try {
         await Api.disablePlanTask({ ids: [row.id] });
-        ElMessage.success("禁用成功");
+        ElMessage.success(t("commons.msg.disableSuccess"));
         getData();
       } catch (error) {
-        ElMessage.error("禁用失败");
+        ElMessage.error(t("commons.msg.disableFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消禁用");
+      ElMessage.info(t("commons.msg.disableCancel"));
     });
 };
 
 // 单条数据开启方法
 const enableSingleTask = async (row: any) => {
   if (row.enabled === true) {
-    ElMessage.warning("该任务正在运行，无需再次开启");
+    ElMessage.warning(t('commons.msg.alreadyRunningTask'));
     return;
   }
-  ElMessageBox.confirm("确定要开启该任务吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
+  ElMessageBox.confirm(t("commons.msg.openConfirmTask"), t("commons.tip"), {
+    confirmButtonText: t("commons.button.confirm"),
+    cancelButtonText: t("commons.button.cancel"),
     type: "warning",
   })
     .then(async () => {
       try {
         await Api.enablePlanTask({ ids: [row.id] });
-        ElMessage.success("开启成功");
+        ElMessage.success(t("commons.msg.openSuccess"));
         getData();
       } catch (error) {
-        ElMessage.error("开启失败");
+        ElMessage.error(t("commons.msg.openFailed"));
       }
     })
     .catch(() => {
-      ElMessage.info("取消开启");
+      ElMessage.info(t("commons.msg.openCancel"));
     });
 };
 
@@ -423,19 +424,19 @@ onMounted(() => {
       <el-card>
         <div class="card-content">
           <el-space class="btn-group">
-            <el-button class="large-btn" type="primary" @click="addTask"
-              >添加任务</el-button
-            >
+            <el-button class="large-btn" type="primary" @click="addTask">{{
+              $t("task.addTask")
+            }}</el-button>
             <!-- <el-button type="primary">执行任务</el-button> -->
-            <el-button class="large-btn" type="primary" @click="batchEnable"
-              >启动任务</el-button
-            >
-            <el-button class="large-btn" type="primary" @click="batchDisable"
-              >停止任务</el-button
-            >
-            <el-button class="large-btn" type="primary" @click="batchDelete"
-              >删除任务</el-button
-            >
+            <el-button class="large-btn" type="primary" @click="batchEnable">{{
+              $t("task.startTask")
+            }}</el-button>
+            <el-button class="large-btn" type="primary" @click="batchDisable">{{
+              $t("task.stopTask")
+            }}</el-button>
+            <el-button class="large-btn" type="primary" @click="batchDelete">{{
+              $t("task.deleteTask")
+            }}</el-button>
           </el-space>
           <div class="demo-form-inline flex" style="margin-left: auto">
             <!-- <el-dropdown>
@@ -452,7 +453,7 @@ onMounted(() => {
           </template>
 </el-dropdown> -->
             <search-input
-              placeholder="请输入域名或备注"
+              :placeholder="$t('task.searchPlaceholder')"
               style="margin-right: 18px"
               v-model="searchValue"
               @search="getData()"
@@ -484,7 +485,7 @@ onMounted(() => {
         :select-on-indeterminate="false"
         :row-selectable="selectFilter"
         :row-key="(row: any) => row.id"
-        empty-text="暂无数据"
+        :empty-text="$t('commons.noData')"
       >
         <el-table-column
           type="selection"
@@ -495,7 +496,7 @@ onMounted(() => {
         />
         <el-table-column
           prop="name"
-          label="任务名称"
+          :label="$t('task.taskName')"
           width="180"
         ></el-table-column>
         <el-table-column prop="enabled" label="状态" width="180">
@@ -518,7 +519,7 @@ onMounted(() => {
                 v-if="scope.row.enabled"
                 @click="disableSingleTask(scope.row)"
               >
-                运行中
+                {{ $t("task.running") }}
                 <el-icon>
                   <VideoPlay />
                 </el-icon>
@@ -532,7 +533,7 @@ onMounted(() => {
                 <el-icon>
                   <VideoPause />
                 </el-icon>
-                已停用
+                {{ $t("task.stop") }}
               </a>
               <!-- <a style="color: #ff8888; text-decoration: underline"  class="abox" v-else>
                 <el-icon><Warning /></el-icon>
@@ -541,7 +542,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="执行周期">
+        <el-table-column prop="address" :label="$t('task.exeCycle')">
           <template #default="scope">
             <div
               style="
@@ -555,7 +556,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="updated_at" label="上次执行时间">
+        <el-table-column prop="updated_at" :label="$t('task.lastExeTime')">
           <template #default="scope">
             <div
               style="
@@ -569,7 +570,11 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="操作" align="center">
+        <el-table-column
+          prop="address"
+          :label="$t('commons.action')"
+          align="center"
+        >
           <template #default="scope">
             <el-button
               link
@@ -577,7 +582,7 @@ onMounted(() => {
               @click="enableSingleTask(scope.row)"
               v-if="!scope.row.enabled"
             >
-              开启
+              {{ $t("commons.button.start") }}
             </el-button>
             <el-button
               link
@@ -585,28 +590,20 @@ onMounted(() => {
               @click="disableSingleTask(scope.row)"
               v-if="scope.row.enabled"
             >
-              禁用
+              {{ $t("commons.button.disable") }}
             </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="deleteSingleTask(scope.row)"
-            >
-              删除
+            <el-button link type="primary" @click="deleteSingleTask(scope.row)">
+              {{ $t("commons.button.delete")}}
             </el-button>
-            <el-button
-              link
-              type="primary"
-              @click="updateSingleTask(scope.row)"
-            >
-              更新
+            <el-button link type="primary" @click="updateSingleTask(scope.row)">
+              {{ $t("commons.button.update") }}
             </el-button>
             <el-button
               link
               type="primary"
               @click="updateSingleTaskLog(scope.row)"
             >
-              查看日志
+              {{ $t("commons.button.viewLog") }}
             </el-button>
           </template>
         </el-table-column>

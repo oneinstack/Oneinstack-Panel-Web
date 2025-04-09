@@ -1,20 +1,21 @@
 <script setup lang="ts">
 import SearchInput from '@/components/search-input.vue'
 import { reactive } from 'vue'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n();
 const conf = reactive({
   activeName: 0,
   tabs: [
     {
-      name: '操作日志',
+      name: t('log.operation'),
       index: 0
     },
     {
-      name: '运行日志',
+      name: t('log.run'),
       index: 1
     },
     {
-      name: '计划任务日志',
+      name: t('log.task'),
       index: 2
     }
   ],
@@ -60,32 +61,32 @@ const conf = reactive({
       </div>
       <div class="tool-bar">
         <el-space :size="14" class="btn-group">
-          <el-button type="primary" @click="conf.handleAdd">刷新日志</el-button>
-          <el-button type="primary" @click="conf.handleAdd">清空日志</el-button>
-          <el-button type="primary" @click="conf.handleAdd">IP操作统计</el-button>
+          <el-button type="primary" @click="conf.handleAdd">{{ $t('log.refresh') }}</el-button>
+          <el-button type="primary" @click="conf.handleAdd">{{ $t('log.clear') }}</el-button>
+          <el-button type="primary" @click="conf.handleAdd">{{ $t('log.ipOperation') }}</el-button>
         </el-space>
         <div class="demo-form-inline">
-          <SearchInput placeholder="请输入关键词进行搜索" />
+          <SearchInput :placeholder="t('log.searchPlaceholder')" />
         </div>
       </div>
 
       <el-table :data="conf.tableData">
         <el-table-column type="selection" width="55" />
-        <el-table-column prop="date" label="用户" width="180" />
-        <el-table-column prop="status" label="操作类型" width="180">
+        <el-table-column prop="date" :label="$t('log.user')" width="180" />
+        <el-table-column prop="status" :label="$t('log.operationType')" width="180">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
-              <a style="color: #64ffc9; text-decoration: underline" v-if="scope.row.status == 1">运行中</a>
-              <a style="color: #ff8888; text-decoration: underline" v-if="scope.row.status == 2">已停用</a>
+              <a style="color: #64ffc9; text-decoration: underline" v-if="scope.row.status == 1">{{ $t('log.running') }}</a>
+              <a style="color: #ff8888; text-decoration: underline" v-if="scope.row.status == 2">{{ $t('log.stop') }}</a>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="详情" />
-        <el-table-column prop="address" label="操作时间" />
-        <el-table-column prop="address" label="操作" align="center">
+        <el-table-column prop="address" :label="$t('log.detail')" />
+        <el-table-column prop="address" :label="$t('log.operationTime')" />
+        <el-table-column prop="address" :label="$t('commons.action')" align="center">
           <template #default>
-            <el-button link type="primary">设置</el-button>
-            <el-button link type="primary">删除</el-button>
+            <el-button link type="primary">{{ $t('commons.button.setting') }}</el-button>
+            <el-button link type="primary">{{ $t('commons.button.delete') }}</el-button>
           </template>
         </el-table-column>
       </el-table>

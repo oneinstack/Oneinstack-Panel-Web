@@ -1,91 +1,87 @@
 <script setup lang="ts">
-import { Api } from '@/api/Api'
-import { ChildProps } from '../index.vue'
-import { dayjs } from 'element-plus'
-import sapp from '@/sstore/sapp'
-import { ref } from 'vue'
-
+import { Api } from "@/api/Api";
+import { ChildProps } from "../index.vue";
+import { dayjs } from "element-plus";
+import sapp from "@/sstore/sapp";
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 const props = withDefaults(defineProps<ChildProps>(), {
-  list: () => []
-})
-console.log('安装列表', props.list)
+  list: () => [],
+});
+console.log("安装列表", props.list);
 
-const installedList = ref<any[]>([])
+const installedList = ref<any[]>([]);
 
-props.list.forEach(item => {
+props.list.forEach((item) => {
   if (item.installed) {
-    installedList.value.push(item)
+    installedList.value.push(item);
   }
-})
-console.log('已安装', installedList.value)
+});
+console.log("已安装", installedList.value);
 const hanldeCheckRunState = async (id: number) => {
-  const { data: isRun } = await Api.getSoftRunState({ id })
-  return isRun
-}
+  const { data: isRun } = await Api.getSoftRunState({ id });
+  return isRun;
+};
 
 props.list.forEach(async (item) => {
-  item.isRun = await hanldeCheckRunState(item.id)
-})
-const handleChangeLayout = ()=>{
-  sapp.setLayout(sapp.layout == 'grid'? 'list' : 'grid')
-}
+  item.isRun = await hanldeCheckRunState(item.id);
+});
+const handleChangeLayout = () => {
+  sapp.setLayout(sapp.layout == "grid" ? "list" : "grid");
+};
 const columns = [
   {
-    prop: 'name',
-    label: '软件名称',
-    width: 280
+    prop: "name",
+    label: t("software.name"),
+    width: 280,
   },
   {
-    prop: 'describe',
-    label: '简介',
+    prop: "describe",
+    label: t("software.describe"),
   },
   {
-    prop: 'status',
-    label: '是否安装',
-    width: 180
-  },
-  {
-    prop: 'version',
-    label: '安装版本',
-    width: 180
-  },
-  {
-    prop: 'operation',
-    label: '操作',
+    prop: "status",
+    label: t("software.isInstalled"),
     width: 180,
-    align: 'center'
-  }
-]
-const handleStart = () => {
-  
-}
-const handleRestart = () => {
-  
-}
-const handleStop = () => {
-  
-}
-const handleUninstall = () => {
-  
-}
-const handleSync = () => {
-  
-}
+  },
+  {
+    prop: "version",
+    label: t("software.installedVersion"),
+    width: 180,
+  },
+  {
+    prop: "operation",
+    label: t("commons.action"),
+    width: 180,
+    align: "center",
+  },
+];
+const handleStart = () => {};
+const handleRestart = () => {};
+const handleStop = () => {};
+const handleUninstall = () => {};
+const handleSync = () => {};
 </script>
 
 <template>
   <div>
     <div class="title">
-      <p>已安装</p>
+      <p>{{ $t("software.installed") }}</p>
       <div class="right">
-        <el-button type="primary" class="btn" @click="handleStart">一键启动</el-button>
+        <!-- <el-button type="primary" class="btn" @click="handleStart">一键启动</el-button>
         <el-button type="primary" class="btn" @click="handleRestart">一键重启</el-button>
         <el-button type="primary" class="btn" @click="handleStop">一键停止</el-button>
         <el-button type="primary" class="btn" @click="handleUninstall">一键卸载</el-button>
-        <el-button type="primary" class="btn" @click="handleSync">同步</el-button>
-        <v-s-icon name="layout" size="22" class="cursor-pointer icon" @click="handleChangeLayout"/>
+        <el-button type="primary" class="btn" @click="handleSync">同步</el-button> -->
+        <v-s-icon
+          name="layout"
+          size="22"
+          class="cursor-pointer icon"
+          @click="handleChangeLayout"
+        />
       </div>
-      </div>
+    </div>
     <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="installedList.length">
         <div v-for="item in installedList" class="item">
@@ -99,51 +95,68 @@ const handleSync = () => {
                   <div>
                     <span class="menuTitle">{{ item.name }}</span>
                     <span class="remark" :class="{ stop: !item.isRun }">
-                      {{ item.isRun ? '（已启动）' : '（未启动）' }}
+                      {{
+                        item.isRun
+                          ? `（${$t("software.started")}）`
+                          : `（${$t("software.notStarted")}）`
+                      }}
                     </span>
                   </div>
                   <div class="flex" style="gap: 16px">
-                    <div class="btn primary">安装目录</div>
-                    <div class="btn primary">日志</div>
+                    <div class="btn primary">
+                      {{ $t("commons.button.installedDir") }}
+                    </div>
+                    <div class="btn primary">
+                      {{ $t("commons.button.log") }}
+                    </div>
                   </div>
                 </div>
                 <div class="tip">
-                  <div class="btn">版本：{{ item.versions[0] }}</div>
-                  <div class="btn">服务端口：80</div>
-                  <div class="btn">服务端口：443</div>
+                  <div class="btn">
+                    {{ $t("software.version") }}：{{ item.versions[0] }}
+                  </div>
+                  <div class="btn">{{ $t("software.serverPort") }}：80</div>
+                  <div class="btn">{{ $t("software.serverPort") }}：443</div>
                 </div>
                 <span style="color: var(--font-color-gray); margin-top: 10px">
-                  已安装：{{ `${dayjs().diff(item.install_time, 'd')}天`
-                  }}{{ `${dayjs().diff(item.install_time, 'h') - dayjs().diff(item.install_time, 'd') * 24}小时` }}
+                  {{ $t("software.installed") }}：{{
+                    `${dayjs().diff(item.install_time, "d")}${$t("commons.units.day")}`
+                  }}{{
+                    `${dayjs().diff(item.install_time, "h") - dayjs().diff(item.install_time, "d") * 24}${$t("commons.units.hour")}`
+                  }}
                 </span>
               </div>
             </div>
             <div class="xian" />
             <div class="below">
-              <div class="btn round">同步</div>
-              <div class="btn round">重建</div>
-              <div class="btn round">重启</div>
-              <div class="btn round">启动</div>
-              <div class="btn round">停止</div>
-              <div class="btn round">卸载</div>
-              <div class="btn round">参数</div>
-              <div class="btn round">备份</div>
-              <div class="btn round">导入重启</div>
+              <div class="btn round">{{ $t("commons.button.sync") }}</div>
+              <div class="btn round">{{ $t("commons.button.rebuild") }}</div>
+              <div class="btn round">{{ $t("commons.button.restart") }}</div>
+              <div class="btn round">{{ $t("commons.button.start") }}</div>
+              <div class="btn round">{{ $t("commons.button.stop") }}</div>
+              <div class="btn round">{{ $t("commons.button.uninstall") }}</div>
+              <div class="btn round">{{ $t("commons.button.arg") }}</div>
+              <div class="btn round">{{ $t("commons.button.backups") }}</div>
+              <div class="btn round">
+                {{ $t("commons.button.importRestart") }}
+              </div>
             </div>
           </div>
         </div>
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>尚未安装任何应用</span>
+        <span>{{ $t("software.noInstalledApps") }}</span>
       </div>
     </div>
     <div v-else class="table-content">
-      <custom-table :columns="columns" :data="installedList" :pagination="false">
-        <template #status="{ row }">
-        </template>
-        <template #operation="{ row }">
-        </template>
+      <custom-table
+        :columns="columns"
+        :data="installedList"
+        :pagination="false"
+      >
+        <template #status="{ row }"> </template>
+        <template #operation="{ row }"> </template>
       </custom-table>
     </div>
   </div>
@@ -158,13 +171,13 @@ const handleSync = () => {
   justify-content: space-between;
   align-items: center;
 }
-.right{
-      display: flex;
-      align-items: center;
-      .icon{
-        margin-left: 12px;
-      }
+.right {
+  display: flex;
+  align-items: center;
+  .icon {
+    margin-left: 12px;
   }
+}
 .list {
   width: 100%;
   // display: grid;
@@ -245,7 +258,7 @@ const handleSync = () => {
 
     .below {
       display: flex;
-      gap:12.7px;
+      gap: 12.7px;
       margin-top: 20px;
       color: var(--font-color-gray-light);
       flex-wrap: wrap;
@@ -254,7 +267,7 @@ const handleSync = () => {
   @media screen and (max-width: 1600px) {
     .item {
       width: 100%;
-    }   
+    }
   }
   .no-data {
     width: 100%;
@@ -302,7 +315,7 @@ const handleSync = () => {
     }
   }
 }
-.table-content{
+.table-content {
   margin-top: 24px;
 }
 </style>

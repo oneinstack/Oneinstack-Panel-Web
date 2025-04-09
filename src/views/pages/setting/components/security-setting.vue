@@ -3,7 +3,8 @@ import { reactive, ref } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
 import { watchEffect } from 'vue'
 import PortDialog from './port-dialog.vue'
-
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 interface Props {
   isCard?: boolean
   allinfo?: any
@@ -105,20 +106,20 @@ const conf = reactive<Config>({
     //   tip: '设置访问授权IP，多个IP地址，请使用"-"分割，<span style="color: var(--el-color-primary)">注意：一旦设置授权IP，只有指定IP的电脑能访问面板</span>'
     // },
     {
-      label: '面板端口',
+      label: t('setting.panelPort'),
       prop: 'port',
       value: '',
       type: 'input', 
       disabled: true,
       action: {
         type: 'primary',
-        text: '设置',
+        text: t('commons.button.setting'),
         click: () => {
           portDialog.value = true
           ruleForm.value.port = String(conf.settingData[0].value)
         }
       },
-      tip: '例如:8080<span style="color: var(--el-color-primary)">注意：有安全组的服务器请提前在安全组放行新端口</span>'
+      tip: `${t('commons.example')}:8080<span style="color: var(--el-color-primary)">${t('setting.panelPortTip')}</span>`
     },
     // {
     //   label: '安全入口',
@@ -217,7 +218,7 @@ watchEffect(() => {
 <template>
   <div class="basic-card" :class="{ isCard }">
     <div class="basic-card__header">
-      <div class="basic-card__title">安全设置</div>
+      <div class="basic-card__title">{{$t('setting.securitySetting')}}</div>
     </div>
     <div class="basic-card__body">
       <setting-form :data="conf.settingData" />

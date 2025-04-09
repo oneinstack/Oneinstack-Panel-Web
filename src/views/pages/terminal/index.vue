@@ -10,12 +10,13 @@
 import { ref, onBeforeUnmount ,reactive } from 'vue';
 import CardTabs from '@/components/card-tabs.vue'
 import Terminal from '@/views/pages/terminal/components/terminal.vue'
-
+import { useI18n } from 'vue-i18n';
+const { t } = useI18n();
 const conf = reactive({
   activeIndex: 0,
   list: [
     {
-      name: '终端',
+      name: t('terminal.terminal'),
       index: 0,
       component: Terminal
     },

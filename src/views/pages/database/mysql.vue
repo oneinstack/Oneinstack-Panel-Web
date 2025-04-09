@@ -64,7 +64,7 @@ const handleInstall = () => {
       <div class="container">
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
-            <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('commons.button.add') }}{{ $t('database.database') }}</el-button>
+            <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('database.addDatabase') }}</el-button>
             <!-- <el-button type="primary">root密码</el-button> -->
             <el-button type="primary" @click="System.router.push('/database/remote')">{{ $t('database.remoteDatabase') }}</el-button>
             <!-- <el-button type="primary">phpMyAdmin</el-button>

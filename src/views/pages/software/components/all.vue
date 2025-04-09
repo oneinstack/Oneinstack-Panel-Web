@@ -1,13 +1,18 @@
 <script setup lang="ts">
-import { reactive, ref, nextTick } from 'vue'
-import { ChildEmits, ChildProps } from '../index.vue'
-import CustomDrawer from '@/components/custom-drawer.vue'
-import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
-import { FormInstance } from 'element-plus'
-import { Api } from '@/api/Api'
-import { Scope } from 'tools-vue3'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import sapp from '@/sstore/sapp'
+import { reactive, ref, nextTick } from "vue";
+import { ChildEmits, ChildProps } from "../index.vue";
+import CustomDrawer from "@/components/custom-drawer.vue";
+import CustomForm, {
+  type FormItem,
+  type Props as FormProps,
+} from "@/components/custom-form.vue";
+import { FormInstance } from "element-plus";
+import { Api } from "@/api/Api";
+import { Scope } from "tools-vue3";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
+import sapp from "@/sstore/sapp";
 
 // 在文件顶部添加 ElInput 的导入
 import { ElInput } from "element-plus";
@@ -20,7 +25,7 @@ withDefaults(defineProps<ChildProps>(), {
 const formRef = ref<FormInstance | null>(null);
 const drawer = reactive({
   show: false,
-  title: "安装",
+  title: t("commons.button.install"),
   onClose: () => {
     formRef.value?.clearValidate();
     formRef.value?.resetFields();
@@ -28,12 +33,12 @@ const drawer = reactive({
   },
   onConfirm: () => {
     formRef.value?.validate((valid: any) => {
-      if (!valid) return
-      handleInstall()
-      drawer.show = false
-    })
-  }
-})
+      if (!valid) return;
+      handleInstall();
+      drawer.show = false;
+    });
+  },
+});
 
 // let formRef: FormInstance
 const installForm = reactive<FormProps["data"]>({
@@ -47,46 +52,47 @@ const installForm = reactive<FormProps["data"]>({
 // 先添加卸载方法到 script 部分
 const uninstallDialog = reactive({
   show: false,
-  title: '卸载确认',
+  title: "卸载确认",
   item: null as any,
   open: (item: any) => {
-    console.log('uninstallDialog111', item)
-    uninstallDialog.item = item
-    uninstallDialog.show = true
+    console.log("uninstallDialog111", item);
+    uninstallDialog.item = item;
+    uninstallDialog.show = true;
   },
   close: () => {
-    uninstallDialog.show = false
+    uninstallDialog.show = false;
   },
   confirm: async () => {
     try {
       await Api.uninstallSoft({
         name: uninstallDialog.item.name,
-        version: uninstallDialog.item.install_version
-      })
+        version: uninstallDialog.item.install_version,
+      });
       // 移除本地存储的版本信息
       // delete installedVersions.value[uninstallDialog.item.key]
       // localStorage.setItem('installedVersions', JSON.stringify(installedVersions.value))
       // 提示卸载成功
       ElMessage({
-        type: 'success',
-        message: '卸载成功'
-      })
+        type: "success",
+        message: "卸载成功",
+      });
       // 刷新列表
-      emit('refresh')
+      emit("refresh");
     } catch (error) {
-      console.error('卸载失败', error)
+      console.error("卸载失败", error);
     } finally {
-      uninstallDialog.show = false
+      uninstallDialog.show = false;
     }
-  }
-})
+  },
+});
 
 const handleUninstall = (item: any) => {
-  uninstallDialog.open(item)
-}
+  uninstallDialog.open(item);
+};
 
 // 在 script setup 中添加
-const versionDialog = reactive({//管理版本选择弹窗的状态和行为的响应式对象
+const versionDialog = reactive({
+  //管理版本选择弹窗的状态和行为的响应式对象
   show: false,
   currentItem: null as any,
   onClose: () => {
@@ -154,7 +160,7 @@ const handleClickInstall = (item: any) => {
 const handleSelectVersion = (v: string, item: any) => {
   installForm.value.key = item.key;
   installForm.value.version = v;
-  installForm.value.name = item.name; 
+  installForm.value.name = item.name;
 };
 // 在 script setup 顶部添加
 const installedVersions = ref(
@@ -170,7 +176,7 @@ const handleInstall = async () => {
   //   "installedVersions",
   //   JSON.stringify(installedVersions.value)
   // );
-  handleCheckInstallLog(res.installName,installForm.value.name);//显示安装日志信息
+  handleCheckInstallLog(res.installName, installForm.value.name); //显示安装日志信息
 };
 
 const dialog = reactive({
@@ -180,20 +186,20 @@ const dialog = reactive({
   onClose: () => {
     timer && timer.clear();
     dialog.show = false; // 添加这行来关闭弹窗
-    emit("refresh");//刷新列表
+    emit("refresh"); //刷新列表
   },
 });
 // 添加 ref
 const logTextareaRef = ref<InstanceType<typeof ElInput> | null>(null);
 
 const timer = Scope.Timer();
-const handleCheckInstallLog = async (log:string,name:string) => {
+const handleCheckInstallLog = async (log: string, name: string) => {
   console.log("value", log);
   dialog.show = true;
   dialog.completed = false; // 初始化安装状态
   timer.on(
     async () => {
-      const { data: res2 } = await Api.getInstallLog({ fn: log,name: name });
+      const { data: res2 } = await Api.getInstallLog({ fn: log, name: name });
       dialog.content = res2.logs.content;
       dialog.completed = res2.logs.completed; // 更新安装状态
       // 如果安装完成，清除定时器
@@ -216,34 +222,34 @@ const handleCheckInstallLog = async (log:string,name:string) => {
     },
     5000,
     true
-  )
-}
+  );
+};
 const handleChangeLayout = () => {
-  sapp.setLayout(sapp.layout == 'grid' ? 'list' : 'grid')
-}
+  sapp.setLayout(sapp.layout == "grid" ? "list" : "grid");
+};
 const columns = [
   {
     prop: "name",
-    label: "软件名称",
+    label: t("software.name"),
     width: 280,
   },
   {
     prop: "describe",
-    label: "简介",
+    label: t("software.describe"),
   },
   {
     prop: "status",
-    label: "是否安装",
+    label: t("software.isInstalled"),
     width: 180,
   },
   {
     prop: "version",
-    label: "安装版本",
+    label: t("software.installedVersion"),
     width: 180,
   },
   {
     prop: "operation",
-    label: "操作",
+    label: t("commons.action"),
     width: 180,
     align: "center",
   },
@@ -253,8 +259,13 @@ const columns = [
 <template>
   <div>
     <div class="title">
-      <p>应用</p>
-      <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout" />
+      <p>{{ $t("software.apply") }}</p>
+      <v-s-icon
+        name="layout"
+        size="22"
+        class="cursor-pointer"
+        @click="handleChangeLayout"
+      />
     </div>
     <div v-if="sapp.layout == 'grid'" class="list">
       <template v-if="list.length">
@@ -276,25 +287,50 @@ const columns = [
           <div class="below">
             <div>
               <el-dropdown :disabled="!(item.versions.length > 1)">
-                <span class="flex items-center" style="color: var(--font-color-gray-light)">
+                <span
+                  class="flex items-center"
+                  style="color: var(--font-color-gray-light)"
+                >
                   <template v-if="!item.installed">
-                    未安装
+                    {{ $t("software.notInstalled") }}
                   </template>
                   <template v-else>
-                    <span>已安装版本：</span>
+                    <span>{{ $t("software.installedVersion") }}：</span>
                     {{ item.install_version }}
                   </template>
                 </span>
               </el-dropdown>
             </div>
             <!-- 修改安装按钮的点击事件 -->
-            <div class="btn" :class="{
-        installed: item.status === 2,
-        uninstall: item.status === 2,
-        installing: item.status === 1
-      }" @click="item.status === 2 ? handleUninstall(item) : item.status === 1 ? handleCheckInstallLog(item.log,item.name) : handleInstallClick(item)">
-              <span class="default-text">{{ item.status === 1 ? '安装中' : item.status === 2 ? '卸载' : '安装' }}</span>
-              <span class="hover-text">{{ item.status === 1 ? '查看日志' : item.status === 2 ? '卸载' : '安装' }}</span>
+            <div
+              class="btn"
+              :class="{
+                installed: item.status === 2,
+                uninstall: item.status === 2,
+                installing: item.status === 1,
+              }"
+              @click="
+                item.status === 2
+                  ? handleUninstall(item)
+                  : item.status === 1
+                    ? handleCheckInstallLog(item.log, item.name)
+                    : handleInstallClick(item)
+              "
+            >
+              <span class="default-text">{{
+                item.status === 1
+                  ? $t("software.installing")
+                  : item.status === 2
+                    ? $t("commons.button.uninstall")
+                    : $t("commons.button.install")
+              }}</span>
+              <span class="hover-text">{{
+                item.status === 1
+                  ? $t("commons.button.viewLog")
+                  : item.status === 2
+                    ? $t("commons.button.uninstall")
+                    : $t("commons.button.install")
+              }}</span>
             </div>
           </div>
         </div>
@@ -302,64 +338,126 @@ const columns = [
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>暂无应用</span>
+        <span>{{ $t("commons.noData") }}</span>
       </div>
     </div>
     <div v-else class="table-content">
       <custom-table :columns="columns" :data="list" :pagination="false">
         <template #status="{ row }">
-          <span v-if="row.status === 0">未安装</span>
-          <span v-else-if="row.status === 2">已安装</span>
-          <span v-else>安装失败</span>
+          <span v-if="row.status === 0">{{
+            $t("software.notInstalled")
+          }}</span>
+          <span v-else-if="row.status === 2">{{
+            $t("software.installed")
+          }}</span>
+          <span v-else>{{ $t("software.installing") }}</span>
         </template>
         <template #operation="{ row }">
-          <el-link :type="(row.status === 2 || installedVersions[row.key])? 'danger' : 'primary'">
-            <span class="flex items-center"  @click="(row.status === 2 || installedVersions[row.key])? handleUninstall(row) : handleInstallClick(row)">
-              {{ (row.status === 2 || installedVersions[row.key])? '卸载' : '安装' }}
+          <el-link
+            :type="
+              row.status === 2 || installedVersions[row.key]
+                ? 'danger'
+                : 'primary'
+            "
+          >
+            <span
+              class="flex items-center"
+              @click="
+                row.status === 2 || installedVersions[row.key]
+                  ? handleUninstall(row)
+                  : handleInstallClick(row)
+              "
+            >
+              {{
+                row.status === 2 || installedVersions[row.key] ? "卸载" : "安装"
+              }}
             </span>
           </el-link>
         </template>
       </custom-table>
     </div>
-    <custom-drawer :visible="drawer.show" :title="drawer.title" :on-close="drawer.onClose"
-      :on-confirm="drawer.onConfirm">
+    <custom-drawer
+      :visible="drawer.show"
+      :title="drawer.title"
+      :on-close="drawer.onClose"
+      :on-confirm="drawer.onConfirm"
+    >
       <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
     </custom-drawer>
     <!-- 在原有弹窗之前添加版本选择弹窗 -->
-    <custom-dialog v-model:show="versionDialog.show" title="版本选择" :on-close="versionDialog.onClose">
+    <custom-dialog
+      v-model:show="versionDialog.show"
+      title="版本选择"
+      :on-close="versionDialog.onClose"
+    >
       <div class="version-select-container">
         <div class="version-label">版本</div>
-        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%"
-          popper-class="version-select-dropdown">
-          <el-option v-for="version in versionDialog.currentItem?.versions" :key="version" :label="version"
-            :value="version" />
+        <el-select
+          v-model="installForm.value.version"
+          placeholder="请选择版本"
+          style="width: 100%"
+          popper-class="version-select-dropdown"
+        >
+          <el-option
+            v-for="version in versionDialog.currentItem?.versions"
+            :key="version"
+            :label="version"
+            :value="version"
+          />
         </el-select>
       </div>
       <template #footer>
         <el-button @click="versionDialog.onClose">取消</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
+        <el-button type="primary" @click="versionDialog.onConfirm"
+          >安装</el-button
+        >
       </template>
     </custom-dialog>
     <!-- 原有的安装日志弹窗 -->
-    <custom-dialog v-model:show="dialog.show" title="安装日志" :on-close="dialog.onClose" draggable>
-      <el-input ref="logTextareaRef" v-model="dialog.content" type="textarea" readonly
-        style="min-height: 200px; scroll-behavior: smooth;" />
+    <custom-dialog
+      v-model:show="dialog.show"
+      title="安装日志"
+      :on-close="dialog.onClose"
+      draggable
+    >
+      <el-input
+        ref="logTextareaRef"
+        v-model="dialog.content"
+        type="textarea"
+        readonly
+        style="min-height: 200px; scroll-behavior: smooth"
+      />
       <template #footer>
-        <el-button v-if="dialog.completed" type="primary" @click="dialog.onClose">
+        <el-button
+          v-if="dialog.completed"
+          type="primary"
+          @click="dialog.onClose"
+        >
           安装完成
         </el-button>
       </template>
     </custom-dialog>
     <!-- 在卸载弹窗中添加调试信息 -->
-    <custom-dialog v-model="uninstallDialog.show" :title="uninstallDialog.title">
-
+    <custom-dialog
+      v-model="uninstallDialog.show"
+      :title="uninstallDialog.title"
+    >
       <div v-if="uninstallDialog.item">
-        <div style="display: flex; align-items: center;">
+        <div style="display: flex; align-items: center">
           <img
-            :src="sapp.theme === 'dark' ? '/static/images/mark.png' : '/static/images/markone.png'"
-            class="custom-icon" />
-          <p>确定要卸载 {{ uninstallDialog.item.name }} {{ uninstallDialog.item.install_version }}
-            吗？卸载后所有关于{{ uninstallDialog.item.name }}数据将被删除，需要重新安装。</p>
+            :src="
+              sapp.theme === 'dark'
+                ? '/static/images/mark.png'
+                : '/static/images/markone.png'
+            "
+            class="custom-icon"
+          />
+          <p>
+            确定要卸载 {{ uninstallDialog.item.name }}
+            {{ uninstallDialog.item.install_version }} 吗？卸载后所有关于{{
+              uninstallDialog.item.name
+            }}数据将被删除，需要重新安装。
+          </p>
         </div>
         <!-- <el-alert :title=""
             type="warning" show-icon :closable="false" /> -->
@@ -370,7 +468,9 @@ const columns = [
 
       <template #footer>
         <el-button @click="uninstallDialog.close">取消</el-button>
-        <el-button type="primary" @click="uninstallDialog.confirm">确认</el-button>
+        <el-button type="primary" @click="uninstallDialog.confirm"
+          >确认</el-button
+        >
       </template>
     </custom-dialog>
   </div>
