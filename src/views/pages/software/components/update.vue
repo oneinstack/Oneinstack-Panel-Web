@@ -39,7 +39,7 @@ const columns = [
 </script>
 
 <template>
-  <div>
+  <div style="flex:1">
     <div class="title">
       <p>{{$t('software.upgradable')}}</p>
       <v-s-icon name="layout" size="22" class="cursor-pointer" @click="handleChangeLayout"/>
@@ -83,7 +83,7 @@ const columns = [
         <span>{{ $t("software.noUpgradeApps") }}</span>
       </div>
     </div>
-    <div v-else class="table-content">
+    <div v-else class="update-table">
       <custom-table :columns="columns" :data="list" :pagination="false">
         <template #status="{ row }">
         </template>
@@ -95,6 +95,9 @@ const columns = [
 </template>
 
 <style scoped lang="less">
+.update-table{
+  margin-top: 24px;
+}
 .title {
   font-weight: 500;
   font-size: 18px;
@@ -239,8 +242,5 @@ const columns = [
       border-color: var(--el-color-primary);
     }
   }
-}
-.table-content{
-  margin-top: 24px;
 }
 </style>

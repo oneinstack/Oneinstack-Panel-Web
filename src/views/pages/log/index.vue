@@ -3,6 +3,7 @@ import CardTabs from "@/components/card-tabs.vue";
 import { reactive } from "vue";
 import Panel from "./components/panel.vue";
 import { useI18n } from "vue-i18n";
+import { log } from 'console';
 const { t } = useI18n();
 const conf = reactive({
   list: [
@@ -46,4 +47,10 @@ const conf = reactive({
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.log-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+</style>

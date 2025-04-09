@@ -257,7 +257,7 @@ const columns = [
 </script>
 
 <template>
-  <div>
+  <div class="all">
     <div class="title">
       <p>{{ $t("software.apply") }}</p>
       <v-s-icon
@@ -341,7 +341,7 @@ const columns = [
         <span>{{ $t("commons.noData") }}</span>
       </div>
     </div>
-    <div v-else class="table-content">
+    <div v-else class="all-table">
       <custom-table :columns="columns" :data="list" :pagination="false">
         <template #status="{ row }">
           <span v-if="row.status === 0">{{
@@ -491,7 +491,14 @@ const columns = [
 :deep(.el-select__wrapper.is-focused) {
   box-shadow: none !important;
 }
-
+.all{
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  .all-table{
+    margin-top: 24px;
+  }
+}
 .below {
   display: flex;
   flex-direction: row;
@@ -697,10 +704,6 @@ const columns = [
     align-items: center;
     color: var(--font-color-gray-light);
   }
-}
-
-.table-content {
-  margin-top: 24px;
 }
 
 :deep(.el-textarea__inner) {

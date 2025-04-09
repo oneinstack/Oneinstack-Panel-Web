@@ -132,18 +132,14 @@ conf.list.getData();
 </script>
 
 <template>
-  <div class="software-container relative">
-    <div class="absolute fit-width" style="padding-bottom: 35px">
+  <div class="software-container relative fit-height">
+    <div class="absolute fit-width fit-height flex-col">
       <card-tabs
         :list="conf.dataTypelist"
         :activeIndex="conf.activeIndex"
         :clickActive="conf.clickActive"
       />
-      <div
-        v-loading="conf.list.loading"
-        class="box2"
-        style="padding-left: 26px; padding-right: 26px"
-      >
+      <div v-loading="conf.list.loading" class="box2 software-box">
         <div class="category flex justify-between items-center">
           <el-tabs
             v-model="conf.tabs.selected"
@@ -194,7 +190,12 @@ conf.list.getData();
     --el-tabs-header-height: 35px;
   }
 }
-
+.software-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 26px;
+}
 :deep(.el-tabs__nav-wrap) {
   &::after {
     background: transparent;

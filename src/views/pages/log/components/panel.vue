@@ -52,8 +52,8 @@ const conf = reactive({
 </script>
 
 <template>
-  <div>
-    <div class="box2">
+  <div class="panel flex-col">
+    <div class="box2 flex-col" style="flex:1">
       <div class="category">
         <el-tabs v-model="conf.activeName" @tab-click="conf.handleClick">
           <el-tab-pane v-for="item in conf.tabs" :key="item.index" :label="item.name" :name="item.index" />
@@ -98,6 +98,9 @@ const conf = reactive({
 </template>
 
 <style scoped lang="less">
+.panel {
+  flex: 1;
+}
 .category {
   height: 60px;
   background: rgba(var(--category-item-bg-color), 0.6);

@@ -65,7 +65,7 @@ const handleSync = () => {};
 </script>
 
 <template>
-  <div>
+  <div style="flex:1">
     <div class="title">
       <p>{{ $t("software.installed") }}</p>
       <div class="right">
@@ -149,7 +149,7 @@ const handleSync = () => {};
         <span>{{ $t("software.noInstalledApps") }}</span>
       </div>
     </div>
-    <div v-else class="table-content">
+    <div v-else class="installed-table">
       <custom-table
         :columns="columns"
         :data="installedList"
@@ -163,6 +163,9 @@ const handleSync = () => {};
 </template>
 
 <style scoped lang="less">
+.installed-table{
+  margin-top:24px;
+}
 .title {
   font-weight: 500;
   font-size: 18px;
@@ -314,8 +317,5 @@ const handleSync = () => {};
       border-color: var(--el-color-primary);
     }
   }
-}
-.table-content {
-  margin-top: 24px;
 }
 </style>
