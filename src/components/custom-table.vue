@@ -1,36 +1,36 @@
 <script setup lang="ts">
-import sapp from '@/sstore/sapp'
-import { computed, reactive } from 'vue'
-import { useI18n } from 'vue-i18n';
-const {t} = useI18n();
+import sapp from "@/sstore/sapp";
+import { computed, reactive } from "vue";
+import { useI18n } from "vue-i18n";
+const { t } = useI18n();
 export interface ColumnItem {
-  label: string
-  prop: string
-  width?: string | number
-  align?: string
-  fixed?: string
-  tooltip?: boolean
-  placeholder?: string
-  formatter?: (row: any) => string
-  sortable?: boolean
-  sortMethod?: (a: any, b: any) => number
+  label: string;
+  prop: string;
+  width?: string | number;
+  align?: string;
+  fixed?: string;
+  tooltip?: boolean;
+  placeholder?: string;
+  formatter?: (row: any) => string;
+  sortable?: boolean;
+  sortMethod?: (a: any, b: any) => number;
 }
 
 interface Props {
-  loading?: boolean
-  selection?: boolean
-  selectionChange?: (newSelection: any[]) => void
-  pagination?: boolean
-  pageSize?: number
-  autoPagination?: boolean
-  total?: number
-  columns: ColumnItem[]
-  data: any[]
+  loading?: boolean;
+  selection?: boolean;
+  selectionChange?: (newSelection: any[]) => void;
+  pagination?: boolean;
+  pageSize?: number;
+  autoPagination?: boolean;
+  total?: number;
+  columns: ColumnItem[];
+  data: any[];
 }
 
 interface Emits {
-  (e: 'update:page', page: number): void
-  (e: 'selection-change', selection: any[]): void  // 添加多选事件
+  (e: "update:page", page: number): void;
+  (e: "selection-change", selection: any[]): void; // 添加多选事件
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,53 +41,61 @@ const props = withDefaults(defineProps<Props>(), {
   total: 0,
   autoPagination: true,
   data: () => [],
-  columns: () => []
-})
+  columns: () => [],
+});
 
-const emit = defineEmits<Emits>()
+const emit = defineEmits<Emits>();
 
 const conf = reactive({
-  total: computed(() => (props.autoPagination ? props.data.length : props.total)),
+  total: computed(() =>
+    props.autoPagination ? props.data.length : props.total
+  ),
   page: 1,
   pageSize: props.pageSize,
-  visibleData: computed<any>(() => props.data.slice((conf.page - 1) * conf.pageSize, conf.page * conf.pageSize)),
+  visibleData: computed<any>(() =>
+    props.data.slice((conf.page - 1) * conf.pageSize, conf.page * conf.pageSize)
+  ),
   handleCurrentChange: (page: number) => {
-    conf.page = page
-    emit('update:page', page)
+    conf.page = page;
+    emit("update:page", page);
   },
-  contentRefs: [] as { [index: number]: HTMLElement }
-})
+  contentRefs: [] as { [index: number]: HTMLElement },
+});
 
-const collectionHeaderCellClassName = (row:any) => {
-  if(row.columnIndex != row.row.length -1){
-    return {'border-right':'1px solid #8B8B8B30','text-align':'center'};
-  }else{
-    return {'text-align':'center'};
+const collectionHeaderCellClassName = (row: any) => {
+  if (row.columnIndex != row.row.length - 1) {
+    return { "border-right": "1px solid #8B8B8B30", "text-align": "center" };
+  } else {
+    return { "text-align": "center" };
   }
-}
+};
 // 添加处理选择变化的方法
 const handleSelectionChange = (selection: any[]) => {
-  emit('selection-change', selection)
-}
+  emit("selection-change", selection);
+};
 defineExpose({
   handleCurrentChange: conf.handleCurrentChange,
   collectionHeaderCellClassName,
-  handleSelectionChange
-})
+  handleSelectionChange,
+});
 </script>
 
 <template>
   <div v-loading="loading" class="table-content">
     <el-table
       :data="autoPagination ? conf.visibleData : data"
-
       @selection-change="selectionChange"
-	    :empty-text="t('commons.noData')"
+      :empty-text="t('commons.noData')"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
       </template>
-      <el-table-column v-if="selection" type="selection" width="55" align="center"/>
+      <el-table-column
+        v-if="selection"
+        type="selection"
+        width="55"
+        align="center"
+      />
       <el-table-column
         v-for="(item, col) in columns"
         :key="item.prop"
@@ -101,7 +109,12 @@ defineExpose({
         :sort-method="item.sortMethod"
       >
         <template #default="{ row, $index }">
-          <slot v-if="$slots[item.prop]" :name="item.prop" :row="row" :index="$index" />
+          <slot
+            v-if="$slots[item.prop]"
+            :name="item.prop"
+            :row="row"
+            :index="$index"
+          />
           <el-tooltip
             v-else
             :disabled="
@@ -115,11 +128,19 @@ defineExpose({
             placement="bottom"
           >
             <div
-              :ref="(el) => (conf.contentRefs[$index * columns.length + col] = el as HTMLElement)"
+              :ref="
+                (el) =>
+                  (conf.contentRefs[$index * columns.length + col] =
+                    el as HTMLElement)
+              "
               class="ellipsis"
               :style="{ width: item.width }"
             >
-              {{ item.formatter ? item.formatter(row) : row[item.prop] || item?.placeholder }}
+              {{
+                item.formatter
+                  ? item.formatter(row)
+                  : row[item.prop] || item?.placeholder
+              }}
             </div>
           </el-tooltip>
         </template>
@@ -138,4 +159,14 @@ defineExpose({
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.table-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: scroll;
+  .el-table {
+    flex: 1;
+  }
+}
+</style>

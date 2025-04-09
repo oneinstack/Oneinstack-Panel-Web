@@ -483,13 +483,13 @@ defineExpose({
         </el-button>
       </div> -->
         </div>
-        <div class="box2">
+        <div class="box2 table-box">
           <custom-table
             ref="tableRef"
             :data="conf.fileList"
             :columns="conf.columns"
             :loading="conf.loading"
-            :page-size="19"
+            :page-size="30"
           >
             <template #name="{ row }">
               <div class="flex items-center file-name-cell" style="gap: 10px">
@@ -731,6 +731,11 @@ defineExpose({
 .file-list {
   height: 100%;
   width: 100%;
+  .table-box {
+    display: flex;
+    flex: 1;
+    overflow: scroll;
+  }
 }
 .upload-header {
   margin-bottom: 18px;

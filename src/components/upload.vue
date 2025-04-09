@@ -2,7 +2,7 @@
   <div class="drag" v-loading="loading">
     <slot name="header"></slot>
     <div
-      class="el-upload-dragger"
+      class="dragger"
       :class="props.className"
       @dragover="handleDragover"
       @drop="handleDrop"
@@ -23,7 +23,8 @@
             :limit="1000"
           >
             <div class="el-upload__text">
-              {{$t('file.uploadText')}}<el-link> {{ $t('file.clickUpload')}}</el-link>
+              {{ $t("file.uploadText")
+              }}<el-link> {{ $t("file.clickUpload") }}</el-link>
             </div>
           </el-upload>
         </div>
@@ -43,7 +44,7 @@
       :limit="1000"
     >
     </el-upload>
-    <div v-if="props.isShowFileList">
+    <div class="file-list" v-if="props.isShowFileList">
       <template v-if="loading">
         <el-text>{{ uploadHelper }}</el-text>
         <el-progress
@@ -122,7 +123,7 @@ const props = defineProps({
   className: {
     type: String,
     default: "",
-  }
+  },
 });
 const emit = defineEmits(["upload-success"]);
 interface UploadFileProps {
@@ -330,7 +331,7 @@ const handleFileUpload = (
 };
 
 const uploadFile = async (files: any[]) => {
-  if (props.path == "/") return ElMessage.warning(t('file.notAllowUpload'));
+  if (props.path == "/") return ElMessage.warning(t("file.notAllowUpload"));
   if (files.length == 0) {
     clearFiles();
   } else {
@@ -471,18 +472,32 @@ defineExpose({ acceptParams, clearFiles, submit });
   width: 100%;
   background: var(--bg-color);
 }
+.dragger {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
 .flex-center {
   > div {
     width: 100%;
     background: rgb(var(--bg-color));
+    text-align: center;
   }
 }
-.file-item {
-  font-size: 14px;
-  color: #888;
-  position: relative;
-  display: flex;
-  align-items: center;
+.file-list {
+  height: 400px;
+  margin-top: 10px;
+  overflow-y: auto;
+  background: rgb(var(--bg-color));
+  padding: 10px;
+  .file-item {
+    font-size: 14px;
+    color: #888;
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
 }
 
 .file-item:hover {
