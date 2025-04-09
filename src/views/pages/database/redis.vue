@@ -77,7 +77,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="container">
+  <div class="content flex-col">
     <install-mask :is-installed="redistatus" installText="安装Redis"  @install="handleInstall">
       
     <div class="tool-bar">
@@ -103,7 +103,7 @@ onMounted(() => {
         </el-select>
       </div>
     </div>
-    <div class="box2">
+    <div class="box2 flex-col" style="flex:1">
       <el-tabs v-if="conf.dbList.data.length" v-model="conf.list.params.r_db" @tab-click="handleTabClick">
         <el-tab-pane v-for="item in conf.dbList.data" :key="item.index" :label="`DB${item.name}`" :name="item.name" />
       </el-tabs>
@@ -130,6 +130,9 @@ onMounted(() => {
 </template>
 
 <style scoped lang="less">
+.content{
+  flex: 1;
+}
 .no-data {
   width: 100%;
   display: flex;

@@ -174,7 +174,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div>
+  <div class="firewall flex-col">
     <div class="box1">
       <div class="flex justify-between items-center">
         <div>
@@ -227,7 +227,7 @@ onMounted(() => {
         />
       </div>
     </div>
-    <div class="box2">
+    <div class="box2 firewall-table">
       <!-- <div class="miscellaneous">
         <div>端口规则：2</div>
         <div>端口转发：0</div>
@@ -323,6 +323,11 @@ onMounted(() => {
 <style scoped lang="less">
 .box1 {
   border-radius: 4px;
+}
+.firewall-table{
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 .miscellaneous {
   width: 100%;

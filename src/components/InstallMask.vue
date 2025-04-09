@@ -1,6 +1,6 @@
 <template>
-  <div>
-    <div :class="{ 'blur-mask': !isInstalled }">
+  <div style="flex:1" class="flex-col">
+    <div :class="{ 'blur-mask': !isInstalled }" style="flex:1" class="flex-col">
       <slot></slot>
     </div>
     <div v-if="!isInstalled" class="mask-tip">

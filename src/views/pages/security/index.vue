@@ -52,5 +52,7 @@ const conf = reactive({
 </template>
 
 <style scoped lang="less">
-
+.security-container{
+  height: 100%;
+}
 </style>

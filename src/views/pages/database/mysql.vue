@@ -45,7 +45,7 @@ const handleInstall = () => {
 </script>
 
 <template>
-  <div>
+  <div style="flex: 1;" class="flex-col">
     <install-mask :is-installed="myslqstatus" :installText="`${t('database.install')}MySQL`"  @install="handleInstall">
       <div v-if="conf.showTips" class="tip">
         <div class="flex items-center">
@@ -61,7 +61,7 @@ const handleInstall = () => {
           <CircleClose />
         </el-icon>
       </div>
-      <div class="container">
+      <div class="content flex-col">
         <div class="tool-bar">
           <el-space class="btn-group" :size="14">
             <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('database.addDatabase') }}</el-button>
@@ -114,19 +114,17 @@ const handleInstall = () => {
             <el-button :icon="Setting" type="primary" />
           </div>
         </div>
-        <div class="box2">
+        <div class="box2 flex-col" style="flex:1">
           <custom-table v-model:page="conf.list.params.page" :loading="conf.list.loading" :data="conf.list.data"
             :auto-pagination="false" :total="conf.list.total" :page-size="conf.list.params.pageSize"
             :columns="conf.list.columns" @update:page="conf.list.getData">
             <template #empty>
-              <div>
-                <span>
+              <div class="flex empty">
                   {{ $t('database.tableNoData') }}
                   <a class="cursor-pointer" style="color: var(--el-color-primary); text-decoration: underline"
                     @click="conf.drawer.open('add')">
                     {{ $t('database.tableNoDataAdd')  }}
                   </a>
-                </span>
               </div>
             </template>
             <template #password="{ row, index }">
@@ -170,6 +168,17 @@ const handleInstall = () => {
     span {
       font-size: 16px;
       color: var(--font-color-gray-light);
+    }
+  }
+  .content{
+    flex: 1;
+    margin-top: 24px;
+    .empty{
+      height: 100%;
+      width: 100%;
+      justify-content: center;
+      align-items: center;
+      display: flex;
     }
   }
 }
