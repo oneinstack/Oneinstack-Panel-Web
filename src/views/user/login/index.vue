@@ -114,19 +114,19 @@ const conf = reactive({
     margin-top: 42rem;
     margin-left: 54rem;
     font-size: 56rem;
-    color: #ffffff;
+    color: var(--card-bg-color);
   }
   .content {
     margin-top: 76rem;
     flex: 1;
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-top-left-radius: 44rem;
     border-top-right-radius: 44rem;
     padding: 52rem 40rem;
     overflow-y: scroll;
     .form-label {
       font-size: 32rem;
-      color: #6d6d6d;
+      color: var(--font-gray-color);
       margin-top: 60rem;
     }
     .form-item {
@@ -153,9 +153,9 @@ const conf = reactive({
       line-height: 88rem;
       margin-top: 148rem;
       cursor: pointer;
-      background: linear-gradient(to right, #ffbb2a, #f38100);
+      background: linear-gradient(to right, #2ACDFF, #1575FC);
       font-size: 36rem;
-      color: #ffffff;
+      color: var(--card-bg-color);
       border-radius: 12rem;
       border: none;
     }
@@ -167,9 +167,9 @@ const conf = reactive({
       p {
         margin-left: 28rem;
         font-size: 24rem;
-        color: #a8a8a8;
+        color: var(--font-gray-color);
         span {
-          color: #f98f18;
+          color: var(--primary-color);
         }
       }
     }
@@ -186,7 +186,7 @@ const conf = reactive({
 
 :deep(.van-field__control) {
   height: 88rem;
-  background: #f7f7f7;
+  background: var(--bg-color);
   font-size: 28rem;
   padding: 32rem
 }

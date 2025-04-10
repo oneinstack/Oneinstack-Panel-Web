@@ -21,7 +21,7 @@ const fileList = reactive([
     name: '文件1'
   },
   {
-    fileType: 'files',
+    fileType: 'folder',
     name: '文件夹1'
   },
   {
@@ -29,13 +29,14 @@ const fileList = reactive([
     name: '文件2'
   },
   {
-    fileType: 'files',
+    fileType: 'folder',
     name: '文件夹2'
   }
 ])
 fileList.forEach((item: any, index) => {
   const _icon = item.fileType
-  item.icon = `/static/img/home/${_icon}.png`
+  // item.icon = `/static/img/home/${_icon}.png`
+  item.icon = `${_icon}`
 })
 </script>
 <style lang="less" scoped>

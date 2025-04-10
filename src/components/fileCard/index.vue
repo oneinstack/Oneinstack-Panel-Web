@@ -3,7 +3,8 @@
     <div class="file_card" v-for="(item, index) in props.list">
       <div class="icon_box">
         <div class="left">
-          <van-image :width="item.width || '56rem'" :height="item.height || '56rem'" :src="item.icon" />
+          <!-- <van-image :width="item.width || '56rem'" :height="item.height || '56rem'" :src="item.icon" /> -->
+          <v-s-icon :name="item.icon" :size="item.size || 56" />
           <div class="file_info">
             <p class="file_name">{{ item.name }}</p>
             <slot name="time" :item="item"></slot>

@@ -59,9 +59,11 @@ const fileList: any = reactive([
   }
 ])
 fileList.forEach((item: any) => {
-  item.icon = `/static/img/file/file-icon.png`
-  item.width = '72rem'
-  item.height = '72rem'
+  // item.icon = `/static/img/file/file-icon.png`
+  item.icon = 'file'
+  item.size = 72
+  // item.width = '72rem'
+  // item.height = '72rem'
 })
 </script>
 <style lang="less" scoped>
@@ -71,7 +73,7 @@ fileList.forEach((item: any) => {
   .tabs {
     display: flex;
     padding: 14rem 28rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-radius: 12rem;
     align-items: center;
     justify-content: space-between;
@@ -94,10 +96,10 @@ fileList.forEach((item: any) => {
       transform: translateY(-50%);
       width: 2rem;
       height: 32rem;
-      background: #dadada;
+      background: var(--bg-color);
     }
     .active{
-        background: #f7f7f7;
+        background: var(--bg-color);
     }
   }
 }
@@ -106,13 +108,13 @@ fileList.forEach((item: any) => {
     height: 52rem;
     line-height: 52rem;
     border-radius: 26rem;
-    color: #f98f18;
+    color: var(--primary-color);
     text-align: center;
-    border: 2rem solid #f98f18;
+    border: 2rem solid var(--primary-color);
 }
 .setting {
   font-size: 32rem;
-  color: #acacac;
+  color: var(--font-gray-color);
 }
 .not-data{
     display: flex;
@@ -120,9 +122,12 @@ fileList.forEach((item: any) => {
     align-items: center;
     justify-content: center;
     p{
-        color: #9c9c9c;
+        color: var(--font-gray-color);
         font-size: 32rem;
         margin-top: 40rem;
     }
+}
+.update_date{
+    color: var(--font-gray-color);
 }
 </style>

@@ -81,7 +81,7 @@ defineExpose({
     justify-content: flex-end;
     border-bottom: 2rem solid #e3e3e3;
     font-size: 32rem;
-    color: #000000;
+    color: var(--font-dark-color);
     font-weight: 700;
     .icon {
       margin-left: 266rem;

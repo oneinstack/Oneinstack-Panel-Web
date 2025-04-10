@@ -19,7 +19,7 @@
   margin: 0 auto;
   .card {
     height: 238rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     width: 330rem;
     margin-left: 26rem;
     margin-top: 20rem;
@@ -38,19 +38,19 @@
         height: 20rem;
         width: 20rem;
         border-radius: 50%;
-        border: 4rem solid #F98F18;
+        border: 4rem solid var(--primary-color);
       }
     }
 
     .rate {
       margin-top: 40rem;
       font-size: 48rem;
-      color: #f98f18;
+      color: var(--primary-color);
       line-height: 42rem;
     }
     .date {
       margin-top: 44rem;
-      color: #9c9c9c;
+      color: var(--font-gray-color);
       line-height: 20rem;
       font-size: 24rem;
     }

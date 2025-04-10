@@ -107,7 +107,7 @@ const option:ECOption = {
 <style lang="less" scoped>
 .card {
   height: 238rem;
-  background: #ffffff;
+  background: var(--card-bg-color);
   width: 686rem;
   margin: 0 auto;
   margin-top: 20rem;
@@ -124,12 +124,12 @@ const option:ECOption = {
     .rate {
       margin-top: 40rem;
       font-size: 48rem;
-      color: #f98f18;
+      color: var(--primary-color);
       line-height: 42rem;
     }
     .num {
       margin-top: 40rem;
-      color: #9c9c9c;
+      color: var(--font-gray-color);
       line-height: 20rem;
     }
   }

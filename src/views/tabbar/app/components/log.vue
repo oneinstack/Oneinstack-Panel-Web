@@ -35,7 +35,7 @@ defineExpose({
     width: 100%;
     height: 822rem;
     padding: 40rem 32rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-radius: 16rem;
     margin: 0 auto;
     margin-top: 314rem;
@@ -53,14 +53,14 @@ defineExpose({
         height: 52rem;
         line-height: 52rem;
         border-radius: 8rem;
-        border: 2rem solid #f98f18;
-        color: #f98f18;
+        border: 2rem solid var(--primary-color);
+        color: var(--primary-color);
         cursor: pointer;
       }
     }
     .text{
         margin-top: 32rem;
-        background: #f1f1f1;
+        background: var(--bg-color);
         border-radius: 16rem;
         padding: 32rem;
         height: 604rem;
@@ -69,7 +69,7 @@ defineExpose({
     }
   }
   .close {
-    color: #ffffff;
+    color: var(--card-bg-color);
     margin-top: 50rem;
     font-size: 46rem;
   }

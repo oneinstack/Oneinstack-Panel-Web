@@ -9,7 +9,8 @@
       </template>
     </Navbar>
     <div class="file-content">
-      <van-image class="icon" width="174rem" height="174rem" :src="`/static/img/file/file.png`" @click="show = false" />
+      <!-- <van-image class="icon" width="174rem" height="174rem" :src="`/static/img/file/file.png`" @click="show = false" /> -->
+      <v-s-icon class="icon" :size="174" name="addFolder" @click="show = false"/>
       <div v-if="operationType == 'rename' || 'add'" class="my-input">
         <input placeholder="请输入名称" />
         <van-icon class="input-icon" size="44rem" name="close" />
@@ -70,7 +71,7 @@ defineExpose({
       text-align: center;
     }
     .confirm {
-      color: #f98f18;
+      color: var(--primary-color);
       font-weight: 300;
       font-size: 28rem;
     }
@@ -93,7 +94,7 @@ defineExpose({
         width: 100%;
         height: 92rem;
         border-radius: 12rem;
-        background: #f7f7f7;
+        background: var(--bg-color);
         padding: 32rem;
         font-size: 32rem;
         text-align: center;

@@ -63,7 +63,7 @@ defineExpose({
     justify-content: flex-end;
     border-bottom: 2rem solid #e3e3e3;
     font-size: 32rem;
-    color: #000000;
+    color: var(--font-black-color);
     font-weight: 700;
     .icon {
       margin-left: 266rem;
@@ -79,7 +79,7 @@ defineExpose({
         margin-left: 44rem;
       }
       .active {
-        color: #f98f18;
+        color: var(--primary-color);
         margin-left: 16rem;
       }
     }

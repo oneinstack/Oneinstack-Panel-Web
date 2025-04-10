@@ -21,6 +21,7 @@
                     :class="{ 'img': index == conf.currentTabbarIndex }"
                     :src="`${index == conf.currentTabbarIndex ? item.iconActive : item.icon}`"
                   />
+                  <!-- <v-s-icon :name="item.icon" :size="48" /> -->
                   <p class="name" :class="`${index == conf.currentTabbarIndex ? 'tabbar__item_icon_active_name' : ''}`">{{ $t(item.name) }}</p>
                 </div>
               </div>
@@ -167,7 +168,7 @@ onMounted(() => {
         font-size: 20rem;
       }
       .tabbar__item_icon_active_name{
-        color:#F98F18;
+        color:var(--primary-color);
       }
     }
 

@@ -35,7 +35,7 @@ defineExpose({
   .content {
     width: 100%;
     height: 408rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-radius: 16rem;
     margin: 0 auto;
     margin-top: 512rem;
@@ -51,7 +51,7 @@ defineExpose({
       font-size: 32rem;
       line-height: 28rem;
       font-weight: 700;
-      color: #bd3600;
+      color: var(--primary-color);
       z-index: 1;
     }
     .tip{
@@ -59,13 +59,13 @@ defineExpose({
         width: 288rem;
         text-align: center;
         margin: 0 auto;
-        color: #972800;
+        color: var(--assist-blue);
         font-size: 24rem;
         margin-top: 28rem;
     }
     .btn{
-        background: #ff5805;
-        color: #ffffff;
+        background: var(--primary-color);
+        color: var(--font-light-color);
         height: 56rem;
         line-height: 56rem;
         width: 284rem;
@@ -74,13 +74,13 @@ defineExpose({
         border-radius: 28rem;
     }
     .cancel{
-        color: #9c9c9c;
+        color: var(--font-gray-color);
         font-size: 24rem;
         margin-top: 28rem;
     }
   }
   .close {
-    color: #ffffff;
+    color: var(--card-bg-color);
     font-size: 46rem;
     margin-top: 50rem;
   }

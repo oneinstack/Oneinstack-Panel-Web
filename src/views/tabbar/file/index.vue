@@ -124,7 +124,7 @@ const fileList: any = reactive([
     name: '文件1'
   },
   {
-    fileType: 'files',
+    fileType: 'folder',
     name: '文件夹1'
   },
   {
@@ -132,19 +132,21 @@ const fileList: any = reactive([
     name: '文件2'
   },
   {
-    fileType: 'files',
+    fileType: 'folder',
     name: '文件夹2'
   },
   {
-    fileType: 'files',
-    name: '文件夹2'
+    fileType: 'folder',
+    name: '文件夹3'
   }
 ])
 fileList.forEach((item: any) => {
   const _icon = item.fileType
-  item.icon = `/static/img/file/${_icon}.png`
-  item.width = '72rem'
-  item.height = '72rem'
+  // item.icon = `/static/img/file/${_icon}.png`
+  item.icon = `${_icon}`
+  item.size = 72
+  // item.width = '72rem'
+  // item.height = '72rem'
 })
 const cancelChecked = () => {
   fileList.forEach((item: any) => {
@@ -172,9 +174,11 @@ const onMenu = (menu: any) => {
       break
     case 2:
       openAddOrRenamePopup('upload')
+      showMenu.value = false
       break
     case 3:
       openAddOrRenamePopup('add')
+      showMenu.value = false
       break
     case 4:
       break
@@ -230,17 +234,17 @@ const fileDetail = ref({})
 }
 .header {
   padding: 0 32rem 18rem 32rem;
-  background: #ffffff;
+  background: var(--card-bg-color);
   .van-nav-bar {
     margin-top: 118rem;
     .left-title {
       font-size: 32rem;
-      color: #000000;
+      color: var(--font-dark-color);
       font-weight: 700;
     }
     .checked-left,
     .checked-right {
-      color: #f98f18;
+      color: var(--primary-color);
       font-size: 28rem;
     }
   }
@@ -255,7 +259,7 @@ const fileDetail = ref({})
     margin-top: 32rem;
     position: relative;
     input {
-      background: #f7f7f7;
+      background: var(--bg-color);
       height: 64rem;
       width: 100%;
       border-radius: 46rem;
@@ -269,7 +273,7 @@ const fileDetail = ref({})
   }
   .tabs {
     display: flex;
-    background: #ffffff;
+    background: var(--card-bg-color);
     margin-top: 44rem;
     overflow-x: scroll;
     .tab {
@@ -291,13 +295,13 @@ const fileDetail = ref({})
   width: 272rem;
   height: 448rem;
   border-radius: 10rem;
-  background: #ffffff;
-  box-shadow: #000000 0px 4px 15px;
+  background: var(--card-bg-color);
+  box-shadow: var(--font-dark-color) 0px 4px 15px;
   .menu-item {
     display: flex;
     align-items: center;
     height: 112rem;
-    border-bottom: 2rem solid #f7f7f7;
+    border-bottom: 2rem solid var(--bg-color);
     .icon {
       margin-left: 32rem;
     }
@@ -310,18 +314,18 @@ const fileDetail = ref({})
 
 .content {
   padding: 0 32rem;
-  background: #faf8f6;
+  background: var(--bg-color);
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
   .menu {
     font-size: 28rem;
     margin-top: 32rem;
-    color: #9c9c9c;
+    color: var(--font-gray-color);
   }
   .app_status_card {
     padding: 32rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     margin-top: 20rem;
     border-radius: 12rem;
     .top {
@@ -348,8 +352,8 @@ const fileDetail = ref({})
       justify-content: space-between;
       align-items: center;
       span {
-        color: #9c9c9c;
-        border-bottom: 1px solid #9c9c9c;
+        color: var(--font-gray-color);
+        border-bottom: 1px solid var(--font-gray-color);
       }
       .btns {
         display: flex;
@@ -362,16 +366,19 @@ const fileDetail = ref({})
           border-radius: 12rem;
         }
         .restart {
-          border: 1px solid #9c9c9c;
-          color: #9c9c9c;
+          border: 1px solid var(--font-gray-color);
+          color: var(--font-gray-color);
         }
         .stop {
-          border: 1px solid #f98f18;
-          color: #f98f18;
+          border: 1px solid var(--primary-color);
+          color: var(--primary-color);
         }
       }
     }
   }
+}
+.update_date{
+  color: var(--font-gray-color);
 }
 .pdb-100 {
   padding-bottom: 100rem;

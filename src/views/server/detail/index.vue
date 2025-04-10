@@ -6,7 +6,7 @@
       <div class="card-list">
         <div class="card-item" v-for="item in list">
           <van-image class="img" width="102rem" height="102rem" :src="item.icon" />
-          <p>{{ item.num }}</p>
+          <p :class="item.className">{{ item.num }}</p>
           <span>{{ item.name }}</span>
         </div>
       </div>
@@ -23,14 +23,14 @@
         </div>
         <div class="ram">
           <p class="title">内存使用率</p>
-          <p class="rate">18.7</p>
+          <p class="rate">18.7%</p>
           <div class="more" @click="goPage('ram')">
             <van-icon class="icon" name="arrow" />
           </div>
         </div>
         <div class="disk">
           <p class="title">硬盘使用率</p>
-          <p class="rate">38.7</p>
+          <p class="rate">38.7%</p>
           <div class="more" @click="goPage('disk')">
             <van-icon class="icon" name="arrow" />
           </div>
@@ -107,10 +107,9 @@ import { useRouter } from 'vue-router'
 import Memo from './components/memo.vue'
 const router = useRouter()
 const list = reactive([
-  { icon: 'website', num: 2, name: '网站' },
-  { icon: 'safety', num: 0, name: '安全风险' },
-  { icon: 'data', num: 5, name: '数据' },
-  { icon: '', num: 5, name: '数据' }
+  { icon: 'website', num: 2, name: '网站',className:'website' },
+  { icon: 'safety', num: 0, name: '安全风险',className:'safety', },
+  { icon: 'data', num: 5, name: '数据',className:'data', },
 ])
 list.forEach((item) => {
   const _icon = item.icon
@@ -151,7 +150,7 @@ const goPage = (type: string) => {
       height: 338rem;
       width: 246rem;
       border-radius: 36rem;
-      background: #ffffff;
+      background: var(--card-bg-color);
       margin-left: 24rem;
       text-align: center;
       position: relative; // 关键定位
@@ -163,7 +162,15 @@ const goPage = (type: string) => {
         transform: translateX(-50%);
         width: 44rem; // 严格匹配2个中文字符
         height: 4rem; // 边框粗细
-        background: #333;
+      }
+      &:nth-child(1)::after {
+        background: #00D881;
+      }
+      &:nth-child(2)::after {
+        background: #154AFC;
+      }
+      &:nth-child(3)::after {
+        background: #EA00CB;
       }
       .img {
         margin-top: 40rem;
@@ -174,6 +181,7 @@ const goPage = (type: string) => {
       }
       span {
         margin-top: 32rem;
+        color: var(--font-gray-color);
       }
     }
     .card-item:first-child {
@@ -196,19 +204,19 @@ const goPage = (type: string) => {
       padding: 0 32rem;
       .title {
         font-size: 28rem;
-        color: #393939;
+        color: var(--font-dark-color);
         font-weight: 700;
         margin-top: 32rem;
         line-height: 24rem;
       }
       .rate {
         margin-top: 40rem;
-        color: #f98f18;
+        color: var(--primary-color);
         font-size: 40rem;
         line-height: 34rem;
       }
       .more {
-        background: #f98f18;
+        background: var(--primary-color);
         height: 32rem;
         width: 32rem;
         border-radius: 50%;
@@ -217,7 +225,7 @@ const goPage = (type: string) => {
         justify-content: center;
         align-items: center;
         .icon {
-          color: #ffffff;
+          color: var(--font-light-color);
           font-size: 22rem;
         }
       }
@@ -258,18 +266,18 @@ const goPage = (type: string) => {
         line-height: 24rem;
         .title {
           font-size: 28rem;
-          color: #393939;
+          color: var(--font-dark-color);
           font-weight: 700;
         }
         .more {
-          background: #f98f18;
+          background: var(--primary-color);
           height: 32rem;
           line-height: 32rem;
           text-align: center;
           width: 32rem;
           border-radius: 50%;
           .icon {
-            color: #ffffff;
+            color: var(--font-light-color);
             font-size: 22rem;
           }
         }
@@ -291,7 +299,7 @@ const goPage = (type: string) => {
         .right {
           .label {
             font-size: 24rem;
-            color: #999999;
+            color: var(--font-gray-color);
             margin-top: 36rem;
             display: flex;
             justify-content: space-between;
@@ -299,7 +307,7 @@ const goPage = (type: string) => {
             line-height: 20rem;
             span {
               font-size: 28rem;
-              color: #f98f18;
+              color: var(--primary-color);
             }
           }
           .label:first-child {
@@ -310,7 +318,15 @@ const goPage = (type: string) => {
     }
   }
 }
-
+.website {
+  color: #00D881;
+}
+.safety {
+  color: #154AFC;
+}
+.data {
+  color: #EA00CB;
+}
 :deep(.van-nav-bar__content) {
   height: 40rem;
 }
@@ -319,9 +335,9 @@ const goPage = (type: string) => {
 }
 :deep(.van-nav-bar__title) {
   font-size: 32rem;
-  color: #ffffff;
+  color: var(--card-bg-color);
 }
 :deep(.van-nav-bar .van-icon) {
-  color: #ffffff;
+  color: var(--card-bg-color);
 }
 </style>

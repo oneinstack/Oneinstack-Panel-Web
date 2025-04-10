@@ -6,7 +6,8 @@
         <template #right>
           <div class="icon-item" v-for="item in iconList">
             <van-badge :content="item.num" color="#FF5805">
-              <van-image class="icon" width="40rem" height="40rem" :src="item.icon" />
+              <!-- <van-image class="icon" width="40rem" height="40rem" :src="item.icon" /> -->
+              <v-s-icon :name="item.icon" :size="40" />
             </van-badge>
           </div>
         </template>
@@ -41,7 +42,7 @@
                 <p class="introduce">基于 NGINX 和 LuaJIT测试数据</p>
               </div>
             </div>
-            <div>运行中</div>
+            <div :class="item.status == 1 ? 'run' : 'stop'">{{ item.status == 1 ? '运行中' : '停止中' }}</div>
           </div>
           <van-divider />
           <div class="footer">
@@ -70,10 +71,10 @@ const iconList = reactive([
   { icon: 'download', num: '0' },
   { icon: 'upload', num: '0' }
 ])
-iconList.forEach((item, index) => {
-  const _icon = item.icon
-  item.icon = `/static/img/application/${_icon}.png`
-})
+// iconList.forEach((item, index) => {
+//   const _icon = item.icon
+//   item.icon = `/static/img/application/${_icon}.png`
+// })
 const activeTab = ref('1')
 const tabList = reactive([
   {
@@ -112,24 +113,24 @@ const onTab = (item: any) => {
 }
 
 const list = reactive([
-  { icon: 'download', num: '0' },
-  { icon: 'download', num: '0' },
-  { icon: 'download', num: '0' },
-  { icon: 'download', num: '0' },
-  { icon: 'download', num: '0' },
-  { icon: 'download', num: '0' }
+  { icon: 'download', num: '0', status: 1 },
+  { icon: 'download', num: '0', status: 2 },
+  { icon: 'download', num: '0', status: 1 },
+  { icon: 'download', num: '0', status: 2 },
+  { icon: 'download', num: '0', status: 1 },
+  { icon: 'download', num: '0', status: 2 }
 ])
 list.forEach((item, index) => {
   const _icon = item.icon
   item.icon = `/static/img/application/${_icon}.png`
 })
-const logRef = ref();
-const openLog = ()=>{
+const logRef = ref()
+const openLog = () => {
   logRef.value.open()
 }
-const stopRef = ref();
-const openStop = ()=>{
-  stopRef.value.open();
+const stopRef = ref()
+const openStop = () => {
+  stopRef.value.open()
 }
 </script>
 
@@ -139,9 +140,9 @@ const openStop = ()=>{
 }
 .header {
   padding: 0 32rem 18rem 32rem;
-  background: #ffffff;
-  
-  .van-nav-bar{
+  background: var(--card-bg-color);
+
+  .van-nav-bar {
     margin-top: 118rem;
   }
   .icon-item {
@@ -154,7 +155,7 @@ const openStop = ()=>{
     margin-top: 32rem;
     position: relative;
     input {
-      background: #f7f7f7;
+      background: var(--bg-color);
       height: 64rem;
       width: 100%;
       border-radius: 46rem;
@@ -168,7 +169,7 @@ const openStop = ()=>{
   }
   .tabs {
     display: flex;
-    background: #ffffff;
+    background: var(--card-bg-color);
     margin-top: 44rem;
     overflow-x: scroll;
     .tab {
@@ -189,13 +190,13 @@ const openStop = ()=>{
 
 .content {
   padding: 0 32rem;
-  background: #faf8f6;
+  background: var(--bg-color);
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
   .app_status_card {
     padding: 32rem;
-    background: #ffffff;
+    background: var(--card-bg-color);
     margin-top: 20rem;
     border-radius: 12rem;
     .top {
@@ -209,13 +210,19 @@ const openStop = ()=>{
             font-size: 32rem;
             font-weight: 700;
           }
-          .introduce{
+          .introduce {
             width: 272rem;
             overflow: hidden;
-            white-space:nowrap;
+            white-space: nowrap;
             text-overflow: ellipsis;
           }
         }
+      }
+      .run {
+        color: var(--success-color);
+      }
+      .stop {
+        color: var(--warning-color);
       }
     }
     .van-divider {
@@ -228,8 +235,8 @@ const openStop = ()=>{
       justify-content: space-between;
       align-items: center;
       span {
-        color: #9c9c9c;
-        border-bottom: 1px solid #9c9c9c;
+        color: var(--font-gray-color);
+        border-bottom: 1px solid var(--font-gray-color);
       }
       .btns {
         display: flex;
@@ -242,12 +249,12 @@ const openStop = ()=>{
           border-radius: 12rem;
         }
         .restart {
-          border: 1px solid #9c9c9c;
-          color: #9c9c9c;
+          border: 1px solid var(--font-gray-color);
+          color: var(--font-gray-color);
         }
         .stop {
-          border: 1px solid #f98f18;
-          color: #f98f18;
+          border: 1px solid var(--primary-color);
+          color: var(--primary-color);
         }
       }
     }

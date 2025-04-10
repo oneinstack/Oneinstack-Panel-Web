@@ -304,7 +304,7 @@ const option1: ECOption = {
   height: 88rem;
   margin: 0 auto;
   margin-top: 24rem;
-  background-color: #ffffff;
+  background-color: var(--card-bg-color);
   border-radius: 12rem;
   padding: 0 32rem;
   .title {
@@ -321,7 +321,7 @@ const option1: ECOption = {
       white-space: nowrap;
       text-align: center;
       position: relative;
-      color: #5d5d5d;
+      color: var(--font-gray-color);
       font-size: 20rem;
     }
     .tab:first-child {
@@ -333,7 +333,7 @@ const option1: ECOption = {
       left: 0;
       width: -webkit-fill-available;
       height: 4rem;
-      background: #f98f18;
+      background: var(--primary-color);
     }
     .active {
       font-weight: 800;
@@ -342,7 +342,7 @@ const option1: ECOption = {
 }
 .chart {
   height: 324rem;
-  background: #ffffff;
+  background: var(--card-bg-color);
   width: 686rem;
   margin: 0 auto;
   margin-top: 20rem;

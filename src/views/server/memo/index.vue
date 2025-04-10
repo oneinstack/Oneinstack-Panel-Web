@@ -40,7 +40,7 @@ const memo = reactive<memo>({
 .memo-page {
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: var(--card-bg-color);
   height: 100%;
   .content {
     flex: 1;
@@ -53,7 +53,7 @@ const memo = reactive<memo>({
     .date {
       font-size: 28rem;
       line-height: 24rem;
-      color: #b6b6b6;
+      color: var(--font-gray-color);
       margin-top: 52rem;
       span {
         margin-left: 46rem;
@@ -71,11 +71,11 @@ const memo = reactive<memo>({
 
 .icon {
   font-size: 44rem;
-  color: #272636;
+  color: var(--font-dark-color);
 }
 .rotate {
   transform: rotate(-180deg);
-  color: #a5a5a5;
+  color: var(--font-gray-color);
   margin-left: 38rem;
 }
 .save {

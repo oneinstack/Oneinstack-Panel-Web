@@ -81,7 +81,7 @@ const rightList = computed(() => list.filter((_, index) => index % 2 === 1))
   }
   
   .card {
-    background: #ffffff;
+    background: var(--card-bg-color);
     border-radius: 12rem;
     padding: 16rem;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -89,13 +89,13 @@ const rightList = computed(() => list.filter((_, index) => index % 2 === 1))
     .text {
       font-size: 28rem;
       line-height: 1.5;
-      color: #333333;
+      color: var(--font-dark-color);
     }
     
     .date {
       margin-top: 16rem;
       font-size: 24rem;
-      color: #999999;
+      color: var(--font-gray-color);
     }
   }
 }
@@ -107,12 +107,12 @@ const rightList = computed(() => list.filter((_, index) => index % 2 === 1))
     width: 100rem;
     height: 100rem;
     border-radius: 50%;
-    background: #F98F18;
+    background: var(--primary-color);
     display: flex;
     justify-content: center;
     align-items: center;
     .icon{
-        color: #ffffff;
+        color: var(--card-bg-color);
         font-size: 48rem;
     }
 }

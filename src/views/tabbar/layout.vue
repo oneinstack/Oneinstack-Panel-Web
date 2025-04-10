@@ -26,7 +26,7 @@ const conf = reactive({
     },
     {
       path: '/home/app',
-      icon: 'application',
+      icon: 'app',
       name:'tabbar.application',
       auth: false
     },

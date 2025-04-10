@@ -52,8 +52,8 @@ const onItem = (item: any) => {
   z-index: 999;
   height: 208rem;
   width: 750rem;
-  background: #ffffff;
-  box-shadow: #000000 0 2rem 4rem 0;
+  background: var(--card-bg-color);
+  box-shadow: var(--font-dark-color) 0 2rem 4rem 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -63,7 +63,7 @@ const onItem = (item: any) => {
   }
   p {
     font-size: 24rem;
-    color: #393939;
+    color: var(--font-gray-color);
     margin-top: 24rem;
     line-height: 20rem;
   }
