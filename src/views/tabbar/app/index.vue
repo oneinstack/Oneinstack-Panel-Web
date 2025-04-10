@@ -19,10 +19,10 @@
         </div>
       </div>
       <div class="tabs">
-        <div class="tab" :class="activeTab == item.key ? 'active' : ''" v-for="item in tabList" @click="onTab(item)">
+        <div class="tab" :class="activeTab == item.value ? 'active' : ''" v-for="item in tabList" @click="onTab(item)">
           <p>{{ item.label }}</p>
           <van-image
-            v-if="activeTab == item.key"
+            v-if="activeTab == item.value"
             class="icon"
             width="30rem"
             height="16rem"
@@ -38,8 +38,8 @@
             <div class="left">
               <van-image width="72rem" height="72rem" :src="item.icon" />
               <div class="info">
-                <p class="name">OpenResty</p>
-                <p class="introduce">基于 NGINX 和 LuaJIT测试数据</p>
+                <p class="name">{{item.name}}</p>
+                <p class="introduce">{{item.describe}}</p>
               </div>
             </div>
             <div :class="item.status == 1 ? 'run' : 'stop'">{{ item.status == 1 ? '运行中' : '停止中' }}</div>
@@ -62,67 +62,76 @@
   </x-page>
 </template>
 <script lang="ts" setup>
-import { reactive, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { index } from './app'
 import logDialog from './components/log.vue'
 import stopDialog from './components/stop.vue'
+import { apis } from '@/api'
 const conf = index()
 const iconList = reactive([
   { icon: 'download', num: '0' },
   { icon: 'upload', num: '0' }
 ])
-// iconList.forEach((item, index) => {
-//   const _icon = item.icon
-//   item.icon = `/static/img/application/${_icon}.png`
-// })
-const activeTab = ref('1')
+const activeTab = ref('');
 const tabList = reactive([
   {
-    name: '',
-    label: '测试',
+    label: '全部',
+    value: '',
     key: '1'
   },
   {
-    name: '',
-    label: '测试',
+    label: '建站',
+    value: '建站',
     key: '2'
   },
   {
-    name: '',
-    label: '是的反攻倒算是的',
+    label: '数据库',
+    value: '数据库',
     key: '3'
   },
   {
-    name: '',
-    label: '似懂非懂方式',
+    label: 'Web服务器',
+    value: 'Web服务器',
     key: '4'
   },
   {
-    name: '',
-    label: '是的反攻倒算是的',
+    label: '运行环境',
+    value: '运行环境',
     key: '5'
   },
   {
-    name: '',
-    label: '似懂非懂方式',
+    label: '实用工具',
+    value: '实用工具',
     key: '6'
+  },
+  {
+    label: '云存储',
+    value: '云存储',
+    key: '7'
+  },
+  {
+    label: 'AI/大模型',
+    value: 'AI/大模型',
+    key: '8'
   }
 ])
 const onTab = (item: any) => {
-  activeTab.value = item.key
+  activeTab.value = item.value
 }
 
-const list = reactive([
-  { icon: 'download', num: '0', status: 1 },
-  { icon: 'download', num: '0', status: 2 },
-  { icon: 'download', num: '0', status: 1 },
-  { icon: 'download', num: '0', status: 2 },
-  { icon: 'download', num: '0', status: 1 },
-  { icon: 'download', num: '0', status: 2 }
-])
-list.forEach((item, index) => {
-  const _icon = item.icon
-  item.icon = `/static/img/application/${_icon}.png`
+const list = ref([])
+const parmas = reactive({
+  installed: true,
+  page: 1,
+  pageSize: 10
+})
+const getList = () => {
+  apis.getSoftList({...parmas,tags:activeTab.value}).then((res: any) => {
+    list.value = res.data?.data || [];
+  })
+}
+onMounted(() => {
+  getList();
 })
 const logRef = ref()
 const openLog = () => {

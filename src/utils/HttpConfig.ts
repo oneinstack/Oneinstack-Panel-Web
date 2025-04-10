@@ -62,8 +62,6 @@ export default class HttpConfig {
           }
         })
         const token = sconfig.userInfo?.token
-        console.log(sconfig.userInfo?.token);
-        
         token && (config.param.headers.Authorization = `Bearer ${token}`)
         if (config.data?.json) {
           config.param.headers['Content-Type'] = 'application/json'

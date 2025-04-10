@@ -1,6 +1,5 @@
 export const apis = {
   login: (obj?: any) => {
-    console.log('Api.login', obj)
     return http.post('/login', obj)
   },
   /** 获取系统信息 */
@@ -11,6 +10,18 @@ export const apis = {
   getSysMonitor: () => {
     return http.get('/sys/monitor')
   },
+  /** 获取备忘录数量 */
+  getRemarkCount: () => {
+    return http.get('/sys/remarkcount')
+  },
+  /** 获取备忘录列表 */
+  getRemarkList: () => {
+    return http.get('/sys/remark')
+  },
+  /** 删除备忘录 */
+  deleteRemark: (id: number) => {
+    return http.post('/sys/remark/del', { id })
+  },
   /** 获取备注信息 */
   getSysRemark: (id = 1) => {
     return http.get(`/sys/remark/${id}`)
@@ -18,6 +29,10 @@ export const apis = {
   /** 更新备注信息 */
   updateSysRemark: (obj: any) => {
     return http.post('/sys/remark/update', obj)
+  },
+  /** 更新备注信息 */
+  addSysRemark: (obj: any) => {
+    return http.post('/sys/remark/add', obj)
   },
   /** 获取网站统计 */
   getWebsiteCount: () => {

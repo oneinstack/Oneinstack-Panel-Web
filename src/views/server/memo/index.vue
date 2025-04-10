@@ -9,32 +9,57 @@
         <template #right>
           <van-icon class="icon" name="revoke" />
           <van-icon class="icon rotate" name="revoke" />
-          <van-icon class="icon save" name="success" />
+          <van-icon class="icon save" name="success" @click="save"/>
         </template>
       </van-nav-bar>
       <div class="content">
-        <van-field class="title" v-model="memo.title" placeholder="标题" />
+        <van-field class="title" v-model="memo.content" placeholder="标题" />
         <p class="date">
-          1月7日 10:36
-          <span>{{ memo.text.length }}字</span>
+          {{ memo.create_time }}
+          <span>{{ memo.content.length }}字</span>
         </p>
-        <van-field class="text" v-model="memo.text" autosize type="textarea" placeholder="开始书写" />
+        <van-field class="content" v-model="memo.content" autosize type="textarea" placeholder="开始书写" />
       </div>
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { apis } from '@/api'
+import { onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
+const id = Number(router.currentRoute.value.query.id)
 interface memo {
-  title: string
-  text: string
+  id: number | string
+  content: string
+  create_time: string
 }
-const memo = reactive<memo>({
-  title: '',
-  text: ''
+const memo = ref<memo>({
+  id: "",
+  content: '',
+  create_time: new Date().toLocaleDateString()
 })
+const getMemo = () => {
+  if(!router.currentRoute.value.query.id) return
+  apis.getSysRemark(id).then((res) => {
+    memo.value = res.data;
+  })
+}
+onMounted(() => {
+  getMemo()
+})
+
+const save = () => {
+  if(!router.currentRoute.value.query.id) {
+    apis.addSysRemark({content:memo.value.content}).then((res) => {
+      router.back()
+    })
+  } else {
+    apis.updateSysRemark({...memo.value,id:id}).then((res) => {
+      router.back()
+    })
+  }
+}
 </script>
 <style lang="less" scoped>
 .memo-page {
@@ -59,7 +84,7 @@ const memo = reactive<memo>({
         margin-left: 46rem;
       }
     }
-    .text {
+    .content {
       padding: 24rem 0;
       font-size: 28rem;
     }

@@ -4,7 +4,7 @@
       <p class="name">应用程序</p>
     </div>
     <div class="app-list">
-      <template v-for="(item, index) in appList">
+      <template v-for="(item, index) in app.list">
         <div v-if="index < 7" class="app_card">
           <div class="icon_box">
             <van-image width="68rem" height="68rem" :src="item.icon" />
@@ -22,41 +22,24 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive } from 'vue'
-const appList = reactive([
-  {
-    icon: 'cpu',
-    name: 'OpenResty'
-  },
-  {
-    icon: 'ram',
-    name: 'MySQL'
-  },
-  {
-    icon: 'disk',
-    name: 'Halo'
-  },
-  {
-    icon: 'cpu',
-    name: 'OpenResty'
-  },
-  {
-    icon: 'ram',
-    name: 'MySQL'
-  },
-  {
-    icon: 'disk',
-    name: 'Halo'
-  },
-  {
-    icon: 'ram',
-    name: 'MySQL'
-  },
-  {
-    icon: 'disk',
-    name: 'Halo'
-  }
-])
+import { apis } from '@/api'
+import { onMounted, reactive } from 'vue'
+const app = reactive({
+    parmas: {
+      installed:true,
+      page: 1,
+      pageSize: 10
+    },
+    list: []
+})
+const getAppList = () => {
+    apis.getSoftList(app.parmas).then((res) => {
+      app.list = res.data?.data || [];
+    })
+}
+onMounted(() => {
+  getAppList();
+})
 </script>
 <style lang="less" scoped>
 .application {
@@ -98,6 +81,9 @@ const appList = reactive([
         width: 140rem;
         height: 140rem;
         background: var(--card-bg-color);
+        display: flex;
+        justify-content: center;
+        align-items: center;
       }
       .name {
         margin-top: 16rem;

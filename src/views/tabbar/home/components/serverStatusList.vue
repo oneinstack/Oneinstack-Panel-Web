@@ -19,24 +19,24 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, onMounted } from 'vue'
+import { reactive, onMounted, ref } from 'vue'
 import { apis } from '@/api/index'
 import { useRouter } from 'vue-router'
 const serverList = reactive([
   {
     icon: 'cpu',
     name: 'cpu使用率',
-    rate: '38.7'
+    rate: '0'
   },
   {
     icon: 'ram',
     name: '内存使用率',
-    rate: '38.7'
+    rate: '0'
   },
   {
     icon: 'disk',
     name: '磁盘使用率',
-    rate: '38.7'
+    rate: '0'
   }
 ])
 serverList.forEach((item, index) => {
@@ -48,30 +48,35 @@ const serverNameClass: any = {
   1: 'yellow',
   2: 'blue'
 }
-const getServerList = async (type: number) => {
+const serverInfo = ref<any>({})
+const getServerInfo = async () => {
   const { data: res } = await apis.getSysInfo()
+  serverInfo.value = res;
+} 
+const getServerData = async (type: string) => {
+  // const { data: res } = await apis.getSysInfo()
   switch (type) {
-    case 1:
+    case 'ram':
       {
-        const { total, used, available, usedPercent } = res.memory_usage
+        const { total, used, available, usedPercent } = serverInfo.value.memory_usage
         // conf.statusData.usage.total = sutil.bytesTransform(total).strValue
         // conf.statusData.usage.used = sutil.bytesTransform(used).strValue
         // conf.statusData.usage.available = sutil.bytesTransform(available).strValue
         // conf.statusData.usage.usedPercent = usedPercent
-        serverList[0].rate = usedPercent
+        serverList[0].rate = usedPercent.toFixed(2)
       }
       break
-    case 2:
+    case 'disk':
       {
-        const rootDisk = res.disk_usage.find((disk: { path: string }) => disk.path === '/')
+        const rootDisk = serverInfo.value.disk_usage.find((disk: { path: string }) => disk.path === '/')
         if (!rootDisk) {
           // 如果没找到根目录，使用第一个磁盘信息
-          const { total, free, used, usedPercent } = res.disk_usage[0]
+          const { total, free, used, usedPercent } = serverInfo.value.disk_usage[0]
           // conf.statusData.usage.total = sutil.bytesTransform(total).strValue
           // conf.statusData.usage.used = sutil.bytesTransform(used).strValue
           // conf.statusData.usage.available = sutil.bytesTransform(free).strValue
           // conf.statusData.usage.usedPercent = usedPercent
-          serverList[1].rate = usedPercent
+          serverList[1].rate = usedPercent.toFixed(2)
         } else {
           // 使用根目录磁盘信息
           const { total, free, used, usedPercent } = rootDisk
@@ -79,20 +84,20 @@ const getServerList = async (type: number) => {
           // conf.statusData.usage.used = sutil.bytesTransform(used).strValue
           // conf.statusData.usage.available = sutil.bytesTransform(free).strValue
           // conf.statusData.usage.usedPercent = usedPercent
-          serverList[1].rate = usedPercent
+          serverList[1].rate = usedPercent.toFixed(2)
         }
       }
       break
-    case 3:
+    case 'cpu':
       {
-        const [usedPercent] = res.cpu_usage
-        const { modelName, cores } = res.cpu_info[0]
+        const [usedPercent] = serverInfo.value.cpu_usage
+        const { modelName, cores } = serverInfo.value.cpu_info[0]
         // conf.statusData.usage.total = '--'
         // conf.statusData.usage.used = '--'
         // conf.statusData.usage.available = '--'
         // conf.statusData.usage.usedPercent = usedPercent
         // conf.statusData.cpuInfo = `${modelName} ${cores}核`
-        serverList[2].rate = usedPercent
+        serverList[2].rate = usedPercent.toFixed(2)
       }
       break
   }
@@ -103,10 +108,11 @@ const goDetail = () => {
     path: '/serverDetail'
   })
 }
-onMounted(() => {
-  getServerList(1)
-  getServerList(2)
-  getServerList(3)
+onMounted(async() => {
+  await getServerInfo()
+  getServerData('cpu')
+  getServerData('ram')
+  getServerData('disk')
 })
 </script>
 <style lang="less" scoped>

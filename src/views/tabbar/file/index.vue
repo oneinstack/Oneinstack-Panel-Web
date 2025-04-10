@@ -43,7 +43,7 @@
           <p class="checked-left" @click="cancelChecked()">取消</p>
         </template>
         <template #right>
-          <p v-if="checkedList.length != fileList.length" class="checked-right" @click="checkedAll()">全选</p>
+          <p v-if="checkedList.length != file.list.length" class="checked-right" @click="checkedAll()">全选</p>
           <p v-else class="checked-right" @click="checkedNotAll()">全不选</p>
         </template>
       </van-nav-bar>
@@ -59,9 +59,9 @@
         {{ checkSortTypeName ? checkSortTypeName : '智能排序' }}
         <van-icon name="filter-o" @click="showSortPopup" />
       </p>
-      <file-card :list="fileList">
+      <file-card :list="file.list">
         <template #time="{ item }">
-          <p class="update_date">上传于：2024-05-18</p>
+          <p class="update_date">上传于：{{item.modTime}}</p>
         </template>
         <template #operation="{ item }">
           <van-checkbox v-model="item.checked"></van-checkbox>
@@ -75,19 +75,20 @@
   </x-page>
 </template>
 <script lang="ts" setup>
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { index } from './file'
 import { useRouter } from 'vue-router'
 import SortPopup from './components/sortPopup.vue'
 import DetailPopup from './components/detailPopup.vue'
 import OperationList from './components/operationList.vue'
 import AddOrRenamePopup from './components/addOrRenamePopup.vue'
+import { apis } from '@/api'
 const router = useRouter()
 const conf = index()
 const isChecked = ref<boolean>(false)
 const showMenu = ref<boolean>(false)
 const checkedList = computed(() => {
-  const checkedList = fileList.filter((item: any) => {
+  const checkedList = file.list.filter((item: any) => {
     return item.checked == true
   })
   return checkedList
@@ -118,50 +119,39 @@ menuList.forEach((item, index) => {
   const _icon = item.icon
   item.icon = `/static/img/file/${_icon}.png`
 })
-const fileList: any = reactive([
-  {
-    fileType: 'file',
-    name: '文件1'
-  },
-  {
-    fileType: 'folder',
-    name: '文件夹1'
-  },
-  {
-    fileType: 'file',
-    name: '文件2'
-  },
-  {
-    fileType: 'folder',
-    name: '文件夹2'
-  },
-  {
-    fileType: 'folder',
-    name: '文件夹3'
+const file = reactive({
+  list: [],
+  params: {
+    path:'/'
   }
-])
-fileList.forEach((item: any) => {
-  const _icon = item.fileType
-  // item.icon = `/static/img/file/${_icon}.png`
-  item.icon = `${_icon}`
-  item.size = 72
-  // item.width = '72rem'
-  // item.height = '72rem'
+})
+const getList = () => {
+  apis.getFileList(file.params).then((res: any) => {
+    file.list = res.data?.files || []
+    file.list.forEach((item: any) => {
+      item.checked = false
+      item.size = 72
+      item.icon = `${item.isDir ? 'folder' : 'file'}`
+    })
+  })
+}
+onMounted(() => {
+  getList()
 })
 const cancelChecked = () => {
-  fileList.forEach((item: any) => {
+  file.list.forEach((item: any) => {
     item.checked = false
   })
   isChecked.value = false
   showMenu.value = false
 }
 const checkedAll = () => {
-  fileList.forEach((item: any) => {
+  file.list.forEach((item: any) => {
     item.checked = true
   })
 }
 const checkedNotAll = () => {
-  fileList.forEach((item: any) => {
+  file.list.forEach((item: any) => {
     item.checked = false
   })
 }
@@ -377,7 +367,7 @@ const fileDetail = ref({})
     }
   }
 }
-.update_date{
+.update_date {
   color: var(--font-gray-color);
 }
 .pdb-100 {
