@@ -226,6 +226,17 @@ export default {
     back: "Atrás",
     top: "Subir un Nivel",
     refresh: "Actualizar",
+    up: "Subir un Nivel",
+    saveContentAndClose:
+      "¿El archivo ha sido modificado, desea guardar y cerrar?",
+    saveAndOpenNewFile:
+      "¿El archivo ha sido modificado, desea guardar y abrir uno nuevo?",
+    noEdit:
+      "¡El archivo no ha sido modificado, no es necesaria esta operación!",
+    noNameFolder: "Carpeta sin Nombre",
+    noNameFile: "Archivo sin Nombre",
+    minimap: "Minimapa",
+    fileCanNotRead: "Este archivo no se puede previsualizar",
   },
   log: {
     panel: "Registro del Panel",

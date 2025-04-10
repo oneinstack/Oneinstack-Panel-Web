@@ -220,7 +220,15 @@ export default {
         right: 'Maju',
         back: 'Mundur',
         top: 'Kembali ke Atas',
-        refresh: 'Segarkan'
+        refresh: 'Segarkan',
+        up: 'Naik Satu Level',
+        saveContentAndClose: 'File telah dimodifikasi, apakah Anda ingin menyimpan dan menutup?',
+        saveAndOpenNewFile: 'File telah dimodifikasi, apakah Anda ingin menyimpan dan membuka file baru?',
+        noEdit: 'File tidak dimodifikasi, tidak perlu melakukan operasi ini!',
+        noNameFolder: 'Folder Tanpa Nama',
+        noNameFile: 'File Tanpa Nama',
+        minimap: 'Peta Mini',
+        fileCanNotRead: 'File ini tidak mendukung pratinjau',
     },
     log: {
         panel: 'Log Panel',

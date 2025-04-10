@@ -701,7 +701,7 @@ defineExpose({
     </custom-dialog>
 
     <custom-dialog v-model="conf.selectFolder.show" :title="$t('file.selectFolder')">
-      <file-panel @select="(path) => (conf.selectFolder.path = path)" />
+      <file-panel @select="(path:any) => (conf.selectFolder.path = path)" />
       <template #footer>
         <el-button type="primary" @click="conf.selectFolder.confirm"
           >{{ $t('commons.button.confirm') }}</el-button
