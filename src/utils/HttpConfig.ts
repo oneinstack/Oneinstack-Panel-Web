@@ -31,8 +31,8 @@ export default class HttpConfig {
       else System.toast(msg, 'error')
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
       if (code == 401) {
-        // sconfig.logout()
-        // System.router.replace('/login')
+        sconfig.logout()
+        System.router.replace('/login')
         // const sapp = sutil.getStore('sapp')
         // if (!sapp.isNav) {
         //   System.router.replace('/login')
@@ -45,7 +45,7 @@ export default class HttpConfig {
     http.setConfig({
       base: env.API,
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        // 'Content-Type': 'application/x-www-form-urlencoded',
         'Authorization': 'Basic c2FiZXI6c2FiZXJfc2VjcmV0'
       },
       before(config) {
@@ -62,7 +62,9 @@ export default class HttpConfig {
           }
         })
         const token = sconfig.userInfo?.token
-        token && (config.param.headers.Token = token)
+        console.log(sconfig.userInfo?.token);
+        
+        token && (config.param.headers.Authorization = `Bearer ${token}`)
         if (config.data?.json) {
           config.param.headers['Content-Type'] = 'application/json'
           delete config.data.json
@@ -71,7 +73,7 @@ export default class HttpConfig {
       after(xhr, config) {
         const { code } = xhr.data
         if (code === undefined) return
-        if (code != 200) {
+        if (code != 0) {
           error(code, config, xhr)
           throw new Error(code)
         }

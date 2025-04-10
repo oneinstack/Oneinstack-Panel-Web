@@ -75,15 +75,16 @@ const conf = reactive({
     username: '',
     password: '',
     serverUrl:'',
-    checked: false,
-    isShowPassword: false
+    checked: true,
+    isShowPassword: true
   },
   loading: false,
   handleLogin: async () => {
     conf.loading = true
     const { data: res } = await apis.login({
-      ...conf.form,
-      final: () => (conf.loading = false)
+      username: conf.form.username,
+      password: conf.form.password,
+      remember: true
     })
     console.log(res)
     // showDialog({
@@ -92,9 +93,9 @@ const conf = reactive({
 
     // })
     sconfig.login(res)
-    // setTimeout(() => {
-    //   System.router.push('/')
-    // }, 500)
+    setTimeout(() => {
+      System.router.push('/')
+    }, 500)
   }
 })
 </script>

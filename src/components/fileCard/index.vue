@@ -22,6 +22,7 @@ interface FileListItem {
   icon?: string
   height?: string
   width?: string
+  size?: number
   checked?:boolean
 }
 const props = withDefaults(defineProps<{

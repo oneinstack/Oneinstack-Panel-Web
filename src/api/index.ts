@@ -1,21 +1,4 @@
 export const apis = {
-  //登录注册列表
-  appConfigurationV1: (obj?: ApiData) => http.get('/api/systemApi/appConfigurationV1', obj),
-  // 退出登录
-  loginOut: (obj?: ApiData) => http.post('/api/login/loginOut', obj),
-  //登录
-  // login: (obj?: ApiData) => http.post('/api/login/login', { ...obj, json: true }),
-
-  // //返回当前系统时间戳
-  // getTime: (data?: ApiData) => http.get('/api/api/gettime', data),
-  // system: (data?: ApiData) => http.get('/api/api/system/time', data),
-
-  //进入APP调取接口数据
-  backOnline: (obj?: ApiData) => http.get('/api/login/backOnline', obj),
-  //离开APP调取接口数据
-  offline: (obj?: ApiData) => http.get('/api/login/offline', obj),
-
-
   login: (obj?: any) => {
     console.log('Api.login', obj)
     return http.post('/login', obj)

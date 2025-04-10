@@ -32,7 +32,7 @@ export const sconfig = reactive({
    */
   logout(toLogin = false) {
     // 下线
-    apis.offline()
+    // apis.offline()
 
     // 清空token
     Cookie.clear()

@@ -29,7 +29,7 @@
       <div v-if="conf.popup.type == 'lang'" class="lang-select">
         <div class="select-title">
           <span>{{ $t('me.switchLanguage') }}</span>
-          <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" />
+          <!-- <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" /> -->
         </div>
         <div class="lang-list">
           <div v-for="item of conf.langArr" :key="item.id">
@@ -46,7 +46,7 @@
       <div v-else-if="conf.popup.type == 'theme'" class="lang-select">
         <div class="select-title">
           <span>{{ $t('me.theme') }}</span>
-          <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" />
+          <!-- <img class="close-img" src="/static/img/close.webp" @click="conf.popup.close" /> -->
         </div>
         <div class="lang-list">
           <div v-for="item of conf.themeArr" :key="item.id">
