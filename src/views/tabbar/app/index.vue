@@ -117,9 +117,10 @@ const tabList = reactive([
 ])
 const onTab = (item: any) => {
   activeTab.value = item.value
+  getList()
 }
 
-const list = ref([])
+const list = ref<any[]>([])
 const parmas = reactive({
   installed: true,
   page: 1,

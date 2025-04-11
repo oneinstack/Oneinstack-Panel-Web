@@ -3,7 +3,7 @@
     <div class="item-title">
       <p class="name">最近文件</p>
     </div>
-    <file-card :list="fileList">
+    <file-card  v-for="file in fileList" :item="file">
       <template #time="{ item }">
         <p class="update_date">修改时间：2024-05-18</p>
       </template>

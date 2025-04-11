@@ -13,9 +13,6 @@
             </van-badge>
           </div>
           <div class="icon-item">
-            <!-- <van-badge :content="''" color="#FF5805" @click="showMenu = !showMenu">
-              <van-image class="icon" width="40rem" height="40rem" :src="`/static/img/file/more.png`" />
-            </van-badge> -->
             <van-popover v-model:show="showMenu" placement="bottom-end">
               <div class="drop-menu">
                 <div class="menu-item" v-for="menu in menuList" @click="onMenu(menu)">
@@ -29,12 +26,6 @@
                 </van-badge>
               </template>
             </van-popover>
-            <!-- <div v-if="showMenu" class="drop-menu">
-              <div class="menu-item" v-for="menu in menuList" @click="onMenu(menu)">
-                <van-image class="icon" width="48rem" height="48rem" :src="menu.icon" />
-                <p class="menu-name">{{ menu.name }}</p>
-              </div>
-            </div> -->
           </div>
         </template>
       </van-nav-bar>
@@ -55,13 +46,20 @@
       </div>
     </div>
     <div class="content" :class="checkedList.length > 0 ? 'pdb-100' : ''">
-      <p class="menu">
-        {{ checkSortTypeName ? checkSortTypeName : '智能排序' }}
-        <van-icon name="filter-o" @click="showSortPopup" />
-      </p>
-      <file-card :list="file.list">
+      <div class="top">
+        <p class="menu">
+          {{ checkSortTypeName ? checkSortTypeName : '智能排序' }}
+          <van-icon name="filter-o" @click="showSortPopup" />
+        </p>
+        <div>
+          <van-icon name="arrow-up" />
+          <span @click="goUp">上一级</span>
+          当前目录：{{ file.params.pathStr == '/' ? '根目录（/）' : file.params.pathStr }}
+        </div>
+      </div>
+      <file-card v-for="item in file.list" :item="item" :list="file.list" @click="clickFile(item)">
         <template #time="{ item }">
-          <p class="update_date">上传于：{{item.modTime}}</p>
+          <p class="update_date">上传于：{{ item.modTime }}</p>
         </template>
         <template #operation="{ item }">
           <van-checkbox v-model="item.checked"></van-checkbox>
@@ -122,11 +120,13 @@ menuList.forEach((item, index) => {
 const file = reactive({
   list: [],
   params: {
-    path:'/'
+    path: ['/'],
+    pathStr: ''
   }
 })
 const getList = () => {
-  apis.getFileList(file.params).then((res: any) => {
+  file.params.pathStr = file.params.path.join('/').replace(/\/\//g, '/')
+  apis.getFileList({ path: file.params.pathStr }).then((res: any) => {
     file.list = res.data?.files || []
     file.list.forEach((item: any) => {
       item.checked = false
@@ -174,14 +174,28 @@ const onMenu = (menu: any) => {
       break
   }
 }
+const downloadFile = async () => {
+  console.log(checkedList.value)
+  checkedList.value.forEach(async (item: any) => {
+    if (item.isDir) return
+    const { data: res } = await apis.downloadFile({ path: file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`, filename: item.name })
+  })
+}
+const delFile = async () => {
+  checkedList.value.forEach(async (item: any) => {
+    const { data: res } = await apis.deleteFile({ path: file.params.pathStr + `/${item.name}` })
+  })
+}
 const onItem = (item: any) => {
   switch (item.id) {
     case 1:
+      downloadFile()
       break
     case 2:
       openAddOrRenamePopup('rename')
       break
     case 3:
+      delFile()
       break
     case 4:
       break
@@ -210,6 +224,23 @@ const changeSortType = (item: any) => {
   checkSortTypeName.value = item.name
 }
 const fileDetail = ref({})
+const clickFile = (item: any) => {
+  if (item.isDir) {
+    file.params.path.push(item.name)
+    file.params.pathStr = file.params.path.join('/').replace(/\/\//g, '/')
+    getList()
+  }
+}
+const goUp = () => {
+  // 如果已经在根目录，则直接返回
+  if (file.params.path.length <= 1) return
+  // 移除当前路径的最后一个目录
+  file.params.path.pop()
+  // 更新路径字符串
+  file.params.pathStr = file.params.path.join('/').replace(/\/\//g, '/')
+  // 获取新路径的文件列表
+  getList()
+}
 </script>
 
 <style lang="less" scoped>
@@ -308,11 +339,18 @@ const fileDetail = ref({})
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
-  .menu {
-    font-size: 28rem;
-    margin-top: 32rem;
-    color: var(--font-gray-color);
+  .top {
+    .menu {
+      font-size: 28rem;
+      margin-top: 32rem;
+      color: var(--font-gray-color);
+    }
+    >div{
+      margin-top: 20rem;
+      font-size: 24rem;
+    }
   }
+
   .app_status_card {
     padding: 32rem;
     background: var(--card-bg-color);
