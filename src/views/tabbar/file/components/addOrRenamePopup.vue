@@ -10,9 +10,9 @@
     </Navbar>
     <div class="file-content">
       <!-- <van-image class="icon" width="174rem" height="174rem" :src="`/static/img/file/file.png`" @click="show = false" /> -->
-      <v-s-icon class="icon" :size="174" name="addFolder" @click="show = false"/>
-      <div v-if="operationType == 'rename' || 'add'" class="my-input">
-        <input placeholder="请输入名称" />
+      <v-s-icon class="icon" :size="174" name="addFolder" @click="show = false" />
+      <div v-if="operationType == 'rename' || operationType == 'add'" class="my-input">
+        <input v-model="fileInfo.name" placeholder="请输入名称" />
         <van-icon class="input-icon" size="44rem" name="close" />
       </div>
       <van-uploader v-else>
@@ -31,6 +31,8 @@
   </van-popup>
 </template>
 <script setup lang="ts">
+import { apis } from '@/api'
+import System from '@/utils/System'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
@@ -43,16 +45,59 @@ const typeTitle: any = {
 type operationTypes = 'upload' | 'add' | 'rename'
 const show = ref<boolean>(false)
 const operationType = ref<string>('')
-const open = (type: operationTypes) => {
+const open = (type: operationTypes, obj: any) => {
   show.value = true
   operationType.value = type
+  fileInfo.value = obj
 }
 const close = () => {
   show.value = false
 }
 const handleConfirm = () => {
   show.value = false
+  switch (operationType.value) {
+    case 'upload':
+      break
+    case 'add':
+      apis.createFile({
+        path:
+          fileInfo.value.pathStr == '/'
+            ? fileInfo.value.pathStr + fileInfo.value.name
+            : fileInfo.value.pathStr + '/' + fileInfo.value.name,
+        type: fileInfo.value.isDir ? 'dir' : 'file'
+      })
+      break
+    case 'rename':
+      apis.createFile({
+        path:
+          fileInfo.value.pathStr === '/'
+            ? fileInfo.value.pathStr + fileInfo.value.name
+            : fileInfo.value.pathStr + '/' + fileInfo.value.name,
+        type: fileInfo.value.isDir ? 'dir' : 'file'
+      })
+      break
+  }
   emit('change')
+}
+const fileInfo = ref({
+  name: '',
+  file: null,
+  isDir: '',
+  pathStr: ''
+})
+const upload = async (file: { file: File }) => {
+  fileInfo.value.name = file.file.name
+  try {
+    const { data: res } = await apis.uploadFile(
+      {
+        file: file,
+        path: fileInfo.value.pathStr
+      },
+      () => {}
+    )
+  } catch (error) {
+    System.toast('上传失败')
+  }
 }
 defineExpose({
   open

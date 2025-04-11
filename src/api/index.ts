@@ -50,6 +50,24 @@ export const apis = {
   createFile: (obj: any) => {
     return http.post('/ftp/create', obj)
   },
+  /** 上传文件 */
+  uploadFile: (obj: any,callback:Function) => {
+    return http.post(
+      {
+        url: "/ftp/upload",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        // 原生获取上传进度的事件
+        onProgress: (e:any) => {
+            if (e.lengthComputable) {
+                callback && callback(e);
+            }
+        },
+      },
+      obj
+    );
+  },
   /** 删除文件或文件夹 */
   deleteFile: (obj: any) => {
     return http.post('/ftp/delete', obj)

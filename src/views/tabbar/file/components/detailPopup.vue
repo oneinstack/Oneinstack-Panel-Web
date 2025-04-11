@@ -13,13 +13,13 @@
     <div class="file-top">
       <van-image class="file-type-icon" width="56rem" height="56rem" :src="`/static/img/file/file.png`" />
       <van-field v-if="isEdit" />
-      <p v-else class="file-name">文件1</p>
+      <p v-else class="file-name">{{ fileInfo.name }}</p>
       <van-image class="edit-icon" width="32rem" height="32rem" :src="`/static/img/file/edit.png`" @click="isEdit = !isEdit"/>
     </div>
     <div class="detail-list">
         <div class="detail-item" v-for="item in detailArr">
             <p class="label">{{ item.label }}</p>
-            <div v-if="fileType == 'files' && item.value == 'fileNum'" class="value">
+            <div v-if="fileInfo.isDir" class="value">
               <p>2个文件</p>
               <p>0个文件夹</p>
             </div>
@@ -39,18 +39,26 @@
 import { ref } from 'vue'
 const emit = defineEmits(['update:checkSortType'])
 const isEdit = ref<boolean>(false)
-const detailArr = [
+const show = ref<boolean>(false)
+const fileType = ref<string>('')
+const fileInfo = ref<any>({})
+const open = (obj:any) => {
+  fileType.value = 'files'
+  fileInfo.value = obj
+  show.value = true
+}
+const detailArr = ref([
   {
     label: '文件类型',
-    value: '文件'
+    value: fileInfo.value.isDir ? '文件夹' : '文件'
   },
   {
     label: '上传时间',
-    value: '2019-04-17 13:31'
+    value: fileInfo.value.modTime
   },
   {
     label: '文件大小',
-    value: '34.27MB'
+    value: fileInfo.value.size
   },
   {
     label: '最后修改时间',
@@ -60,13 +68,7 @@ const detailArr = [
     label: '包含文件数',
     value: 'fileNum'
   }
-]
-const show = ref<boolean>(false)
-const fileType = ref<string>('')
-const open = () => {
-  fileType.value = 'files'
-  show.value = true
-}
+])
 defineExpose({
   open
 })
