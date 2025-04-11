@@ -10,14 +10,14 @@
       <div class="tabs">
         <div class="tab" v-for="item in list" :class="item.id == activeTab ? 'active' : ''" @click="activeTab = item.id">{{ item.title }}</div>
       </div>
-      <FileCard v-if="fileList.length > 0" :list="fileList">
+      <file-card v-if="fileList.length > 0" v-for="file in fileList" :item="file">
         <template #time="{ item }">
           <p class="update_date">上传于    2024-05-18</p>
         </template>
         <template #operation="{ item }">
             <div class="btn">等待中</div>
         </template>
-      </FileCard>
+      </file-card>
       <div v-else class="not-data">
         <van-image class="" width="266rem" height="284rem" src="/public/static/img/file/not-data.png" />
         <p>当前无下载记录</p>
@@ -59,11 +59,8 @@ const fileList: any = reactive([
   }
 ])
 fileList.forEach((item: any) => {
-  // item.icon = `/static/img/file/file-icon.png`
   item.icon = 'file'
   item.size = 72
-  // item.width = '72rem'
-  // item.height = '72rem'
 })
 </script>
 <style lang="less" scoped>

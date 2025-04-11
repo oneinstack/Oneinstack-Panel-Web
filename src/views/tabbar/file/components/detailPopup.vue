@@ -19,7 +19,7 @@
     <div class="detail-list">
         <div class="detail-item" v-for="item in detailArr">
             <p class="label">{{ item.label }}</p>
-            <div v-if="fileInfo.isDir" class="value">
+            <div v-if="fileInfo.isDir && item.label == '包含文件数'" class="value">
               <p>2个文件</p>
               <p>0个文件夹</p>
             </div>

@@ -6,7 +6,7 @@
         <!-- <van-image :width="item.width || '56rem'" :height="item.height || '56rem'" :src="item.icon" /> -->
         <v-s-icon :name="props.item.icon" :size="props.item.size || 56" />
         <div class="file_info">
-          <p class="file_name">{{ props.item.name }}</p>
+          <p class="file_name van-ellipsis">{{ props.item.name }}</p>
           <slot name="time" :item="props.item"></slot>
         </div>
       </div>
@@ -33,12 +33,6 @@ const props = defineProps({
     }
   }
 })
-// const props = withDefaults(
-//   defineProps<
-//     item:{
-//     ty: FileListItem // 这里指定 list 的类型
-//   }>
-// )
 </script>
 <style lang="less" scoped>
 .file_card {

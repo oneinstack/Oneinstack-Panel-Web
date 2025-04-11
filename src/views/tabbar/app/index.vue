@@ -1,7 +1,7 @@
 <template>
   <x-page no-header tabbar>
-    <x-statusbar />
     <div class="header">
+      <x-statusbar />
       <van-nav-bar title="应用">
         <template #right>
           <div class="icon-item" v-for="item in iconList">
@@ -151,10 +151,12 @@ const openStop = () => {
 .header {
   padding: 0 32rem 18rem 32rem;
   background: var(--card-bg-color);
+  width: 100%;
+  position: fixed;
 
-  .van-nav-bar {
-    margin-top: 118rem;
-  }
+  // .van-nav-bar {
+  //   margin-top: 118rem;
+  // }
   .icon-item {
     display: flex;
     justify-content: center;
@@ -204,6 +206,7 @@ const openStop = () => {
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
+  margin-top: calc(148rem + 44rem + 64rem + 64rem );
   .app_status_card {
     padding: 32rem;
     background: var(--card-bg-color);

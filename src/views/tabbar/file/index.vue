@@ -1,7 +1,7 @@
 <template>
   <x-page no-header tabbar>
-    <x-statusbar />
     <div class="header">
+      <x-statusbar />
       <van-nav-bar v-show="!isChecked && checkedList.length < 1" title="">
         <template #left>
           <p class="left-title">文件</p>
@@ -81,6 +81,7 @@ import DetailPopup from './components/detailPopup.vue'
 import OperationList from './components/operationList.vue'
 import AddOrRenamePopup from './components/addOrRenamePopup.vue'
 import { apis } from '@/api'
+import System from '@/utils/System'
 const router = useRouter()
 const conf = index()
 const isChecked = ref<boolean>(false)
@@ -176,7 +177,7 @@ const onMenu = (menu: any) => {
 }
 const downloadFile = async () => {
   checkedList.value.forEach(async (item: any) => {
-    if (item.isDir) return
+    if (item.isDir) return System.toast('文件夹无法下载')
     const { data: res } = await apis.downloadFile({ path: file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`, filename: item.name })
   })
 }
@@ -261,8 +262,10 @@ const goUp = () => {
 .header {
   padding: 0 32rem 18rem 32rem;
   background: var(--card-bg-color);
+  position: fixed;
+  width: 100%;
   .van-nav-bar {
-    margin-top: 118rem;
+    // margin-top: 118rem;
     .left-title {
       font-size: 32rem;
       color: var(--font-dark-color);
@@ -344,6 +347,7 @@ const goUp = () => {
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
+  margin-top: calc(128rem + 64rem);
   .top {
     .menu {
       font-size: 28rem;
