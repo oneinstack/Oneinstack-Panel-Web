@@ -3,7 +3,7 @@
     <div class="item-title">
       <p class="name">应用程序</p>
     </div>
-    <div class="app-list">
+    <div v-if="app.list.length > 0" class="app-list">
       <template v-for="(item, index) in app.list">
         <div v-if="index < 7" class="app_card">
           <div class="icon_box">
@@ -18,6 +18,9 @@
           <p class="name">更多应用</p>
         </div>
       </template>
+    </div>
+    <div class="empty" v-else>
+      <van-empty description="暂无应用" />
     </div>
   </div>
 </template>
