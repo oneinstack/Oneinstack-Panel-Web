@@ -206,7 +206,7 @@ const openStop = () => {
   height: 100%;
   overflow-y: scroll;
   padding-bottom: 32rem;
-  margin-top: calc(148rem + 44rem + 64rem + 64rem );
+  margin-top: calc(148rem + 44rem + 64rem + 64rem);
   .app_status_card {
     padding: 32rem;
     background: var(--card-bg-color);
