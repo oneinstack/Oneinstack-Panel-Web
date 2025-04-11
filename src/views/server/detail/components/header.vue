@@ -107,4 +107,13 @@ onMounted(() => {
     }
   }
 }
+.website {
+  color: #00d881;
+}
+.safety {
+  color: #154afc;
+}
+.data {
+  color: #ea00cb;
+}
 </style>

@@ -1,7 +1,7 @@
 <template>
   <x-page no-header tabbar no-footer>
-    <x-statusbar />
     <div class="header">
+      <x-statusbar />
       <van-nav-bar :title="title" left-arrow @click-left="router.back()"></van-nav-bar>
     </div>
     <div class="top">
@@ -14,34 +14,31 @@
       </div>
     </div>
     <div class="chart">
-      <ECharts v-if="['cpu', 'ram', 'disk'].includes(route.query.type as ServerMetricType)" :option="option" />
-      <ECharts v-else :option="option1" />
+      <ECharts ref="lineRef" v-if="isServerType" :option="option" />
+      <ECharts ref="linesRef" v-else :option="option1" />
     </div>
-    <card v-if="['cpu', 'ram', 'disk'].includes(route.query.type as ServerMetricType)" />
-    <listCard v-else />
+    <card v-if="isServerType" :server-info="serverInfo" />
+    <listCard v-else :monitor-info="monitorInfo" />
   </x-page>
 </template>
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import card from './components/card.vue'
 import listCard from './components/listCard.vue'
 import echarts, { ECOption } from '@/components/ECharts/config/index'
 import ECharts from '@/components/ECharts/index.vue'
-import { toPx } from '@/utils'
+import { toPx, titleMap, getThemeColor, formatSizeUnits } from '@/utils'
+import { apis } from '@/api'
 type ServerMetricType = 'cpu' | 'ram' | 'disk' | 'io' | 'flow' // 定义明确类型
 const router = useRouter()
 const route = useRoute()
 const title = computed(() => {
-  return routeTitle[route.query.type as ServerMetricType]
+  return titleMap[route.query.type as ServerMetricType]
 })
-const routeTitle = {
-  'cpu': 'cpu使用率',
-  'ram': '内存使用率',
-  'disk': '硬盘使用率',
-  'io': '磁盘IO',
-  'flow': '流量'
-}
+const isServerType = computed(() => {
+  return ['cpu', 'ram', 'disk'].includes(route.query.type as ServerMetricType)
+})
 const activeTab = ref('1')
 const onTab = (item: any) => {
   activeTab.value = item.value
@@ -64,7 +61,7 @@ const list = reactive([
     value: '4'
   }
 ])
-const option: ECOption = {
+const option = ref<any>({
   grid: {
     top: toPx(10),
     left: 0,
@@ -76,9 +73,9 @@ const option: ECOption = {
     {
       type: 'category',
       boundaryGap: false,
-      data: ['9:46:11', '9:46:15', '9:46:18', '9:46:21', '9:46:24', '9:46:27'],
+      data: [],
       axisLabel: {
-        color: '#a1a1a1'
+        color: getThemeColor('--font-gray-color')
       },
       axisTick: {
         show: false
@@ -88,10 +85,8 @@ const option: ECOption = {
   yAxis: [
     {
       type: 'value',
-      min: 0,
-      max: 100,
       axisLabel: {
-        color: '#a1a1a1'
+        color: getThemeColor('--font-gray-color')
       },
       axisTick: {
         show: false
@@ -101,23 +96,23 @@ const option: ECOption = {
   series: [
     {
       symbol: 'none', //去掉折线图中的节点
-      smooth: true, //true 为平滑曲线，false为直线
+      smooth: false, //true 为平滑曲线，false为直线
       name: 'Direct',
       type: 'line',
       stack: 'Total',
       lineStyle: {
-        color: '#F98F18'
+        color: getThemeColor('--primary-color')
       },
       areaStyle: {
         // 颜色自上而下渐变
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           {
             offset: 0,
-            color: '#F98F18'
+            color: getThemeColor('--primary-color')
           },
           {
             offset: 1,
-            color: '#ffffff'
+            color: getThemeColor('--font-light-color')
           }
         ]),
         opacity: 1 // 填充区域透明度
@@ -125,18 +120,18 @@ const option: ECOption = {
       emphasis: {
         focus: 'series'
       },
-      data: [75, 40, 52, 24, 11, 23, 23]
+      data: []
     }
   ]
-}
-const option1: ECOption = {
-    color:['#F98F18', '#FF455A', '#FFD226', '#27D7D7'],
+})
+const option1: any = {
+  color: [getThemeColor('--primary-color'), '#FF455A', '#FFD226', '#27D7D7'],
   legend: {
     icon: 'roundRect',
     itemWidth: toPx(10),
     itemHeight: toPx(10),
     itemGap: toPx(28),
-    borderRadius:toPx(5),
+    borderRadius: toPx(5),
     data: ['上行', '下行', '总发送', '总接收']
   },
   grid: {
@@ -150,9 +145,9 @@ const option1: ECOption = {
     {
       type: 'category',
       boundaryGap: false,
-      data: ['9:46:11', '9:46:15', '9:46:18', '9:46:21', '9:46:24', '9:46:27'],
+      data: [],
       axisLabel: {
-        color: '#a1a1a1'
+        color: getThemeColor('--font-gray-color')
       },
       axisTick: {
         show: false
@@ -162,10 +157,8 @@ const option1: ECOption = {
   yAxis: [
     {
       type: 'value',
-      min: 0,
-      max: 100,
       axisLabel: {
-        color: '#a1a1a1'
+        color: getThemeColor('--font-gray-color')
       },
       axisTick: {
         show: false
@@ -180,18 +173,18 @@ const option1: ECOption = {
       type: 'line',
       stack: 'top',
       lineStyle: {
-        color: '#F98F18'
+        color: getThemeColor('--primary-color')
       },
       areaStyle: {
         // 颜色自上而下渐变
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           {
             offset: 0,
-            color: '#F98F18'
+            color: getThemeColor('--primary-color')
           },
           {
             offset: 1,
-            color: '#ffffff'
+            color: getThemeColor('--font-light-color')
           }
         ]),
         opacity: 1 // 填充区域透明度
@@ -199,7 +192,7 @@ const option1: ECOption = {
       emphasis: {
         focus: 'series'
       },
-      data: [45, 20, 32, 24, 14, 65, 83]
+      data: []
     },
     {
       symbol: 'none', //去掉折线图中的节点
@@ -219,7 +212,7 @@ const option1: ECOption = {
           },
           {
             offset: 1,
-            color: '#ffffff'
+            color: getThemeColor('--font-light-color')
           }
         ]),
         opacity: 1 // 填充区域透明度
@@ -227,7 +220,7 @@ const option1: ECOption = {
       emphasis: {
         focus: 'series'
       },
-      data: [75, 40, 52, 24, 11, 23, 23]
+      data: []
     },
     {
       symbol: 'none', //去掉折线图中的节点
@@ -247,7 +240,7 @@ const option1: ECOption = {
           },
           {
             offset: 1,
-            color: '#ffffff'
+            color: getThemeColor('--font-light-color')
           }
         ]),
         opacity: 1 // 填充区域透明度
@@ -255,7 +248,7 @@ const option1: ECOption = {
       emphasis: {
         focus: 'series'
       },
-      data: [25, 40, 26, 54, 33, 73, 45]
+      data: []
     },
     {
       symbol: 'none', //去掉折线图中的节点
@@ -275,7 +268,7 @@ const option1: ECOption = {
           },
           {
             offset: 1,
-            color: '#ffffff'
+            color: getThemeColor('--font-light-color')
           }
         ]),
         opacity: 1 // 填充区域透明度
@@ -283,16 +276,91 @@ const option1: ECOption = {
       emphasis: {
         focus: 'series'
       },
-      data: [80, 55, 82, 74, 18, 23, 65]
+      data: []
     }
   ]
 }
+const serverInfo = ref<any>({})
+const lineRef = ref<any>()
+const linesRef = ref<any>()
+const getServerInfo = async () => {
+  const { data: res } = await apis.getSysInfo()
+  serverInfo.value = res
+  getServerTypeData()
+}
+const getServerTypeData = async () => {
+  option.value.xAxis[0].data.push(new Date().toLocaleTimeString())
+  switch (route.query.type) {
+    case 'cpu':
+      const [usedPercent] = serverInfo.value.cpu_usage
+      option.value.series[0].data.push(usedPercent.toFixed(2))
+      break
+    case 'ram':
+      const ramUsedPercent = serverInfo.value.memory_usage.usedPercent
+      option.value.series[0].data.push(ramUsedPercent.toFixed(2))
+      break
+    case 'disk':
+      const rootDisk = serverInfo.value.disk_usage.find((disk: { path: string }) => disk.path === '/')
+      const diskInfo = rootDisk || serverInfo.value.disk_usage[0]
+      option.value.series[0].data.push(diskInfo.toFixed(2))
+      break
+  }
+  if (lineRef.value) {
+    lineRef.value.draw()
+  }
+}
+const monitorInfo = ref<any>({})
+const getMonitorInfo = async () => {
+  const { data: res } = await apis.getSysMonitor()
+  monitorInfo.value = res
+  getMonitorTypeData()
+}
+const getMonitorTypeData = async () => {
+  const flow = monitorInfo.value.network[1]
+  const io = monitorInfo.value.disk[3]
+  option1.xAxis[0].data.push(new Date().toLocaleTimeString())
+  switch (route.query.type) {
+    case 'flow':
+      option1.series[0].data.push(parseFloat(formatSizeUnits(flow.SendRate)))
+      option1.series[1].data.push(parseFloat(formatSizeUnits(flow.RecvRate)))
+      option1.series[2].data.push(`${parseFloat(formatSizeUnits(flow.BytesSent))}`)
+      option1.series[3].data.push(`${parseFloat(formatSizeUnits(flow.BytesRecv))}`)
+      break
+    case 'io':
+      option1.series[0].data.push(parseFloat(formatSizeUnits(io.ReadSpeed)))
+      option1.series[1].data.push(parseFloat(formatSizeUnits(io.WriteSpeed)))
+      option1.series[2].data.push(io.ReadOpsPerSec)
+      option1.series[3].data.push(io.AvgIoLatency.toFixed(2))
+      break
+  }
+  if (linesRef.value) {
+    linesRef.value.draw()
+  }
+}
+let timer: any = null
+onMounted(async () => {
+  timer = setInterval(() => {
+    if (isServerType.value) {
+      getServerInfo()
+    } else {
+      getMonitorInfo()
+    }
+  }, 3000)
+})
+
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+  }
+})
 </script>
 <style lang="less" scoped>
 .header {
-  background: #ffffff;
+  background: var(--card-bg-color);
+  position: fixed;
+  width: 100%;
   .van-nav-bar {
-    margin-top: 128rem;
+    // margin-top: 128rem;
     line-height: 120rem;
   }
 }
@@ -303,7 +371,8 @@ const option1: ECOption = {
   width: 686rem;
   height: 88rem;
   margin: 0 auto;
-  margin-top: 24rem;
+  // margin-top: 24rem;
+  margin-top: calc(24rem + 88rem);
   background-color: var(--card-bg-color);
   border-radius: 12rem;
   padding: 0 32rem;

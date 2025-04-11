@@ -26,11 +26,11 @@ import { apis } from '@/api'
 import { onMounted, reactive } from 'vue'
 const app = reactive({
     parmas: {
-      installed:true,
+      // installed:false,
       page: 1,
       pageSize: 10
     },
-    list: []
+    list: [] as any[]
 })
 const getAppList = () => {
     apis.getSoftList(app.parmas).then((res) => {

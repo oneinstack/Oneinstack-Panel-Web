@@ -7,22 +7,53 @@
     </div>
   </div>
 </template>
-<script lang="ts" setup>
-import { apis } from '@/api'
-import { onMounted, ref } from 'vue'
+<script setup lang="ts">
+import { onMounted, watch, ref } from 'vue'
 import { useRouter } from 'vue-router'
-const router = useRouter()
-const titleMap:any = {
-  cpu: 'cpu使用率',
-  ram: '内存使用率',
-  disk: '硬盘使用率'
-} 
+import { titleMap } from '@/utils'
 const props = defineProps({
   type: {
     type: String,
     default: 'cpu'
+  },
+  serverInfo: {
+    type: Object,
+    required: true
   }
 })
+
+const rate = ref('0')
+
+// 监听 serverInfo 变化
+watch(() => props.serverInfo, (newInfo) => {
+  if (newInfo && Object.keys(newInfo).length > 0) {
+    getServerData(props.type)
+  }
+}, { deep: true })
+
+const getServerData = (type: string) => {
+  if (!props.serverInfo) return
+  
+  switch (type) {
+    case 'ram': {
+      const { usedPercent } = props.serverInfo.memory_usage
+      rate.value = usedPercent.toFixed(2)
+      break
+    }
+    case 'disk': {
+      const rootDisk = props.serverInfo.disk_usage.find((disk: { path: string }) => disk.path === '/')
+      const diskInfo = rootDisk || props.serverInfo.disk_usage[0]
+      rate.value = diskInfo.usedPercent.toFixed(2)
+      break
+    }
+    case 'cpu': {
+      const [usedPercent] = props.serverInfo.cpu_usage
+      rate.value = usedPercent.toFixed(2)
+      break
+    }
+  }
+}
+const router = useRouter()
 const goPage = () => {
   router.push({
     path: '/useRate',
@@ -31,47 +62,6 @@ const goPage = () => {
     }
   })
 }
-const rate = ref('0')
-const serverInfo = ref<any>({})
-const getServerInfo = async () => {
-  const { data: res } = await apis.getSysInfo()
-  serverInfo.value = res;
-} 
-const getServerData = async (type: string) => {
-  switch (type) {
-    case 'ram':
-      {
-        const { total, used, available, usedPercent } = serverInfo.value.memory_usage
-        rate.value = usedPercent.toFixed(2)
-      }
-      break
-    case 'disk':
-      {
-        const rootDisk = serverInfo.value.disk_usage.find((disk: { path: string }) => disk.path === '/')
-        if (!rootDisk) {
-          // 如果没找到根目录，使用第一个磁盘信息
-          const { total, free, used, usedPercent } = serverInfo.value.disk_usage[0]
-          rate.value = usedPercent.toFixed(2)
-        } else {
-          // 使用根目录磁盘信息
-          const { total, free, used, usedPercent } = rootDisk
-          rate.value = usedPercent.toFixed(2)
-        }
-      }
-      break
-    case 'cpu':
-      {
-        const [usedPercent] = serverInfo.value.cpu_usage
-        const { modelName, cores } = serverInfo.value.cpu_info[0]
-        rate.value = usedPercent.toFixed(2)
-      }
-      break
-  }
-}
-onMounted(async() => {
-  await getServerInfo()
-  getServerData(props.type)
-})
 </script>
 <style lang="less" scoped>
 .cpu,

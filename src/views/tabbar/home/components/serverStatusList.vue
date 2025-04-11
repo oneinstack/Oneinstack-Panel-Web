@@ -19,7 +19,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { reactive, onMounted, ref } from 'vue'
+import { reactive, onMounted, ref, onUnmounted } from 'vue'
 import { apis } from '@/api/index'
 import { useRouter } from 'vue-router'
 const serverList = reactive([
@@ -51,8 +51,8 @@ const serverNameClass: any = {
 const serverInfo = ref<any>({})
 const getServerInfo = async () => {
   const { data: res } = await apis.getSysInfo()
-  serverInfo.value = res;
-} 
+  serverInfo.value = res
+}
 const getServerData = async (type: string) => {
   // const { data: res } = await apis.getSysInfo()
   switch (type) {
@@ -108,11 +108,19 @@ const goDetail = () => {
     path: '/serverDetail'
   })
 }
-onMounted(async() => {
-  await getServerInfo()
-  getServerData('cpu')
-  getServerData('ram')
-  getServerData('disk')
+let timer: any = null
+onMounted(async () => {
+  timer = setInterval(async () => {
+    await getServerInfo()
+    getServerData('cpu')
+    getServerData('ram')
+    getServerData('disk')
+  }, 3000)
+})
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer)
+  }
 })
 </script>
 <style lang="less" scoped>

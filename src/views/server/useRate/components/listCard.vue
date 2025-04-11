@@ -1,16 +1,85 @@
 <template>
   <div class="list-card">
-    <div class="card" v-for="i in 4">
+    <div class="card">
       <div class="top">
-        <p class="name">当前使用率</p>
+        <p class="name">{{ query.type == 'flow' ? '上行' : '读取' }}</p>
         <div class="round"></div>
       </div>
-      <p class="rate">38.7%</p>
-      <p class="date">2024-05-21 9:46:11</p>
+      <p class="rate">
+        {{
+          query.type == 'flow' ? `${formatSizeUnits(info.flow.SendRate)}/s` : `${formatSizeUnits(info.io.ReadSpeed)}`
+        }}
+      </p>
+      <p class="date">{{ dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss') }}</p>
+    </div>
+    <div class="card">
+      <div class="top">
+        <p class="name">{{ query.type == 'flow' ? '下行' : '写入' }}</p>
+        <div class="round"></div>
+      </div>
+      <p class="rate">
+        {{
+          query.type == 'flow' ? `${formatSizeUnits(info.flow.RecvRate)}/s` : `${formatSizeUnits(info.io.WriteSpeed)}`
+        }}
+      </p>
+      <p class="date">{{ dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss') }}</p>
+    </div>
+    <div class="card">
+      <div class="top">
+        <p class="name">{{ query.type == 'flow' ? '总发送' : '读写次数' }}</p>
+        <div class="round"></div>
+      </div>
+      <p class="rate">{{ query.type == 'flow' ? `${formatSizeUnits(info.flow.BytesSent)}` : `${info.io.ReadOpsPerSec}次/s` }}</p>
+      <p class="date">{{ dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss') }}</p>
+    </div>
+    <div class="card">
+      <div class="top">
+        <p class="name">{{ query.type == 'flow' ? '总接收' : '读写延迟' }}</p>
+        <div class="round"></div>
+      </div>
+      <p class="rate">{{
+              query.type == 'flow' ? `${formatSizeUnits(info.flow.BytesRecv)}` : `${info.io.AvgIoLatency.toFixed(2)}/ms`
+            }}</p>
+      <p class="date">{{ dayjs(new Date()).format('YYYY-MM-DD HH:mm:ss') }}</p>
     </div>
   </div>
 </template>
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { formatSizeUnits } from '@/utils/index'
+import { reactive, watch } from 'vue'
+import { useRoute } from 'vue-router'
+import dayjs from 'dayjs'
+const route = useRoute()
+const query = route.query
+const props = defineProps({
+  monitorInfo: {
+    type: Object
+  }
+})
+const info = reactive<any>({
+  flow: {
+    SendRate: 0,
+    BytesSent: 0,
+    RecvRate: 0,
+    BytesRecv: 0
+  },
+  io: {
+    ReadSpeed: 0,
+    ReadOpsPerSec: 0,
+    WriteSpeed: 0,
+    AvgIoLatency: 0
+  }
+})
+watch(
+  () => props.monitorInfo,
+  (newVal) => {
+    if (newVal) {
+      info.flow = newVal.network.find((item:any) => item.Name === 'all')
+      info.io = newVal.disk.find((item:any) => item.Name === 'all')
+    }
+  }
+)
+</script>
 <style lang="less" scoped>
 .list-card {
   display: flex;
@@ -34,10 +103,21 @@
         font-size: 24rem;
         font-weight: 700;
       }
-      .round{
+      .round {
         height: 20rem;
         width: 20rem;
         border-radius: 50%;
+      }
+      .card:nth-of-type(1) .round {
+        border: 4rem solid #F98F18;
+      }
+      .card:nth-of-type(2) .round {
+        border: 4rem solid #FF455A;
+      }
+      .card:nth-of-type(3) .round {
+        border: 4rem solid #FFD226;
+      }
+      .card:nth-of-type(4) .round {
         border: 4rem solid var(--primary-color);
       }
     }

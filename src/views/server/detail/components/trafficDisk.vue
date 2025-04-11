@@ -1,7 +1,7 @@
 <template>
   <div :class="props.type">
     <div class="header">
-      <p class="title">流量</p>
+      <p class="title">{{ titleMap[props.type] }}</p>
       <div class="more" @click="goPage()">
         <van-icon class="icon" name="arrow" />
       </div>
@@ -51,14 +51,18 @@
 </template>
 <script lang="ts" setup>
 import { apis } from '@/api'
-import { formatSizeUnits } from '@/utils/index'
-import { onMounted, reactive } from 'vue'
+import { formatSizeUnits, titleMap } from '@/utils/index'
+import { onMounted, onUnmounted, reactive, watch } from 'vue'
 import { useRouter } from 'vue-router'
 const router = useRouter()
 const props = defineProps({
   type: {
     type: String,
     default: 'ram'
+  },
+  monitorInfo: {
+    type: Object,
+    required: true
   }
 })
 const goPage = () => {
@@ -86,90 +90,17 @@ const info = reactive({
     AvgIoLatency: 0
   }
 })
-const getData = async () => {
-  const { data: res } = await apis.getSysMonitor()
-  info.flow = res.network[1]
-  info.io = res.disk[3]
-  // if (!conf.monitorData.options.length || isCardChange) {
-  //   conf.monitorData.options = (res[conf.monitorData.selectedType] as any[])
-  //     .map((item: any, i: number) => {
-  //       const option = { label: item.Name, value: i }
-  //       if (item.Name == 'all') conf.monitorData.selectedCard = option
-  //       return option
-  //     })
-  //     .sort((a, b) => a.label.localeCompare(b.label))
-  // }
-  // let ascend: ChartData['ascend'][0], descend: ChartData['descend'][0]
-  // switch (conf.monitorData.selectedType) {
-  //   case 'network':
-  //     {
-  //       const { SendRate, RecvRate, BytesSent, BytesRecv } = res.network.find(
-  //         (item: any) => item.Name == conf.monitorData.selectedCard.label
-  //       )
-  //       ascend = {
-  //         value: parseFloat((SendRate / 1024 / 1024).toFixed(2)),
-  //         strValue: sutil.bytesTransform(SendRate).strValue
-  //       }
-  //       descend = {
-  //         value: parseFloat((RecvRate / 1024 / 1024).toFixed(2)),
-  //         strValue: sutil.bytesTransform(RecvRate).strValue
-  //       }
-  //       conf.monitorData.network = [
-  //         {
-  //           label: t('home.upstream'),
-  //           value: `${sutil.bytesTransform(SendRate).strValue}/s`
-  //         },
-  //         {
-  //           label: t('home.downstream'),
-  //           value: `${sutil.bytesTransform(RecvRate).strValue}/s`
-  //         },
-  //         {
-  //           label: t('home.totalSend'),
-  //           value: sutil.bytesTransform(BytesSent).strValue
-  //         },
-  //         {
-  //           label: t('home.totalReceive'),
-  //           value: sutil.bytesTransform(BytesRecv).strValue
-  //         }
-  //       ]
-  //     }
-  //     break
-  //   case 'disk':
-  //     {
-  //       const { ReadSpeed, WriteSpeed, ReadOpsPerSec, WriteOpsPerSec, AvgIoLatency } = res.disk.find(
-  //         (item: any) => item.Name == conf.monitorData.selectedCard.label
-  //       )
-  //       ascend = {
-  //         value: parseFloat((ReadSpeed / 1024 / 1024).toFixed(2)),
-  //         strValue: sutil.bytesTransform(ReadSpeed).strValue
-  //       }
-  //       descend = {
-  //         value: parseFloat((WriteSpeed / 1024 / 1024).toFixed(2)),
-  //         strValue: sutil.bytesTransform(WriteSpeed).strValue
-  //       }
-  //       conf.monitorData.disk = [
-  //         {
-  //           label: t('home.read'),
-  //           value: sutil.bytesTransform(ReadSpeed).strValue
-  //         },
-  //         {
-  //           label: t('home.write'),
-  //           value: sutil.bytesTransform(WriteSpeed).strValue
-  //         },
-  //         {
-  //           label: t('home.readCount'),
-  //           value: `${ReadOpsPerSec + WriteOpsPerSec}次/s`
-  //         },
-  //         { label: t('home.averageDelay'), value: `${AvgIoLatency.toFixed(2)}ms` }
-  //       ]
-  //     }
-  //     break
-  // }
-  // conf.monitorData.draw({ ascend, descend })
-}
-onMounted(() => {
-  getData()
-})
+// 监听数据变化并更新
+watch(
+  () => props.monitorInfo,
+  (newInfo) => {
+    if (newInfo) {
+      info.flow = newInfo.network.find((item:any) => item.Name === 'all')
+      info.io = newInfo.disk.find((item:any) => item.Name === 'all')
+    }
+  },
+  { deep: true }
+)
 </script>
 <style lang="less" scoped>
 .flow,
