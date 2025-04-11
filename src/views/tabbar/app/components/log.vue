@@ -4,22 +4,43 @@
       <div class="content">
         <p class="title">日志</p>
         <div class="operation">
-            <p>最近一小时</p>
-            <p>200条</p>
-            <div class="btn">追踪</div>
+          <p>最近一小时</p>
+          <p>200条</p>
+          <div class="btn">追踪</div>
         </div>
-        <div class="text"></div>
+        <div class="text">
+          {{ logContent }}
+        </div>
       </div>
-      <van-icon class="close" name="close" @click="show = false"/>
+      <van-icon class="close" name="close" @click="close" />
     </div>
   </van-overlay>
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-
+import { apis } from '@/api'
+const logInfo = ref<any>({})
+const logContent = ref<string>('')
+const getLog = async () => {
+  const obj = {
+    name: logInfo.value?.name,
+    fn: logInfo.value?.log
+  }
+  const { data: res } = await apis.getInstallLog(obj)
+  logContent.value = res.logs.content
+}
 const show = ref<boolean>(false)
-const open = () => {
+const close = () => {
+  show.value = false
+  clearInterval(timer)
+}
+let timer: any = null
+const open = (item: any) => {
+  logInfo.value = item
   show.value = true
+  timer = setInterval(() => {
+    getLog()
+  }, 3000)
 }
 defineExpose({
   open
@@ -48,7 +69,7 @@ defineExpose({
       margin-top: 26rem;
       display: flex;
       align-items: center;
-      .btn{
+      .btn {
         width: 96rem;
         height: 52rem;
         line-height: 52rem;
@@ -58,14 +79,15 @@ defineExpose({
         cursor: pointer;
       }
     }
-    .text{
-        margin-top: 32rem;
-        background: var(--bg-color);
-        border-radius: 16rem;
-        padding: 32rem;
-        height: 604rem;
-        font-size: 24rem;
-        overflow-y: scroll;
+    .text {
+      margin-top: 32rem;
+      background: var(--bg-color);
+      border-radius: 16rem;
+      padding: 32rem;
+      height: 604rem;
+      font-size: 24rem;
+      overflow-y: scroll;
+      text-align: left;
     }
   }
   .close {

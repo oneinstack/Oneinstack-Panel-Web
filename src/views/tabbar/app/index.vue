@@ -46,7 +46,7 @@
           </div>
           <van-divider />
           <div class="footer">
-            <span @click="openLog()">日志</span>
+            <span @click="openLog(item)">日志</span>
             <div class="btns">
               <div class="btn restart">重启</div>
               <div class="btn stop" @click="openStop">停止</div>
@@ -135,8 +135,8 @@ onMounted(() => {
   getList();
 })
 const logRef = ref()
-const openLog = () => {
-  logRef.value.open()
+const openLog = (item:any) => {
+  logRef.value.open(item)
 }
 const stopRef = ref()
 const openStop = () => {
