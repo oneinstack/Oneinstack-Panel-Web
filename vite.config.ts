@@ -28,7 +28,7 @@ export default ({ mode, command }) => {
     // },
     server: {
       host: '0.0.0.0',
-      port: env.port || 5100,
+      port: env.port || 5200,
       headers:{ 'Access-Control-Allow-Origin': '*',},
       proxy: {
         '/api': {

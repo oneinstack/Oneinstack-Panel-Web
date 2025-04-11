@@ -4,9 +4,5 @@ export default {
    * 接口地址
    */
   API: '/api',
-  
-  /**
-   * 聊天地址
-   */
-  ChatUrl: 'https://im.bggame.live'
+  // API:'http://162.14.64.127:8089',
 }
