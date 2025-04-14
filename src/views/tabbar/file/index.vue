@@ -57,19 +57,24 @@
           当前目录：{{ file.params.pathStr == '/' ? '根目录（/）' : file.params.pathStr }}
         </div>
       </div>
-      <file-card v-for="item in file.list" :item="item" :list="file.list" @click="clickFile(item)">
-        <template #time="{ item }">
-          <p class="update_date">上传于：{{ item.modTime }}</p>
-        </template>
-        <template #operation="{ item }">
-          <van-checkbox v-model="item.checked" @click.stop></van-checkbox>
-        </template>
-      </file-card>
+      <template v-if="file.list.length > 0">
+        <file-card v-for="item in file.list" :item="item" :list="file.list" @click="clickFile(item)">
+          <template #time="{ item }">
+            <p class="update_date">上传于：{{ item.modTime }}</p>
+          </template>
+          <template #operation="{ item }">
+            <van-checkbox v-model="item.checked" @click.stop></van-checkbox>
+          </template>
+        </file-card>
+      </template>
+      <template v-else>
+        <van-empty description="暂无数据" />
+      </template>
     </div>
     <OperationList v-show="checkedList.length > 0" @on-item="onItem" />
     <SortPopup ref="sortPopupRef" @change="changeSortType" />
     <DetailPopup ref="detailPopupRef" />
-    <AddOrRenamePopup ref="addOrRenamePopupRef" @change="getList"/>
+    <AddOrRenamePopup ref="addOrRenamePopupRef" @change="getList" />
   </x-page>
 </template>
 <script lang="ts" setup>
@@ -87,7 +92,7 @@ const conf = index()
 const isChecked = ref<boolean>(false)
 const showMenu = ref<boolean>(false)
 const checkedList = computed(() => {
-  const checkedList:any = file.list.filter((item: any) => {
+  const checkedList: any = file.list.filter((item: any) => {
     return item.checked == true
   })
   return checkedList
@@ -164,11 +169,11 @@ const onMenu = (menu: any) => {
       showMenu.value = false
       break
     case 2:
-      openAddOrRenamePopup('upload','')
+      openAddOrRenamePopup('upload', '')
       showMenu.value = false
       break
     case 3:
-      openAddOrRenamePopup('add','')
+      openAddOrRenamePopup('add', '')
       showMenu.value = false
       break
     case 4:
@@ -178,7 +183,10 @@ const onMenu = (menu: any) => {
 const downloadFile = async () => {
   checkedList.value.forEach(async (item: any) => {
     if (item.isDir) return System.toast('文件夹无法下载')
-    const { data: res } = await apis.downloadFile({ path: file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`, filename: item.name })
+    const { data: res } = await apis.downloadFile({
+      path: file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`,
+      filename: item.name
+    })
   })
 }
 const delFile = async () => {
@@ -192,7 +200,7 @@ const onItem = (item: any) => {
       downloadFile()
       break
     case 2:
-      openAddOrRenamePopup('rename',checkedList.value[0].name)
+      openAddOrRenamePopup('rename', checkedList.value[0].name)
       break
     case 3:
       delFile()
@@ -212,13 +220,13 @@ const openDetailPopup = () => {
 }
 
 const addOrRenamePopupRef = ref()
-const openAddOrRenamePopup = (type: string,name = '') => {
+const openAddOrRenamePopup = (type: string, name = '') => {
   const obj = {
     pathStr: file.params.pathStr,
     name: name,
-    isDir:checkedList.value[0]?.isDir || true
+    isDir: checkedList.value[0]?.isDir || true
   }
-  addOrRenamePopupRef.value.open(type,obj)
+  addOrRenamePopupRef.value.open(type, obj)
 }
 
 const sortPopupRef = ref()
@@ -354,7 +362,7 @@ const goUp = () => {
       margin-top: 32rem;
       color: var(--font-gray-color);
     }
-    >div{
+    > div {
       margin-top: 20rem;
       font-size: 24rem;
     }
