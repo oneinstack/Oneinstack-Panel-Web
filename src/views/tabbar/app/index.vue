@@ -6,7 +6,6 @@
         <template #right>
           <div class="icon-item" v-for="item in iconList">
             <van-badge :content="item.num" color="#FF5805">
-              <!-- <van-image class="icon" width="40rem" height="40rem" :src="item.icon" /> -->
               <v-s-icon :name="item.icon" :size="40" />
             </van-badge>
           </div>
@@ -18,103 +17,31 @@
           <van-icon name="search" size="32rem" />
         </div>
       </div>
-      <div class="tabs">
-        <div class="tab" :class="activeTab == item.value ? 'active' : ''" v-for="item in tabList" @click="onTab(item)">
-          <p>{{ item.label }}</p>
-          <van-image
-            v-if="activeTab == item.value"
-            class="icon"
-            width="30rem"
-            height="16rem"
-            :src="'/static/img/application/tab-active.png'"
-          />
-        </div>
-      </div>
+      <tabs v-model="activeTab" @change="onTab"/>
     </div>
     <div class="content">
       <template v-if="list && list.length > 0">
         <div class="app_status_card" v-for="item in list">
-          <div class="top">
-            <div class="left">
-              <van-image width="72rem" height="72rem" :src="item.icon" />
-              <div class="info">
-                <p class="name">{{item.name}}</p>
-                <p class="introduce">{{item.describe}}</p>
-              </div>
-            </div>
-            <div :class="item.status == 1 ? 'run' : 'stop'">{{ item.status == 1 ? '运行中' : '停止中' }}</div>
-          </div>
-          <van-divider />
-          <div class="footer">
-            <span @click="openLog(item)">日志</span>
-            <div class="btns">
-              <div class="btn restart">重启</div>
-              <div class="btn stop" @click="openStop">停止</div>
-            </div>
-          </div>
+          <app-card :item="item" />
         </div>
       </template>
-
       <van-empty v-else :image="`/static/img/application/notData.png`" image-size="562rem" description="暂无程序" />
     </div>
-    <logDialog ref="logRef" />
-    <stopDialog ref="stopRef" />
   </x-page>
 </template>
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
 import { index } from './app'
-import logDialog from './components/log.vue'
-import stopDialog from './components/stop.vue'
+import appCard from './components/app-card.vue'
+import tabs from './components/tabs.vue'
 import { apis } from '@/api'
 const conf = index()
 const iconList = reactive([
   { icon: 'download', num: '0' },
   { icon: 'upload', num: '0' }
 ])
-const activeTab = ref('');
-const tabList = reactive([
-  {
-    label: '全部',
-    value: '',
-    key: '1'
-  },
-  {
-    label: '建站',
-    value: '建站',
-    key: '2'
-  },
-  {
-    label: '数据库',
-    value: '数据库',
-    key: '3'
-  },
-  {
-    label: 'Web服务器',
-    value: 'Web服务器',
-    key: '4'
-  },
-  {
-    label: '运行环境',
-    value: '运行环境',
-    key: '5'
-  },
-  {
-    label: '实用工具',
-    value: '实用工具',
-    key: '6'
-  },
-  {
-    label: '云存储',
-    value: '云存储',
-    key: '7'
-  },
-  {
-    label: 'AI/大模型',
-    value: 'AI/大模型',
-    key: '8'
-  }
-])
+const activeTab = ref('')
+
 const onTab = (item: any) => {
   activeTab.value = item.value
   getList()
@@ -127,21 +54,13 @@ const parmas = reactive({
   pageSize: 10
 })
 const getList = () => {
-  apis.getSoftList({...parmas,tags:activeTab.value}).then((res: any) => {
-    list.value = res.data?.data || [];
+  apis.getSoftList({ ...parmas, tags: activeTab.value }).then((res: any) => {
+    list.value = res.data?.data || []
   })
 }
 onMounted(() => {
-  getList();
+  getList()
 })
-const logRef = ref()
-const openLog = (item:any) => {
-  logRef.value.open(item)
-}
-const stopRef = ref()
-const openStop = () => {
-  stopRef.value.open()
-}
 </script>
 
 <style lang="less" scoped>
@@ -153,10 +72,6 @@ const openStop = () => {
   background: var(--card-bg-color);
   width: 100%;
   position: fixed;
-
-  // .van-nav-bar {
-  //   margin-top: 118rem;
-  // }
   .icon-item {
     display: flex;
     justify-content: center;
@@ -179,23 +94,33 @@ const openStop = () => {
       top: 16rem;
     }
   }
-  .tabs {
+  .tabs-content {
     display: flex;
-    background: var(--card-bg-color);
+    align-items: center;
     margin-top: 44rem;
-    overflow-x: scroll;
-    .tab {
-      margin-left: 40rem;
-      font-size: 28rem;
-      white-space: nowrap;
-      text-align: center;
+    .left {
+      margin-right: 20rem;
     }
-    .tab:first-child {
-      margin-left: 0;
-    }
+    .tabs {
+      display: flex;
+      background: var(--card-bg-color);
+      overflow-x: scroll;
+      .tab {
+        margin-left: 40rem;
+        font-size: 28rem;
+        white-space: nowrap;
+        text-align: center;
+      }
+      .tab:first-child {
+        margin-left: 0;
+      }
 
-    .active {
-      font-weight: 800;
+      .active {
+        font-weight: 800;
+      }
+    }
+    .right {
+      margin-left: 20rem;
     }
   }
 }
@@ -212,65 +137,6 @@ const openStop = () => {
     background: var(--card-bg-color);
     margin-top: 20rem;
     border-radius: 12rem;
-    .top {
-      display: flex;
-      justify-content: space-between;
-      .left {
-        display: flex;
-        .info {
-          margin-left: 28rem;
-          .name {
-            font-size: 32rem;
-            font-weight: 700;
-          }
-          .introduce {
-            width: 272rem;
-            overflow: hidden;
-            white-space: nowrap;
-            text-overflow: ellipsis;
-          }
-        }
-      }
-      .run {
-        color: var(--success-color);
-      }
-      .stop {
-        color: var(--warning-color);
-      }
-    }
-    .van-divider {
-      margin: 0;
-      margin-top: 36rem;
-      margin-bottom: 28rem;
-    }
-    .footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      span {
-        color: var(--font-gray-color);
-        border-bottom: 1px solid var(--font-gray-color);
-      }
-      .btns {
-        display: flex;
-        .btn {
-          width: 108rem;
-          height: 52rem;
-          line-height: 52rem;
-          text-align: center;
-          margin-left: 32rem;
-          border-radius: 12rem;
-        }
-        .restart {
-          border: 1px solid var(--font-gray-color);
-          color: var(--font-gray-color);
-        }
-        .stop {
-          border: 1px solid var(--primary-color);
-          color: var(--primary-color);
-        }
-      }
-    }
   }
 }
 </style>
