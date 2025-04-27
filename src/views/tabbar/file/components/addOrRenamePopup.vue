@@ -18,9 +18,7 @@
         v-else
         multiple
         :after-read="afterRead"
-        :before-read="beforeRead"
         :max-size="100 * 1024 * 1024"
-        @oversize="onOversize"
         accept="*"
       >
         <div class="my-input">
@@ -62,10 +60,6 @@ const open = (type: operationTypes, obj: any) => {
 const close = () => {
   show.value = false
 }
-const beforeRead = (file: any) => {
-  // 可以在这里添加文件类型验证
-  return true
-}
 
 const afterRead = async (file: any) => {
   // 处理单个文件上传
@@ -90,10 +84,6 @@ const afterRead = async (file: any) => {
       }
     }
   }
-}
-
-const onOversize = () => {
-  System.toast('文件大小不能超过100MB')
 }
 
 const handleConfirm = () => {

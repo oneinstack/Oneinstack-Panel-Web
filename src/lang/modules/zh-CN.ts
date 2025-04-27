@@ -51,6 +51,14 @@ export default {
     current: '当前目录',
     checkFile: '已选中{num}个文件',  
     uploadAt: '上传于',
+    fileType: '文件类型',
+    uploadTime: '上传时间',
+    fileSize: '文件大小',
+    lastUpdateTime: '最后修改',
+    fileNum: '包含文件数',
+    filePosition: '文件位置',
+    fileDetail: '文件详情',
+    transferSetting: '传输设置',
   },
   me: {
     setting: '设置',
@@ -122,6 +130,8 @@ export default {
       create: '创建',
       copy: '复制',
       finish: '完成',
+      remove: '移动',
+      detail: '详情',
     }
   }
 }

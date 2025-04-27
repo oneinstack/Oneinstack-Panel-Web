@@ -40,7 +40,7 @@
           <p v-if="checkedList.length != file.list.length" class="checked-right" @click="checkedAll()">
             {{ $t('commons.button.checAll') }}
           </p>
-          <p v-else class="checked-right" @click="checkedNotAll()">{{ $t('commons.button.unChecAll') }}</p>
+          <p v-else class="checked-right" @click="checkedNotAll()">{{ $t('commons.button.uncheckAll') }}</p>
         </template>
       </van-nav-bar>
       <div class="search">

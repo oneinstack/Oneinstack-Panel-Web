@@ -8,31 +8,33 @@
 </template>
 <script setup lang="ts">
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const emit = defineEmits(['onItem'])
 const checkedOperationList = reactive([
   {
     id: 1,
-    name: '下载',
+    name: t('commons.button.download'),
     icon: 'download'
   },
   {
     id: 2,
-    name: '重命名',
+    name: t('commons.button.rename'),
     icon: 'rename'
   },
   {
     id: 3,
-    name: '删除',
+    name: t('commons.button.delete'),
     icon: 'delete1'
   },
   {
     id: 4,
-    name: '移动',
+    name: t('commons.button.remove'),
     icon: 'remove'
   },
   {
     id: 5,
-    name: '详情',
+    name: t('commons.button.detail'),
     icon: 'detail'
   }
 ])

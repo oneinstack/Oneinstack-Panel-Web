@@ -7,7 +7,7 @@
     :style="{ height: 'calc(100% - 384rem)' }"
   >
     <div class="navbar">
-      <p>文件详情</p>
+      <p>{{ $t('file.fileDetail') }}</p>
       <van-image class="icon" width="36rem" height="36rem" :src="`/static/img/file/close.png`" @click="show = false" />
     </div>
     <div class="file-top">
@@ -26,7 +26,7 @@
             <p v-else class="value">{{ item.value }}</p>
         </div>
         <div class="file-position">
-            <p class="label">文件位置</p>
+            <p class="label">{{ $t('file.filePosition') }}</p>
             <div class="value">
                 <p>文件夹1>文件1</p>
                 <van-icon name="arrow" />
@@ -37,6 +37,8 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const emit = defineEmits(['update:checkSortType'])
 const isEdit = ref<boolean>(false)
 const show = ref<boolean>(false)
@@ -49,23 +51,23 @@ const open = (obj:any) => {
 }
 const detailArr = ref([
   {
-    label: '文件类型',
+    label: t('file.fileType'),
     value: fileInfo.value.isDir ? '文件夹' : '文件'
   },
   {
-    label: '上传时间',
+    label: t('file.uploadTime'),
     value: fileInfo.value.modTime
   },
   {
-    label: '文件大小',
+    label: t('file.fileSize'),
     value: fileInfo.value.size
   },
   {
-    label: '最后修改时间',
+    label: t('file.lastUpdateTime'),
     value: '2024-04-17 13:31'
   },
   {
-    label: '包含文件数',
+    label: t('file.fileNum'),
     value: 'fileNum'
   }
 ])
