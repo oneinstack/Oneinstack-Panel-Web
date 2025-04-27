@@ -16,7 +16,7 @@
 </template>
 <style lang="less" scoped>
 .user_info {
-  margin-top: 132rem;
+  margin-top: 32rem;
   width: 100%;
   display: flex;
   align-items: center;

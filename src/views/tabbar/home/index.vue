@@ -24,8 +24,8 @@ import FileList from './components/fileList.vue';
 .header {
   position: fixed;
   top: 0;
-  height: 432rem;
-  width: 100%;
+  height: 332rem;
+  width: 750rem;
   background: url('/static/img/home/home.png');
   background-size: 100% 100%;
   padding: 0 36rem;
@@ -36,7 +36,8 @@ import FileList from './components/fileList.vue';
   border-radius: 32rem;
   margin-top: -24rem;
   padding: 0 32rem 68rem 32rem;
-  margin-top: 432rem;
+  margin-top: 280rem;
   overflow: scroll;
+  z-index: 2;
 }
 </style>
