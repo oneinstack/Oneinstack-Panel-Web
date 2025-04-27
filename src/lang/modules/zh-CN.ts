@@ -59,6 +59,11 @@ export default {
     filePosition: '文件位置',
     fileDetail: '文件详情',
     transferSetting: '传输设置',
+    transferNum: '同时传输文件数',
+    transferNetword: '传输网络设置',
+    onlyWifi: '仅wifi环境上传/下载',
+    onlyMobile: '仅流量环境上传/下载',
+    noLimit: '不限网络环境上传/下载',
   },
   me: {
     setting: '设置',

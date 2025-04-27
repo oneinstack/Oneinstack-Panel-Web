@@ -1,64 +1,69 @@
 <template>
   <x-page noHeader noFooter>
     <x-statusbar />
-    <Navbar title="传输设置"></Navbar>
+    <Navbar :title="t('file.transferSetting')"></Navbar>
     <div class="content">
-      <p class="title">传输设置</p>
-      <div class="card" @click="picker1 = true">
-        <p class="label">同时传输文件数：</p>
+      <p class="title">{{ $t("file.transferSetting") }}</p>
+      <div class="card" @click="transferNumPicker = true">
+        <p class="label">{{ $t("file.transferNum") }}：</p>
         <div class="right">
-          <span>{{ text1 }}</span>
+          <span>{{ transferNumText }}</span>
           <van-icon class="icon" name="arrow" />
         </div>
       </div>
-      <div class="card" @click="picker2 = true">
-        <p class="label">传输网络设置：</p>
+      <div class="card" @click="transferNetwordPicker = true">
+        <p class="label">{{ $t("file.transferNetword") }}：</p>
         <div class="right">
-          <span>{{ text2 }}</span>
+          <span>{{ transferNetwordText }}</span>
           <van-icon class="icon" name="arrow" />
         </div>
       </div>
     </div>
-    <van-popup v-model:show="picker1" destroy-on-close round position="bottom">
-      <van-picker :model-value="pickerValue1" :columns="columns1" @cancel="picker1 = false" @confirm="onConfirm1"/>
+    <van-popup v-model:show="transferNumPicker" destroy-on-close round position="bottom">
+      <van-picker :model-value="transferNum" :columns="transferNumList" @cancel="transferNumPicker = false" @confirm="onTransferNumConfirm"/>
     </van-popup>
-    <van-popup v-model:show="picker2" destroy-on-close round position="bottom">
-      <van-picker :model-value="pickerValue2" :columns="columns2" @cancel="picker2 = false" @confirm="onConfirm2"/>
+    <van-popup v-model:show="transferNetwordPicker" destroy-on-close round position="bottom">
+      <van-picker :model-value="transferNetword" :columns="transferNetwordList" @cancel="transferNetwordPicker = false" @confirm="onConfirm2"/>
     </van-popup>
   </x-page>
 </template>
 <script setup lang="ts">
 import { Numeric } from 'vant/lib/utils'
-import { ref } from 'vue'
-
-const picker1 = ref<boolean>(false)
-const pickerValue1 = ref<Numeric[]>([1])
-const text1 = ref()
-const columns1 = [
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
+const transferNumList = [
   { text: 1, value: 1 },
   { text: 2, value: 2 },
   { text: 3, value: 3 },
   { text: 4, value: 4 },
   { text: 5, value: 5 }
 ]
-const onConfirm1 = ({ selectedValues, selectedOptions }:any) => {
-  picker1.value = false
-  pickerValue1.value = selectedValues
-  text1.value = selectedOptions[0].text;
+const transferNumPicker = ref<boolean>(false)
+const transferNum = ref<Numeric[]>([1]) // 传输数量
+const transferNumText = computed(() => {
+  const text = transferNumList.find((item:any) => item.value === transferNum.value[0])
+  return text?.text || transferNumList[0]?.text
+})
+const onTransferNumConfirm = ({ selectedValues, selectedOptions }:any) => {
+  transferNumPicker.value = false
+  transferNum.value = selectedValues
 }
 
-const picker2 = ref<boolean>(false)
-const pickerValue2 = ref<Numeric[]>([])
-const text2 = ref()
-const columns2 = [
-  { text: '仅wifi环境上传/下载', value: 1 },
-  { text: '仅流量环境上传/下载', value: 2 },
-  { text: '均可下载', value: 3 }
+const transferNetwordList = [
+  { text: t("file.onlyWifi"), value: 1 },
+  { text: t("file.onlyMobile"), value: 2 },
+  { text: t("file.noLimit"), value: 3 }
 ]
+const transferNetwordPicker = ref<boolean>(false)
+const transferNetword = ref<Numeric[]>([1]) // 传输网络
+const transferNetwordText = computed(() => {
+  const text = transferNetwordList.find((item:any) => item.value === transferNetword.value[0])
+  return text?.text || ''
+})
 const onConfirm2 = ({ selectedValues, selectedOptions }:any) => {
-  picker2.value = false
-  pickerValue2.value = selectedValues
-  text2.value = selectedOptions[0].text;
+  transferNetwordPicker.value = false
+  transferNetword.value = selectedValues
 }
 </script>
 <style lang="less" scoped>
