@@ -1,7 +1,7 @@
 <template>
   <x-page noHeader noFooter>
     <x-statusbar />
-    <Navbar title="传输">
+    <Navbar :title="$t('file.transfer')">
       <template #right>
         <van-icon class="setting" name="setting-o" @click="router.push('/transferSetting')"/>
       </template>
@@ -12,32 +12,34 @@
       </div>
       <file-card v-if="fileList.length > 0" v-for="file in fileList" :item="file">
         <template #time="{ item }">
-          <p class="update_date">上传于    2024-05-18</p>
+          <p class="update_date">{{ $t("file.uploadAt") }}    2024-05-18</p>
         </template>
         <template #operation="{ item }">
-            <div class="btn">等待中</div>
+            <div class="btn">{{ $t("commons.button.waitting") }}</div>
         </template>
       </file-card>
       <div v-else class="not-data">
         <van-image class="" width="266rem" height="284rem" src="/public/static/img/file/not-data.png" />
-        <p>当前无下载记录</p>
+        <p>{{$t("file.downloadRecord")}}</p>
       </div>
     </div>
   </x-page>
 </template>
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
+const { t } = useI18n();
 const router = useRouter();
 const activeTab = ref('1');
 const list = reactive([
   {
     id: '1',
-    title: '下载'
+    title: t('commons.button.download')
   },
   {
     id: '2',
-    title: '上传'
+    title: t('commons.button.upload')
   }
 ])
 const fileList: any = reactive([

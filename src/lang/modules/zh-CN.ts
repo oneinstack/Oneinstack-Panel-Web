@@ -16,7 +16,9 @@ export default {
     memory: '内存',
     disk: '磁盘',
     alterTime: '修改时间',
-    moreApplication: '更多应用'
+    moreApplication: '更多应用',
+    history: '搜索历史',
+    serach: '搜索',
   },
   app: {
     running: '运行中',
@@ -58,12 +60,14 @@ export default {
     fileNum: '包含文件数',
     filePosition: '文件位置',
     fileDetail: '文件详情',
+    transfer: '传输',
     transferSetting: '传输设置',
     transferNum: '同时传输文件数',
     transferNetword: '传输网络设置',
     onlyWifi: '仅wifi环境上传/下载',
     onlyMobile: '仅流量环境上传/下载',
     noLimit: '不限网络环境上传/下载',
+    downloadRecord: '当前无下载记录',
   },
   me: {
     setting: '设置',
@@ -137,6 +141,7 @@ export default {
       finish: '完成',
       remove: '移动',
       detail: '详情',
+      waitting: '等待中',
     }
   }
 }

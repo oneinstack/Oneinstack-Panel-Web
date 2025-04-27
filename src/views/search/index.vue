@@ -4,12 +4,12 @@
       <x-statusbar />
       <div class="search">
         <van-icon class="icon" name="search" />
-        <input placeholder="搜索" />
-        <p @click="router.back()">取消</p>
+        <input :placeholder="$t('home.serach')" />
+        <p @click="router.back()">{{$t("commons.button.cancel")}}</p>
       </div>
       <div class="history">
         <div class="header">
-            <p>历史记录</p>
+            <p>{{ $t("home.history") }}</p>
             <van-image class="icon" width="40.86rem" height="40.86rem" src="/public/static/img/icon/delete.png" />
         </div>
         <div class="history-list">
