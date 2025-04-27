@@ -293,7 +293,7 @@ const goUp = () => {
   padding: 0 32rem 18rem 32rem;
   background: var(--card-bg-color);
   position: fixed;
-  width: 100%;
+  width: 750rem;
   .van-nav-bar {
     // margin-top: 118rem;
     .left-title {

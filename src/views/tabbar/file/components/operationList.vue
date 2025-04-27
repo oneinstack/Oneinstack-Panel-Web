@@ -48,7 +48,6 @@ const onItem = (item: any) => {
 .checked-operation {
   position: fixed;
   bottom: 0;
-  left: 0;
   z-index: 999;
   height: 208rem;
   width: 750rem;

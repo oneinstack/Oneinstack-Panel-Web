@@ -47,7 +47,7 @@ onUnmounted(() => {
 </script>
 <style lang="less" scoped>
 .content {
-  margin-top: calc(24rem + 566rem + 32rem);
+  margin-top: calc(24rem + 566rem + 32rem - 100rem);
   padding: 0 32rem;
   height: 100%;
   overflow-y: scroll;
@@ -56,9 +56,6 @@ onUnmounted(() => {
     display: flex;
     flex-wrap: wrap;
   }
-}
-:deep(.van-nav-bar__content) {
-  height: 40rem;
 }
 :deep(.van-hairline--bottom:after) {
   border-bottom-width: 0;

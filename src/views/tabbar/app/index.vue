@@ -71,7 +71,7 @@ onMounted(() => {
 .header {
   padding: 0 32rem 18rem 32rem;
   background: var(--card-bg-color);
-  width: 100%;
+  width: 750rem;
   position: fixed;
   .icon-item {
     display: flex;

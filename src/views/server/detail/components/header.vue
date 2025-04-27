@@ -43,18 +43,22 @@ onMounted(() => {
 })
 </script>
 <style scoped lang="less">
+:deep(.van-nav-bar__content) {
+  height: auto;
+}
 .top {
   position: fixed;
   top: 0;
-  height: calc(434rem + 132rem);
-  width: 100%;
+  height: calc(434rem - 100rem);
+  width: 750rem;
   background: url('/static/img/server/detail-top-bg.png');
   background-repeat: no-repeat;
-  background-size: 100%;
+  background-size: 100% 100%;
   .van-nav-bar {
     background: transparent;
-    margin-top: 128rem;
-    line-height: 40rem;
+    // margin-top: 128rem;
+    // line-height: 108rem;
+    padding: 44rem 0;
   }
   .card-list {
     display: flex;
@@ -62,7 +66,7 @@ onMounted(() => {
     flex-wrap: nowrap;
     height: 338rem;
     width: 100%;
-    margin-top: 60rem;
+    margin-top: 24rem;
     .card-item {
       flex-shrink: 0;
       height: 338rem;
