@@ -18,7 +18,8 @@
 </template>
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
-
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps({
   modelValue: {
     type: String,
@@ -32,42 +33,42 @@ const tabsRef = ref<HTMLElement>()
 
 const tabList = reactive([
   {
-    label: '全部',
+    label: t('app.all'),
     value: '',
     key: '1'
   },
   {
-    label: '建站',
+    label: t('app.build'),
     value: '建站',
     key: '2'
   },
   {
-    label: '数据库',
+    label: t('app.database'),
     value: '数据库',
     key: '3'
   },
   {
-    label: 'Web服务器',
+    label: t('app.webServer'),
     value: 'Web服务器',
     key: '4'
   },
   {
-    label: '运行环境',
+    label: t('app.runEnv'),
     value: '运行环境',
     key: '5'
   },
   {
-    label: '实用工具',
+    label: t('app.utils'),
     value: '实用工具',
     key: '6'
   },
   {
-    label: '云存储',
+    label: t('app.cloudStorage'),
     value: '云存储',
     key: '7'
   },
   {
-    label: 'AI/大模型',
+    label: t('app.model'),
     value: 'AI/大模型',
     key: '8'
   }

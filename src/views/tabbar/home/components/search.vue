@@ -1,6 +1,10 @@
 <template>
   <div class="search">
-    <input class="search_input" @focus="router.push({ path: '/search' })" placeholder="请输入搜索关键词" />
+    <input
+      class="search_input"
+      @focus="router.push({ path: '/search' })"
+      :placeholder="$t('commons.placeholder.keyWord')"
+    />
     <div class="search_icon">
       <van-icon name="search" size="32rem" />
     </div>

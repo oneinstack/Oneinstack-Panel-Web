@@ -1,7 +1,7 @@
 <template>
   <van-popup class="sort-popup" v-model:show="show" round position="bottom" :style="{ height: '480rem' }">
     <div class="navbar">
-      <p>排序</p>
+      <p>{{ $t("file.sort") }}</p>
       <van-image class="icon" width="36rem" height="36rem" :src="`/static/img/file/close.png`" @click="show = false" />
     </div>
     <div class="sort-list">
@@ -20,25 +20,27 @@
 </template>
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const emit = defineEmits(['change'])
 const checkSortType = ref(1)
 const show = ref<boolean>(false)
 const list = reactive([
   {
     id: 1,
-    name: '按时间修改'
+    name: t('file.sortTime')
   },
   {
     id: 2,
-    name: '按打开时间'
+    name: t('file.sortOpen')
   },
   {
     id: 3,
-    name: '按文件名'
+    name: t('file.sortName')
   },
   {
     id: 4,
-    name: '按文件大小'
+    name: t('file.sortSize')
   }
 ])
 const onSort = (item: any) => {
@@ -61,7 +63,7 @@ defineExpose({
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    border-bottom: 2rem solid #e3e3e3;
+    border-bottom: 2rem solid var(--border-color);
     font-size: 32rem;
     color: var(--font-black-color);
     font-weight: 700;
@@ -74,7 +76,7 @@ defineExpose({
       margin-top: 52rem;
       line-height: 24rem;
       font-size: 24rem;
-      color: #5d5d5d;
+      color: var(--font-gray-color);
       span {
         margin-left: 44rem;
       }

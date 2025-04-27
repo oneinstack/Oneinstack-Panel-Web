@@ -3,10 +3,10 @@
     <div class="bg">
       <div class="content">
         <van-image class="bg-img" width="502rem" height="300rem" src="/public/static/img/application/stop-bg.png" />
-        <p class="p1">确定吗？</p>
-        <div class="tip">确定要停止此应用吗？可能会导致一些问题产生</div>
-        <div class="btn">确定停止</div>
-        <p class="cancel" @click="cancel()">取消</p>
+        <p class="p1">{{ $t('app.isConfirm') }}</p>
+        <div class="tip">{{ $t("app.stopMsg") }}</div>
+        <div class="btn">{{ $t("commons.button.confirmStop") }}</div>
+        <p class="cancel" @click="cancel()">{{ $t("commons.button.cancel") }}</p>
       </div>
       <van-icon class="close" name="close" @click="cancel()" />
     </div>

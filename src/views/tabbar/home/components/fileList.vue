@@ -1,21 +1,21 @@
 <template>
   <div class="file">
     <div class="item-title">
-      <p class="name">最近文件</p>
+      <p class="name">{{ $t('home.recentFile') }}</p>
     </div>
     <template v-if="fileList.length > 0">
       <file-card v-for="file in fileList" :item="file">
         <template #time="{ item }">
-          <p class="update_date">修改时间：2024-05-18</p>
+          <p class="update_date">{{$t('home.alterTime')}}：2024-05-18</p>
         </template>
         <template #operation="{ item }">
-          <div class="btn">查看</div>
+          <div class="btn">{{ $t('commons.button.view') }}</div>
         </template>
       </file-card>
     </template>
     <template v-else>
       <div class="empty">
-        <van-empty description="暂无文件" />
+        <van-empty :description="$t('commons.emptyFile')" />
       </div>
     </template>
   </div>

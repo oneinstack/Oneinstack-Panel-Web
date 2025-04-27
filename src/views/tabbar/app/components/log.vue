@@ -2,11 +2,11 @@
   <van-overlay :show="show">
     <div class="bg">
       <div class="content">
-        <p class="title">日志</p>
+        <p class="title">{{$t("commons.button.log")}}</p>
         <div class="operation">
-          <p>最近一小时</p>
-          <p>200条</p>
-          <div class="btn">追踪</div>
+          <p>{{ $t("app.lastHour") }}</p>
+          <p>200{{ $t("commons.unit.stripe") }}</p>
+          <div class="btn">{{ $t('commons.button.trace') }}</div>
         </div>
         <div class="text" ref="logRef">
           {{ logContent }}

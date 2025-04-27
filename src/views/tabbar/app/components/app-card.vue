@@ -8,14 +8,14 @@
           <p class="introduce">{{ item.describe }}</p>
         </div>
       </div>
-      <div :class="item.status == 1 ? 'run' : 'stop'">{{ item.status == 1 ? '运行中' : '停止中' }}</div>
+      <div :class="item.status == 1 ? 'run' : 'stop'">{{ item.status == 1 ? t('app.running') : t('app.stopping') }}</div>
     </div>
     <van-divider />
     <div class="footer">
-      <span @click="openLog(item)">日志</span>
+      <span @click="openLog(item)">{{ $t("commons.button.log") }}</span>
       <div class="btns">
-        <div class="btn restart">重启</div>
-        <div class="btn stop" @click="openStop">停止</div>
+        <div class="btn restart">{{ $t("commons.button.restart") }}</div>
+        <div class="btn stop" @click="openStop">{{ $t("commons.button.stop") }}</div>
       </div>
     </div>
     <logDialog ref="logRef" />
@@ -26,6 +26,8 @@
 import { ref } from 'vue'
 import logDialog from './log.vue'
 import stopDialog from './stop.vue'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const props = defineProps({
   item: {
     type: Object,

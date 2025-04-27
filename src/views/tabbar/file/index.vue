@@ -4,7 +4,7 @@
       <x-statusbar />
       <van-nav-bar v-show="!isChecked && checkedList.length < 1" title="">
         <template #left>
-          <p class="left-title">文件</p>
+          <p class="left-title">{{ $t('file.file') }}</p>
         </template>
         <template #right>
           <div class="icon-item">
@@ -29,17 +29,22 @@
           </div>
         </template>
       </van-nav-bar>
-      <van-nav-bar v-show="isChecked || checkedList.length > 0" :title="`已选中${checkedList.length}个文件`">
+      <van-nav-bar
+        v-show="isChecked || checkedList.length > 0"
+        :title="`${t('file.checkFile', { num: checkedList.length })}`"
+      >
         <template #left>
-          <p class="checked-left" @click="cancelChecked()">取消</p>
+          <p class="checked-left" @click="cancelChecked()">{{ t('commons.button.cancel') }}</p>
         </template>
         <template #right>
-          <p v-if="checkedList.length != file.list.length" class="checked-right" @click="checkedAll()">全选</p>
-          <p v-else class="checked-right" @click="checkedNotAll()">全不选</p>
+          <p v-if="checkedList.length != file.list.length" class="checked-right" @click="checkedAll()">
+            {{ $t('commons.button.checAll') }}
+          </p>
+          <p v-else class="checked-right" @click="checkedNotAll()">{{ $t('commons.button.unChecAll') }}</p>
         </template>
       </van-nav-bar>
       <div class="search">
-        <input class="search_input" @focus="" placeholder="请输入文件名字" />
+        <input class="search_input" @focus="" :placeholder="t('commons.placeholder.file')" />
         <div class="search_icon">
           <van-icon name="search" size="32rem" />
         </div>
@@ -48,19 +53,19 @@
     <div class="content" :class="checkedList.length > 0 ? 'pdb-100' : ''">
       <div class="top">
         <p class="menu">
-          {{ checkSortTypeName ? checkSortTypeName : '智能排序' }}
+          {{ checkSortTypeName ? checkSortTypeName : t('file.intelligentSort') }}
           <van-icon name="filter-o" @click="showSortPopup" />
         </p>
         <div>
           <van-icon name="arrow-up" />
-          <span @click="goUp">上一级</span>
-          当前目录：{{ file.params.pathStr == '/' ? '根目录（/）' : file.params.pathStr }}
+          <span @click="goUp">{{ $t('file.top') }}</span>
+          {{ $t('file.current') }}:{{ file.params.pathStr == '/' ? `${t('file.root')}（/）` : file.params.pathStr }}
         </div>
       </div>
       <template v-if="file.list.length > 0">
         <file-card v-for="item in file.list" :item="item" :list="file.list" @click="clickFile(item)">
           <template #time="{ item }">
-            <p class="update_date">上传于：{{ item.modTime }}</p>
+            <p class="update_date">{{ $t('file.uploadAt') }}：{{ item.modTime }}</p>
           </template>
           <template #operation="{ item }">
             <van-checkbox v-model="item.checked" @click.stop></van-checkbox>
@@ -68,7 +73,7 @@
         </file-card>
       </template>
       <template v-else>
-        <van-empty description="暂无数据" />
+        <van-empty :description="t('commons.empty')" />
       </template>
     </div>
     <OperationList v-show="checkedList.length > 0" @on-item="onItem" />
@@ -87,6 +92,8 @@ import OperationList from './components/operationList.vue'
 import AddOrRenamePopup from './components/addOrRenamePopup.vue'
 import { apis } from '@/api'
 import System from '@/utils/System'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const router = useRouter()
 const conf = index()
 const isChecked = ref<boolean>(false)
@@ -101,22 +108,22 @@ const menuList = reactive([
   {
     id: 1,
     icon: 'checked',
-    name: '文件多选'
+    name: t('commons.button.multipleFile')
   },
   {
     id: 2,
     icon: 'upload',
-    name: '上传文件'
+    name: t('commons.button.uploadFile')
   },
   {
     id: 3,
     icon: 'new-add',
-    name: '新建文件夹'
+    name: t('commons.button.createFolder')
   },
   {
     id: 4,
     icon: 'delete',
-    name: '回收站'
+    name: t('commons.button.recycleBin')
   }
 ])
 menuList.forEach((item, index) => {
@@ -191,14 +198,14 @@ const downloadFile = async () => {
           filename: item.name
         })
         if (res.code == 0) {
-          System.toast('下载成功', 'success')
+          System.toast(t('commons.msg.uploadSuccess'), 'success')
         } else {
-          System.toast(res.msg || '下载失败')
+          System.toast(res.msg || t('commons.msg.uploadFailed'))
         }
       })
     })
   } catch (error) {
-    System.toast('下载失败')
+    System.toast(t('commons.msg.uploadFailed'))
   }
 }
 const delFile = async () => {
@@ -206,14 +213,14 @@ const delFile = async () => {
     checkedList.value.forEach(async (item: any) => {
       const res = await apis.deleteFile({ path: file.params.pathStr + `/${item.name}` })
       if (res.code == 0) {
-        System.toast('删除成功', 'success')
+        System.toast(t('commons.button.deleteSuccess'), 'success')
       } else {
-        System.toast(res.msg || '删除失败')
+        System.toast(res.msg || t('commons.button.deleteFailed'))
       }
     })
     getList()
   } catch (error) {
-    System.toast('删除失败')
+    System.toast(t('commons.button.deleteFailed'))
   }
 }
 const onItem = (item: any) => {

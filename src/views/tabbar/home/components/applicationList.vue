@@ -1,7 +1,7 @@
 <template>
   <div class="application">
     <div class="item-title">
-      <p class="name">应用程序</p>
+      <p class="name">{{ $t("home.applications") }}</p>
     </div>
     <div v-if="app.list.length > 0" class="app-list">
       <template v-for="(item, index) in app.list">
@@ -15,12 +15,12 @@
           <div class="icon_box">
             <van-image width="68rem" height="68rem" :src="item.icon" />
           </div>
-          <p class="name">更多应用</p>
+          <p class="name">{{ $t("home.moreApplication") }}</p>
         </div>
       </template>
     </div>
     <div class="empty" v-else>
-      <van-empty description="暂无应用" />
+      <van-empty :description="$t('commons.emptyApplication')" />
     </div>
   </div>
 </template>

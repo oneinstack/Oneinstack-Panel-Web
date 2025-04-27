@@ -36,7 +36,7 @@ import FileList from './components/fileList.vue';
   border-radius: 32rem;
   margin-top: -24rem;
   padding: 0 32rem 68rem 32rem;
-  margin-top: 280rem;
+  margin-top: 260rem;
   overflow: scroll;
   z-index: 2;
 }

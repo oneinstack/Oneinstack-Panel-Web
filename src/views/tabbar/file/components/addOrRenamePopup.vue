@@ -5,13 +5,13 @@
         <van-icon name="arrow-left" @click="close" />
       </template>
       <template #right>
-        <p class="confirm" @click="handleConfirm">完成</p>
+        <p class="confirm" @click="handleConfirm">{{ $t('commons.button.finish') }}</p>
       </template>
     </Navbar>
     <div class="file-content">
       <v-s-icon class="icon" :size="174" name="addFolder" @click="show = false" />
       <div v-if="operationType == 'rename' || operationType == 'add'" class="my-input">
-        <input v-model="fileInfo.name" placeholder="请输入名称" />
+        <input v-model="fileInfo.name" :placeholder="t('commons.placeholder.name')" />
         <van-icon class="input-icon" size="44rem" name="close" />
       </div>
       <van-uploader
@@ -24,7 +24,7 @@
         accept="*"
       >
         <div class="my-input">
-          <input v-model="fileInfo.name" placeholder="请选择文件" />
+          <input v-model="fileInfo.name" :placeholder="t('commons.placeholder.selectFile')" />
           <van-image
             class="input-icon"
             width="44rem"
@@ -41,13 +41,15 @@
 import { apis } from '@/api'
 import System from '@/utils/System'
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+const { t } = useI18n()
 const router = useRouter()
 const emit = defineEmits(['change'])
 const typeTitle: any = {
-  'upload': '上传文件',
-  'add': '新建文件夹',
-  'rename': '重命名'
+  'upload': t('commons.button.uploadFile'),
+  'add': t('commons.button.createFolder'),
+  'rename': t('commons.button.rename')
 }
 type operationTypes = 'upload' | 'add' | 'rename'
 const show = ref<boolean>(false)
@@ -77,14 +79,14 @@ const afterRead = async (file: any) => {
       try {
         const res = await apis.uploadFile(params, () => {})
         if (res.code == 0) {
-          System.toast('上传成功', 'success')
+          System.toast(t('commons.button.uploadSuccess'), 'success')
           emit('change')
           show.value = false
         } else {
-          System.toast(res.msg || '上传失败')
+          System.toast(res.msg || t('commons.button.uploadFail'))
         }
       } catch (error) {
-        System.toast('上传失败')
+        System.toast(t('commons.button.uploadFail'))
       }
     }
   }
@@ -126,20 +128,6 @@ const fileInfo = ref({
   isDir: '',
   pathStr: ''
 })
-const upload = async (file: { file: File }) => {
-  fileInfo.value.name = file.file.name
-  try {
-    const { data: res } = await apis.uploadFile(
-      {
-        file: file,
-        path: fileInfo.value.pathStr
-      },
-      () => {}
-    )
-  } catch (error) {
-    System.toast('上传失败')
-  }
-}
 defineExpose({
   open
 })
