@@ -181,18 +181,40 @@ const onMenu = (menu: any) => {
   }
 }
 const downloadFile = async () => {
-  checkedList.value.forEach(async (item: any) => {
-    if (item.isDir) return System.toast('文件夹无法下载')
-    const { data: res } = await apis.downloadFile({
-      path: file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`,
-      filename: item.name
+  try {
+    checkedList.value.forEach(async (item: any) => {
+      checkedList.value.forEach(async (item: any) => {
+        if (item.isDir) return System.toast('文件夹无法下载')
+        const res = await apis.downloadFile({
+          path:
+            file.params.pathStr == '/' ? file.params.pathStr + `${item.name}` : file.params.pathStr + `/${item.name}`,
+          filename: item.name
+        })
+        if (res.code == 0) {
+          System.toast('下载成功', 'success')
+        } else {
+          System.toast(res.msg || '下载失败')
+        }
+      })
     })
-  })
+  } catch (error) {
+    System.toast('下载失败')
+  }
 }
 const delFile = async () => {
-  checkedList.value.forEach(async (item: any) => {
-    const { data: res } = await apis.deleteFile({ path: file.params.pathStr + `/${item.name}` })
-  })
+  try {
+    checkedList.value.forEach(async (item: any) => {
+      const res = await apis.deleteFile({ path: file.params.pathStr + `/${item.name}` })
+      if (res.code == 0) {
+        System.toast('删除成功', 'success')
+      } else {
+        System.toast(res.msg || '删除失败')
+      }
+    })
+    getList()
+  } catch (error) {
+    System.toast('删除失败')
+  }
 }
 const onItem = (item: any) => {
   switch (item.id) {

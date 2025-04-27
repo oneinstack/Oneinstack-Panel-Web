@@ -12,8 +12,8 @@
         </template>
       </van-nav-bar>
       <div class="search">
-        <input class="search_input" placeholder="请输入搜索关键词" />
-        <div class="search_icon">
+        <input @keyup.enter="getList" v-model="parmas.name" class="search_input" placeholder="请输入搜索关键词" />
+        <div class="search_icon" @click="getList">
           <van-icon name="search" size="32rem" />
         </div>
       </div>
@@ -51,7 +51,8 @@ const list = ref<any[]>([])
 const parmas = reactive({
   installed: true,
   page: 1,
-  pageSize: 10
+  pageSize: 10,
+  name: '',
 })
 const getList = () => {
   apis.getSoftList({ ...parmas, tags: activeTab.value }).then((res: any) => {
