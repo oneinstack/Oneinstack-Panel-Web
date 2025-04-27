@@ -9,15 +9,22 @@
       </template>
     </Navbar>
     <div class="file-content">
-      <!-- <van-image class="icon" width="174rem" height="174rem" :src="`/static/img/file/file.png`" @click="show = false" /> -->
       <v-s-icon class="icon" :size="174" name="addFolder" @click="show = false" />
       <div v-if="operationType == 'rename' || operationType == 'add'" class="my-input">
         <input v-model="fileInfo.name" placeholder="请输入名称" />
         <van-icon class="input-icon" size="44rem" name="close" />
       </div>
-      <van-uploader v-else>
+      <van-uploader
+        v-else
+        multiple
+        :after-read="afterRead"
+        :before-read="beforeRead"
+        :max-size="100 * 1024 * 1024"
+        @oversize="onOversize"
+        accept="*"
+      >
         <div class="my-input">
-          <input placeholder="请选择文件" />
+          <input v-model="fileInfo.name" placeholder="请选择文件" />
           <van-image
             class="input-icon"
             width="44rem"
@@ -53,6 +60,40 @@ const open = (type: operationTypes, obj: any) => {
 const close = () => {
   show.value = false
 }
+const beforeRead = (file: any) => {
+  // 可以在这里添加文件类型验证
+  return true
+}
+
+const afterRead = async (file: any) => {
+  // 处理单个文件上传
+  if (!Array.isArray(file)) {
+    if (file.file) {
+      fileInfo.value.name = file.file.name
+      const params = {
+        file: file.file,
+        path: fileInfo.value.pathStr
+      }
+      try {
+        const res = await apis.uploadFile(params, () => {})
+        if (res.code == 0) {
+          System.toast('上传成功', 'success')
+          emit('change')
+          show.value = false
+        } else {
+          System.toast(res.msg || '上传失败')
+        }
+      } catch (error) {
+        System.toast('上传失败')
+      }
+    }
+  }
+}
+
+const onOversize = () => {
+  System.toast('文件大小不能超过100MB')
+}
+
 const handleConfirm = () => {
   show.value = false
   switch (operationType.value) {

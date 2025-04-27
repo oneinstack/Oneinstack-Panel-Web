@@ -12,7 +12,7 @@
         </template>
       </van-nav-bar>
       <div class="search">
-        <input class="search_input" @focus="" placeholder="请输入搜索关键词" />
+        <input class="search_input" placeholder="请输入搜索关键词" />
         <div class="search_icon">
           <van-icon name="search" size="32rem" />
         </div>
