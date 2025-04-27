@@ -3,7 +3,7 @@
     <div class="item-title">
       <p class="name">{{ $t('home.serverStatus') }}</p>
       <p class="more" @click="goDetail()">
-        更多
+        {{ $t('commons.button.more') }}
         <span><van-icon name="arrow" /></span>
       </p>
     </div>
@@ -22,20 +22,22 @@
 import { reactive, onMounted, ref, onUnmounted } from 'vue'
 import { apis } from '@/api/index'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+const { t } = useI18n()
 const serverList = reactive([
   {
     icon: 'cpu',
-    name: 'cpu使用率',
+    name: t('home.cpuUsage'),
     rate: '0'
   },
   {
     icon: 'ram',
-    name: '内存使用率',
+    name: t('home.memoryUsage'),
     rate: '0'
   },
   {
     icon: 'disk',
-    name: '磁盘使用率',
+    name: t('home.diskUsage'),
     rate: '0'
   }
 ])
