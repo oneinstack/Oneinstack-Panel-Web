@@ -8,7 +8,7 @@
           <p>200条</p>
           <div class="btn">追踪</div>
         </div>
-        <div class="text">
+        <div class="text" ref="logRef">
           {{ logContent }}
         </div>
       </div>
@@ -17,10 +17,23 @@
   </van-overlay>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { nextTick, ref, watch, onUnmounted } from 'vue';
 import { apis } from '@/api'
+
+const logRef = ref<HTMLElement>()
 const logInfo = ref<any>({})
 const logContent = ref<string>('')
+
+// 监听日志内容变化
+watch(logContent, () => {
+  // 使用 nextTick 确保 DOM 更新后再滚动
+  nextTick(() => {
+    if (logRef.value) {
+      logRef.value.scrollTop = logRef.value.scrollHeight
+    }
+  })
+})
+
 const getLog = async () => {
   const obj = {
     name: logInfo.value?.name,
@@ -38,10 +51,14 @@ let timer: any = null
 const open = (item: any) => {
   logInfo.value = item
   show.value = true
+  getLog()
   timer = setInterval(() => {
     getLog()
   }, 3000)
 }
+onUnmounted(() => {
+  clearInterval(timer)
+})
 defineExpose({
   open
 })
