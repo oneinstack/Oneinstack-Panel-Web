@@ -80,6 +80,7 @@
     <SortPopup ref="sortPopupRef" @change="changeSortType" />
     <DetailPopup ref="detailPopupRef" />
     <AddOrRenamePopup ref="addOrRenamePopupRef" @change="getList" />
+    <MovePopup ref="movePopupRef" />
   </x-page>
 </template>
 <script lang="ts" setup>
@@ -90,6 +91,7 @@ import SortPopup from './components/sortPopup.vue'
 import DetailPopup from './components/detailPopup.vue'
 import OperationList from './components/operationList.vue'
 import AddOrRenamePopup from './components/addOrRenamePopup.vue'
+import MovePopup from './components/movePopup.vue'
 import { apis } from '@/api'
 import System from '@/utils/System'
 import { useI18n } from 'vue-i18n'
@@ -235,6 +237,7 @@ const onItem = (item: any) => {
       delFile()
       break
     case 4:
+      openMovePopup()
       break
     case 5:
       openDetailPopup()
@@ -261,6 +264,10 @@ const openAddOrRenamePopup = (type: string, name = '') => {
 const sortPopupRef = ref()
 const showSortPopup = () => {
   sortPopupRef.value.open()
+}
+const movePopupRef = ref()
+const openMovePopup = () => {
+  movePopupRef.value.open(file.params.path)
 }
 const checkSortTypeName = ref<string>('')
 const changeSortType = (item: any) => {
