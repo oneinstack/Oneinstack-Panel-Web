@@ -2,9 +2,9 @@
   <x-page no-header tabbar no-footer>
     <div class="memo-page">
       <x-statusbar />
-      <van-nav-bar left-arrow title="" >
+      <van-nav-bar title="" >
         <template #left>
-          <van-icon name="arrow-left" color="#a5a5a5" @click-left="router.back()"/>
+          <van-icon name="arrow-left" color="#a5a5a5" @click="router.back()"/>
         </template>
         <template #right>
           <van-icon class="icon" name="revoke" />
@@ -13,12 +13,12 @@
         </template>
       </van-nav-bar>
       <div class="content">
-        <van-field class="title" v-model="memo.content" placeholder="标题" />
+        <van-field class="title" v-model="memo.content" :placeholder="$t('home.title')" />
         <p class="date">
           {{ memo.create_time }}
-          <span>{{ memo.content.length }}字</span>
+          <span>{{ memo.content.length }}{{ $t('commons.unit.word') }}</span>
         </p>
-        <van-field class="content" v-model="memo.content" autosize type="textarea" placeholder="开始书写" />
+        <van-field class="content" v-model="memo.content" autosize type="textarea" :placeholder="$t('home.startWrite')" />
       </div>
     </div>
   </x-page>

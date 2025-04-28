@@ -9,7 +9,7 @@
     <div class="data-info">
       <div class="left">
         <p class="label">
-          {{ props.type == 'flow' ? '上行' : '读取' }}:
+          {{ props.type == 'flow' ? t('home.upstream') : t('home.read') }}:
           <span>
             {{
               props.type == 'flow'
@@ -19,7 +19,7 @@
           </span>
         </p>
         <p class="label">
-          {{ props.type == 'flow' ? '下行' : '写入' }}:
+          {{ props.type == 'flow' ? t('home.downstream') : t('home.write') }}:
           <span>
             {{
               props.type == 'flow'
@@ -32,13 +32,13 @@
       <van-divider vertical />
       <div class="right">
         <p class="label">
-          {{ props.type == 'flow' ? '总发送' : '读写次数' }}
+          {{ props.type == 'flow' ? t('home.totalSend') :  t('home.readNum') }}
           <span>
             {{ props.type == 'flow' ? `${formatSizeUnits(info.flow.BytesSent)}` : `${info.io.ReadOpsPerSec}次/s` }}
           </span>
         </p>
         <p class="label">
-          {{ props.type == 'flow' ? '总接收' : '读写延迟' }}
+          {{ props.type == 'flow' ? t('home.totalReceive') : t('home.readLatency') }}
           <span>
             {{
               props.type == 'flow' ? `${formatSizeUnits(info.flow.BytesRecv)}` : `${info.io.AvgIoLatency.toFixed(2)}/ms`
@@ -53,7 +53,9 @@
 import { apis } from '@/api'
 import { formatSizeUnits, titleMap } from '@/utils/index'
 import { onMounted, onUnmounted, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
+const { t } = useI18n()
 const router = useRouter()
 const props = defineProps({
   type: {

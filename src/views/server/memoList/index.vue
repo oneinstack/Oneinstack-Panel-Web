@@ -2,7 +2,7 @@
   <x-page no-header tabbar no-footer>
     <div class="memo-list-page">
       <x-statusbar />
-      <van-nav-bar left-arrow title="备忘录" @click-left="router.back()"></van-nav-bar>
+      <van-nav-bar left-arrow :title="$t('home.memo')" @click-left="router.back()"></van-nav-bar>
       <div class="content">
         <div class="column">
           <div class="card" v-for="(item, index) in leftList" :key="index" @click="goPage(item)">

@@ -56,14 +56,14 @@ onMounted(() => {
       font-family: 'PingFang SC-Medium';
       font-weight: 700;
       position: relative;
-      display: inline-block; // 关键：让元素宽度自适应内容
+      display: inline-block;
 
       &::after {
         content: '';
         position: absolute;
         left: 0;
-        bottom: -4rem; // 调整边框与文字间距
-        width: 44rem; // 继承文字宽度
+        bottom: -4rem;
+        width: 44rem;
         height: 8rem;
         background: var(--primary-color);
         border-radius: 5rem;

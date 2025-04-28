@@ -2,7 +2,7 @@
   <div class="list-card">
     <div class="card">
       <div class="top">
-        <p class="name">{{ query.type == 'flow' ? '上行' : '读取' }}</p>
+        <p class="name">{{ query.type == 'flow' ? $t('home.upstream') : $t('home.read') }}</p>
         <div class="round"></div>
       </div>
       <p class="rate">
@@ -14,7 +14,7 @@
     </div>
     <div class="card">
       <div class="top">
-        <p class="name">{{ query.type == 'flow' ? '下行' : '写入' }}</p>
+        <p class="name">{{ query.type == 'flow' ? $t('home.downstream') : $t('home.write') }}</p>
         <div class="round"></div>
       </div>
       <p class="rate">
@@ -26,7 +26,7 @@
     </div>
     <div class="card">
       <div class="top">
-        <p class="name">{{ query.type == 'flow' ? '总发送' : '读写次数' }}</p>
+        <p class="name">{{ query.type == 'flow' ?  $t('home.totalSend')  : $t('home.readNum') }}</p>
         <div class="round"></div>
       </div>
       <p class="rate">{{ query.type == 'flow' ? `${formatSizeUnits(info.flow.BytesSent)}` : `${info.io.ReadOpsPerSec}次/s` }}</p>
@@ -34,7 +34,7 @@
     </div>
     <div class="card">
       <div class="top">
-        <p class="name">{{ query.type == 'flow' ? '总接收' : '读写延迟' }}</p>
+        <p class="name">{{ query.type == 'flow' ?  $t('home.totalReceive')  : $t('home.readLatency') }}</p>
         <div class="round"></div>
       </div>
       <p class="rate">{{

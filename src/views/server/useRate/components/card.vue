@@ -129,8 +129,8 @@ const getServerData = () => {
       const rootDisk = props.serverInfo.disk_usage.find((disk: { path: string }) => disk.path === '/')
       const diskInfo = rootDisk || props.serverInfo.disk_usage[0]
       option.series[0].data[0] = diskInfo.usedPercent.toFixed(2)
-      rate.value = diskInfo.toFixed(2)
-      available.value = parseInt(diskInfo.available.free)
+      rate.value = diskInfo.usedPercent.toFixed(2)
+      available.value = parseInt(diskInfo.free)
       break
   }
   chartRef.value.draw()

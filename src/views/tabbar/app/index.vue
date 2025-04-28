@@ -2,7 +2,7 @@
   <x-page no-header tabbar>
     <div class="header">
       <x-statusbar />
-      <van-nav-bar title="应用">
+      <van-nav-bar :title="$t('app.app')">
         <template #right>
           <div class="icon-item" v-for="item in iconList">
             <van-badge :content="item.num" color="#FF5805">
@@ -12,12 +12,12 @@
         </template>
       </van-nav-bar>
       <div class="search">
-        <input @keyup.enter="getList" v-model="parmas.name" class="search_input" placeholder="请输入搜索关键词" />
+        <input @keyup.enter="getList" v-model="parmas.name" class="search_input" :placeholder="$t('commons.placeholder.keyWord')" />
         <div class="search_icon" @click="getList">
           <van-icon name="search" size="32rem" />
         </div>
       </div>
-      <tabs v-model="activeTab" @change="onTab"/>
+      <tabs v-model="activeTab" @change="onTab" />
     </div>
     <div class="content">
       <template v-if="list && list.length > 0">
@@ -25,7 +25,12 @@
           <app-card :item="item" />
         </div>
       </template>
-      <van-empty v-else :image="`/static/img/application/notData.png`" image-size="562rem" description="暂无程序" />
+      <van-empty
+        v-else
+        :image="`/static/img/application/notData.png`"
+        image-size="562rem"
+        :description="$t('commons.empty')"
+      />
     </div>
   </x-page>
 </template>
@@ -52,7 +57,7 @@ const parmas = reactive({
   installed: true,
   page: 1,
   pageSize: 10,
-  name: '',
+  name: ''
 })
 const getList = () => {
   apis.getSoftList({ ...parmas, tags: activeTab.value }).then((res: any) => {
