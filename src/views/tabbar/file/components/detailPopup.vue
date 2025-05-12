@@ -19,7 +19,7 @@
     <div class="detail-list">
         <div class="detail-item" v-for="item in detailArr">
             <p class="label">{{ item.label }}</p>
-            <div v-if="fileInfo.isDir && item.label == '包含文件数'" class="value">
+            <div v-if="fileInfo.isDir && item.label === t('file.fileNum')" class="value">
               <p>2个文件</p>
               <p>0个文件夹</p>
             </div>
@@ -36,41 +36,46 @@
   </van-popup>
 </template>
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const emit = defineEmits(['update:checkSortType'])
 const isEdit = ref<boolean>(false)
 const show = ref<boolean>(false)
-const fileType = ref<string>('')
 const fileInfo = ref<any>({})
 const open = (obj:any) => {
-  fileType.value = 'files'
   fileInfo.value = obj
   show.value = true
 }
-const detailArr = ref([
-  {
-    label: t('file.fileType'),
-    value: fileInfo.value.isDir ? '文件夹' : '文件'
-  },
-  {
-    label: t('file.uploadTime'),
-    value: fileInfo.value.modTime
-  },
-  {
-    label: t('file.fileSize'),
-    value: fileInfo.value.size
-  },
-  {
-    label: t('file.lastUpdateTime'),
-    value: '2024-04-17 13:31'
-  },
-  {
-    label: t('file.fileNum'),
-    value: 'fileNum'
+
+const detailArr = computed(() => {
+  const baseItems = [
+    {
+      label: t('file.fileType'),
+      value: fileInfo.value.isDir ? '文件夹' : '文件'
+    },
+    {
+      label: t('file.uploadTime'),
+      value: fileInfo.value.modTime
+    },
+    {
+      label: t('file.fileSize'),
+      value: fileInfo.value.size
+    },
+    {
+      label: t('file.lastUpdateTime'),
+      value: fileInfo.value.modTime
+    }
+  ]
+  if (fileInfo.value.isDir) {
+    baseItems.push({
+      label: t('file.fileNum'),
+      value: ''
+    })
   }
-])
+  return baseItems
+})
+
 defineExpose({
   open
 })
