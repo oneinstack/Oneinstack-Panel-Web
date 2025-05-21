@@ -836,7 +836,7 @@ onMounted(() => {
       </div>
     </div>
     <!-- <memo :show="conf.memo.show" :memo="conf.memo.data" :close="conf.memo.close" :update="conf.memo.update" /> -->
-    <memo-list ref="memoListRef" />
+    <memo-list ref="memoListRef" @update="conf.memo.getData"/>
     <install-dialog
       v-model:visible="installDialog"
       @confirm="handleInstallConfirm"

@@ -27,7 +27,11 @@
               <el-icon v-if="isActive"><ArrowUp /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ isActive ? $t('commons.button.collapse') : $t('commons.button.expand') }}
+                {{
+                  isActive
+                    ? $t("commons.button.collapse")
+                    : $t("commons.button.expand")
+                }}
               </span>
             </div>
           </template>
@@ -35,14 +39,17 @@
             {{ item.content }}
           </div>
           <div class="collapse-content-footer">
-            <el-button type="danger" plain @click="conf.memoList.delete(item)"
-              >{{ $t('commons.button.delete') }}</el-button
+            <el-button
+              type="danger"
+              plain
+              @click="conf.memoList.delete(item)"
+              >{{ $t("commons.button.delete") }}</el-button
             >
             <el-button
               type="warning"
               plain
               @click="memoRef.open({ content: item.content, id: item.id })"
-              >{{ $t('commons.button.edit') }}</el-button
+              >{{ $t("commons.button.edit") }}</el-button
             >
             <div class="icon-ele" @click="conf.memoList.activeName = 0">
               <el-icon v-if="conf.memoList.activeName == item.id"
@@ -50,7 +57,11 @@
               /></el-icon>
               <el-icon v-else><ArrowDown /></el-icon>
               <span>
-                {{ conf.memoList.activeName == item.id ? $t('commons.button.collapse') : $t('commons.button.expand') }}
+                {{
+                  conf.memoList.activeName == item.id
+                    ? $t("commons.button.collapse")
+                    : $t("commons.button.expand")
+                }}
               </span>
             </div>
           </div>
@@ -62,13 +73,15 @@
     </div>
 
     <template #footer>
-      <el-button @click="conf.memoList.close">{{$t('commons.button.cancel')}}</el-button>
-      <el-button type="primary" @click="memoRef.open(conf.memoList.data)"
-        >{{$t('commons.button.new')}}</el-button
-      >
+      <el-button @click="conf.memoList.close">{{
+        $t("commons.button.cancel")
+      }}</el-button>
+      <el-button type="primary" @click="memoRef.open(conf.memoList.data)">{{
+        $t("commons.button.new")
+      }}</el-button>
     </template>
   </custom-dialog>
-  <memo ref="memoRef" @update="conf.memoList.getMemoList()" />
+  <memo ref="memoRef" @update="conf.memoList.update" />
 </template>
 <script setup lang="ts">
 import { ref, reactive } from "vue";
@@ -78,6 +91,7 @@ import CustomDialog from "@/components/custom-dialog.vue";
 import { ElMessage } from "element-plus";
 import { Api } from "@/api/Api";
 import { timeFormat } from "@/utils/index";
+const emit = defineEmits(["update"]);
 const memoRef = ref();
 const conf = reactive({
   memoList: {
@@ -117,6 +131,10 @@ const conf = reactive({
       await Api.deleteRemark(item.id);
       ElMessage.success("删除成功");
       conf.memoList.getMemoList();
+    },
+    update: async () => {
+      conf.memoList.getMemoList();
+      emit("update");
     },
   },
 });
