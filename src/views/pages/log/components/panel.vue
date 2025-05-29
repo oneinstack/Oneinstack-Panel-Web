@@ -91,7 +91,7 @@ const conf = reactive({
         </el-table-column>
       </el-table>
       <div class="pagination">
-        <el-pagination background layout="prev, pager, next" :total="1000" />
+        <el-pagination background layout="prev, pager, next" :total="conf.tableData.length" />
       </div>
     </div>
   </div>
