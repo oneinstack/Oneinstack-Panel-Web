@@ -101,7 +101,7 @@ const conf = reactive({
         prop: "action",
         label: t("commons.action"),
         align: "center",
-        width: 240,
+        width: 140,
         fixed: "right",
       },
     ],
@@ -482,7 +482,7 @@ conf.website.getData();
             }}</el-link>
           </template>
           <template #action="{ row }">
-            <el-button type="primary" link style="margin-right: 8px">{{
+            <!-- <el-button type="primary" link style="margin-right: 8px">{{
               $t("website.statistics")
             }}</el-button>
             <span
@@ -501,7 +501,7 @@ conf.website.getData();
                 height: 12px;
                 margin-right: 8px;
               "
-            ></span>
+            ></span> -->
             <el-button
               type="primary"
               link
