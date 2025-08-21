@@ -292,15 +292,14 @@ function confirmClick() {
 
         let res;
         if (props.type) {
-          const { data } = await Api.addFirewallRule(requestData);
+          const data = await Api.addFirewallRule(requestData);
           res = data;
         } else {
           // 修改接口
           const { data } = await Api.updateFirewallRule(requestData);
           res = data;
         }
-
-        if (res) {
+        if (res.code === 0) {
           ElMessage.success(props.type ? "添加成功" : "修改成功");
           drawer2.value = false;
           emit("close", false); // 通知父组件关闭并刷新

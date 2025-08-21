@@ -20,7 +20,8 @@
           :name="item.id"
           v-for="item in conf.memoList.list"
         >
-          <template #title> {{ item.content }} </template>
+          <template #title> 
+            <p class="title">{{ item.content }} </p></template>
           <template #icon="{ isActive }">
             <div class="icon-ele">
               <span class="time">{{ timeFormat(item.create_time) }}</span>
@@ -131,6 +132,7 @@ const conf = reactive({
       await Api.deleteRemark(item.id);
       ElMessage.success("删除成功");
       conf.memoList.getMemoList();
+      emit("update");
     },
     update: async () => {
       conf.memoList.getMemoList();
@@ -143,12 +145,21 @@ defineExpose({
 });
 </script>
 <style lang="less" scoped>
+.title {
+  font-size: 16px;
+  font-weight: bolder;
+  color: var(--font-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .icon-ele {
   margin: 0 8px 0 auto;
   color: rgb(var(--primary-color));
   display: flex;
   align-items: center;
   cursor: pointer;
+  white-space: nowrap;
   .time {
     color: var(--font-color-gray-light);
     margin-right: 21px;
@@ -184,6 +195,7 @@ defineExpose({
   border-radius: 6px;
   padding: 0 22px;
   margin-top: 12px;
+  display: flex;
 }
 :deep(.is-active) {
   .el-collapse-item__header {
