@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { CircleClose } from '@element-plus/icons-vue'
+import { Close } from '@element-plus/icons-vue'
 
 interface Props {
   title?: string
@@ -29,7 +29,9 @@ const show = defineModel<boolean>('show')
     <template #header="{ close, titleId }">
       <div class="custom-dialog__header">
         <h4 :id="titleId">{{ title }}</h4>
-        <el-icon size="24" color="#A2A2A2" class="cursor-pointer" @click="close"><CircleClose /></el-icon>
+        <button class="close-button" type="button" aria-label="关闭" @click="close">
+          <el-icon size="17"><Close /></el-icon>
+        </button>
       </div>
     </template>
     <template #default>
@@ -47,31 +49,52 @@ const show = defineModel<boolean>('show')
 
 <style scoped lang="less">
 :global(.el-dialog.custom-dialog) {
-  --el-dialog-bg-color: rgb(var(--bg-card-color));
+  --el-dialog-bg-color: var(--surface-raised);
   --el-dialog-padding-primary: 0;
 
   &__header {
     overflow: hidden;
+    margin: 0;
   }
 }
 
 .custom-dialog {
   &__header {
-    padding: 20px 28px;
-    background: rgb(var(--category-item-bg-color));
+    padding: 20px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    color: var(--font-color-black);
-    font-size: 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+
+    h4 {
+      font-size: 16px;
+      font-weight: 680;
+    }
+
+    .close-button {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      color: var(--text-tertiary);
+      background: var(--surface-subtle);
+      transition: all 0.18s ease;
+
+      &:hover {
+        color: rgb(var(--error-color));
+        background: rgba(var(--error-color), 0.08);
+      }
+    }
   }
 
   &__body {
-    padding: 16px 28px 0;
+    padding: 22px 24px 0;
   }
 
   &__footer {
-    padding: 28px;
+    padding: 20px 24px 24px;
   }
 }
 </style>

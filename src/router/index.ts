@@ -52,8 +52,15 @@ export const initRouter = () => {
     if (_name) _title = _title + ' - ' + _name
     document.title = _title
     document.documentElement.scrollTop = 0
-    if (!sconfig.userInfo?.token && !whiteList.includes(to.path)) return next('/login')
-    else next()
+    const authenticated = Boolean(sconfig.userInfo?.authenticated)
+    const mustChangePassword = Boolean(sconfig.userInfo?.mustChangePassword)
+    if (!authenticated && !whiteList.includes(to.path)) return next('/login')
+    if (authenticated && mustChangePassword && to.path !== '/first-login')
+      return next('/first-login')
+    if (authenticated && !mustChangePassword && to.path === '/first-login')
+      return next('/')
+    if (authenticated && whiteList.includes(to.path)) return next('/')
+    next()
   })
 
   router.afterEach((guard) => {

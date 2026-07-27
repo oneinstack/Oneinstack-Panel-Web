@@ -81,6 +81,7 @@ const props = defineProps<Props>()
 :deep(.el-form) {
   &-item__content {
     flex-wrap: nowrap;
+    gap: 8px;
   }
 }
 
@@ -90,25 +91,47 @@ const props = defineProps<Props>()
   &.is-disabled {
     .el-input__wrapper,
     .el-input-group__append {
-      background: rgb(var(--category-item-bg-color)) !important;
+      background: var(--surface-muted) !important;
     }
   }
 
   &__wrapper {
-    background: transparent !important;
-    box-shadow: 0 0 0 0.4px #7d8389 inset !important;
+    background: var(--surface-card) !important;
+    box-shadow: 0 0 0 1px var(--border-default) inset !important;
+
+    &.is-focus {
+      box-shadow:
+        0 0 0 1px rgb(var(--primary-color)) inset,
+        0 0 0 4px var(--focus-ring) !important;
+    }
   }
 
   &-group__append {
-    background: transparent !important;
-    border: 0.1px solid #7d838980 !important;
-    box-shadow: none !important;
+    border-left: 1px solid var(--border-subtle) !important;
+    background: var(--surface-subtle) !important;
+    box-shadow: 0 0 0 1px var(--border-default) inset !important;
     border-left: none !important;
   }
 }
 
 .tips-text {
-  font-size: 14px;
-  color: var(--font-color-gray-light);
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+@media (max-width: 780px) {
+  :deep(.el-form-item) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  :deep(.el-form-item__content) {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  :deep(.el-input) {
+    width: min(100%, 360px);
+  }
 }
 </style>

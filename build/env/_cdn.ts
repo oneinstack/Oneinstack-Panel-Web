@@ -1,5 +1,5 @@
 export default {
   pro: 'build',
-  API: '/',
-  static: 'https://www.wwww.ink/pc/static'
+  API: '/v1',
+  static: '/static'
 }

@@ -5,6 +5,8 @@ import { Api } from '@/api/Api'
 import { onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { watchEffect } from 'vue'
+import sconfig from '@/sstore/sconfig'
+import System from '@/utils/System'
 
 
 
@@ -175,13 +177,32 @@ const conf = reactive<Config>({
         click: async() => {
           try {
             const password = conf.settingData.find(item => item.prop === 'password')?.value
-            const username = conf.settingData.find(item => item.prop === 'username')?.value
-            const { data } = await Api.updateResetpassword({ password :password,username:username})
+            if (!password || password === '******') {
+              ElMessage.warning('请先输入一个新密码')
+              return
+            }
+            const { value: currentPassword } = await ElMessageBox.prompt(
+              '修改密码会让所有设备立即退出，请输入当前密码确认。',
+              '修改面板密码',
+              {
+                confirmButtonText: '确认修改',
+                cancelButtonText: '取消',
+                inputType: 'password',
+                inputPlaceholder: '当前密码',
+                inputValidator: value => Boolean(value) || '请输入当前密码'
+              }
+            )
+            const { data } = await Api.updateResetpassword({
+              currentPassword,
+              password
+            })
             if(data) {
-              ElMessage.success('修改成功')
+              ElMessage.success('密码修改成功，请重新登录')
+              sconfig.logout()
+              await System.router.replace('/login')
             }
           } catch(error) {
-            ElMessage.error('修改失败')
+            if (error !== 'cancel' && error !== 'close') ElMessage.error('修改失败')
           }
         }
       },
@@ -286,8 +307,6 @@ const getSystemInfo = async () => {
 }
 watchEffect(() => {
   getSystemInfo()
-  console.log(props.allinfo,'allinfo',conf.settingData)
-  
 })
 </script>
 
@@ -307,39 +326,41 @@ watchEffect(() => {
   width: 100%;
 
   &.isCard {
-    background: rgb(var(--bg-card-color));
-    border-radius: 5px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    background: var(--surface-card);
     padding: 26px 30px;
+    box-shadow: var(--shadow-xs);
   }
 
   &__title {
     display: flex;
     align-items: center;
     position: relative;
-    font-family: PingFang SC;
-    font-weight: 500;
+    font-weight: 650;
     font-size: 16px;
-    color: var(--font-color-black);
+    color: var(--text-primary);
 
     &::before {
       content: '';
       background: var(--el-color-primary);
-      width: 5px;
-      height: 22px;
-      margin-right: 18px;
+      width: 3px;
+      height: 17px;
+      margin-right: 9px;
+      border-radius: 99px;
     }
   }
 
   &__header {
-    padding: 17px 0 24px;
+    padding: 8px 0 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 2px solid rgb(var(--border-color-gray-light));
+    border-bottom: 1px solid var(--border-subtle);
   }
 
   &__body {
-    padding: 24px 0;
+    padding: 24px 0 8px;
   }
 }
 </style>

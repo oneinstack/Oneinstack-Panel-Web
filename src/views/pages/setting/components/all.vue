@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import panelSetting from './panel-setting.vue'
-import securitySetting from './security-setting.vue'
+import NetworkSetting from './network-setting.vue'
+import PanelUpdate from './panel-update.vue'
+import AccountSecurity from './account-security.vue'
 import { Api } from '@/api/Api'
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -30,14 +32,24 @@ onMounted(() => {
 <template>
   <div class="all-container" v-if="allinfo">
     <panel-setting v-if="allinfo" :isCard="false" :allinfo="allinfo" />
-    <security-setting v-if="allinfo" :isCard="false" :allinfo="allinfo" />
+    <NetworkSetting />
+    <AccountSecurity />
+    <PanelUpdate />
   </div>
 </template>
 
 <style scoped lang="less">
 .all-container {
-  background: rgb(var(--bg-card-color));
-  border-radius: 5px;
   padding: 26px 30px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
+}
+
+@media (max-width: 700px) {
+  .all-container {
+    padding: 20px 16px;
+  }
 }
 </style>

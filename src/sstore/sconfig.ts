@@ -4,7 +4,13 @@ import { sutil } from './sutil'
 
 export const sconfig = reactive({
   load: () => {
-    sconfig.userInfo = Cookie.get('userInfo') || (null as any)
+    const saved = sessionStorage.getItem('oneinstack_user')
+    try {
+      sconfig.userInfo = saved ? JSON.parse(saved) : null
+    } catch {
+      sessionStorage.removeItem('oneinstack_user')
+      sconfig.userInfo = null as any
+    }
   },
   userInfo: null as any as any,
 
@@ -12,19 +18,16 @@ export const sconfig = reactive({
    * 成功登录用户
    */
   login(info: any) {
-    // 清空token
-    Cookie.clear()
     sutil.reset()
 
     sconfig.userInfo = info
-    Cookie.set('userInfo', sconfig.userInfo)
+    sessionStorage.setItem('oneinstack_user', JSON.stringify(info))
   },
   /**
    * 退出登录
    */
   logout(toLogin = false) {
-    // 清空token
-    Cookie.clear()
+    sessionStorage.removeItem('oneinstack_user')
     sutil.reset()
     sconfig.userInfo = null as any
 

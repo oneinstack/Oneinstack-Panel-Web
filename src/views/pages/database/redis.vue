@@ -17,12 +17,25 @@ const conf = reactive({
         label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
         value: item.id
       }))
+      if (conf.server.options.length) {
+        await conf.server.onChange(conf.server.options[0].value)
+      } else {
+        conf.list.params.id = 0
+        conf.dbList.params.id = 0
+        conf.dbList.data = []
+        conf.list.data = []
+      }
     },
-    onChange: (value: number) => {
+    onChange: async (value: number) => {
       conf.list.params.id = value
       conf.dbList.params.id = value
-      conf.dbList.getData()
-      handleTabClick({ paneName: conf.dbList.data[0] })
+      await conf.dbList.getData()
+      const firstDatabase = conf.dbList.data[0]
+      if (firstDatabase) {
+        await handleTabClick({ paneName: firstDatabase.name })
+      } else {
+        conf.list.data = []
+      }
     }
   },
   dbList: {
@@ -34,19 +47,20 @@ const conf = reactive({
     },
     data: [] as any[],
     getData: async () => {
-      const { data: res } = await Api.getDatabaseList(conf.list.params)
+      const { data: res } = await Api.getDatabaseList(conf.dbList.params)
       conf.dbList.data = res.data
     }
   }
 })
 
 conf.list.loading = false
-!conf.server.options.length && conf.server.getOptions()
 
-const handleTabClick = ({ paneName }: { paneName: string | number | undefined }) => {
+const handleTabClick = async ({ paneName }: { paneName: string | number | undefined }) => {
   conf.list.params.r_db = paneName
-  conf.list.getData()
+  await conf.list.getData()
 }
+
+conf.server.getOptions()
 </script>
 
 <template>
@@ -54,7 +68,7 @@ const handleTabClick = ({ paneName }: { paneName: string | number | undefined })
     <div class="tool-bar">
       <el-space class="btn-group">
         <!-- <el-button type="primary" @click="conf.drawer.open('add')">添加key</el-button> -->
-        <el-button type="primary" @click="System.router.push('/database/remote')">远程服务器</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">远程服务器</el-button>
         <!-- <el-button type="primary">备份列表</el-button>
         <el-button type="primary">清空数据库</el-button> -->
       </el-space>

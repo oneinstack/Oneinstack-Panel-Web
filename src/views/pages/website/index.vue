@@ -8,6 +8,26 @@ import { Api } from '@/api/Api'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
+import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
+import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
+
+const certificateDrawer = reactive({
+  show: false,
+  website: {} as Record<string, any>,
+  open: (website: Record<string, any>) => {
+    certificateDrawer.website = website
+    certificateDrawer.show = true
+  }
+})
+
+const backupDrawer = reactive({
+  show: false,
+  website: null as Record<string, any> | null,
+  open: (website?: Record<string, any>) => {
+    backupDrawer.website = website || null
+    backupDrawer.show = true
+  }
+})
 
 const conf = reactive({
   tabs: {
@@ -63,6 +83,7 @@ const conf = reactive({
       { prop: 'domain', label: '域名', width: 200 },
       { prop: 'root_dir', label: '根目录' },
       { prop: 'remark', label: '备注', width: 200 },
+      { prop: 'ssl', label: 'SSL', width: 110 },
       { prop: 'action', label: '操作' }
     ],
     params: {
@@ -174,7 +195,7 @@ const conf = reactive({
                   if (value && !conf.form.data.value.root_dir && domainPattern.test(value)) {
                     // 如果有端口号，去掉端口号
                     const domainWithoutPort = value.split(':')[0];
-                    conf.form.data.value.root_dir = `${domainWithoutPort}`;
+                    conf.form.data.value.root_dir = `/${domainWithoutPort}`;
                   }
                 }
               },
@@ -200,8 +221,8 @@ const conf = reactive({
               }
             ]
           case 'proxy':
-            conf.form.data.value.pact = 'http'
-            conf.form.data.value.tar_url = '$http_host'
+            conf.form.data.value.pact ||= 'http'
+            conf.form.data.value.tar_url ||= '$http_host'
             return [
               {
                 label: '主域名',
@@ -243,23 +264,50 @@ const conf = reactive({
     title: '网站删除确认',
     type: 'delete',
     row: {} as any,
+    loading: false,
+    confirmName: '',
+    databaseId: 0,
+    deleteFiles: false,
+    databases: [] as any[],
     open: (type: 'delete', row?: any) => {
       conf.dialog.type = type
       conf.dialog.row = row
+      conf.dialog.confirmName = ''
+      conf.dialog.databaseId = 0
+      conf.dialog.deleteFiles = false
       switch (type) {
         case 'delete':
           conf.dialog.title = '网站删除确认'
           break
       }
       conf.dialog.show = true
+      Api.getDatabaseList({ type: 'mysql', page: 1, pageSize: 100 }).then(({ data }) => {
+        conf.dialog.databases = data?.data || []
+      })
     },
     close: () => {
       conf.dialog.show = false
     },
     confirm: async () => {
-      await Api.delWebsite({ id: conf.dialog.row.id })
-      conf.website.getData()
-      conf.dialog.show = false
+      if (conf.dialog.confirmName !== conf.dialog.row.name) {
+        ElMessage.error('网站名不匹配')
+        return
+      }
+      conf.dialog.loading = true
+      try {
+        await Api.delWebsite({
+          id: conf.dialog.row.id,
+          confirmName: conf.dialog.confirmName,
+          databaseId: conf.dialog.databaseId || 0,
+          deleteFiles: conf.dialog.deleteFiles
+        })
+        ElMessage.success('安全删除任务已创建，完整快照验证成功后才会删除网站')
+        backupDrawer.open(conf.dialog.row)
+        conf.dialog.show = false
+        conf.website.getData()
+      } finally {
+        conf.dialog.loading = false
+      }
     }
   }
 })
@@ -273,6 +321,7 @@ conf.website.getData()
     <div class="tool-bar">
       <el-space class="btn-group" :size="14" style="width: 100%;">
         <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+        <el-button @click="backupDrawer.open()">整站备份管理</el-button>
 
         <!-- <el-dropdown>
             <el-button type="primary">
@@ -337,8 +386,16 @@ conf.website.getData()
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
         :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
         <template #action="{ row }">
+          <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
+          <el-button type="primary" link @click="backupDrawer.open(row)">备份</el-button>
           <el-button type="primary" link @click="conf.drawer.open('edit', row)">设置</el-button>
           <el-button type="danger" link @click="conf.dialog.open('delete', row)">删除</el-button>
+        </template>
+        <template #ssl="{ row }">
+          <el-tag v-if="row.ssl_enabled" :type="row.certificate_status === 'active' ? 'success' : 'warning'">
+            {{ row.certificate_status === 'active' ? '已启用' : row.certificate_status === 'expired' ? '已过期' : '即将到期' }}
+          </el-tag>
+          <el-tag v-else type="info">未启用</el-tag>
         </template>
       </custom-table>
     </div>
@@ -350,8 +407,8 @@ conf.website.getData()
           <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">
             <template #prepend>
               <el-select v-model="conf.form.data.value.pact" style="width: 80px">
-                <el-option label="http" value="http://" />
-                <el-option label="https" value="https://" />
+                <el-option label="http" value="http" />
+                <el-option label="https" value="https" />
               </el-select>
             </template>
           </el-input>
@@ -361,14 +418,62 @@ conf.website.getData()
 
     <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
       <template v-if="conf.dialog.type === 'delete'">
-        <el-alert title="确定删除所选网站？" type="warning" show-icon :closable="false" />
+        <el-alert
+          title="删除前会强制创建并验证整站快照。默认只移除 Nginx/证书状态并保留业务文件；选择删除文件后，目录只会在受管根路径校验通过时删除。"
+          type="warning"
+          show-icon
+          :closable="false"
+        />
+        <el-form label-position="top" class="delete-form">
+          <el-form-item label="关联 MySQL 数据库（可选）">
+            <el-select v-model="conf.dialog.databaseId" style="width: 100%" placeholder="不包含数据库">
+              <el-option label="不包含数据库" :value="0" />
+              <el-option
+                v-for="database in conf.dialog.databases"
+                :key="database.id"
+                :label="database.name"
+                :value="database.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="文件处理">
+            <el-checkbox v-model="conf.dialog.deleteFiles">
+              快照成功后同时删除网站目录与业务文件
+            </el-checkbox>
+          </el-form-item>
+          <el-form-item :label="`请输入网站名 ${conf.dialog.row.name || ''} 确认`">
+            <el-input v-model="conf.dialog.confirmName" :placeholder="conf.dialog.row.name" />
+          </el-form-item>
+        </el-form>
       </template>
       <template #footer>
         <el-button @click="conf.dialog.close">取消</el-button>
-        <el-button type="primary" @click="conf.dialog.confirm">确认</el-button>
+        <el-button
+          type="danger"
+          :loading="conf.dialog.loading"
+          :disabled="conf.dialog.confirmName !== conf.dialog.row.name"
+          @click="conf.dialog.confirm"
+        >
+          创建快照并删除
+        </el-button>
       </template>
     </custom-dialog>
+
+    <website-certificate-drawer
+      v-model="certificateDrawer.show"
+      :website="certificateDrawer.website"
+      @changed="conf.website.getData()"
+    />
+    <website-backup-drawer
+      v-model="backupDrawer.show"
+      :website="backupDrawer.website"
+      @changed="conf.website.getData()"
+    />
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.delete-form {
+  margin-top: 16px;
+}
+</style>

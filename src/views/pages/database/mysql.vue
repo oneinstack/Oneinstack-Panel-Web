@@ -1,12 +1,107 @@
 <script setup lang="ts">
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
-import { CircleClose, ArrowDown, Setting, Hide, View, CopyDocument, CaretBottom } from '@element-plus/icons-vue'
+import { CircleClose, Setting } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
+import { Api } from '@/api/Api'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { reactive } from 'vue'
+import DatabaseBackupDrawer from './components/DatabaseBackupDrawer.vue'
 
 const { conf } = defineProps<ConfProps>()
 
 conf.list.getData()
+
+const backupPanel = reactive({
+  visible: false,
+  library: null as any
+})
+
+const openBackupPanel = (row: any) => {
+  backupPanel.library = row
+  backupPanel.visible = true
+}
+
+const createBackup = async (row: any) => {
+  await Api.createDatabaseBackup({ libraryId: row.id })
+  ElMessage.success('备份任务已创建')
+  openBackupPanel(row)
+}
+
+const requestPanelPassword = async (title: string) => {
+  const { value } = await ElMessageBox.prompt(
+    '为保护数据库密码，请输入当前面板登录密码完成二次认证。',
+    title,
+    {
+      inputType: 'password',
+      inputPlaceholder: '当前面板登录密码',
+      inputValidator: (value: string) => !!value || '请输入当前面板登录密码',
+      confirmButtonText: '确认',
+      cancelButtonText: '取消'
+    }
+  )
+  return value
+}
+
+const viewCredential = async (row: any) => {
+  try {
+    const panelPassword = await requestPanelPassword('查看数据库账号')
+    const { data } = await Api.revealDatabaseCredential(row.id, { panelPassword })
+    conf.credential.open(data)
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+}
+
+const updateCredential = async (row: any) => {
+  try {
+    const panelPassword = await requestPanelPassword('修改数据库密码')
+    const { value: password } = await ElMessageBox.prompt(
+      '输入 12–128 位新密码；留空则由服务端生成高强度随机密码。',
+      `修改 ${row.name} 的账号密码`,
+      {
+        inputType: 'password',
+        inputPlaceholder: '留空自动生成随机密码',
+        inputValidator: (value: string) =>
+          !value || (value.length >= 12 && value.length <= 128) || '密码长度必须为 12–128 位',
+        confirmButtonText: '修改密码',
+        cancelButtonText: '取消'
+      }
+    )
+    const { data } = await Api.updateDatabaseCredential(row.id, {
+      panelPassword,
+      password
+    })
+    ElMessage.success('数据库账号密码已修改')
+    conf.credential.open(data)
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+}
+
+const deleteDatabase = async (row: any) => {
+  try {
+    const { value } = await ElMessageBox.prompt(
+      `此操作将永久删除数据库“${row.name}”及其专用用户，且不会删除现有备份。请输入数据库名确认：`,
+      '删除数据库',
+      {
+        type: 'warning',
+        confirmButtonText: '永久删除',
+        cancelButtonText: '取消',
+        inputPlaceholder: row.name,
+        inputValidator: (value: string) => value === row.name || '数据库名不匹配'
+      }
+    )
+    await Api.deleteDatabaseLib({ id: row.id, confirmName: value })
+    ElMessage.success('数据库和专用用户已删除')
+    await conf.list.getData()
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+}
 </script>
 
 <template>
@@ -101,26 +196,16 @@ conf.list.getData()
             </span>
           </div>
         </template>
-        <template #password="{ row, index }">
-          <div class="flex items-center" style="gap: 8px">
-            <span>
-              {{ conf.password.show[index] ? row.password : ''.padEnd(row.password.length, '*') }}
-            </span>
-            <el-icon
-              class="hover-opacity cursor-pointer"
-              :size="18"
-              @click="conf.password.show[index] = !conf.password.show[index]"
-            >
-              <View v-if="conf.password.show[index]" />
-              <Hide v-else />
-            </el-icon>
-            <el-icon class="hover-opacity cursor-pointer" @click="conf.password.copy(row.password)">
-              <CopyDocument />
-            </el-icon>
-          </div>
+        <template #action="{ row }">
+          <el-button type="primary" link @click="viewCredential(row)">查看账号</el-button>
+          <el-button type="primary" link @click="updateCredential(row)">修改密码</el-button>
+          <el-button type="primary" link @click="createBackup(row)">备份</el-button>
+          <el-button type="primary" link @click="openBackupPanel(row)">备份管理</el-button>
+          <el-button type="danger" link @click="deleteDatabase(row)">删除</el-button>
         </template>
       </custom-table>
     </div>
+    <database-backup-drawer v-model="backupPanel.visible" :library="backupPanel.library" />
   </div>
 </template>
 
@@ -128,17 +213,21 @@ conf.list.getData()
 .database-container {
   .tip {
     width: 100%;
-    height: 58px;
-    background: rgb(var(--bg-card-color));
+    min-height: 60px;
     margin-top: 20px;
-    padding: 18px 28px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
 
     span {
-      font-size: 16px;
-      color: var(--font-color-gray-light);
+      color: var(--text-tertiary);
+      font-size: 13px;
     }
   }
 }

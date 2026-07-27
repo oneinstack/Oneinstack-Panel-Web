@@ -8,11 +8,12 @@ import { ElMessage, FormInstance, UploadFile, UploadInstance } from 'element-plu
 import { nextTick, onMounted, reactive, useTemplateRef } from 'vue'
 import type { DrawerType, DrawerOpenType } from '../index.vue'
 import System from '@/utils/System'
-import sconfig from '@/sstore/sconfig'
+import { formatBytes } from '@/utils/fileSize'
 
 interface Emits {
   (e: 'update:path', value: string[]): void
   (e: 'open-drawer', openType: DrawerOpenType, type: DrawerType, row?: any): void
+  (e: 'open-trash'): void
 }
 
 const emit = defineEmits<Emits>()
@@ -29,7 +30,12 @@ const conf = reactive({
     { prop: 'action', label: '操作',width:'270' }
   ],
   fileList: [],
+  capacity: null as any,
   loading: false,
+  getCapacity: async () => {
+    const { data } = await Api.getFileCapacity()
+    conf.capacity = data.capacity
+  },
   getFileList: async (refresh = false) => {
     if (!refresh) emit('update:path', conf.path)
     const path = conf.path.join('/').replace(/\/\//g, '/')
@@ -43,7 +49,10 @@ const conf = reactive({
     })
     conf.fileList = res.files ?? []
   },
-  refresh: () => conf.getFileList(true),
+  refresh: () => {
+    conf.getFileList(true)
+    conf.getCapacity()
+  },
   handleFileClick: (row: any) => {
     if (!row.isDir) return
     conf.path.push(row.name)
@@ -110,6 +119,12 @@ const conf = reactive({
           conf.fileDialog.confirmText = '开始上传'
           break
         case 'linkDownload':
+          const downloadPath = conf.path.join('/').replace(/\/\//g, '/')
+          conf.fileDialog.row = {
+            path: downloadPath,
+            name: '',
+            url: ''
+          }
           conf.fileDialog.title = `URL链接下载`
           conf.fileDialog.confirmText = '确定'
           break
@@ -129,12 +144,17 @@ const conf = reactive({
       if (conf.fileDialog.type === 'linkDownload') {
         const res = await conf.linkDownload.instance?.validate()
         if (!res) return
+        await Api.urlDownloadFile(conf.fileDialog.row)
+        ElMessage.success('下载任务已完成')
+        conf.fileDialog.close()
+        conf.refresh()
+        return
       }
       const path = conf.path.join('/').replace(/\/\//g, '/')
-      const { data: msg } = await Api.deleteFile({
-        path: `${path}/${conf.fileDialog.row.name}`
+      await Api.deleteFile({
+        path: `${path === '/' ? '' : path}/${conf.fileDialog.row.name}`
       })
-      ElMessage.success(msg)
+      ElMessage.success('已移入回收站')
       conf.fileDialog.close()
       conf.refresh()
     }
@@ -171,6 +191,7 @@ const conf = reactive({
 
 onMounted(() => {
   conf.getFileList()
+  conf.getCapacity()
 })
 
 defineExpose({
@@ -227,6 +248,9 @@ defineExpose({
             </el-dropdown-menu>
           </template>
         </el-dropdown>
+        <el-tag v-if="conf.capacity" type="info" effect="plain">
+          可写 {{ formatBytes(conf.capacity.writableBytes) }}
+        </el-tag>
         <el-dropdown>
           <el-button type="primary">
             新建
@@ -252,12 +276,12 @@ defineExpose({
         <!-- <el-button type="primary">终端</el-button>
         <el-button type="primary">/（根目录）29.47GB</el-button> -->
       </el-space>
-      <!-- <div class="demo-form-inline">
-        <el-button type="primary">
+      <div class="demo-form-inline">
+        <el-button type="primary" plain @click="emit('open-trash')">
           <span class="mr-1">回收站</span>
           <el-icon size="16"><Delete /></el-icon>
         </el-button>
-      </div> -->
+      </div>
     </div>
     <div class="box2">
       <custom-table :data="conf.fileList" :columns="conf.columns" :loading="conf.loading">
@@ -293,7 +317,7 @@ defineExpose({
 
     <custom-dialog v-model="conf.fileDialog.show" :title="conf.fileDialog.title">
       <template v-if="conf.fileDialog.type === 'delete'">
-        <el-alert title="确定删除所选文件？" type="warning" show-icon :closable="false" />
+        <el-alert title="确定将所选文件移入回收站？稍后可以恢复。" type="warning" show-icon :closable="false" />
         <div class="flex items-center" style="gap: 10px; margin-top: 20px">
           <v-s-icon :name="conf.fileDialog.row?.isDir ? 'folder' : 'txt'" size="22" />
           <span style="color: var(--font-color-gray)">{{ conf.fileDialog.row.name }}</span>
@@ -308,7 +332,7 @@ defineExpose({
             ref="uploadRef"
             drag
             :data="conf.fileDialog.row"
-            :headers="{ Authorization: `Bearer ${sconfig.userInfo?.token}` }"
+            :with-credentials="true"
             :auto-upload="false"
             multiple
             :action="`${System.env.API}/ftp/upload`"

@@ -39,16 +39,32 @@ const handleSearch = () => {
 
 <style scoped lang="less">
 .el-input {
-  --el-input-border-radius: 18px;
-  --el-input-width: 262px;
-  --el-input-height: 36px;
-  --el-input-border-color: rgb(var(--border-input-color));
-  --el-input-text-color: var(--font-color-black);
-  font-size: 14px;
+  --el-input-width: 280px;
+  --el-input-height: 40px;
+  --el-input-text-color: var(--text-primary);
+  font-size: 13px;
 
   :deep(.el-input__wrapper) {
-    background-color: rgba(var(--bg-input-color), 0.5);
-    padding-inline: 20px;
+    padding-inline: 14px;
+    border-radius: 10px;
+    background: var(--surface-card);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+
+    &:hover {
+      box-shadow: 0 0 0 1px var(--border-strong) inset;
+    }
+
+    &.is-focus {
+      box-shadow:
+        0 0 0 1px rgb(var(--primary-color)) inset,
+        0 0 0 4px var(--focus-ring);
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .el-input {
+    --el-input-width: 100%;
   }
 }
 </style>

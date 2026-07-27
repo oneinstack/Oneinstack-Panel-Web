@@ -21,11 +21,31 @@ export default class HttpConfig {
     }
 
     const error = (_code: number, config: any, xhr: any) => {
-      let code = xhr?.data?.code || _code,
-        msg = xhr?.data?.message || ''
-        
+      const isAcceptedSuccess =
+        _code >= 200 &&
+        _code < 300 &&
+        (xhr?.data?.code === 0 || xhr?.data?.success === true)
+      if (isAcceptedSuccess) {
+        // tools-javascript currently routes non-200 2xx responses through its
+        // error hook. Preserve correct HTTP semantics for 201/202 task APIs.
+        funrun(config.data, ['final', 'success', 'complete'], xhr.data, config, xhr)
+        return
+      }
+
+      let code = xhr?.data?.code ?? _code,
+        msg = xhr?.data?.message || xhr?.data?.error || ''
+
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
+      if (_code === HttpCode.LOGIN_EXPIRED) {
+        System.er(msg || '登录已过期，请重新登录', { type: 'error' })
+        sconfig.logout(true)
+        return
+      }
       switch (code) {
+        case 'PASSWORD_CHANGE_REQUIRED':
+          System.er('首次登录必须先修改初始密码', { type: 'warning' })
+          System.router.replace('/first-login')
+          break
         case HttpCode.LOGIN_EXPIRED:
           System.er(msg, { type: 'error' })
           sconfig.logout(true)
@@ -43,9 +63,8 @@ export default class HttpConfig {
     }
     http.setConfig({
       base: env.API,
-      headers: {
-        'Authorization': 'Basic c2FiZXI6c2FiZXJfc2VjcmV0'
-      },
+      headers: {},
+      withCredentials: true,
       before(config) {
         config.param.headers = config.param.headers || {}
 
@@ -59,10 +78,9 @@ export default class HttpConfig {
             delete config.data[key]
           }
         })
-        const token = sconfig.userInfo?.token
         const currentPath = System.getRouterPath()
-        if (!token && !currentPath.includes('/login')) return System.router.replace('/login')
-        token && (config.param.headers.Authorization = `Bearer ${token}`)
+        if (!sconfig.userInfo?.authenticated && !currentPath.includes('/login'))
+          return System.router.replace('/login')
         if (config.data?.json) {
           config.param.headers['Content-Type'] = 'application/json'
           delete config.data.json

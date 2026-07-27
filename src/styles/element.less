@@ -1,4 +1,4 @@
-:deep(.el-table) {
+.el-table {
   --el-table-border-color: transparent;
   --el-table-border: none;
   --el-table-text-color: var(--font-color-black);
@@ -21,18 +21,17 @@
   }
 }
 
-:deep(.el-textarea),
-:deep(.el-input),
-:deep(.el-select) {
-  --el-input-bg-color: rgba(var(--bg-input-color), 0.6);
-  --el-select-input-color: rgba(var(--bg-input-color), 0.6);
-  --el-input-border-color: transparent;
-  --el-select-border-color: transparent;
+.el-textarea,
+.el-input,
+.el-select {
+  --el-input-bg-color: var(--surface-card);
+  --el-select-input-color: var(--text-primary);
+  --el-input-border-color: var(--border-default);
+  --el-select-border-color: var(--border-default);
   --el-select-input-color: var(--font-color-black);
 
   &__wrapper {
     background: var(--el-input-bg-color);
-    box-shadow: none;
   }
 
   &__inner {
@@ -49,11 +48,11 @@
   }
 }
 
-:deep(.el-dropdown) {
+.el-dropdown {
   color: var(--font-color-black);
 }
 
-:deep(.el-drawer) {
+.el-drawer {
   --el-drawer-bg-color: rgb(var(--bg-card-color));
 
   &__header {
@@ -66,15 +65,15 @@
   }
 }
 
-:deep(.el-form-item__label) {
+.el-form-item__label {
   color: var(--font-color-black);
 }
 
-:deep(.el-pagination) {
+.el-pagination {
   --el-pagination-button-bg-color: rgb(var(--border-color-gray));
 }
 
-:deep(.el-tabs) {
+.el-tabs {
   &__nav {
     display: flex;
     align-items: center;
@@ -93,18 +92,18 @@
   }
 }
 
-:deep(.el-checkbox) {
+.el-checkbox {
   --el-checkbox-text-color: var(--font-color-black);
   &__input {
     transform: scale(1.1);
   }
 }
 
-:deep(.el-link) {
+.el-link {
   --el-link-text-color: var(--font-color-black);
 }
 
-:deep(.el-breadcrumb) {
+.el-breadcrumb {
   &__item {
     cursor: pointer;
     &:hover {
@@ -122,7 +121,7 @@
   }
 }
 
-:deep(.el-upload) {
+.el-upload {
   &-dragger {
     height: 364px;
     background: rgba(var(--bg-input-color), 0.5);

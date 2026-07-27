@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Typecheck, test and build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+
+      - name: Scan tracked source for secrets
+        run: ./scripts/secret-scan.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Verify production artifacts
+        shell: bash
+        run: |
+          test -s dist/index.html
+          test -s version/app-1.0.0.zip
+          unzip -t version/app-1.0.0.zip
+
+      - name: Generate SBOM and license inventory
+        run: ./scripts/generate-supply-chain.sh supply-chain
+
+      - name: Upload supply-chain evidence
+        uses: actions/upload-artifact@v7
+        with:
+          name: one-web-supply-chain-${{ github.sha }}
+          if-no-files-found: error
+          path: supply-chain/

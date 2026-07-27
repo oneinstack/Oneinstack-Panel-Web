@@ -17,6 +17,18 @@ const conf = reactive({
     dark: ['#EAB170']
   },
   showTips: true,
+  credential: {
+    show: false,
+    database: '',
+    username: '',
+    password: '',
+    open: (value: any) => {
+      conf.credential.database = value.database || ''
+      conf.credential.username = value.username || ''
+      conf.credential.password = value.password || ''
+      conf.credential.show = true
+    }
+  },
   tabs: {
     activeIndex: 0,
     list: [
@@ -74,7 +86,7 @@ const conf = reactive({
           return [
             { prop: 'name', label: '数据库名' },
             { prop: 'user', label: '用户名' },
-            { prop: 'password', label: '密码' },
+            { prop: 'encoding', label: '字符集', placeholder: 'utf8mb4' },
             { prop: 'capacity', label: '容量', placeholder: '未配置' },
             { prop: 'p_addr', label: '数据库位置' },
             { prop: 'action', label: '操作' }
@@ -94,18 +106,9 @@ const conf = reactive({
       conf.list.loading = true
       const api = conf.list.params.type === 'redis' ? Api.getRedisList : Api.getDatabaseList
       const { data: res } = await api(conf.list.params)
-      if (conf.list.params.type !== 'redis')
-        res.data.forEach((_: any, index: number) => (conf.password.show[index] = false))
       conf.list.loading = false
       conf.list.total = res.total
       conf.list.data = res[conf.list.params.type === 'redis' ? 'keys' : 'data']
-    }
-  },
-  password: {
-    show: {} as { [key: number]: boolean },
-    copy: async (value: string) => {
-      await navigator.clipboard.writeText(value)
-      ElMessage.success('复制成功！')
     }
   },
   drawer: {
@@ -127,11 +130,21 @@ const conf = reactive({
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
         conf.drawer.loading = true
-        await Api.addDatabaseLib(conf.form.data.value)
-        conf.drawer.loading = false
-        ElMessage.success('添加成功！')
-        conf.list.getData()
-        conf.drawer.show = false
+        try {
+          const request = {
+            id: conf.form.data.value.id,
+            name: conf.form.data.value.name,
+            encoding: conf.form.data.value.encoding,
+            type: 'mysql'
+          }
+          const { data: credential } = await Api.addDatabaseLib(request)
+          ElMessage.success('数据库和专用用户创建成功')
+          await conf.list.getData()
+          conf.drawer.show = false
+          conf.credential.open(credential)
+        } finally {
+          conf.drawer.loading = false
+        }
       })
     }
   },
@@ -153,22 +166,14 @@ const conf = reactive({
                 rules: [{ required: true, message: '请输入数据库名', trigger: 'blur' }]
               },
               {
-                label: '用户名',
-                prop: 'root',
-                type: 'input',
-                rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }]
-              },
-              {
-                label: '密码',
-                prop: 'password',
-                type: 'password',
-                rules: [{ required: true, message: '请输入密码', trigger: 'blur' }]
-              },
-              {
                 label: '添加至',
                 prop: 'id',
                 asyncOptions: async () => {
                   const { data } = await Api.getConnlist(conf.list.params)
+                  if (!data.length) {
+                    conf.form.data.value.id = undefined
+                    return []
+                  }
                   conf.form.data.value.id = data[0].id
                   return data.map((item: any) => ({
                     label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
@@ -190,6 +195,12 @@ const conf = reactive({
 const routeName = (System.getRouterPath() as string).match(/(?<=\/database\/)\w*/)?.[0]
 conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)!.index
 conf.list.params.type = routeName
+
+const copyCredential = async () => {
+  const text = `数据库：${conf.credential.database}\n用户名：${conf.credential.username}\n密码：${conf.credential.password}`
+  await navigator.clipboard.writeText(text)
+  ElMessage.success('账号密码已复制')
+}
 </script>
 
 <template>
@@ -221,6 +232,34 @@ conf.list.params.type = routeName
         </custom-form>
       </template>
     </custom-drawer>
+
+    <custom-dialog
+      v-model:show="conf.credential.show"
+      title="数据库账号"
+    >
+      <el-alert
+        title="该账号只拥有当前数据库权限，请妥善保存密码。"
+        type="success"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 18px"
+      />
+      <el-form label-width="78px">
+        <el-form-item label="数据库">
+          <el-input :model-value="conf.credential.database" readonly />
+        </el-form-item>
+        <el-form-item label="用户名">
+          <el-input :model-value="conf.credential.username" readonly />
+        </el-form-item>
+        <el-form-item label="密码">
+          <el-input :model-value="conf.credential.password" readonly show-password />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="conf.credential.show = false">关闭</el-button>
+        <el-button type="primary" @click="copyCredential">复制账号密码</el-button>
+      </template>
+    </custom-dialog>
   </div>
 </template>
 
@@ -230,17 +269,21 @@ conf.list.params.type = routeName
 .database-container {
   .tip {
     width: 100%;
-    height: 58px;
-    background: rgb(var(--bg-card-color));
+    min-height: 60px;
     margin-top: 20px;
-    padding: 18px 28px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
 
     span {
-      font-size: 16px;
-      color: var(--font-color-gray-light);
+      color: var(--text-tertiary);
+      font-size: 13px;
     }
   }
 }

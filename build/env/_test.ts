@@ -3,6 +3,6 @@ export default {
   /**
    * 接口地址
    */
-  API: 'http://192.168.31.69:6521/api',
+  API: '/v1',
   port: 3334
 }

@@ -51,25 +51,15 @@ const conf = reactive({
   contentRefs: [] as { [index: number]: HTMLElement }
 })
 
-const collectionHeaderCellClassName = (row:any) => {
-  if(row.columnIndex != row.row.length -1){
-    return {'border-right':'1px solid #8B8B8B30','text-align':'center'};
-  }else{
-    return {'text-align':'center'};
-  }
-}
 </script>
 
 <template>
   <div v-loading="loading" class="table-content">
     <el-table
       :data="autoPagination ? conf.visibleData : data"
-      border
-      style="width: 100%;text-align: center;"
+      style="width: 100%"
       @selection-change="selectionChange"
-	    empty-text="暂无数据"
-      :cell-style="{'text-align':'center'}"
-      :header-cell-style="{'border-right':'1px solid #8B8B8B30','text-align':'center'}"
+      empty-text="暂无数据"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
@@ -103,7 +93,7 @@ const collectionHeaderCellClassName = (row:any) => {
               class="ellipsis"
               :style="{ width: item.width }"
             >
-              {{ item.formatter ? item.formatter(row) : row[item.prop] || item?.placeholder }}
+              {{ item.formatter ? item.formatter(row) : row[item.prop] ?? item?.placeholder }}
             </div>
           </el-tooltip>
         </template>
@@ -121,4 +111,27 @@ const collectionHeaderCellClassName = (row:any) => {
   </div>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.table-content {
+  width: 100%;
+}
+
+.ellipsis {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-secondary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+:deep(.el-table__empty-block) {
+  min-height: 180px;
+  background: var(--surface-card);
+}
+</style>

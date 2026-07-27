@@ -11,10 +11,41 @@ import { globalType } from '../env/globalVar'
 import { tozip } from './plugins/tozip'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
+const toolsJavascriptCSPPlugin = (): PluginOption => ({
+  name: 'tools-javascript-csp-safe',
+  enforce: 'pre',
+  transform(code, id) {
+    const normalizedId = id.split(path.sep).join('/')
+    if (!normalizedId.endsWith('/node_modules/tools-javascript/dist/tools-javascript.js')) {
+      return null
+    }
+
+    // tools-javascript 1.2.9 clones prototype helpers through `new Function`.
+    // Copying the original function object has the same call semantics and
+    // remains compatible with a strict Content-Security-Policy.
+    const assignment = code.match(/([A-Za-z_$][\w$]*)\.getFunction=/)
+    if (!assignment || assignment.index === undefined) {
+      throw new Error('Unable to locate tools-javascript getFunction assignment')
+    }
+    const owner = assignment[1]
+    const assignmentEnd = code.indexOf(`,${owner}.setPrototype=`, assignment.index)
+    if (assignmentEnd === -1) {
+      throw new Error('Unable to locate tools-javascript setPrototype assignment')
+    }
+    const patched =
+      code.slice(0, assignment.index) +
+      `${owner}.getFunction=t=>t` +
+      code.slice(assignmentEnd)
+
+    return { code: patched, map: null }
+  }
+})
+
 export const getPlugins = (env: globalType) => {
   const isBuild = env.env.pro === 'build'
 
   const plugin: PluginOption[] = [
+    toolsJavascriptCSPPlugin(),
     viteVar(env as any),
     viteDef(env.env.pro),
     viteComType({

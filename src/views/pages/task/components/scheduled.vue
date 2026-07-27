@@ -19,7 +19,7 @@ interface RuleForm {
 interface Task {
   id: number
   enabled: boolean
-  // 其他属性...
+  task_type: 'shell' | 'template'
 }
 
 const multipleSelection = ref<Task[]>([])
@@ -38,16 +38,23 @@ const clearTableSelection = () => {
 
 let searchValue = ref('')
 const tableData = ref([])
+const runningByTask = ref<Record<number, number>>({})
 
 const getData = async () => {
   multipleSelection.value = []
   try {
-    const { data: res } = await Api.getPlanTaskList({
-      page: pagination.currentPage,
-      pageSize: pagination.pageSize,
-      q: searchValue.value
-    })
-    console.log(res, 'res')
+    const [{ data: res }, { data: running }] = await Promise.all([
+      Api.getPlanTaskList({
+        page: pagination.currentPage,
+        pageSize: pagination.pageSize,
+        name: searchValue.value
+      }),
+      Api.getRunningPlanTaskExecutions()
+    ])
+    runningByTask.value = (running || []).reduce((result: Record<number, number>, execution: any) => {
+      result[execution.cron_job_id] = execution.id
+      return result
+    }, {})
     if (res) {
       tableData.value = res.data || []
       pagination.total = res.total || 0
@@ -78,7 +85,7 @@ const onSubmit = () => {
 }
 
 const enabledClick = () => {
-  ElMessageBox.confirm('计划任务暂停后将无法继续运行，您真的要停用这个计划任务吗？', '设置计划任务状态', {
+  ElMessageBox.confirm('停用后将不再触发新的调度，已经开始的执行不会被中断。确定继续吗？', '设置计划任务状态', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
@@ -107,12 +114,15 @@ const ruleForm = reactive<RuleForm>({
 let action_type = ref(true)
 let rulesForm = ref({
   name: '',
-  cron_type: '',
+  task_type: 'template',
+  template_id: 'disk-usage-report',
+  template_params: {} as Record<string, string>,
   schedule: '',
   created_at: '',
   deleted_at: '',
   id: '',
   command: '',
+  notify_on_failure: false,
   enabled: true,
   updated_at: ''
 })
@@ -136,12 +146,15 @@ const addTask = () => {
   addTaskVisible.value = true
   rulesForm.value = {
     name: '',
-    cron_type: '',
+    task_type: 'template',
+    template_id: 'disk-usage-report',
+    template_params: {},
     schedule: '',
     created_at: '',
     deleted_at: '',
     id: '',
     command: '',
+    notify_on_failure: false,
     enabled: true,
     updated_at: ''
   }
@@ -310,12 +323,15 @@ const updateSingleTask = async (row: any) => {
   addTaskVisible.value = true
   rulesForm.value = {
     name: row.name,
-    cron_type: row.cron_type,
+    task_type: row.task_type || 'shell',
+    template_id: row.template_id || '',
+    template_params: row.template_params || {},
     schedule: row.schedule,
     created_at: row.created_at,
     deleted_at: row.deleted_at,
     id: row.id,
     command: row.command,
+    notify_on_failure: Boolean(row.notify_on_failure),
     enabled: row.enabled,
     updated_at: row.updated_at
   }
@@ -324,16 +340,30 @@ const updateSingleTask = async (row: any) => {
 }
 // 查看单条数据日志方法
 const updateSingleTaskLog = async (row: any) => {
-  System.router.push('/task/log')
-  // router.push({
-  //   name: 'taskLog',
-  //   query: {
-  //     id: row.id
-  //   }
-  // })
-  let { data: res } = await Api.getPlanTaskLog({ id: row.id })
-  console.log(res, 'res')
+  System.router.push(`/task/log?id=${row.id}`)
+}
 
+const runSingleTask = async (row: any) => {
+  const { data } = await Api.runPlanTask({ id: row.id })
+  if (data.status === 'skipped') {
+    ElMessage.warning('上一次执行尚未结束，本次已跳过')
+    return
+  }
+  runningByTask.value[row.id] = data.id
+  ElMessage.success('任务已开始执行，可在日志中查看进度')
+}
+
+const cancelRunningTask = async (row: any) => {
+  const executionID = runningByTask.value[row.id]
+  if (!executionID) return
+  await ElMessageBox.confirm('确定终止这次正在运行的任务吗？系统会先发送 TERM，必要时再强制结束进程组。', '取消执行', {
+    confirmButtonText: '终止执行',
+    cancelButtonText: '返回',
+    type: 'warning'
+  })
+  await Api.cancelPlanTaskExecution(executionID)
+  ElMessage.success('已提交取消请求')
+  await getData()
 }
 // 选择过滤函数，控制选择逻辑
 const selectFilter = (row: any) => {
@@ -420,11 +450,12 @@ onMounted(() => {
         :row-key="(row: any) => row.id" empty-text="暂无数据">
         <el-table-column type="selection" width="55" :reserve-selection="true" :selectable="selectFilter" />
         <el-table-column prop="name" label="任务名称" width="180"></el-table-column>
-        <el-table-column prop="enabled" label="状态" width="180">
+        <el-table-column prop="enabled" label="状态" width="140">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
+              <el-tag v-if="runningByTask[scope.row.id]" type="warning">正在执行</el-tag>
               <a style="color: #64ffc9; text-decoration: underline ;display: flex;" class="abox"
-                v-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> 运行中 <el-icon>
+                v-else-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> 已启用 <el-icon>
                   <VideoPlay />
                 </el-icon>
               </a>
@@ -440,6 +471,14 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
+        <el-table-column label="类型" width="120">
+          <template #default="{ row }">
+            <el-tag :type="(row.task_type || 'shell') === 'template' ? 'success' : 'warning'">
+              {{ (row.task_type || 'shell') === 'template' ? '安全模板' : '高级 Shell' }}
+            </el-tag>
+            <el-tag v-if="row.notify_on_failure" type="info" style="margin-left: 6px">失败通知</el-tag>
+          </template>
+        </el-table-column>
         <el-table-column prop="address" label="执行周期">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
@@ -447,10 +486,10 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="updated_at" label="上次执行时间">
+        <el-table-column prop="last_run_at" label="上次执行时间">
           <template #default="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
-              <span>{{ formatDate(scope.row.updated_at) }}</span>
+              <span>{{ scope.row.last_run_at ? formatDate(scope.row.last_run_at) : '尚未执行' }}</span>
             </div>
           </template>
         </el-table-column>
@@ -462,6 +501,14 @@ onMounted(() => {
               禁用 </el-button>
             <el-button link type="primary" size="small" @click="deleteSingleTask(scope.row)"> 删除 </el-button>
             <el-button link type="primary" size="small" @click="updateSingleTask(scope.row)"> 更新 </el-button>
+            <el-button link type="primary" size="small" @click="runSingleTask(scope.row)"> 立即执行 </el-button>
+            <el-button
+              v-if="runningByTask[scope.row.id]"
+              link type="danger" size="small"
+              @click="cancelRunningTask(scope.row)"
+            >
+              取消执行
+            </el-button>
             <el-button link type="primary" size="small" @click="updateSingleTaskLog(scope.row)">
               查看日志
             </el-button>

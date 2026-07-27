@@ -1,6 +1,6 @@
 export default {
   pro: 'build',
-  API: '/',
+  API: '/v1',
   /**
    * 是否需要编译后进入打包文件体积可视化
    */

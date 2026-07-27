@@ -17,7 +17,13 @@ defineProps<Props>()
 
 <template>
   <div class="head-tabs">
-    <div v-for="item in list" class="item" :class="{ active: activeIndex === item.index }" @click="clickActive(item)">
+    <div
+      v-for="item in list"
+      :key="item.index"
+      class="item"
+      :class="{ active: activeIndex === item.index }"
+      @click="clickActive(item)"
+    >
       <el-badge :is-dot="item.dot" >{{ item.name }}</el-badge>
     </div>
   </div>
@@ -25,34 +31,44 @@ defineProps<Props>()
 
 <style scoped lang="less">
 .head-tabs {
-  padding: 6px;
+  padding: 5px;
   width: 100%;
-  background: rgb(var(--bg-card-color));
-  height: 46px;
-  border-radius: 5px;
+  min-height: 48px;
   display: flex;
   align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  border: 1px solid var(--border-subtle);
+  border-radius: 13px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
 
   .item {
-    width: 93px;
-	margin-right: 6px;
-    height: 100%;
-    border-radius: 5px;
+    min-width: 94px;
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 9px;
     text-align: center;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--font-color-black);
-    transition: background 0.3s;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-weight: 560;
+    white-space: nowrap;
+    transition: all 0.18s ease;
 
     &:hover {
-      background: rgba(var(--primary-color), 0.1);
+      color: var(--text-primary);
+      background: var(--surface-subtle);
     }
 
     &.active {
-      color: var(--font-color-white);
-      background: var(--el-color-primary);
+      color: rgb(var(--primary-color));
+      background: rgba(var(--primary-color), 0.1);
+      box-shadow: inset 0 0 0 1px rgba(var(--primary-color), 0.08);
+      font-weight: 650;
     }
   }
 }

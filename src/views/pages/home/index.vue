@@ -500,12 +500,19 @@ onMounted(() => {
       <div class="col column fit-width">
         <div class="col relative fit-width">
           <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px">
-           <div class="basic-card__title">概览</div>
+            <div class="dashboard-intro">
+              <div>
+                <div class="intro-eyebrow">SERVER OVERVIEW</div>
+                <h2>服务器概览</h2>
+                <p>快速掌握站点、数据库和系统资源的实时运行情况。</p>
+              </div>
+              <div class="live-badge"><i></i> 实时数据 · 5 秒刷新</div>
+            </div>
             <el-row :gutter="20">
-              <el-col v-for="item in conf.category" :lg="6" :md="12" :sm="24">
+              <el-col v-for="item in conf.category" :key="item.name" :lg="6" :md="12" :sm="24">
                 <div class="category-item" @click="item.linkFn?.()">
                   <div class="icon">
-                    <v-s-icon :name="item.icon" size="52" :color="conf.themeColor[sapp.theme]" />
+                    <v-s-icon :name="item.icon" size="30" :color="conf.themeColor[sapp.theme]" />
                   </div>
                   <div class="text column items-center">
                     <span :class="{ 'link': typeof item.value === 'string' }">
@@ -913,6 +920,276 @@ onMounted(() => {
       border: none;
       background-color: transparent;
       box-shadow: none;
+    }
+  }
+
+  .dashboard-intro {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+
+    .intro-eyebrow {
+      margin-bottom: 7px;
+      color: rgb(var(--primary-color));
+      font-size: 10px;
+      font-weight: 750;
+      letter-spacing: 0.15em;
+    }
+
+    h2 {
+      color: var(--text-primary);
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+    }
+
+    p {
+      margin-top: 7px;
+      color: var(--text-tertiary);
+      font-size: 12px;
+    }
+
+    .live-badge {
+      height: 34px;
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(var(--success-color), 0.17);
+      border-radius: 999px;
+      color: rgb(var(--success-color));
+      background: rgba(var(--success-color), 0.07);
+      font-size: 10px;
+      font-weight: 600;
+
+      i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: currentColor;
+        box-shadow: 0 0 0 4px rgba(var(--success-color), 0.11);
+      }
+    }
+  }
+
+  .basic-card {
+    padding: 20px 22px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
+
+    &__title {
+      font-size: 14px;
+      font-weight: 650;
+
+      &::before {
+        width: 3px;
+        height: 16px;
+        margin-right: 9px;
+        border-radius: 99px;
+      }
+    }
+
+    &__header {
+      padding: 0 0 17px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    &__body {
+      padding: 20px 0 0;
+    }
+  }
+
+  .category-item {
+    min-height: 124px;
+    padding: 20px;
+    justify-content: flex-start;
+    gap: 17px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 15px;
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
+    cursor: pointer;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      box-shadow 0.2s ease;
+
+    &:hover {
+      transform: translateY(-3px);
+      border-color: rgba(var(--primary-color), 0.26);
+      box-shadow: var(--shadow-sm);
+
+      .icon {
+        border-color: transparent;
+        background: rgba(var(--primary-color), 0.13);
+      }
+    }
+
+    .icon {
+      width: 56px;
+      height: 56px;
+      flex: 0 0 56px;
+      border: 0;
+      border-radius: 15px;
+      background: rgba(var(--primary-color), 0.08);
+      transition: background-color 0.2s ease;
+    }
+
+    .text {
+      width: auto;
+      align-items: flex-start;
+      gap: 8px;
+
+      span {
+        width: auto;
+        max-width: 150px;
+        color: var(--text-primary);
+        font-size: 21px;
+        font-weight: 700;
+        text-align: left;
+
+        &.link {
+          color: rgb(var(--primary-color));
+          font-size: 13px;
+          font-weight: 600;
+          text-decoration: none;
+        }
+      }
+
+      .name {
+        color: var(--text-tertiary);
+        font-size: 11px;
+      }
+    }
+  }
+
+  .miscellaneous {
+    .switch,
+    .menu {
+      height: 36px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      border-radius: 9px;
+      background: var(--surface-subtle);
+    }
+
+    .switch {
+      width: 190px;
+
+      span {
+        color: var(--text-tertiary);
+        border-color: var(--border-subtle);
+        font-size: 11px;
+      }
+    }
+
+    .menu .item {
+      min-width: 56px;
+      color: var(--text-tertiary);
+      font-size: 11px;
+    }
+
+    .menu .active {
+      border: 0;
+      border-radius: 7px;
+      color: #fff;
+      background: rgb(var(--primary-color));
+    }
+  }
+
+  .flow {
+    .lefts {
+      color: var(--text-tertiary);
+      font-size: 11px;
+    }
+
+    .rights {
+      .upper,
+      .below {
+        color: var(--text-tertiary);
+        font-size: 11px;
+      }
+    }
+  }
+
+  .status-right {
+    height: 36px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 9px;
+    background: var(--surface-subtle);
+  }
+
+  .norule {
+    .status-title {
+      margin: 14px 0 26px;
+      font-size: 17px;
+      font-weight: 650;
+    }
+
+    .status-menu {
+      width: 100%;
+      justify-content: center;
+
+      .b1,
+      .b2 {
+        min-width: 112px;
+        color: var(--text-tertiary);
+        font-size: 11px;
+
+        span {
+          color: rgb(var(--primary-color));
+          font-weight: 650;
+        }
+      }
+
+      .b1 {
+        border-color: var(--border-subtle);
+      }
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .home-container {
+    .dashboard-intro {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .miscellaneous {
+      height: auto;
+      align-items: stretch;
+      flex-direction: column;
+      gap: 8px;
+    }
+  }
+}
+
+@media (max-width: 600px) {
+  .home-container {
+    .dashboard-intro {
+      h2 {
+        font-size: 21px;
+      }
+    }
+
+    .basic-card {
+      padding: 16px;
+    }
+
+    .category-item {
+      min-height: 104px;
+      margin-bottom: 12px;
+      padding: 16px;
+    }
+
+    .flow {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
     }
   }
 }

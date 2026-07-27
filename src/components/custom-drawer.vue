@@ -21,7 +21,7 @@ const props = withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <el-drawer :model-value="visible" direction="rtl" size="40%" :show-close="false" @close="onClose">
+  <el-drawer :model-value="visible" direction="rtl" size="520px" :show-close="false" @close="onClose">
     <template #header>
       <div class="drawerHeader">
         <div class="back" @click="onClose">
@@ -32,17 +32,13 @@ const props = withDefaults(defineProps<Props>(), {
       </div>
     </template>
     <template #default>
-      <slot />
+      <div class="drawerBody">
+        <slot />
+      </div>
     </template>
     <template #footer>
-      <div style="flex: auto">
-        <el-button
-          style="border: 1px solid rgb(var(--border-color-gray)); color: var(--font-color-black)"
-          color="transparent"
-          @click="onClose"
-        >
-          {{ cancelText }}
-        </el-button>
+      <div class="drawerFooter">
+        <el-button @click="onClose">{{ cancelText }}</el-button>
         <el-button :loading="loading" type="primary" @click="onConfirm">{{ confirmText }}</el-button>
       </div>
     </template>
@@ -51,30 +47,55 @@ const props = withDefaults(defineProps<Props>(), {
 
 <style scoped lang="less">
 .drawerHeader {
-  background: rgb(var(--category-item-bg-color));
-  padding: 20px;
+  min-height: 68px;
+  padding: 0 22px;
   display: flex;
-  flex-direction: row;
   align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
 
   .back {
-    margin-right: 20px;
+    margin-right: 16px;
+    padding: 7px 13px 7px 0;
     display: flex;
     align-items: center;
-    color: var(--font-color-gray);
+    gap: 5px;
+    border-right: 1px solid var(--border-subtle);
+    color: var(--text-tertiary);
     cursor: pointer;
-    border-right: 0.4px solid var(--font-color-gray);
-    padding-right: 10px;
+    font-size: 12px;
+    transition: color 0.18s ease;
 
-    span {
-      margin-left: 5px;
+    &:hover {
+      color: rgb(var(--primary-color));
     }
   }
 
   .title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--font-color-black);
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 680;
   }
+}
+
+.drawerBody {
+  min-height: 100%;
+  padding: 22px;
+}
+
+.drawerFooter {
+  padding: 16px 22px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-raised);
+}
+
+:global(.el-drawer__header),
+:global(.el-drawer__body),
+:global(.el-drawer__footer) {
+  margin: 0;
+  padding: 0;
 }
 </style>

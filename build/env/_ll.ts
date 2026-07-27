@@ -3,5 +3,5 @@ export default {
   /**
    * 接口地址
    */
-  API: 'https://demo.bggame.live'
+  API: '/v1'
 }

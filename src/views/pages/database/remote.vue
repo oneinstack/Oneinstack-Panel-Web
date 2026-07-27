@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
-import { Hide, View, CopyDocument, Back } from '@element-plus/icons-vue'
+import { Back } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
-import { ElMessage, FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 
-const conf = reactive({
+const requestedConnectionType = String(System.getRouterParams().type || 'mysql')
+const connectionType = ['mysql', 'redis'].includes(requestedConnectionType)
+  ? requestedConnectionType
+  : 'mysql'
+
+const conf: Record<string, any> = reactive({
   themeColor: {
     light: ['#F7911C'],
     dark: ['#EAB170']
@@ -15,13 +20,13 @@ const conf = reactive({
     loading: true,
     data: [],
     params: {
-      type: 'mysql'
+      type: connectionType
     },
     columns: [
       { prop: 'addr', label: '数据库地址' },
       { prop: 'port', label: '端口' },
       { prop: 'root', label: '用户名' },
-      { prop: 'password', label: '密码' },
+      { prop: 'passwordConfigured', label: '密码状态' },
       { prop: 'remark', label: '备注' },
       { prop: 'action', label: '操作' }
     ],
@@ -34,13 +39,29 @@ const conf = reactive({
     syncData: async (id: number) => {
       await Api.syncDatabaseConn({ id })
       ElMessage.success('同步成功！')
-    }
-  },
-  password: {
-    show: {} as { [key: number]: boolean },
-    copy: async (value: string) => {
-      await navigator.clipboard.writeText(value)
-      ElMessage.success('复制成功！')
+    },
+    testData: async (row: any) => {
+      await Api.testDatabaseConn({ ...row, password: '' })
+      ElMessage.success('连接测试成功')
+    },
+    deleteData: async (row: any) => {
+      try {
+        await ElMessageBox.confirm(
+          `确定从面板移除 ${row.addr}:${row.port}？此操作只删除连接和面板中的同步记录，不会删除远端数据库。`,
+          '移除数据库连接',
+          {
+            type: 'warning',
+            confirmButtonText: '确认移除',
+            cancelButtonText: '取消'
+          }
+        )
+        await Api.deleteDatabaseConn({ id: row.id })
+        ElMessage.success('数据库连接已移除')
+        await conf.list.getData()
+      } catch (error: any) {
+        if (error === 'cancel' || error === 'close') return
+        throw error
+      }
     }
   },
   drawer: {
@@ -53,6 +74,7 @@ const conf = reactive({
       if (type === 'edit') {
         conf.drawer.title = '编辑数据库'
         const cloneRow = structuredClone(toRaw(row))
+        cloneRow.password = ''
         conf.form.data.value = cloneRow
       }
       conf.drawer.type = type
@@ -64,15 +86,19 @@ const conf = reactive({
       conf.drawer.show = false
     },
     onConfirm: () => {
-      conf.form.instance?.validate(async (valid) => {
+      conf.form.instance?.validate(async (valid: boolean) => {
         if (!valid) return
         conf.drawer.loading = true
-        const api = conf.drawer.type === 'add' ? Api.addDatabaseConn : Api.updateDatabaseConn
-        await api(conf.form.data.value)
-        conf.drawer.loading = false
-        ElMessage.success(conf.drawer.type === 'add' ? '添加成功！' : '编辑成功！')
-        conf.list.getData()
-        conf.drawer.show = false
+        try {
+          const api = conf.drawer.type === 'add' ? Api.addDatabaseConn : Api.updateDatabaseConn
+          await api(conf.form.data.value)
+          conf.form.data.value.password = ''
+          ElMessage.success(conf.drawer.type === 'add' ? '连接测试并添加成功' : '连接测试并保存成功')
+          await conf.list.getData()
+          conf.drawer.show = false
+        } finally {
+          conf.drawer.loading = false
+        }
       })
     }
   },
@@ -80,11 +106,12 @@ const conf = reactive({
     instance: null as FormInstance | null,
     data: {
       value: {
-        type: 'mysql'
+        type: connectionType
       } as any,
-      items: computed<FormItem[]>(() => {
+      items: computed<FormItem[]>((): FormItem[] => {
         switch (conf.list.params.type) {
           case 'mysql':
+          case 'redis':
             return [
               {
                 label: '数据库地址',
@@ -108,7 +135,12 @@ const conf = reactive({
                 label: '密码',
                 prop: 'password',
                 type: 'password',
-                rules: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+                placeholder: conf.drawer.type === 'edit' ? '留空表示保持现有密码' : '',
+                rules: [{
+                  required: conf.list.params.type === 'mysql' && conf.drawer.type === 'add',
+                  message: '请输入密码',
+                  trigger: 'blur'
+                }]
               },
               {
                 label: '备注',
@@ -158,27 +190,16 @@ conf.list.getData()
               </span>
             </div>
           </template>
-          <template #password="{ row, index }">
-            <div class="flex items-center" style="gap: 8px">
-              <span>
-                {{ conf.password.show[index] ? row.password : ''.padEnd(row.password.length, '*') }}
-              </span>
-              <el-icon
-                class="hover-opacity cursor-pointer"
-                :size="18"
-                @click="conf.password.show[index] = !conf.password.show[index]"
-              >
-                <View v-if="conf.password.show[index]" />
-                <Hide v-else />
-              </el-icon>
-              <el-icon class="hover-opacity cursor-pointer" @click="conf.password.copy(row.password)">
-                <CopyDocument />
-              </el-icon>
-            </div>
+          <template #passwordConfigured="{ row }">
+            <el-tag :type="row.passwordConfigured ? 'success' : 'info'">
+              {{ row.passwordConfigured ? '已安全配置' : '未配置' }}
+            </el-tag>
           </template>
           <template #action="{ row }">
             <el-button type="primary" link @click="conf.drawer.open('edit', row)">编辑</el-button>
+            <el-button type="primary" link @click="conf.list.testData(row)">测试</el-button>
             <el-button type="primary" link @click="conf.list.syncData(row.id)">同步</el-button>
+            <el-button type="danger" link @click="conf.list.deleteData(row)">移除</el-button>
           </template>
         </custom-table>
       </div>

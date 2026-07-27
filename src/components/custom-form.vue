@@ -66,12 +66,11 @@ onMounted(() => {
     if (!item.asyncOptions) return
     item.options = await item.asyncOptions?.()
   })
-  console.log(props.data.items)
 })
 </script>
 
 <template>
-  <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" style="padding: 20px">
+  <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" class="custom-form">
     <template v-for="(item, index) in data.items">
       <el-form-item v-if="item.ifShow?.(data.value) ?? true" :key="index" :label="item.label" :prop="item.prop">
         <template v-if="item.type === 'input' || item.type === 'password'">
@@ -126,4 +125,19 @@ onMounted(() => {
   </el-form>
 </template>
 
-<style scoped lang="less"></style>
+<style scoped lang="less">
+.custom-form {
+  padding: 4px 2px;
+
+  :deep(.el-form-item__label) {
+    min-width: 96px;
+    color: var(--text-secondary);
+    font-weight: 560;
+  }
+
+  :deep(.el-input),
+  :deep(.el-select) {
+    width: 100%;
+  }
+}
+</style>

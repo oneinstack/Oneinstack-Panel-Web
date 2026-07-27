@@ -61,26 +61,29 @@ const toggleTheme = (event: MouseEvent) => {
 
 <style scoped lang="less">
 .theme-switch {
-  width: 60px;
-  height: 30px;
-  background-color: rgb(var(--bg-card-color));
-  border-radius: 15px;
+  width: 66px;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 11px;
+  background: var(--surface-subtle);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
 
   &__core {
-    width: 26px;
-    height: 26px;
-    border-radius: 50%;
+    width: 29px;
+    height: 28px;
+    border-radius: 8px;
     display: flex;
     justify-content: center;
     align-items: center;
     transition: all 0.3s;
 
     &.active {
-      background-color: var(--el-color-primary);
+      background: rgb(var(--primary-color));
+      box-shadow: 0 4px 10px rgba(var(--primary-color), 0.2);
     }
 
     img {

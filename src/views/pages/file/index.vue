@@ -7,6 +7,7 @@ import sapp from '@/sstore/sapp'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import { Api } from '@/api/Api'
 import CustomForm from '@/components/custom-form.vue'
+import TrashList from './components/trash-list.vue'
 
 
 export type DrawerType = 'file' | 'dir'
@@ -39,6 +40,7 @@ const perms = {
   }
 }
 const conf = reactive({
+  trashVisible: false,
   theme: {
     light: ['#626262'],
     dark: ['#DBDBDB']
@@ -63,7 +65,8 @@ const conf = reactive({
       if (conf.tab.list.length === 1) return
       conf.tab.list[index - 1].active = true
       conf.tab.list.splice(index, 1)
-    }
+    },
+    refreshAll: () => conf.tab.list.forEach((item) => item.instance?.refresh())
   },
   handleUpdatePath: (path: string[], index: number) => {
     conf.tab.list.forEach((item, i) => (item.active = i === index))
@@ -308,6 +311,7 @@ const conf = reactive({
         :key="index"
         @update:path="conf.handleUpdatePath($event, index)"
         @open-drawer="conf.drawer.open"
+        @open-trash="conf.trashVisible = true"
       />
     </div>
     <custom-drawer
@@ -322,6 +326,7 @@ const conf = reactive({
         :on-init="(ins) => (conf.form.instance = ins)"
       />
     </custom-drawer>
+    <trash-list v-model="conf.trashVisible" @changed="conf.tab.refreshAll" />
   </div>
 </template>
 
@@ -329,7 +334,8 @@ const conf = reactive({
 
 .file-container {
   .box1 {
-    border-radius: 4px;
+    min-height: 62px;
+    border-radius: 12px;
     margin-top: 0;
     justify-content: flex-start;
 
@@ -339,14 +345,15 @@ const conf = reactive({
       justify-content: center;
       margin-right: 22px;
       padding-inline-end: 12px;
-      border-right: 1px solid rgb(var(--border-color-gray));
-      color: var(--font-color-gray);
+      border-right: 1px solid var(--border-subtle);
+      color: var(--text-tertiary);
+      font-size: 13px;
       cursor: pointer;
 
       &.active,
       &:hover {
         .path-tab-text {
-          color: var(--font-color-black);
+          color: var(--text-primary);
         }
       }
 
@@ -357,7 +364,11 @@ const conf = reactive({
 
     .add-btn {
       font-size: 24px;
-      color: var(--font-color-gray);
+      color: var(--text-tertiary);
+
+      &:hover {
+        color: rgb(var(--primary-color));
+      }
     }
   }
 }

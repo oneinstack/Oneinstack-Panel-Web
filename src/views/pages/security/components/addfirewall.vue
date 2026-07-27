@@ -1,350 +1,277 @@
-<template>
-    <el-dialog 
-      v-model="drawer2"
-      width="560px" 
-      :direction="direction" 
-      :show-close="true" 
-      @close="cancelClick" 
-     style="padding-top: 0;"
-    >
-    <template #header>
-      <div class="firewall-dialog-header" > 
-        <div class="firewall-dialog-header-title">
-          <span class="firewall-dialog-header-title-text" >{{ props.type ? '添加防火墙' : '更新防火墙' }}</span>
-        </div>
-      </div>
-    </template>
-      
-      <template #default>
-        <el-form style="padding: 0 20px;"
-    ref="ruleFormRef"
-    :model="ruleForm"
-    :rules="rules"
-    class="demo-ruleForm"
-    status-icon
-  >
-    <el-form-item label="协议" prop="protocol" :required="true" >
-      <el-select v-model="ruleForm.protocol"  placeholder="请选择协议类型">
-        <el-option label="tcp" value="tcp" />
-        <el-option label="udp" value="udp" />
-        <el-option label="icmp" value="icmp" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="端口" prop="ports" :required="true">
-      <el-input 
-        v-model="ruleForm.ports" 
-        placeholder="支持多个端口，如:80,88"
-      />
-    </el-form-item>
-    <el-form-item label="来源" prop="ips" :required="ruleForm.ips === 'true'">
-      <el-radio-group v-model="ruleForm.ips" @change="$refs.ruleFormRef?.validateField('ips')">
-        <el-radio value="">全部IP</el-radio>
-        <el-radio value="true">部分IP</el-radio>
-      </el-radio-group>
-      <el-input 
-        v-if="ruleForm.ips === 'true'"
-        v-model="ipsdata" 
-        placeholder="支持多个IP地址，如：192.168.1.1,192.168.1.0/24" 
-        @blur="$refs.ruleFormRef?.validateField('ips')"
-      />
-    </el-form-item>
-    <el-form-item label="策略" prop="strategy" :required="true">
-      <el-select v-model="ruleForm.strategy" placeholder="请选择策略类型">
-        <el-option label="放行" value="allow" />
-        <el-option label="禁止" value="deny" />
-      </el-select>
-    </el-form-item>
-    <el-form-item label="方向" prop="direction" :required="true">
-      <el-select v-model="ruleForm.direction" placeholder="请选择规则方向">
-        <el-option label="入站" value="in" />
-        <el-option label="出站" value="out" />
-      </el-select>
-    </el-form-item>
-    <!-- <el-form-item label="状态" prop="state" :required="true">
-      <el-select 
-        v-model="ruleForm.state" 
-        placeholder="请选择状态"
-        :disabled="props.type"
-      >
-        <el-option label="启用" :value="1" />
-        <el-option label="禁用" :value="0" v-if="!props.type" />
-      </el-select>
-    </el-form-item> -->
-    
-    <el-form-item label="备注" prop="remark">
-      <el-input v-model="ruleForm.remark" placeholder="可为空" />
-    </el-form-item> 
-    <div class="textbox">
-      <div class="tagbox">* </div>
-        支持添加多个端口,如:80,88
-    </div>
-    <!-- <div class="textbox">
-      <div class="tagbox">* </div>
-      支持添加多个端口范围,如:80，88，90-99，110-120  
-    </div> -->
-    
-  </el-form>
-      </template>
-      <template #footer>
-        <div style="flex: auto">
-          <el-button @click="cancelClick">取消</el-button>
-          <el-button type="primary" @click="confirmClick">确定</el-button>
-        </div>
-      </template>
-    </el-dialog>
-  </template>
-  
-  <script lang="ts" setup>
-    import { reactive, ref, watch } from 'vue'
-import type { ComponentSize, FormInstance, FormRules } from 'element-plus'
-  import { ElMessageBox, ElMessage } from 'element-plus'
-  import type { DrawerProps } from 'element-plus'
-  import { Api } from '@/api/Api'
-import { log } from 'console'
+<script setup lang="ts">
+import { computed, reactive, ref, watch } from 'vue'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
-  const drawer2 = ref(false)
-  const direction = ref<DrawerProps['direction']>('rtl')
-  const radio1 = ref('Option 1')
-  const ruleForm = ref({
-    id:'',
-    direction:'in',// 规则方向 "in" 或 "out"
-    protocol:'tcp', //协议类型 "tcp", "udp", "icmp"
-    ips:'',  // 支持多个 IP 地址或子网
-    ports:'',//支持多个端口
-    state: 1,  // 默认为启用状态
-    remark:'',//备注
-    strategy:'allow'//策略类型 "allow", "deny"
+import { Api } from '@/api/Api'
+
+interface FirewallRuleForm {
+  id?: number
+  direction: 'in' | 'out'
+  protocol: 'tcp' | 'udp' | 'icmp'
+  strategy: 'allow' | 'deny'
+  ips: string
+  ports: string
+  state: number
+  remark: string
+}
+
+const props = withDefaults(defineProps<{
+  modelValue: boolean
+  type?: boolean
+  formData?: Partial<FirewallRuleForm>
+  panelPort?: number
+}>(), {
+  type: true,
+  formData: () => ({}),
+  panelPort: 8089
+})
+
+const emit = defineEmits<{
+  'update:modelValue': [value: boolean]
+  close: [value: boolean]
+  saved: []
+}>()
+
+const formRef = ref<FormInstance>()
+const submitting = ref(false)
+const sourceMode = ref<'all' | 'custom'>('all')
+const customIPs = ref('')
+const form = reactive<FirewallRuleForm>({
+  direction: 'in',
+  protocol: 'tcp',
+  strategy: 'allow',
+  ips: '',
+  ports: '',
+  state: 1,
+  remark: ''
+})
+
+const visible = computed({
+  get: () => props.modelValue,
+  set: (value) => {
+    emit('update:modelValue', value)
+    if (!value) emit('close', false)
+  }
+})
+
+const isIPv4 = (value: string) => {
+  const octets = value.split('.')
+  return octets.length === 4 && octets.every((part) => {
+    if (!/^\d{1,3}$/.test(part)) return false
+    const number = Number(part)
+    return number >= 0 && number <= 255 && String(number) === String(Number(part))
   })
-  const ruleFormRef = ref<FormInstance>()
-  const rules = ref<FormRules>({
-    protocol: [
-      { required: true, message: '请选择协议类型', trigger: 'change' }
-    ],
-    ports: [
-      { required: true, message: '请输入端口', trigger: 'blur' },
-      { 
-        validator: (rule, value, callback) => {
-          const portPattern = /^(\d+(-\d+)?)(,\d+(-\d+)?)*$/
-          if (!value || portPattern.test(value)) {
-            callback()
-          } else {
-            callback(new Error('端口格式不正确'))
-          }
-        },
-        trigger: 'blur'
-      }
-    ],
-    ips: [
-      { 
-        validator: (rule, value, callback) => {
-          if (ruleForm.value.ips === 'true') {
-            if (!ipsdata.value) {
-              callback(new Error('请输入IP地址'))
-              return
-            }
-            // 修改后的正则表达式，支持 IP 范围
-          const ipPattern = /^((\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?|(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3})(,((\d{1,3}\.){3}\d{1,3}(\/\d{1,2})?|(\d{1,3}\.){3}\d{1,3}-(\d{1,3}\.){3}\d{1,3}))*$/;
-          if (!ipPattern.test(ipsdata.value)) {
-            callback(new Error('IP地址格式不正确'));
-            return;
-          }
-          // 进一步验证 IP 范围的合理性
-          const ipSegments = ipsdata.value.split(',');
-          for (const segment of ipSegments) {
-            if (segment.includes('-')) {
-              const [startIp, endIp] = segment.split('-');
-              const startIpParts = startIp.split('.').map(Number);
-              const endIpParts = endIp.split('.').map(Number);
-              for (let i = 0; i < 4; i++) {
-                if (startIpParts[i] > endIpParts[i]) {
-                  callback(new Error('IP范围格式不正确,起始IP不能大于结束IP'));
-                  return;
-                }
-              }
-            }
-          }
-        }
-          callback()
-        },
-        trigger: 'blur'
-      }
-    ],
-    strategy: [
-      { required: true, message: '请选择策略类型', trigger: 'change' }
-    ],
-    direction: [
-      { required: true, message: '请选择规则方向', trigger: 'change' }
-    ],
-    state: [
-      { required: true, message: '请选择状态', trigger: 'change' }
-    ]
+}
+
+const validateIPs = (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
+  if (sourceMode.value === 'all') {
+    callback()
+    return
+  }
+  const values = customIPs.value.split(',').map((item) => item.trim()).filter(Boolean)
+  if (!values.length) {
+    callback(new Error('请输入 IPv4 地址或 CIDR 网段'))
+    return
+  }
+  for (const value of values) {
+    const [ip, prefix, extra] = value.split('/')
+    if (extra !== undefined || !isIPv4(ip) || (prefix !== undefined && (!/^\d{1,2}$/.test(prefix) || Number(prefix) > 32))) {
+      callback(new Error(`IP 格式不正确：${value}`))
+      return
+    }
+  }
+  callback()
+}
+
+const parsePortRange = (value: string) => {
+  const parts = value.split('-')
+  if (parts.length > 2 || parts.some((part) => !/^\d+$/.test(part))) return false
+  const start = Number(parts[0])
+  const end = parts.length === 2 ? Number(parts[1]) : start
+  return start >= 1 && end <= 65535 && start <= end
+}
+
+const portsContain = (raw: string, port: number) => {
+  if (!raw.trim()) return true
+  return raw.split(',').some((item) => {
+    const [startText, endText] = item.trim().split('-')
+    const start = Number(startText)
+    const end = endText ? Number(endText) : start
+    return port >= start && port <= end
   })
-  const ipsdata = ref('')
-  const isValidPorts = ref(true)
+}
 
-  const validatePorts = (value: string) => {
-    const portPattern = /^(\d+(-\d+)?)(,\d+(-\d+)?)*$/
-    isValidPorts.value = portPattern.test(value)
+const validatePorts = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  if (form.protocol === 'icmp') {
+    callback()
+    return
   }
+  const values = String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
+  if (values.some((item) => !parsePortRange(item))) {
+    callback(new Error('端口格式应为 80,443,8000-8100，范围为 1-65535'))
+    return
+  }
+  if (
+    form.direction === 'in' &&
+    form.strategy === 'deny' &&
+    portsContain(String(value || ''), props.panelPort)
+  ) {
+    callback(new Error(`不能拒绝面板端口 ${props.panelPort}`))
+    return
+  }
+  callback()
+}
 
-  const handleClose = (done: () => void) => {
-    ElMessageBox.confirm('Are you sure you want to close this?')
-      .then(() => {
-        done()
-      })
-      .catch(() => {
-        // catch error
-      })
-  }
-  const options = ref([])
-  const locationOptions = ref([])
-  const submitForm = (formEl: FormInstance | undefined) => {
-    if (!formEl) return
-    formEl.validate((valid) => {
-      if (valid) {
-        console.log('submit!')
-      } else {
-        console.log('error submit!')
-      }
-    })
-  }
-  const resetForm = (formEl: FormInstance | undefined) => {
-    if (!formEl) return
-    formEl.resetFields()
-  }
-  const cancelClick = () => {
-    drawer2.value = false
-    emit('close', false)
-  }
+const rules: FormRules = {
+  protocol: [{ required: true, message: '请选择协议', trigger: 'change' }],
+  direction: [{ required: true, message: '请选择方向', trigger: 'change' }],
+  strategy: [{ required: true, message: '请选择策略', trigger: 'change' }],
+  ports: [{ validator: validatePorts, trigger: ['blur', 'change'] }],
+  ips: [{ validator: validateIPs, trigger: ['blur', 'change'] }],
+  remark: [{ max: 200, message: '备注不能超过 200 个字符', trigger: 'blur' }]
+}
 
-  const props = defineProps({
-    type: {
-      type: Boolean,
-      default: true  // true 为新增，false 为修改
-    },
-    formData: {
-      type: Object,
-      default: () => ({})
+const resetFromProps = () => {
+  const source = props.formData || {}
+  form.id = source.id
+  form.direction = source.direction || 'in'
+  form.protocol = source.protocol || 'tcp'
+  form.strategy = source.strategy || 'allow'
+  form.ports = source.protocol === 'icmp' ? '' : (source.ports || '')
+  form.state = 1
+  form.remark = source.remark || ''
+  const sourceIPs = source.ips || ''
+  if (sourceIPs && sourceIPs !== '0.0.0.0/0') {
+    sourceMode.value = 'custom'
+    customIPs.value = sourceIPs
+  } else {
+    sourceMode.value = 'all'
+    customIPs.value = ''
+  }
+}
+
+watch(() => props.formData, resetFromProps, { immediate: true, deep: true })
+watch(() => form.protocol, (protocol) => {
+  if (protocol === 'icmp') form.ports = ''
+  formRef.value?.validateField('ports')
+})
+watch([() => form.direction, () => form.strategy], () => formRef.value?.validateField('ports'))
+
+const close = () => {
+  visible.value = false
+}
+
+const submit = async () => {
+  if (!formRef.value || submitting.value) return
+  const valid = await formRef.value.validate().catch(() => false)
+  if (!valid) return
+
+  submitting.value = true
+  try {
+    const payload = {
+      id: props.type ? undefined : form.id,
+      direction: form.direction,
+      protocol: form.protocol,
+      strategy: form.strategy,
+      ips: sourceMode.value === 'custom' ? customIPs.value.trim() : '',
+      ports: form.protocol === 'icmp' ? '' : form.ports.trim(),
+      state: 1,
+      remark: form.remark.trim()
     }
-  })
-
-  // 监听 formData 变化，更新表单数据
-  watch(() => props.formData, (newVal) => {
-    if (!props.type && newVal) {  // 修改模式且有数据时
-      ruleForm.value = {
-        ...ruleForm.value,
-        ...newVal
-      }
-      // 如果有 ips 数据，设置为部分 IP 模式
-      if (newVal.ips) {
-        ruleForm.value.ips = 'true'  // 设置为部分 IP 模式
-        ipsdata.value = newVal.ips   // 将 ips 值赋给 ipsdata
-      } else {
-        ruleForm.value.ips = ''      // 设置为全部 IP 模式
-        ipsdata.value = ''           // 清空 ipsdata
-      }
+    if (props.type) {
+      await Api.addFirewallRule(payload)
+    } else {
+      await Api.updateFirewallRule(payload)
     }
-  }, { immediate: true })
-
-  // 监听 type 变化，确保新增时 state 为 1
-  watch(() => props.type, (newVal) => {
-    if (newVal) {  // 新增模式
-      ruleForm.value.state = 1
-    }
-  }, { immediate: true })
-
-  // 定义 emit
-  const emit = defineEmits(['close'])
-
-  function confirmClick() {
-    if (!ruleFormRef.value) return
-    
-    ruleFormRef.value.validate(async (valid) => {
-      if (valid) {
-        try {
-          // 构建请求数据，新增时不传id
-          const { id, direction, protocol, ports, state, remark, strategy } = ruleForm.value
-          const requestData = {
-            direction,
-            protocol,
-            ports,
-            state,
-            remark,
-            strategy,
-            id: props.type ? undefined : id,
-            ips: ruleForm.value.ips === 'true' ? ipsdata.value : ''
-          }
-          
-          let res
-          if (props.type) {
-            const { data } = await Api.addFirewallRule(requestData)
-            res = data
-          } else {
-            // 修改接口
-            const { data } = await Api.updateFirewallRule(requestData)
-            res = data
-          }
-
-          if (res) {
-            ElMessage.success(props.type ? '添加成功' : '修改成功')
-            drawer2.value = false
-            emit('close', false)  // 通知父组件关闭并刷新
-          } else {
-            ElMessage.error(res.message || (props.type ? '添加失败' : '修改失败'))
-          }
-        } catch (error) {
-          ElMessage.error('操作失败')
-        }
-      }
-    })
+    ElMessage.success(props.type ? '规则已添加' : '规则已更新')
+    emit('saved')
+  } finally {
+    submitting.value = false
   }
-  
-
+}
 </script>
 
+<template>
+  <el-dialog
+    v-model="visible"
+    width="560px"
+    :close-on-click-modal="false"
+    :title="props.type ? '添加防火墙规则' : '编辑防火墙规则'"
+  >
+    <el-form ref="formRef" :model="form" :rules="rules" label-width="88px" status-icon>
+      <el-form-item label="协议" prop="protocol">
+        <el-select v-model="form.protocol" class="full-width">
+          <el-option label="TCP" value="tcp" />
+          <el-option label="UDP" value="udp" />
+          <el-option label="ICMP" value="icmp" />
+        </el-select>
+      </el-form-item>
+
+      <el-form-item v-if="form.protocol !== 'icmp'" label="端口" prop="ports">
+        <el-input v-model="form.ports" placeholder="留空表示全部端口，例如 80,443,8000-8100" />
+      </el-form-item>
+
+      <el-form-item label="IP 范围" prop="ips">
+        <div class="source-field">
+          <el-radio-group v-model="sourceMode" @change="formRef?.validateField('ips')">
+            <el-radio value="all">全部 IPv4</el-radio>
+            <el-radio value="custom">指定 IPv4/CIDR</el-radio>
+          </el-radio-group>
+          <el-input
+            v-if="sourceMode === 'custom'"
+            v-model="customIPs"
+            placeholder="例如 192.168.1.10,10.0.0.0/24"
+            @blur="formRef?.validateField('ips')"
+          />
+        </div>
+      </el-form-item>
+
+      <el-form-item label="策略" prop="strategy">
+        <el-radio-group v-model="form.strategy">
+          <el-radio-button value="allow">放行</el-radio-button>
+          <el-radio-button value="deny">拒绝</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <el-form-item label="方向" prop="direction">
+        <el-radio-group v-model="form.direction">
+          <el-radio-button value="in">入站</el-radio-button>
+          <el-radio-button value="out">出站</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <el-form-item label="备注" prop="remark">
+        <el-input v-model="form.remark" maxlength="200" show-word-limit placeholder="可选" />
+      </el-form-item>
+
+      <el-alert
+        v-if="form.direction === 'in' && form.strategy === 'deny'"
+        :title="`为防止失联，入站拒绝规则不能包含面板端口 ${props.panelPort}`"
+        type="warning"
+        :closable="false"
+        show-icon
+      />
+    </el-form>
+
+    <template #footer>
+      <el-button :disabled="submitting" @click="close">取消</el-button>
+      <el-button type="primary" :loading="submitting" @click="submit">
+        {{ props.type ? '添加规则' : '保存修改' }}
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
 <style scoped>
-.tagbox {
-  color: #FF4848;
-  font-size: 12px;
-  margin-right: 4px;
+.full-width,
+.source-field {
+  width: 100%;
 }
-.textbox {
-  height: 32px;
+
+.source-field {
   display: flex;
-  font-weight: 400;
-  font-size: 12px;
+  flex-direction: column;
+  gap: 10px;
 }
-.firewall-dialog-header-title-text{
-  font-size: 18px;
-}
-/* .firewall-dialog-header{
-  padding: 20px !important;
-  background: #F1F2F6  !important;
-  border-radius: 6px 6px 0 0 !important;
-} */
-/* Dialog 样式 */
-/* :deep(.el-dialog) {
-  margin: 0 !important;
-  padding:0;
-  background: #F1F2F6  !important;
-  border-radius: 6px 6px 0 0 !important;
-}
-:deep(.el-dialog__header) {
-  margin: 0 !important;
-  padding: 20px !important;
-  background: #F1F2F6  !important;
-  border-radius: 6px 6px 0 0 !important;
-}
-:deep(.show-close) {
-  margin: 0 !important;
-  padding: 20px !important;
-  background: #F1F2F6 !important;
-  border-radius: 6px 6px 0 0 !important;
-}
-:deep(.el-dialog__title) {
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  color: #333 !important;
-} */
 </style>
-  

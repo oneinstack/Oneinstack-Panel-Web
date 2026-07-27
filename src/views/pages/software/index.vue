@@ -132,14 +132,14 @@ conf.list.getData()
 
 <template>
   <div class="software-container relative" >
-    <div class="absolute fit-width" style="padding-bottom: 35px">
+    <div class="absolute fit-width software-content">
       <card-tabs :list="conf.dataTypelist" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
-      <div v-loading="conf.list.loading" class="box2" style="padding-left:  26px; padding-right: 26px">
+      <div v-loading="conf.list.loading" class="box2 software-box">
         <div class="category flex justify-between items-center" >
           <el-tabs v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
             <el-tab-pane v-for="item in conf.tabs.list" :label="item.name" :name="item.index" />
           </el-tabs>
-          <div class="fit-height mr-2" style="padding: 6px ;margin-right: 0;" >
+          <div class="search-wrap">
             <search-input v-model="conf.list.params.name" placeholder="请输入搜索关键字" @search="conf.list.onSearch" />
           </div>
         </div>
@@ -165,18 +165,52 @@ conf.list.getData()
 </template>
 
 <style scoped lang="less">
+.software-content {
+  padding-bottom: 35px;
+}
 
+.software-box {
+  padding: 20px 22px 24px;
+}
 
 .category {
-  height: 60px;
-  background: rgba(var(--category-item-bg-color), 0.6);
-  border-radius: 4px;
+  min-height: 58px;
+  padding: 0 10px 0 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   margin-bottom: 24px;
+  background: var(--surface-subtle);
+}
+
+.search-wrap {
+  padding: 6px 0 6px 16px;
 }
 
 :deep(.el-tabs__nav-wrap) {
   &::after {
     background: transparent;
+  }
+}
+
+:deep(.el-tabs__header) {
+  margin: 0;
+}
+
+@media (max-width: 780px) {
+  .software-box {
+    padding: 14px;
+  }
+
+  .category {
+    padding: 10px;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .search-wrap {
+    width: 100%;
+    padding: 0;
   }
 }
 </style>

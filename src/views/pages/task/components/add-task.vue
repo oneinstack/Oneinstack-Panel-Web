@@ -27,6 +27,68 @@
         <el-input v-model="ruleForm.name" placeholder="请输入任务名称" />
       </el-form-item>
 
+      <el-form-item label="任务类型" required>
+        <el-radio-group v-model="ruleForm.task_type">
+          <el-radio-button value="template">安全模板</el-radio-button>
+          <el-radio-button value="shell">高级 Shell</el-radio-button>
+        </el-radio-group>
+      </el-form-item>
+
+      <template v-if="ruleForm.task_type === 'template'">
+        <el-alert
+          type="success"
+          :closable="false"
+          show-icon
+          title="安全模板使用固定可执行文件和结构化参数，不经过 Shell 解析。"
+          style="margin-bottom: 18px"
+        />
+        <el-form-item label="任务模板" required>
+          <el-select v-model="ruleForm.template_id" style="width: 100%" placeholder="请选择模板">
+            <el-option
+              v-for="template in templates"
+              :key="template.id"
+              :label="template.name"
+              :value="template.id"
+            >
+              <span>{{ template.name }}</span>
+              <span class="option-description">{{ template.description }}</span>
+            </el-option>
+          </el-select>
+          <div v-if="selectedTemplate" class="template-description">
+            {{ selectedTemplate.description }}
+          </div>
+        </el-form-item>
+        <el-form-item
+          v-for="parameter in selectedTemplate?.parameters || []"
+          :key="parameter.name"
+          :label="parameter.label"
+          :required="parameter.required"
+        >
+          <el-select
+            v-if="parameter.type === 'select'"
+            v-model="ruleForm.template_params[parameter.name]"
+            style="width: 100%"
+            :placeholder="parameter.placeholder || `请选择${parameter.label}`"
+          >
+            <el-option v-for="option in parameter.options" :key="option" :label="option" :value="option" />
+          </el-select>
+          <el-input
+            v-else
+            v-model="ruleForm.template_params[parameter.name]"
+            :placeholder="parameter.placeholder || `请输入${parameter.label}`"
+          />
+          <span v-if="parameter.description" class="tip-text">{{ parameter.description }}</span>
+        </el-form-item>
+      </template>
+
+      <template v-else>
+        <el-alert
+          type="warning"
+          :closable="false"
+          show-icon
+          title="高级 Shell 将以面板进程权限执行。请优先使用安全模板，仅在确认脚本来源和影响范围后启用。"
+          style="margin-bottom: 18px"
+        />
       <el-form-item label="脚本内容" prop="command" >
         <div class="code-editor-wrapper">
           <pre
@@ -37,6 +99,34 @@
             ref="codeEditorRef"
           >{{ copy_content }}</pre>
         </div>
+      </el-form-item>
+        <el-form-item>
+          <el-checkbox v-model="confirmUnsafeShell">
+            我确认该脚本可信，并理解其将以面板权限执行
+          </el-checkbox>
+        </el-form-item>
+      </template>
+
+      <el-form-item label="超时时间">
+        <el-input-number
+          v-model="ruleForm.timeout_seconds"
+          :min="1"
+          :max="86400"
+          controls-position="right"
+        />
+        <span class="tip-text">秒；超时后终止整个命令进程组</span>
+      </el-form-item>
+
+      <el-form-item label="并发策略">
+        <el-select v-model="ruleForm.concurrency_policy" style="width: 240px">
+          <el-option label="禁止重叠（推荐）" value="forbid" />
+        </el-select>
+        <span class="tip-text">前一次未结束时，新调度会记录为“已跳过”</span>
+      </el-form-item>
+
+      <el-form-item label="失败通知">
+        <el-switch v-model="ruleForm.notify_on_failure" />
+        <span class="tip-text">失败或超时后使用“监控告警”中已启用的通知通道发送告警</span>
       </el-form-item>
 
       <el-form-item label="执行周期" required>
@@ -195,7 +285,7 @@
 <script setup lang="ts">
 
 import { Api } from '@/api/Api'
-import { ref, reactive, watch } from 'vue'
+import { computed, onMounted, ref, reactive, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
@@ -212,6 +302,26 @@ const drawer = ref(false)
 const direction = ref<'rtl' | 'ltr' | 'ttb' | 'btt'>('rtl')
 const ruleFormRef = ref<FormInstance>()
 const copy_content = ref('')
+const confirmUnsafeShell = ref(false)
+
+interface TemplateParameter {
+  name: string
+  label: string
+  type: 'text' | 'select'
+  required: boolean
+  description?: string
+  options?: string[]
+  placeholder?: string
+}
+
+interface TaskTemplate {
+  id: string
+  name: string
+  description: string
+  parameters: TemplateParameter[]
+}
+
+const templates = ref<TaskTemplate[]>([])
 const weekDays = [
   { day: '一', value: 1 },
   { day: '二', value: 2 },
@@ -219,13 +329,18 @@ const weekDays = [
   { day: '四', value: 4 },
   { day: '五', value: 5 },
   { day: '六', value: 6 },
-  { day: '日', value: 7 }
+  { day: '日', value: 0 }
 ]
 
 const ruleForm = reactive({
-  // cron_type: 'shell',
   name: '',
+  task_type: 'template',
+  template_id: 'disk-usage-report',
+  template_params: {} as Record<string, string>,
   command: '',
+  notify_on_failure: false,
+  timeout_seconds: 1800,
+  concurrency_policy: 'forbid',
   cycles: [
     {
       type: 'day',
@@ -265,8 +380,7 @@ const rules = reactive<FormRules>({
       message: '请输入脚本内容',
       trigger: 'blur',
       validator: (rule, value, callback) => {
-        // if (ruleForm.cron_type === 'shell' && !value) {
-          if (!value) {
+        if (ruleForm.task_type === 'shell' && !value) {
           callback(new Error('请输入脚本内容'))
         } else {
           callback()
@@ -275,6 +389,26 @@ const rules = reactive<FormRules>({
     }
   ]
 })
+
+const selectedTemplate = computed(() =>
+  templates.value.find((template) => template.id === ruleForm.template_id)
+)
+
+watch(() => ruleForm.template_id, () => {
+  if (!selectedTemplate.value) return
+  const allowed = new Set(selectedTemplate.value.parameters.map((parameter) => parameter.name))
+  Object.keys(ruleForm.template_params).forEach((name) => {
+    if (!allowed.has(name)) delete ruleForm.template_params[name]
+  })
+})
+
+const loadTemplates = async () => {
+  const { data } = await Api.getPlanTaskTemplates()
+  templates.value = data || []
+  if (!templates.value.some((template) => template.id === ruleForm.template_id)) {
+    ruleForm.template_id = templates.value[0]?.id || ''
+  }
+}
 
 const handleCycleChange = (type: string, index: number) => {
   const cycle = ruleForm.cycles[index]
@@ -316,6 +450,22 @@ const handleSubmit = async () => {
     ElMessage.error('请设置执行周期')
     return
   }
+  if (ruleForm.task_type === 'template') {
+    if (!selectedTemplate.value) {
+      ElMessage.error('请选择安全任务模板')
+      return
+    }
+    const missing = selectedTemplate.value.parameters.find((parameter) =>
+      parameter.required && !String(ruleForm.template_params[parameter.name] || '').trim()
+    )
+    if (missing) {
+      ElMessage.error(`请填写${missing.label}`)
+      return
+    }
+  } else if (!confirmUnsafeShell.value) {
+    ElMessage.error('请确认高级 Shell 的执行风险')
+    return
+  }
 
   await ruleFormRef.value.validate(async (valid) => {
     if (valid) {
@@ -338,25 +488,37 @@ const handleSubmit = async () => {
                 `${time.minute} ${time.hour} ${time.day} * *`
               )
             case 'n_minute':
-              return [generateCronExpression(cycle.n_minute, 0)]
+              return [`*/${cycle.n_minute} * * * *`]
             default:
               return []
           }
         })
 
-        // 打印生成的 cron 表达式数组
-        console.log('Cron expressions:', cronExpressions)
         let apidata: {
             name: string;
             schedule: string[];
             command: string;
+            task_type: string;
+            template_id: string;
+            template_params: Record<string, string>;
+            confirm_unsafe_shell: boolean;
             enabled: boolean;
+            notify_on_failure: boolean;
+            timeout_seconds: number;
+            concurrency_policy: string;
             [key: string]: any; // 索引签名，允许添加任意属性
         } = {
             name: ruleForm.name,
             schedule: cronExpressions,
-            command: ruleForm.command,
-            enabled: true
+            command: ruleForm.task_type === 'shell' ? ruleForm.command : '',
+            task_type: ruleForm.task_type,
+            template_id: ruleForm.task_type === 'template' ? ruleForm.template_id : '',
+            template_params: ruleForm.task_type === 'template' ? ruleForm.template_params : {},
+            confirm_unsafe_shell: ruleForm.task_type === 'shell' && confirmUnsafeShell.value,
+            enabled: props.type ? true : props.formData?.enabled !== false,
+            notify_on_failure: ruleForm.notify_on_failure,
+            timeout_seconds: ruleForm.timeout_seconds,
+            concurrency_policy: ruleForm.concurrency_policy
         };
         if (!props.type && props.formData && props.formData.id) {
           apidata.id = props.formData.id 
@@ -386,10 +548,16 @@ watch(() => props.modelValue, (val) => {
 watch(() => props.formData, (val) => {
     if (val && !props.type) {
         const cronTimes = val.schedule.split(',');
-        // ruleForm.cron_type = val.cron_type;
         ruleForm.name = val.name;
         ruleForm.cycles = [];
+        ruleForm.task_type = val.task_type || 'shell';
+        ruleForm.template_id = val.template_id || 'disk-usage-report';
+        ruleForm.template_params = { ...(val.template_params || {}) };
         ruleForm.command = val.command;
+        ruleForm.notify_on_failure = Boolean(val.notify_on_failure);
+        confirmUnsafeShell.value = false;
+        ruleForm.timeout_seconds = val.timeout_seconds || 1800;
+        ruleForm.concurrency_policy = val.concurrency_policy || 'forbid';
         ruleForm.name = val.name;
       copy_content.value = val.command;
 
@@ -436,7 +604,14 @@ watch(() => props.formData, (val) => {
         });
     }else{
       ruleForm.name= ''
+      ruleForm.task_type = 'template'
+      ruleForm.template_id = 'disk-usage-report'
+      ruleForm.template_params = {}
       ruleForm.command = ''
+      ruleForm.notify_on_failure = false
+      confirmUnsafeShell.value = false
+      ruleForm.timeout_seconds = 1800
+      ruleForm.concurrency_policy = 'forbid'
       copy_content.value =  ''
   ruleForm.cycles = [
     {
@@ -465,6 +640,10 @@ watch(() => props.formData, (val) => {
   
     }
 }, { immediate: true });
+
+onMounted(() => {
+  void loadTemplates()
+})
 
 // 添加新的周期行
 const addCycle = () => {
@@ -590,6 +769,21 @@ const handleScriptInput = (event: Event) => {
   color: #909399;
   font-size: 12px;
   margin-left: 10px;
+}
+
+.template-description {
+  margin-top: 8px;
+  color: #909399;
+  line-height: 1.5;
+}
+
+.option-description {
+  float: right;
+  max-width: 60%;
+  overflow: hidden;
+  color: #909399;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .time-row {

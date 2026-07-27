@@ -1,53 +1,4 @@
 <script setup lang="ts">
-import System from '@/utils/System'
-import { onMounted, ref } from 'vue'
-
-const isMobile = ref(window.innerWidth <= 1000)
-
-// 修正 resize 事件逻辑
-window.addEventListener('resize', () => {
-  isMobile.value = window.innerWidth <= 1000
-})
-
-onMounted(() => {
-  const handleSplineScript = () => {
-    const splineScript = document.querySelector('script[src*="spline-viewer.js"]')
-    const splineViewer = document.querySelector('spline-viewer')
-
-    if (isMobile.value) {
-      if (splineScript) {
-        splineScript.remove()
-      }
-      if (splineViewer) {
-        (splineViewer as HTMLElement).style.display = 'none'
-      }
-    } else {
-      if (!splineScript) {
-        const script = document.createElement('script')
-        script.style.width='80px'
-        script.type = 'module'
-        script.src = 'https://unpkg.com/@splinetool/viewer@1.9.68/build/spline-viewer.js'
-        script.onload = () => {
-          if (splineViewer) {
-            (splineViewer as HTMLElement).style.display = 'block'
-          }
-        }
-        document.head.appendChild(script)
-      } else {
-        if (splineViewer) {
-          (splineViewer as HTMLElement).style.display = 'block'
-        }
-      }
-    }
-  }
-
-  // 初始化时检查
-  handleSplineScript()
-
-  // 监听窗口大小变化
-  window.addEventListener('resize', handleSplineScript)
-})
-
 interface Props {
   currentActive?: 'login' | 'register'
   loading?: boolean
@@ -61,12 +12,57 @@ withDefaults(defineProps<Props>(), {
 
 <template>
   <div v-loading="loading" class="login-container">
-    <div class="login-content-left" v-if="!isMobile">
-      <spline-viewer url="/static/scene.splinecode"></spline-viewer>
-    </div>
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+    <section class="login-hero">
+      <div class="hero-brand">
+        <div class="hero-logo">1S</div>
+        <div>
+          <strong>OneinStack Panel</strong>
+          <span>现代化服务器运维控制台</span>
+        </div>
+      </div>
 
-    <div class="login-content-right">
-      <div class="login-content-right__main">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> SERVER OPERATIONS, SIMPLIFIED</div>
+        <h1>让服务器管理<br />清晰、可靠、更高效</h1>
+        <p>从网站、数据库到运行环境与安全策略，在一个面板中完成日常运维。</p>
+      </div>
+
+      <div class="console-preview">
+        <div class="console-head">
+          <div class="window-dots"><i></i><i></i><i></i></div>
+          <span>server-overview</span>
+          <div class="online"><i></i> Online</div>
+        </div>
+        <div class="console-body">
+          <div class="metric">
+            <span>CPU 负载</span>
+            <strong>24%</strong>
+            <div class="progress"><i style="width: 24%"></i></div>
+          </div>
+          <div class="metric">
+            <span>内存使用</span>
+            <strong>6.8 GB</strong>
+            <div class="progress memory"><i style="width: 52%"></i></div>
+          </div>
+          <div class="service-list">
+            <div><span class="service-icon orange">N</span><b>Nginx</b><em>运行中</em></div>
+            <div><span class="service-icon blue">DB</span><b>MySQL 8.0</b><em>运行中</em></div>
+            <div><span class="service-icon red">R</span><b>Redis</b><em>运行中</em></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-features">
+        <span><i>✓</i> 本地化部署</span>
+        <span><i>✓</i> 安全可控</span>
+        <span><i>✓</i> 实时监控</span>
+      </div>
+    </section>
+
+    <main class="login-panel">
+      <div class="login-panel__inner">
         <slot
           :className="{
             loginBtn: 'login-content-right__main-login-btn',
@@ -75,181 +71,410 @@ withDefaults(defineProps<Props>(), {
           }"
         />
       </div>
-    </div>
+      <div class="panel-footer">OneinStack Panel · Secure Server Console</div>
+    </main>
   </div>
 </template>
 
-
-
 <style scoped lang="less">
-@primary-color: #f7911c;
-@error-color: #ff4848;
-@font-gray: #a2a2a2;
-@border-gray: #e3e3e3;
-@bg-color: #f5f5f5;
-
 .login-container {
+  position: relative;
   width: 100%;
-  height: 100vh;
-  // background-color: @bg-color;
-  background: rgb(255, 250 , 243);
-  // background: url('/static/images/login-bg.png') no-repeat;
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: minmax(500px, 1.08fr) minmax(440px, 0.92fr);
+  overflow: hidden;
+  color: #f8fafc;
+  background: #0b1120;
+}
+
+.ambient {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(20px);
+  pointer-events: none;
+
+  &-one {
+    top: -260px;
+    left: -180px;
+    width: 620px;
+    height: 620px;
+    background: radial-gradient(circle, rgba(249, 115, 22, 0.19), transparent 68%);
+  }
+
+  &-two {
+    right: 28%;
+    bottom: -360px;
+    width: 760px;
+    height: 760px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.13), transparent 68%);
+  }
+}
+
+.login-hero {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(34px, 5vw, 70px) clamp(38px, 7vw, 104px);
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border-right: 1px solid rgba(255, 255, 255, 0.07);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.2;
+    background-image:
+      linear-gradient(rgba(148, 163, 184, 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.09) 1px, transparent 1px);
+    background-size: 42px 42px;
+    mask-image: linear-gradient(to bottom, black, transparent 80%);
+    pointer-events: none;
+  }
+}
+
+.hero-brand,
+.hero-copy,
+.console-preview,
+.hero-features {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-brand {
+  display: flex;
   align-items: center;
+  gap: 12px;
 
-  .login-content-left {
-    min-width: 550px;
-    padding: 32px 0;
-    // width: 657px;
-    height: 100%;
-    // background: url('/static/images/login-bg.webp') no-repeat;
-    background: rgb(255, 250 , 243);
-    background-size: 100% 100%;
-    // position: relative;
-
-    &__btn {
-      position: absolute;
-      top: 50%;
-      right: 0;
-      transform: translate(0, -50%);
-      // width: 163px;
-      height: 210px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-
-      &-login,
-      &-register {
-        flex: 0.5;
-        border-radius: 30px 0 0 30px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: #fff;
-
-        &.active {
-          font-weight: 500;
-          background-color: #fff;
-          color: #f75f1c;
-        }
-      }
-    }
+  .hero-logo {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(251, 146, 60, 0.28);
+    border-radius: 13px;
+    color: #fb923c;
+    background: rgba(249, 115, 22, 0.12);
+    font-size: 14px;
+    font-weight: 850;
+    box-shadow: 0 10px 28px rgba(249, 115, 22, 0.13);
   }
 
-  .login-content-right {
-    // flex: 1;
-    height: 100%;
-    // display: flex;
-    justify-content: center;
+  > div:last-child {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  strong {
+    font-size: 15px;
+    font-weight: 720;
+    letter-spacing: 0.01em;
+  }
+
+  span {
+    color: #94a3b8;
+    font-size: 11px;
+  }
+}
+
+.hero-copy {
+  margin: clamp(48px, 8vh, 96px) 0 34px;
+
+  .eyebrow {
+    display: flex;
     align-items: center;
-    position: relative;
+    gap: 9px;
+    color: #fb923c;
+    font-size: 10px;
+    font-weight: 750;
+    letter-spacing: 0.16em;
 
-    &__main {
-      // width: 434px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
+    span {
+      width: 22px;
+      height: 2px;
+      border-radius: 2px;
+      background: #f97316;
+    }
+  }
 
-      :deep(.login-content-right__main-login-btn) {
-        margin-top: 48px;
-        width: 100%;
-        height: 58px;
-        background: linear-gradient(180deg, @primary-color 0%, #ff4848 100%);
-        border-radius: 10px;
-        font-weight: 500;
-        font-size: 20px;
-        color: #ffffff;
-        cursor: pointer;
-        transition: box-shadow 0.3s;
+  h1 {
+    margin: 19px 0 18px;
+    font-size: clamp(38px, 4.2vw, 62px);
+    font-weight: 720;
+    line-height: 1.16;
+    letter-spacing: -0.045em;
+  }
 
-        &:hover,
-        &:focus {
-          box-shadow: 0 0 10px @primary-color;
-        }
+  p {
+    max-width: 510px;
+    color: #94a3b8;
+    font-size: 15px;
+    line-height: 1.8;
+  }
+}
+
+.console-preview {
+  width: min(100%, 600px);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.17);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.78);
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(16px);
+}
+
+.console-head {
+  height: 46px;
+  padding: 0 15px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+  color: #64748b;
+  font-size: 10px;
+
+  .window-dots {
+    display: flex;
+    gap: 6px;
+
+    i {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #475569;
+
+      &:first-child {
+        background: #f97316;
+      }
+    }
+  }
+
+  .online {
+    justify-self: end;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #34d399;
+
+    i {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.12);
+    }
+  }
+}
+
+.console-body {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+
+  .metric {
+    padding: 14px;
+    border: 1px solid rgba(148, 163, 184, 0.11);
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.58);
+
+    span {
+      color: #94a3b8;
+      font-size: 10px;
+    }
+
+    strong {
+      margin-top: 5px;
+      display: block;
+      color: #f8fafc;
+      font-size: 18px;
+    }
+
+    .progress {
+      height: 4px;
+      margin-top: 11px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #253147;
+
+      i {
+        height: 100%;
+        display: block;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #f97316, #fb923c);
       }
 
-      :deep(.login-content-right__main-form-item-gap) {
-        margin-bottom: 50px;
-      }
-
-      :deep(.login-content-right__main-other) {
-        margin-top: 53px;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-
-        &-title {
-          font-size: 16px;
-          color: @font-gray;
-        }
+      &.memory i {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
       }
     }
   }
 }
 
-:deep(.el-input) {
-  --el-input-focus-border-color: @primary-color;
-  --el-input-bg-color: transparent;
-  --el-input-height: 50px;
-  --el-input-placeholder-color: @font-gray;
-  --el-input-border-color: @border-gray;
-  --el-input-border-radius: 0;
-  font-size: 16px;
-  outline: none;
-  box-shadow: none;
+.service-list {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
 
-  &__wrapper {
-    box-shadow: none;
-    // border-bottom: 1px solid @border-gray;
-    transition: border 0.3s;
-    padding-left: 0;
+  > div {
+    min-width: 0;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 28px 1fr;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 10px;
+    background: rgba(30, 41, 59, 0.4);
+  }
 
-    &.is-focus {
-      border-bottom: 1px solid @primary-color;
+  .service-icon {
+    width: 28px;
+    height: 28px;
+    grid-row: 1 / span 2;
+    display: grid;
+    place-items: center;
+    border-radius: 8px;
+    font-size: 9px;
+    font-weight: 800;
+
+    &.orange {
+      color: #fb923c;
+      background: rgba(249, 115, 22, 0.13);
+    }
+
+    &.blue {
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.13);
+    }
+
+    &.red {
+      color: #fb7185;
+      background: rgba(244, 63, 94, 0.13);
     }
   }
-}
 
-:deep(.el-checkbox) {
-  --el-checkbox-text-color: @font-gray;
-  --el-checkbox-border-radius: 3px;
-  --el-checkbox-bg-color: transparent;
-  --el-checkbox-checked-text-color: @primary-color;
-  --el-checkbox-checked-bg-color: @primary-color;
-  --el-checkbox-input-border-color-hover: @primary-color;
-  --el-checkbox-checked-input-border-color: @primary-color;
-
-  &__input {
-    zoom: 1.85;
+  b {
+    overflow: hidden;
+    color: #e2e8f0;
+    font-size: 10px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  &__label {
-    padding-left: 22px;
+  em {
+    color: #34d399;
+    font-size: 9px;
+    font-style: normal;
   }
 }
 
-:deep(.el-link) {
-  --el-link-font-size: 14px;
-  --el-link-text-color: @font-gray;
-  --el-link-font-weight: 400;
-  --el-link-hover-text-color: @primary-color;
-}
+.hero-features {
+  margin-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  color: #94a3b8;
+  font-size: 11px;
 
-:deep(.el-form-item.is-error) {
-  .el-input__wrapper {
-    box-shadow: none;
-    border-bottom: 1px solid @error-color;
+  span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  i {
+    width: 18px;
+    height: 18px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    color: #34d399;
+    background: rgba(52, 211, 153, 0.1);
+    font-size: 10px;
+    font-style: normal;
   }
 }
 
-:deep(.el-divider__text) {
-  font-size: 16px;
-  color: @font-gray;
-  background-color: @bg-color;
+.login-panel {
+  position: relative;
+  z-index: 2;
+  min-height: 100vh;
+  padding: 42px clamp(38px, 7vw, 104px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: #182230;
+  background: #ffffff;
+
+  &__inner {
+    width: min(100%, 440px);
+    margin: auto;
+  }
+
+  .panel-footer {
+    width: 100%;
+    margin-top: 32px;
+    color: #98a2b3;
+    font-size: 10px;
+    text-align: center;
+    letter-spacing: 0.04em;
+  }
+}
+
+:deep(.login-content-right__main-login-btn) {
+  width: 100%;
+  height: 50px;
+  margin-top: 28px;
+  border: 0;
+  border-radius: 11px;
+  color: #fff;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.23);
+  font-size: 14px;
+  font-weight: 680;
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(249, 115, 22, 0.3);
+  }
+}
+
+:deep(.login-content-right__main-form-item-gap) {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 980px) {
+  .login-container {
+    grid-template-columns: 1fr;
+    background: #f8fafc;
+  }
+
+  .login-hero {
+    display: none;
+  }
+
+  .login-panel {
+    min-height: 100vh;
+    padding: 32px 24px;
+    background:
+      radial-gradient(circle at 20% 0, rgba(249, 115, 22, 0.08), transparent 28rem),
+      #f8fafc;
+  }
+}
+
+@media (max-width: 520px) {
+  .login-panel {
+    padding: 26px 20px;
+  }
 }
 </style>

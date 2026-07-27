@@ -12,14 +12,13 @@ import { Terminal } from 'xterm';
 import 'xterm/css/xterm.css';
 // import { WebLinksAddon } from 'xterm-addon-web-links';
 import { FitAddon } from 'xterm-addon-fit';
+import { ElMessageBox } from 'element-plus';
+import { Api } from '@/api/Api';
+import System from '@/utils/System';
 
 
 // 定义终端容器的引用
 const terminalDiv = ref<HTMLElement | null>(null);
-const baseWsUrl = 'ws://162.14.64.127:8089/v1/ssh/open';
-const authorization = localStorage.getItem('userInfo') ? JSON.parse(localStorage.getItem('userInfo') || '')?.token : '';
-const wsUrl = `${baseWsUrl}?Authorization=${authorization}`;
-console.log('ws连接',wsUrl);
 // 添加命令提示库
 // const commandSuggestions = {
 //   'cat': { desc: '显示文件内容' },
@@ -369,7 +368,7 @@ const checkCtrlKeyAllSystem = (domEvent: KeyboardEvent): boolean => {
 };
 
 // 初始化 WebSocket 的方法
-const initSocket = () => {
+const initSocket = (wsUrl: string) => {
   // 只有当 WebSocket 未连接时，才进行连接操作实际方法
   if (!isWebSocketConnected) {
     ws = new WebSocket(wsUrl);
@@ -397,9 +396,6 @@ const socketOnMessage = async (event: MessageEvent) => {
   try {
     const encodedText = event.data as string;
 
-    // 添加调试日志
-    console.log('收到的原始数据:', encodedText);
-
     // 验证数据是否为 Base64
     const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(encodedText);
     let text;
@@ -414,8 +410,6 @@ const socketOnMessage = async (event: MessageEvent) => {
     } else {
       text = encodedText; // 如果不是 Base64，直接使用原始数据
     }
-
-    console.log('解码后的数据:', text);
 
     // 处理命令提示符
     if (text.endsWith('$ ') || text.endsWith('# ')) {
@@ -537,10 +531,26 @@ const socketOnError = (err: Event) => {
 
 
 // 组件挂载时初始化终端和 WebSocket
-onMounted(() => {
+onMounted(async () => {
   initTerminal();
-  initSocket();
-  // new WebSocket(wsUrl);
+  try {
+    const { value: password } = await ElMessageBox.prompt('请输入当前管理员密码进行二次认证。终端票据仅可使用一次。', '启用终端会话', {
+      inputType: 'password',
+      inputPlaceholder: '管理员密码',
+      confirmButtonText: '连接',
+      cancelButtonText: '取消',
+      inputValidator: (value) => Boolean(value) || '请输入密码'
+    });
+    const { data } = await Api.createTerminalTicket({ password });
+    const apiBase = new URL(System.env.API || '/v1', window.location.origin);
+    if (apiBase.origin !== window.location.origin) throw new Error('终端只允许同源连接');
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const apiPath = apiBase.pathname.replace(/\/$/, '');
+    const wsUrl = `${protocol}//${window.location.host}${apiPath}/ssh/open?ticket=${encodeURIComponent(data.ticket)}`;
+    initSocket(wsUrl);
+  } catch {
+    xterm?.write('\r\n\x1b[91m终端未启用、认证失败或用户取消连接。\x1b[0m\r\n');
+  }
 });
 
 // 组件销毁前关闭 WebSocket 连接
