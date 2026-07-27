@@ -6,9 +6,9 @@ import { UIViteAutoImport } from 'ui-vite/src/autoimport'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { PluginOption } from 'vite'
-import { viteComType, viteDef, viteVar } from 'vite-var'
 import { globalType } from '../env/globalVar'
 import { tozip } from './plugins/tozip'
+import { viteComType, viteDef, viteVar } from './vite-tools'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 
 const toolsJavascriptCSPPlugin = (): PluginOption => ({

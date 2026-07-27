@@ -16,6 +16,8 @@ interface VersionInfo {
 
 interface UpdateCheck {
   enabled: boolean
+  source?: 'center' | 'manifest'
+  instanceId?: string
   currentVersion: string
   latestVersion?: string
   updateAvailable: boolean
@@ -79,6 +81,18 @@ const formatBytes = (value?: number) => {
   return `${(value / 1024 / 1024).toFixed(1)} MiB`
 }
 
+const updateSource = computed(() => {
+  if (check.value?.source === 'center') return 'OneinStack Center'
+  if (check.value?.source === 'manifest') return '独立签名清单'
+  return '尚未检查'
+})
+
+const maskedInstanceID = computed(() => {
+  const value = check.value?.instanceId
+  if (!value) return ''
+  return `…${value.slice(-8)}`
+})
+
 const loadBaseState = async () => {
   const [versionResponse, statusResponse] = await Promise.all([
     Api.getPanelVersion(),
@@ -94,7 +108,11 @@ const checkForUpdate = async () => {
     const { data } = await Api.checkPanelUpdate()
     check.value = data
     if (data.updateAvailable) {
-      ElMessage.success(`发现新版本 ${data.latestVersion}`)
+      ElMessage.success(
+        data.source === 'center'
+          ? `Center 已为本机分配新版本 ${data.latestVersion}`
+          : `发现新版本 ${data.latestVersion}`
+      )
     } else {
       ElMessage.success('当前已经是最新版本')
     }
@@ -182,7 +200,7 @@ onBeforeUnmount(() => {
     <div class="update-card__header">
       <div>
         <div class="update-card__title">面板更新</div>
-        <div class="update-card__subtitle">签名清单校验、迁移预检、健康确认和失败自动回滚</div>
+        <div class="update-card__subtitle">Center 版本策略、签名校验、迁移预检、健康确认和失败自动回滚</div>
       </div>
       <el-tag :type="statusType">{{ stateNames[status.state] || status.state }}</el-tag>
     </div>
@@ -203,6 +221,11 @@ onBeforeUnmount(() => {
       <div class="version-item">
         <span>更新包</span>
         <strong>{{ formatBytes(check?.artifactSize) }}</strong>
+      </div>
+      <div class="version-item">
+        <span>版本来源</span>
+        <strong>{{ updateSource }}</strong>
+        <small v-if="maskedInstanceID">实例 {{ maskedInstanceID }}</small>
       </div>
     </div>
 
@@ -263,7 +286,7 @@ onBeforeUnmount(() => {
 
 .version-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 12px;
   margin: 20px 0;
 }
@@ -275,7 +298,8 @@ onBeforeUnmount(() => {
   background: var(--surface-subtle);
 
   span,
-  strong {
+  strong,
+  small {
     display: block;
   }
 
@@ -289,6 +313,12 @@ onBeforeUnmount(() => {
     color: var(--text-primary);
     font-size: 15px;
     word-break: break-all;
+  }
+
+  small {
+    margin-top: 4px;
+    color: var(--text-tertiary);
+    font-size: 11px;
   }
 }
 

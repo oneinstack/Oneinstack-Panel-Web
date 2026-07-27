@@ -1,7 +1,7 @@
 import path from 'path'
 import { defineConfig } from 'vite'
-import { viteVar } from 'vite-var'
 import { getBuild, getPlugins } from './build/config'
+import { viteVar } from './build/config/vite-tools'
 import { globalVar } from './build/env/globalVar'
 import { initLog } from './build/env/log'
 
