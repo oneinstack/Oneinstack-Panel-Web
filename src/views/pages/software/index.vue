@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { markRaw, reactive } from 'vue'
+import { computed, markRaw, reactive } from 'vue'
 import AllSoft from './components/all.vue'
-import InstalledSoft from './components/installed.vue'
-import UpdateSoft from './components/update.vue'
 import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
 import { Api } from '@/api/Api'
+import { ElMessage } from 'element-plus'
 
 export interface ChildProps {
   list: any[]
@@ -26,13 +25,13 @@ const conf = reactive({
     {
       name: '已安装',
       index: 1,
-      component: InstalledSoft
+      component: AllSoft
     },
     {
       name: '可升级',
       index: 2,
       dot: false,
-      component: UpdateSoft
+      component: AllSoft
     }
   ]),
   activeIndex: 0,
@@ -76,6 +75,39 @@ const conf = reactive({
       conf.list.params.page = 1
       conf.list.params.tags = props.label === '全部' ? undefined : props.label
       conf.list.getData()
+    }
+  },
+  catalog: {
+    loading: false,
+    status: null as null | {
+      enabled: boolean
+      mode: string
+      revision?: string
+      productCount: number
+      versionCount: number
+      lastSyncedAt?: string
+      lastError?: string
+      stale: boolean
+      channel: string
+    },
+    getStatus: async () => {
+      const { data } = await Api.getSoftwareCatalogStatus()
+      conf.catalog.status = data
+    },
+    sync: async () => {
+      if (conf.catalog.loading) return
+      conf.catalog.loading = true
+      try {
+        const { data } = await Api.syncSoftwareCatalog()
+        conf.catalog.status = data
+        await conf.list.getData()
+        ElMessage.success('软件商城已从 Center 更新')
+      } catch (error) {
+        await conf.catalog.getStatus().catch(() => {})
+        throw error
+      } finally {
+        conf.catalog.loading = false
+      }
     }
   },
   clickActive: (item: any) => {
@@ -128,6 +160,26 @@ const conf = reactive({
 })
 
 conf.list.getData()
+void conf.catalog.getStatus()
+
+const catalogLabel = computed(() => {
+  const status = conf.catalog.status
+  if (!status) return '正在读取商城来源'
+  if (status.mode === 'center') return `Center 已同步 · ${status.productCount} 个应用`
+  if (status.mode === 'center-cache') return `Center 暂不可用 · 正在使用可信缓存`
+  if (status.mode === 'center-cache-disabled') return 'Center 同步已关闭 · 正在使用上次缓存'
+  if (status.mode === 'local-fallback') return '尚未取得 Center 目录 · 正在使用本地目录'
+  return '本地内置目录'
+})
+
+const catalogDetail = computed(() => {
+  const status = conf.catalog.status
+  if (!status) return ''
+  if (status.lastSyncedAt) {
+    return `通道 ${status.channel} · 最近同步 ${new Date(status.lastSyncedAt).toLocaleString()}`
+  }
+  return status.enabled ? '等待首次同步' : '可在配置中启用 Script Center'
+})
 </script>
 
 <template>
@@ -135,6 +187,29 @@ conf.list.getData()
     <div class="absolute fit-width software-content">
       <card-tabs :list="conf.dataTypelist" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
       <div v-loading="conf.list.loading" class="box2 software-box">
+        <div
+          class="catalog-source"
+          :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"
+        >
+          <div class="catalog-source-copy">
+            <span class="source-dot" />
+            <span>
+              <strong>{{ catalogLabel }}</strong>
+              <small>{{ catalogDetail }}</small>
+              <small v-if="conf.catalog.status?.lastError" class="source-error">
+                最近同步失败：{{ conf.catalog.status.lastError }}
+              </small>
+            </span>
+          </div>
+          <el-button
+            v-if="conf.catalog.status?.enabled"
+            :loading="conf.catalog.loading"
+            plain
+            @click="conf.catalog.sync"
+          >
+            立即同步
+          </el-button>
+        </div>
         <div class="category flex justify-between items-center" >
           <el-tabs v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
             <el-tab-pane v-for="item in conf.tabs.list" :label="item.name" :name="item.index" />
@@ -173,6 +248,69 @@ conf.list.getData()
   padding: 20px 22px 24px;
 }
 
+.catalog-source {
+  display: flex;
+  min-height: 66px;
+  padding: 12px 14px 12px 16px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+  border: 1px solid color-mix(in srgb, var(--el-color-success) 24%, var(--border-subtle));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--el-color-success) 5%, var(--surface-card));
+
+  &.warning {
+    border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--border-subtle));
+    background: color-mix(in srgb, var(--el-color-warning) 6%, var(--surface-card));
+
+    .source-dot {
+      background: var(--el-color-warning);
+    }
+  }
+}
+
+.catalog-source-copy {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+
+  > span:last-child {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  small {
+    margin-top: 3px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+
+  .source-error {
+    overflow: hidden;
+    max-width: min(760px, 65vw);
+    color: var(--el-color-warning-dark-2);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.source-dot {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--el-color-success);
+  box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 10%, transparent);
+}
+
 .category {
   min-height: 58px;
   padding: 0 10px 0 14px;
@@ -206,6 +344,11 @@ conf.list.getData()
     align-items: stretch;
     flex-direction: column;
     gap: 8px;
+  }
+
+  .catalog-source {
+    align-items: stretch;
+    flex-direction: column;
   }
 
   .search-wrap {

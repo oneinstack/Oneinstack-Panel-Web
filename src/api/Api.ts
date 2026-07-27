@@ -136,6 +136,14 @@ export const Api = {
   getSoftList: (obj: any) => {
     return http.post('/soft/list', obj)
   },
+  /** 获取 Center 软件商城目录同步状态 */
+  getSoftwareCatalogStatus: () => {
+    return http.get('/soft/catalog/status')
+  },
+  /** 立即从 Center 同步软件商城目录 */
+  syncSoftwareCatalog: () => {
+    return http.post('/soft/catalog/sync')
+  },
   /** 安装软件 */
   installSoft: (obj: any) => {
     return postAccepted('/soft/install', obj)

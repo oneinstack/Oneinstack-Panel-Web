@@ -115,6 +115,13 @@ const serviceStatus = (item: any) => serviceStatuses.value[item.key]
 const isInstalled = (item: any) =>
   item.installed === true || serviceStatus(item)?.installed === true
 
+const recommendedVersion = (item: any) =>
+  item.recommendedVersion || item.versions?.[0] || ''
+
+const hasUpgrade = (item: any) =>
+  isInstalled(item) && item.isUpdate === true &&
+  !!recommendedVersion(item) && recommendedVersion(item) !== item.install_version
+
 const serviceStateLabel = (status?: ComponentServiceStatus) => {
   if (!status) return '正在读取状态'
   if (status.probeError) return status.probeError
@@ -235,9 +242,13 @@ const handleInstallClick = (item: any) => {
     showTask(activeTask(item)!.id)
     return
   }
+  if (item.installable === false) {
+    ElMessage.warning('Center 当前已暂停该软件的安装')
+    return
+  }
   selectedItem.value = item
   installForm.value.key = item.key
-  installForm.value.version = item.install_version || item.versions?.[0] || ''
+  installForm.value.version = item.install_version || recommendedVersion(item)
   if (item.versions?.length > 1) {
     versionDialog.currentItem = item
     versionDialog.show = true
@@ -362,6 +373,13 @@ const handleSoftwareAction = (item: any) => {
     return
   }
   if (isInstalled(item)) {
+    if (hasUpgrade(item)) {
+      selectedItem.value = item
+      installForm.value.key = item.key
+      installForm.value.version = recommendedVersion(item)
+      openInstallForm(item)
+      return
+    }
     void handleUninstall(item)
     return
   }
@@ -425,7 +443,8 @@ onMounted(() => {
           <div class="item-inner">
             <div class="sundry">
               <div class="icon">
-                <img :src="item.icon" alt="" />
+                <img v-if="item.icon" :src="item.icon" alt="" />
+                <span v-else class="icon-fallback">{{ item.name?.slice(0, 1)?.toUpperCase() }}</span>
               </div>
               <div class="content">
                 <div>
@@ -541,15 +560,29 @@ onMounted(() => {
                 <template v-if="!isInstalled(item)">未安装</template>
                 <template v-else>
                   已安装版本：{{ item.install_version || item.versions?.[0] }}
+                  <span v-if="hasUpgrade(item)"> · 可升级至 {{ recommendedVersion(item) }}</span>
                 </template>
               </div>
               <button
                 type="button"
                 class="btn"
-                :class="{ installed: isInstalled(item), disabled: !!activeTask(item) }"
+                :disabled="!isInstalled(item) && item.installable === false"
+                :class="{
+                  installed: isInstalled(item),
+                  disabled: !!activeTask(item) || (!isInstalled(item) && item.installable === false),
+                  upgrade: hasUpgrade(item)
+                }"
                 @click="handleSoftwareAction(item)"
               >
-                {{ activeTask(item) ? '查看进度' : isInstalled(item) ? '卸载' : '安装' }}
+                {{
+                  activeTask(item)
+                    ? '查看进度'
+                    : hasUpgrade(item)
+                      ? '升级'
+                      : isInstalled(item)
+                        ? '卸载'
+                        : item.installable === false ? '已停用' : '安装'
+                }}
               </button>
             </div>
           </div>
@@ -734,7 +767,20 @@ onMounted(() => {
   img {
     width: 100%;
     height: 100%;
+    object-fit: contain;
   }
+}
+
+.icon-fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: rgb(var(--primary-color));
+  background: rgba(var(--primary-color), 0.08);
+  font-size: 24px;
+  font-weight: 750;
 }
 
 .content {
@@ -855,7 +901,14 @@ onMounted(() => {
   }
 
   &.disabled {
-    opacity: 0.82;
+    cursor: not-allowed;
+    opacity: 0.58;
+  }
+
+  &.upgrade {
+    color: #fff;
+    border-color: var(--el-color-success);
+    background: var(--el-color-success);
   }
 }
 
