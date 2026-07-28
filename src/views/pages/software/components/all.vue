@@ -366,24 +366,16 @@ const handleUninstall = async (item: any) => {
   }
 }
 
-const handleSoftwareAction = (item: any) => {
+const handleUpgrade = (item: any) => {
   const task = activeTask(item)
   if (task) {
     showTask(task.id)
     return
   }
-  if (isInstalled(item)) {
-    if (hasUpgrade(item)) {
-      selectedItem.value = item
-      installForm.value.key = item.key
-      installForm.value.version = recommendedVersion(item)
-      openInstallForm(item)
-      return
-    }
-    void handleUninstall(item)
-    return
-  }
-  handleInstallClick(item)
+  selectedItem.value = item
+  installForm.value.key = item.key
+  installForm.value.version = recommendedVersion(item)
+  openInstallForm(item)
 }
 
 watch(
@@ -563,27 +555,44 @@ onMounted(() => {
                   <span v-if="hasUpgrade(item)"> · 可升级至 {{ recommendedVersion(item) }}</span>
                 </template>
               </div>
-              <button
-                type="button"
-                class="btn"
-                :disabled="!isInstalled(item) && item.installable === false"
-                :class="{
-                  installed: isInstalled(item),
-                  disabled: !!activeTask(item) || (!isInstalled(item) && item.installable === false),
-                  upgrade: hasUpgrade(item)
-                }"
-                @click="handleSoftwareAction(item)"
-              >
-                {{
-                  activeTask(item)
-                    ? '查看进度'
-                    : hasUpgrade(item)
-                      ? '升级'
-                      : isInstalled(item)
-                        ? '卸载'
-                        : item.installable === false ? '已停用' : '安装'
-                }}
-              </button>
+              <div class="software-card-actions">
+                <button
+                  v-if="activeTask(item)"
+                  type="button"
+                  class="btn task"
+                  @click="showTask(activeTask(item)!.id)"
+                >
+                  查看进度
+                </button>
+                <template v-else-if="isInstalled(item)">
+                  <button
+                    v-if="hasUpgrade(item)"
+                    type="button"
+                    class="btn upgrade"
+                    @click="handleUpgrade(item)"
+                  >
+                    升级
+                  </button>
+                  <button
+                    type="button"
+                    class="btn uninstall"
+                    :disabled="submitting"
+                    @click="handleUninstall(item)"
+                  >
+                    卸载
+                  </button>
+                </template>
+                <button
+                  v-else
+                  type="button"
+                  class="btn"
+                  :disabled="item.installable === false"
+                  :class="{ disabled: item.installable === false }"
+                  @click="handleInstallClick(item)"
+                >
+                  {{ item.installable === false ? '已停用' : '安装' }}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -870,21 +879,32 @@ onMounted(() => {
 }
 
 .below {
+  gap: 14px;
   margin-top: 20px;
   color: var(--text-tertiary);
   font-size: 11px;
 }
 
 .version-info {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.software-card-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+}
+
 .btn {
   display: flex;
-  width: 78px;
+  min-width: 68px;
   height: 36px;
+  padding: 0 14px;
   align-items: center;
   justify-content: center;
   color: var(--el-color-primary);
@@ -893,13 +913,13 @@ onMounted(() => {
   background: transparent;
   cursor: pointer;
 
-  &:hover,
-  &.installed {
+  &:hover {
     color: #fff;
     background: rgb(var(--primary-color));
     box-shadow: 0 5px 12px rgba(var(--primary-color), 0.16);
   }
 
+  &:disabled,
   &.disabled {
     cursor: not-allowed;
     opacity: 0.58;
@@ -909,6 +929,24 @@ onMounted(() => {
     color: #fff;
     border-color: var(--el-color-success);
     background: var(--el-color-success);
+  }
+
+  &.uninstall {
+    color: var(--el-color-danger);
+    border-color: color-mix(in srgb, var(--el-color-danger) 50%, var(--border-subtle));
+    background: transparent;
+
+    &:hover:not(:disabled) {
+      color: #fff;
+      border-color: var(--el-color-danger);
+      background: var(--el-color-danger);
+      box-shadow: 0 5px 12px color-mix(in srgb, var(--el-color-danger) 18%, transparent);
+    }
+  }
+
+  &.task {
+    color: #fff;
+    background: rgb(var(--primary-color));
   }
 }
 

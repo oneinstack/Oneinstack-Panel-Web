@@ -184,18 +184,34 @@ export const softwareTaskStore = reactive({
 
   upsert(task: SoftwareTask) {
     const current = softwareTaskStore.tasks[task.id]
-    softwareTaskStore.tasks[task.id] = current ? { ...current, ...task } : task
+    const next = current ? { ...current, ...task } : task
+    softwareTaskStore.tasks[task.id] = next
     softwareTaskStore.order = [
       task.id,
       ...softwareTaskStore.order.filter((id) => id !== task.id)
     ]
+    if (
+      current &&
+      !softwareTaskStore.isTerminal(current.status) &&
+      softwareTaskStore.isTerminal(next.status)
+    ) {
+      softwareTaskStore.terminalRevision++
+    }
   },
 
   ingest(tasks: SoftwareTask[]) {
     const ids = tasks.map((task) => task.id)
     tasks.forEach((task) => {
       const current = softwareTaskStore.tasks[task.id]
-      softwareTaskStore.tasks[task.id] = current ? { ...current, ...task } : task
+      const next = current ? { ...current, ...task } : task
+      softwareTaskStore.tasks[task.id] = next
+      if (
+        current &&
+        !softwareTaskStore.isTerminal(current.status) &&
+        softwareTaskStore.isTerminal(next.status)
+      ) {
+        softwareTaskStore.terminalRevision++
+      }
     })
     softwareTaskStore.order = [
       ...ids,
@@ -214,7 +230,7 @@ export const softwareTaskStore = reactive({
       const event = JSON.parse(raw.data) as TaskEvent
       const current = softwareTaskStore.tasks[taskId]
       if (!current || event.seq <= (current.eventSeq || 0)) return
-      softwareTaskStore.tasks[taskId] = {
+      softwareTaskStore.upsert({
         ...current,
         status: event.status,
         phase: event.phase,
@@ -224,11 +240,10 @@ export const softwareTaskStore = reactive({
         errorCode: event.code || current.errorCode,
         eventSeq: event.seq,
         updatedAt: event.createdAt
-      }
+      })
       void softwareTaskStore.fetchLog(taskId).catch(() => undefined)
       if (softwareTaskStore.isTerminal(event.status)) {
         softwareTaskStore.close(taskId)
-        softwareTaskStore.terminalRevision++
         void softwareTaskStore.track(taskId)
         void softwareTaskStore.loadHistory().catch(() => undefined)
         void softwareTaskStore.loadStats().catch(() => undefined)

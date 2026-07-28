@@ -85,6 +85,19 @@ const elapsed = computed(() => {
   const minutes = Math.floor(seconds / 60)
   return `${minutes} 分 ${seconds % 60} 秒`
 })
+const createdAtText = computed(() => {
+  if (!task.value?.createdAt) return '时间未知'
+  const value = new Date(task.value.createdAt)
+  if (Number.isNaN(value.getTime())) return '时间未知'
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(value)
+})
 const componentInitial = computed(() => (task.value?.component || 'S').slice(0, 1).toUpperCase())
 
 const stages = computed(() => {
@@ -226,6 +239,10 @@ onBeforeUnmount(() => {
             </div>
             <div class="task-meta">
               <span class="task-id">{{ task?.id }}</span>
+              <span class="task-meta__divider"></span>
+              <span :class="{ 'task-meta__history': terminal }">
+                {{ terminal ? '历史任务' : '创建于' }} · {{ createdAtText }}
+              </span>
               <span class="task-meta__divider"></span>
               <span>已用时 {{ elapsed }}</span>
             </div>
@@ -387,6 +404,11 @@ onBeforeUnmount(() => {
   font-size: 9px;
   font-weight: 750;
   letter-spacing: 0.14em;
+}
+
+.task-meta__history {
+  color: var(--el-color-warning);
+  font-weight: 650;
 }
 
 .task-title {
@@ -647,19 +669,26 @@ onBeforeUnmount(() => {
 }
 
 .task-actions {
-  justify-content: flex-end;
+  justify-content: center;
   flex-wrap: wrap;
 }
 
 :deep(.install-task-drawer) {
+  top: 18px;
+  right: 18px;
+  bottom: auto;
+  height: calc(100% - 36px);
+  overflow: hidden;
   border-left: 1px solid var(--border-subtle);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
   background: var(--surface-page);
-  box-shadow: -20px 0 60px rgba(16, 24, 40, 0.14);
+  box-shadow: -20px 18px 60px rgba(16, 24, 40, 0.16);
 }
 
 :deep(.install-task-drawer .el-drawer__header) {
-  min-height: 82px;
-  padding: 16px 20px;
+  min-height: 86px;
+  padding: 20px 28px 17px;
   margin-bottom: 0;
   border-bottom: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--surface-card) 96%, transparent);
@@ -682,20 +711,42 @@ onBeforeUnmount(() => {
 }
 
 :deep(.install-task-drawer .el-drawer__body) {
-  padding: 18px 20px;
+  padding: 22px 28px 28px;
   background:
     radial-gradient(circle at 100% 0, rgba(var(--primary-color), 0.04), transparent 26rem),
     var(--surface-page);
 }
 
 :deep(.install-task-drawer .el-drawer__footer) {
-  padding: 13px 20px;
-  border-top: 1px solid var(--border-subtle);
+  margin: 0 28px 28px;
+  padding: 13px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
   background: var(--surface-card);
-  box-shadow: 0 -8px 24px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.08);
 }
 
 @media (max-width: 760px) {
+  :deep(.install-task-drawer) {
+    top: 8px;
+    right: 8px;
+    height: calc(100% - 16px);
+    border-radius: 16px;
+  }
+
+  :deep(.install-task-drawer .el-drawer__header) {
+    padding: 16px 18px 14px;
+  }
+
+  :deep(.install-task-drawer .el-drawer__body) {
+    padding: 16px 18px 22px;
+  }
+
+  :deep(.install-task-drawer .el-drawer__footer) {
+    margin: 0 18px 18px;
+    padding: 11px 12px;
+  }
+
   .task-header {
     align-items: flex-start;
     flex-direction: column;
