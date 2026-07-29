@@ -324,6 +324,10 @@ watchEffect(() => {
 <style scoped lang="less">
 .basic-card {
   width: 100%;
+  border: none !important;
+  border-radius: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
 
   &.isCard {
     border: 1px solid var(--border-subtle);
@@ -356,11 +360,15 @@ watchEffect(() => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid var(--border-subtle);
+    // border-bottom: 1px solid var(--border-subtle);
   }
 
   &__body {
-    padding: 24px 0 8px;
+    // padding: 8px 0;
+    padding: 22px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: var(--surface-subtle);
   }
 }
 </style>

@@ -3,7 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from 'vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import sapp from '@/sstore/sapp'
 import { Bell, Expand, Fold } from '@element-plus/icons-vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import sconfig from '@/sstore/sconfig'
 import { Api } from '@/api/Api'
@@ -27,6 +27,7 @@ interface NavItem {
 }
 
 const route = useRoute()
+const router = useRouter()
 
 const conf = reactive({
   isCollapse: false,
@@ -168,6 +169,13 @@ const currentNav = computed(() => {
   const matched = visibleNavList.value.find(item => item.path && route.path.startsWith(item.path))
   return matched ?? visibleNavList.value[0]
 })
+const activeMenuIndex = computed(() => currentNav.value?.path || '')
+const navigateNavItem = (item: NavItem) => {
+  if (item.path && route.path !== item.path) {
+    router.push(item.path)
+  }
+  item.event?.()
+}
 const pageDescriptions: Record<string, string> = {
   '/home': '查看服务器资源与服务运行状态',
   '/website': '管理站点、域名、证书与运行环境',
@@ -397,7 +405,7 @@ const BindButton = () => {
       <aside class="layout-container__body-left" :class="{ collapsed: conf.isCollapse }">
         <div class="navigation-label" v-show="!conf.isCollapse">管理中心</div>
         <el-scrollbar class="nav-scrollbar">
-          <el-menu :collapse="conf.isCollapse" :default-active="route.path.match(/\/\w*/)?.[0]" router>
+          <el-menu :collapse="conf.isCollapse" :default-active="activeMenuIndex">
             <template v-for="item in visibleNavList" :key="item.path || item.name">
               <el-sub-menu v-if="item.children" :index="item.path" :popper-offset="-110">
                 <template #title>
@@ -416,7 +424,7 @@ const BindButton = () => {
                   v-for="child in item.children"
                   :key="child.path"
                   :index="child.path"
-                  @click="child.event?.()"
+                  @click="navigateNavItem(child)"
                 >
                   <v-s-icon
                     :name="child.icon"
@@ -430,7 +438,7 @@ const BindButton = () => {
                   <span class="menu-item-name">{{ child.name }}</span>
                 </el-menu-item>
               </el-sub-menu>
-              <el-menu-item v-else :index="item.path || route.path" @click="item.event?.()">
+              <el-menu-item v-else :index="item.path || `action:${item.name}`" @click="navigateNavItem(item)">
                 <v-s-icon
                   :name="item.icon"
                   :color="

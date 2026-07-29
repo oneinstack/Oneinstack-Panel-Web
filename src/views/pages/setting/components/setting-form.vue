@@ -39,40 +39,45 @@ const props = defineProps<Props>()
 <template>
   <el-form label-width="180px">
     <el-form-item v-for="item in data" :key="item.prop" :label="item.label" label-position="left">
-      <div class="mr-2">
-        <el-input
-          v-if="item.type === 'input' || item.type === 'password'"
-          v-model="item.value"
-          :type="item.type === 'password' ? 'password' : 'text'"
-          clearable
-          :disabled="item.disabled"
-        />
-        <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="item.disabled" />
-        <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="item.disabled">
-          <template #append>
-            <v-s-icon name="folders" />
+      <div class="setting-form-item">
+        <div class="setting-form-item__controls">
+          <div class="setting-form-item__field">
+            <el-input
+              v-if="item.type === 'input' || item.type === 'password'"
+              v-model="item.value"
+              :type="item.type === 'password' ? 'password' : 'text'"
+              clearable
+              :disabled="item.disabled"
+            />
+            <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="item.disabled" />
+            <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="item.disabled">
+              <template #append>
+                <v-s-icon name="folders" />
+              </template>
+            </el-input>
+          </div>
+          <template v-if="item.action">
+            <el-button
+              v-if="Array.isArray(item.action)"
+              v-for="action in item.action"
+              :type="action.type || 'default'"
+              class="setting-form-item__button"
+              @click="action.click"
+            >
+              {{ action.text }}
+            </el-button>
+            <el-button
+              v-else
+              :type="item.action?.type || 'default'"
+              class="setting-form-item__button"
+              @click="item.action.click"
+            >
+              {{ item.action.text }}
+            </el-button>
           </template>
-        </el-input>
+        </div>
+        <span v-if="item.tip" v-html="item.tip" class="tips-text"></span>
       </div>
-      <!-- 按钮 -->
-      <template v-if="item.action">
-        <el-button
-          v-if="Array.isArray(item.action)"
-          v-for="action in item.action"
-          :type="action.type || 'default'"
-          class="mr-2"
-          @click="action.click"
-        >
-          {{ action.text }}
-        </el-button>
-        <el-button v-else :type="item.action?.type || 'default'" class="mr-2" @click="item.action.click">
-          {{ item.action.text }}
-        </el-button>
-      </template>
-      <!-- 提示 -->
-      <template v-if="item.tip">
-        <span v-html="item.tip" class="tips-text"></span>
-      </template>
     </el-form-item>
   </el-form>
 </template>
@@ -80,13 +85,35 @@ const props = defineProps<Props>()
 <style scoped lang="less">
 :deep(.el-form) {
   &-item__content {
-    flex-wrap: nowrap;
-    gap: 8px;
+    width: 100%;
   }
 }
 
+:deep(.el-form-item) {
+  margin-bottom: 24px;
+}
+
+.setting-form-item {
+  width: 100%;
+}
+
+.setting-form-item__controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.setting-form-item__field {
+  flex: 0 1 297px;
+  min-width: 0;
+}
+
+.setting-form-item__button {
+  flex-shrink: 0;
+}
+
 :deep(.el-input) {
-  width: 297px;
+  width: 100%;
 
   &.is-disabled {
     .el-input__wrapper,
@@ -115,8 +142,12 @@ const props = defineProps<Props>()
 }
 
 .tips-text {
+  display: block;
+  margin-top: 10px;
   color: var(--text-tertiary);
   font-size: 12px;
+  line-height: 1.6;
+  word-break: break-word;
 }
 
 @media (max-width: 780px) {
@@ -125,13 +156,29 @@ const props = defineProps<Props>()
     flex-direction: column;
   }
 
-  :deep(.el-form-item__content) {
-    width: 100%;
+  :deep(.el-form-item__label) {
+    margin-bottom: 10px;
+  }
+
+  .setting-form-item__controls {
+    align-items: stretch;
     flex-wrap: wrap;
   }
 
-  :deep(.el-input) {
-    width: min(100%, 360px);
+  .setting-form-item__field {
+    flex-basis: 100%;
+  }
+
+  .setting-form-item__button {
+    margin-left: 0 !important;
+  }
+
+  :deep(.el-button) {
+    width: 100%;
+  }
+
+  .tips-text {
+    margin-top: 8px;
   }
 }
 </style>

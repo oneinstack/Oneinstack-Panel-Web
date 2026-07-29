@@ -318,8 +318,8 @@ conf.website.getData()
 <template>
   <div class="website-container">
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-    <div class="tool-bar">
-      <el-space class="btn-group" :size="14" style="width: 100%;">
+    <div class="tool-bar website-toolbar">
+      <el-space class="btn-group website-toolbar__actions" :size="14" style="width: 100%;">
         <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
         <el-button @click="backupDrawer.open()">整站备份管理</el-button>
 
@@ -372,13 +372,17 @@ conf.website.getData()
 </el-dropdown> -->
 
       </el-space>
-      <div class="demo-form-inline">
-        <el-space class="btn-group" :size="14">
-          <search-input v-model="conf.website.params.name" placeholder="请输入域名" style="margin-right: 18px"
-            @search="conf.website.getData()" />
-          <el-button :icon="Refresh" type="primary" @click="conf.website.getData()" />
+      <div class="demo-form-inline website-toolbar__search">
+        <div class="website-search-panel">
+          <search-input
+            v-model="conf.website.params.name"
+            class="website-search-panel__input"
+            placeholder="请输入域名"
+            @search="conf.website.getData()"
+          />
+          <el-button class="website-search-panel__refresh" :icon="Refresh" type="primary" @click="conf.website.getData()" />
           <!-- <el-button :icon="Setting" type="primary" /> -->
-        </el-space>
+        </div>
       </div>
     </div>
     <div class="box2">
@@ -473,7 +477,84 @@ conf.website.getData()
 </template>
 
 <style scoped lang="less">
+.website-container {
+  .website-toolbar {
+    align-items: center;
+  }
+
+  .website-toolbar__actions {
+    flex: 1 1 420px;
+    min-width: 0;
+  }
+
+  .website-toolbar__search {
+    flex: 0 1 360px;
+    width: min(100%, 360px);
+    margin-left: auto;
+  }
+}
+
+.website-search-panel {
+  width: 100%;
+  padding: 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.website-search-panel__input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.website-search-panel__refresh {
+  flex: 0 0 auto;
+  min-width: 44px;
+  padding-inline: 14px;
+}
+
 .delete-form {
   margin-top: 16px;
+}
+
+@media (max-width: 1100px) {
+  .website-container {
+    .website-toolbar__search {
+      flex-basis: 100%;
+      width: 100%;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .website-container {
+    .website-toolbar {
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+
+    .website-toolbar__actions,
+    .website-toolbar__search {
+      flex-basis: auto;
+      width: 100%;
+      margin-left: 0;
+    }
+  }
+
+  .website-search-panel {
+    padding: 12px;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 560px) {
+  .website-search-panel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .website-search-panel__refresh {
+    width: 100%;
+  }
 }
 </style>
