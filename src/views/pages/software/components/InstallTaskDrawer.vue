@@ -99,6 +99,40 @@ const createdAtText = computed(() => {
   }).format(value)
 })
 const componentInitial = computed(() => (task.value?.component || 'S').slice(0, 1).toUpperCase())
+const fallbackErrorCode = computed(() => {
+  if (isConfigurationTask.value) return 'CONFIG_APPLY_FAILED'
+  if (isServiceTask.value) return 'SERVICE_ACTION_FAILED'
+  if (isUninstall.value) return 'UNINSTALL_FAILED'
+  return 'INSTALL_FAILED'
+})
+const metaCards = computed(() => [
+  {
+    label: '任务 ID',
+    value: task.value?.id || '-',
+    className: 'task-meta-card--mono task-meta-card--wide'
+  },
+  {
+    label: terminal.value ? '任务类型' : '创建时间',
+    value: terminal.value ? '历史任务' : createdAtText.value,
+    className: terminal.value ? 'task-meta-card--accent' : ''
+  },
+  {
+    label: '当前阶段',
+    value: task.value?.phase || task.value?.status || 'waiting',
+    className: 'task-meta-card--mono'
+  },
+  {
+    label: '已用时',
+    value: elapsed.value,
+    className: 'task-meta-card--strong'
+  }
+])
+const summaryItems = computed(() => [
+  { label: '组件', value: task.value?.component || '-' },
+  { label: '版本', value: task.value?.requestedVersion || '-' },
+  { label: '错误码', value: task.value?.errorCode || (failed.value ? fallbackErrorCode.value : '-') },
+  { label: '回滚状态', value: task.value?.rollbackStatus || 'not_required' }
+])
 
 const stages = computed(() => {
   const currentProgress = task.value?.progress || 0
@@ -222,7 +256,7 @@ onBeforeUnmount(() => {
   <el-drawer
     v-model="visible"
     class="install-task-drawer"
-    size="720px"
+    size="840px"
     :close-on-click-modal="terminal"
     :destroy-on-close="false"
   >
@@ -249,54 +283,81 @@ onBeforeUnmount(() => {
             {{ statusText }}
           </el-tag>
         </div>
-        <div class="task-meta">
-          <span class="task-meta__item task-id">
-            <small>任务 ID</small>
-            <strong>{{ task?.id || '-' }}</strong>
-          </span>
-          <span class="task-meta__item" :class="{ 'task-meta__history': terminal }">
-            <small>{{ terminal ? '任务类型' : '创建时间' }}</small>
-            <strong>{{ terminal ? '历史任务' : createdAtText }}</strong>
-          </span>
-          <span class="task-meta__item">
-            <small>已用时</small>
-            <strong>{{ elapsed }}</strong>
-          </span>
-        </div>
       </div>
     </template>
 
     <div v-if="task" class="task-content">
       <section class="overview">
-        <div class="overview-label">
-          <span>当前进度</span>
-          <span>{{ task.phase || task.status }}</span>
+        <div class="overview-hero">
+          <div class="overview-copy">
+            <div class="overview-label">
+              <span class="overview-label__title">当前进度</span>
+              <span class="overview-phase">{{ task.phase || task.status }}</span>
+            </div>
+            <h3>{{ statusText }}</h3>
+            <p>{{ task.message || '任务已创建，正在准备执行。' }}</p>
+          </div>
+          <div class="overview-progress-card">
+            <small>完成度</small>
+            <strong>{{ task.progress }}%</strong>
+            <span>{{ terminal ? '任务已结束' : '实时刷新中' }}</span>
+          </div>
         </div>
-        <div class="overview-line">
-          <span>{{ task.message || statusText }}</span>
-          <strong>{{ task.progress }}%</strong>
+        <div class="overview-track">
+          <el-progress
+            :percentage="task.progress"
+            :status="progressStatus"
+            :stroke-width="10"
+            :show-text="false"
+            :indeterminate="task.phaseProgress === undefined && !terminal"
+            :duration="3"
+          />
         </div>
-        <el-progress
-          :percentage="task.progress"
-          :status="progressStatus"
-          :stroke-width="9"
-          :show-text="false"
-          :indeterminate="task.phaseProgress === undefined && !terminal"
-          :duration="3"
-        />
+        <div class="overview-foot">
+          <div
+            v-for="item in metaCards"
+            :key="item.label"
+            class="overview-foot__item"
+            :class="item.className"
+          >
+            <small>{{ item.label }}</small>
+            <strong>{{ item.value }}</strong>
+          </div>
+          <div class="overview-foot__item">
+            <small>任务状态</small>
+            <strong>{{ task.status }}</strong>
+          </div>
+          <div class="overview-foot__item">
+            <small>执行模式</small>
+            <strong>{{ isConfigurationTask ? '配置发布' : isServiceTask ? '服务动作' : isUninstall ? '卸载任务' : '安装任务' }}</strong>
+          </div>
+          <div class="overview-foot__item">
+            <small>日志状态</small>
+            <strong>{{ autoScroll ? '自动滚动开启' : '手动查看' }}</strong>
+          </div>
+        </div>
       </section>
 
-      <section class="stage-list">
-        <div
-          v-for="(stage, index) in stages"
-          :key="stage.key"
-          class="stage"
-          :class="{ active: stage.active, done: stage.done }"
-        >
-          <span class="stage-dot">{{ stage.done ? '✓' : index + 1 }}</span>
-          <div class="stage-copy">
-            <small>STEP {{ String(index + 1).padStart(2, '0') }}</small>
-            <span>{{ stage.name }}</span>
+      <section class="stage-section">
+        <div class="section-heading">
+          <div>
+            <span class="section-heading__eyebrow">EXECUTION FLOW</span>
+            <h4>任务执行路径</h4>
+          </div>
+          <span class="section-heading__hint">按阶段展示当前安装流程</span>
+        </div>
+        <div class="stage-list">
+          <div
+            v-for="(stage, index) in stages"
+            :key="stage.key"
+            class="stage"
+            :class="{ active: stage.active, done: stage.done, pending: !stage.active && !stage.done }"
+          >
+            <span class="stage-dot">{{ stage.done ? '✓' : index + 1 }}</span>
+            <div class="stage-copy">
+              <small>STEP {{ String(index + 1).padStart(2, '0') }}</small>
+              <span>{{ stage.name }}</span>
+            </div>
           </div>
         </div>
       </section>
@@ -307,55 +368,83 @@ onBeforeUnmount(() => {
         type="error"
         :closable="false"
         show-icon
-        :title="task.errorMessage || task.message"
+        :title="task.errorMessage || task.message || '任务执行失败'"
       >
         <template #default>
-          <div>
-            错误码：{{
-              task.errorCode || (isConfigurationTask
-                ? 'CONFIG_APPLY_FAILED'
-                : isServiceTask
-                ? 'SERVICE_ACTION_FAILED'
-                : isUninstall ? 'UNINSTALL_FAILED' : 'INSTALL_FAILED')
-            }}
+          <div class="failure__row">
+            错误码：{{ task.errorCode || fallbackErrorCode }}
           </div>
-          <div v-if="task.rollbackStatus && task.rollbackStatus !== 'not_required'">
+          <div v-if="task.rollbackStatus && task.rollbackStatus !== 'not_required'" class="failure__row">
             回滚状态：{{ task.rollbackStatus }}
           </div>
-          <div v-if="task.recoveryStatus">
+          <div v-if="task.recoveryStatus" class="failure__row">
             重启核验：{{ task.recoveryStatus }} · {{ task.recoveryMessage }}
           </div>
         </template>
       </el-alert>
 
-      <section class="log-section">
-        <div class="log-toolbar">
-          <div>
-            <span class="log-live-dot"></span>
-            <strong>实时任务日志</strong>
+      <section class="diagnostic-grid">
+        <section class="log-section">
+          <div class="log-toolbar">
+            <div class="log-toolbar__title">
+              <span class="log-live-dot"></span>
+              <div class="log-toolbar__copy">
+                <strong>实时任务日志</strong>
+                <span>安装脚本输出会持续追加到这里，便于定位当前步骤。</span>
+              </div>
+            </div>
+            <el-checkbox v-model="autoScroll">自动滚动</el-checkbox>
           </div>
-          <el-checkbox v-model="autoScroll">自动滚动</el-checkbox>
-        </div>
-        <pre ref="logElement" class="task-log">{{ logs }}</pre>
+          <pre ref="logElement" class="task-log">{{ logs }}</pre>
+        </section>
+
+        <aside class="summary-panel">
+          <div class="section-heading section-heading--aside">
+            <div>
+              <span class="section-heading__eyebrow">DIAGNOSTICS</span>
+              <h4>诊断摘要</h4>
+            </div>
+          </div>
+          <div class="summary-panel__card">
+            <small>当前结果</small>
+            <strong>{{ statusText }}</strong>
+            <p>{{ task.errorMessage || task.message || '暂无附加说明' }}</p>
+          </div>
+          <div class="summary-panel__list">
+            <div v-for="item in summaryItems" :key="item.label" class="summary-panel__item">
+              <span>{{ item.label }}</span>
+              <strong>{{ item.value }}</strong>
+            </div>
+          </div>
+        </aside>
       </section>
     </div>
     <el-skeleton v-else :rows="8" animated />
 
     <template #footer>
       <div class="task-actions">
-        <el-button :loading="downloading" @click="downloadLog">下载完整日志</el-button>
-        <el-button v-if="failed" @click="copyDiagnostics">复制诊断信息</el-button>
-        <el-button
-          v-if="failed && !isUninstall && !isServiceTask && !isConfigurationTask"
-          type="primary"
-          @click="emit('retry', taskId)"
-        >
-          重新填写并重试
-        </el-button>
-        <el-button v-if="cancelable" type="danger" plain @click="cancelTask">取消任务</el-button>
-        <el-button type="primary" @click="visible = false">
-          {{ terminal ? '完成' : '后台运行' }}
-        </el-button>
+        <div class="task-actions__group task-actions__group--tools">
+          <el-button :loading="downloading" @click="downloadLog">下载完整日志</el-button>
+          <el-button v-if="failed" @click="copyDiagnostics">复制诊断信息</el-button>
+        </div>
+        <div class="task-actions__group task-actions__group--main">
+          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">取消任务</el-button>
+          <el-button
+            v-if="failed && !isUninstall && !isServiceTask && !isConfigurationTask"
+            type="primary"
+            class="task-actions__retry"
+            @click="emit('retry', taskId)"
+          >
+            重新填写并重试
+          </el-button>
+          <el-button
+            :type="failed && !cancelable ? 'info' : 'primary'"
+            :plain="failed && !cancelable"
+            @click="visible = false"
+          >
+            {{ terminal ? '完成' : '后台运行' }}
+          </el-button>
+        </div>
       </div>
     </template>
   </el-drawer>
@@ -363,32 +452,26 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .task-header,
-.overview-line,
 .log-toolbar,
 .task-actions {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  padding: 20px;
 }
 
 .task-header {
   width: 100%;
   min-width: 0;
-  padding-right: 8px;
   display: flex;
-  align-items: stretch;
   flex-direction: column;
-  gap: 13px;
-  justify-content: flex-start;
 
   &__top {
-    width: 100%;
-    min-width: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
+    gap: 20px;
   }
 
   &__identity {
@@ -396,24 +479,27 @@ onBeforeUnmount(() => {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
   }
 }
 
 .task-mark {
-  width: 46px;
-  height: 46px;
-  flex: 0 0 46px;
+  width: 68px;
+  height: 68px;
+  flex: 0 0 68px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(var(--primary-color), 0.18);
-  border-radius: 12px;
+  border: 1px solid rgba(var(--primary-color), 0.15);
+  border-radius: 22px;
   color: rgb(var(--primary-color));
   background:
-    linear-gradient(180deg, rgba(var(--primary-color), 0.12), rgba(var(--primary-color), 0.06)),
-    var(--surface-card);
-  font-size: 17px;
-  font-weight: 780;
+    radial-gradient(circle at top, rgba(var(--primary-color), 0.18), rgba(var(--primary-color), 0.05) 74%),
+    rgba(255, 255, 255, 0.94);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 14px 28px rgba(var(--primary-color), 0.08);
+  font-size: 30px;
+  font-weight: 820;
 }
 
 .task-heading {
@@ -423,220 +509,328 @@ onBeforeUnmount(() => {
 
 .task-kicker {
   display: block;
-  margin-bottom: 5px;
-  color: var(--text-placeholder);
-  font-size: 10px;
+  margin-bottom: 8px;
+  color: var(--text-tertiary);
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.08em;
-}
-
-.task-meta__history {
-  color: var(--el-color-warning);
-  font-weight: 650;
+  letter-spacing: 0.14em;
 }
 
 .task-title {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   color: var(--text-primary);
-  font-size: 18px;
-  font-weight: 740;
-  line-height: 1.25;
+  font-size: 22px;
+  font-weight: 780;
+  line-height: 1.2;
   text-transform: capitalize;
 
   strong {
     min-width: 0;
     overflow: hidden;
-    font-weight: inherit;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   .task-operation {
-    padding: 2px 8px;
+    padding: 5px 11px;
     border-radius: 999px;
     color: var(--text-secondary);
-    background: var(--surface-subtle);
-    font-size: 12px;
-    font-weight: 650;
+    background: color-mix(in srgb, var(--surface-subtle) 74%, white);
+    font-size: 11px;
+    font-weight: 700;
   }
 
   small {
     color: var(--text-tertiary);
-    font-size: 12px;
-    font-weight: 550;
-  }
-}
-
-.task-meta {
-  width: 100%;
-  min-width: 0;
-  padding: 9px 12px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 0.72fr);
-  gap: 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  background: var(--surface-subtle);
-
-  &__item {
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    color: var(--text-secondary);
-    font-size: 11px;
-    line-height: 1.35;
-
-    small {
-      flex: 0 0 auto;
-      color: var(--text-placeholder);
-      font-size: 10px;
-      font-weight: 560;
-    }
-
-    strong {
-      min-width: 0;
-      overflow: hidden;
-      font-weight: 620;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-}
-
-.task-id {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-
-  strong {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 14px;
+    font-weight: 600;
   }
 }
 
 .task-status {
   flex: 0 0 auto;
-  min-height: 30px;
-  padding-inline: 12px;
-  font-weight: 650;
+  min-height: 40px;
+  padding-inline: 16px;
+  border-width: 1.5px;
+  font-size: 14px;
+  font-weight: 720;
+}
+
+.task-meta-card--wide {
+  grid-column: span 2;
+}
+
+.task-meta-card--mono strong,
+.task-meta-card--wide strong {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.task-meta-card--accent strong {
+  color: var(--el-color-warning);
+}
+
+.task-meta-card--strong strong {
+  font-size: 18px;
 }
 
 .task-content {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 18px;
+  padding: 20px;
+
+  > * {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: taskSectionEnter 0.34s ease forwards;
+  }
+
+  > *:nth-child(1) { animation-delay: 0.04s; }
+  > *:nth-child(2) { animation-delay: 0.1s; }
+  > *:nth-child(3) { animation-delay: 0.16s; }
+  > *:nth-child(4) { animation-delay: 0.22s; }
+}
+
+.overview,
+.stage-section,
+.summary-panel {
+  padding: 22px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 253, 0.96));
+  box-shadow: 0 14px 32px rgba(16, 24, 40, 0.05);
 }
 
 .overview {
-  padding: 18px 20px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-color: rgba(var(--primary-color), 0.12);
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 92%, var(--surface-subtle)), var(--surface-card));
-  box-shadow: var(--shadow-xs);
+    radial-gradient(circle at top right, rgba(var(--primary-color), 0.1), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 253, 0.95));
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.07);
 }
 
-.overview-label {
-  margin-bottom: 10px;
+.overview-hero {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: space-between;
-  color: var(--text-placeholder);
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.04em;
+  gap: 18px;
+  margin-bottom: 20px;
+}
 
-  span:last-child {
-    padding: 3px 7px;
-    border-radius: 6px;
-    color: rgb(var(--primary-color));
-    background: rgba(var(--primary-color), 0.08);
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    letter-spacing: 0;
+.overview-copy {
+  min-width: 0;
+  flex: 1;
+
+  h3 {
+    margin: 0 0 10px;
+    color: var(--text-primary);
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.12;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.7;
+    word-break: break-word;
   }
 }
 
-.overview-line {
+.overview-label {
   margin-bottom: 14px;
-  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 
-  span {
-    color: var(--text-secondary);
-    font-size: 13px;
+.overview-label__title {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.overview-phase {
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: rgb(var(--primary-color));
+  background: rgba(var(--primary-color), 0.08);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.overview-progress-card {
+  flex: 0 0 auto;
+  min-width: 170px;
+  padding: 20px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(var(--primary-color), 0.12);
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(var(--primary-color), 0.08), rgba(var(--primary-color), 0.04));
+
+  small {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 700;
   }
 
   strong {
     color: rgb(var(--primary-color));
-    font-size: 20px;
+    font-size: 44px;
+    font-weight: 820;
+    line-height: 1;
+  }
+
+  span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.overview-track {
+  margin-bottom: 18px;
+}
+
+.overview-foot {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.overview-foot__item {
+  min-width: 0;
+  padding: 13px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.64);
+  display: grid;
+  gap: 6px;
+
+  small {
+    color: var(--text-placeholder);
+    font-size: 11px;
+    font-weight: 650;
+  }
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.section-heading {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+
+  h4 {
+    margin: 4px 0 0;
+    color: var(--text-primary);
+    font-size: 18px;
     font-weight: 760;
   }
+}
+
+.section-heading__eyebrow {
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-weight: 750;
+  letter-spacing: 0.16em;
+}
+
+.section-heading__hint {
+  color: var(--text-placeholder);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.section-heading--aside {
+  margin-bottom: 18px;
 }
 
 .stage-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .stage {
   min-width: 0;
-  min-height: 56px;
-  padding: 10px 12px;
+  min-height: 92px;
+  padding: 16px;
   display: flex;
-  align-items: center;
-  gap: 9px;
+  align-items: flex-start;
+  gap: 12px;
   border: 1px solid var(--border-subtle);
-  border-radius: 11px;
+  border-radius: 18px;
   color: var(--text-tertiary);
   background: var(--surface-card);
-  text-align: left;
+  box-shadow: 0 8px 18px rgba(16, 24, 40, 0.04);
   transition: all 0.2s ease;
 }
 
 .stage-dot {
-  width: 26px;
-  height: 26px;
-  flex: 0 0 26px;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 36px;
   display: grid;
   place-items: center;
   border: 1px solid var(--border-default);
-  border-radius: 8px;
+  border-radius: 13px;
   color: var(--text-placeholder);
   background: var(--surface-subtle);
-  font-size: 10px;
-  font-weight: 750;
+  font-size: 13px;
+  font-weight: 780;
 }
 
 .stage-copy {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 6px;
 
   small {
     color: var(--text-placeholder);
-    font-size: 8px;
+    font-size: 11px;
     font-weight: 750;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
   }
 
   span {
-    overflow: hidden;
-    font-size: 11px;
-    font-weight: 620;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
   }
 }
 
+.stage.pending {
+  background: color-mix(in srgb, var(--surface-card) 92%, #f8fafc);
+}
+
 .stage.active {
-  border-color: rgba(var(--primary-color), 0.35);
+  border-color: rgba(var(--primary-color), 0.28);
   color: var(--el-color-primary);
-  background: rgba(var(--primary-color), 0.06);
+  background: linear-gradient(180deg, rgba(var(--primary-color), 0.08), rgba(var(--primary-color), 0.04));
+  box-shadow: 0 14px 28px rgba(var(--primary-color), 0.08);
 
   .stage-dot {
     border-color: var(--el-color-primary);
@@ -649,10 +843,10 @@ onBeforeUnmount(() => {
 .stage.done {
   border-color: rgba(var(--success-color), 0.2);
   color: var(--el-color-success);
-  background: rgba(var(--success-color), 0.045);
+  background: linear-gradient(180deg, rgba(var(--success-color), 0.07), rgba(var(--success-color), 0.03));
 
   .stage-dot {
-    color: white;
+    color: #fff;
     border-color: var(--el-color-success);
     background: var(--el-color-success);
   }
@@ -664,44 +858,68 @@ onBeforeUnmount(() => {
 
 .failure {
   margin: 0;
-  border-radius: 12px;
+  padding: 8px 6px;
+  border-radius: 18px;
   border-color: color-mix(in srgb, var(--el-color-danger) 22%, var(--border-subtle));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.failure__row + .failure__row {
+  margin-top: 6px;
+}
+
+.diagnostic-grid {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+  gap: 16px;
 }
 
 .log-section {
-  flex: 1;
-  min-height: 280px;
+  min-height: 520px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
+  border-radius: 22px;
   background: var(--surface-card);
-  box-shadow: var(--shadow-xs);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
 }
 
 .log-toolbar {
-  min-height: 44px;
-  padding: 0 16px;
+  min-height: 64px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
 
-  > div {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
   strong {
     color: var(--text-primary);
-    font-size: 12px;
-    font-weight: 680;
+    font-size: 14px;
+    font-weight: 700;
+  }
+}
+
+.log-toolbar__title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.log-toolbar__copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    line-height: 1.5;
   }
 }
 
 .log-live-dot {
-  width: 7px;
-  height: 7px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: rgb(var(--success-color));
   box-shadow: 0 0 0 4px rgba(var(--success-color), 0.1);
@@ -710,23 +928,118 @@ onBeforeUnmount(() => {
 .task-log {
   box-sizing: border-box;
   flex: 1;
-  min-height: 220px;
-  max-height: none;
+  min-height: 260px;
   margin: 0;
-  padding: 16px 17px;
+  padding: 18px 18px 22px;
   overflow: auto;
   color: #d7e0ee;
-  background: #101827;
-  font: 11px/1.7 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: linear-gradient(180deg, rgba(20, 29, 46, 0.98), rgba(11, 18, 32, 1));
+  font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-all;
   scrollbar-color: #475467 #101827;
 }
 
+.summary-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.summary-panel__card {
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(var(--primary-color), 0.08), rgba(var(--primary-color), 0.03));
+
+  small {
+    display: block;
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+  }
+
+  strong {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 780;
+    line-height: 1.2;
+  }
+
+  p {
+    margin: 10px 0 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.7;
+    word-break: break-word;
+  }
+}
+
+.summary-panel__list {
+  display: grid;
+  gap: 12px;
+}
+
+.summary-panel__item {
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-radius: 16px;
+  border: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.8);
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+
+  strong {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 700;
+    text-align: right;
+    word-break: break-word;
+  }
+}
+
 .task-actions {
   width: 100%;
+  align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
+  gap: 10px;
+}
+
+.task-actions__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-actions__group--tools {
+  margin-right: 0;
+}
+
+.task-actions__retry {
+  box-shadow: 0 10px 24px rgba(var(--primary-color), 0.2);
+}
+
+@keyframes taskSectionEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 :deep(.install-task-drawer) {
@@ -734,61 +1047,126 @@ onBeforeUnmount(() => {
   right: 16px;
   bottom: auto;
   height: calc(100% - 32px);
+  position: relative;
+  box-sizing: border-box;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--border-subtle);
+  gap: 14px;
+  padding: 16px;
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: 28px;
   background: var(--surface-page);
-  box-shadow: -18px 16px 46px rgba(16, 24, 40, 0.14);
+  box-shadow: -24px 22px 64px rgba(16, 24, 40, 0.16);
 }
 
 :deep(.install-task-drawer .el-drawer__header) {
   flex: 0 0 auto;
-  min-height: 124px;
-  padding: 22px 24px 16px;
+  min-height: auto;
+  padding: 24px 68px 24px 24px;
   margin-bottom: 0;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at top left, rgba(var(--primary-color), 0.08), transparent 28%),
+    var(--surface-card);
 }
 
 :deep(.install-task-drawer .el-drawer__close-btn) {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
-  align-self: flex-start;
+  position: absolute;
+  top: 5px;
+  right: 10px;
+  z-index: 5;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
   display: grid;
   place-items: center;
-  border-radius: 8px;
+  border: 1px solid transparent;
+  border-radius: 12px;
   color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.72);
   transition: all 0.18s ease;
 
   &:hover {
     color: rgb(var(--primary-color));
     background: rgba(var(--primary-color), 0.08);
+    border-color: rgba(var(--primary-color), 0.16);
   }
+}
+
+:global(.install-task-drawer .el-drawer__close-btn) {
+  position: fixed !important;
+  top: 5px !important;
+  right: 10px !important;
+  z-index: 2100;
+  width: 38px !important;
+  height: 38px !important;
+  display: grid !important;
+  place-items: center;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(8px);
+  transition: all 0.18s ease;
+}
+
+:global(.install-task-drawer .el-drawer__close-btn:hover) {
+  color: rgb(var(--primary-color));
+  border-color: rgba(var(--primary-color), 0.16);
+  background: rgba(var(--primary-color), 0.08);
+}
+
+:global(.install-task-drawer .el-drawer__close-btn .el-icon),
+:global(.install-task-drawer .el-drawer__close-btn svg) {
+  width: 20px !important;
+  height: 20px !important;
 }
 
 :deep(.install-task-drawer .el-drawer__body) {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 22px 24px 18px;
+  padding: 20px !important;
   overflow: auto;
-  background: var(--surface-page);
+  background: transparent;
 }
 
 :deep(.install-task-drawer .el-drawer__footer) {
   flex: 0 0 auto;
   margin: 0;
-  padding: 14px 24px 22px;
+  padding: 16px 0 2px;
   border-top: 1px solid var(--border-subtle);
   border-right: 0;
   border-bottom: 0;
   border-left: 0;
-  border-radius: 0;
-  background: var(--surface-card);
-  box-shadow: 0 -8px 20px rgba(16, 24, 40, 0.05);
+  background: transparent;
+  box-shadow: none;
+}
+
+:deep(.install-task-drawer .el-drawer__footer .el-button + .el-button) {
+  margin-left: 0;
+}
+
+@media (max-width: 960px) {
+  .overview-foot,
+  .diagnostic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .task-meta-card--wide {
+    grid-column: auto;
+  }
+
+  .overview-hero {
+    flex-direction: column;
+  }
+
+  .overview-progress-card {
+    min-width: 0;
+  }
 }
 
 @media (max-width: 760px) {
@@ -796,59 +1174,63 @@ onBeforeUnmount(() => {
     top: 8px;
     right: 8px;
     height: calc(100% - 16px);
-    border-radius: 16px;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 18px;
   }
 
   :deep(.install-task-drawer .el-drawer__header) {
-    padding: 16px 18px 14px;
+    min-height: auto;
+    padding: 18px 58px 16px 18px;
+    border-radius: 16px;
   }
 
   :deep(.install-task-drawer .el-drawer__body) {
-    padding: 16px 18px;
+    padding: 20px !important;
   }
 
   :deep(.install-task-drawer .el-drawer__footer) {
-    padding: 12px 18px 18px;
+    padding: 12px 0 2px;
   }
 
-  .task-header {
-    align-items: flex-start;
-    gap: 12px;
+  :deep(.install-task-drawer .el-drawer__close-btn) {
+    top: 5px;
+    right: 10px;
+  }
+
+  :global(.install-task-drawer .el-drawer__close-btn) {
+    top: 7px !important;
+    right: 16px !important;
   }
 
   .task-header__top {
     align-items: flex-start;
     flex-direction: column;
-    gap: 12px;
   }
 
   .task-status {
-    margin-left: 58px;
+    margin-left: 84px;
   }
 
   .task-title {
-    font-size: 16px;
-  }
-
-  .task-meta {
-    grid-template-columns: 1fr;
-    gap: 6px;
+    font-size: 18px;
   }
 
   .stage-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .task-meta {
-    max-width: 70vw;
-  }
-
-  .task-log {
-    min-height: 200px;
+    grid-template-columns: 1fr;
   }
 
   .task-actions {
+    align-items: stretch;
+  }
+
+  .task-actions__group {
     justify-content: flex-end;
   }
+
+  .task-actions__group--tools {
+    margin-right: 0;
+  }
 }
+
 </style>
