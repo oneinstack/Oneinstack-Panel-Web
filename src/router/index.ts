@@ -5,6 +5,9 @@ import prefetchRouteData from './prefetch'
 import { CRouter } from 'tools-vue3'
 import routes from './routes'
 import sconfig from '@/sstore/sconfig'
+import { Api } from '@/api/Api'
+import { ElMessage } from 'element-plus'
+import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
 
 export const initRouter = () => {
   const _routes = CRouter.init({
@@ -60,6 +63,19 @@ export const initRouter = () => {
     if (authenticated && !mustChangePassword && to.path === '/first-login')
       return next('/')
     if (authenticated && whiteList.includes(to.path)) return next('/')
+    if (authenticated && Object.keys(sconfig.menuAccess || {}).length === 0) {
+      try {
+        const matrixResponse = await Api.getAccessMatrix()
+        sconfig.setMenuAccess(matrixResponse?.data?.menu || {})
+      } catch {
+        sconfig.setMenuAccess({})
+      }
+    }
+    const menuKey = resolveMenuKeyByPath(to.path)
+    if (authenticated && menuKey && !canAccessPath(to.path)) {
+      ElMessage.warning(`当前账号暂无${resolveMenuLabelByKey(menuKey)}菜单权限`)
+      return next(from.path && from.path !== to.path ? from.path : getFirstAccessiblePath())
+    }
     next()
   })
 

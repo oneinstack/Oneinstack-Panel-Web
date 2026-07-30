@@ -10,12 +10,23 @@ import * as echarts from 'echarts'
 import basicChart from '@/components/echarts/basic-chart.vue'
 import { ElMessage } from 'element-plus'
 import System from '@/utils/System'
+import sconfig from '@/sstore/sconfig'
+import { resolveMenuLabelByKey } from '@/utils/access'
 
 type MonitorType = 'network' | 'disk'
 
 interface Options {
   label: string
   value: string | number | object
+}
+
+interface HomeCategory {
+  name: string
+  icon: string
+  value: string | number
+  matrixKey?: string
+  permissionName?: string
+  linkFn?: () => void
 }
 
 interface ChartData {
@@ -34,12 +45,16 @@ const conf = reactive({
       name: '网站-全部',
       icon: 'home-website',
       value: 0,
+      matrixKey: 'website',
+      permissionName: '网站',
       linkFn: () => System.router.push('/website')
     },
     {
       name: '数据-全部',
       icon: 'home-data',
       value: 0,
+      matrixKey: 'database',
+      permissionName: '数据库',
       linkFn: () => System.router.push('/database')
     },
     {
@@ -53,7 +68,14 @@ const conf = reactive({
       value: '当前内容为空，点击编辑',
       linkFn: () => conf.memo.open()
     }
-  ],
+  ] as HomeCategory[],
+  handleCategoryClick: (item: HomeCategory) => {
+    if (item.matrixKey && !sconfig.hasMenuAccess(item.matrixKey)) {
+      ElMessage.warning(`当前账号暂无${item.permissionName || resolveMenuLabelByKey(item.matrixKey) || item.name}菜单权限`)
+      return
+    }
+    item.linkFn?.()
+  },
   getSysCount: async () => {
     const { data: wbsiteCount } = await Api.getWebsiteCount()
     const { data: databaseCount } = await Api.getDatabaseCount()
@@ -510,7 +532,7 @@ onMounted(() => {
             </div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :key="item.name" :lg="6" :md="12" :sm="24">
-                <div class="category-item" @click="item.linkFn?.()">
+                <div class="category-item" @click="conf.handleCategoryClick(item)">
                   <div class="icon">
                     <v-s-icon :name="item.icon" size="30" :color="conf.themeColor[sapp.theme]" />
                   </div>

@@ -33,23 +33,35 @@ const conf = reactive({
     conf.formRef?.validate(async valid => {
       if (!valid) return
       conf.loading = true
-      const { data: res } = await Api.login({
-        username: conf.form.username,
-        password: conf.form.password,
-        totpCode: conf.requiresTwoFactor ? conf.form.totpCode : '',
-        final: () => conf.loading = false
-      })
-      if (res.requiresTwoFactor && !res.authenticated) {
-        conf.requiresTwoFactor = true
-        conf.form.totpCode = ''
-        ElMessage.info('请输入身份验证器动态口令或恢复码')
-        return
+      try {
+        const { data: res } = await Api.login({
+          username: conf.form.username,
+          password: conf.form.password,
+          totpCode: conf.requiresTwoFactor ? conf.form.totpCode : '',
+          final: () => conf.loading = false
+        })
+        if (res.requiresTwoFactor && !res.authenticated) {
+          conf.requiresTwoFactor = true
+          conf.form.totpCode = ''
+          ElMessage.info('请输入身份验证器动态口令或恢复码')
+          return
+        }
+
+        sconfig.login(res)
+        try {
+          const matrixResponse = await Api.getAccessMatrix()
+          sconfig.setMenuAccess(matrixResponse?.data?.menu || {})
+        } catch {
+          sconfig.setMenuAccess({})
+        }
+
+        ElMessage.success('登录成功')
+        setTimeout(() => {
+          System.router.push(res.mustChangePassword ? '/first-login' : '/')
+        }, 500)
+      } catch {
+        conf.loading = false
       }
-      ElMessage.success('登录成功')
-      sconfig.login(res)
-      setTimeout(() => {
-        System.router.push(res.mustChangePassword ? '/first-login' : '/')
-      }, 500)
     })
   }
 })

@@ -195,14 +195,13 @@ const conf = reactive({
     }
   ] as NavItem[]
 })
-const accessMatrixMenu = ref<Record<string, boolean>>({})
 const isPrivilegedUser = computed(() =>
   Boolean(sconfig.userInfo?.user?.isAdmin || sconfig.userInfo?.user?.isSuperAdmin)
 )
 const hasMenuPermission = (item: NavItem) => {
   if (isPrivilegedUser.value) return true
   if (!item.matrixKeys?.length) return true
-  return item.matrixKeys.some((key) => Boolean(accessMatrixMenu.value[key]))
+  return item.matrixKeys.some((key) => sconfig.hasMenuAccess(key))
 }
 const visibleNavList = computed(() =>
   conf.navList.filter((item) => {
@@ -323,10 +322,10 @@ onMounted(() => {
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
     .then((response) => {
-      accessMatrixMenu.value = response?.data?.menu || {}
+      sconfig.setMenuAccess(response?.data?.menu || {})
     })
     .catch(() => {
-      accessMatrixMenu.value = {}
+      sconfig.setMenuAccess({})
     })
 })
 
