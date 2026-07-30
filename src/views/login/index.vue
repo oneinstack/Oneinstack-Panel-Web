@@ -14,6 +14,17 @@ const updateViewport = () => {
 onMounted(() => window.addEventListener('resize', updateViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
+const goAfterLogin = (routePath: string) => {
+  const normalizedRoute = routePath.startsWith('/') ? routePath : `/${routePath}`
+  const currentPathname = window.location.pathname || '/'
+  if (currentPathname !== '/') {
+    const hashURL = `${window.location.origin}${currentPathname}#${normalizedRoute}`
+    window.location.replace(hashURL)
+    return
+  }
+  System.router.push(normalizedRoute)
+}
+
 const conf = reactive({
   form: {
     username: '',
@@ -57,7 +68,7 @@ const conf = reactive({
 
         ElMessage.success('登录成功')
         setTimeout(() => {
-          System.router.push(res.mustChangePassword ? '/first-login' : '/')
+          goAfterLogin(res.mustChangePassword ? '/first-login' : '/')
         }, 500)
       } catch {
         conf.loading = false

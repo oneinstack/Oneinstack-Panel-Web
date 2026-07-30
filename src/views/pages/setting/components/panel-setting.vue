@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, onMounted, reactive } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
 import { Api } from '@/api/Api'
-import { onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { watchEffect } from 'vue'
 import sconfig from '@/sstore/sconfig'
@@ -18,6 +17,22 @@ interface Props {
 interface Config {
   settingData: FormItem[]
   [key: string]: any
+}
+
+interface PanelEntryState {
+  loading: boolean
+  saving: boolean
+  bindAddress: string
+  httpPort: string
+  httpsEnabled: boolean
+  httpsPort: string
+  httpsCertificateFile: string
+  httpsPrivateKeyFile: string
+  trustedProxies: string[]
+  panelEntryEnabled: boolean
+  panelEntryPath: string
+  panelAccessURL: string
+  restartRequired: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -290,6 +305,173 @@ const conf = reactive<Config>({
   ]
 })
 
+const panelEntry = reactive<PanelEntryState>({
+  loading: false,
+  saving: false,
+  bindAddress: '0.0.0.0',
+  httpPort: '8089',
+  httpsEnabled: false,
+  httpsPort: '8443',
+  httpsCertificateFile: '',
+  httpsPrivateKeyFile: '',
+  trustedProxies: [],
+  panelEntryEnabled: false,
+  panelEntryPath: '',
+  panelAccessURL: '',
+  restartRequired: false
+})
+
+const panelEntryAccessLabel = computed(() => panelEntry.panelEntryEnabled ? '已启用' : '未启用')
+const currentRoutePath = computed(() => System.getRouterPath() || '/setting')
+const currentPanelAccessURL = computed(() => {
+  if (!panelEntry.panelEntryEnabled) return ''
+  const entryPath = panelEntry.panelEntryPath || ''
+  if (!entryPath) return ''
+  const normalizedPath = entryPath.startsWith('/') ? entryPath : `/${entryPath}`
+  return `${window.location.origin}${normalizedPath}`
+})
+
+const applyPanelEntry = (data?: Record<string, any>) => {
+  if (!data) return
+  panelEntry.bindAddress = data.bindAddress || '0.0.0.0'
+  panelEntry.httpPort = data.httpPort || '8089'
+  panelEntry.httpsEnabled = Boolean(data.httpsEnabled)
+  panelEntry.httpsPort = data.httpsPort || '8443'
+  panelEntry.httpsCertificateFile = data.httpsCertificateFile || ''
+  panelEntry.httpsPrivateKeyFile = data.httpsPrivateKeyFile || ''
+  panelEntry.trustedProxies = data.trustedProxies || []
+  panelEntry.panelEntryEnabled = Boolean(data.panelEntryEnabled)
+  panelEntry.panelEntryPath = data.panelEntryPath || ''
+  panelEntry.panelAccessURL = data.panelAccessURL || ''
+  panelEntry.restartRequired = Boolean(data.restartRequired)
+}
+
+const loadPanelEntry = async () => {
+  panelEntry.loading = true
+  try {
+    const { data } = await Api.getPanelNetwork()
+    applyPanelEntry(data)
+  } catch {
+    ElMessage.error('获取安全入口配置失败')
+  } finally {
+    panelEntry.loading = false
+  }
+}
+
+const buildPanelRouteURL = (accessURL: string) => {
+  const targetAccessURL = accessURL || currentPanelAccessURL.value
+  if (!targetAccessURL) return ''
+  const normalized = targetAccessURL.replace(/\/$/, '')
+  const routePath = currentRoutePath.value.startsWith('/') ? currentRoutePath.value : `/${currentRoutePath.value}`
+  return `${normalized}/#${routePath}`
+}
+
+const maybeRedirectToPanelEntry = async (accessURL: string, message: string) => {
+  const target = buildPanelRouteURL(accessURL)
+  if (!target) return
+  try {
+    await ElMessageBox.confirm(message, '访问地址已更新', {
+      type: 'warning',
+      confirmButtonText: '立即跳转',
+      cancelButtonText: '稍后处理'
+    })
+    window.location.assign(target)
+  } catch {
+    ElMessage.info('请记得使用新的访问地址进入面板')
+  }
+}
+
+const writeClipboardText = async (text: string) => {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', 'readonly')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  if (!copied) {
+    throw new Error('copy failed')
+  }
+}
+
+const savePanelEntry = async (rotatePanelEntry = false) => {
+  const panelEntryPath = panelEntry.panelEntryPath.trim()
+  if (panelEntry.panelEntryEnabled && panelEntryPath && !/^\/[^/?#\s]+$/.test(panelEntryPath)) {
+    ElMessage.warning('安全入口路径格式应为 /<随机串>')
+    return
+  }
+  const requestPanelEntryPath = panelEntry.panelEntryEnabled && !rotatePanelEntry ? panelEntryPath : ''
+  const actionLabel = rotatePanelEntry
+    ? '轮换后旧入口会立即失效，是否继续？'
+    : panelEntry.panelEntryEnabled
+      ? '启用后根路径将无法访问面板，是否继续保存？'
+      : '关闭后面板将恢复根路径访问，是否继续保存？'
+
+  try {
+    await ElMessageBox.confirm(actionLabel, rotatePanelEntry ? '轮换安全入口' : '保存安全入口配置', {
+      type: 'warning',
+      confirmButtonText: rotatePanelEntry ? '确认轮换' : '确认保存',
+      cancelButtonText: '取消'
+    })
+  } catch {
+    return
+  }
+
+  panelEntry.saving = true
+  try {
+    const { data } = await Api.updatePanelNetwork({
+      bindAddress: panelEntry.bindAddress,
+      httpPort: panelEntry.httpPort,
+      httpsEnabled: panelEntry.httpsEnabled,
+      httpsPort: panelEntry.httpsPort,
+      httpsCertificateFile: panelEntry.httpsCertificateFile,
+      httpsPrivateKeyFile: panelEntry.httpsPrivateKeyFile,
+      trustedProxies: panelEntry.trustedProxies,
+      panelEntryEnabled: panelEntry.panelEntryEnabled,
+      panelEntryPath: requestPanelEntryPath,
+      rotatePanelEntry
+    })
+    applyPanelEntry(data)
+    ElMessage.success(rotatePanelEntry ? '安全入口已轮换' : '安全入口配置已保存')
+
+    if (rotatePanelEntry) {
+      await maybeRedirectToPanelEntry(data?.panelAccessURL, '新的安全入口已经生效，建议立即跳转到新地址继续操作。')
+      return
+    }
+
+    if (panelEntry.panelEntryEnabled) {
+      await maybeRedirectToPanelEntry(data?.panelAccessURL, '安全入口已经启用，建议立即跳转到新的访问地址。')
+    }
+  } catch {
+    ElMessage.error(rotatePanelEntry ? '轮换安全入口失败' : '保存安全入口配置失败')
+  } finally {
+    panelEntry.saving = false
+  }
+}
+
+const copyPanelAccessURL = async () => {
+  const accessURL = currentPanelAccessURL.value
+  if (!accessURL) {
+    ElMessage.warning('暂无可复制的访问地址')
+    return
+  }
+  try {
+    await writeClipboardText(accessURL)
+    ElMessage.success('访问地址已复制')
+  } catch {
+    ElMessage.error('复制失败，请检查浏览器剪贴板权限')
+  }
+}
+
 const getSystemInfo = async () => {
   const res = props.allinfo  // 使用 props 中的数据
   if (!res) return
@@ -308,6 +490,10 @@ const getSystemInfo = async () => {
 watchEffect(() => {
   getSystemInfo()
 })
+
+onMounted(() => {
+  void loadPanelEntry()
+})
 </script>
 
 <template>
@@ -317,6 +503,69 @@ watchEffect(() => {
     </div>
     <div class="basic-card__body">
       <setting-form :data="conf.settingData" />
+    </div>
+
+    <div class="panel-entry-card" v-loading="panelEntry.loading">
+      <div class="panel-entry-card__header">
+        <div>
+          <div class="panel-entry-card__title">面板安全入口</div>
+          <p class="panel-entry-card__desc">启用后面板将通过随机路径访问，可有效降低被扫描和暴力探测的风险。</p>
+        </div>
+        <div class="panel-entry-card__status" :class="{ active: panelEntry.panelEntryEnabled }">
+          {{ panelEntryAccessLabel }}
+        </div>
+      </div>
+
+      <div class="panel-entry-overview">
+        <div class="panel-entry-overview__item">
+          <span>当前入口路径</span>
+          <strong>{{ panelEntry.panelEntryPath || '自动生成 / 未启用' }}</strong>
+        </div>
+        <div class="panel-entry-overview__item">
+          <span>生效状态</span>
+          <strong>{{ panelEntry.restartRequired ? '需要重启生效' : '已生效' }}</strong>
+        </div>
+        <div class="panel-entry-overview__item panel-entry-overview__item--wide">
+          <span>当前访问地址</span>
+          <strong>{{ currentPanelAccessURL || '未生成' }}</strong>
+        </div>
+      </div>
+
+      <div class="panel-entry-form">
+        <div class="panel-entry-form__row">
+          <label>启用安全入口</label>
+          <div class="panel-entry-form__control panel-entry-form__control--inline">
+            <el-switch v-model="panelEntry.panelEntryEnabled" />
+            <span class="panel-entry-form__hint">关闭时保持根路径访问；开启后根路径会返回 404。</span>
+          </div>
+        </div>
+
+        <div class="panel-entry-form__row">
+          <label>自定义入口路径</label>
+          <div class="panel-entry-form__control">
+            <el-input
+              v-model="panelEntry.panelEntryPath"
+              :disabled="!panelEntry.panelEntryEnabled"
+              placeholder="留空则由后端自动生成，例如 /AbCd123456"
+            />
+            <span class="panel-entry-form__hint">格式固定为 `/&lt;slug&gt;`，留空即可自动生成。轮换入口时会忽略这里的值。</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel-entry-actions">
+        <el-button type="primary" :loading="panelEntry.saving" @click="savePanelEntry(false)">保存配置</el-button>
+        <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">复制访问地址</el-button>
+        <el-button
+          type="warning"
+          plain
+          :disabled="!panelEntry.panelEntryEnabled"
+          :loading="panelEntry.saving"
+          @click="savePanelEntry(true)"
+        >
+          轮换安全入口
+        </el-button>
+      </div>
     </div>
   </div>
 </template>
@@ -369,6 +618,188 @@ watchEffect(() => {
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     background: var(--surface-subtle);
+  }
+}
+
+.panel-entry-card {
+  margin-top: 22px;
+  padding: 24px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface-subtle);
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  &__title {
+     display: flex;
+    align-items: center;
+    position: relative;
+    font-weight: 650;
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 10px;
+
+    &::before {
+      content: '';
+      background: var(--el-color-primary);
+      width: 3px;
+      height: 17px;
+      margin-right: 9px;
+      border-radius: 99px;
+    }
+  }
+
+  &__desc {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+
+  &__status {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 700;
+
+    &.active {
+      background: rgba(34, 197, 94, 0.12);
+      color: #16a34a;
+    }
+  }
+}
+
+.panel-entry-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+
+  &__item {
+    padding: 16px 18px;
+    border-radius: 12px;
+    background: var(--surface-card);
+    box-shadow: 0 0 0 1px var(--border-subtle) inset;
+
+    span {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--text-tertiary);
+      font-size: 12px;
+    }
+
+    strong {
+      display: block;
+      color: var(--text-primary);
+      font-size: 14px;
+      line-height: 1.7;
+      word-break: break-all;
+    }
+  }
+
+  &__item--wide {
+    grid-column: 1 / -1;
+  }
+}
+
+.panel-entry-form {
+  display: grid;
+  gap: 18px;
+
+  &__row {
+    display: grid;
+    grid-template-columns: 140px minmax(0, 1fr);
+    gap: 18px;
+    align-items: start;
+
+    label {
+      padding-top: 11px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 650;
+    }
+  }
+
+  &__control {
+    min-width: 0;
+  }
+
+  &__control--inline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  &__hint {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.7;
+  }
+}
+
+.panel-entry-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+@media (max-width: 900px) {
+  .panel-entry-overview {
+    grid-template-columns: 1fr;
+
+    &__item--wide {
+      grid-column: auto;
+    }
+  }
+
+  .panel-entry-form__row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+
+    label {
+      padding-top: 0;
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .basic-card {
+    &.isCard {
+      padding: 20px 16px;
+    }
+
+    &__body {
+      padding: 16px;
+    }
+  }
+
+  .panel-entry-card {
+    padding: 16px;
+
+    &__header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+  }
+
+  .panel-entry-actions {
+    :deep(.el-button) {
+      width: 100%;
+      margin-left: 0;
+    }
   }
 }
 </style>

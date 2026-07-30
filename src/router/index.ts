@@ -8,6 +8,7 @@ import sconfig from '@/sstore/sconfig'
 import { Api } from '@/api/Api'
 import { ElMessage } from 'element-plus'
 import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
+import { getPanelEntryStatus, isPanelEntryPathAllowed } from '@/utils/panel-entry'
 
 export const initRouter = () => {
   const _routes = CRouter.init({
@@ -48,13 +49,18 @@ export const initRouter = () => {
     routes: _routes
   })
 
-  const whiteList = ['/login', '/login/scan']
+  const whiteList = ['/login', '/login/scan', '/not-found']
   router.beforeEach(async (to, from, next) => {
     let _name = (to.meta.name as any) || ''
     let _title = System.env.title
     if (_name) _title = _title + ' - ' + _name
     document.title = _title
     document.documentElement.scrollTop = 0
+    const panelEntryStatus = await getPanelEntryStatus()
+    if (!isPanelEntryPathAllowed(panelEntryStatus)) {
+      if (to.path !== '/not-found') return next('/not-found')
+      return next()
+    }
     const authenticated = Boolean(sconfig.userInfo?.authenticated)
     const mustChangePassword = Boolean(sconfig.userInfo?.mustChangePassword)
     if (!authenticated && !whiteList.includes(to.path)) return next('/login')

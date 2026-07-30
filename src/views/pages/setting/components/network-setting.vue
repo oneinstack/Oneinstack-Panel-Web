@@ -22,6 +22,9 @@ interface NetworkSettings {
   httpsCertificateFile: string
   httpsPrivateKeyFile: string
   trustedProxies: string[]
+  panelEntryEnabled: boolean
+  panelEntryPath: string
+  panelAccessURL?: string
   certificate?: CertificateStatus
   restartRequired: boolean
 }
@@ -128,9 +131,13 @@ const saveSettings = async () => {
       .split(/[\n,]+/)
       .map(item => item.trim())
       .filter(Boolean)
+    const panelEntryEnabled = Boolean(current.value?.panelEntryEnabled)
     const { data } = await Api.updatePanelNetwork({
       ...form,
-      trustedProxies
+      trustedProxies,
+      panelEntryEnabled,
+      panelEntryPath: panelEntryEnabled ? (current.value?.panelEntryPath || '') : '',
+      rotatePanelEntry: false
     })
     applySettings(data)
     ElMessage.success(data.restartRequired ? '配置已保存，请重启面板服务后生效' : '配置校验通过')
