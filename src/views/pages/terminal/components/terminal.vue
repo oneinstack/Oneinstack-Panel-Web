@@ -1,615 +1,536 @@
 <template>
-  <div class="terminalPage">
-    <div class="terminal-container">
-      <div class="terminal" ref="terminalDiv"></div>
+  <section class="secure-terminal">
+    <header class="terminal-header">
+      <div>
+        <div class="terminal-eyebrow">ISOLATED WEB SHELL</div>
+        <h2>安全终端</h2>
+        <p>以独立低权限用户运行，命令参数不会写入审计日志。</p>
+      </div>
+      <div class="terminal-actions">
+        <span class="connection-state" :class="connectionState">
+          <i />
+          {{ connectionLabel }}
+        </span>
+        <el-button
+          v-if="connectionState !== 'connected'"
+          type="primary"
+          :loading="connecting"
+          :disabled="!status?.enabled || !status?.isolationAvailable"
+          @click="connectTerminal"
+        >
+          建立安全会话
+        </el-button>
+        <el-button v-else type="danger" plain @click="disconnectTerminal">
+          断开会话
+        </el-button>
+      </div>
+    </header>
+
+    <el-alert
+      v-if="status && (!status.enabled || !status.isolationAvailable)"
+      class="terminal-alert"
+      type="warning"
+      :closable="false"
+      show-icon
+      :title="status.enabled ? '终端隔离环境不可用' : 'Web 终端当前未启用'"
+      :description="status.reason || '请在 Panel 配置中启用终端后重新加载。'"
+    />
+
+    <div v-if="status" class="security-grid">
+      <div class="security-item">
+        <span>运行身份</span>
+        <strong>{{ status.runtimeUser || '不可用' }}</strong>
+      </div>
+      <div class="security-item">
+        <span>权限边界</span>
+        <strong>无 sudo · 无 capabilities</strong>
+      </div>
+      <div class="security-item">
+        <span>会话限制</span>
+        <strong>
+          {{ status.maxSessionMinutes }} 分钟 · 空闲 {{ status.idleMinutes }} 分钟
+          · 输出 {{ status.maxOutputMB }} MB
+        </strong>
+      </div>
+      <div class="security-item">
+        <span>并发会话</span>
+        <strong>
+          全局 {{ status.activeSessions }} / {{ status.maxConcurrent }}
+          · 单账号 {{ status.maxPerUser }}
+        </strong>
+      </div>
     </div>
-  </div>
+
+    <div class="audit-notice">
+      <el-icon><Lock /></el-icon>
+      <div>
+        <strong>命令级安全审计已开启</strong>
+        <span>记录会话、命令提交时间和操作者；命令内容、参数、交互输入和终端输出均不保存。</span>
+      </div>
+    </div>
+
+    <div class="terminal-shell">
+      <div class="terminal-shell__bar">
+        <div class="window-dots"><i /><i /><i /></div>
+        <span>{{ status?.runtimeUser || 'one-terminal' }}@panel</span>
+        <span class="terminal-path">{{ status?.workingDirectory }}</span>
+      </div>
+      <div ref="terminalDiv" class="terminal-screen" />
+      <div v-if="connectionState !== 'connected'" class="terminal-placeholder">
+        <el-icon><Monitor /></el-icon>
+        <strong>{{ status?.enabled ? '终端尚未连接' : '终端已关闭' }}</strong>
+        <span>连接时需要再次输入当前管理员密码。</span>
+      </div>
+    </div>
+  </section>
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Terminal } from 'xterm';
-import 'xterm/css/xterm.css';
-// import { WebLinksAddon } from 'xterm-addon-web-links';
-import { FitAddon } from 'xterm-addon-fit';
-import { ElMessageBox } from 'element-plus';
-import { Api } from '@/api/Api';
-import System from '@/utils/System';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Lock, Monitor } from '@element-plus/icons-vue'
+import { Terminal } from 'xterm'
+import { FitAddon } from 'xterm-addon-fit'
+import 'xterm/css/xterm.css'
+import { Api } from '@/api/Api'
+import System from '@/utils/System'
 
+interface TerminalStatus {
+  enabled: boolean
+  isolationAvailable: boolean
+  reason?: string
+  runtimeUser: string
+  workingDirectory: string
+  maxSessionMinutes: number
+  idleMinutes: number
+  maxOutputMB: number
+  maxConcurrent: number
+  maxPerUser: number
+  activeSessions: number
+  commandAudit: boolean
+  noNewPrivileges: boolean
+  capabilities: string
+}
 
-// 定义终端容器的引用
-const terminalDiv = ref<HTMLElement | null>(null);
-// 添加命令提示库
-// const commandSuggestions = {
-//   'cat': { desc: '显示文件内容' },
-//   'cd': { desc: '切换目录' },
-//   'clear': { desc: '清屏' },
-//   'help': { desc: '显示帮助信息' },
-//   'ls': { desc: '列出目录内容' },
-//   'pwd': { desc: '显示当前工作目录' },
-//   // 可以添加更多命令
-// };
-// 模拟文件系统测试
-// const fileSystem = {
-//   '/': {
-//     type: 'dir',
-//     content: {
-//       'home': {
-//         type: 'dir',
-//         content: {
-//           'user': {
-//             type: 'dir',
-//             content: {
-//               'documents': {
-//                 type: 'dir',
-//                 content: {
-//                   'readme.txt': { type: 'file', content: '这是一个测试文件' },
-//                   'test.js': { type: 'file', content: 'console.log("Hello World!");' },
-//                   'project.zip': { type: 'file', content: 'ZIP文件内容' },
-//                   'image.png': { type: 'file', content: '图片文件内容' },
-//                   'script.sh': { type: 'file', content: '#!/bin/bash\necho "Hello"' },
-//                   'report.pdf': { type: 'file', content: 'PDF文档内容' },
-//                   'data.xlsx': { type: 'file', content: '表格内容' }
-//                 }
-//               },
-//               'downloads': {
-//                 type: 'dir',
-//                 content: {
-//                   'archive.tar.gz': { type: 'file', content: '压缩文件内容' },
-//                   'movie.mp4': { type: 'file', content: '视频文件内容' },
-//                   'setup.exe': { type: 'file', content: '可执行文件内容' }
-//                 }
-//               },
-//               'pictures': {
-//                 type: 'dir',
-//                 content: {
-//                   'avatar.jpg': { type: 'file', content: '照片内容' },
-//                   'logo.svg': { type: 'file', content: '矢量图内容' }
-//                 }
-//               }
-//             }
-//           }
-//         }
-//       },
-//       'usr': { type: 'dir', content: {} },
-//       'etc': { type: 'dir', content: {} }
-//     }
-//   }
-// };
-// 当前工作目录测试使用可以删除
-// let currentPath = '/home/user';
-// 添加状态变量测试使用可以删除
-// let suggestions: string[] = [];
-// let currentSuggestionIndex = -1;
-// 模拟命令处理器测试使用可以删除
-// const executeCommand = (command: string): string => {
-//   const args = command.trim().split(' ');
-//   const cmd = args[0];
+type ConnectionState = 'disconnected' | 'connecting' | 'connected' | 'closed'
 
-//   switch (cmd) {
-//     case 'pwd':
-//       return currentPath + '\n';
+const terminalDiv = ref<HTMLElement>()
+const status = ref<TerminalStatus>()
+const connecting = ref(false)
+const connectionState = ref<ConnectionState>('disconnected')
+let terminal: Terminal | undefined
+let fitAddon: FitAddon | undefined
+let socket: WebSocket | undefined
+let resizeObserver: ResizeObserver | undefined
+let statusTimer: number | undefined
 
-//     case 'ls':
-//       const dir = getDirectoryFromPath(currentPath);
-//       if (!dir || dir.type !== 'dir') return 'Not a directory\n';
-
-//       let output = '';
-//       for (const [name, item] of Object.entries(dir.content)) {
-//         let colorCode = '\x1b[0m'; // 默认颜色
-
-//         if ((item as { type: string }).type === 'dir') {
-//           colorCode = '\x1b[34m'; // 目录使用蓝色
-//         } else if (name.match(/\.(zip|gz|rar|7z|bz2|tar)$/i)) {
-//           colorCode = '\x1b[31m'; // 压缩文件使用红色
-//         } else if (name.match(/\.(sh|exe|cmd|bat|py|js|pl|ps1|rb)$/i)) {
-//           colorCode = '\x1b[32m'; // 可执行文件使用绿色
-//         } else if (name.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp|ico|mp4|mov)$/i)) {
-//           colorCode = '\x1b[35m'; // 图片和视频文件使用洋红色
-//         } else if (name.match(/\.(txt|md|doc|docx|pdf|xlsx|xls|csv|ppt|pptx|odt|ods)$/i)) {
-//           colorCode = '\x1b[33m'; // 文档文件使用黄色
-//         }
-//         const prefix = (item as { type: string }).type === 'dir' ? 'd' : '-';
-//         output += `${prefix}rw-r--r--  1 user  staff  ${colorCode}${name}\x1b[0m\n`;
-//       }
-//       return output;
-
-//     case 'cd':
-//       const newPath = args[1] || '/home/user';
-//       if (newPath === '..') {
-//         const parentPath = currentPath.split('/').slice(0, -1).join('/');
-//         currentPath = parentPath || '/';
-//         return '';
-//       }
-//       const targetDir = getDirectoryFromPath(newPath.startsWith('/') ? newPath : `${currentPath}/${newPath}`);
-//       if (targetDir && targetDir.type === 'dir') {
-//         currentPath = newPath.startsWith('/') ? newPath : `${currentPath}/${newPath}`;
-//         return '';
-//       }
-//       return 'No such directory\n';
-
-//     case 'cat':
-//       if (!args[1]) return 'Please specify a file\n';
-//       const file = getFileFromPath(`${currentPath}/${args[1]}`);
-//       if (!file || file.type !== 'file') return 'No such file\n';
-//       return file.content + '\n';
-
-//     case 'clear':
-//       xterm?.clear();
-//       return '';
-
-//     case 'help':
-//       return 'Available commands:\n' +
-//         'pwd - Print working directory\n' +
-//         'ls - List directory contents\n' +
-//         'cd [dir] - Change directory\n' +
-//         'cat [file] - Show file contents\n' +
-//         'clear - Clear screen\n' +
-//         'help - Show this help\n';
-
-//     default:
-//       return `Command not found: ${cmd}\n`;
-//   }
-// };
-
-// 辅助函数：从路径获取目录或文件测试使用可以删除
-// const getDirectoryFromPath = (path: string) => {
-//   const parts = path.split('/').filter(p => p);
-//   let current: any = fileSystem['/'];
-
-//   for (const part of parts) {
-//     if (!current.content[part]) return null;
-//     current = current.content[part];
-//   }
-//   return current;
-// };
-
-// const getFileFromPath = (path: string) => {
-//   const parts = path.split('/').filter(p => p);
-//   const fileName = parts.pop();
-//   const dir = getDirectoryFromPath('/' + parts.join('/'));
-//   return dir?.content[fileName!];
-// };
-
-// 添加命令历史记录
-const commandHistory: string[] = [];
-let historyIndex = -1;
-// 定义状态变量
-let xterm: Terminal | null = null;
-let fitAddon: FitAddon | null = null;
-let ws: WebSocket | null = null;
-let commandBuffer = '';
-// 添加一个标志位，用于记录 WebSocket 是否已经连接
-let cursorPosition = 0;
-let isWebSocketConnected = false;
-// 处理终端输入数据的方法
-const terminalOnData = (data: string) => {
-  // 更严格的输入验证，只允许直接输入的ASCII字符
-  if (!/^[\x00-\x7F]$/.test(data) || data.length > 1) {
-    return; // 如果是组合键输入或非单个ASCII字符，直接返回不处理
+const connectionLabel = computed(() => {
+  switch (connectionState.value) {
+    case 'connecting': return '正在认证'
+    case 'connected': return '会话已连接'
+    case 'closed': return '会话已结束'
+    default: return '未连接'
   }
-  // 处理退格键
-  if (data === '\u007f') {
-    if (cursorPosition > 0) {
-      commandBuffer = commandBuffer.slice(0, -1);
-      cursorPosition--;
-      xterm?.write('\b \b');
-    }
-    return;
+})
+
+const encodeInput = (value: string) => {
+  const bytes = new TextEncoder().encode(value)
+  let binary = ''
+  bytes.forEach(byte => { binary += String.fromCharCode(byte) })
+  return window.btoa(binary)
+}
+
+const decodeOutput = (value: string) => {
+  const binary = window.atob(value)
+  const bytes = new Uint8Array(binary.length)
+  for (let index = 0; index < binary.length; index++) {
+    bytes[index] = binary.charCodeAt(index)
   }
+  return bytes
+}
 
-  // 处理回车键
-  if (data === '\r') {
-    // 添加换行符
-    xterm?.write('\r\n');
-
-    // 发送命令到服务器
-    const encodedCommand = btoa(commandBuffer + '\n');
-    ws?.send(encodedCommand);
-
-    // 保存命令历史
-    if (commandBuffer) {
-      commandHistory.push(commandBuffer);
-      historyIndex = commandHistory.length;
-    }
-
-    // 重置命令缓冲区和光标位置
-    commandBuffer = '';
-    cursorPosition = 0;
-    return;
-    //测试版本可以删除
-    // xterm?.write('\r\n');
-    // if (commandBuffer.trim()) {
-    //   const output = executeCommand(commandBuffer);
-    //   xterm?.write(output);
-    // }
-    // xterm?.write('$ ');
-    // commandBuffer = '';
-    // cursorPosition = 0;
-    // return;
-  }
-
-  // 处理普通字符输入
-  xterm?.write(data);
-  commandBuffer += data;
-  cursorPosition++;
-};
-// 处理终端按键事件的方法
-const terminalOnKey = (event: { domEvent: KeyboardEvent }) => {
-  const { domEvent } = event;
-  const ctrlKey = checkCtrlKeyAllSystem(domEvent);
-
-  // 处理 Tab 键
-  if (domEvent.key === 'Tab') {
-    domEvent.preventDefault();// 阻止 Tab 键的默认行为
-    domEvent.stopPropagation();
-    // if (suggestions.length === 0) {//这个可以删
-    //   const input = commandBuffer.trim();
-    //   suggestions = Object.keys(commandSuggestions).filter(cmd =>
-    //     cmd.startsWith(input)
-    //   );
-    //   if (suggestions.length > 0) {
-    //     if (suggestions.length === 1) {
-    //       // 只有一个匹配项时，直接补全剩余部分
-    //       const remainingText = suggestions[0].slice(input.length);
-    //       commandBuffer = suggestions[0];
-    //       cursorPosition = commandBuffer.length;
-
-    //       xterm?.write(remainingText);
-    //     } else {
-    //       // 多个匹配项，显示所有选项
-    //       xterm?.write('\r\n');
-
-    //       // 计算最长命令的长度，用于对齐描述
-    //       const maxLength = Math.max(...suggestions.map(cmd => cmd.length));
-    //       suggestions.forEach(cmd => {
-    //         const padding = ' '.repeat(maxLength - cmd.length + 2); // 添加固定间距
-    //         xterm?.write(`  ${cmd}${padding}- ${commandSuggestions[cmd as keyof typeof commandSuggestions].desc}\r\n`);
-    //       });
-    //       xterm?.write('$ ' + input); // 使用原始输入而不是整个命令
-    //     }
-    //     currentSuggestionIndex = 0;
-    //   }
-    // } else {
-    //   // 再次按 Tab，循环选择
-    //   currentSuggestionIndex = (currentSuggestionIndex + 1) % suggestions.length;
-    //   while (cursorPosition > 0) {
-    //     xterm?.write('\b \b');
-    //     cursorPosition--;
-    //   }
-    //   commandBuffer = suggestions[currentSuggestionIndex];
-    //   cursorPosition = commandBuffer.length;
-    //   xterm?.write(commandBuffer);
-    // }
-    return;
-  }
-
-  // 其他按键时重置建议列表
-  if (domEvent.key !== 'Tab') {
-    // suggestions = [];
-    // currentSuggestionIndex = -1;
-  }
-
-  // 处理左箭头键
-  if (domEvent.key === 'ArrowLeft') {
-    if (cursorPosition > 0) {
-      cursorPosition--;
-      xterm?.write('\b');
-    }
-    return;
-  }
-
-  // 处理右箭头键
-  if (domEvent.key === 'ArrowRight') {
-    if (cursorPosition < commandBuffer.length) {
-      xterm?.write(commandBuffer[cursorPosition]);
-      cursorPosition++;
-    }
-    return;
-  }
-
-  // 处理方向键
-  if (domEvent.key === 'ArrowUp') {
-    if (historyIndex > 0) {
-      historyIndex--;
-      const command = commandHistory[historyIndex];
-      // 清除当前行
-      while (cursorPosition > 0) {
-        xterm?.write('\b \b');
-        cursorPosition--;
-      }
-      commandBuffer = command;
-      cursorPosition = command.length;
-      xterm?.write(command);
-    }
-    return;
-  }
-
-  if (domEvent.key === 'ArrowDown') {
-    if (historyIndex < commandHistory.length - 1) {
-      historyIndex++;
-      const command = commandHistory[historyIndex];
-      // 清除当前行
-      while (cursorPosition > 0) {
-        xterm?.write('\b \b');
-        cursorPosition--;
-      }
-      commandBuffer = command;
-      cursorPosition = command.length;
-      xterm?.write(command);
-    } else if (historyIndex === commandHistory.length - 1) {
-      historyIndex++;
-      // 清除当前行
-      while (cursorPosition > 0) {
-        xterm?.write('\b \b');
-        cursorPosition--;
-      }
-      commandBuffer = '';
-      cursorPosition = 0;
-    }
-    return;
-  }
-
-  // 处理 Ctrl+C
-  if (ctrlKey && domEvent.key.toLowerCase() === 'c') {
-    xterm?.write('^C\r\n$ ');
-    commandBuffer = '';
-    cursorPosition = 0;
-    return;
-  }
-};
-
-
-// 判断是否按了Ctrl键 - 兼容Mac和Win不同系统
-const checkCtrlKeyAllSystem = (domEvent: KeyboardEvent): boolean => {
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const isPressCtrlKey = isMac ? domEvent.metaKey : domEvent.ctrlKey;
-  return isPressCtrlKey;
-};
-
-// 初始化 WebSocket 的方法
-const initSocket = (wsUrl: string) => {
-  // 只有当 WebSocket 未连接时，才进行连接操作实际方法
-  if (!isWebSocketConnected) {
-    ws = new WebSocket(wsUrl);
-    ws.onopen = socketOnOpen;
-    ws.onmessage = socketOnMessage;
-    ws.onclose = socketOnClose;
-    ws.onerror = socketOnError;
-    isWebSocketConnected = true;
-  }
-  // 模拟 WebSocket 连接可以删除
-  // setTimeout(() => {
-  //   socketOnOpen();
-  //   xterm?.write('$ ');
-  // }, 500);
-};
-// WebSocket 连接成功的回调方法
-const socketOnOpen = () => {
-  xterm?.write(`连接成功 \r\n`);
-  // // 连接成功后添加输入提示
-  // xterm?.write('$ ');
-};
-
-// 修改 WebSocket 消息处理方法
-const socketOnMessage = async (event: MessageEvent) => {
+const loadStatus = async (quiet = false) => {
   try {
-    const encodedText = event.data as string;
-
-    // 验证数据是否为 Base64
-    const isBase64 = /^[A-Za-z0-9+/]*={0,2}$/.test(encodedText);
-    let text;
-
-    if (isBase64) {
-      try {
-        text = atob(encodedText);
-      } catch (error) {
-        console.error('Base64 解码失败:', error);
-        text = encodedText; // 如果解码失败，使用原始数据
-      }
-    } else {
-      text = encodedText; // 如果不是 Base64，直接使用原始数据
-    }
-
-    // 处理命令提示符
-    if (text.endsWith('$ ') || text.endsWith('# ')) {
-      xterm?.write(text);
-      commandBuffer = '';
-      cursorPosition = 0;
-    } else {
-      // 处理命令输出
-      const coloredText = text.replace(/([^\n]*)([\n\r]*)/g, (match, line, lineEnd) => {
-        if (!line) return lineEnd; // 处理空行
-
-        // 目录蓝色
-        if (line.match(/^d/)) {
-          return '\x1b[34m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 压缩文件红色
-        else if (line.match(/^-.*\.(zip|gz|rar|7z|bz2|tar)(\s|$)/i)) {
-          return '\x1b[31m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 可执行文件或脚本绿色
-        else if (line.match(/^-.*\.(sh|exe|cmd|bat|py|js|pl|ps1|rb)(\s|$)/i) || line.match(/^-.*\*\s/)) {
-          return '\x1b[32m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 图片文件洋红色
-        else if (line.match(/^-.*\.(jpg|jpeg|png|gif|bmp|svg|webp|ico)(\s|$)/i)) {
-          return '\x1b[35m' + line + '\x1b[0m' + lineEnd;
-        }
-        // 文档文件黄色
-        else if (line.match(/^-.*\.(txt|md|doc|docx|pdf|xlsx|xls|csv|ppt|pptx|odt|ods)(\s|$)/i)) {
-          return '\x1b[33m' + line + '\x1b[0m' + lineEnd;
-        }
-        return match;
-      });
-
-      xterm?.write(coloredText);
-    }
-  } catch (error) {
-    console.error('处理 WebSocket 消息时出错:', error);
-    xterm?.write('\r\n\x1b[91m处理服务器响应时出错\x1b[0m\r\n');
-  }
-};
-
-// 初始化终端的方法
-const initTerminal = () => {
-  xterm = new Terminal({
-    rows: 30, // 可视窗口的行数
-    cols: 80, // 可视窗口的列数
-    cursorBlink: true, // 光标是否闪烁
-    // 终端主题
-    theme: {
-      foreground: '#ffffff',
-      background: '#000000',
-      cursor: '#ffffff',
-      // 添加更多颜色定义
-      blue: '#0066ff',
-      cyan: '#00ffff',
-      green: '#33ff33',
-      magenta: '#ff00ff',
-      red: '#ff0000',
-      yellow: '#ffff00',
-    },
-    fontFamily: 'Consolas, Courier, monospace',
-    fontSize: 14,
-    convertEol: true, // 确保换行符能正确转换
-  });
-
-  if (terminalDiv.value) {
-    xterm.open(terminalDiv.value);
-    // 添加自定义按键处理器来禁用 Tab 键的默认行为
-    xterm.attachCustomKeyEventHandler((event) => {
-      if (event.key === 'Tab') {
-        event.preventDefault();
-        terminalOnKey({ domEvent: { key: 'Tab', preventDefault: () => { }, stopPropagation: () => { } } as KeyboardEvent }); // 创建一个模拟的事件对象来调用Tab键补全逻辑
-        return false; // 阻止 xterm 处理 Tab 键
-      }
-      return true; // 允许其他按键正常处理
-    });
-
-  }
-
-  fitAddon = new FitAddon();
-  xterm.loadAddon(fitAddon);
-  fitAddon.fit();
-
-  const handleResize = () => {
-    try {
-      fitAddon?.fit();
-    } catch (e) {
-      console.error((e as Error).message);
-    }
-  };
-
-  window.addEventListener('resize', handleResize);
-
-  onBeforeUnmount(() => {
-    window.removeEventListener('resize', handleResize);
-  });
-
-  xterm.write('Connecting \r\n');
-  xterm.onData((data) => terminalOnData(data));
-  xterm.onKey((event) => terminalOnKey(event));
-};
-
-// WebSocket 连接关闭的回调方法
-const socketOnClose = () => {
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    xterm?.write('\r\n\x1b[91m连接已关闭，请刷新重试！');
-  }
-  // 当连接关闭时，将标志位重置为 false
-  isWebSocketConnected = false;
-};
-
-// WebSocket 连接出错的回调方法
-const socketOnError = (err: Event) => {
-  console.error('WebSocket connection error:', err);
-  // 当连接出错时，将标志位重置为 false
-  isWebSocketConnected = false;
-};
-
-
-// 组件挂载时初始化终端和 WebSocket
-onMounted(async () => {
-  initTerminal();
-  try {
-    const { value: password } = await ElMessageBox.prompt('请输入当前管理员密码进行二次认证。终端票据仅可使用一次。', '启用终端会话', {
-      inputType: 'password',
-      inputPlaceholder: '管理员密码',
-      confirmButtonText: '连接',
-      cancelButtonText: '取消',
-      inputValidator: (value) => Boolean(value) || '请输入密码'
-    });
-    const { data } = await Api.createTerminalTicket({ password });
-    const apiBase = new URL(System.env.API || '/v1', window.location.origin);
-    if (apiBase.origin !== window.location.origin) throw new Error('终端只允许同源连接');
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const apiPath = apiBase.pathname.replace(/\/$/, '');
-    const wsUrl = `${protocol}//${window.location.host}${apiPath}/ssh/open?ticket=${encodeURIComponent(data.ticket)}`;
-    initSocket(wsUrl);
+    const { data } = await Api.getTerminalStatus()
+    status.value = data
   } catch {
-    xterm?.write('\r\n\x1b[91m终端未启用、认证失败或用户取消连接。\x1b[0m\r\n');
+    if (!quiet) ElMessage.error('读取终端安全状态失败')
   }
-});
+}
 
-// 组件销毁前关闭 WebSocket 连接
-// onBeforeUnmount(() => {
-//   ws?.close();
-// });
+const sendSize = () => {
+  if (!socket || socket.readyState !== WebSocket.OPEN || !terminal) return
+  socket.send(JSON.stringify({ rows: terminal.rows, cols: terminal.cols }))
+}
+
+const connectTerminal = async () => {
+  if (connecting.value || connectionState.value === 'connected') return
+  connecting.value = true
+  connectionState.value = 'connecting'
+  try {
+    const { value: password } = await ElMessageBox.prompt(
+      '终端以独立低权限用户运行。请输入当前管理员密码完成二次认证。',
+      '建立安全终端会话',
+      {
+        inputType: 'password',
+        inputPlaceholder: '管理员密码',
+        confirmButtonText: '认证并连接',
+        cancelButtonText: '取消',
+        inputValidator: value => Boolean(value) || '请输入密码'
+      }
+    )
+    const { data } = await Api.createTerminalTicket({ password })
+    const apiBase = new URL(System.env.API || '/v1', window.location.origin)
+    if (apiBase.origin !== window.location.origin) {
+      throw new Error('终端只允许同源连接')
+    }
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const apiPath = apiBase.pathname.replace(/\/$/, '')
+    const url = `${protocol}//${window.location.host}${apiPath}/ssh/open?ticket=${encodeURIComponent(data.ticket)}`
+    socket = new WebSocket(url)
+    socket.onopen = () => {
+      connectionState.value = 'connected'
+      connecting.value = false
+      terminal?.focus()
+      sendSize()
+      void loadStatus()
+    }
+    socket.onmessage = event => {
+      try {
+        terminal?.write(decodeOutput(String(event.data)))
+      } catch {
+        terminal?.write('\r\n\x1b[31m无法解析终端输出。\x1b[0m\r\n')
+      }
+    }
+    socket.onerror = () => {
+      ElMessage.error('安全终端连接失败')
+    }
+    socket.onclose = () => {
+      connectionState.value = 'closed'
+      connecting.value = false
+      socket = undefined
+      terminal?.write('\r\n\x1b[33m终端会话已关闭。\x1b[0m\r\n')
+      void loadStatus()
+    }
+  } catch {
+    connecting.value = false
+    connectionState.value = 'disconnected'
+  }
+}
+
+const disconnectTerminal = () => {
+  socket?.close(1000, 'user closed terminal')
+}
+
+const initializeTerminal = async () => {
+  await nextTick()
+  terminal = new Terminal({
+    cursorBlink: true,
+    convertEol: false,
+    fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
+    fontSize: 14,
+    lineHeight: 1.25,
+    scrollback: 5000,
+    theme: {
+      background: '#0b1220',
+      foreground: '#d8e1ef',
+      cursor: '#ff7a1a',
+      selectionBackground: '#314158',
+      black: '#111827',
+      red: '#ff6b6b',
+      green: '#55d187',
+      yellow: '#f6c453',
+      blue: '#69a7ff',
+      magenta: '#c792ea',
+      cyan: '#56cfe1',
+      white: '#e5edf7'
+    }
+  })
+  fitAddon = new FitAddon()
+  terminal.loadAddon(fitAddon)
+  if (terminalDiv.value) terminal.open(terminalDiv.value)
+  fitAddon.fit()
+  terminal.write('\x1b[38;5;245mOneinStack isolated terminal · waiting for authentication\x1b[0m\r\n')
+  terminal.onData(data => {
+    if (socket?.readyState === WebSocket.OPEN) socket.send(encodeInput(data))
+  })
+  terminal.onResize(sendSize)
+  if (terminalDiv.value) {
+    resizeObserver = new ResizeObserver(() => {
+      try {
+        fitAddon?.fit()
+      } catch {
+        // 抽屉或页面切换时容器可能暂时没有尺寸。
+      }
+    })
+    resizeObserver.observe(terminalDiv.value)
+  }
+}
+
+onMounted(async () => {
+  await loadStatus()
+  await initializeTerminal()
+  statusTimer = window.setInterval(() => {
+    void loadStatus(true)
+  }, 15000)
+})
+
+onBeforeUnmount(() => {
+  if (statusTimer !== undefined) window.clearInterval(statusTimer)
+  resizeObserver?.disconnect()
+  socket?.close(1000, 'terminal page closed')
+  terminal?.dispose()
+})
 </script>
 
-<style scoped>
-/* 可以在这里添加样式 */
-.terminalPage {
-  padding: 0px;
-  /* background-color: #fff; */
-  margin-top: 2%;
-  border-radius: 5px;
-  height: calc(100vh - 200px);
-  /* 减去顶部margin和其他可能的间距 */
-  max-height: 750px;
-  /* 添加最大高度限制 */
+<style scoped lang="less">
+.secure-terminal {
   display: flex;
   flex-direction: column;
+  gap: 18px;
+  min-height: calc(100vh - 150px);
+  padding: 22px;
 }
 
-.terminal-container {
-  flex: 1;
-  position: relative;
+.terminal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+
+  h2 {
+    margin: 3px 0 6px;
+    color: var(--text-primary);
+    font-size: 25px;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-tertiary);
+  }
+}
+
+.terminal-eyebrow {
+  color: rgb(var(--primary-color));
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0.18em;
+}
+
+.terminal-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.connection-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+
+  i {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #9aa6b6;
+  }
+
+  &.connected {
+    color: #1ba968;
+
+    i {
+      background: #22c77a;
+      box-shadow: 0 0 0 4px rgb(34 199 122 / 12%);
+    }
+  }
+
+  &.connecting i {
+    background: #f59e0b;
+  }
+}
+
+.terminal-alert {
+  border-radius: 12px;
+}
+
+.security-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
-  min-height: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface-primary);
 }
 
-.terminal {
+.security-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+  padding: 16px 18px;
+  border-right: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-right: 0;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+
+  strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 13px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.audit-notice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 16px;
+  border: 1px solid rgb(60 130 246 / 18%);
+  border-radius: 12px;
+  color: #3b82f6;
+  background: rgb(60 130 246 / 6%);
+
+  .el-icon {
+    font-size: 20px;
+  }
+
+  div {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+}
+
+.terminal-shell {
+  position: relative;
+  flex: 1;
+  min-height: 480px;
+  overflow: hidden;
+  border: 1px solid #202b3d;
+  border-radius: 15px;
+  background: #0b1220;
+  box-shadow: 0 18px 44px rgb(15 23 42 / 18%);
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 42px;
+    padding: 0 15px;
+    border-bottom: 1px solid #202b3d;
+    color: #8fa0b7;
+    background: #111a2a;
+    font-family: monospace;
+    font-size: 11px;
+  }
+}
+
+.window-dots {
+  display: flex;
+  gap: 6px;
+
+  i {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #ff6b6b;
+
+    &:nth-child(2) { background: #f6c453; }
+    &:nth-child(3) { background: #55d187; }
+  }
+}
+
+.terminal-path {
+  overflow: hidden;
+  margin-left: auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.terminal-screen {
+  height: calc(100% - 42px);
+  min-height: 438px;
+  padding: 10px 6px;
+}
+
+.terminal-placeholder {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
+  inset: 42px 0 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  color: #6f819a;
+  background: rgb(11 18 32 / 72%);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+
+  .el-icon {
+    font-size: 30px;
+  }
+
+  strong {
+    color: #aebbd0;
+  }
+
+  span {
+    font-size: 12px;
+  }
 }
 
-:deep(.xterm-rows) {
-  padding: 0px 10px;
+@media (max-width: 900px) {
+  .terminal-header {
+    flex-direction: column;
+  }
+
+  .security-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .security-item:nth-child(2) {
+    border-right: 0;
+  }
 }
 
-:deep(.xterm-viewport) {
-  overflow-y: auto !important;
-  scrollbar-width: thin;
-  scrollbar-color: #666 #333;
-}
+@media (max-width: 560px) {
+  .secure-terminal {
+    padding: 14px;
+  }
 
-:deep(.xterm-viewport::-webkit-scrollbar) {
-  width: 8px;
-}
+  .security-grid {
+    grid-template-columns: 1fr;
+  }
 
-:deep(.xterm-viewport::-webkit-scrollbar-track) {
-  background: #333;
-}
+  .security-item {
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
 
-:deep(.xterm-viewport::-webkit-scrollbar-thumb) {
-  background-color: #666;
-  border-radius: 4px;
+  .terminal-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
 }
 </style>

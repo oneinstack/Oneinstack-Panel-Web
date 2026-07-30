@@ -159,6 +159,17 @@ const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action
   !!status?.availableActions?.includes(action) &&
   !(action === 'reload' && !status.canReload)
 
+const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const { data: task } = await Api.getSoftwareTask(taskId)
+    softwareTaskStore.upsert(task)
+    if (softwareTaskStore.isTerminal(task.status)) return task as SoftwareTask
+    await new Promise((resolve) => window.setTimeout(resolve, 800))
+  }
+  throw new Error('等待服务操作完成超时，请在右上角任务中心查看结果')
+}
+
 const handleServiceAction = async (item: any, action: ServiceAction) => {
   const status = serviceStatus(item)
   if (!status || !serviceActionAllowed(status, action) || submitting.value) return
@@ -172,18 +183,20 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
     restart: '重启',
     reload: '平滑重载'
   }
-  try {
-    await ElMessageBox.confirm(
-      `确定${actionLabels[action]} ${status.displayName} 服务？该操作将通过已签名的组件脚本执行并记录完整任务日志。`,
-      `确认${actionLabels[action]}服务`,
-      {
-        type: action === 'stop' ? 'warning' : 'info',
-        confirmButtonText: `确认${actionLabels[action]}`,
-        cancelButtonText: '取消'
-      }
-    )
-  } catch {
-    return
+  if (action !== 'restart') {
+    try {
+      await ElMessageBox.confirm(
+        `确定${actionLabels[action]} ${status.displayName} 服务？该操作将通过已签名的组件脚本执行并记录完整任务日志。`,
+        `确认${actionLabels[action]}服务`,
+        {
+          type: action === 'stop' ? 'warning' : 'info',
+          confirmButtonText: `确认${actionLabels[action]}`,
+          cancelButtonText: '取消'
+        }
+      )
+    } catch {
+      return
+    }
   }
   submitting.value = true
   try {
@@ -193,13 +206,23 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
       version: status.recordedVersion || item.install_version || '',
       action
     })
-    taskDrawer.taskId = result.taskId
-    taskDrawer.show = true
     serviceStatuses.value[status.softwareKey] = {
       ...status,
       busy: true,
       activeTaskId: result.taskId
     }
+    if (action === 'restart') {
+      const task = await waitForServiceTask(result.taskId)
+      if (task.status === 'succeeded') {
+        ElMessage.success(`${status.displayName} 重启成功`)
+      } else {
+        ElMessage.error(task.errorMessage || task.message || `${status.displayName} 重启失败`)
+      }
+      await loadServiceStatuses()
+      return
+    }
+    taskDrawer.taskId = result.taskId
+    taskDrawer.show = true
     ElMessage.success(`${actionLabels[action]}任务已创建，可在后台继续运行`)
   } finally {
     submitting.value = false

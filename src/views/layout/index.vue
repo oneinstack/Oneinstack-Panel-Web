@@ -121,15 +121,16 @@ const conf = reactive({
         dark: ['#ffffff', '#eab170']
       }
     },
-    // {
-    //   name: '终端',
-    //   path: '/terminal',
-    //   icon: 'terminal',
-    //   activeColor: {
-    //     light: ['#8B8B8B', '#eab170'],
-    //     dark: ['#ffffff', '#eab170']
-    //   }
-    // },
+    {
+      name: '安全终端',
+      path: '/terminal',
+      icon: 'terminal',
+      adminOnly: true,
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
+      }
+    },
     {
       name: '计划任务',
       path: '/task',

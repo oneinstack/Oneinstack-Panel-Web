@@ -342,7 +342,7 @@ const applyPanelEntry = (data?: Record<string, any>) => {
   panelEntry.trustedProxies = data.trustedProxies || []
   panelEntry.panelEntryEnabled = Boolean(data.panelEntryEnabled)
   panelEntry.panelEntryPath = data.panelEntryPath || ''
-  panelEntry.panelAccessURL = data.panelAccessURL || ''
+  panelEntry.panelAccessURL = data.panelAccessURL || data.panelAccessUrl || ''
   panelEntry.restartRequired = Boolean(data.restartRequired)
 }
 
@@ -442,14 +442,15 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
     })
     applyPanelEntry(data)
     ElMessage.success(rotatePanelEntry ? '安全入口已轮换' : '安全入口配置已保存')
+    const panelAccessURL = data?.panelAccessURL || data?.panelAccessUrl || ''
 
     if (rotatePanelEntry) {
-      await maybeRedirectToPanelEntry(data?.panelAccessURL, '新的安全入口已经生效，建议立即跳转到新地址继续操作。')
+      await maybeRedirectToPanelEntry(panelAccessURL, '新的安全入口已经生效，建议立即跳转到新地址继续操作。')
       return
     }
 
     if (panelEntry.panelEntryEnabled) {
-      await maybeRedirectToPanelEntry(data?.panelAccessURL, '安全入口已经启用，建议立即跳转到新的访问地址。')
+      await maybeRedirectToPanelEntry(panelAccessURL, '安全入口已经启用，建议立即跳转到新的访问地址。')
     }
   } catch {
     ElMessage.error(rotatePanelEntry ? '轮换安全入口失败' : '保存安全入口配置失败')

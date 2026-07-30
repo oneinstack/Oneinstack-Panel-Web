@@ -2,6 +2,7 @@
 import panelSetting from './panel-setting.vue'
 import NetworkSetting from './network-setting.vue'
 import PanelUpdate from './panel-update.vue'
+import PanelBackup from './panel-backup.vue'
 import AccountSecurity from './account-security.vue'
 import { Api } from '@/api/Api'
 import { onMounted, ref } from 'vue'
@@ -34,6 +35,7 @@ onMounted(() => {
     <panel-setting v-if="allinfo" :isCard="false" :allinfo="allinfo" />
     <NetworkSetting />
     <AccountSecurity />
+    <PanelBackup />
     <PanelUpdate />
   </div>
 </template>

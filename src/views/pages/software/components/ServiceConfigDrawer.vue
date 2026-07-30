@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { ArrowLeft, Close, Lock, RefreshRight, View } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, Clock, Close, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 
 interface ConfigurationField {
@@ -43,6 +43,22 @@ interface ConfigurationPreview {
   hasChanges: boolean
 }
 
+interface ConfigurationHistoryEntry {
+  id: string
+  taskId: string
+  component: string
+  softwareKey: string
+  softwareVersion: string
+  baseRevision: string
+  before: Record<string, string>
+  after: Record<string, string>
+  status: 'pending' | 'succeeded' | 'failed' | 'canceled' | 'interrupted'
+  restoreFromId?: string
+  requestedBy: number
+  finishedAt?: string
+  createdAt: string
+}
+
 const props = defineProps<{
   modelValue: boolean
   component: string
@@ -56,8 +72,11 @@ const emit = defineEmits<{
 const loading = ref(false)
 const previewing = ref(false)
 const applying = ref(false)
+const historyLoading = ref(false)
+const restoringId = ref('')
 const configuration = ref<ComponentConfiguration>()
 const preview = ref<ConfigurationPreview>()
+const history = ref<ConfigurationHistoryEntry[]>([])
 const values = reactive<Record<string, any>>({})
 let hydrating = false
 
@@ -80,6 +99,35 @@ const applyModeLabel = computed(() =>
 )
 
 const changeCount = computed(() => preview.value?.changes.length || 0)
+
+const historyStatus = (status: ConfigurationHistoryEntry['status']) => {
+  const labels = {
+    pending: '发布中',
+    succeeded: '已发布',
+    failed: '失败',
+    canceled: '已取消',
+    interrupted: '已中断'
+  }
+  return labels[status]
+}
+
+const historyTagType = (status: ConfigurationHistoryEntry['status']) => {
+  if (status === 'succeeded') return 'success'
+  if (status === 'pending') return 'warning'
+  if (status === 'failed') return 'danger'
+  return 'info'
+}
+
+const formatDate = (value: string) => new Intl.DateTimeFormat('zh-CN', {
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit'
+}).format(new Date(value))
+
+const historyChangeCount = (entry: ConfigurationHistoryEntry) => Object.keys(entry.after)
+  .filter((key) => entry.before[key] !== entry.after[key])
+  .length
 
 const toPayload = () => Object.fromEntries(
   (configuration.value?.fields || []).map((field) => [
@@ -114,8 +162,23 @@ const load = async () => {
     const { data } = await Api.getComponentServiceConfiguration(props.component)
     configuration.value = data as ComponentConfiguration
     hydrateValues(configuration.value)
+    void loadHistory().catch(() => undefined)
   } finally {
     loading.value = false
+  }
+}
+
+const loadHistory = async () => {
+  if (!props.component || historyLoading.value) return
+  historyLoading.value = true
+  try {
+    const { data } = await Api.getComponentServiceConfigurationHistory(props.component, {
+      page: 1,
+      pageSize: 10
+    })
+    history.value = (data?.items || []) as ConfigurationHistoryEntry[]
+  } finally {
+    historyLoading.value = false
   }
 }
 
@@ -149,6 +212,42 @@ const apply = async () => {
     ElMessage.success('配置发布任务已创建，可在后台继续运行')
   } finally {
     applying.value = false
+  }
+}
+
+const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
+  if (entry.status !== 'succeeded' || restoringId.value) return
+  restoringId.value = entry.id
+  try {
+    const { data } = await Api.previewComponentServiceConfigurationRestore(
+      props.component,
+      entry.id
+    )
+    const restorePreview = data?.preview as ConfigurationPreview
+    if (!restorePreview?.hasChanges) {
+      ElMessage.info('当前配置已经与该历史版本一致')
+      return
+    }
+    await ElMessageBox.confirm(
+      `将把 ${restorePreview.changes.length} 项参数恢复到本次发布前的值。系统会再次执行语法检查并在失败时自动回滚。`,
+      '恢复历史配置',
+      {
+        type: 'warning',
+        confirmButtonText: '创建恢复任务',
+        cancelButtonText: '取消'
+      }
+    )
+    const { data: result } = await Api.restoreComponentServiceConfiguration(
+      props.component,
+      entry.id
+    )
+    emit('task-created', result)
+    visible.value = false
+    ElMessage.success('配置恢复任务已创建，可在后台查看进度')
+  } catch (error: any) {
+    if (error !== 'cancel' && error !== 'close') throw error
+  } finally {
+    restoringId.value = ''
   }
 }
 
@@ -294,6 +393,59 @@ watch(values, () => {
             </el-form-item>
           </template>
         </el-form>
+      </section>
+
+      <section class="history-panel">
+        <div class="history-panel__header">
+          <div>
+            <h3><el-icon><Clock /></el-icon> 配置历史</h3>
+            <p>保存每次安全发布前后的参数，可以创建恢复任务</p>
+          </div>
+          <el-button
+            link
+            :icon="RefreshRight"
+            :loading="historyLoading"
+            :disabled="applying || !!restoringId"
+            @click="loadHistory"
+          >
+            刷新
+          </el-button>
+        </div>
+        <div v-loading="historyLoading" class="history-list">
+          <div v-for="entry in history" :key="entry.id" class="history-item">
+            <span class="history-marker" :class="`is-${entry.status}`" />
+            <div class="history-copy">
+              <div>
+                <strong>{{ formatDate(entry.createdAt) }}</strong>
+                <el-tag size="small" effect="plain" :type="historyTagType(entry.status)">
+                  {{ historyStatus(entry.status) }}
+                </el-tag>
+                <el-tag v-if="entry.restoreFromId" size="small" effect="plain">
+                  恢复任务
+                </el-tag>
+              </div>
+              <p>
+                {{ entry.softwareVersion }} · {{ historyChangeCount(entry) }} 项变更 ·
+                {{ entry.baseRevision.slice(0, 10) }}…
+              </p>
+            </div>
+            <el-button
+              link
+              type="primary"
+              :icon="RefreshLeft"
+              :loading="restoringId === entry.id"
+              :disabled="entry.status !== 'succeeded' || applying || (!!restoringId && restoringId !== entry.id)"
+              @click="restoreHistory(entry)"
+            >
+              恢复到发布前
+            </el-button>
+          </div>
+          <el-empty
+            v-if="!historyLoading && !history.length"
+            description="暂无配置发布历史"
+            :image-size="56"
+          />
+        </div>
       </section>
 
       <section v-if="preview" class="preview-section">
@@ -691,6 +843,114 @@ watch(values, () => {
   border: 1px solid var(--border-subtle);
   border-radius: 10px;
   background: var(--surface-card);
+}
+
+.history-panel {
+  overflow: hidden;
+  margin-top: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.035);
+}
+
+.history-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-subtle);
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  h3 .el-icon {
+    color: rgb(var(--primary-color));
+  }
+
+  p {
+    margin-top: 4px;
+    color: var(--text-tertiary);
+    font-size: 10px;
+  }
+}
+
+.history-list {
+  min-height: 86px;
+}
+
+.history-item {
+  display: flex;
+  min-height: 68px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+}
+
+.history-marker {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border: 2px solid var(--surface-card);
+  border-radius: 50%;
+  background: var(--text-placeholder);
+  box-shadow: 0 0 0 3px var(--surface-subtle);
+
+  &.is-succeeded {
+    background: var(--el-color-success);
+  }
+
+  &.is-pending {
+    background: var(--el-color-warning);
+  }
+
+  &.is-failed {
+    background: var(--el-color-danger);
+  }
+}
+
+.history-copy {
+  min-width: 0;
+  flex: 1;
+
+  > div {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  strong {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 650;
+  }
+
+  p {
+    overflow: hidden;
+    margin: 5px 0 0;
+    color: var(--text-placeholder);
+    font-size: 10px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 .preview-title {

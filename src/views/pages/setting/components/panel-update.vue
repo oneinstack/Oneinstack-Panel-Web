@@ -26,6 +26,12 @@ interface UpdateCheck {
   releaseNotes?: string
   compatible: boolean
   artifactSize?: number
+  signingKeyId?: string
+  trustRevision?: number
+  trustSource?: 'center' | 'static'
+  trustedKeyCount: number
+  revokedKeyCount: number
+  trustUpdatedAt?: string
 }
 
 interface UpdateStatus {
@@ -227,6 +233,15 @@ onBeforeUnmount(() => {
         <strong>{{ updateSource }}</strong>
         <small v-if="maskedInstanceID">实例 {{ maskedInstanceID }}</small>
       </div>
+      <div class="version-item trust-item">
+        <span>签名信任</span>
+        <strong>{{ check?.signingKeyId || '尚未检查' }}</strong>
+        <small v-if="check?.trustSource === 'center'">
+          Center 状态 #{{ check.trustRevision }} · 信任 {{ check.trustedKeyCount }} 把密钥
+          <template v-if="check.revokedKeyCount"> · 已撤销 {{ check.revokedKeyCount }}</template>
+        </small>
+        <small v-else-if="check?.trustSource === 'static'">本机静态信任配置</small>
+      </div>
     </div>
 
     <el-alert
@@ -297,7 +312,7 @@ onBeforeUnmount(() => {
 
 .version-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 12px;
   margin: 20px 0;
 }

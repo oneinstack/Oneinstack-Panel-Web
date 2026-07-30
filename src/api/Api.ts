@@ -137,6 +137,14 @@ export const Api = {
   createTerminalTicket: (obj: { password: string }) => {
     return http.post('/ssh/ticket', obj)
   },
+  /** 获取低权限终端隔离与并发状态 */
+  getTerminalStatus: () => {
+    return http.get('/ssh/status')
+  },
+  /** 获取当前活动终端会话 */
+  getTerminalSessions: () => {
+    return http.get('/ssh/sessions')
+  },
   /** 下载文件 */
   downloadFile: (obj: any) => {
     return http.post('/ftp/download', { ...obj, isBlob: true })
@@ -193,6 +201,21 @@ export const Api = {
     obj: { revision: string; values: Record<string, string> }
   ) => {
     return postAccepted(`/soft/services/${component}/config/apply`, obj)
+  },
+  /** 获取组件配置发布历史 */
+  getComponentServiceConfigurationHistory: (
+    component: string,
+    obj?: { page?: number; pageSize?: number }
+  ) => {
+    return http.get(`/soft/services/${component}/config/history`, obj)
+  },
+  /** 预览恢复到一次历史发布前的配置 */
+  previewComponentServiceConfigurationRestore: (component: string, historyId: string) => {
+    return http.post(`/soft/services/${component}/config/history/${historyId}/preview`)
+  },
+  /** 创建组件配置历史恢复任务 */
+  restoreComponentServiceConfiguration: (component: string, historyId: string) => {
+    return postAccepted(`/soft/services/${component}/config/history/${historyId}/restore`)
   },
   /** 获取安装日志 */
   getInstallLog: (obj: any) => {
@@ -477,6 +500,30 @@ export const Api = {
   applyPanelUpdate: (obj: { confirm: string }) => {
     return http.post('/sys/update/apply', obj)
   },
+  /** 获取 Panel 配置、数据库与证书备份 */
+  getPanelBackups: () => {
+    return http.get('/sys/backups')
+  },
+  /** 创建密码加密的 Panel 灾备包 */
+  createPanelBackup: (obj: { passphrase: string; includeCertificates: boolean }) => {
+    return http.post('/sys/backups', obj)
+  },
+  /** 校验灾备包密码、清单、配置和 SQLite 完整性 */
+  preflightPanelBackup: (id: string, obj: { passphrase: string }) => {
+    return http.post(`/sys/backups/${encodeURIComponent(id)}/preflight`, obj)
+  },
+  /** 删除 Panel 灾备包 */
+  deletePanelBackup: (id: string) => {
+    return http.post(`/sys/backups/${encodeURIComponent(id)}/delete`, { confirm: true })
+  },
+  /** 交给独立 systemd 单元恢复 Panel 数据 */
+  restorePanelBackup: (id: string, obj: { passphrase: string; confirm: string }) => {
+    return http.post(`/sys/backups/${encodeURIComponent(id)}/restore`, obj)
+  },
+  /** 获取最近一次 Panel 恢复状态 */
+  getPanelRestoreStatus: () => {
+    return http.get('/sys/restore/status')
+  },
   /** 更新系统信息/修改端口*/
   updatePort: (obj: any) => {
     return http.post('/sys/updateport', obj)
@@ -488,6 +535,10 @@ export const Api = {
   /** 原子校验并保存面板 HTTP/HTTPS 访问配置 */
   updatePanelNetwork: (obj: any) => {
     return http.post('/sys/network', obj)
+  },
+  /** 获取面板访问配置自动应用/恢复事务 */
+  getPanelNetworkTransaction: (transactionId: string) => {
+    return http.get(`/sys/network/transactions/${transactionId}`)
   },
   /** 修改标题 */
   updateSystemTitley: (obj: any) => {
@@ -568,6 +619,18 @@ export const Api = {
   /** 获取监控与告警摘要 */
   getMonitorSummary: () => {
     return http.get('/monitor/summary')
+  },
+  /** 获取已安装组件的服务健康状态 */
+  getMonitorServiceHealth: (obj?: { includeNotInstalled?: boolean }) => {
+    return http.get('/monitor/services', obj)
+  },
+  /** 立即执行一次组件服务健康检查 */
+  checkMonitorServiceHealth: () => {
+    return http.post('/monitor/services/check', {})
+  },
+  /** 静默或解除静默组件服务健康告警 */
+  silenceMonitorServiceHealth: (component: string, minutes: number) => {
+    return http.post(`/monitor/services/${encodeURIComponent(component)}/silence`, { minutes })
   },
   /** 获取历史监控指标 */
   getMonitorMetrics: (obj?: any) => {

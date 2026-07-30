@@ -26,7 +26,30 @@ interface MonitorSummary {
   enabledRules: number
   firingCount: number
   pendingCount: number
+  serviceFiringCount: number
+  servicePendingCount: number
   last24Hours: number
+}
+
+interface ComponentHealthState {
+  component: string
+  displayName: string
+  softwareKey: string
+  serviceName: string
+  softwareVersion?: string
+  runtimeVersion?: string
+  installed: boolean
+  busy: boolean
+  healthState: 'normal' | 'pending' | 'firing'
+  serviceState: 'running' | 'stopped' | 'failed' | 'transitioning' | 'unknown'
+  loadState?: string
+  activeState?: string
+  subState?: string
+  consecutiveFailures: number
+  lastError?: string
+  lastCheckedAt: string
+  firingSince?: string
+  silencedUntil?: string
 }
 
 interface MonitorRule {
@@ -96,14 +119,18 @@ const summary = ref<MonitorSummary>({
   enabledRules: 0,
   firingCount: 0,
   pendingCount: 0,
+  serviceFiringCount: 0,
+  servicePendingCount: 0,
   last24Hours: 0
 })
 const metrics = ref<MetricSample[]>([])
+const serviceHealth = ref<ComponentHealthState[]>([])
 const rules = ref<MonitorRule[]>([])
 const events = ref<AlertEvent[]>([])
 const channels = ref<NotificationChannel[]>([])
 const deliveries = ref<NotificationDelivery[]>([])
 const dashboardLoading = ref(false)
+const serviceChecking = ref(false)
 const tableLoading = ref(false)
 const activeTab = ref('rules')
 const eventTotal = ref(0)
@@ -187,8 +214,10 @@ const formatRate = (value?: number) => {
   return `${current.toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 const metricMeta = (metric: string) => metricOptions.find((item) => item.value === metric)
-const metricLabel = (metric: string) => metricMeta(metric)?.label || metric
+const metricLabel = (metric: string) =>
+  metric === 'service_health' ? '组件服务健康' : (metricMeta(metric)?.label || metric)
 const metricValue = (metric: string, value: number) => {
+  if (metric === 'service_health') return value >= 1 ? '正常' : '异常'
   const unit = metricMeta(metric)?.unit
   if (unit === '%') return `${Number(value).toFixed(1)}%`
   if (unit === 'B/s') return formatRate(value)
@@ -224,20 +253,63 @@ const stateType = (rule: MonitorRule) => {
 }
 const isSilenced = (rule: MonitorRule) =>
   Boolean(rule.silencedUntil && new Date(rule.silencedUntil).getTime() > Date.now())
+const totalFiring = computed(() =>
+  summary.value.firingCount + (summary.value.serviceFiringCount || 0)
+)
+const totalPending = computed(() =>
+  summary.value.pendingCount + (summary.value.servicePendingCount || 0)
+)
+const serviceStateLabel = (service: ComponentHealthState) => {
+  if (service.busy) return '操作中'
+  if (service.healthState === 'firing') return '异常'
+  if (service.healthState === 'pending') return '待确认'
+  if (service.serviceState === 'running') return '运行正常'
+  return '状态未知'
+}
+const serviceStateType = (service: ComponentHealthState) => {
+  if (service.busy) return 'info'
+  if (service.healthState === 'firing') return 'danger'
+  if (service.healthState === 'pending') return 'warning'
+  return service.serviceState === 'running' ? 'success' : 'info'
+}
+const serviceSilenced = (service: ComponentHealthState) =>
+  Boolean(service.silencedUntil && new Date(service.silencedUntil).getTime() > Date.now())
 
 const loadDashboard = async () => {
   dashboardLoading.value = true
   try {
     const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-    const [summaryResponse, metricResponse] = await Promise.all([
+    const [summaryResponse, metricResponse, serviceResponse] = await Promise.all([
       Api.getMonitorSummary(),
-      Api.getMonitorMetrics({ from, limit: 2000 })
+      Api.getMonitorMetrics({ from, limit: 2000 }),
+      Api.getMonitorServiceHealth()
     ])
     summary.value = summaryResponse.data
     metrics.value = metricResponse.data || []
+    serviceHealth.value = serviceResponse.data || []
   } finally {
     dashboardLoading.value = false
   }
+}
+
+const checkServiceHealth = async () => {
+  serviceChecking.value = true
+  try {
+    const { data } = await Api.checkMonitorServiceHealth()
+    serviceHealth.value = data || []
+    const { data: currentSummary } = await Api.getMonitorSummary()
+    summary.value = currentSummary
+    ElMessage.success('组件服务健康检查已完成')
+  } finally {
+    serviceChecking.value = false
+  }
+}
+
+const silenceServiceHealth = async (service: ComponentHealthState, minutes: number) => {
+  await Api.silenceMonitorServiceHealth(service.component, minutes)
+  ElMessage.success(minutes ? `${service.displayName} 告警已静默 1 小时` : '组件告警静默已解除')
+  const { data } = await Api.getMonitorServiceHealth()
+  serviceHealth.value = data || []
 }
 
 const loadRules = async () => {
@@ -475,9 +547,80 @@ onUnmounted(() => {
       </div>
       <div class="stat-card danger">
         <span>当前告警</span>
-        <strong>{{ summary.firingCount }}</strong>
-        <small>待确认 {{ summary.pendingCount }} / 24 小时事件 {{ summary.last24Hours }}</small>
+        <strong>{{ totalFiring }}</strong>
+        <small>待确认 {{ totalPending }} / 24 小时事件 {{ summary.last24Hours }}</small>
       </div>
+    </div>
+
+    <div class="service-health-panel">
+      <div class="panel-heading">
+        <div>
+          <h3>组件服务健康</h3>
+          <span>连续两次异常后告警；安装、升级、配置和服务操作期间暂停判断。</span>
+        </div>
+        <el-button :loading="serviceChecking" @click="checkServiceHealth">立即检查</el-button>
+      </div>
+      <div v-if="serviceHealth.length" class="service-health-grid">
+        <article
+          v-for="service in serviceHealth"
+          :key="service.component"
+          class="service-health-card"
+          :class="`is-${service.healthState}`"
+        >
+          <div class="service-health-card__top">
+            <div>
+              <strong>{{ service.displayName }}</strong>
+              <span>{{ service.serviceName }}</span>
+            </div>
+            <el-tag :type="serviceStateType(service)" effect="light" size="small">
+              {{ serviceStateLabel(service) }}
+            </el-tag>
+          </div>
+          <dl>
+            <div>
+              <dt>安装版本</dt>
+              <dd>{{ service.softwareVersion || '—' }}</dd>
+            </div>
+            <div>
+              <dt>运行版本</dt>
+              <dd>{{ service.runtimeVersion || '—' }}</dd>
+            </div>
+            <div>
+              <dt>systemd</dt>
+              <dd>{{ service.activeState || service.serviceState }}</dd>
+            </div>
+            <div>
+              <dt>最近检查</dt>
+              <dd>{{ formatTime(service.lastCheckedAt) }}</dd>
+            </div>
+          </dl>
+          <p v-if="service.lastError" class="service-health-error">{{ service.lastError }}</p>
+          <div class="service-health-card__footer">
+            <span v-if="serviceSilenced(service)">已静默至 {{ formatTime(service.silencedUntil) }}</span>
+            <span v-else-if="service.healthState === 'pending'">
+              连续异常 {{ service.consecutiveFailures }}/2
+            </span>
+            <span v-else>自动检查与恢复通知已启用</span>
+            <el-button
+              v-if="!serviceSilenced(service)"
+              link
+              type="warning"
+              @click="silenceServiceHealth(service, 60)"
+            >
+              静默 1 小时
+            </el-button>
+            <el-button
+              v-else
+              link
+              type="success"
+              @click="silenceServiceHealth(service, 0)"
+            >
+              解除静默
+            </el-button>
+          </div>
+        </article>
+      </div>
+      <el-empty v-else description="暂无已安装的受管组件" :image-size="72" />
     </div>
 
     <div class="trend-panel">
@@ -825,7 +968,7 @@ onUnmounted(() => {
   &.danger strong { color: #e25d5d; }
 }
 
-.trend-panel, .management-panel {
+.service-health-panel, .trend-panel, .management-panel {
   padding: 20px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
@@ -833,8 +976,104 @@ onUnmounted(() => {
   box-shadow: var(--shadow-xs);
 }
 
-.trend-panel {
+.service-health-panel, .trend-panel {
   margin-bottom: 14px;
+}
+
+.service-health-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.service-health-card {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+
+  &.is-firing {
+    border-color: color-mix(in srgb, var(--el-color-danger) 32%, var(--border-subtle));
+    background: color-mix(in srgb, var(--el-color-danger) 5%, var(--surface-card));
+  }
+
+  &.is-pending {
+    border-color: color-mix(in srgb, var(--el-color-warning) 32%, var(--border-subtle));
+    background: color-mix(in srgb, var(--el-color-warning) 5%, var(--surface-card));
+  }
+}
+
+.service-health-card__top,
+.service-health-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.service-health-card__top {
+  > div {
+    min-width: 0;
+  }
+
+  strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 15px;
+  }
+
+  span {
+    display: block;
+    margin-top: 3px;
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+}
+
+.service-health-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 16px 0 0;
+
+  div {
+    min-width: 0;
+  }
+
+  dt {
+    color: var(--text-placeholder);
+    font-size: 10px;
+  }
+
+  dd {
+    overflow: hidden;
+    margin: 4px 0 0;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.service-health-error {
+  margin: 14px 0 0;
+  padding: 9px 10px;
+  border-radius: 8px;
+  color: var(--el-color-danger);
+  background: color-mix(in srgb, var(--el-color-danger) 7%, var(--surface-card));
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.service-health-card__footer {
+  min-height: 30px;
+  margin-top: 13px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-placeholder);
+  font-size: 10px;
 }
 
 .panel-heading {
@@ -890,8 +1129,8 @@ onUnmounted(() => {
 
 @media (max-width: 760px) {
   .page-heading, .toolbar { align-items: flex-start; flex-direction: column; }
-  .stats-grid, .form-grid { grid-template-columns: 1fr; }
-  .trend-panel, .management-panel { padding: 12px; }
+  .stats-grid, .service-health-grid, .form-grid { grid-template-columns: 1fr; }
+  .service-health-panel, .trend-panel, .management-panel { padding: 12px; }
   .filters { flex-wrap: wrap; }
 }
 </style>

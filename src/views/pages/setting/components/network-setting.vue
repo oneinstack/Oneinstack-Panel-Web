@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Api } from '@/api/Api'
 
@@ -25,12 +25,29 @@ interface NetworkSettings {
   panelEntryEnabled: boolean
   panelEntryPath: string
   panelAccessURL?: string
+  panelAccessUrl?: string
   certificate?: CertificateStatus
   restartRequired: boolean
+  autoApplySupported: boolean
+  applyTransaction?: NetworkApplyTransaction
+}
+
+interface NetworkApplyTransaction {
+  id: string
+  status: 'scheduled' | 'applying' | 'succeeded' | 'rolled_back' | 'failed'
+  error?: string
+  createdAt: string
+  startedAt?: string
+  finishedAt?: string
+  httpUrl: string
+  httpsUrl?: string
+  rolledBack: boolean
+  recoverable: boolean
 }
 
 const loading = ref(false)
 const saving = ref(false)
+const applyPolling = ref(false)
 const formRef = ref<FormInstance>()
 const current = ref<NetworkSettings>()
 const proxyText = ref('')
@@ -42,6 +59,7 @@ const form = reactive({
   httpsCertificateFile: '',
   httpsPrivateKeyFile: ''
 })
+let applyPollTimer: number | undefined
 
 const validatePort = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
   const port = Number(value)
@@ -107,6 +125,104 @@ const loadSettings = async () => {
   }
 }
 
+const applyStatusTitle = computed(() => {
+  const transaction = current.value?.applyTransaction
+  if (!transaction) return ''
+  switch (transaction.status) {
+    case 'scheduled':
+      return '访问配置已保存，systemd 即将自动重启面板'
+    case 'applying':
+      return '正在应用新的访问配置并执行就绪检查'
+    case 'succeeded':
+      return '新的访问配置已自动应用'
+    case 'rolled_back':
+      return '新配置启动失败，已自动恢复原访问配置'
+    case 'failed':
+      return '访问配置自动应用失败，需要检查 systemd 状态'
+    default:
+      return ''
+  }
+})
+
+const applyStatusType = computed(() => {
+  const status = current.value?.applyTransaction?.status
+  if (status === 'succeeded') return 'success'
+  if (status === 'rolled_back' || status === 'failed') return 'error'
+  return 'warning'
+})
+
+const browserHTTPOrigin = (url: string) => {
+  const browserHost = window.location.hostname.includes(':')
+    ? `[${window.location.hostname.replace(/^\[|\]$/g, '')}]`
+    : window.location.hostname
+  return url.replace('服务器IP', browserHost).replace(/\/+$/, '')
+}
+
+const stopApplyPolling = () => {
+  if (applyPollTimer !== undefined) {
+    window.clearTimeout(applyPollTimer)
+    applyPollTimer = undefined
+  }
+  applyPolling.value = false
+}
+
+const followNetworkTransaction = async (
+  transaction: NetworkApplyTransaction,
+  attempts = 0
+) => {
+  if (attempts >= 50) {
+    stopApplyPolling()
+    ElMessage.warning('面板重启时间较长，请稍后使用新地址访问并检查 systemd 状态')
+    return
+  }
+  applyPolling.value = true
+  try {
+    const { data } = await Api.getPanelNetworkTransaction(transaction.id)
+    current.value = {
+      ...(current.value as NetworkSettings),
+      applyTransaction: data
+    }
+    if (data.status === 'succeeded') {
+      stopApplyPolling()
+      const newOrigin = browserHTTPOrigin(data.httpUrl)
+      if (newOrigin !== window.location.origin) {
+        ElMessage.success('新访问地址已就绪，正在跳转')
+        window.location.assign(`${newOrigin}${window.location.pathname}${window.location.hash}`)
+      } else {
+        ElMessage.success('访问配置已自动应用')
+        await loadSettings()
+      }
+      return
+    }
+    if (data.status === 'rolled_back' || data.status === 'failed') {
+      stopApplyPolling()
+      ElMessage.error(data.error || '新配置启动失败，已恢复原访问方式')
+      await loadSettings()
+      return
+    }
+  } catch {
+    const newOrigin = browserHTTPOrigin(transaction.httpUrl)
+    try {
+      await window.fetch(`${newOrigin}/health/ready`, {
+        method: 'GET',
+        cache: 'no-store',
+        mode: newOrigin === window.location.origin ? 'same-origin' : 'no-cors'
+      })
+      if (newOrigin !== window.location.origin) {
+        stopApplyPolling()
+        window.location.assign(`${newOrigin}${window.location.pathname}${window.location.hash}`)
+        return
+      }
+    } catch {
+      // 重启窗口内旧地址和新地址都可能短暂不可达，继续轮询。
+    }
+  }
+  applyPollTimer = window.setTimeout(
+    () => followNetworkTransaction(transaction, attempts + 1),
+    1500
+  )
+}
+
 const saveSettings = async () => {
   if (!formRef.value) return
   const valid = await formRef.value.validate().catch(() => false)
@@ -117,9 +233,9 @@ const saveSettings = async () => {
   }
   try {
     await ElMessageBox.confirm(
-      '保存前会检查端口占用、证书和私钥。配置保存后需要重启面板服务，当前 HTTP 访问不会立即中断。',
+      '保存前会检查端口占用、证书和私钥。受管 systemd 环境会自动重启并验证新地址；如果启动失败，将恢复原配置。',
       '确认更新访问配置',
-      { type: 'warning', confirmButtonText: '校验并保存', cancelButtonText: '取消' }
+      { type: 'warning', confirmButtonText: '保存并自动应用', cancelButtonText: '取消' }
     )
   } catch {
     return
@@ -140,7 +256,14 @@ const saveSettings = async () => {
       rotatePanelEntry: false
     })
     applySettings(data)
-    ElMessage.success(data.restartRequired ? '配置已保存，请重启面板服务后生效' : '配置校验通过')
+    if (data.applyTransaction) {
+      ElMessage.success('配置已保存，将自动重启并验证；失败时会恢复原配置')
+      void followNetworkTransaction(data.applyTransaction)
+    } else if (data.restartRequired) {
+      ElMessage.warning('当前不是受管 systemd 环境，配置已保存，请手动重启面板')
+    } else {
+      ElMessage.success('配置校验通过')
+    }
   } catch {
     ElMessage.error('访问配置保存失败，请检查端口、证书文件和私钥文件')
   } finally {
@@ -149,6 +272,7 @@ const saveSettings = async () => {
 }
 
 onMounted(loadSettings)
+onBeforeUnmount(stopApplyPolling)
 </script>
 
 <template>
@@ -187,10 +311,22 @@ onMounted(loadSettings)
     <el-alert
       v-if="current?.restartRequired"
       class="setting-alert"
-      title="配置已保存但尚未生效，请在确认防火墙或云安全组已放行新端口后重启面板服务。"
+      :title="current.autoApplySupported
+        ? '配置正在由 systemd 自动应用，启动失败会恢复原配置。'
+        : '当前不是受管 systemd 环境；配置已保存，请手动重启面板服务。'"
       type="warning"
       :closable="false"
       show-icon
+    />
+
+    <el-alert
+      v-if="current?.applyTransaction"
+      class="setting-alert"
+      :title="applyStatusTitle"
+      :type="applyStatusType"
+      :closable="false"
+      show-icon
+      :description="current.applyTransaction.error || (applyPolling ? '页面会持续检查状态，新地址就绪后自动跳转。' : '')"
     />
 
     <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="network-form">
@@ -280,7 +416,9 @@ onMounted(loadSettings)
       </div>
 
       <div class="network-form__footer">
-        <el-button type="primary" :loading="saving" @click="saveSettings">校验并保存</el-button>
+        <el-button type="primary" :loading="saving || applyPolling" @click="saveSettings">
+          {{ applyPolling ? '正在应用配置' : '校验并保存' }}
+        </el-button>
       </div>
     </el-form>
   </section>
