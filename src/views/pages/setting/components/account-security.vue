@@ -179,22 +179,37 @@ onMounted(load)
       <el-button :disabled="otherSessionCount === 0" @click="revokeOthers">退出其他设备</el-button>
     </div>
     <el-table :data="sessions" empty-text="暂无有效会话">
-      <el-table-column label="设备" min-width="240">
+      <el-table-column label="IP 地址" min-width="150">
         <template #default="{ row }">
-          <div class="device">
-            <span>{{ row.userAgent || '未知浏览器' }}</span>
-            <el-tag v-if="row.current" type="success" size="small">当前会话</el-tag>
-          </div>
+          <el-popover
+            placement="top-start"
+            :width="320"
+            trigger="hover"
+            popper-class="session-device-popover"
+          >
+            <template #reference>
+              <div class="session-ip">
+                <span class="session-ip__text">{{ row.remoteIp || '-' }}</span>
+                <el-tag v-if="row.current" type="success" size="small">当前会话</el-tag>
+              </div>
+            </template>
+            <div class="session-device">
+              <div class="session-device__label">设备信息</div>
+              <div class="session-device__value">{{ row.userAgent || '未知浏览器' }}</div>
+            </div>
+          </el-popover>
         </template>
       </el-table-column>
-      <el-table-column prop="remoteIp" label="IP 地址" width="150" />
-      <el-table-column label="最近活动" width="190">
+      <el-table-column label="登录时间" min-width="160">
+        <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
+      </el-table-column>
+      <el-table-column label="最近活动" min-width="160">
         <template #default="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
       </el-table-column>
-      <el-table-column label="到期时间" width="190">
+      <el-table-column label="到期时间" min-width="160">
         <template #default="{ row }">{{ formatDate(row.expiresAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="100" align="right">
+      <el-table-column label="操作" width="96" align="right">
         <template #default="{ row }">
           <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">吊销</el-button>
         </template>
@@ -277,15 +292,30 @@ onMounted(load)
   gap: 24px;
 }
 .section-title {
-  color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 650;
+   display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  &::before {
+      content: '';
+      width: 3px;
+      height: 17px;
+      margin-right: 9px;
+      border-radius: 99px;
+      background: rgb(var(--primary-color));
+    }
 }
 .section-description,
 .row-description {
-  color: var(--el-text-color-secondary);
-  margin-top: 7px;
-  line-height: 1.5;
+  color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.75;
+}
+
+.section-header{
+  margin-bottom: 16px;
 }
 .security-row {
   padding: 20px;
@@ -310,15 +340,40 @@ onMounted(load)
 .sessions-header {
   padding: 24px 0 14px;
 }
-.device {
+.session-ip {
   display: flex;
   align-items: center;
   gap: 8px;
+
+  &__text {
+    color: var(--text-primary);
+    cursor: help;
+    transition: color 0.2s ease;
+  }
+
+  &:hover &__text {
+    color: rgb(var(--primary-color));
+  }
 }
-.device span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+
+.session-device {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  &__value {
+    color: var(--text-primary);
+    font-size: 13px;
+    line-height: 1.7;
+    word-break: break-word;
+  }
 }
 .setup-content {
   display: flex;
@@ -343,12 +398,18 @@ onMounted(load)
   text-align: center;
   font-size: 15px;
 }
+
 @media (max-width: 768px) {
   .section-header,
   .security-row,
   .sessions-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .session-ip {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>

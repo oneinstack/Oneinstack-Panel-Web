@@ -273,9 +273,20 @@ onBeforeUnmount(() => {
 }
 
 .update-card__title {
-  font-size: 16px;
-  font-weight: 650;
-  color: var(--text-primary);
+  display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+  &::before {
+      content: '';
+      width: 3px;
+      height: 17px;
+      margin-right: 9px;
+      border-radius: 99px;
+      background: rgb(var(--primary-color));
+    }
 }
 
 .update-card__subtitle {
