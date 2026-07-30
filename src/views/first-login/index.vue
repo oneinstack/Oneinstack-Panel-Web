@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Api } from '@/api/Api'
@@ -12,10 +12,18 @@ const form = reactive({
   confirmPassword: ''
 })
 const loading = ref(false)
+const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/
 const rules: FormRules = {
   password: [
     { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 8, max: 128, message: '密码长度应为 8-128 位', trigger: 'blur' }
+    {
+      validator: (_rule, value, callback) => {
+        passwordRule.test(value)
+          ? callback()
+          : callback(new Error('密码需包含大写字母、小写字母、数字和特殊字符，长度至少 8 位'))
+      },
+      trigger: ['blur', 'change']
+    }
   ],
   confirmPassword: [
     { required: true, message: '请再次输入新密码', trigger: 'blur' },
@@ -23,12 +31,18 @@ const rules: FormRules = {
       validator: (_rule, value, callback) => {
         value === form.password ? callback() : callback(new Error('两次输入的密码不一致'))
       },
-      trigger: 'blur'
+      trigger: ['blur', 'change']
     }
   ]
 }
+const passwordValid = computed(() => passwordRule.test(form.password))
+const confirmValid = computed(() => form.confirmPassword.length > 0 && form.confirmPassword === form.password)
+const submitDisabled = computed(
+  () => loading.value || !passwordValid.value || !confirmValid.value
+)
 
 const submit = async () => {
+  if (submitDisabled.value) return
   if (!await formRef.value?.validate()) return
   loading.value = true
   try {
@@ -95,10 +109,16 @@ const submit = async () => {
               placeholder="请再次输入新密码"
               show-password
               autocomplete="new-password"
-              @keyup.enter="submit"
+              @keyup.enter="!submitDisabled && submit()"
             />
           </el-form-item>
-          <el-button type="primary" :loading="loading" class="submit" @click="submit">
+          <el-button
+            type="primary"
+            :loading="loading"
+            :disabled="submitDisabled"
+            class="submit"
+            @click="submit"
+          >
             保存密码并重新登录
             <span>→</span>
           </el-button>

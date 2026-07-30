@@ -24,6 +24,7 @@ interface NavItem {
   children?: NavItem[]
   event?: () => void
   adminOnly?: boolean
+  matrixKeys?: string[]
 }
 
 const route = useRoute()
@@ -41,6 +42,7 @@ const conf = reactive({
       name: '首页',
       path: '/home',
       icon: 'home',
+      matrixKeys: ['dashboard'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -50,6 +52,7 @@ const conf = reactive({
       name: '网站',
       path: '/website',
       icon: 'website',
+      matrixKeys: ['website'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -59,6 +62,7 @@ const conf = reactive({
       name: '数据库',
       path: '/database',
       icon: 'database',
+      matrixKeys: ['database'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -69,6 +73,7 @@ const conf = reactive({
       path: '/monitor',
       icon: 'monitor',
       adminOnly: true,
+      matrixKeys: ['monitoring'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -78,6 +83,7 @@ const conf = reactive({
       name: '安全',
       path: '/security',
       icon: 'security',
+      matrixKeys: ['security'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -87,6 +93,7 @@ const conf = reactive({
       name: '文件',
       path: '/file',
       icon: 'file',
+      matrixKeys: ['file'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -97,6 +104,7 @@ const conf = reactive({
       path: '/log',
       icon: 'log',
       adminOnly: true,
+      matrixKeys: ['audit'],
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
@@ -107,6 +115,7 @@ const conf = reactive({
       path: '/runtime-log',
       icon: 'log',
       adminOnly: true,
+      matrixKeys: ['runtimeLog'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -125,6 +134,7 @@ const conf = reactive({
       name: '计划任务',
       path: '/task',
       icon: 'task',
+      matrixKeys: ['cron'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -134,6 +144,7 @@ const conf = reactive({
       name: '软件商店',
       path: '/software',
       icon: 'software',
+      matrixKeys: ['software'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -143,6 +154,27 @@ const conf = reactive({
       name: '面板设置',
       path: '/setting',
       icon: 'setting',
+      matrixKeys: ['panelSettings'],
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
+      }
+    },
+    {
+      name: '用户管理',
+      path: '/user-management',
+      icon: 'user-management',
+      matrixKeys: ['userManagement'],
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
+      }
+    },
+    {
+      name: '审批中心',
+      path: '/approval-center',
+      icon: 'log',
+      matrixKeys: ['approval'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -152,6 +184,7 @@ const conf = reactive({
       name: '退出',
       path: '',
       icon: 'exit',
+      matrixKeys: ['logout'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -162,8 +195,22 @@ const conf = reactive({
     }
   ] as NavItem[]
 })
+const accessMatrixMenu = ref<Record<string, boolean>>({})
+const isPrivilegedUser = computed(() =>
+  Boolean(sconfig.userInfo?.user?.isAdmin || sconfig.userInfo?.user?.isSuperAdmin)
+)
+const hasMenuPermission = (item: NavItem) => {
+  if (isPrivilegedUser.value) return true
+  if (!item.matrixKeys?.length) return true
+  return item.matrixKeys.some((key) => Boolean(accessMatrixMenu.value[key]))
+}
 const visibleNavList = computed(() =>
-  conf.navList.filter(item => !item.adminOnly || sconfig.userInfo?.user?.isAdmin)
+  conf.navList.filter((item) => {
+    if (item.adminOnly && !isPrivilegedUser.value) {
+      return false
+    }
+    return hasMenuPermission(item)
+  })
 )
 const currentNav = computed(() => {
   const matched = visibleNavList.value.find(item => item.path && route.path.startsWith(item.path))
@@ -178,6 +225,8 @@ const navigateNavItem = (item: NavItem) => {
 }
 const pageDescriptions: Record<string, string> = {
   '/home': '查看服务器资源与服务运行状态',
+  '/user-management': '管理用户账号、权限与角色',
+  '/approval-center': '查看审批记录、处理高风险操作申请',
   '/website': '管理站点、域名、证书与运行环境',
   '/database': '管理数据库实例、账号与远程连接',
   '/monitor': '跟踪资源指标、告警规则与通知事件',
@@ -272,6 +321,13 @@ watch(
 
 onMounted(() => {
   void softwareTaskStore.loadActive().catch(() => undefined)
+  void Api.getAccessMatrix()
+    .then((response) => {
+      accessMatrixMenu.value = response?.data?.menu || {}
+    })
+    .catch(() => {
+      accessMatrixMenu.value = {}
+    })
 })
 
 const Beturn = () => {

@@ -6,6 +6,7 @@ export interface ColumnItem {
   label: string
   prop: string
   width?: string | number
+  minWidth?: string | number
   placeholder?: string
   formatter?: (row: any) => string
   sortable?: boolean
@@ -57,12 +58,18 @@ const conf = reactive({
   <div v-loading="loading" class="table-content">
     <el-table
       :data="autoPagination ? conf.visibleData : data"
+      class="smart-table"
       style="width: 100%"
       @selection-change="selectionChange"
       empty-text="暂无数据"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
+        <div v-else class="table-empty">
+          <div class="table-empty__icon">[]</div>
+          <strong>暂无数据</strong>
+          <p>当前筛选条件下还没有记录，试试调整搜索或筛选项。</p>
+        </div>
       </template>
       <el-table-column v-if="selection" type="selection" width="55"/>
       <el-table-column
@@ -71,6 +78,7 @@ const conf = reactive({
         :prop="item.prop"
         :label="item.label"
         :width="item.width"
+        :min-width="item.minWidth"
         :sortable="item.sortable"
         :sort-method="item.sortMethod"
       >
@@ -118,20 +126,129 @@ const conf = reactive({
 
 .ellipsis {
   max-width: 100%;
-  overflow: hidden;
   color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .pagination {
+  padding-top: 16px;
   display: flex;
   justify-content: flex-end;
-  margin-top: 18px;
+  margin-top: 14px;
 }
 
-:deep(.el-table__empty-block) {
-  min-height: 180px;
-  background: var(--surface-card);
+.table-empty {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-secondary);
+}
+
+.table-empty__icon {
+  width: 52px;
+  height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  color: rgb(var(--primary-color));
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, rgba(var(--primary-color), 0.12), rgba(var(--primary-color), 0.04));
+}
+
+.table-empty strong {
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 680;
+}
+
+.table-empty p {
+  margin: 0;
+  font-size: 13px;
+}
+
+:deep(.smart-table) {
+  --el-table-border-color: transparent;
+  --el-table-row-hover-bg-color: rgba(var(--primary-color), 0.045);
+  --el-table-header-bg-color: #f7f9fc;
+  --el-table-bg-color: transparent;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 252, 255, 0.98));
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.14),
+    0 10px 26px rgba(15, 23, 42, 0.04);
+}
+
+:deep(.smart-table th.el-table__cell) {
+  height: 52px;
+  padding: 0;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(180deg, #f8fafc, #f5f7fb);
+}
+
+:deep(.smart-table td.el-table__cell) {
+  height: 58px;
+  padding: 0;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.95);
+}
+
+:deep(.smart-table .cell) {
+  padding: 0 16px;
+}
+
+:deep(.smart-table .el-table__inner-wrapper::before) {
+  display: none;
+}
+
+:deep(.smart-table .el-table__body tr:last-child td.el-table__cell) {
+  border-bottom: none;
+}
+
+:deep(.smart-table .el-table__empty-block) {
+  min-height: 240px;
+  background: transparent;
+}
+
+:deep(.pagination .el-pagination.is-background .btn-next),
+:deep(.pagination .el-pagination.is-background .btn-prev),
+:deep(.pagination .el-pagination.is-background .el-pager li) {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: none;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(226, 232, 240, 0.95);
+}
+
+:deep(.pagination .el-pagination.is-background .el-pager li.is-active) {
+  color: #fff;
+  background: linear-gradient(135deg, rgb(var(--primary-color)), #ff9b52);
+  box-shadow: 0 10px 20px rgba(255, 122, 26, 0.2);
+}
+
+@media (max-width: 768px) {
+  :deep(.smart-table .cell) {
+    padding: 0 12px;
+  }
+
+  .table-empty {
+    min-height: 180px;
+  }
+
+  .pagination {
+    justify-content: center;
+  }
 }
 </style>

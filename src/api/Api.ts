@@ -19,6 +19,19 @@ const postAccepted = (url: string, payload: Record<string, any> = {}) => {
   })
 }
 
+const requestJson = async (
+  method: 'GET' | 'POST' | 'PUT',
+  url: string,
+  payload?: Record<string, any>
+) => {
+  const request = {
+    url,
+    method,
+    headers: method === 'GET' ? undefined : { 'Content-Type': 'application/json' }
+  }
+  return await http.get(request as any, payload || {})
+}
+
 export const Api = {
   /** 登录 */
   login: (obj?: any) => {
@@ -491,6 +504,50 @@ export const Api = {
   /** 获取基础信息 */
   getBaseInfo: () => {
     return http.get('/sys/getbaseinfo')
+  },
+  /** 获取当前登录用户的角色、权限与可见范围 */
+  getCurrentUserAccess: () => {
+    return requestJson('GET', '/auth/me')
+  },
+  /** 获取菜单、按钮与审批策略矩阵 */
+  getAccessMatrix: () => {
+    return requestJson('GET', '/access/matrix')
+  },
+  /** 获取用户列表 */
+  getAccessUsers: (obj?: any) => {
+    return requestJson('GET', '/access/users', obj)
+  },
+  /** 获取角色列表 */
+  getAccessRoles: () => {
+    return requestJson('GET', '/access/roles')
+  },
+  /** 创建用户并分配角色 */
+  createAccessUser: (obj: any) => {
+    return requestJson('POST', '/access/users', obj)
+  },
+  /** 更新指定用户角色 */
+  updateAccessUserRoles: (id: number | string, obj: { roleCodes: string[] }) => {
+    return requestJson('PUT', `/access/users/${id}/roles`, obj)
+  },
+  /** 重置指定用户密码 */
+  resetAccessUserPassword: (id: number | string, obj: { password: string }) => {
+    return requestJson('POST', `/access/users/${id}/reset-password`, obj)
+  },
+  /** 获取审批列表 */
+  getApprovals: (obj?: any) => {
+    return requestJson('GET', '/approvals', obj)
+  },
+  /** 获取审批详情 */
+  getApprovalDetail: (id: string) => {
+    return requestJson('GET', `/approvals/${encodeURIComponent(id)}`)
+  },
+  /** 审批通过 */
+  approveApproval: (id: string, obj: { comment?: string }) => {
+    return requestJson('POST', `/approvals/${encodeURIComponent(id)}/approve`, obj)
+  },
+  /** 审批拒绝 */
+  rejectApproval: (id: string, obj: { comment?: string }) => {
+    return requestJson('POST', `/approvals/${encodeURIComponent(id)}/reject`, obj)
   },
   /** 分页查询持久化审计日志 */
   getAuditEvents: (obj?: any) => {
