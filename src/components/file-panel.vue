@@ -1,68 +1,200 @@
 <script setup lang="ts">
 import { Api } from '@/api/Api'
-import { reactive } from 'vue'
-import type Node from 'element-plus/es/components/tree/src/model/node'
-import type { TreeOptionProps } from 'element-plus/es/components/tree/src/tree.type'
+import { Document, FolderOpened, Refresh } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { onMounted, reactive } from 'vue'
 
-interface Tree {
+interface TreeNode {
   name: string
-  leaf?: boolean
+  path: string
+  children?: TreeNode[]
   isDir?: boolean
 }
 
 interface Emits {
   (e: 'select', path: string): void
+  (e: 'select-node', node: TreeNode): void
 }
 
-const props: TreeOptionProps = {
-  label: 'name'
-}
+const props = withDefaults(defineProps<{ path?: string }>(), {
+  path: '/'
+})
 
 const emit = defineEmits<Emits>()
 
+const treeProps = {
+  label: 'name',
+  children: 'children'
+}
+
 const state = reactive({
-  path: '/',
-  fileList: [],
-  loading: false
+  loading: false,
+  selectedPath: '/',
+  treeData: [] as TreeNode[]
 })
 
-const getFileList = async () => {
-  state.loading = true
-  const { data: res } = await Api.getFileList({
-    path: state.path,
-    final: () => (state.loading = false)
-  })
-  state.fileList = res.files?.filter((item: any) => item.isDir) ?? []
+const normalizePath = (path?: string, parentPath = '/') => {
+  const raw = String(path || '').trim()
+  if (raw) return raw.startsWith('/') ? raw : `${parentPath === '/' ? '' : parentPath}/${raw}`
+  return parentPath
 }
 
-const loadNode = async (node: Node, resolve: (data: Tree[]) => void) => {
-  let currentNode = node,
-    paths = []
-  while (currentNode.parent) {
-    paths.unshift(currentNode.data.name)
-    currentNode = currentNode.parent
-  }
-  state.path = `/${paths.join('/')}`
-  emit('select', state.path)
-  await getFileList()
-  return resolve(state.fileList)
+const normalizeNodes = (items: any[], parentPath = '/'): TreeNode[] => {
+  return items
+    .filter(Boolean)
+    .map((item) => {
+      const name = String(item.name || item.label || item.path?.split('/').pop() || '/')
+      const path = normalizePath(item.path, parentPath === '/' ? `/${name}` : `${parentPath}/${name}`)
+      const isDir = Boolean(item.isDir ?? item.type === 'directory' ?? item.children?.length)
+      return {
+        name: path === '/' ? '根目录' : name,
+        path,
+        isDir,
+        children: normalizeNodes(item.children || item.dirs || item.directories || [], path)
+      }
+    })
 }
+
+const normalizeTreeData = (data: any): TreeNode[] => {
+  const root = data?.tree || data?.directories || data?.dirs || data?.files || data
+  const items = Array.isArray(root) ? root : [root].filter(Boolean)
+  const nodes = normalizeNodes(items)
+  if (nodes.length === 1 && nodes[0].path === '/') return nodes
+  return [
+    {
+      name: '根目录',
+      path: '/',
+      isDir: true,
+      children: nodes
+    }
+  ]
+}
+
+const selectPath = (path: string) => {
+  state.selectedPath = path
+  emit('select', path)
+}
+
+const selectNode = (node: TreeNode) => {
+  selectPath(node.path)
+  emit('select-node', node)
+}
+
+const loadTree = async () => {
+  const queryPath = normalizePath(props.path || '/')
+  state.loading = true
+  try {
+    const { data } = await Api.getFileTree({ path: queryPath })
+    state.treeData = normalizeTreeData(data)
+    if (!state.treeData.length) {
+      state.treeData = [{ name: queryPath === '/' ? '根目录' : queryPath.split('/').pop() || queryPath, path: queryPath, isDir: true, children: [] }]
+    }
+    selectPath(queryPath)
+  } catch (error: any) {
+    ElMessage.error(error?.message || '目录树读取失败')
+  } finally {
+    state.loading = false
+  }
+}
+
+onMounted(loadTree)
+
+defineExpose({
+  refresh: loadTree
+})
 </script>
 
 <template>
-  <el-tree v-loading="state.loading" :props="props" :load="loadNode" lazy>
-    <template #default="{ data }">
-      <div class="flex items-center" style="gap: 20px">
-        <v-s-icon name="folder" />
-        <span>{{ data.name }}</span>
-      </div>
-    </template>
-  </el-tree>
+  <div class="file-tree-panel">
+    <div class="file-tree-panel__header">
+      <span class="file-tree-panel__path">{{ state.selectedPath }}</span>
+      <el-button :icon="Refresh" link @click="loadTree">刷新</el-button>
+    </div>
+    <el-tree
+      v-loading="state.loading"
+      class="file-tree-panel__tree"
+      :data="state.treeData"
+      :props="treeProps"
+      node-key="path"
+      highlight-current
+      default-expand-all
+      :current-node-key="state.selectedPath"
+      @node-click="(data: TreeNode) => selectNode(data)"
+    >
+      <template #default="{ data }">
+        <div class="file-tree-panel__node" :class="{ 'is-file': !data.isDir }">
+          <el-icon><component :is="data.isDir ? FolderOpened : Document" /></el-icon>
+          <span>{{ data.name }}</span>
+        </div>
+      </template>
+    </el-tree>
+  </div>
 </template>
 
 <style scoped lang="less">
-:deep(.flex .items-center){
+.file-tree-panel {
+  min-height: 360px;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.file-tree-panel__header {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.file-tree-panel__path {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-tree-panel__tree {
+  flex: 1;
+  min-height: 300px;
+  max-height: calc(100vh - 400px);
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+}
+
+.file-tree-panel__node {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-secondary);
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &.is-file {
+    color: var(--text-tertiary);
+  }
+}
+
+:deep(.el-tree-node__content) {
+  height: 34px;
+  border-radius: 8px;
+}
+
+:deep(.el-tree-node.is-current > .el-tree-node__content) {
+  color: rgb(var(--primary-color));
+  background: rgba(var(--primary-color), 0.08);
 }
 </style>

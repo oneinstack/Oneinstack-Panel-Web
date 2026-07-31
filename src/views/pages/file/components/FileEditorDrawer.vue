@@ -8,6 +8,7 @@ import { formatBytes } from '@/utils/fileSize'
 const props = defineProps<{
   modelValue: boolean
   path: string
+  initialDetail?: any
 }>()
 
 const emit = defineEmits<{
@@ -25,21 +26,115 @@ const state = reactive({
   saving: false,
   content: '',
   original: '',
-  detail: null as any
+  detail: null as any,
+  loadError: '',
+  readOnlyReason: ''
 })
 const editorRef = ref<HTMLTextAreaElement>()
 const dirty = computed(() => state.content !== state.original)
+const canEdit = computed(() => !state.loadError && !state.readOnlyReason)
+const textPreviewExtensions = new Set([
+  '.txt',
+  '.md',
+  '.markdown',
+  '.json',
+  '.xml',
+  '.yml',
+  '.yaml',
+  '.ini',
+  '.conf',
+  '.config',
+  '.env',
+  '.log',
+  '.sh',
+  '.bash',
+  '.zsh',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.tsx',
+  '.jsx',
+  '.vue',
+  '.css',
+  '.scss',
+  '.sass',
+  '.less',
+  '.html',
+  '.htm',
+  '.php',
+  '.py',
+  '.go',
+  '.java',
+  '.rb',
+  '.rs',
+  '.sql',
+  '.toml',
+  '.csv',
+  '.gitignore',
+  '.dockerfile'
+])
+
+const isTextPreviewable = (detail: any) => {
+  const mimeType = String(detail?.mimeType || '').toLowerCase()
+  const extension = String(detail?.extension || '').toLowerCase()
+  if (/^text\//.test(mimeType)) return true
+  if (/(^|\/)(json|xml|javascript|x-sh|x-httpd-php|x-empty|svg\+xml)(;|$)/.test(mimeType)) return true
+  if (textPreviewExtensions.has(extension)) return true
+  if (!extension && mimeType.includes('charset=')) return true
+  return false
+}
+
+const isEditLimitMessage = (message: string) => /过大|超限|无法在线编辑|too large|max/i.test(message)
+
+const resolveReadErrorMessage = (error: any) => {
+  const message = String(error?.message || '').trim()
+  if (isEditLimitMessage(message)) return message || '当前文件超过在线编辑限制，无法直接在线编辑。'
+  if (/binary|二进制|文本|text|utf-8|编码/i.test(message)) return message || '当前文件不是可在线编辑的文本文件。'
+  return message || '读取文件失败'
+}
+
+const resetEditor = () => {
+  state.loadError = ''
+  state.readOnlyReason = ''
+  state.content = ''
+  state.original = ''
+}
+
+const applyFileDetail = async (data: any) => {
+  state.detail = data
+  state.content = data?.content ?? ''
+  state.original = state.content
+  if (!isTextPreviewable(data)) {
+    state.readOnlyReason = `当前文件类型为 ${data?.mimeType || data?.extension || '未知类型'}，不支持在线文本预览或编辑。`
+  }
+  await nextTick()
+  if (!state.readOnlyReason) editorRef.value?.focus()
+}
 
 const load = async () => {
   if (!props.path) return
   state.loading = true
+  resetEditor()
   try {
-    const { data } = await Api.getFileContent({ path: props.path })
-    state.detail = data
-    state.content = data?.content ?? ''
-    state.original = state.content
-    await nextTick()
-    editorRef.value?.focus()
+    const data =
+      props.initialDetail?.path === props.path
+        ? props.initialDetail
+        : (await Api.getFileContent({ path: props.path })).data
+    await applyFileDetail(data)
+  } catch (error: any) {
+    state.detail = {
+      name: props.path.split('/').pop() || props.path,
+      path: props.path,
+      size: 0,
+      mimeType: '-'
+    }
+    state.loadError = resolveReadErrorMessage(error)
+    if (isEditLimitMessage(state.loadError)) {
+      state.readOnlyReason = state.loadError
+      state.loadError = ''
+      return
+    }
   } finally {
     state.loading = false
   }
@@ -53,7 +148,7 @@ watch(
 )
 
 const save = async () => {
-  if (!dirty.value) return
+  if (!dirty.value || !canEdit.value) return
   try {
     await ElMessageBox.confirm(
       `确定保存 ${props.path}？系统配置文件保存错误可能影响服务启动。`,
@@ -74,6 +169,15 @@ const save = async () => {
     if (state.detail) state.detail.revision = data?.revision
     ElMessage.success('文件已保存')
     emit('saved')
+  } catch (error: any) {
+    const message = String(error?.message || '文件保存失败')
+    if (isEditLimitMessage(message)) {
+      state.readOnlyReason = message
+      state.original = state.content
+      ElMessage.warning(message)
+      return
+    }
+    ElMessage.error(message)
   } finally {
     state.saving = false
   }
@@ -110,7 +214,7 @@ const beforeClose = async (done: () => void) => {
 
 <template>
   <el-drawer
-    :model-value="visible"
+    v-model="visible"
     size="min(1040px, 92vw)"
     class="file-editor-drawer"
     :before-close="beforeClose"
@@ -135,12 +239,28 @@ const beforeClose = async (done: () => void) => {
         <span>权限 {{ state.detail?.mode || '-' }}</span>
         <span>所有者 {{ state.detail?.user || '-' }} : {{ state.detail?.group || '-' }}</span>
         <span>{{ state.detail?.mimeType || 'text/plain' }}</span>
+        <span v-if="state.detail?.extension">{{ state.detail.extension }}</span>
         <el-button :icon="Refresh" link @click="load">重新读取</el-button>
       </div>
+      <el-alert
+        v-if="state.loadError"
+        :title="state.loadError"
+        type="error"
+        show-icon
+        :closable="false"
+      />
+      <el-alert
+        v-else-if="state.readOnlyReason"
+        :title="state.readOnlyReason"
+        type="warning"
+        show-icon
+        :closable="false"
+      />
       <textarea
         ref="editorRef"
         v-model="state.content"
         class="code-editor"
+        :readonly="!canEdit"
         spellcheck="false"
         autocomplete="off"
         aria-label="文件内容"
@@ -149,7 +269,7 @@ const beforeClose = async (done: () => void) => {
         <span>在线编辑上限由服务器配置控制，默认 10MB。</span>
         <div>
           <el-button @click="close">关闭</el-button>
-          <el-button type="primary" :icon="Check" :loading="state.saving" :disabled="!dirty" @click="save">
+          <el-button type="primary" :icon="Check" :loading="state.saving" :disabled="!dirty || !canEdit" @click="save">
             保存文件
           </el-button>
         </div>

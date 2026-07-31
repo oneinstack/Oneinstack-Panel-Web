@@ -101,6 +101,22 @@ export const Api = {
   getFileList: (obj: any) => {
     return http.post('/ftp/list', obj)
   },
+  /** 获取当前用户收藏列表 */
+  getFileFavorites: () => {
+    return http.get('/ftp/favorites')
+  },
+  /** 收藏文件或目录 */
+  favoriteFile: (obj: { path: string }) => {
+    return http.post('/ftp/favorite', obj)
+  },
+  /** 取消收藏文件或目录 */
+  cancelFileFavorite: (obj: { path?: string; id?: number }) => {
+    return http.post('/ftp/favorite/cancel', obj)
+  },
+  /** 读取目录树 */
+  getFileTree: (obj: { path?: string } = {}) => {
+    return http.post('/ftp/tree', obj)
+  },
   /** 搜索服务器文件或目录 */
   searchFiles: (obj: {
     path: string
@@ -143,11 +159,11 @@ export const Api = {
     return http.post('/ftp/delete', obj)
   },
   /** 复制文件或目录（目标同名时不会覆盖） */
-  copyFile: (obj: { source: string; targetDir: string; targetName?: string }) => {
+  copyFile: (obj: { sourcePath: string; targetPath: string; overwrite?: boolean }) => {
     return http.post('/ftp/copy', obj)
   },
   /** 移动文件或目录（用于剪切/粘贴） */
-  moveFile: (obj: { source: string; targetDir: string; targetName?: string }) => {
+  moveFile: (obj: { sourcePath: string; targetPath: string }) => {
     return http.post('/ftp/move', obj)
   },
   /** 重命名文件或目录 */

@@ -17,6 +17,7 @@ import {
   Files,
   MoreFilled,
   FolderOpened,
+  Operation,
   Star,
   Share,
   InfoFilled,
@@ -42,22 +43,114 @@ interface Emits {
 const emit = defineEmits<Emits>()
 
 type ClipboardMode = '' | 'copy' | 'move'
-type FavoriteItem = { path: string; name: string; isDir: boolean }
+type FavoriteItem = {
+  id?: number
+  path: string
+  name: string
+  isDir: boolean
+  isMissing?: boolean
+}
 
 const imageExtensionPattern = /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/i
 const currentPath = () => conf.path.join('/').replace(/\/\//g, '/')
+const normalizeBool = (value: any) => value === true || value === 1 || value === '1' || value === 'true'
+const joinVirtualPath = (dir: string, name: string) => `${dir === '/' ? '' : dir}/${name}`
+const toCopyName = (name: string) => {
+  const dotIndex = name.lastIndexOf('.')
+  if (dotIndex <= 0) return `${name}-copy`
+  return `${name.slice(0, dotIndex)}-copy${name.slice(dotIndex)}`
+}
 const parentPath = (path: string) => {
   const clean = path.replace(/\/+$/, '')
   const index = clean.lastIndexOf('/')
   return index <= 0 ? '/' : clean.slice(0, index)
 }
+const parseDownloadFilename = (disposition: string, fallback: string) => {
+  const encodedName = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+  if (encodedName) return decodeURIComponent(encodedName)
+  const plainName = disposition.match(/filename="?([^"]+)"?/i)?.[1]
+  return plainName || fallback
+}
+const triggerBlobDownload = (blob: Blob, name: string) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.style.display = 'none'
+  link.href = url
+  link.download = name
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+const releasePreviewUrl = () => {
+  if (!conf.imagePreview.url?.startsWith('blob:')) return
+  URL.revokeObjectURL(conf.imagePreview.url)
+}
+const downloadVirtualFile = async (path: string, fallbackName: string) => {
+  const apiBase = String(System.env.API || '/v1').replace(/\/$/, '')
+  const response = await fetch(`${apiBase}/ftp/download`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/octet-stream',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ path })
+  })
+  const contentType = response.headers.get('content-type') || ''
+  if (!response.ok || contentType.includes('application/json')) {
+    let message = `文件下载失败（HTTP ${response.status}）`
+    try {
+      const payload = await response.json()
+      message = payload?.message || payload?.error?.message || message
+    } catch {
+      // Keep the HTTP status based fallback message.
+    }
+    throw new Error(message)
+  }
+  const blob = await response.blob()
+  const disposition = response.headers.get('Content-Disposition') || response.headers.get('content-disposition') || ''
+  const filename = parseDownloadFilename(disposition, fallbackName)
+  triggerBlobDownload(blob, filename)
+}
+const loadImagePreviewUrl = async (path: string) => {
+  const apiBase = String(System.env.API || '/v1').replace(/\/$/, '')
+  const response = await fetch(`${apiBase}/ftp/download`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      Accept: 'image/*,application/octet-stream',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ path })
+  })
+  const contentType = response.headers.get('content-type') || ''
+  if (!response.ok || contentType.includes('application/json')) {
+    let message = `图片读取失败（HTTP ${response.status}）`
+    try {
+      const payload = await response.json()
+      message = payload?.message || payload?.error?.message || message
+    } catch {
+      // Keep the HTTP status based fallback message.
+    }
+    throw new Error(message)
+  }
+  const blob = await response.blob()
+  if (!blob.type.startsWith('image/')) {
+    throw new Error('当前文件不是受支持的图片格式')
+  }
+  return URL.createObjectURL(blob)
+}
 
 const conf = reactive({
+  tipPaste: '',
   path: ['/'],
   searchVisible: false,
   operationsVisible: false,
   editorVisible: false,
   editorPath: '',
+  editorDetail: null as any,
+  editorLoadingPath: '',
   imagePreview: {
     show: false,
     row: null as any,
@@ -70,14 +163,15 @@ const conf = reactive({
       conf.imagePreview.loading = true
       conf.imagePreview.show = true
       try {
-        const { data } = await Api.createImagePreviewTicket({ path: row.path })
-        conf.imagePreview.url = `${window.location.origin}${data.url}`
+        releasePreviewUrl()
+        conf.imagePreview.url = await loadImagePreviewUrl(row.path)
       } catch {
         conf.imagePreview.loading = false
         conf.imagePreview.error = true
       }
     },
     close: () => {
+      releasePreviewUrl()
       conf.imagePreview.show = false
       conf.imagePreview.loading = false
       conf.imagePreview.error = false
@@ -97,7 +191,35 @@ const conf = reactive({
     mode: '' as ClipboardMode,
     source: null as any
   },
+  copyDialog: {
+    show: false,
+    overwrite: false,
+    targetPath: '',
+    open: () => {
+      if (!conf.clipboard.source) return
+      conf.copyDialog.overwrite = false
+      conf.copyDialog.targetPath = joinVirtualPath(currentPath(), toCopyName(conf.clipboard.source.name))
+      conf.copyDialog.show = true
+    },
+    close: () => {
+      conf.copyDialog.show = false
+      conf.copyDialog.overwrite = false
+      conf.copyDialog.targetPath = ''
+    },
+    confirm: async () => {
+      if (!conf.clipboard.source || conf.clipboard.mode !== 'copy') return
+      await Api.copyFile({
+        sourcePath: conf.clipboard.source.path,
+        targetPath: conf.copyDialog.targetPath,
+        overwrite: conf.copyDialog.overwrite
+      })
+      ElMessage.success('复制完成')
+      conf.copyDialog.close()
+      conf.refresh()
+    }
+  },
   favorites: [] as FavoriteItem[],
+  favoritesLoading: false,
   capacity: null as any,
   rootPath: '/',
   loading: false,
@@ -129,12 +251,26 @@ const conf = reactive({
         conf.imagePreview.open(row)
         return
       }
-      conf.editorPath = row.path
-      conf.editorVisible = true
+      conf.openEditor(row)
       return
     }
     conf.path.push(row.name)
     conf.getFileList()
+  },
+  openEditor: async (row: any) => {
+    if (!row?.path) return
+    conf.editorLoadingPath = row.path
+    conf.editorDetail = null
+    try {
+      const { data } = await Api.getFileContent({ path: row.path })
+      conf.editorPath = row.path
+      conf.editorDetail = data
+      conf.editorVisible = true
+    } catch {
+      // HttpConfig already shows the backend error once; keep the editor closed.
+    } finally {
+      conf.editorLoadingPath = ''
+    }
   },
   handleBackLevel: (index = conf.path.length - 2) => {
     if (conf.path.length === 1) return
@@ -175,10 +311,7 @@ const conf = reactive({
     emit('open-drawer', openType, type, row)
   },
   handleFileDownload: async (row: any) => {
-    await Api.downloadFile({
-      path: row.path,
-      filename: row.name
-    })
+    await downloadVirtualFile(row.path, row.name)
     ElMessage.success('下载成功！')
   },
   isImage: (row: any) => !row?.isDir && imageExtensionPattern.test(row?.name || ''),
@@ -190,6 +323,7 @@ const conf = reactive({
       isDir: row.isDir
     }
     ElMessage.success(mode === 'copy' ? '已复制到文件剪贴板' : '已剪切到文件剪贴板')
+    conf.tipPaste = mode === 'copy' ? '粘贴到当前目录' : '剪切到当前目录'
   },
   clearClipboard: () => {
     conf.clipboard.mode = ''
@@ -197,49 +331,59 @@ const conf = reactive({
   },
   pasteClipboard: async () => {
     if (!conf.clipboard.source || !conf.clipboard.mode) return
-    const params = {
-      source: conf.clipboard.source.path,
-      targetDir: currentPath(),
-      targetName: conf.clipboard.source.name
-    }
     if (conf.clipboard.mode === 'copy') {
-      await Api.copyFile(params)
-    } else {
-      await Api.moveFile(params)
-      conf.clearClipboard()
+      conf.copyDialog.open()
+      return
     }
-    ElMessage.success('粘贴完成')
+    await Api.moveFile({
+      sourcePath: conf.clipboard.source.path,
+      targetPath: joinVirtualPath(currentPath(), conf.clipboard.source.name)
+    })
+    ElMessage.success('剪切完成')
+    conf.clearClipboard()
     conf.refresh()
   },
-  loadFavorites: () => {
+  loadFavorites: async () => {
+    conf.favoritesLoading = true
     try {
-      const saved = JSON.parse(localStorage.getItem('oneinstack-file-favorites') || '[]')
-      conf.favorites = Array.isArray(saved) ? saved.slice(0, 100) : []
+      const { data } = await Api.getFileFavorites()
+      const items = Array.isArray(data?.items) ? data.items : []
+      conf.favorites = items.map((item: any) => ({
+        id: item.id,
+        path: item.path,
+        name: item.name || item.path?.split('/').pop() || item.path,
+        isDir: normalizeBool(item.isDir),
+        isMissing: normalizeBool(item.isMissing)
+      }))
     } catch {
       conf.favorites = []
+    } finally {
+      conf.favoritesLoading = false
     }
   },
   isFavorite: (path: string) => conf.favorites.some((item) => item.path === path),
-  toggleFavorite: (row: any) => {
-    const index = conf.favorites.findIndex((item) => item.path === row.path)
-    if (index >= 0) {
-      conf.favorites.splice(index, 1)
+  toggleFavorite: async (row: any) => {
+    const item = conf.favorites.find((favorite) => favorite.path === row.path)
+    if (item) {
+      await Api.cancelFileFavorite({ path: item.path })
       ElMessage.success('已取消收藏')
     } else {
-      conf.favorites.unshift({ path: row.path, name: row.name, isDir: row.isDir })
-      conf.favorites = conf.favorites.slice(0, 100)
+      await Api.favoriteFile({ path: row.path })
       ElMessage.success('已添加到收藏夹')
     }
-    localStorage.setItem('oneinstack-file-favorites', JSON.stringify(conf.favorites))
+    await conf.loadFavorites()
   },
   openFavorite: (item: FavoriteItem) => {
+    if (item.isMissing) {
+      ElMessage.warning('该收藏路径已失效')
+      return
+    }
     if (item.isDir) {
       conf.handleNavigate(item.path)
       return
     }
     conf.handleNavigate(parentPath(item.path))
-    conf.editorPath = item.path
-    conf.editorVisible = true
+    ElMessage.success('已打开收藏文件所在目录')
   },
   openInNewWindow: (row: any) => {
     const params = new URLSearchParams({
@@ -419,11 +563,36 @@ const conf = reactive({
   linkDownload: {
     instance: useTemplateRef<FormInstance>('formRef')
   },
+  treeDialog: {
+    show: false,
+    path: '/',
+    isDir: true,
+    key: 0,
+    open: (row?: any) => {
+      conf.treeDialog.path = row?.path || currentPath()
+      conf.treeDialog.isDir = true
+      conf.treeDialog.key += 1
+      conf.treeDialog.show = true
+    },
+    select: (node: any) => {
+      conf.treeDialog.path = node.path
+      conf.treeDialog.isDir = Boolean(node.isDir)
+    },
+    confirm: () => {
+      if (!conf.treeDialog.isDir) return ElMessage.warning('请选择目录')
+      conf.handleNavigate(conf.treeDialog.path || '/')
+      conf.treeDialog.show = false
+    }
+  },
   selectFolder: {
     show: false,
     path: '',
     open: () => {
       conf.selectFolder.show = true
+    },
+    select: (node: any) => {
+      if (!node.isDir) return
+      conf.selectFolder.path = node.path
     },
     confirm: () => {
       conf.fileDialog.row.path = conf.selectFolder.path
@@ -452,8 +621,7 @@ onMounted(() => {
     if (conf.isImage(initialRow)) {
       conf.imagePreview.open(initialRow)
     } else {
-      conf.editorPath = initialFile
-      conf.editorVisible = true
+      conf.openEditor(initialRow)
     }
   }
   conf.getCapacity()
@@ -499,80 +667,91 @@ defineExpose({
       </el-space>
     </div>
     <div class="tool-bar">
-      <el-space :size="14" class="btn-group">
-        <el-dropdown>
-          <el-button type="primary">
-            上传/下载
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+      <div class="tool-bar__content">
+        <div class="tool-bar__row tool-bar__row--actions">
+          <el-dropdown>
+            <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
+              上传/下载
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="conf.upload.handleOpenDialog">上传文件/文件夹</el-dropdown-item>
+                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">URL链接下载</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown>
+            <el-button class="tool-bar__button tool-bar__button--soft" plain>
+              收藏夹
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu class="favorite-menu">
+                <el-dropdown-item v-if="conf.favoritesLoading" disabled>收藏加载中...</el-dropdown-item>
+                <el-dropdown-item v-else-if="!conf.favorites.length" disabled>暂无收藏</el-dropdown-item>
+                <el-dropdown-item
+                  v-for="item in conf.favorites"
+                  :key="item.path"
+                  :disabled="item.isMissing"
+                  @click="conf.openFavorite(item)"
+                >
+                  <el-icon><Star /></el-icon>
+                  <span class="favorite-name">{{ item.name }}</span>
+                  <el-tag v-if="item.isMissing" size="small" type="warning" effect="plain">已失效</el-tag>
+                  <small>{{ item.path }}</small>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-dropdown>
+            <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
+              新建
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item @click="conf.handleOpenDrawer('create', 'file')">
+                  <div class="flex items-center" style="gap: 10px">
+                    <v-s-icon name="txt" size="22" />
+                    <span>文件</span>
+                  </div>
+                </el-dropdown-item>
+                <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
+                  <div class="flex items-center" style="gap: 10px">
+                    <v-s-icon name="folder" size="22" />
+                    <span>文件夹</span>
+                  </div>
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <el-button
+            v-if="conf.clipboard.source"
+            class="tool-bar__button tool-bar__button--clipboard"
+            type="success"
+            plain
+            @click="conf.pasteClipboard"
+          >
+            <span>{{ conf.tipPaste }}</span>
+            <span class="clipboard-name">{{ conf.clipboard.source.name }}</span>
           </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="conf.upload.handleOpenDialog">上传文件/文件夹</el-dropdown-item>
-              <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">URL链接下载</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <el-tag v-if="conf.capacity" type="info" effect="plain">
-          可写 {{ formatBytes(conf.capacity.writableBytes) }}
-        </el-tag>
-        <el-tag type="success" effect="plain">管理根目录 {{ conf.rootPath }}</el-tag>
-        <el-button
-          v-if="conf.clipboard.source"
-          type="success"
-          plain
-          @click="conf.pasteClipboard"
-        >
-          粘贴到当前目录
-          <span class="clipboard-name">{{ conf.clipboard.source.name }}</span>
+        </div>
+        <div class="tool-bar__row tool-bar__row--meta">
+          <el-tag v-if="conf.capacity" class="tool-bar__pill tool-bar__pill--capacity" type="info" effect="plain">
+            可写 {{ formatBytes(conf.capacity.writableBytes) }}
+          </el-tag>
+          <div class="tool-bar__location">
+            <span class="tool-bar__location-label">管理根目录</span>
+            <span class="tool-bar__location-value">{{ conf.rootPath }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="tool-bar__actions">
+        <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="conf.operationsVisible = true">
+          操作记录
         </el-button>
-        <el-dropdown>
-          <el-button plain>
-            收藏夹
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu class="favorite-menu">
-              <el-dropdown-item v-if="!conf.favorites.length" disabled>暂无收藏</el-dropdown-item>
-              <el-dropdown-item
-                v-for="item in conf.favorites"
-                :key="item.path"
-                @click="conf.openFavorite(item)"
-              >
-                <el-icon><Star /></el-icon>
-                <span class="favorite-name">{{ item.name }}</span>
-                <small>{{ item.path }}</small>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <el-dropdown>
-          <el-button type="primary">
-            新建
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item @click="conf.handleOpenDrawer('create', 'file')">
-                <div class="flex items-center" style="gap: 10px">
-                  <v-s-icon name="txt" size="22" />
-                  <span>文件</span>
-                </div>
-              </el-dropdown-item>
-              <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
-                <div class="flex items-center" style="gap: 10px">
-                  <v-s-icon name="folder" size="22" />
-                  <span>文件夹</span>
-                </div>
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <!-- <el-button type="primary">终端</el-button>
-        <el-button type="primary">/（根目录）29.47GB</el-button> -->
-      </el-space>
-      <div class="demo-form-inline">
-        <el-button type="primary" plain @click="conf.operationsVisible = true">操作记录</el-button>
-        <el-button type="primary" plain @click="emit('open-trash')">
+        <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="emit('open-trash')">
           <span class="mr-1">回收站</span>
           <el-icon size="16"><Delete /></el-icon>
         </el-button>
@@ -611,6 +790,7 @@ defineExpose({
               type="primary"
               plain
               :icon="conf.isImage(row) ? View : FolderOpened"
+              :loading="conf.editorLoadingPath === row.path"
               @click="conf.handleFileClick(row)"
             >
               {{ row.isDir ? '打开' : conf.isImage(row) ? '预览' : '编辑' }}
@@ -623,6 +803,12 @@ defineExpose({
             </el-button>
             <el-button type="primary" link :icon="EditPen" @click="conf.operationDialog.open('rename', row)">
               重命名
+            </el-button>
+            <el-button v-if="row.isDir" type="primary" link :icon="Operation" @click="conf.treeDialog.open(row)">
+              目录树
+            </el-button>
+            <el-button class="row-action-danger" type="primary" link :icon="Delete" @click="conf.fileDialog.open('delete', row)">
+              删除
             </el-button>
             <el-dropdown trigger="click">
               <el-button type="primary" link :icon="MoreFilled">
@@ -637,6 +823,9 @@ defineExpose({
                   </el-dropdown-item>
                   <el-dropdown-item @click="conf.openInNewWindow(row)">
                     <el-icon><FolderOpened /></el-icon>在新窗口打开
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="row.isDir" @click="conf.treeDialog.open(row)">
+                    <el-icon><Operation /></el-icon>目录树
                   </el-dropdown-item>
                   <el-dropdown-item v-if="!row.isDir" @click="conf.handleFileDownload(row)">
                     <el-icon><Download /></el-icon>下载
@@ -923,10 +1112,52 @@ defineExpose({
       </template>
     </custom-dialog>
 
+    <custom-dialog v-model="conf.copyDialog.show" title="复制到当前目录" width="680px">
+      <div class="copy-dialog">
+        <el-alert
+          title="目标已存在时，默认由后端拒绝复制；开启覆盖后会替换目标文件。"
+          type="warning"
+          show-icon
+          :closable="false"
+        />
+        <el-form label-position="top" class="copy-dialog__form">
+          <el-form-item label="源路径">
+            <el-input :model-value="conf.clipboard.source?.path" disabled />
+          </el-form-item>
+          <el-form-item label="目标路径">
+            <el-input v-model="conf.copyDialog.targetPath" disabled />
+          </el-form-item>
+          <el-form-item label="覆盖策略">
+            <el-switch
+              v-model="conf.copyDialog.overwrite"
+              active-text="覆盖已存在文件"
+              inactive-text="不覆盖"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+      <template #footer>
+        <el-button @click="conf.copyDialog.close">取消</el-button>
+        <el-button type="primary" @click="conf.copyDialog.confirm">开始复制</el-button>
+      </template>
+    </custom-dialog>
+
     <custom-dialog v-model="conf.selectFolder.show" title="选择文件夹">
-      <file-panel @select="(path) => (conf.selectFolder.path = path)" />
+      <file-panel :path="conf.selectFolder.path || currentPath()" @select-node="conf.selectFolder.select" />
       <template #footer>
         <el-button type="primary" @click="conf.selectFolder.confirm">确定</el-button>
+      </template>
+    </custom-dialog>
+
+    <custom-dialog v-model="conf.treeDialog.show" title="目录树" width="720px">
+      <file-panel
+        :key="conf.treeDialog.key"
+        :path="conf.treeDialog.path || currentPath()"
+        @select-node="conf.treeDialog.select"
+      />
+      <template #footer>
+        <el-button @click="conf.treeDialog.show = false">取消</el-button>
+        <el-button type="primary" :disabled="!conf.treeDialog.isDir" @click="conf.treeDialog.confirm">打开目录</el-button>
       </template>
     </custom-dialog>
 
@@ -939,6 +1170,7 @@ defineExpose({
     <file-editor-drawer
       v-model="conf.editorVisible"
       :path="conf.editorPath"
+      :initial-detail="conf.editorDetail"
       @saved="conf.refresh"
     />
   </div>
@@ -960,13 +1192,197 @@ defineExpose({
   height: 36px;
 }
 
+.tool-bar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px 20px;
+  padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92)),
+    var(--surface-subtle);
+  box-shadow:
+    0 10px 28px rgba(15, 23, 42, 0.035),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.tool-bar__content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tool-bar__row {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tool-bar__row--meta {
+  align-items: stretch;
+  padding-top: 2px;
+}
+
+.tool-bar__actions {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tool-bar__button {
+  min-height: 40px;
+  padding-inline: 16px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.tool-bar__button--accent {
+  min-width: 124px;
+  box-shadow: 0 10px 20px rgba(244, 63, 94, 0.14);
+}
+
+.tool-bar__button--soft {
+  min-width: 112px;
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.tool-bar__button--clipboard {
+  max-width: min(100%, 360px);
+  background: linear-gradient(180deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.92));
+}
+
+.tool-bar__button--ghost {
+  min-width: 112px;
+  background: rgba(255, 241, 242, 0.82);
+}
+
+.tool-bar__pill {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tool-bar__pill--capacity {
+  white-space: nowrap;
+}
+
+.tool-bar__location {
+  min-height: 34px;
+  min-width: 0;
+  // flex: 1 1 320px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid rgba(34, 197, 94, 0.24);
+  border-radius: 10px;
+  color: #2f7d32;
+  background: rgba(240, 253, 244, 0.72);
+  font-size: 13px;
+}
+
+.tool-bar__location-label {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.tool-bar__location-value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.92;
+}
+
 .clipboard-name {
-  max-width: 120px;
-  margin-left: 8px;
+  max-width: 180px;
+  margin-left: 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   opacity: 0.75;
+}
+
+@media (max-width: 1200px) {
+  .tool-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-bar__actions {
+    justify-content: flex-start;
+  }
+
+  .tool-bar__actions > * {
+    flex: 0 0 auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .tool-bar {
+    gap: 12px;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .tool-bar__row,
+  .tool-bar__actions {
+    gap: 10px;
+  }
+
+  .tool-bar__row > *,
+  .tool-bar__actions > * {
+    flex: 1 1 calc(50% - 10px);
+    min-width: 0;
+  }
+
+  .tool-bar__button,
+  .tool-bar__pill,
+  .tool-bar__location {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .tool-bar__button--clipboard {
+    max-width: none;
+  }
+
+  .clipboard-name {
+    max-width: 120px;
+  }
+}
+
+@media (max-width: 560px) {
+  .tool-bar__row > *,
+  .tool-bar__actions > * {
+    flex-basis: 100%;
+  }
+
+  .tool-bar__location {
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: column;
+    padding-block: 10px;
+  }
+
+  .tool-bar__location-value {
+    width: 100%;
+  }
+
+  .tool-bar__button--ghost {
+    min-width: 0;
+  }
 }
 
 .identity-cell {
@@ -1024,6 +1440,15 @@ defineExpose({
     &:hover {
       color: rgb(var(--primary-color));
       background: rgba(var(--primary-color), 0.08);
+    }
+  }
+
+  :deep(.row-action-danger.is-link) {
+    color: var(--el-color-danger);
+
+    &:hover {
+      color: var(--el-color-danger);
+      background: rgba(245, 108, 108, 0.1);
     }
   }
 
@@ -1138,6 +1563,18 @@ defineExpose({
   min-height: 130px;
 }
 
+.copy-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.copy-dialog__form {
+  :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+}
+
 .share-form {
   margin-top: 20px;
 }
@@ -1214,6 +1651,7 @@ defineExpose({
 
 :global(.file-action-menu) {
   min-width: 210px;
+  max-height: 220px;
 }
 
 :global(.file-action-menu .el-dropdown-menu__item) {

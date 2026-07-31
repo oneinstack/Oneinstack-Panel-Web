@@ -245,12 +245,34 @@ const copyVisible = async () => {
   const content = entries.value.map((entry) =>
     `${formatTime(entry.occurredAt)} ${entry.level.toUpperCase()} [${entry.source}] ${entry.message}`
   ).join('\n')
-  try {
-    await navigator.clipboard.writeText(content)
-    ElMessage.success('当前视图已复制')
-  } catch {
-    ElMessage.error('复制失败，请检查浏览器剪贴板权限')
-  }
+  if (window.isSecureContext && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(content)
+        ElMessage.success('当前视图已复制')
+        return
+      } catch {
+        // 剪贴板权限被拒绝时继续尝试兼容复制
+      }
+    }
+
+    const textarea = document.createElement('textarea')
+    textarea.value = content
+    textarea.style.position = 'fixed'
+    textarea.style.opacity = '0'
+    textarea.style.pointerEvents = 'none'
+    document.body.appendChild(textarea)
+    try {
+      textarea.select()
+      if (!document.execCommand('copy')) throw new Error('浏览器拒绝复制')
+    } finally {
+      textarea.remove()
+    }
+  // try {
+  //   await navigator.clipboard.writeText(content)
+  //   ElMessage.success('当前视图已复制')
+  // } catch {
+  //   ElMessage.error('复制失败，请检查浏览器剪贴板权限')
+  // }
 }
 
 const scrollToBottom = async () => {
