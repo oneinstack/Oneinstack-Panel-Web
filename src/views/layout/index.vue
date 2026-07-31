@@ -323,10 +323,10 @@ onMounted(() => {
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
     .then((response) => {
-      sconfig.setMenuAccess(response?.data?.menu || {})
+      sconfig.setAccessMatrix(response?.data || {})
     })
     .catch(() => {
-      sconfig.setMenuAccess({})
+      sconfig.setAccessMatrix({})
     })
 })
 

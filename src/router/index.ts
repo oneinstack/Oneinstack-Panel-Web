@@ -72,9 +72,9 @@ export const initRouter = () => {
     if (authenticated && Object.keys(sconfig.menuAccess || {}).length === 0) {
       try {
         const matrixResponse = await Api.getAccessMatrix()
-        sconfig.setMenuAccess(matrixResponse?.data?.menu || {})
+        sconfig.setAccessMatrix(matrixResponse?.data || {})
       } catch {
-        sconfig.setMenuAccess({})
+        sconfig.setAccessMatrix({})
       }
     }
     const menuKey = resolveMenuKeyByPath(to.path)

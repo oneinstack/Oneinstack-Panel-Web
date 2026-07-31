@@ -61,9 +61,9 @@ const conf = reactive({
         sconfig.login(res)
         try {
           const matrixResponse = await Api.getAccessMatrix()
-          sconfig.setMenuAccess(matrixResponse?.data?.menu || {})
+          sconfig.setAccessMatrix(matrixResponse?.data || {})
         } catch {
-          sconfig.setMenuAccess({})
+          sconfig.setAccessMatrix({})
         }
 
         ElMessage.success('登录成功')

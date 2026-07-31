@@ -2,6 +2,7 @@
 import { Api } from '@/api/Api'
 import CustomDialog from '@/components/custom-dialog.vue'
 import CustomTable from '@/components/custom-table.vue'
+import sconfig from '@/sstore/sconfig'
 import sutil from '@/sstore/sutil'
 import {
   Refresh,
@@ -50,7 +51,24 @@ type FavoriteItem = {
   isDir: boolean
   isMissing?: boolean
 }
+type FilePermission = 'archive' | 'create' | 'delete' | 'edit' | 'modify' | 'move' | 'read' | 'share'
 
+const filePermissionLabels: Record<FilePermission, string> = {
+  archive: '压缩',
+  create: '创建',
+  delete: '删除',
+  edit: '编辑',
+  modify: '修改',
+  move: '移动',
+  read: '读取',
+  share: '分享'
+}
+const canFilePermission = (permission: FilePermission) => sconfig.hasScopeAccess('file', permission)
+const requireFilePermission = (permission: FilePermission) => {
+  if (canFilePermission(permission)) return true
+  ElMessage.warning(`当前账号暂无文件${filePermissionLabels[permission]}权限`)
+  return false
+}
 const imageExtensionPattern = /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/i
 const currentPath = () => conf.path.join('/').replace(/\/\//g, '/')
 const normalizeBool = (value: any) => value === true || value === 1 || value === '1' || value === 'true'
@@ -158,6 +176,7 @@ const conf = reactive({
     loading: false,
     error: false,
     open: async (row: any) => {
+      if (!requireFilePermission('read')) return
       conf.imagePreview.row = row
       conf.imagePreview.error = false
       conf.imagePreview.loading = true
@@ -208,6 +227,10 @@ const conf = reactive({
     },
     confirm: async () => {
       if (!conf.clipboard.source || conf.clipboard.mode !== 'copy') return
+      if (!canCopyFile()) {
+        requireFilePermission(canFilePermission('read') ? 'create' : 'read')
+        return
+      }
       await Api.copyFile({
         sourcePath: conf.clipboard.source.path,
         targetPath: conf.copyDialog.targetPath,
@@ -248,17 +271,21 @@ const conf = reactive({
   handleFileClick: (row: any) => {
     if (!row.isDir) {
       if (conf.isImage(row)) {
+        if (!requireFilePermission('read')) return
         conf.imagePreview.open(row)
         return
       }
+      if (!requireFilePermission('edit')) return
       conf.openEditor(row)
       return
     }
+    if (!requireFilePermission('read')) return
     conf.path.push(row.name)
     conf.getFileList()
   },
   openEditor: async (row: any) => {
     if (!row?.path) return
+    if (!requireFilePermission('edit')) return
     conf.editorLoadingPath = row.path
     conf.editorDetail = null
     try {
@@ -308,14 +335,19 @@ const conf = reactive({
     conf.getFileList()
   },
   handleOpenDrawer: (openType: DrawerOpenType, type: DrawerType, row?: any) => {
+    if (openType === 'create' && !requireFilePermission('create')) return
+    if ((openType === 'editPER' || openType === 'editUser') && !requireFilePermission('modify')) return
     emit('open-drawer', openType, type, row)
   },
   handleFileDownload: async (row: any) => {
+    if (!requireFilePermission('read')) return
     await downloadVirtualFile(row.path, row.name)
     ElMessage.success('下载成功！')
   },
   isImage: (row: any) => !row?.isDir && imageExtensionPattern.test(row?.name || ''),
   setClipboard: (mode: Exclude<ClipboardMode, ''>, row: any) => {
+    if (mode === 'copy' && !canCopyFile()) return requireFilePermission(canFilePermission('read') ? 'create' : 'read')
+    if (mode === 'move' && !requireFilePermission('move')) return
     conf.clipboard.mode = mode
     conf.clipboard.source = {
       path: row.path,
@@ -331,6 +363,10 @@ const conf = reactive({
   },
   pasteClipboard: async () => {
     if (!conf.clipboard.source || !conf.clipboard.mode) return
+    if (!canPasteClipboard()) {
+      requireFilePermission(conf.clipboard.mode === 'copy' ? 'create' : 'move')
+      return
+    }
     if (conf.clipboard.mode === 'copy') {
       conf.copyDialog.open()
       return
@@ -363,6 +399,7 @@ const conf = reactive({
   },
   isFavorite: (path: string) => conf.favorites.some((item) => item.path === path),
   toggleFavorite: async (row: any) => {
+    if (!requireFilePermission('read')) return
     const item = conf.favorites.find((favorite) => favorite.path === row.path)
     if (item) {
       await Api.cancelFileFavorite({ path: item.path })
@@ -374,6 +411,7 @@ const conf = reactive({
     await conf.loadFavorites()
   },
   openFavorite: (item: FavoriteItem) => {
+    if (!requireFilePermission('read')) return
     if (item.isMissing) {
       ElMessage.warning('该收藏路径已失效')
       return
@@ -386,6 +424,7 @@ const conf = reactive({
     ElMessage.success('已打开收藏文件所在目录')
   },
   openInNewWindow: (row: any) => {
+    if (!requireFilePermission('read')) return
     const params = new URLSearchParams({
       path: row.isDir ? row.path : parentPath(row.path)
     })
@@ -404,6 +443,8 @@ const conf = reactive({
     confirmText: '确定',
     cancelText: '取消',
     open: (type: 'delete' | 'upload' | 'linkDownload', row?: any) => {
+      if (type === 'delete' && !requireFilePermission('delete')) return
+      if ((type === 'upload' || type === 'linkDownload') && !requireFilePermission('create')) return
       switch (type) {
         case 'delete':
           conf.fileDialog.row = row
@@ -470,6 +511,13 @@ const conf = reactive({
     shareUrl: '',
     loading: false,
     open: async (type: 'rename' | 'archive' | 'properties' | 'share', row: any) => {
+      const permissionMap: Record<typeof type, FilePermission> = {
+        rename: 'modify',
+        archive: 'archive',
+        properties: 'read',
+        share: 'share'
+      }
+      if (!requireFilePermission(permissionMap[type])) return
       conf.operationDialog.type = type
       conf.operationDialog.row = row
       conf.operationDialog.value = ''
@@ -569,6 +617,7 @@ const conf = reactive({
     isDir: true,
     key: 0,
     open: (row?: any) => {
+      if (!requireFilePermission('read')) return
       conf.treeDialog.path = row?.path || currentPath()
       conf.treeDialog.isDir = true
       conf.treeDialog.key += 1
@@ -600,6 +649,17 @@ const conf = reactive({
     }
   }
 })
+
+const canCopyFile = () => canFilePermission('read') && canFilePermission('create')
+const canPasteClipboard = () => {
+  if (conf.clipboard.mode === 'copy') return canCopyFile()
+  if (conf.clipboard.mode === 'move') return canFilePermission('move')
+  return false
+}
+const canUsePrimaryAction = (row: any) => {
+  if (row?.isDir || conf.isImage(row)) return canFilePermission('read')
+  return canFilePermission('edit')
+}
 
 onMounted(() => {
   conf.loadFavorites()
@@ -669,7 +729,7 @@ defineExpose({
     <div class="tool-bar">
       <div class="tool-bar__content">
         <div class="tool-bar__row tool-bar__row--actions">
-          <el-dropdown>
+          <el-dropdown v-if="canFilePermission('create')">
             <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
               上传/下载
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -681,7 +741,7 @@ defineExpose({
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-dropdown>
+          <el-dropdown v-if="canFilePermission('read')">
             <el-button class="tool-bar__button tool-bar__button--soft" plain>
               收藏夹
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -704,7 +764,7 @@ defineExpose({
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          <el-dropdown>
+          <el-dropdown v-if="canFilePermission('create')">
             <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
               新建
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
@@ -727,7 +787,7 @@ defineExpose({
             </template>
           </el-dropdown>
           <el-button
-            v-if="conf.clipboard.source"
+            v-if="conf.clipboard.source && canPasteClipboard()"
             class="tool-bar__button tool-bar__button--clipboard"
             type="success"
             plain
@@ -751,7 +811,13 @@ defineExpose({
         <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="conf.operationsVisible = true">
           操作记录
         </el-button>
-        <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="emit('open-trash')">
+        <el-button
+          v-if="canFilePermission('delete')"
+          class="tool-bar__button tool-bar__button--ghost"
+          type="primary"
+          plain
+          @click="emit('open-trash')"
+        >
           <span class="mr-1">回收站</span>
           <el-icon size="16"><Delete /></el-icon>
         </el-button>
@@ -765,27 +831,31 @@ defineExpose({
               <el-icon><PictureFilled /></el-icon>
             </span>
             <v-s-icon v-else :name="row.isDir ? 'folder' : 'txt'" size="22" />
-            <el-link @click="conf.handleFileClick(row)">
+            <el-link :disabled="!canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
               <span class="ellipsis file-name">{{ row.name }}</span>
             </el-link>
           </div>
         </template>
         <template #identity="{ row }">
           <div class="identity-cell">
-            <el-link @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
+            <el-link v-if="canFilePermission('modify')" @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
               {{ row.permissions?.padEnd(4, '0') }}
             </el-link>
+            <span v-else>{{ row.permissions?.padEnd(4, '0') }}</span>
             <el-link
+              v-if="canFilePermission('modify')"
               class="identity-owner"
               @click="conf.handleOpenDrawer('editUser', row.isDir ? 'dir' : 'file', row)"
             >
               {{ row.user }}
             </el-link>
+            <span v-else class="identity-owner">{{ row.user }}</span>
           </div>
         </template>
         <template #action="{ row }">
           <div class="row-actions">
             <el-button
+              v-if="canUsePrimaryAction(row)"
               class="action-main"
               type="primary"
               plain
@@ -795,19 +865,26 @@ defineExpose({
             >
               {{ row.isDir ? '打开' : conf.isImage(row) ? '预览' : '编辑' }}
             </el-button>
-            <el-button type="primary" link :icon="CopyDocument" @click="conf.setClipboard('copy', row)">
+            <el-button v-if="canCopyFile()" type="primary" link :icon="CopyDocument" @click="conf.setClipboard('copy', row)">
               复制
             </el-button>
-            <el-button type="primary" link :icon="Scissor" @click="conf.setClipboard('move', row)">
+            <el-button v-if="canFilePermission('move')" type="primary" link :icon="Scissor" @click="conf.setClipboard('move', row)">
               剪切
             </el-button>
-            <el-button type="primary" link :icon="EditPen" @click="conf.operationDialog.open('rename', row)">
+            <el-button v-if="canFilePermission('modify')" type="primary" link :icon="EditPen" @click="conf.operationDialog.open('rename', row)">
               重命名
             </el-button>
-            <el-button v-if="row.isDir" type="primary" link :icon="Operation" @click="conf.treeDialog.open(row)">
+            <el-button v-if="row.isDir && canFilePermission('read')" type="primary" link :icon="Operation" @click="conf.treeDialog.open(row)">
               目录树
             </el-button>
-            <el-button class="row-action-danger" type="primary" link :icon="Delete" @click="conf.fileDialog.open('delete', row)">
+            <el-button
+              v-if="canFilePermission('delete')"
+              class="row-action-danger"
+              type="primary"
+              link
+              :icon="Delete"
+              @click="conf.fileDialog.open('delete', row)"
+            >
               删除
             </el-button>
             <el-dropdown trigger="click">
@@ -817,45 +894,54 @@ defineExpose({
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu class="file-action-menu">
-                  <el-dropdown-item @click="conf.handleFileClick(row)">
+                  <el-dropdown-item v-if="canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
                     <el-icon><component :is="conf.isImage(row) ? View : FolderOpened" /></el-icon>
                     {{ row.isDir ? '打开目录' : conf.isImage(row) ? '图片预览' : '编辑文件' }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.openInNewWindow(row)">
+                  <el-dropdown-item v-if="canFilePermission('read')" @click="conf.openInNewWindow(row)">
                     <el-icon><FolderOpened /></el-icon>在新窗口打开
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="row.isDir" @click="conf.treeDialog.open(row)">
+                  <el-dropdown-item v-if="row.isDir && canFilePermission('read')" @click="conf.treeDialog.open(row)">
                     <el-icon><Operation /></el-icon>目录树
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!row.isDir" @click="conf.handleFileDownload(row)">
+                  <el-dropdown-item v-if="!row.isDir && canFilePermission('read')" @click="conf.handleFileDownload(row)">
                     <el-icon><Download /></el-icon>下载
                   </el-dropdown-item>
-                  <el-dropdown-item divided @click="conf.toggleFavorite(row)">
+                  <el-dropdown-item v-if="canFilePermission('read')" divided @click="conf.toggleFavorite(row)">
                     <el-icon><Star /></el-icon>
                     {{ conf.isFavorite(row.path) ? '取消收藏' : '添加到收藏夹' }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!row.isDir" @click="conf.operationDialog.open('share', row)">
+                  <el-dropdown-item v-if="!row.isDir && canFilePermission('share')" @click="conf.operationDialog.open('share', row)">
                     <el-icon><Share /></el-icon>外链分享
                   </el-dropdown-item>
-                  <el-dropdown-item divided @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)">
+                  <el-dropdown-item
+                    v-if="canFilePermission('modify')"
+                    divided
+                    @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)"
+                  >
                     <el-icon><Lock /></el-icon>权限
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.setClipboard('copy', row)">
+                  <el-dropdown-item v-if="canCopyFile()" @click="conf.setClipboard('copy', row)">
                     <el-icon><CopyDocument /></el-icon>复制
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.setClipboard('move', row)">
+                  <el-dropdown-item v-if="canFilePermission('move')" @click="conf.setClipboard('move', row)">
                     <el-icon><Scissor /></el-icon>剪切
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.operationDialog.open('rename', row)">
+                  <el-dropdown-item v-if="canFilePermission('modify')" @click="conf.operationDialog.open('rename', row)">
                     <el-icon><EditPen /></el-icon>重命名
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.operationDialog.open('archive', row)">
+                  <el-dropdown-item v-if="canFilePermission('archive')" @click="conf.operationDialog.open('archive', row)">
                     <el-icon><Files /></el-icon>创建压缩包
                   </el-dropdown-item>
-                  <el-dropdown-item @click="conf.operationDialog.open('properties', row)">
+                  <el-dropdown-item v-if="canFilePermission('read')" @click="conf.operationDialog.open('properties', row)">
                     <el-icon><InfoFilled /></el-icon>属性
                   </el-dropdown-item>
-                  <el-dropdown-item divided class="danger-menu-item" @click="conf.fileDialog.open('delete', row)">
+                  <el-dropdown-item
+                    v-if="canFilePermission('delete')"
+                    divided
+                    class="danger-menu-item"
+                    @click="conf.fileDialog.open('delete', row)"
+                  >
                     <el-icon><Delete /></el-icon>删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
