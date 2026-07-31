@@ -7,6 +7,8 @@ export const install = (app: App) => {
     const noVlearValue = {
       // 页面主题
       [EKey.pageTheme]: '',
+      // 页面主题色
+      [EKey.pageThemeColor]: '',
       // 开发接口地址
       [EKey.apiurl]: '',
       // 语言

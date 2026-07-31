@@ -619,7 +619,7 @@ onMounted(async () => {
 }
 
 .metric-chip--total .metric-chip__accent {
-  background: linear-gradient(180deg, #ff7a1a, #ff5b00);
+  background: linear-gradient(180deg, rgb(var(--primary-color)), var(--primary-gradient-end));
 }
 
 .metric-chip--granted .metric-chip__accent {
@@ -635,7 +635,7 @@ onMounted(async () => {
 }
 
 .metric-chip--total .metric-chip__content strong {
-  color: #ff5b00;
+  color: rgb(var(--primary-color));
 }
 
 .metric-chip--granted .metric-chip__content strong {
@@ -755,9 +755,9 @@ onMounted(async () => {
 }
 
 .role-pill {
-  --el-tag-bg-color: rgba(255, 107, 44, 0.08);
-  --el-tag-border-color: rgba(255, 107, 44, 0.18);
-  --el-tag-text-color: #ff5b00;
+  --el-tag-bg-color: rgba(var(--primary-color), 0.08);
+  --el-tag-border-color: rgba(var(--primary-color), 0.18);
+  --el-tag-text-color: rgb(var(--primary-color));
   height: 28px;
   border-radius: 999px;
   padding: 0 4px;

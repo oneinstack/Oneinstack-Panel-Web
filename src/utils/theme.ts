@@ -1,0 +1,90 @@
+export type PageTheme = 'light' | 'dark'
+
+export interface ThemeAccentPreset {
+  name: string
+  color: string
+  description: string
+}
+
+export const DEFAULT_THEME_ACCENT = '#F97316'
+
+export const THEME_ACCENT_PRESETS: ThemeAccentPreset[] = [
+  { name: '活力橙', color: '#F97316', description: '默认主题，醒目温暖' },
+  { name: '科技蓝', color: '#2563EB', description: '清晰稳重，适合运维场景' },
+  { name: '翡翠绿', color: '#059669', description: '自然舒适，状态辨识清楚' },
+  { name: '极光紫', color: '#7C3AED', description: '现代鲜明，层次感更强' },
+  { name: '珊瑚红', color: '#E11D48', description: '高对比，强调操作反馈' },
+  { name: '深海青', color: '#0891B2', description: '冷静简约，长时间使用舒适' }
+]
+
+export const normalizeThemeAccent = (value?: string | null) => {
+  const color = String(value || '').trim()
+  if (/^#[\da-f]{3}$/i.test(color)) {
+    return `#${color
+      .slice(1)
+      .split('')
+      .map(item => `${item}${item}`)
+      .join('')}`.toUpperCase()
+  }
+  if (/^#[\da-f]{6}$/i.test(color)) return color.toUpperCase()
+  return DEFAULT_THEME_ACCENT
+}
+
+const hexToRgb = (value: string) => {
+  const color = normalizeThemeAccent(value).slice(1)
+  return {
+    r: Number.parseInt(color.slice(0, 2), 16),
+    g: Number.parseInt(color.slice(2, 4), 16),
+    b: Number.parseInt(color.slice(4, 6), 16)
+  }
+}
+
+const rgbToHex = (red: number, green: number, blue: number) => {
+  const channel = (value: number) => Math.round(value).toString(16).padStart(2, '0')
+  return `#${channel(red)}${channel(green)}${channel(blue)}`.toUpperCase()
+}
+
+export const mixHexColor = (source: string, target: string, targetWeight: number) => {
+  const from = hexToRgb(source)
+  const to = hexToRgb(target)
+  const ratio = Math.min(1, Math.max(0, targetWeight))
+  return rgbToHex(
+    from.r + (to.r - from.r) * ratio,
+    from.g + (to.g - from.g) * ratio,
+    from.b + (to.b - from.b) * ratio
+  )
+}
+
+export const applyThemeAppearance = (
+  theme: PageTheme,
+  accentInput: string,
+  root: HTMLElement = document.documentElement
+) => {
+  const accent = normalizeThemeAccent(accentInput)
+  const rgb = hexToRgb(accent)
+  const surface = theme === 'dark' ? '#111827' : '#FFFFFF'
+  const darkColor = mixHexColor(accent, theme === 'dark' ? '#FFFFFF' : '#000000', theme === 'dark' ? 0.14 : 0.18)
+  const lightColor = mixHexColor(accent, '#FFFFFF', 0.3)
+  const menuHover = hexToRgb(mixHexColor(accent, surface, 0.9))
+
+  root.classList.toggle('light', theme === 'light')
+  root.classList.toggle('dark', theme === 'dark')
+  root.style.setProperty('--primary-color', `${rgb.r}, ${rgb.g}, ${rgb.b}`)
+  root.style.setProperty('--primary-color-hex', accent)
+  root.style.setProperty('--primary-color-dark', darkColor)
+  root.style.setProperty('--primary-color-light', lightColor)
+  root.style.setProperty('--primary-gradient-end', darkColor)
+  root.style.setProperty('--focus-ring', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${theme === 'dark' ? 0.24 : 0.18})`)
+  root.style.setProperty('--menu-item-bg-color-hover', `${menuHover.r}, ${menuHover.g}, ${menuHover.b}`)
+
+  root.style.setProperty('--el-color-primary', accent)
+  root.style.setProperty('--el-color-primary-rgb', `${rgb.r}, ${rgb.g}, ${rgb.b}`)
+  root.style.setProperty('--el-color-primary-dark-2', darkColor)
+  root.style.setProperty('--el-color-primary-light-3', mixHexColor(accent, surface, 0.3))
+  root.style.setProperty('--el-color-primary-light-5', mixHexColor(accent, surface, 0.5))
+  root.style.setProperty('--el-color-primary-light-7', mixHexColor(accent, surface, 0.7))
+  root.style.setProperty('--el-color-primary-light-8', mixHexColor(accent, surface, 0.8))
+  root.style.setProperty('--el-color-primary-light-9', mixHexColor(accent, surface, 0.9))
+
+  return accent
+}

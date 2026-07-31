@@ -101,6 +101,39 @@ export const Api = {
   getFileList: (obj: any) => {
     return http.post('/ftp/list', obj)
   },
+  /** 搜索服务器文件或目录 */
+  searchFiles: (obj: {
+    path: string
+    query: string
+    type?: 'all' | 'file' | 'dir'
+    maxResults?: number
+    maxDepth?: number
+  }) => {
+    return http.post('/ftp/search', obj)
+  },
+  /** 获取文件操作记录 */
+  getFileOperations: (obj?: {
+    page?: number
+    pageSize?: number
+    q?: string
+    action?: string
+    outcome?: 'success' | 'failure' | ''
+    username?: string
+  }) => {
+    return http.get('/ftp/operations', obj)
+  },
+  /** 读取文本文件 */
+  getFileContent: (obj: { path: string }) => {
+    return http.post('/ftp/content', obj)
+  },
+  /** 为当前登录会话创建短期图片预览票据 */
+  createImagePreviewTicket: (obj: { path: string }) => {
+    return http.post('/ftp/preview-ticket', obj)
+  },
+  /** 保存文本文件 */
+  saveFileContent: (obj: { path: string; content: string; revision?: string }) => {
+    return http.post('/ftp/save', obj)
+  },
   /** 创建文件或文件夹 */
   createFile: (obj: any) => {
     return http.post('/ftp/create', obj)
@@ -108,6 +141,38 @@ export const Api = {
   /** 删除文件或文件夹 */
   deleteFile: (obj: any) => {
     return http.post('/ftp/delete', obj)
+  },
+  /** 复制文件或目录（目标同名时不会覆盖） */
+  copyFile: (obj: { source: string; targetDir: string; targetName?: string }) => {
+    return http.post('/ftp/copy', obj)
+  },
+  /** 移动文件或目录（用于剪切/粘贴） */
+  moveFile: (obj: { source: string; targetDir: string; targetName?: string }) => {
+    return http.post('/ftp/move', obj)
+  },
+  /** 重命名文件或目录 */
+  renameFile: (obj: { path: string; newName: string }) => {
+    return http.post('/ftp/rename', obj)
+  },
+  /** 创建 tar.gz 压缩包 */
+  archiveFile: (obj: { path: string; targetDir: string; archiveName: string }) => {
+    return http.post('/ftp/archive', obj)
+  },
+  /** 获取文件属性 */
+  getFileProperties: (obj: { path: string }) => {
+    return http.post('/ftp/properties', obj)
+  },
+  /** 创建带有效期的文件外链 */
+  createFileShare: (obj: { path: string; expiryHours: number }) => {
+    return http.post('/ftp/shares', obj)
+  },
+  /** 获取外链分享记录 */
+  getFileShares: () => {
+    return http.get('/ftp/shares')
+  },
+  /** 取消外链分享 */
+  revokeFileShare: (id: string) => {
+    return http.post(`/ftp/shares/${encodeURIComponent(id)}/revoke`, {})
   },
   /** 获取文件存储容量和配额 */
   getFileCapacity: () => {
@@ -248,6 +313,26 @@ export const Api = {
   /** 获取网站列表 */
   getWebsiteList: (obj: any) => {
     return http.post('/website/list', obj)
+  },
+  /** 获取当前网站模块使用的 Nginx/OpenResty 运行时 */
+  getWebsiteWebServer: () => {
+    return http.get('/website/web-server')
+  },
+  /** 获取当前 Web 服务器的受管配置文件 */
+  getWebsiteWebServerConfigs: () => {
+    return http.get('/website/web-server/configs')
+  },
+  /** 读取一个受管 Web 服务器配置文件 */
+  getWebsiteWebServerConfig: (path: string) => {
+    return http.get('/website/web-server/config', { path })
+  },
+  /** 保存配置，后端会先备份、校验并在运行时平滑重载 */
+  updateWebsiteWebServerConfig: (obj: {
+    path: string
+    content: string
+    revision: string
+  }) => {
+    return requestJson('PUT', '/website/web-server/config', obj)
   },
   /** 新增站点 */
   addWebsite: (obj: any) => {

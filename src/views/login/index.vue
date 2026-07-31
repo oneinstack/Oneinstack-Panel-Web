@@ -203,7 +203,7 @@ const conf = reactive({
     display: grid;
     place-items: center;
     border-radius: 12px;
-    color: #f97316;
+    color: rgb(var(--primary-color));
     background: #fff1e7;
     font-size: 13px;
     font-weight: 800;
@@ -231,7 +231,7 @@ const conf = reactive({
 
   .eyebrow {
     margin-bottom: 12px;
-    color: #f97316;
+    color: rgb(var(--primary-color));
     font-size: 10px;
     font-weight: 750;
     letter-spacing: 0.17em;
@@ -282,8 +282,8 @@ const conf = reactive({
     &.is-focus {
       background: #fff;
       box-shadow:
-        0 0 0 1px #f97316 inset,
-        0 0 0 4px rgba(249, 115, 22, 0.11);
+        0 0 0 1px rgb(var(--primary-color)) inset,
+        0 0 0 4px rgba(var(--primary-color), 0.11);
     }
   }
 

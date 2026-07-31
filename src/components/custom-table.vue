@@ -234,8 +234,8 @@ const conf = reactive({
 
 :deep(.pagination .el-pagination.is-background .el-pager li.is-active) {
   color: #fff;
-  background: linear-gradient(135deg, rgb(var(--primary-color)), #ff9b52);
-  box-shadow: 0 10px 20px rgba(255, 122, 26, 0.2);
+  background: linear-gradient(135deg, rgb(var(--primary-color)), var(--primary-color-light));
+  box-shadow: 0 10px 20px rgba(var(--primary-color), 0.2);
 }
 
 @media (max-width: 768px) {

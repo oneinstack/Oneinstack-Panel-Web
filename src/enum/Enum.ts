@@ -39,6 +39,10 @@ const manager = {
      */
     pageTheme: '',
     /**
+     * 页面主题色
+     */
+    pageThemeColor: '',
+    /**
      * 开发接口地址
      */
     apiurl: '',

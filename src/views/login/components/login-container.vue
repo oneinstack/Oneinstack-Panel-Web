@@ -99,7 +99,7 @@ withDefaults(defineProps<Props>(), {
     left: -180px;
     width: 620px;
     height: 620px;
-    background: radial-gradient(circle, rgba(249, 115, 22, 0.19), transparent 68%);
+    background: radial-gradient(circle, rgba(var(--primary-color), 0.19), transparent 68%);
   }
 
   &-two {
@@ -153,13 +153,13 @@ withDefaults(defineProps<Props>(), {
     height: 44px;
     display: grid;
     place-items: center;
-    border: 1px solid rgba(251, 146, 60, 0.28);
+    border: 1px solid rgba(var(--primary-color), 0.28);
     border-radius: 13px;
-    color: #fb923c;
-    background: rgba(249, 115, 22, 0.12);
+    color: var(--primary-color-light);
+    background: rgba(var(--primary-color), 0.12);
     font-size: 14px;
     font-weight: 850;
-    box-shadow: 0 10px 28px rgba(249, 115, 22, 0.13);
+    box-shadow: 0 10px 28px rgba(var(--primary-color), 0.13);
   }
 
   > div:last-child {
@@ -187,7 +187,7 @@ withDefaults(defineProps<Props>(), {
     display: flex;
     align-items: center;
     gap: 9px;
-    color: #fb923c;
+    color: var(--primary-color-light);
     font-size: 10px;
     font-weight: 750;
     letter-spacing: 0.16em;
@@ -196,7 +196,7 @@ withDefaults(defineProps<Props>(), {
       width: 22px;
       height: 2px;
       border-radius: 2px;
-      background: #f97316;
+      background: rgb(var(--primary-color));
     }
   }
 
@@ -247,7 +247,7 @@ withDefaults(defineProps<Props>(), {
       background: #475569;
 
       &:first-child {
-        background: #f97316;
+        background: rgb(var(--primary-color));
       }
     }
   }
@@ -304,7 +304,7 @@ withDefaults(defineProps<Props>(), {
         height: 100%;
         display: block;
         border-radius: inherit;
-        background: linear-gradient(90deg, #f97316, #fb923c);
+        background: linear-gradient(90deg, rgb(var(--primary-color)), var(--primary-color-light));
       }
 
       &.memory i {
@@ -343,8 +343,8 @@ withDefaults(defineProps<Props>(), {
     font-weight: 800;
 
     &.orange {
-      color: #fb923c;
-      background: rgba(249, 115, 22, 0.13);
+      color: var(--primary-color-light);
+      background: rgba(var(--primary-color), 0.13);
     }
 
     &.blue {
@@ -434,8 +434,8 @@ withDefaults(defineProps<Props>(), {
   border: 0;
   border-radius: 11px;
   color: #fff;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.23);
+  background: linear-gradient(135deg, rgb(var(--primary-color)), var(--primary-gradient-end));
+  box-shadow: 0 10px 24px rgba(var(--primary-color), 0.23);
   font-size: 14px;
   font-weight: 680;
   cursor: pointer;
@@ -445,7 +445,7 @@ withDefaults(defineProps<Props>(), {
 
   &:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(249, 115, 22, 0.3);
+    box-shadow: 0 14px 30px rgba(var(--primary-color), 0.3);
   }
 }
 
@@ -467,7 +467,7 @@ withDefaults(defineProps<Props>(), {
     min-height: 100vh;
     padding: 32px 24px;
     background:
-      radial-gradient(circle at 20% 0, rgba(249, 115, 22, 0.08), transparent 28rem),
+      radial-gradient(circle at 20% 0, rgba(var(--primary-color), 0.08), transparent 28rem),
       #f8fafc;
   }
 }

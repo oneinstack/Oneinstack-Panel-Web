@@ -147,7 +147,7 @@ const submit = async () => {
   overflow: hidden;
   color: #f8fafc;
   background:
-    radial-gradient(circle at 20% 10%, rgba(249, 115, 22, 0.2), transparent 26rem),
+    radial-gradient(circle at 20% 10%, rgba(var(--primary-color), 0.2), transparent 26rem),
     radial-gradient(circle at 90% 90%, rgba(59, 130, 246, 0.13), transparent 28rem),
     #0b1120;
 
@@ -181,8 +181,8 @@ const submit = async () => {
     display: grid;
     place-items: center;
     border-radius: 12px;
-    color: #fb923c;
-    background: rgba(249, 115, 22, 0.12);
+    color: var(--primary-color-light);
+    background: rgba(var(--primary-color), 0.12);
     font-size: 13px;
     font-weight: 820;
   }
@@ -212,8 +212,8 @@ const submit = async () => {
     height: 86px;
     display: grid;
     place-items: center;
-    color: #fb923c;
-    background: linear-gradient(145deg, rgba(249, 115, 22, 0.18), rgba(249, 115, 22, 0.05));
+    color: var(--primary-color-light);
+    background: linear-gradient(145deg, rgba(var(--primary-color), 0.18), rgba(var(--primary-color), 0.05));
     clip-path: polygon(50% 0, 92% 16%, 86% 68%, 50% 100%, 14% 68%, 8% 16%);
 
     span {
@@ -222,7 +222,7 @@ const submit = async () => {
       display: grid;
       place-items: center;
       border-radius: 50%;
-      background: rgba(249, 115, 22, 0.18);
+      background: rgba(var(--primary-color), 0.18);
       font-size: 14px;
       font-weight: 800;
     }
@@ -230,7 +230,7 @@ const submit = async () => {
 
   .eyebrow {
     margin-top: 28px;
-    color: #fb923c;
+    color: var(--primary-color-light);
     font-size: 10px;
     font-weight: 750;
     letter-spacing: 0.16em;
@@ -273,7 +273,7 @@ const submit = async () => {
     place-items: center;
     border: 1px solid rgba(148, 163, 184, 0.16);
     border-radius: 9px;
-    color: #fb923c;
+    color: var(--primary-color-light);
     background: rgba(30, 41, 59, 0.55);
     font-size: 9px;
     font-style: normal;
@@ -293,7 +293,7 @@ const submit = async () => {
   display: grid;
   place-items: center;
   background:
-    radial-gradient(circle at 100% 0, rgba(249, 115, 22, 0.07), transparent 25rem),
+    radial-gradient(circle at 100% 0, rgba(var(--primary-color), 0.07), transparent 25rem),
     #f8fafc;
 }
 
@@ -308,7 +308,7 @@ const submit = async () => {
 
 .step {
   margin-bottom: 14px;
-  color: #f97316;
+  color: rgb(var(--primary-color));
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -348,8 +348,8 @@ const submit = async () => {
   &.is-focus {
     background: #fff;
     box-shadow:
-      0 0 0 1px #f97316 inset,
-      0 0 0 4px rgba(249, 115, 22, 0.11);
+      0 0 0 1px rgb(var(--primary-color)) inset,
+      0 0 0 4px rgba(var(--primary-color), 0.11);
   }
 }
 
@@ -360,8 +360,8 @@ const submit = async () => {
   display: flex;
   justify-content: space-between;
   border-radius: 11px;
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  box-shadow: 0 10px 24px rgba(249, 115, 22, 0.22);
+  background: linear-gradient(135deg, rgb(var(--primary-color)), var(--primary-gradient-end));
+  box-shadow: 0 10px 24px rgba(var(--primary-color), 0.22);
 }
 
 .privacy-note {

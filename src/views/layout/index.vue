@@ -739,7 +739,7 @@ const BindButton = () => {
       place-items: center;
       border-radius: 10px;
       color: #fff;
-      background: linear-gradient(145deg, #fb923c, #ea580c);
+      background: linear-gradient(145deg, var(--primary-color-light), var(--primary-gradient-end));
       font-size: 14px;
       font-weight: 750;
       box-shadow: 0 5px 12px rgba(var(--primary-color), 0.22);

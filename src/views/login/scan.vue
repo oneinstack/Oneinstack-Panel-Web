@@ -47,7 +47,7 @@ const conf = reactive({
   transition: color 0.18s ease;
 
   &:hover {
-    color: #f97316;
+    color: rgb(var(--primary-color));
   }
 }
 
@@ -56,7 +56,7 @@ const conf = reactive({
 
   .eyebrow {
     margin-bottom: 11px;
-    color: #f97316;
+    color: rgb(var(--primary-color));
     font-size: 10px;
     font-weight: 750;
     letter-spacing: 0.16em;
@@ -106,7 +106,7 @@ const conf = reactive({
     place-items: center;
     overflow: hidden;
     border-radius: 9px;
-    color: #f97316;
+    color: rgb(var(--primary-color));
     background:
       linear-gradient(90deg, #182230 9px, transparent 9px) 0 0 / 22px 22px,
       linear-gradient(#182230 9px, transparent 9px) 0 0 / 22px 22px,

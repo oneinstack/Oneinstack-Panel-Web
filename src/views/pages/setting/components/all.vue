@@ -4,6 +4,7 @@ import NetworkSetting from './network-setting.vue'
 import PanelUpdate from './panel-update.vue'
 import PanelBackup from './panel-backup.vue'
 import AccountSecurity from './account-security.vue'
+import AppearanceSetting from './appearance-setting.vue'
 import { Api } from '@/api/Api'
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -31,12 +32,16 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="all-container" v-if="allinfo">
-    <panel-setting v-if="allinfo" :isCard="false" :allinfo="allinfo" />
-    <NetworkSetting />
-    <AccountSecurity />
-    <PanelBackup />
-    <PanelUpdate />
+  <div class="all-container">
+    <AppearanceSetting />
+    <template v-if="allinfo">
+      <panel-setting :isCard="false" :allinfo="allinfo" />
+      <NetworkSetting />
+      <AccountSecurity />
+      <PanelBackup />
+      <PanelUpdate />
+    </template>
+    <el-skeleton v-else :rows="5" animated />
   </div>
 </template>
 

@@ -86,7 +86,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Lock, Monitor } from '@element-plus/icons-vue'
 import { Terminal } from 'xterm'
@@ -94,6 +94,7 @@ import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
+import sapp from '@/sstore/sapp'
 
 interface TerminalStatus {
   enabled: boolean
@@ -234,7 +235,7 @@ const initializeTerminal = async () => {
     theme: {
       background: '#0b1220',
       foreground: '#d8e1ef',
-      cursor: '#ff7a1a',
+      cursor: sapp.accentColor,
       selectionBackground: '#314158',
       black: '#111827',
       red: '#ff6b6b',
@@ -266,6 +267,17 @@ const initializeTerminal = async () => {
     resizeObserver.observe(terminalDiv.value)
   }
 }
+
+watch(
+  () => sapp.accentColor,
+  color => {
+    if (!terminal) return
+    terminal.options.theme = {
+      ...terminal.options.theme,
+      cursor: color
+    }
+  }
+)
 
 onMounted(async () => {
   await loadStatus()

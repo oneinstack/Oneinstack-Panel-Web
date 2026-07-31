@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Refresh, Setting, ArrowDown, CaretBottom } from '@element-plus/icons-vue'
+import { Refresh, Setting } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/Api'
@@ -10,6 +10,32 @@ import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
 import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
+import WebServerConfigDrawer from './components/WebServerConfigDrawer.vue'
+
+const webServer = reactive({
+  loading: true,
+  data: {
+    available: false,
+    running: false,
+    configurationAvailable: false
+  } as Record<string, any>,
+  configVisible: false,
+  load: async () => {
+    webServer.loading = true
+    try {
+      const { data } = await Api.getWebsiteWebServer()
+      webServer.data = data
+    } catch {
+      webServer.data = {
+        available: false,
+        running: false,
+        configurationAvailable: false
+      }
+    } finally {
+      webServer.loading = false
+    }
+  }
+})
 
 const certificateDrawer = reactive({
   show: false,
@@ -313,14 +339,51 @@ const conf = reactive({
 })
 
 conf.website.getData()
+webServer.load()
 </script>
 
 <template>
   <div class="website-container">
+    <section v-loading="webServer.loading" class="web-server-card" :class="{ unavailable: !webServer.data.available }">
+      <div class="web-server-card__identity">
+        <div class="web-server-card__logo">
+          {{ webServer.data.component === 'openresty' ? 'O' : webServer.data.available ? 'N' : '?' }}
+        </div>
+        <div class="web-server-card__copy">
+          <span>当前网站 Web 服务器</span>
+          <div>
+            <h3>{{ webServer.data.available ? webServer.data.name : '未检测到 Nginx 或 OpenResty' }}</h3>
+            <el-tag
+              :type="webServer.data.running ? 'success' : webServer.data.available ? 'warning' : 'info'"
+              effect="plain"
+              round
+            >
+              {{ webServer.data.running ? '运行中' : webServer.data.available ? '服务已停止' : '未安装' }}
+            </el-tag>
+          </div>
+          <p v-if="webServer.data.available">
+            {{ webServer.data.version || '版本未知' }} · 站点配置目录 {{ webServer.data.siteConfigDir || '-' }}
+          </p>
+          <p v-else>请先在软件商城安装 Nginx 或 OpenResty，网站模块会自动识别并使用已安装的服务。</p>
+        </div>
+      </div>
+      <div class="web-server-card__actions">
+        <el-button :icon="Refresh" @click="webServer.load">刷新状态</el-button>
+        <el-button
+          type="primary"
+          :icon="Setting"
+          :disabled="!webServer.data.configurationAvailable"
+          @click="webServer.configVisible = true"
+        >
+          管理配置文件
+        </el-button>
+      </div>
+    </section>
+
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <div class="tool-bar website-toolbar">
       <el-space class="btn-group website-toolbar__actions" :size="14" style="width: 100%;">
-        <el-button type="primary" @click="conf.website.handleAdd">添加站点</el-button>
+        <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">添加站点</el-button>
         <el-button @click="backupDrawer.open()">整站备份管理</el-button>
 
         <!-- <el-dropdown>
@@ -473,10 +536,96 @@ conf.website.getData()
       :website="backupDrawer.website"
       @changed="conf.website.getData()"
     />
+    <web-server-config-drawer
+      v-model="webServer.configVisible"
+      @changed="webServer.load"
+    />
   </div>
 </template>
 
 <style scoped lang="less">
+.web-server-card {
+  min-height: 112px;
+  margin-bottom: 16px;
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  border: 1px solid rgba(var(--primary-color), 0.16);
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at top left, rgba(var(--primary-color), 0.1), transparent 34%),
+    var(--surface-card);
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
+
+  &.unavailable {
+    border-color: var(--border-subtle);
+    background: var(--surface-card);
+  }
+}
+
+.web-server-card__identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.web-server-card__logo {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(var(--primary-color), 0.16);
+  border-radius: 18px;
+  color: var(--el-color-primary);
+  background: rgba(var(--primary-color), 0.09);
+  font-size: 26px;
+  font-weight: 800;
+}
+
+.web-server-card__copy {
+  min-width: 0;
+
+  > span {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+  }
+
+  > div {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    line-height: 1.3;
+  }
+
+  p {
+    margin: 7px 0 0;
+    overflow: hidden;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.web-server-card__actions {
+  flex: 0 0 auto;
+  display: flex;
+  gap: 10px;
+}
+
 .website-container {
   .website-toolbar {
     align-items: center;
@@ -527,6 +676,15 @@ conf.website.getData()
 }
 
 @media (max-width: 768px) {
+  .web-server-card {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .web-server-card__actions {
+    justify-content: flex-end;
+  }
+
   .website-container {
     .website-toolbar {
       justify-content: flex-start;
@@ -548,6 +706,20 @@ conf.website.getData()
 }
 
 @media (max-width: 560px) {
+  .web-server-card__identity {
+    align-items: flex-start;
+  }
+
+  .web-server-card__copy {
+    p {
+      white-space: normal;
+    }
+  }
+
+  .web-server-card__actions {
+    flex-direction: column;
+  }
+
   .website-search-panel {
     flex-direction: column;
     align-items: stretch;

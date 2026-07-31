@@ -876,7 +876,9 @@ onBeforeUnmount(() => {
 }
 
 .log-section {
+  height: 520px;
   min-height: 520px;
+  max-height: 520px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -927,11 +929,14 @@ onBeforeUnmount(() => {
 
 .task-log {
   box-sizing: border-box;
-  flex: 1;
-  min-height: 260px;
+  flex: 1 1 0;
+  height: 0;
+  min-height: 0;
   margin: 0;
   padding: 18px 18px 22px;
-  overflow: auto;
+  overflow-x: auto;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
   color: #d7e0ee;
   background: linear-gradient(180deg, rgba(20, 29, 46, 0.98), rgba(11, 18, 32, 1));
   font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -1170,6 +1175,12 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 760px) {
+  .log-section {
+    height: 420px;
+    min-height: 420px;
+    max-height: 420px;
+  }
+
   :deep(.install-task-drawer) {
     top: 8px;
     right: 8px;

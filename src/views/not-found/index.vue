@@ -19,7 +19,7 @@
   padding: 24px;
   overflow: hidden;
   background:
-    radial-gradient(circle at top, rgba(249, 115, 22, 0.16), transparent 34%),
+    radial-gradient(circle at top, rgba(var(--primary-color), 0.16), transparent 34%),
     linear-gradient(180deg, #081120 0%, #0f172a 100%);
 }
 
@@ -34,7 +34,7 @@
   &--left {
     top: -140px;
     left: -100px;
-    background: rgba(249, 115, 22, 0.28);
+    background: rgba(var(--primary-color), 0.28);
   }
 
   &--right {
@@ -74,7 +74,7 @@
 
 .not-found__code {
   margin-bottom: 16px;
-  color: #fb923c;
+  color: var(--primary-color-light);
   font-size: 76px;
   font-weight: 820;
   letter-spacing: 0.08em;
