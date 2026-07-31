@@ -415,15 +415,15 @@ onMounted(() => {
   <div class="container">
     <div class="card-box">
       <el-card>
-      <div class="" style="display: flex;">
-        <el-space class="btn-group">
-          <el-button type="primary" @click="addTask">添加任务</el-button>
+      <div class="task-toolbar">
+        <el-space class="task-toolbar__actions">
+          <el-button class="task-toolbar__button" type="primary" @click="addTask">添加任务</el-button>
           <!-- <el-button type="primary">执行任务</el-button> -->
-          <el-button type="primary" @click="batchEnable">启动任务</el-button>
-          <el-button type="primary" @click="batchDisable">停止任务</el-button>
-          <el-button type="primary" @click="batchDelete">删除任务</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchEnable">启动任务</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchDisable">停止任务</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchDelete">删除任务</el-button>
         </el-space>
-        <div class="demo-form-inline flex" style="margin-left: auto;">
+        <div class="task-toolbar__search">
           <!-- <el-dropdown>
           <el-button type="primary" class="mr-2">
             <span class="el-dropdown-link">
@@ -436,30 +436,30 @@ onMounted(() => {
               <el-dropdown-item>分类</el-dropdown-item>
             </el-dropdown-menu>
           </template>
-</el-dropdown> --> <search-input placeholder="请输入域名或备注" style="margin-right: 18px" v-model="searchValue"
+</el-dropdown> --> <search-input class="task-search-input" placeholder="请输入域名或备注" v-model="searchValue"
             @search="getData()" />
-          <el-button :icon="Refresh" type="primary" @click="onSubmit" style="margin-left: auto;" />
+          <el-button class="task-refresh-button" :icon="Refresh" type="primary" @click="onSubmit" />
           <!-- <el-button :icon="Setting" type="primary" @click="onSubmit" /> -->
         </div>
       </div>
     </el-card>
     </div>
     <div class="box2">
-      <el-table ref="tableRef" :header-cell-style="{'border-right':'1px solid #8B8B8B30','text-align':'center'}" class="fileTable" :data="tableData" border style="width: 100%"
+      <el-table ref="tableRef" class="fileTable task-table" :data="tableData" style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
         :row-key="(row: any) => row.id" empty-text="暂无数据">
-        <el-table-column type="selection" width="55" :reserve-selection="true" :selectable="selectFilter" />
-        <el-table-column prop="name" label="任务名称" width="180"></el-table-column>
-        <el-table-column prop="enabled" label="状态" width="140">
+        <el-table-column type="selection" width="48" :reserve-selection="true" :selectable="selectFilter" />
+        <el-table-column prop="name" label="任务名称" min-width="180" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="enabled" label="状态" min-width="130">
           <template #default="scope">
-            <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
-              <el-tag v-if="runningByTask[scope.row.id]" type="warning">正在执行</el-tag>
-              <a style="color: #64ffc9; text-decoration: underline ;display: flex;" class="abox"
+            <div class="status-cell">
+              <el-tag v-if="runningByTask[scope.row.id]" class="status-tag" type="warning">正在执行</el-tag>
+              <a class="status-link status-link--enabled"
                 v-else-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> 已启用 <el-icon>
                   <VideoPlay />
                 </el-icon>
               </a>
-              <a style="color: #FF4848; text-decoration: underline; " class="abox" v-else-if="!scope.row.enabled"
+              <a class="status-link status-link--disabled" v-else-if="!scope.row.enabled"
                 @click="enableSingleTask(scope.row)">
                 <el-icon>
                   <VideoPause />
@@ -471,30 +471,33 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="类型" width="120">
+        <el-table-column label="类型" min-width="150">
           <template #default="{ row }">
-            <el-tag :type="(row.task_type || 'shell') === 'template' ? 'success' : 'warning'">
+            <div class="type-tags">
+            <el-tag class="type-tag" :type="(row.task_type || 'shell') === 'template' ? 'success' : 'warning'">
               {{ (row.task_type || 'shell') === 'template' ? '安全模板' : '高级 Shell' }}
             </el-tag>
-            <el-tag v-if="row.notify_on_failure" type="info" style="margin-left: 6px">失败通知</el-tag>
+            <el-tag v-if="row.notify_on_failure" class="type-tag" type="info">失败通知</el-tag>
+            </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="执行周期">
+        <el-table-column prop="address" label="执行周期" min-width="220">
           <template #default="scope">
-            <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
+            <div class="schedule-cell">
               <span v-html="formatCron(scope.row.schedule)"></span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="last_run_at" label="上次执行时间">
+        <el-table-column prop="last_run_at" label="上次执行时间" min-width="190">
           <template #default="scope">
-            <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
+            <div class="last-run-cell">
               <span>{{ scope.row.last_run_at ? formatDate(scope.row.last_run_at) : '尚未执行' }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="操作">
+        <el-table-column prop="address" label="操作" min-width="340" class-name="task-actions-column">
           <template #default="scope">
+            <div class="row-actions">
             <el-button link type="primary" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
               开启 </el-button>
             <el-button link type="primary" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
@@ -512,6 +515,7 @@ onMounted(() => {
             <el-button link type="primary" size="small" @click="updateSingleTaskLog(scope.row)">
               查看日志
             </el-button>
+            </div>
           </template>
         </el-table-column>
         <!-- 自定义表格底部栏用于分页 -->
@@ -540,6 +544,173 @@ onMounted(() => {
   </div>
 </template>
 <style scoped lang="less">
+.task-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+
+.task-toolbar__actions {
+  flex-wrap: wrap;
+}
+
+.task-toolbar__button {
+  min-width: 88px;
+  min-height: 40px;
+  border-radius: 10px;
+  font-weight: 650;
+}
+
+.task-toolbar__search {
+  min-width: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.task-search-input {
+  width: min(320px, 36vw);
+}
+
+.task-refresh-button {
+  min-width: 44px;
+  min-height: 40px;
+  border-radius: 10px;
+}
+
+:deep(.task-table) {
+  --el-table-border-color: rgba(226, 232, 240, 0.86);
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.04);
+}
+
+:deep(.task-table th.el-table__cell) {
+  height: 48px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 750;
+  text-align: left;
+  background: linear-gradient(180deg, #fbfcff, #f6f8fb);
+}
+
+:deep(.task-table td.el-table__cell) {
+  padding: 10px 0;
+  color: var(--text-secondary);
+}
+
+:deep(.task-table .cell) {
+  line-height: 1.45;
+}
+
+:deep(.task-table .el-table__body tr:hover > td) {
+  background: rgba(var(--primary-color), 0.035);
+}
+
+.status-cell,
+.schedule-cell,
+.last-run-cell {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.status-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.status-link--enabled {
+  color: #16a34a;
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.status-link--disabled {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.status-link:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.96);
+}
+
+.status-tag {
+  border-radius: 999px;
+  font-weight: 650;
+}
+
+.type-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.type-tag {
+  min-height: 26px;
+  height: auto;
+  padding-block: 3px;
+  border-radius: 8px;
+  font-weight: 650;
+}
+
+.schedule-cell,
+.last-run-cell {
+  color: #475569;
+  overflow-wrap: anywhere;
+}
+
+:deep(.task-actions-column .cell) {
+  overflow: visible;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px 10px;
+  flex-wrap: wrap;
+}
+
+.row-actions :deep(.el-button) {
+  min-height: 26px;
+  margin-left: 0;
+  padding: 0;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.row-actions :deep(.el-button.is-link:hover) {
+  color: rgb(var(--primary-color));
+}
+
+.table-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 14px 10px 4px;
+  color: var(--text-secondary);
+}
+
+.table-pagination :deep(.el-select) {
+  width: 92px;
+}
 
 
 .abox {
@@ -548,5 +719,40 @@ onMounted(() => {
   /* 垂直居中 */
   justify-content: center;
   /* 水平居中 */
+}
+
+@media (max-width: 1180px) {
+  .task-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .task-toolbar__search {
+    width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .task-search-input {
+    width: min(100%, 420px);
+  }
+}
+
+@media (max-width: 640px) {
+  .task-toolbar__actions,
+  .task-toolbar__search {
+    width: 100%;
+  }
+
+  .task-toolbar__button,
+  .task-refresh-button {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .task-search-input {
+    flex: 1 1 100%;
+    width: 100%;
+  }
 }
 </style>

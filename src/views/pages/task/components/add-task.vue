@@ -59,7 +59,7 @@
           </div>
         </el-form-item>
         <el-form-item
-          v-for="parameter in selectedTemplate?.parameters || []"
+          v-for="parameter in selectedTemplateParameters"
           :key="parameter.name"
           :label="parameter.label"
           :required="parameter.required"
@@ -318,7 +318,7 @@ interface TaskTemplate {
   id: string
   name: string
   description: string
-  parameters: TemplateParameter[]
+  parameters?: TemplateParameter[] | null
 }
 
 const templates = ref<TaskTemplate[]>([])
@@ -393,10 +393,13 @@ const rules = reactive<FormRules>({
 const selectedTemplate = computed(() =>
   templates.value.find((template) => template.id === ruleForm.template_id)
 )
+const selectedTemplateParameters = computed(() =>
+  Array.isArray(selectedTemplate.value?.parameters) ? selectedTemplate.value.parameters : []
+)
 
 watch(() => ruleForm.template_id, () => {
   if (!selectedTemplate.value) return
-  const allowed = new Set(selectedTemplate.value.parameters.map((parameter) => parameter.name))
+  const allowed = new Set(selectedTemplateParameters.value.map((parameter) => parameter.name))
   Object.keys(ruleForm.template_params).forEach((name) => {
     if (!allowed.has(name)) delete ruleForm.template_params[name]
   })
@@ -455,7 +458,7 @@ const handleSubmit = async () => {
       ElMessage.error('请选择安全任务模板')
       return
     }
-    const missing = selectedTemplate.value.parameters.find((parameter) =>
+    const missing = selectedTemplateParameters.value.find((parameter) =>
       parameter.required && !String(ruleForm.template_params[parameter.name] || '').trim()
     )
     if (missing) {

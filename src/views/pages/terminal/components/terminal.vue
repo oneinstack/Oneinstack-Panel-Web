@@ -300,12 +300,15 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
-  min-height: calc(100vh - 150px);
+  height: calc(100vh - 150px);
+  min-height: 0;
+  overflow: hidden;
   padding: 22px;
 }
 
 .terminal-header {
   display: flex;
+  flex-shrink: 0;
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
@@ -364,11 +367,13 @@ onBeforeUnmount(() => {
 }
 
 .terminal-alert {
+  flex-shrink: 0;
   border-radius: 12px;
 }
 
 .security-grid {
   display: grid;
+  flex-shrink: 0;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   overflow: hidden;
   border: 1px solid var(--border-subtle);
@@ -404,6 +409,7 @@ onBeforeUnmount(() => {
 
 .audit-notice {
   display: flex;
+  flex-shrink: 0;
   align-items: center;
   gap: 12px;
   padding: 13px 16px;
@@ -435,8 +441,9 @@ onBeforeUnmount(() => {
 
 .terminal-shell {
   position: relative;
-  flex: 1;
-  min-height: 480px;
+  flex: 1 1 auto;
+  min-height: 280px;
+  max-height: clamp(320px, 48vh, 560px);
   overflow: hidden;
   border: 1px solid #202b3d;
   border-radius: 15px;
@@ -481,8 +488,22 @@ onBeforeUnmount(() => {
 
 .terminal-screen {
   height: calc(100% - 42px);
-  min-height: 438px;
+  min-height: 0;
+  overflow: hidden;
   padding: 10px 6px;
+}
+
+.terminal-screen :deep(.xterm) {
+  height: 100%;
+}
+
+.terminal-screen :deep(.xterm-screen),
+.terminal-screen :deep(.xterm-viewport) {
+  max-height: 100%;
+}
+
+.terminal-screen :deep(.xterm-viewport) {
+  overflow-y: auto !important;
 }
 
 .terminal-placeholder {
