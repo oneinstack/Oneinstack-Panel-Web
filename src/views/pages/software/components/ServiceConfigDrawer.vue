@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { ArrowLeft, Clock, Close, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface ConfigurationField {
   key: string
@@ -203,13 +204,16 @@ const apply = async () => {
   if (!configuration.value || !preview.value?.hasChanges || applying.value) return
   applying.value = true
   try {
-    const { data } = await Api.applyComponentServiceConfiguration(props.component, {
+    const { data } = await submitOperation('software.configure', {
+      component: props.component,
       revision: configuration.value.revision,
       values: preview.value.values
     })
     emit('task-created', data)
     visible.value = false
     ElMessage.success('配置发布任务已创建，可在后台继续运行')
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
   } finally {
     applying.value = false
   }
@@ -228,24 +232,16 @@ const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
       ElMessage.info('当前配置已经与该历史版本一致')
       return
     }
-    await ElMessageBox.confirm(
-      `将把 ${restorePreview.changes.length} 项参数恢复到本次发布前的值。系统会再次执行语法检查并在失败时自动回滚。`,
-      '恢复历史配置',
-      {
-        type: 'warning',
-        confirmButtonText: '创建恢复任务',
-        cancelButtonText: '取消'
-      }
-    )
-    const { data: result } = await Api.restoreComponentServiceConfiguration(
-      props.component,
-      entry.id
-    )
+    const { data: result } = await submitOperation('software.configure', {
+      component: props.component,
+      restoreFromHistoryId: entry.id,
+      changes: restorePreview.changes
+    })
     emit('task-created', result)
     visible.value = false
     ElMessage.success('配置恢复任务已创建，可在后台查看进度')
   } catch (error: any) {
-    if (error !== 'cancel' && error !== 'close') throw error
+    if (!isOperationCancelled(error)) throw error
   } finally {
     restoringId.value = ''
   }

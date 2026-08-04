@@ -3,6 +3,7 @@ import { computed, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import { Document, Refresh, Setting } from '@element-plus/icons-vue'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 type WebServerInfo = {
   available: boolean
@@ -161,22 +162,10 @@ const reloadCurrent = async () => {
 
 const save = async () => {
   if (!state.selectedPath || !dirty.value || state.saving) return
-  try {
-    await ElMessageBox.confirm(
-      `即将保存 ${state.selectedPath}。系统会先创建备份并执行 ${state.server.name || 'Web 服务器'} 语法检查，检查通过后再平滑重载。`,
-      '保存并应用配置？',
-      {
-        type: 'warning',
-        confirmButtonText: '保存并应用',
-        cancelButtonText: '取消'
-      }
-    )
-  } catch {
-    return
-  }
   state.saving = true
   try {
-    const { data } = await Api.updateWebsiteWebServerConfig({
+    const { data } = await submitOperation('website.update', {
+      action: 'web_server_config',
       path: state.selectedPath,
       content: state.content,
       revision: state.revision
@@ -194,7 +183,9 @@ const save = async () => {
     ElMessage.success(data.reloaded ? '配置保存成功，Web 服务已平滑重载' : '配置保存成功，服务当前未运行')
     emit('changed')
   } catch (error: any) {
-    if (error?.code === 'CONFLICT') {
+    if (isOperationCancelled(error)) {
+      return
+    } else if (error?.code === 'CONFLICT') {
       ElMessage.error('配置已被其他操作修改，请重新读取后再保存')
     } else {
       ElMessage.error(error?.message || '配置保存失败，原配置已保留')

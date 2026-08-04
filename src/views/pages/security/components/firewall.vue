@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 
 import { Api } from '@/api/Api'
 import SearchInput from '@/components/search-input.vue'
 import softwareTaskStore from '@/sstore/softwareTask'
 import InstallTaskDrawer from '../../software/components/InstallTaskDrawer.vue'
 import Addfirewall from './addfirewall.vue'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface FirewallStatus {
   install: boolean
@@ -121,27 +122,12 @@ const handleFirewallChange = async (value: string | number | boolean) => {
   const previous = !enabled
   firewallChanging.value = true
   try {
-    let confirm = ''
-    if (!enabled) {
-      const { value } = await ElMessageBox.prompt(
-        '关闭防火墙会扩大服务器暴露面。请输入 DISABLE FIREWALL 继续。',
-        '关闭防火墙',
-        {
-          type: 'warning',
-          inputPlaceholder: 'DISABLE FIREWALL',
-          inputValidator: (input) => input === 'DISABLE FIREWALL' || '确认文本不正确',
-          confirmButtonText: '确认关闭',
-          cancelButtonText: '取消'
-        }
-      )
-      confirm = value
-    }
-    await Api.setFirewallEnabled({ enabled, confirm })
+    await submitOperation('firewall.toggle', { enabled })
     ElMessage.success(enabled ? '防火墙已启用' : '防火墙已关闭')
     await Promise.all([getFirewallInfo(), getData()])
   } catch (error) {
     status.value.enabled = previous
-    if (error !== 'cancel' && error !== 'close') {
+    if (!isOperationCancelled(error)) {
       await getFirewallInfo()
     }
   } finally {
@@ -154,12 +140,14 @@ const handlePingChange = async (value: string | number | boolean) => {
   const previous = !blocked
   pingChanging.value = true
   try {
-    await Api.setFirewallPing({ blocked })
+    await submitOperation('firewall.rule_change', { action: 'set_ping', blocked })
     ElMessage.success(blocked ? '已禁止外部 Ping' : '已允许外部 Ping')
     await getFirewallInfo()
-  } catch {
+  } catch (error) {
     status.value.pingBlocked = previous
-    await getFirewallInfo()
+    if (!isOperationCancelled(error)) {
+      await getFirewallInfo()
+    }
   } finally {
     pingChanging.value = false
   }
@@ -171,28 +159,20 @@ const handleInstallFirewall = async () => {
     installTaskVisible.value = true
     return
   }
-  try {
-    await ElMessageBox.confirm(
-      status.value.repairRequired
-        ? '系统将通过受校验脚本补齐协议数据库并重新校验 firewalld 配置。修复完成后仍会保持关闭。'
-        : '系统将通过受校验的独立脚本安装 firewalld。安装完成后会保持关闭，首次启用时面板会先放行当前管理端口。',
-      status.value.repairRequired ? '修复 firewalld' : '安装默认防火墙',
-      {
-        type: 'info',
-        confirmButtonText: status.value.repairRequired ? '开始修复' : '开始安装',
-        cancelButtonText: '取消'
-      }
-    )
-  } catch {
-    return
-  }
   installSubmitting.value = true
   try {
-    const { data } = await Api.installFirewall()
+    const { data } = await submitOperation('software.install', {
+      key: 'firewalld',
+      name: 'firewalld',
+      repair: status.value.repairRequired
+    })
     softwareTaskStore.acceptCreated(data, { key: 'firewalld', version: '1.0.0' })
     installTaskId.value = data.taskId
     installTaskVisible.value = true
     ElMessage.success(status.value.repairRequired ? 'firewalld 修复任务已创建' : 'firewalld 安装任务已创建')
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
+    return
   } finally {
     installSubmitting.value = false
   }
@@ -217,20 +197,11 @@ const handleDelete = async (row: FirewallRule) => {
     return
   }
   try {
-    await ElMessageBox.confirm(
-      `确定删除 ${row.protocol.toUpperCase()} ${row.ports || '全部端口'} 规则吗？系统规则和面板记录会一起删除。`,
-      '删除防火墙规则',
-      {
-        confirmButtonText: '删除',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    await Api.deleteFirewallRule({ id: row.id })
+    await submitOperation('firewall.rule_change', { action: 'delete', id: row.id })
     ElMessage.success('规则已删除')
     await Promise.all([getData(), getFirewallInfo()])
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') {
+    if (!isOperationCancelled(error)) {
       await getData()
     }
   }

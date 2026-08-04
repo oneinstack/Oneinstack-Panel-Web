@@ -11,6 +11,7 @@ import { ElMessage } from 'element-plus'
 import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
 import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
 import WebServerConfigDrawer from './components/WebServerConfigDrawer.vue'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 const webServer = reactive({
   loading: true,
@@ -166,9 +167,8 @@ const conf = reactive({
 
         try {
           conf.drawer.loading = true
-          const api = conf.drawer.type === 'add' ? Api.addWebsite : Api.updateWebsite
-          const { data } = await api(conf.form.data.value)
-          console.log('message', data)
+          const operation = conf.drawer.type === 'add' ? 'website.create' : 'website.update'
+          await submitOperation(operation, structuredClone(toRaw(conf.form.data.value)))
           ElMessage({
             type: 'success',
             message: conf.drawer.type === 'add' ? '创建网站成功' : '更新网站成功'
@@ -176,6 +176,7 @@ const conf = reactive({
           conf.drawer.show = false
           conf.website.getData()
         } catch (error: any) {
+          if (isOperationCancelled(error)) return
           ElMessage({
             type: 'error',
             message: error.message || '操作失败'

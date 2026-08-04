@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
+import { ElMessage, FormInstance } from 'element-plus'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
@@ -8,6 +8,7 @@ import { Api } from '@/api/Api'
 import softwareTaskStore, { type SoftwareTask } from '@/sstore/softwareTask'
 import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -183,24 +184,13 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
     restart: '重启',
     reload: '平滑重载'
   }
-  if (action !== 'restart') {
-    try {
-      await ElMessageBox.confirm(
-        `确定${actionLabels[action]} ${status.displayName} 服务？该操作将通过已签名的组件脚本执行并记录完整任务日志。`,
-        `确认${actionLabels[action]}服务`,
-        {
-          type: action === 'stop' ? 'warning' : 'info',
-          confirmButtonText: `确认${actionLabels[action]}`,
-          cancelButtonText: '取消'
-        }
-      )
-    } catch {
-      return
-    }
-  }
   submitting.value = true
   try {
-    const { data: result } = await Api.runComponentServiceAction(status.component, { action })
+    const { data: result } = await submitOperation('software.service_action', {
+      component: status.component,
+      softwareKey: status.softwareKey,
+      action
+    })
     softwareTaskStore.acceptCreated(result, {
       key: status.softwareKey,
       version: status.recordedVersion || item.install_version || '',
@@ -224,6 +214,8 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
     ElMessage.success(`${actionLabels[action]}任务已创建，可在后台继续运行`)
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
   } finally {
     submitting.value = false
   }
@@ -323,12 +315,14 @@ const handleInstall = async () => {
   submitting.value = true
   const request = { ...installForm.value }
   try {
-    const { data: result } = await Api.installSoft(request)
+    const { data: result } = await submitOperation('software.install', request)
     softwareTaskStore.acceptCreated(result, request)
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
     drawer.show = false
     clearSecretFields()
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
   } finally {
     submitting.value = false
   }
@@ -362,28 +356,16 @@ const retryTask = (taskId: string) => {
 const handleUninstall = async (item: any) => {
   if (submitting.value) return
   const version = item.install_version || item.versions?.[0] || ''
-  try {
-    await ElMessageBox.confirm(
-      `确定卸载 ${item.name} ${version}？组件程序和服务配置将被移除，网站、数据库等业务数据默认保留。`,
-      '确认卸载软件',
-      {
-        type: 'warning',
-        confirmButtonText: '确认卸载',
-        cancelButtonText: '取消'
-      }
-    )
-  } catch {
-    return
-  }
-
   submitting.value = true
   try {
     const request = { name: item.key, key: item.key, version }
-    const { data: result } = await Api.removeSoft(request)
+    const { data: result } = await submitOperation('software.uninstall', request)
     softwareTaskStore.acceptCreated(result, request)
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
     ElMessage.success('卸载任务已创建，可在后台继续运行')
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
   } finally {
     submitting.value = false
   }

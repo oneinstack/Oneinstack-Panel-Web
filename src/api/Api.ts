@@ -238,6 +238,14 @@ export const Api = {
   getSoftList: (obj: any) => {
     return http.post('/soft/list', obj)
   },
+  /** 创建系统变更操作预览票据 */
+  previewOperation: (obj: { operation: string; payload: unknown }) => {
+    return http.post('/operations/preview', obj)
+  },
+  /** 执行已确认的系统变更操作 */
+  executeOperation: (previewId: string) => {
+    return postAccepted(`/operations/${encodeURIComponent(previewId)}/execute`, { confirm: true })
+  },
   /** 获取 Center 软件商城目录同步状态 */
   getSoftwareCatalogStatus: () => {
     return http.get('/soft/catalog/status')

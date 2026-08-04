@@ -6,6 +6,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { watchEffect } from 'vue'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 
 
@@ -410,25 +411,9 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
     return
   }
   const requestPanelEntryPath = panelEntry.panelEntryEnabled && !rotatePanelEntry ? panelEntryPath : ''
-  const actionLabel = rotatePanelEntry
-    ? '轮换后旧入口会立即失效，是否继续？'
-    : panelEntry.panelEntryEnabled
-      ? '启用后根路径将无法访问面板，是否继续保存？'
-      : '关闭后面板将恢复根路径访问，是否继续保存？'
-
-  try {
-    await ElMessageBox.confirm(actionLabel, rotatePanelEntry ? '轮换安全入口' : '保存安全入口配置', {
-      type: 'warning',
-      confirmButtonText: rotatePanelEntry ? '确认轮换' : '确认保存',
-      cancelButtonText: '取消'
-    })
-  } catch {
-    return
-  }
-
   panelEntry.saving = true
   try {
-    const { data } = await Api.updatePanelNetwork({
+    const { data } = await submitOperation('panel.network', {
       bindAddress: panelEntry.bindAddress,
       httpPort: panelEntry.httpPort,
       httpsEnabled: panelEntry.httpsEnabled,
@@ -452,7 +437,8 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
     if (panelEntry.panelEntryEnabled) {
       await maybeRedirectToPanelEntry(panelAccessURL, '安全入口已经启用，建议立即跳转到新的访问地址。')
     }
-  } catch {
+  } catch (error) {
+    if (isOperationCancelled(error)) return
     ElMessage.error(rotatePanelEntry ? '轮换安全入口失败' : '保存安全入口配置失败')
   } finally {
     panelEntry.saving = false

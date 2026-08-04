@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 
-import { Api } from '@/api/Api'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface FirewallRuleForm {
   id?: number
@@ -179,10 +179,14 @@ const submit = async () => {
       state: 1,
       remark: form.remark.trim()
     }
-    if (props.type) {
-      await Api.addFirewallRule(payload)
-    } else {
-      await Api.updateFirewallRule(payload)
+    try {
+      await submitOperation('firewall.rule_change', {
+        action: props.type ? 'create' : 'update',
+        rule: payload
+      })
+    } catch (error) {
+      if (isOperationCancelled(error)) return
+      throw error
     }
     ElMessage.success(props.type ? '规则已添加' : '规则已更新')
     emit('saved')

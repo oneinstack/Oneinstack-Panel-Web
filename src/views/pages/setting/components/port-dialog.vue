@@ -2,7 +2,7 @@
 import { ref, reactive, defineEmits, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { Api } from '@/api/Api'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 
 interface RuleForm {
@@ -64,12 +64,12 @@ const handleSubmit = async () => {
   await ruleFormRef.value.validate(async (valid) => {
     if (valid) {
       try {
-        // TODO: 调用修改端口的API
-        const { data } = await Api.updatePort({port:ruleForm.port})
+        await submitOperation('panel.port_update', { port: ruleForm.port })
         ElMessage.success('修改成功')
         dialogVisible.value = false
         emit('update:modelValue', false)
       } catch (error) {
+        if (isOperationCancelled(error)) return
         ElMessage.error('修改失败')
       }
     }

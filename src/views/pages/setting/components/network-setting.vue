@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { Api } from '@/api/Api'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface CertificateStatus {
   valid: boolean
@@ -231,16 +232,6 @@ const saveSettings = async () => {
     ElMessage.error('HTTP 与 HTTPS 必须使用不同端口')
     return
   }
-  try {
-    await ElMessageBox.confirm(
-      '保存前会检查端口占用、证书和私钥。受管 systemd 环境会自动重启并验证新地址；如果启动失败，将恢复原配置。',
-      '确认更新访问配置',
-      { type: 'warning', confirmButtonText: '保存并自动应用', cancelButtonText: '取消' }
-    )
-  } catch {
-    return
-  }
-
   saving.value = true
   try {
     const trustedProxies = proxyText.value
@@ -248,7 +239,7 @@ const saveSettings = async () => {
       .map(item => item.trim())
       .filter(Boolean)
     const panelEntryEnabled = Boolean(current.value?.panelEntryEnabled)
-    const { data } = await Api.updatePanelNetwork({
+    const { data } = await submitOperation('panel.network', {
       ...form,
       trustedProxies,
       panelEntryEnabled,
@@ -264,7 +255,8 @@ const saveSettings = async () => {
     } else {
       ElMessage.success('配置校验通过')
     }
-  } catch {
+  } catch (error) {
+    if (isOperationCancelled(error)) return
     ElMessage.error('访问配置保存失败，请检查端口、证书文件和私钥文件')
   } finally {
     saving.value = false
