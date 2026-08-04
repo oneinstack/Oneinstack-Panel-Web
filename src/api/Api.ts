@@ -780,6 +780,10 @@ export const Api = {
   getMonitorMetrics: (obj?: any) => {
     return http.get('/monitor/metrics', obj)
   },
+  /** 获取分组监控历史样本 */
+  getMonitorHistory: (obj?: { from?: string; to?: string }) => {
+    return http.get('/monitor/history', obj)
+  },
   /** 获取告警规则 */
   getMonitorRules: () => {
     return http.get('/monitor/rules')

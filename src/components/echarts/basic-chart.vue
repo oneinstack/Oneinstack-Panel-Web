@@ -16,7 +16,7 @@ let chartInstance: EChartsType
 watch(
   () => props.option,
   (newVal) => {
-    newVal && chartInstance?.setOption(newVal)
+    newVal && chartInstance?.setOption(newVal, true)
   }
 )
 
@@ -24,6 +24,7 @@ const observer = new ResizeObserver(() => chartInstance.resize())
 onMounted(() => {
   chartInstance = echarts.init(chartBox.value)
   props.onInit?.(chartInstance)
+  chartInstance.setOption(props.option, true)
   observer.observe(chartBox.value as HTMLElement)
 })
 

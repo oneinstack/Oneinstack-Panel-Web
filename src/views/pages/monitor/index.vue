@@ -4,6 +4,7 @@ import type { EChartsOption, EChartsType } from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import BasicChart from '@/components/echarts/basic-chart.vue'
+import sconfig from '@/sstore/sconfig'
 
 interface MetricSample {
   id: number
@@ -18,6 +19,34 @@ interface MetricSample {
   networkSendBps: number
   diskReadBps: number
   diskWriteBps: number
+}
+
+type MonitorHistoryGroup = 'cpu' | 'memory' | 'load' | 'network' | 'disk'
+
+interface MonitorHistoryPoint {
+  capturedAt: string
+  value: number
+}
+
+interface MonitorHistorySeries {
+  group: MonitorHistoryGroup
+  key: string
+  label: string
+  unit?: string
+  points: MonitorHistoryPoint[]
+}
+
+interface MonitorHistoryRange {
+  from: string
+  to: string
+  bucketSeconds: number
+  sampleCount: number
+  bucketCount: number
+}
+
+interface MonitorHistoryData {
+  range: MonitorHistoryRange
+  series: MonitorHistorySeries[]
 }
 
 interface MonitorSummary {
@@ -114,6 +143,26 @@ const metricOptions = [
   { value: 'disk_write', label: '磁盘写入速率', unit: 'B/s' }
 ]
 
+const historyGroups: Array<{
+  key: MonitorHistoryGroup
+  label: string
+  description: string
+}> = [
+  { key: 'cpu', label: 'CPU', description: '处理器使用率趋势' },
+  { key: 'memory', label: '内存', description: '内存占用比例趋势' },
+  { key: 'load', label: '负载', description: '1 / 5 / 15 分钟系统负载' },
+  { key: 'network', label: '网络', description: '接收与发送吞吐速率' },
+  { key: 'disk', label: '磁盘', description: '根分区使用率与磁盘读写速率' }
+]
+
+const historyRangePresets = [
+  { label: '1 小时', hours: 1 },
+  { label: '6 小时', hours: 6 },
+  { label: '24 小时', hours: 24 },
+  { label: '7 天', hours: 24 * 7 },
+  { label: '30 天', hours: 24 * 30 }
+]
+
 const summary = ref<MonitorSummary>({
   ruleCount: 0,
   enabledRules: 0,
@@ -124,6 +173,21 @@ const summary = ref<MonitorSummary>({
   last24Hours: 0
 })
 const metrics = ref<MetricSample[]>([])
+const historyLoading = ref(false)
+const historyData = ref<MonitorHistoryData>({
+  range: {
+    from: '',
+    to: '',
+    bucketSeconds: 60,
+    sampleCount: 0,
+    bucketCount: 0
+  },
+  series: []
+})
+const historyTimeRange = ref<[Date, Date]>([
+  new Date(Date.now() - 24 * 60 * 60 * 1000),
+  new Date()
+])
 const serviceHealth = ref<ComponentHealthState[]>([])
 const rules = ref<MonitorRule[]>([])
 const events = ref<AlertEvent[]>([])
@@ -199,6 +263,73 @@ const trendOption = computed<EChartsOption>(() => ({
   ]
 }))
 
+const groupedHistorySeries = computed(() => {
+  const groups = Object.fromEntries(
+    historyGroups.map((group) => [group.key, [] as MonitorHistorySeries[]])
+  ) as Record<MonitorHistoryGroup, MonitorHistorySeries[]>
+  historyData.value.series.forEach((series) => {
+    if (groups[series.group]) groups[series.group].push(series)
+  })
+  return groups
+})
+
+const canReadMonitorHistory = computed(() =>
+  sconfig.hasScopeAccess('monitoring', 'read') ||
+  Boolean((sconfig.scopeAccess as any)?.['monitoring.read']) ||
+  sconfig.hasActionAccess('monitoring.read')
+)
+
+const historyChartOptions = computed<Record<MonitorHistoryGroup, EChartsOption>>(() => {
+  return Object.fromEntries(historyGroups.map((group) => {
+    const seriesList = groupedHistorySeries.value[group.key]
+    const hasPercent = seriesList.some((series) => series.unit === '%')
+    const hasRate = seriesList.some((series) => series.unit === 'B/s')
+    const yAxis = []
+    if (hasPercent) {
+      yAxis.push({
+        type: 'value',
+        min: 0,
+        max: 100,
+        axisLabel: { formatter: '{value}%' }
+      })
+    }
+    if (hasRate) {
+      yAxis.push({
+        type: 'value',
+        position: hasPercent ? 'right' : 'left',
+        axisLabel: { formatter: (value: number) => formatRate(value).replace('/s', '') }
+      })
+    }
+    if (!yAxis.length) yAxis.push({ type: 'value', min: 0 })
+
+    return [group.key, {
+      tooltip: {
+        trigger: 'axis',
+        valueFormatter: (value: unknown) => {
+          const numeric = Number(value)
+          return Number.isFinite(numeric) ? numeric.toFixed(2) : String(value)
+        }
+      },
+      legend: {
+        top: 0,
+        type: 'scroll',
+        data: seriesList.map((series) => series.label)
+      },
+      grid: { left: 48, right: hasPercent && hasRate ? 58 : 24, top: 44, bottom: 34 },
+      xAxis: { type: 'time' },
+      yAxis,
+      series: seriesList.map((series) => ({
+        name: series.label,
+        type: 'line',
+        smooth: true,
+        showSymbol: false,
+        yAxisIndex: series.unit === 'B/s' && hasPercent ? 1 : 0,
+        data: series.points.map((point) => [point.capturedAt, point.value])
+      }))
+    } as EChartsOption]
+  })) as Record<MonitorHistoryGroup, EChartsOption>
+})
+
 const initTrend = (instance: EChartsType) => instance.setOption(trendOption.value)
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const formatPercent = (value?: number) => Number.isFinite(value) ? `${Number(value).toFixed(1)}%` : '—'
@@ -214,6 +345,26 @@ const formatRate = (value?: number) => {
   return `${current.toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
 const metricMeta = (metric: string) => metricOptions.find((item) => item.value === metric)
+const formatDuration = (seconds?: number) => {
+  if (!Number.isFinite(seconds)) return '—'
+  const value = Number(seconds)
+  if (value < 60) return `${value} 秒`
+  if (value < 3600) return `${Math.round(value / 60)} 分钟`
+  return `${(value / 3600).toFixed(value % 3600 === 0 ? 0 : 1)} 小时`
+}
+const normalizeMonitorHistory = (response: any): MonitorHistoryData => {
+  const payload = response?.data?.range
+    ? response.data
+    : response?.data?.data?.range
+      ? response.data.data
+      : response?.range
+        ? response
+        : response?.data || {}
+  return {
+    range: payload.range || historyData.value.range,
+    series: Array.isArray(payload.series) ? payload.series : []
+  }
+}
 const metricLabel = (metric: string) =>
   metric === 'service_health' ? '组件服务健康' : (metricMeta(metric)?.label || metric)
 const metricValue = (metric: string, value: number) => {
@@ -292,6 +443,41 @@ const loadDashboard = async () => {
   }
 }
 
+const loadMonitorHistory = async () => {
+  if (!canReadMonitorHistory.value) {
+    historyData.value = {
+      ...historyData.value,
+      series: []
+    }
+    return
+  }
+  historyLoading.value = true
+  try {
+    const [from, to] = historyTimeRange.value || []
+    const response = await Api.getMonitorHistory({
+      from: from?.toISOString(),
+      to: to?.toISOString()
+    })
+    const normalized = normalizeMonitorHistory(response)
+    historyData.value = normalized
+    if (normalized.range?.from && normalized.range?.to) {
+      historyTimeRange.value = [
+        new Date(normalized.range.from),
+        new Date(normalized.range.to)
+      ]
+    }
+  } finally {
+    historyLoading.value = false
+  }
+}
+
+const applyHistoryPreset = (hours: number) => {
+  const to = new Date()
+  const from = new Date(to.getTime() - hours * 60 * 60 * 1000)
+  historyTimeRange.value = [from, to]
+  void loadMonitorHistory()
+}
+
 const checkServiceHealth = async () => {
   serviceChecking.value = true
   try {
@@ -362,7 +548,7 @@ const refreshCurrentTab = () => {
 }
 
 const refreshAll = async () => {
-  await Promise.all([loadDashboard(), refreshCurrentTab()])
+  await Promise.all([loadDashboard(), loadMonitorHistory(), refreshCurrentTab()])
 }
 
 const openCreateRule = () => {
@@ -511,7 +697,7 @@ const deleteChannel = async (channel: NotificationChannel) => {
 
 let refreshTimer: ReturnType<typeof setInterval> | undefined
 onMounted(async () => {
-  await Promise.all([loadDashboard(), loadRules()])
+  await Promise.all([loadDashboard(), loadMonitorHistory(), loadRules()])
   refreshTimer = setInterval(() => void loadDashboard(), 60_000)
 })
 onUnmounted(() => {
@@ -635,6 +821,77 @@ onUnmounted(() => {
         <BasicChart :option="trendOption" :on-init="initTrend" />
       </div>
       <el-empty v-else description="正在等待第一条监控样本" />
+    </div>
+
+    <div class="history-panel" v-loading="historyLoading">
+      <div class="history-panel__heading">
+        <div>
+          <h3>历史样本</h3>
+          <span>
+            聚合粒度 {{ formatDuration(historyData.range.bucketSeconds) }} ·
+            原始样本 {{ historyData.range.sampleCount }} ·
+            趋势点 {{ historyData.range.bucketCount }}
+          </span>
+        </div>
+        <div class="history-controls">
+          <el-button-group>
+            <el-button
+              v-for="preset in historyRangePresets"
+              :key="preset.label"
+              :disabled="historyLoading || !canReadMonitorHistory"
+              @click="applyHistoryPreset(preset.hours)"
+            >
+              {{ preset.label }}
+            </el-button>
+          </el-button-group>
+          <el-date-picker
+            v-model="historyTimeRange"
+            type="datetimerange"
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            :clearable="false"
+            :disabled="historyLoading || !canReadMonitorHistory"
+          />
+          <el-button
+            type="primary"
+            :loading="historyLoading"
+            :disabled="!canReadMonitorHistory"
+            @click="loadMonitorHistory"
+          >
+            查询
+          </el-button>
+        </div>
+      </div>
+      <el-alert
+        v-if="!canReadMonitorHistory"
+        title="当前账号暂无 monitoring.read 权限，不能查看监控历史样本"
+        type="warning"
+        :closable="false"
+        show-icon
+      />
+      <div v-else-if="historyData.series.length" class="history-grid">
+        <article
+          v-for="group in historyGroups"
+          :key="group.key"
+          class="history-card"
+        >
+          <div class="history-card__header">
+            <div>
+              <h4>{{ group.label }}</h4>
+              <span>{{ group.description }}</span>
+            </div>
+            <el-tag size="small" effect="light">
+              {{ groupedHistorySeries[group.key].length }} 项
+            </el-tag>
+          </div>
+          <div v-if="groupedHistorySeries[group.key].length" class="history-chart">
+            <BasicChart :option="historyChartOptions[group.key]" />
+          </div>
+          <el-empty v-else description="该分组暂无样本" :image-size="58" />
+        </article>
+      </div>
+      <el-empty v-else description="当前时间范围内暂无历史样本" />
     </div>
 
     <div class="management-panel">
@@ -968,7 +1225,7 @@ onUnmounted(() => {
   &.danger strong { color: #e25d5d; }
 }
 
-.service-health-panel, .trend-panel, .management-panel {
+.service-health-panel, .trend-panel, .history-panel, .management-panel {
   padding: 20px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
@@ -976,7 +1233,7 @@ onUnmounted(() => {
   box-shadow: var(--shadow-xs);
 }
 
-.service-health-panel, .trend-panel {
+.service-health-panel, .trend-panel, .history-panel {
   margin-bottom: 14px;
 }
 
@@ -1091,6 +1348,75 @@ onUnmounted(() => {
   margin-top: 12px;
 }
 
+.history-panel__heading,
+.history-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.history-panel__heading {
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0 0 4px;
+    color: var(--text-primary);
+    font-size: 17px;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  :deep(.el-date-editor) {
+    width: 360px;
+  }
+}
+
+.history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.history-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.history-card__header {
+  min-height: 42px;
+  margin-bottom: 10px;
+
+  h4 {
+    margin: 0 0 3px;
+    color: var(--text-primary);
+    font-size: 14px;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 11px;
+  }
+}
+
+.history-chart {
+  height: 260px;
+}
+
 .toolbar {
   margin-bottom: 16px;
   color: var(--text-tertiary);
@@ -1124,13 +1450,30 @@ onUnmounted(() => {
 
 @media (max-width: 1100px) {
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .panel-heading { align-items: flex-start; flex-direction: column; }
+  .panel-heading,
+  .history-panel__heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .history-controls {
+    justify-content: flex-start;
+    width: 100%;
+  }
 }
 
 @media (max-width: 760px) {
   .page-heading, .toolbar { align-items: flex-start; flex-direction: column; }
-  .stats-grid, .service-health-grid, .form-grid { grid-template-columns: 1fr; }
-  .service-health-panel, .trend-panel, .management-panel { padding: 12px; }
+  .stats-grid, .service-health-grid, .history-grid, .form-grid { grid-template-columns: 1fr; }
+  .service-health-panel, .trend-panel, .history-panel, .management-panel { padding: 12px; }
   .filters { flex-wrap: wrap; }
+
+  .history-controls {
+    :deep(.el-button-group),
+    :deep(.el-date-editor),
+    .el-button {
+      width: 100%;
+    }
+  }
 }
 </style>
