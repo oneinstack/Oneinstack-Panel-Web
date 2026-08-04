@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import type { EChartsOption } from 'echarts'
-import { Delete, Edit, Plus, Refresh } from '@element-plus/icons-vue'
+import { Delete, Edit, InfoFilled, Plus, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Api } from '@/api/Api'
 import BasicChart from '@/components/echarts/basic-chart.vue'
@@ -71,6 +71,8 @@ const metrics = ref<BastionMetric[]>([])
 const timeRange = ref<TimeRange>('24h')
 const editingId = ref<number | null>(null)
 const testResult = ref<ConnectionTestResult | null>(null)
+const groupFilter = ref('')
+const statusFilter = ref<BastionStatus | ''>('')
 
 const form = reactive({
   name: '',
@@ -125,6 +127,53 @@ const avgCpu = computed(() => {
     .filter((value): value is number => Number.isFinite(value))
   if (!values.length) return 0
   return values.reduce((sum, value) => sum + value, 0) / values.length
+})
+const avgMemory = computed(() => averageMetric(servers.value, 'latestMemory'))
+const avgDisk = computed(() => averageMetric(servers.value, 'latestDisk'))
+const totalNetworkRecv = computed(() =>
+  servers.value.reduce((sum, server) => sum + (server.latestNetworkRecv || 0), 0)
+)
+const totalNetworkSend = computed(() =>
+  servers.value.reduce((sum, server) => sum + (server.latestNetworkSend || 0), 0)
+)
+
+const groupKey = (server: BastionServer) => splitTags(server.tags)[0] || '未分组'
+const statusOptions = computed(() => [
+  { label: '全部状态', value: '' },
+  { label: '在线', value: 'online' },
+  { label: '离线', value: 'offline' },
+  { label: '异常', value: 'error' },
+  { label: '未知', value: 'unknown' }
+])
+const groupOptions = computed(() => [
+  { label: '全部分组', value: '' },
+  ...Array.from(new Set(servers.value.map(groupKey))).map((group) => ({
+    label: group,
+    value: group
+  }))
+])
+const filteredServers = computed(() =>
+  servers.value.filter((server) =>
+    (!groupFilter.value || groupKey(server) === groupFilter.value) &&
+    (!statusFilter.value || server.status === statusFilter.value)
+  )
+)
+const resourceGroups = computed(() => {
+  const groups = new Map<string, BastionServer[]>()
+  servers.value.forEach((server) => {
+    const key = groupKey(server)
+    groups.set(key, [...(groups.get(key) || []), server])
+  })
+  return Array.from(groups.entries()).map(([name, list]) => ({
+    name,
+    list,
+    total: list.length,
+    online: list.filter((item) => item.status === 'online').length,
+    abnormal: list.filter((item) => item.status === 'offline' || item.status === 'error').length,
+    avgCpu: averageMetric(list, 'latestCpu'),
+    avgMemory: averageMetric(list, 'latestMemory'),
+    avgDisk: averageMetric(list, 'latestDisk')
+  }))
 })
 
 const timeRangeOptions: Array<{ label: string; value: TimeRange; hours: number; limit: number }> = [
@@ -332,6 +381,14 @@ const statusType = (status?: BastionStatus) => ({
 const splitTags = (tags?: string) =>
   (tags || '').split(',').map((item) => item.trim()).filter(Boolean)
 
+const averageMetric = (list: BastionServer[], key: keyof BastionServer) => {
+  const values = list
+    .map((item) => item[key])
+    .filter((value): value is number => Number.isFinite(value))
+  if (!values.length) return 0
+  return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
 const formatPercent = (value?: number) =>
   Number.isFinite(value) ? `${Number(value).toFixed(1)}%` : '—'
 
@@ -353,6 +410,9 @@ const formatTime = (value?: string) => {
   if (Number.isNaN(date.getTime())) return '—'
   return date.toLocaleString()
 }
+
+const openServerLink = (server: BastionServer) =>
+  `ssh://${encodeURIComponent(server.username)}@${server.host}:${server.port}`
 
 const formatUptime = (seconds?: number) => {
   if (!Number.isFinite(seconds)) return '—'
@@ -398,15 +458,105 @@ onMounted(() => {
         <strong>{{ formatPercent(avgCpu) }}</strong>
       </div>
       <div class="summary-card">
+        <small>平均内存</small>
+        <strong>{{ formatPercent(avgMemory) }}</strong>
+      </div>
+      <div class="summary-card">
+        <small>平均磁盘</small>
+        <strong>{{ formatPercent(avgDisk) }}</strong>
+      </div>
+      <div class="summary-card">
+        <small>网络接收</small>
+        <strong>{{ formatRate(totalNetworkRecv) }}</strong>
+      </div>
+      <div class="summary-card">
+        <small>网络发送</small>
+        <strong>{{ formatRate(totalNetworkSend) }}</strong>
+      </div>
+      <div class="summary-card">
         <small>启用采集</small>
         <strong>{{ enabledCount }}</strong>
       </div>
     </section>
 
+    <section v-if="servers.length" class="group-overview">
+      <div class="section-heading">
+        <div>
+          <h3>资源组概览</h3>
+          <span>按服务器第一个标签自动分组，快速定位组内运行状态</span>
+        </div>
+      </div>
+      <div class="group-grid">
+        <button
+          v-for="group in resourceGroups"
+          :key="group.name"
+          type="button"
+          class="group-card"
+          :class="{ active: groupFilter === group.name }"
+          @click="groupFilter = groupFilter === group.name ? '' : group.name"
+        >
+          <div class="group-card__top">
+            <strong>{{ group.name }}</strong>
+            <span>{{ group.online }}/{{ group.total }} 在线</span>
+          </div>
+          <div class="group-card__bars">
+            <div>
+              <small>CPU</small>
+              <span><i :style="{ width: `${Math.min(group.avgCpu, 100)}%` }" /></span>
+              <em>{{ formatPercent(group.avgCpu) }}</em>
+            </div>
+            <div>
+              <small>内存</small>
+              <span><i :style="{ width: `${Math.min(group.avgMemory, 100)}%` }" /></span>
+              <em>{{ formatPercent(group.avgMemory) }}</em>
+            </div>
+            <div>
+              <small>磁盘</small>
+              <span><i :style="{ width: `${Math.min(group.avgDisk, 100)}%` }" /></span>
+              <em>{{ formatPercent(group.avgDisk) }}</em>
+            </div>
+          </div>
+          <div class="group-card__nodes">
+            <span
+              v-for="server in group.list.slice(0, 18)"
+              :key="server.id"
+              :class="`is-${server.status}`"
+              :title="`${server.name} · ${statusLabel(server.status)}`"
+            />
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <section v-if="servers.length" class="resource-filters">
+      <div>
+        <h3>服务器资源</h3>
+        <span>展示自选添加的全部服务器资源，点击卡片查看运行详情</span>
+      </div>
+      <div class="filter-actions">
+        <el-select v-model="groupFilter" placeholder="分组" style="width: 150px">
+          <el-option
+            v-for="item in groupOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+        <el-select v-model="statusFilter" placeholder="状态" style="width: 130px">
+          <el-option
+            v-for="item in statusOptions"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          />
+        </el-select>
+      </div>
+    </section>
+
     <section v-loading="loading" class="server-section">
-      <div v-if="servers.length" class="server-grid">
+      <div v-if="filteredServers.length" class="server-grid">
         <article
-          v-for="server in servers"
+          v-for="server in filteredServers"
           :key="server.id"
           class="server-card"
           :class="[`status-${server.status}`, { disabled: !server.enabled }]"
@@ -417,7 +567,7 @@ onMounted(() => {
                 <span class="server-initial">{{ server.name.slice(0, 1).toUpperCase() }}</span>
                 <div>
                   <strong>{{ server.name }}</strong>
-                  <a :href="`ssh://${server.username}@${server.host}:${server.port}`" @click.stop>
+                  <a :href="openServerLink(server)" @click.stop>
                     {{ server.host }}:{{ server.port }}
                   </a>
                 </div>
@@ -471,6 +621,12 @@ onMounted(() => {
             </template>
           </div>
         </article>
+      </div>
+      <div v-else-if="servers.length" class="empty-state">
+        <img src="/static/images/empty.webp" alt="" />
+        <strong>没有匹配的服务器</strong>
+        <span>调整分组或状态筛选后再查看资源卡片。</span>
+        <el-button @click="groupFilter = ''; statusFilter = ''">清除筛选</el-button>
       </div>
       <div v-else class="empty-state">
         <img src="/static/images/empty.webp" alt="" />
@@ -556,9 +712,11 @@ onMounted(() => {
             <span>服务器详情</span>
             <strong>{{ selectedServer?.name || '—' }}</strong>
           </div>
-          <el-tag v-if="selectedServer" :type="statusType(selectedServer.status)" effect="light">
-            {{ statusLabel(selectedServer.status) }}
-          </el-tag>
+          <div class="detail-header__status">
+            <el-tag v-if="selectedServer" :type="statusType(selectedServer.status)" effect="light">
+              {{ statusLabel(selectedServer.status) }}
+            </el-tag>
+          </div>
         </div>
       </template>
 
@@ -601,11 +759,25 @@ onMounted(() => {
             <basic-chart :option="networkChartOption" />
           </section>
           <section class="chart-card">
-            <div class="chart-title">系统负载</div>
+            <div class="chart-title">
+              <span>系统负载</span>
+              <el-tooltip placement="top" effect="light" popper-class="load-help-tooltip">
+                <template #content>
+                  <div class="load-help">
+                    <p>负载平均值衡量一段时间内等待 CPU/IO 的任务数，不等于 CPU 使用率。</p>
+                    <p><strong>load1</strong>：过去 1 分钟平均负载（最灵敏，反映瞬时压力）</p>
+                    <p><strong>load5</strong>：过去 5 分钟平均负载（平稳，适合观察趋势）</p>
+                    <p><strong>load15</strong>：过去 15 分钟平均负载（最平滑，反映长期水位）</p>
+                    <p>参考：小于 CPU 核数 = 健康；约等于核数 = 满载；大于核数 = 过载排队。</p>
+                  </div>
+                </template>
+                <el-icon class="chart-title__help"><InfoFilled /></el-icon>
+              </el-tooltip>
+            </div>
             <basic-chart :option="loadChartOption" />
           </section>
           <section class="health-card">
-            <div>
+            <div class="health-card__time">
               <small>最新采集</small>
               <strong>{{ formatTime(selectedServer.latestCapturedAt) }}</strong>
             </div>
@@ -707,6 +879,149 @@ onMounted(() => {
   }
 }
 
+.group-overview,
+.resource-filters {
+  margin-bottom: 18px;
+  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
+}
+
+.section-heading,
+.resource-filters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  h3 {
+    margin: 0 0 4px;
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.group-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.group-card {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+
+  &:hover,
+  &.active {
+    border-color: rgba(var(--primary-color), 0.34);
+    background: color-mix(in srgb, rgb(var(--primary-color)) 5%, var(--surface-card));
+    box-shadow: var(--shadow-xs);
+  }
+}
+
+.group-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    flex: 0 0 auto;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.group-card__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 13px;
+
+  div {
+    display: grid;
+    grid-template-columns: 34px minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: 8px;
+  }
+
+  small,
+  em {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    font-style: normal;
+  }
+
+  span {
+    height: 5px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: var(--surface-muted);
+  }
+
+  i {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: rgb(var(--primary-color));
+  }
+}
+
+.group-card__nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 13px;
+
+  span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--el-color-warning);
+
+    &.is-online {
+      background: var(--el-color-success);
+    }
+
+    &.is-offline {
+      background: var(--text-placeholder);
+    }
+
+    &.is-error {
+      background: var(--el-color-danger);
+    }
+  }
+}
+
+.filter-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .server-section {
   min-height: 360px;
 }
@@ -718,30 +1033,61 @@ onMounted(() => {
 }
 
 .server-card {
+  min-height: 244px;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   background: var(--surface-card);
   box-shadow: var(--shadow-xs);
-  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
 
   &:hover {
-    border-color: rgba(var(--primary-color), 0.28);
+    border-color: color-mix(in srgb, rgb(var(--primary-color)) 24%, var(--border-subtle));
     box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
   }
 
   &.disabled {
     opacity: 0.68;
   }
+
+  &.status-online {
+    border-color: color-mix(in srgb, var(--el-color-success) 18%, var(--border-subtle));
+  }
+
+  &.status-error {
+    border-color: color-mix(in srgb, var(--el-color-danger) 20%, var(--border-subtle));
+  }
 }
 
 .server-card__main {
+  flex: 1;
   width: 100%;
-  padding: 18px;
+  padding: 16px 18px 14px;
   border: 0;
   background: transparent;
   text-align: left;
   cursor: pointer;
+}
+
+.server-card__header {
+  min-height: 42px;
+  gap: 12px;
+
+  :deep(.el-tag) {
+    min-width: 46px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
+  }
 }
 
 .server-identity {
@@ -789,20 +1135,24 @@ onMounted(() => {
 }
 
 .server-error {
-  margin-top: 14px;
-  padding: 9px 11px;
+  min-height: 36px;
+  margin-top: 16px;
+  padding: 9px 12px;
+  overflow: hidden;
   border-radius: 9px;
   color: var(--el-color-danger);
-  background: color-mix(in srgb, var(--el-color-danger) 8%, var(--surface-card));
+  background: color-mix(in srgb, var(--el-color-danger) 7%, var(--surface-card));
   font-size: 12px;
   line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metric-triplet {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 18px;
+  gap: 12px;
+  margin-top: 17px;
 
   > div {
     min-width: 0;
@@ -815,10 +1165,12 @@ onMounted(() => {
 
   strong {
     display: block;
+    min-height: 20px;
     margin: 6px 0;
     color: var(--text-primary);
     font-size: 15px;
     font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
 
   span {
@@ -835,17 +1187,33 @@ onMounted(() => {
     border-radius: inherit;
     background: rgb(var(--primary-color));
   }
+
+  > div:nth-child(1) i {
+    background: #5b7fd3;
+  }
+
+  > div:nth-child(2) i {
+    background: #83c56c;
+  }
+
+  > div:nth-child(3) i {
+    background: #ffc44d;
+  }
 }
 
 .network-row {
-  margin-top: 18px;
+  min-height: 18px;
+  margin-top: 16px;
   display: flex;
+  align-items: center;
   gap: 10px;
   color: var(--text-secondary);
   font-size: 12px;
+  font-variant-numeric: tabular-nums;
 }
 
 .server-meta {
+  min-height: 34px;
   margin-top: 14px;
   display: flex;
   flex-direction: column;
@@ -862,10 +1230,18 @@ onMounted(() => {
 }
 
 .server-actions {
-  padding: 11px 16px;
+  min-height: 50px;
+  padding: 9px 14px;
   border-top: 1px solid var(--border-subtle);
   justify-content: flex-end;
   background: var(--surface-subtle);
+
+  :deep(.el-button) {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-weight: 600;
+  }
 }
 
 .empty-state {
@@ -909,19 +1285,44 @@ onMounted(() => {
 }
 
 :deep(.bastion-detail-drawer .el-drawer__header) {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 92px;
   margin: 0;
-  padding: 20px 24px;
+  padding: 18px 84px 18px 24px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
 }
 
+:deep(.bastion-detail-drawer .el-drawer__close-btn) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: none;
+}
+
 :deep(.bastion-detail-drawer .el-drawer__body) {
-  padding: 22px 24px 24px;
+  padding: 18px 24px 22px;
   background: var(--surface-page);
 }
 
 .detail-header {
   width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  padding-right: 0;
+  align-items: center;
+
+  > div:first-child {
+    min-width: 0;
+  }
 
   span {
     display: block;
@@ -933,16 +1334,42 @@ onMounted(() => {
   strong {
     display: block;
     margin-top: 5px;
+    overflow: hidden;
     color: var(--text-primary);
     font-size: 18px;
     font-weight: 720;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.detail-header__status {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  min-height: 32px;
+  margin-left: auto;
+
+  :deep(.el-tag) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    height: 30px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
   }
 }
 
 .detail-content {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
 }
 
 .detail-info {
@@ -952,7 +1379,7 @@ onMounted(() => {
 
   > div {
     min-width: 0;
-    padding: 14px;
+    padding: 12px 14px;
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     background: var(--surface-card);
@@ -976,7 +1403,7 @@ onMounted(() => {
 }
 
 .detail-toolbar {
-  padding: 12px 14px;
+  padding: 10px 12px;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   background: var(--surface-card);
@@ -985,13 +1412,13 @@ onMounted(() => {
 .chart-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .chart-card,
 .health-card {
-  min-height: 300px;
-  padding: 16px;
+  min-height: 260px;
+  padding: 14px;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   background: var(--surface-card);
@@ -999,20 +1426,67 @@ onMounted(() => {
 }
 
 .chart-title {
-  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 680;
 }
 
+.chart-title__help {
+  color: var(--text-tertiary);
+  cursor: help;
+  font-size: 15px;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+}
+
+:global(.load-help-tooltip) {
+  max-width: 360px;
+}
+
+:global(.load-help) {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.65;
+
+  p {
+    margin: 0;
+
+    + p {
+      margin-top: 6px;
+    }
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+}
+
+.chart-card {
+  height: 300px;
+}
+
+.chart-card :deep(.chart-box) {
+  height: calc(100% - 28px);
+}
+
 .health-card {
-  min-height: auto;
+  min-height: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: minmax(190px, 1.35fr) repeat(4, minmax(0, 1fr));
+  grid-column: 1 / -1;
+  gap: 8px;
 
   > div {
-    padding: 12px;
+    min-width: 0;
+    padding: 10px 12px;
     border-radius: 10px;
     background: var(--surface-subtle);
   }
@@ -1025,13 +1499,26 @@ onMounted(() => {
   strong {
     display: block;
     margin-top: 7px;
+    overflow: hidden;
     color: var(--text-primary);
     font-weight: 680;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.health-card__time {
+  strong {
+    overflow: visible;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: keep-all;
   }
 }
 
 @media (max-width: 1280px) {
   .server-grid,
+  .group-grid,
   .summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1039,10 +1526,15 @@ onMounted(() => {
   .detail-info {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .health-card {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
   .bastion-toolbar,
+  .resource-filters,
   .detail-toolbar {
     align-items: flex-start;
     flex-direction: column;
@@ -1054,11 +1546,18 @@ onMounted(() => {
   }
 
   .server-grid,
+  .group-grid,
   .summary-grid,
   .chart-grid,
   .detail-info,
+  .health-card,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .filter-actions,
+  .filter-actions :deep(.el-select) {
+    width: 100%;
   }
 }
 </style>
