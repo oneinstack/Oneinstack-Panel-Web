@@ -12,6 +12,8 @@ import { initLog } from './build/env/log'
 initLog()
 export default ({ mode }) => {
   const env = globalVar(mode)
+  const proxyTarget = process.env.ONEINSTACK_DEV_PROXY || 'http://192.168.31.109:8089'
+  const proxyOrigin = new URL(proxyTarget).origin
   return defineConfig({
     base: mode === 'production' ? './' : '/',
     plugins: getPlugins(env),
@@ -27,9 +29,53 @@ export default ({ mode }) => {
       port: env.port || 5100,
       proxy: {
         '/v1': {
-          target: process.env.ONEINSTACK_DEV_PROXY || 'http://127.0.0.1:8089',
+          target: proxyTarget,
           secure: false,
-          changeOrigin: true
+          changeOrigin: true,
+          cookieDomainRewrite: 'localhost',
+          configure: (proxy) => {
+            proxy.on('proxyReq', (proxyReq, req) => {
+              const browserReferer = String(req.headers.referer || '')
+              let forwardedReferer = `${proxyOrigin}/`
+              if (browserReferer) {
+                try {
+                  const refererURL = new URL(browserReferer)
+                  forwardedReferer = `${proxyOrigin}${refererURL.pathname}${refererURL.search}`
+                } catch {
+                  forwardedReferer = `${proxyOrigin}/`
+                }
+              }
+              proxyReq.setHeader('origin', proxyOrigin)
+              proxyReq.setHeader('referer', forwardedReferer)
+              const targetHost = new URL(proxyTarget).host
+              proxyReq.setHeader('host', targetHost)
+              console.log('[proxy:req]', {
+                method: req.method,
+                url: req.url,
+                browserOrigin: req.headers.origin || '',
+                browserReferer: req.headers.referer || '',
+                forwardedOrigin: proxyReq.getHeader('origin') || '',
+                forwardedReferer: proxyReq.getHeader('referer') || '',
+                forwardedHost: proxyReq.getHeader('host') || ''
+              })
+            })
+            proxy.on('proxyRes', (proxyRes, req) => {
+              console.log('[proxy:res]', {
+                method: req.method,
+                url: req.url,
+                statusCode: proxyRes.statusCode,
+                allowOrigin: proxyRes.headers['access-control-allow-origin'] || '',
+                setCookie: proxyRes.headers['set-cookie'] ? 'present' : 'absent'
+              })
+            })
+            proxy.on('error', (error, req) => {
+              console.error('[proxy:error]', {
+                method: req.method,
+                url: req.url,
+                message: error.message
+              })
+            })
+          }
         }
       }
     },
