@@ -80,6 +80,16 @@ const conf = reactive({
       }
     },
     {
+      name: '堡垒机',
+      path: '/bastion',
+      icon: 'security',
+      matrixKeys: ['bastion'],
+      activeColor: {
+        light: ['#eab170', '#8B8B8B'],
+        dark: ['#eab170', '#ffffff']
+      }
+    },
+    {
       name: '安全',
       path: '/security',
       icon: 'security',
@@ -230,6 +240,7 @@ const pageDescriptions: Record<string, string> = {
   '/website': '管理站点、域名、证书与运行环境',
   '/database': '管理数据库实例、账号与远程连接',
   '/monitor': '跟踪资源指标、告警规则与通知事件',
+  '/bastion': '管理远程服务器接入、可达性与资源指标',
   '/security': '管理防火墙、登录防护与系统安全',
   '/file': '浏览、上传和维护服务器文件',
   '/log': '追踪关键操作与安全审计记录',
