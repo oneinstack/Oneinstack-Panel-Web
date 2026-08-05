@@ -216,7 +216,7 @@ const hasMenuPermission = (item: NavItem) => {
 }
 const visibleNavList = computed(() =>
   conf.navList.filter((item) => {
-    if (item.adminOnly && !isPrivilegedUser.value) {
+    if (item.adminOnly && !item.matrixKeys?.length && !isPrivilegedUser.value) {
       return false
     }
     return hasMenuPermission(item)

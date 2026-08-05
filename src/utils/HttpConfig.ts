@@ -43,8 +43,10 @@ export default class HttpConfig {
       }
       switch (code) {
         case 'PASSWORD_CHANGE_REQUIRED':
-          System.er('首次登录必须先修改初始密码', { type: 'warning' })
-          System.router.replace('/first-login')
+          if (System.getRouterPath() !== '/first-login') {
+            System.er('首次登录必须先修改初始密码', { type: 'warning' })
+            System.router.replace('/first-login')
+          }
           break
         case HttpCode.LOGIN_EXPIRED:
           System.er(msg, { type: 'error' })

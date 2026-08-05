@@ -97,6 +97,12 @@ const roleTagList = computed(() => currentUser.value?.roles || [])
 const totalAssignedUsers = computed(() => userState.list.filter((item) => (item.roles || []).length > 0).length)
 const totalPendingUsers = computed(() => userState.list.filter((item) => item.mustChangePassword).length)
 const allRoleCodes = computed(() => roles.value.map((item) => item.code))
+const createRoleAllChecked = computed(
+  () => allRoleCodes.value.length > 0 && createUserDialog.form.roleCodes.length === allRoleCodes.value.length
+)
+const createRoleIndeterminate = computed(
+  () => createUserDialog.form.roleCodes.length > 0 && createUserDialog.form.roleCodes.length < allRoleCodes.value.length
+)
 const roleAllChecked = computed(
   () => allRoleCodes.value.length > 0 && roleDialog.roleCodes.length === allRoleCodes.value.length
 )
@@ -201,6 +207,10 @@ const submitRoleUpdate = async () => {
 
 const toggleAllRoles = (value: string | number | boolean) => {
   roleDialog.roleCodes = Boolean(value) ? [...allRoleCodes.value] : []
+}
+
+const toggleCreateAllRoles = (value: string | number | boolean) => {
+  createUserDialog.form.roleCodes = Boolean(value) ? [...allRoleCodes.value] : []
 }
 
 const submitPasswordReset = async () => {
@@ -390,11 +400,23 @@ onMounted(async () => {
             <el-switch v-model="createUserDialog.form.isAdmin" />
           </el-form-item>
           <el-form-item v-if="!createUserDialog.form.isAdmin" label="角色分配">
-            <el-checkbox-group v-model="createUserDialog.form.roleCodes" class="checkbox-grid">
-              <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
-                {{ item.name }}
-              </el-checkbox>
-            </el-checkbox-group>
+            <div class="role-select-panel">
+              <div class="role-dialog-toolbar">
+                <el-checkbox
+                  :model-value="createRoleAllChecked"
+                  :indeterminate="createRoleIndeterminate"
+                  @change="toggleCreateAllRoles"
+                >
+                  全选
+                </el-checkbox>
+                <span class="role-dialog-count">已选 {{ createUserDialog.form.roleCodes.length }} / {{ allRoleCodes.length }}</span>
+              </div>
+              <el-checkbox-group v-model="createUserDialog.form.roleCodes" class="checkbox-grid">
+                <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
+                  {{ item.name }}
+                </el-checkbox>
+              </el-checkbox-group>
+            </div>
           </el-form-item>
         </el-form>
       </div>
@@ -798,6 +820,14 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px 18px;
+}
+
+.role-select-panel {
+  width: 100%;
+
+  .role-dialog-toolbar {
+    margin-bottom: 12px;
+  }
 }
 
 .dialog-form {

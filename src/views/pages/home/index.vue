@@ -608,7 +608,11 @@ onMounted(() => {
                         </div>
                       </div>
                     </div>
-                    <basic-chart :option="conf.monitorData.chartOptions as EChartsOption" class="chart-box" />
+                    <basic-chart
+                      v-if="conf.monitorData.chartOptions"
+                      :option="conf.monitorData.chartOptions as EChartsOption"
+                      class="chart-box"
+                    />
                   </div>
                 </div>
               </el-col>
@@ -635,6 +639,7 @@ onMounted(() => {
                   <div class="basic-card__body" style="flex: 1">
                     <div class="norule">
                       <basic-chart
+                        v-if="conf.statusData.chartOptions"
                         :option="conf.statusData.chartOptions as EChartsOption"
                         style="width: 256px; height: 256px"
                       />

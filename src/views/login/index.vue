@@ -59,11 +59,15 @@ const conf = reactive({
         }
 
         sconfig.login(res)
-        try {
-          const matrixResponse = await Api.getAccessMatrix()
-          sconfig.setAccessMatrix(matrixResponse?.data || {})
-        } catch {
+        if (res.mustChangePassword) {
           sconfig.setAccessMatrix({})
+        } else {
+          try {
+            const matrixResponse = await Api.getAccessMatrix()
+            sconfig.setAccessMatrix(matrixResponse?.data || {})
+          } catch {
+            sconfig.setAccessMatrix({})
+          }
         }
 
         ElMessage.success('登录成功')

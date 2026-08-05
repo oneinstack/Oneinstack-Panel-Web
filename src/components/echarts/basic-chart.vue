@@ -4,7 +4,7 @@ import * as echarts from 'echarts'
 import type { EChartsOption, EChartsType } from 'echarts'
 
 interface Props {
-  option: EChartsOption
+  option?: EChartsOption | null
   onInit?: (instance: EChartsType) => void
 }
 
@@ -22,14 +22,15 @@ watch(
 
 const observer = new ResizeObserver(() => chartInstance.resize())
 onMounted(() => {
+  if (!chartBox.value) return
   chartInstance = echarts.init(chartBox.value)
   props.onInit?.(chartInstance)
-  chartInstance.setOption(props.option, true)
+  if (props.option) chartInstance.setOption(props.option, true)
   observer.observe(chartBox.value as HTMLElement)
 })
 
 onUnmounted(() => {
-  chartInstance.dispose()
+  chartInstance?.dispose()
   observer.disconnect()
 })
 </script>

@@ -194,8 +194,8 @@ const chartLabels = computed(() =>
 
 const usageChartOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['CPU', '内存', '磁盘'] },
-  grid: { left: 42, right: 18, top: 42, bottom: 34 },
+  legend: { show: false },
+  grid: { left: 42, right: 18, top: 14, bottom: 34 },
   xAxis: { type: 'category', boundaryGap: false, data: chartLabels.value },
   yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
   series: [
@@ -210,10 +210,10 @@ const networkChartOption = computed<EChartsOption>(() => ({
     trigger: 'axis',
     valueFormatter: (value) => formatRate(Number(value))
   },
-  legend: { data: ['接收', '发送', '磁盘读', '磁盘写'] },
-  grid: { left: 54, right: 18, top: 42, bottom: 34 },
+  legend: { show: false },
+  grid: { left: 78, right: 18, top: 14, bottom: 34 },
   xAxis: { type: 'category', boundaryGap: false, data: chartLabels.value },
-  yAxis: { type: 'value', axisLabel: { formatter: (value: number) => formatRate(value) } },
+  yAxis: { type: 'value', axisLabel: { align: 'right', formatter: (value: number) => formatRate(value) } },
   series: [
     { name: '接收', type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkReceiveBps) },
     { name: '发送', type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkSendBps) },
@@ -224,8 +224,8 @@ const networkChartOption = computed<EChartsOption>(() => ({
 
 const loadChartOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['load1', 'load5', 'load15'] },
-  grid: { left: 42, right: 18, top: 42, bottom: 34 },
+  legend: { show: false },
+  grid: { left: 42, right: 18, top: 14, bottom: 34 },
   xAxis: { type: 'category', boundaryGap: false, data: chartLabels.value },
   yAxis: { type: 'value' },
   series: [
@@ -752,11 +752,28 @@ onMounted(() => {
         <div v-loading="metricsLoading" class="chart-grid">
           <section class="chart-card">
             <div class="chart-title">CPU / 内存 / 磁盘</div>
-            <basic-chart :option="usageChartOption" />
+            <div class="chart-legend">
+              <span class="chart-legend__item is-blue">CPU</span>
+              <span class="chart-legend__item is-green">内存</span>
+              <span class="chart-legend__item is-yellow">磁盘</span>
+            </div>
+            <div class="chart-body">
+              <basic-chart v-if="metrics.length" :option="usageChartOption" />
+              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+            </div>
           </section>
           <section class="chart-card">
             <div class="chart-title">网络与磁盘吞吐</div>
-            <basic-chart :option="networkChartOption" />
+            <div class="chart-legend">
+              <span class="chart-legend__item is-blue">接收</span>
+              <span class="chart-legend__item is-green">发送</span>
+              <span class="chart-legend__item is-yellow">磁盘读</span>
+              <span class="chart-legend__item is-red">磁盘写</span>
+            </div>
+            <div class="chart-body">
+              <basic-chart v-if="metrics.length" :option="networkChartOption" />
+              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+            </div>
           </section>
           <section class="chart-card">
             <div class="chart-title">
@@ -774,7 +791,15 @@ onMounted(() => {
                 <el-icon class="chart-title__help"><InfoFilled /></el-icon>
               </el-tooltip>
             </div>
-            <basic-chart :option="loadChartOption" />
+            <div class="chart-legend">
+              <span class="chart-legend__item is-blue">load1</span>
+              <span class="chart-legend__item is-green">load5</span>
+              <span class="chart-legend__item is-yellow">load15</span>
+            </div>
+            <div class="chart-body">
+              <basic-chart v-if="metrics.length" :option="loadChartOption" />
+              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+            </div>
           </section>
           <section class="health-card">
             <div class="health-card__time">
@@ -1471,10 +1496,74 @@ onMounted(() => {
 
 .chart-card {
   height: 300px;
+  display: flex;
+  flex-direction: column;
 }
 
-.chart-card :deep(.chart-box) {
-  height: calc(100% - 28px);
+.chart-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+}
+
+.chart-body :deep(.chart-box) {
+  height: 100%;
+}
+
+.chart-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+  pointer-events: none;
+}
+
+.chart-legend {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.chart-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &::before {
+    width: 22px;
+    height: 12px;
+    border-bottom: 3px solid currentColor;
+    border-radius: 999px;
+    content: '';
+  }
+
+  &.is-blue {
+    color: #5470c6;
+  }
+
+  &.is-green {
+    color: #91cc75;
+  }
+
+  &.is-yellow {
+    color: #fac858;
+  }
+
+  &.is-red {
+    color: #ee6666;
+  }
 }
 
 .health-card {

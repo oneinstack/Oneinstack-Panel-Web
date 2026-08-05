@@ -69,7 +69,7 @@ export const initRouter = () => {
     if (authenticated && !mustChangePassword && to.path === '/first-login')
       return next('/')
     if (authenticated && whiteList.includes(to.path)) return next('/')
-    if (authenticated && Object.keys(sconfig.menuAccess || {}).length === 0) {
+    if (authenticated && !mustChangePassword && Object.keys(sconfig.menuAccess || {}).length === 0) {
       try {
         const matrixResponse = await Api.getAccessMatrix()
         sconfig.setAccessMatrix(matrixResponse?.data || {})
