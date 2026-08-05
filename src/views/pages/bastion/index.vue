@@ -18,6 +18,7 @@ interface BastionServer {
   port: number
   username: string
   authMethod: AuthMethod
+  keyConfigured?: boolean
   tags?: string
   enabled: boolean
   status: BastionStatus
@@ -70,6 +71,7 @@ const selectedServer = ref<BastionServer | null>(null)
 const metrics = ref<BastionMetric[]>([])
 const timeRange = ref<TimeRange>('24h')
 const editingId = ref<number | null>(null)
+const formLoading = ref(false)
 const testResult = ref<ConnectionTestResult | null>(null)
 const groupFilter = ref('')
 const statusFilter = ref<BastionStatus | ''>('')
@@ -81,7 +83,8 @@ const form = reactive({
   username: 'root',
   authMethod: 'password' as AuthMethod,
   password: '',
-  keyPath: '',
+  privateKey: '',
+  keyConfigured: false,
   tags: '',
   enabled: true
 })
@@ -108,11 +111,21 @@ const rules = computed<FormRules>(() => ({
     message: '请输入 SSH 密码',
     trigger: 'blur'
   }],
-  keyPath: [{
-    required: form.authMethod === 'key',
-    message: '请输入私钥路径',
-    trigger: 'blur'
-  }]
+  privateKey: [
+    {
+      required: form.authMethod === 'key' && (!editingId.value || !form.keyConfigured),
+      message: '请输入完整 SSH 私钥文本',
+      trigger: 'blur'
+    },
+    {
+      validator: (_rule, value, callback) => {
+        if (form.authMethod !== 'key' || !value) return callback()
+        if (String(value).length > 64 * 1024) return callback(new Error('私钥文本不能超过 64KB'))
+        callback()
+      },
+      trigger: 'blur'
+    }
+  ]
 }))
 
 const totalCount = computed(() => servers.value.length)
@@ -266,11 +279,17 @@ const openDetail = async (server: BastionServer) => {
   selectedServer.value = server
   detailVisible.value = true
   metrics.value = []
+  try {
+    const { data } = await Api.getBastionServer(server.id)
+    selectedServer.value = { ...server, ...(data || {}) }
+  } catch {
+    selectedServer.value = server
+  }
   await loadMetrics(server.id)
 }
 
-const openForm = (server?: BastionServer) => {
-  editingId.value = server?.id || null
+const fillForm = (server?: BastionServer) => {
+  editingId.value = server?.id ?? null
   testResult.value = null
   Object.assign(form, {
     name: server?.name || '',
@@ -279,11 +298,31 @@ const openForm = (server?: BastionServer) => {
     username: server?.username || 'root',
     authMethod: server?.authMethod || 'password',
     password: '',
-    keyPath: '',
+    privateKey: '',
+    keyConfigured: Boolean(server?.keyConfigured),
     tags: server?.tags || '',
     enabled: server?.enabled ?? true
   })
   formVisible.value = true
+}
+
+const openForm = async (server?: BastionServer) => {
+  if (!server) {
+    formLoading.value = false
+    fillForm()
+    return
+  }
+  formVisible.value = true
+  formLoading.value = true
+  try {
+    const { data } = await Api.getBastionServer(server.id)
+    fillForm({ ...server, ...(data || {}) })
+  } catch {
+    fillForm(server)
+    ElMessage.warning('读取服务器详情失败，已使用列表信息初始化表单')
+  } finally {
+    formLoading.value = false
+  }
 }
 
 const closeForm = () => {
@@ -307,16 +346,18 @@ const submitForm = async () => {
       enabled: form.enabled
     }
     if (form.authMethod === 'password' && form.password) payload.password = form.password
-    if (form.authMethod === 'key') payload.keyPath = form.keyPath
+    if (form.authMethod === 'key' && form.privateKey.trim()) payload.privateKey = form.privateKey
     if (editingId.value) {
       await Api.updateBastionServer(editingId.value, payload)
       ElMessage.success('服务器已更新')
     } else {
       if (form.authMethod === 'password') payload.password = form.password
+      if (form.authMethod === 'key') payload.privateKey = form.privateKey
       await Api.addBastionServer(payload)
       ElMessage.success('服务器已添加')
     }
     form.password = ''
+    form.privateKey = ''
     await fetchServers()
     closeForm()
   } finally {
@@ -346,14 +387,31 @@ const deleteServer = async (server: BastionServer) => {
 }
 
 const testConnection = async (server: BastionServer) => {
-  testingId.value = server.id
   try {
-    const { data } = await Api.testBastionServer(server.id)
+    let payload: { password?: string } = {}
+    if (server.authMethod === 'password') {
+      const { value } = await ElMessageBox.prompt(
+        `请输入 ${server.username}@${server.host}:${server.port} 的 SSH 密码`,
+        '测试 SSH 密码连接',
+        {
+          inputType: 'password',
+          inputPlaceholder: 'SSH 密码',
+          confirmButtonText: '测试连接',
+          cancelButtonText: '取消',
+          inputValidator: (value) => Boolean(value) || '请输入 SSH 密码'
+        }
+      )
+      payload = { password: value }
+    }
+    testingId.value = server.id
+    const { data } = await Api.testBastionServer(server.id, payload)
     if (data?.reachable) {
       ElMessage.success(`连接可达：${data.hostname || server.host}`)
     } else {
       ElMessage.error(data?.error || '连接不可达')
     }
+  } catch {
+    // 用户取消密码输入时不提示错误。
   } finally {
     testingId.value = null
   }
@@ -642,7 +700,14 @@ onMounted(() => {
       width="640px"
       :on-close="closeForm"
     >
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="112px" class="server-form">
+      <el-form
+        ref="formRef"
+        v-loading="formLoading"
+        :model="form"
+        :rules="rules"
+        label-width="112px"
+        class="server-form"
+      >
         <el-form-item label="服务器名称" prop="name">
           <el-input v-model="form.name" placeholder="web-prod-01" />
         </el-form-item>
@@ -674,8 +739,28 @@ onMounted(() => {
             :placeholder="editingId ? '留空表示不修改密码' : '请输入 SSH 密码'"
           />
         </el-form-item>
-        <el-form-item v-else label="私钥路径" prop="keyPath">
-          <el-input v-model="form.keyPath" placeholder="/root/.ssh/id_rsa" />
+        <el-form-item v-else label="SSH 私钥" prop="privateKey">
+          <div class="private-key-field">
+            <el-alert
+              v-if="editingId && form.keyConfigured"
+              type="info"
+              title="私钥已配置，留空表示不替换"
+              :closable="false"
+              show-icon
+            />
+            <el-input
+              v-model="form.privateKey"
+              type="textarea"
+              :rows="8"
+              resize="vertical"
+              maxlength="65536"
+              show-word-limit
+              :placeholder="editingId ? '粘贴新的 SSH 私钥文本；留空表示保留原私钥' : '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----'"
+            />
+            <span class="private-key-field__hint">
+              请粘贴完整 SSH 私钥文本；当前不支持带口令的加密私钥。
+            </span>
+          </div>
         </el-form-item>
         <el-form-item label="标签" prop="tags">
           <el-input v-model="form.tags" placeholder="生产环境,Web 服务器" />
@@ -728,7 +813,12 @@ onMounted(() => {
           </div>
           <div>
             <small>认证方式</small>
-            <strong>{{ selectedServer.authMethod === 'key' ? '私钥' : '密码' }}</strong>
+            <strong>
+              {{ selectedServer.authMethod === 'key'
+                ? `私钥 · ${selectedServer.keyConfigured ? '已配置' : '未配置'}`
+                : '密码'
+              }}
+            </strong>
           </div>
           <div>
             <small>最后在线</small>
@@ -1295,6 +1385,24 @@ onMounted(() => {
 .server-form {
   :deep(.el-input-number) {
     width: 100%;
+  }
+}
+
+.private-key-field {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  :deep(.el-textarea__inner) {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    line-height: 1.45;
+  }
+
+  &__hint {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.5;
   }
 }
 

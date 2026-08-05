@@ -231,27 +231,30 @@ const initializeTerminal = async () => {
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
     fontSize: 14,
     lineHeight: 1.25,
+    minimumContrastRatio: 7,
     scrollback: 5000,
     theme: {
       background: '#0b1220',
-      foreground: '#d8e1ef',
+      foreground: '#f8fafc',
       cursor: sapp.accentColor,
-      selectionBackground: '#314158',
-      black: '#111827',
+      selectionBackground: '#415575',
+      black: '#64748b',
       red: '#ff6b6b',
       green: '#55d187',
       yellow: '#f6c453',
       blue: '#69a7ff',
       magenta: '#c792ea',
       cyan: '#56cfe1',
-      white: '#e5edf7'
+      white: '#f8fafc',
+      brightBlack: '#94a3b8',
+      brightWhite: '#ffffff'
     }
   })
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   if (terminalDiv.value) terminal.open(terminalDiv.value)
   fitAddon.fit()
-  terminal.write('\x1b[38;5;245mOneinStack isolated terminal · waiting for authentication\x1b[0m\r\n')
+  terminal.write('\x1b[1;38;5;255mOneinStack isolated terminal · waiting for authentication\x1b[0m\r\n')
   terminal.onData(data => {
     if (socket?.readyState === WebSocket.OPEN) socket.send(encodeInput(data))
   })
@@ -457,7 +460,7 @@ onBeforeUnmount(() => {
     height: 42px;
     padding: 0 15px;
     border-bottom: 1px solid #202b3d;
-    color: #8fa0b7;
+    color: #b7c5d9;
     background: #111a2a;
     font-family: monospace;
     font-size: 11px;
@@ -490,11 +493,16 @@ onBeforeUnmount(() => {
   height: calc(100% - 42px);
   min-height: 0;
   overflow: hidden;
-  padding: 10px 6px;
+  padding: 12px 8px;
 }
 
 .terminal-screen :deep(.xterm) {
   height: 100%;
+  color: #f8fafc;
+}
+
+.terminal-screen :deep(.xterm-rows) {
+  text-shadow: 0 0 1px rgb(248 250 252 / 35%);
 }
 
 .terminal-screen :deep(.xterm-screen),
@@ -514,9 +522,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   flex-direction: column;
   gap: 8px;
-  color: #6f819a;
-  background: rgb(11 18 32 / 72%);
-  backdrop-filter: blur(2px);
+  color: #a9bad0;
+  background: rgb(11 18 32 / 22%);
   pointer-events: none;
 
   .el-icon {
@@ -524,10 +531,11 @@ onBeforeUnmount(() => {
   }
 
   strong {
-    color: #aebbd0;
+    color: #e2e8f0;
   }
 
   span {
+    color: #b7c5d9;
     font-size: 12px;
   }
 }
