@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   Delete,
   Document,
@@ -17,6 +17,8 @@ import ContainerCreateDrawer from './components/ContainerCreateDrawer.vue'
 import ContainerResourceDialog from './components/ContainerResourceDialog.vue'
 import ContainerDetailDrawer from './components/ContainerDetailDrawer.vue'
 import ContainerLogsDialog from './components/ContainerLogsDialog.vue'
+import ContainerTaskDrawer from './components/ContainerTaskDrawer.vue'
+import containerTaskStore from '@/sstore/containerTask'
 import type {
   ContainerAction,
   ContainerItem,
@@ -91,6 +93,10 @@ const detailType = ref<DetailType>('container')
 const detailTarget = ref<any>(null)
 const detailData = ref<Record<string, any> | null>(null)
 const detailStats = ref<ContainerStats | null>(null)
+const taskDrawer = reactive({
+  show: false,
+  taskId: ''
+})
 let statsTimer: ReturnType<typeof setInterval> | undefined
 
 const form = reactive({
@@ -757,6 +763,19 @@ const buildVolumePayload = () => ({
   labelsText: form.labelsText.trim() || undefined
 })
 
+const extractTaskResult = (response: any) => response?.data || response
+
+const openContainerTask = (result: any, request: Record<string, any>, targetTab: 'containers' | 'images') => {
+  const data = extractTaskResult(result)
+  const taskId = data?.taskId || data?.id
+  if (!taskId) throw new Error('后端未返回任务 ID')
+  containerTaskStore.acceptCreated(data, request)
+  taskDrawer.taskId = taskId
+  taskDrawer.show = true
+  dialogVisible.value = false
+  activeTab.value = targetTab
+}
+
 const submitDialog = async () => {
   if (dialogType.value === 'container') await createDrawerRef.value?.validate()
   else await resourceDialogRef.value?.validate()
@@ -771,14 +790,15 @@ const submitDialog = async () => {
         return
       }
       await confirmContainerCreate(payload)
-      await Api.createContainer(payload)
-      ElMessage.success('容器创建成功')
-      activeTab.value = 'containers'
+      const result = await Api.createContainer(payload)
+      openContainerTask(result, { ...payload, operation: 'create' }, 'containers')
+      ElMessage.success('容器创建任务已创建，可在后台继续运行')
     }
     if (dialogType.value === 'image') {
-      await Api.pullContainerImage(buildImagePullPayload())
-      ElMessage.success('镜像拉取成功')
-      activeTab.value = 'images'
+      const payload = buildImagePullPayload()
+      const result = await Api.pullContainerImage(payload)
+      openContainerTask(result, { ...payload, operation: 'pull' }, 'images')
+      ElMessage.success('镜像拉取任务已创建，可在后台继续运行')
     }
     if (dialogType.value === 'image-import') {
       if (!importFile.value) throw new Error('请选择 tar 镜像文件')
@@ -792,9 +812,10 @@ const submitDialog = async () => {
         confirmButtonText: '确认构建',
         cancelButtonText: '取消'
       })
-      await Api.buildContainerImage(buildImageBuildPayload())
-      ElMessage.success('镜像构建成功')
-      activeTab.value = 'images'
+      const payload = buildImageBuildPayload()
+      const result = await Api.buildContainerImage(payload)
+      openContainerTask(result, { ...payload, buildName: payload.name, operation: 'build' }, 'images')
+      ElMessage.success('镜像构建任务已创建，可在后台继续运行')
     }
     if (dialogType.value === 'image-tag') {
       if (!dialogTarget.value?.ID) throw new Error('未选择镜像')
@@ -1351,9 +1372,25 @@ const handlePageSizeChange = (pageSize: number) => {
   void loadActiveTab(true)
 }
 
+const refreshTaskAffectedLists = async () => {
+  loadedTabs.containers = false
+  loadedTabs.images = false
+  if (activeTab.value === 'containers' || activeTab.value === 'images') {
+    await loadActiveTab(true)
+  }
+}
+
+watch(
+  () => containerTaskStore.terminalRevision,
+  () => {
+    void refreshTaskAffectedLists()
+  }
+)
+
 onMounted(async () => {
   await loadRuntime()
   await loadActiveTab()
+  void containerTaskStore.loadActive()
 })
 
 onBeforeUnmount(() => {
@@ -2075,6 +2112,12 @@ onBeforeUnmount(() => {
       :tail="logTail"
       @update:tail="logTail = $event"
       @refresh="loadLogs()"
+    />
+
+    <ContainerTaskDrawer
+      v-model="taskDrawer.show"
+      :task-id="taskDrawer.taskId"
+      @finished="refreshTaskAffectedLists"
     />
   </div>
 </template>

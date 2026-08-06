@@ -556,7 +556,23 @@ export const Api = {
     labels?: Record<string, string>
     environment?: Record<string, string>
   }) => {
-    return fetchJson('POST', '/containers', obj)
+    return postAccepted('/containers', obj)
+  },
+  /** 获取容器异步任务列表 */
+  getContainerTasks: (obj?: { page?: number; pageSize?: number; active?: boolean; operation?: string; status?: string }) => {
+    return http.get('/containers/tasks', obj)
+  },
+  /** 获取容器异步任务详情 */
+  getContainerTask: (taskId: string) => {
+    return http.get(`/containers/tasks/${encodeURIComponent(taskId)}`)
+  },
+  /** 增量读取容器任务日志 */
+  getContainerTaskLog: (taskId: string, obj?: { cursor?: number; limit?: number }) => {
+    return http.get(`/containers/tasks/${encodeURIComponent(taskId)}/log`, obj)
+  },
+  /** 取消容器异步任务 */
+  cancelContainerTask: (taskId: string) => {
+    return http.post(`/containers/tasks/${encodeURIComponent(taskId)}/cancel`, {})
   },
   /** 获取容器详情 */
   getContainerDetail: (id: string) => {
