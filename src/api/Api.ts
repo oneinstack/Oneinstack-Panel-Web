@@ -1,3 +1,10 @@
+import System from '@/utils/System'
+
+const apiUrl = (path: string) => {
+  const base = String(System.env.API || '/v1').replace(/\/$/, '')
+  return `${base}${path.startsWith('/') ? path : `/${path}`}`
+}
+
 /**
  * The legacy HTTP transport resolves only status 200. Task creation APIs
  * correctly return 202 Accepted, so bridge their success callback into a
@@ -30,6 +37,51 @@ const requestJson = async (
     headers: method === 'GET' ? undefined : { 'Content-Type': 'application/json' }
   }
   return await http.get(request as any, payload || {})
+}
+
+const fetchFormAccepted = async (url: string, formData: FormData) => {
+  const response = await fetch(apiUrl(url), {
+    method: 'POST',
+    body: formData,
+    credentials: 'include'
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
+    throw new Error(data?.error?.detail || data?.message || '请求失败')
+  }
+  return data
+}
+
+const fetchBlob = async (url: string) => {
+  const response = await fetch(apiUrl(url), {
+    method: 'GET',
+    credentials: 'include'
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}))
+    throw new Error(data?.error?.detail || data?.message || '下载失败')
+  }
+  return {
+    blob: await response.blob(),
+    disposition: response.headers.get('Content-Disposition') || ''
+  }
+}
+
+const fetchJson = async (method: 'POST' | 'PUT', url: string, payload: Record<string, any>) => {
+  const response = await fetch(apiUrl(url), {
+    method,
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  })
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
+    throw new Error(data?.error?.detail || data?.message || '请求失败')
+  }
+  return data
 }
 
 export const Api = {
@@ -344,6 +396,210 @@ export const Api = {
     obj?: { from?: string; to?: string; limit?: number }
   ) => {
     return http.get(`/bastion/servers/${id}/metrics`, obj)
+  },
+  /** 获取 Docker/Compose 运行时状态 */
+  getContainerRuntime: () => {
+    return http.get('/containers/runtime')
+  },
+  /** 获取容器列表 */
+  getContainers: (obj?: { page?: number; pageSize?: number; search?: string; status?: string }) => {
+    return http.get('/containers', obj)
+  },
+  /** 创建容器 */
+  createContainer: (obj: {
+    name: string
+    image: string
+    ports?: Array<{ hostIp?: string; hostPort: number; containerPort: number; protocol?: string }>
+    networks?: string[]
+    ipv4?: string
+    ipv6?: string
+    mounts?: Array<{ source: string; target: string; readOnly: boolean }>
+    command?: string[]
+    entrypoint?: string[]
+    autoRemove?: boolean
+    privileged?: boolean
+    tty?: boolean
+    openStdin?: boolean
+    restart?: string
+    cpuWeight?: number
+    cpuLimit?: number
+    memoryLimitMB?: number
+    labels?: Record<string, string>
+    environment?: Record<string, string>
+  }) => {
+    return fetchJson('POST', '/containers', obj)
+  },
+  /** 执行容器生命周期操作 */
+  runContainerAction: (
+    id: string,
+    obj: { action: string; confirm?: boolean; force?: boolean }
+  ) => {
+    return http.post(`/containers/${encodeURIComponent(id)}/actions`, obj)
+  },
+  /** 获取容器日志 */
+  getContainerLogs: (id: string, obj?: { tail?: number }) => {
+    return http.get(`/containers/${encodeURIComponent(id)}/logs`, obj)
+  },
+  /** 获取镜像列表 */
+  getContainerImages: (obj?: { page?: number; pageSize?: number; search?: string }) => {
+    return http.get('/containers/images', obj)
+  },
+  /** 拉取镜像 */
+  pullContainerImage: (obj: { reference?: string; registryId?: number; imageName?: string }) => {
+    return postAccepted('/containers/images/pull', obj)
+  },
+  /** 导入镜像 tar 文件 */
+  importContainerImage: (file: File) => {
+    const payload = new FormData()
+    payload.append('file', file)
+    return fetchFormAccepted('/containers/images/import', payload)
+  },
+  /** 构建镜像 */
+  buildContainerImage: (obj: {
+    name: string
+    dockerfile?: string
+    contextPath?: string
+    dockerfilePath?: string
+    labels?: Record<string, string>
+    labelsText?: string
+  }) => {
+    return postAccepted('/containers/images/build', obj)
+  },
+  /** 修改镜像标签 */
+  tagContainerImage: (
+    id: string,
+    obj: { reference: string; removeOther?: boolean; confirm?: boolean }
+  ) => {
+    return http.post(`/containers/images/${encodeURIComponent(id)}/tag`, obj)
+  },
+  /** 推送镜像 */
+  pushContainerImage: (obj: { reference?: string; registryId?: number; imageName?: string }) => {
+    return postAccepted('/containers/images/push', obj)
+  },
+  /** 导出镜像 tar 文件 */
+  exportContainerImage: (id: string) => {
+    return fetchBlob(`/containers/images/${encodeURIComponent(id)}/export`)
+  },
+  /** 清理悬空镜像 */
+  pruneContainerImages: () => {
+    return http.post('/containers/images/prune', { confirm: true })
+  },
+  /** 清理构建缓存 */
+  pruneContainerBuildCache: () => {
+    return http.post('/containers/images/build-cache/prune', { confirm: true })
+  },
+  /** 删除镜像 */
+  deleteContainerImage: (id: string) => {
+    return requestJson('DELETE', `/containers/images/${encodeURIComponent(id)}?confirm=true`)
+  },
+  /** 获取 Docker 网络列表 */
+  getContainerNetworks: (obj?: { page?: number; pageSize?: number; search?: string }) => {
+    return http.get('/containers/networks', obj)
+  },
+  /** 创建 Docker 网络 */
+  createContainerNetwork: (obj: { name: string; driver?: string }) => {
+    return http.post('/containers/networks', obj)
+  },
+  /** 删除 Docker 网络 */
+  deleteContainerNetwork: (id: string) => {
+    return requestJson('DELETE', `/containers/networks/${encodeURIComponent(id)}?confirm=true`)
+  },
+  /** 批量删除 Docker 网络 */
+  batchDeleteContainerNetworks: (ids: string[]) => {
+    return http.post('/containers/networks/batch/delete', { ids, confirm: true })
+  },
+  /** 获取 Docker 存储卷列表 */
+  getContainerVolumes: (obj?: { page?: number; pageSize?: number; search?: string }) => {
+    return http.get('/containers/volumes', obj)
+  },
+  /** 创建 Docker 存储卷 */
+  createContainerVolume: (obj: {
+    name: string
+    driver?: string
+    nfs?: boolean
+    options?: Record<string, string>
+    optionsText?: string
+    labels?: Record<string, string>
+    labelsText?: string
+  }) => {
+    return http.post('/containers/volumes', obj)
+  },
+  /** 删除 Docker 存储卷 */
+  deleteContainerVolume: (id: string) => {
+    return requestJson('DELETE', `/containers/volumes/${encodeURIComponent(id)}?confirm=true`)
+  },
+  /** 批量删除 Docker 存储卷 */
+  batchDeleteContainerVolumes: (ids: string[]) => {
+    return http.post('/containers/volumes/batch/delete', { ids, confirm: true })
+  },
+  /** 获取 Compose 项目列表 */
+  getContainerCompose: () => {
+    return http.get('/containers/compose')
+  },
+  /** 获取编排模板能力状态 */
+  getContainerTemplates: () => {
+    return http.get('/containers/templates')
+  },
+  /** 创建编排模板 */
+  createContainerTemplate: (obj: { name: string; description?: string; content: string }) => {
+    return http.post('/containers/templates', obj)
+  },
+  /** 更新编排模板 */
+  updateContainerTemplate: (id: number | string, obj: { name: string; description?: string; content: string }) => {
+    return requestJson('PUT', `/containers/templates/${encodeURIComponent(id)}`, obj)
+  },
+  /** 删除编排模板 */
+  deleteContainerTemplate: (id: number | string) => {
+    return requestJson('DELETE', `/containers/templates/${encodeURIComponent(id)}?confirm=true`)
+  },
+  /** 获取 Registry 凭据能力状态 */
+  getContainerRegistries: (obj?: { page?: number; pageSize?: number; search?: string }) => {
+    return http.get('/containers/registries', obj)
+  },
+  /** 新增 Registry */
+  createContainerRegistry: (obj: {
+    name: string
+    address: string
+    protocol: 'http' | 'https'
+    authEnabled?: boolean
+    username?: string
+    password?: string
+  }) => {
+    return http.post('/containers/registries', obj)
+  },
+  /** 更新 Registry */
+  updateContainerRegistry: (
+    id: number | string,
+    obj: {
+      name: string
+      address: string
+      protocol: 'http' | 'https'
+      authEnabled?: boolean
+      username?: string
+      password?: string
+    }
+  ) => {
+    return requestJson('PUT', `/containers/registries/${encodeURIComponent(id)}`, obj)
+  },
+  /** 删除 Registry */
+  deleteContainerRegistry: (id: number | string) => {
+    return requestJson('DELETE', `/containers/registries/${encodeURIComponent(id)}?confirm=true`)
+  },
+  /** 测试 Registry 连通性 */
+  testContainerRegistry: (id: number | string) => {
+    return http.post(`/containers/registries/${encodeURIComponent(id)}/test`, {})
+  },
+  /** 读取 Docker daemon 配置 */
+  getContainerConfig: () => {
+    return http.get('/containers/config')
+  },
+  /** 保存 Docker daemon 配置 */
+  saveContainerConfig: (obj: { raw?: string; basic?: Record<string, unknown> }) => {
+    return requestJson('PUT', '/containers/config', obj)
+  },
+  /** 停止或重启 Docker 服务 */
+  runContainerRuntimeAction: (obj: { action: 'stop' | 'restart'; confirm: true }) => {
+    return http.post('/containers/runtime/actions', obj)
   },
   /** 获取安装任务列表 */
   getSoftwareTasks: (obj?: any) => {
@@ -683,6 +939,36 @@ export const Api = {
   /** 获取面板访问配置自动应用/恢复事务 */
   getPanelNetworkTransaction: (transactionId: string) => {
     return http.get(`/sys/network/transactions/${transactionId}`)
+  },
+  /** 分页查询配置快照 */
+  getConfigurationSnapshots: (obj?: {
+    page?: number
+    pageSize?: number
+    resourceType?: string
+    resourceId?: string
+    status?: string
+  }) => {
+    return http.get('/config-snapshots', obj)
+  },
+  /** 查询配置快照详情 */
+  getConfigurationSnapshot: (id: string) => {
+    return http.get(`/config-snapshots/${encodeURIComponent(id)}`)
+  },
+  /** 查询配置快照差异 */
+  getConfigurationSnapshotDiff: (id: string) => {
+    return http.get(`/config-snapshots/${encodeURIComponent(id)}/diff`)
+  },
+  /** 预览配置快照回滚 */
+  previewConfigurationSnapshotRestore: (id: string) => {
+    return http.post(`/config-snapshots/${encodeURIComponent(id)}/restore/preview`, {})
+  },
+  /** 执行配置快照回滚 */
+  restoreConfigurationSnapshot: (id: string, obj: { force: boolean }) => {
+    return postAccepted(`/config-snapshots/${encodeURIComponent(id)}/restore`, obj)
+  },
+  /** 删除配置快照 */
+  deleteConfigurationSnapshot: (id: string) => {
+    return requestJson('DELETE', `/config-snapshots/${encodeURIComponent(id)}`)
   },
   /** 修改标题 */
   updateSystemTitley: (obj: any) => {

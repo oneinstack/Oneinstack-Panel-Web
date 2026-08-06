@@ -1,0 +1,2605 @@
+<script setup lang="ts">
+import { computed, h, onMounted, reactive, ref } from 'vue'
+import {
+  Delete,
+  Document,
+  Plus,
+  Refresh,
+  SwitchButton,
+  VideoPause,
+  VideoPlay
+} from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { Api } from '@/api/Api'
+import sconfig from '@/sstore/sconfig'
+
+type ResourceTab = 'containers' | 'images' | 'networks' | 'volumes' | 'compose'
+  | 'templates'
+  | 'registries'
+  | 'config'
+type DialogType = 'container'
+  | 'image'
+  | 'image-import'
+  | 'image-build'
+  | 'image-tag'
+  | 'image-push'
+  | 'network'
+  | 'volume'
+  | 'registry'
+  | 'template'
+type MountMode = 'bind' | 'volume'
+type MountPermission = 'rw' | 'ro'
+type PortPublishMode = 'ports' | 'all'
+type PortProtocol = 'tcp' | 'udp' | 'sctp'
+
+interface RuntimeInfo {
+  available: boolean
+  dockerVersion?: string
+  composeVersion?: string
+  serverVersion?: string
+  message?: string
+}
+
+interface ContainerItem {
+  ID: string
+  Names: string
+  Image: string
+  Command?: string
+  CreatedAt?: string
+  Status?: string
+  Ports?: string
+  RunningFor?: string
+  LocalVolumes?: string
+  Size?: string
+  Mounts?: string
+  Networks?: string
+}
+
+interface ImageItem {
+  ID: string
+  Repository: string
+  Tag: string
+  CreatedSince?: string
+  CreatedAt?: string
+  Size?: string
+  Containers?: string | number
+  used?: boolean
+}
+
+interface NetworkItem {
+  ID: string
+  Name: string
+  Driver?: string
+  Scope?: string
+}
+
+interface VolumeItem {
+  Name: string
+  Driver?: string
+  Scope?: string
+  Mountpoint?: string
+  Options?: Record<string, string>
+  Labels?: Record<string, string>
+}
+
+interface RegistryItem {
+  id: number | string
+  name: string
+  address: string
+  protocol: 'http' | 'https'
+  authEnabled?: boolean
+  username?: string
+  status?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+interface TemplateItem {
+  id?: number | string
+  name: string
+  description?: string
+  content?: string
+  supported?: boolean
+  message?: string
+}
+
+const activeTab = ref<ResourceTab>('containers')
+const runtime = ref<RuntimeInfo | null>(null)
+const runtimeLoading = ref(false)
+const listLoading = ref(false)
+const actionLoading = ref('')
+const containers = ref<ContainerItem[]>([])
+const images = ref<ImageItem[]>([])
+const networks = ref<NetworkItem[]>([])
+const volumes = ref<VolumeItem[]>([])
+const composeProjects = ref<Record<string, any>[]>([])
+const registries = ref<RegistryItem[]>([])
+const templates = ref<TemplateItem[]>([])
+const templatesSupported = ref(true)
+const templatesMessage = ref('')
+const dockerConfig = ref<Record<string, any> | null>(null)
+const loadedTabs = reactive<Record<ResourceTab, boolean>>({
+  containers: false,
+  images: false,
+  networks: false,
+  volumes: false,
+  compose: false,
+  templates: false,
+  registries: false,
+  config: false
+})
+
+const formRef = ref<FormInstance>()
+const dialogVisible = ref(false)
+const dialogType = ref<DialogType>('container')
+const saving = ref(false)
+const logsVisible = ref(false)
+const logsLoading = ref(false)
+const logTarget = ref<ContainerItem | null>(null)
+const logsText = ref('')
+const dialogTarget = ref<any>(null)
+const importFile = ref<File | null>(null)
+
+const form = reactive({
+  name: '',
+  image: '',
+  manualImage: false,
+  reference: '',
+  driver: '',
+  portPublishMode: 'ports' as PortPublishMode,
+  ports: [
+    { host: '', container: '', protocol: 'tcp' as PortProtocol }
+  ],
+  networksText: 'bridge',
+  ipv4: '',
+  ipv6: '',
+  mounts: [
+    { mode: 'bind' as MountMode, source: '', target: '', permission: 'rw' as MountPermission }
+  ],
+  commandText: '',
+  entrypointText: '',
+  restart: 'no',
+  cpuWeight: 1000,
+  cpuLimit: 0,
+  memoryLimitMB: 0,
+  labelsText: '',
+  environmentText: '',
+  autoRemove: false,
+  privileged: false,
+  tty: false,
+  openStdin: false
+})
+
+const imageActionForm = reactive({
+  pullMode: 'reference' as 'reference' | 'registry',
+  reference: '',
+  registryId: undefined as number | string | undefined,
+  imageName: '',
+  buildMode: 'dockerfile' as 'dockerfile' | 'path',
+  buildName: '',
+  dockerfile: 'FROM nginx:1.27\nCOPY ./dist /usr/share/nginx/html',
+  contextPath: '',
+  dockerfilePath: '',
+  labelsText: '',
+  tagReference: '',
+  removeOther: false,
+  pushMode: 'reference' as 'reference' | 'registry',
+  pushReference: '',
+  pushImageName: ''
+})
+
+const registryForm = reactive({
+  name: '',
+  address: '',
+  protocol: 'https' as 'http' | 'https',
+  authEnabled: false,
+  username: '',
+  password: ''
+})
+
+const templateForm = reactive({
+  name: '',
+  description: '',
+  content: 'services:\n  web:\n    image: nginx:1.27\n'
+})
+
+const configForm = reactive({
+  raw: ''
+})
+
+const containerScope = computed(() => sconfig.scopeAccess?.container || {})
+const canRead = computed(() => sconfig.hasScopeAccess('container', 'read'))
+const canWrite = computed(() => containerScope.value.write || sconfig.hasScopeAccess('container', 'write'))
+const canDelete = computed(() => containerScope.value.delete || sconfig.hasScopeAccess('container', 'delete'))
+const canForceAction = computed(() => sconfig.hasActionAccess('container.force_action'))
+const canReadLogs = computed(() => containerScope.value.logsRead || sconfig.hasScopeAccess('container', 'logsRead'))
+const canCreateContainer = computed(() => canWrite.value || sconfig.hasActionAccess('container.create'))
+const canImageWrite = computed(() => containerScope.value.imageWrite || sconfig.hasScopeAccess('container', 'imageWrite'))
+const canNetworkWrite = computed(() => containerScope.value.networkWrite || sconfig.hasScopeAccess('container', 'networkWrite'))
+const canVolumeWrite = computed(() => containerScope.value.volumeWrite || sconfig.hasScopeAccess('container', 'volumeWrite'))
+const canComposeWrite = computed(() => containerScope.value.composeWrite || sconfig.hasScopeAccess('container', 'composeWrite'))
+const canRegistryWrite = computed(() => containerScope.value.registryWrite || sconfig.hasScopeAccess('container', 'registryWrite'))
+const canConfigWrite = computed(() => containerScope.value.configWrite || sconfig.hasScopeAccess('container', 'configWrite'))
+
+const runtimeAvailable = computed(() => runtime.value?.available !== false)
+const runtimeStatusText = computed(() => {
+  if (runtimeLoading.value) return '检测中'
+  return runtimeAvailable.value ? '运行时可用' : '运行时不可用'
+})
+const runningContainers = computed(() =>
+  containers.value.filter((item) => String(item.Status || '').toLowerCase().startsWith('up')).length
+)
+const totalImagesSize = computed(() => images.value.map((item) => item.Size).filter(Boolean).join(' / ') || '--')
+
+const rules = computed<FormRules>(() => ({
+  name: [{ required: ['container', 'network', 'volume'].includes(dialogType.value), message: '请输入名称', trigger: 'blur' }],
+  image: [{ required: dialogType.value === 'container', message: '请输入镜像引用', trigger: 'blur' }]
+}))
+
+const normalizeList = <T>(data: any): T[] => {
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data?.items)) return data.items
+  return []
+}
+
+const resetForm = () => {
+  form.name = ''
+  form.image = ''
+  form.manualImage = false
+  form.reference = ''
+  form.driver = ''
+  form.portPublishMode = 'ports'
+  form.ports = [
+    { host: '', container: '', protocol: 'tcp' }
+  ]
+  form.networksText = 'bridge'
+  form.ipv4 = ''
+  form.ipv6 = ''
+  form.mounts = [
+    { mode: 'bind', source: '', target: '', permission: 'rw' }
+  ]
+  form.commandText = ''
+  form.entrypointText = ''
+  form.restart = 'no'
+  form.cpuWeight = 1000
+  form.cpuLimit = 0
+  form.memoryLimitMB = 0
+  form.labelsText = ''
+  form.environmentText = ''
+  form.autoRemove = false
+  form.privileged = false
+  form.tty = false
+  form.openStdin = false
+  imageActionForm.pullMode = 'reference'
+  imageActionForm.reference = ''
+  imageActionForm.registryId = undefined
+  imageActionForm.imageName = ''
+  imageActionForm.buildMode = 'dockerfile'
+  imageActionForm.buildName = ''
+  imageActionForm.dockerfile = 'FROM nginx:1.27\nCOPY ./dist /usr/share/nginx/html'
+  imageActionForm.contextPath = ''
+  imageActionForm.dockerfilePath = ''
+  imageActionForm.labelsText = ''
+  imageActionForm.tagReference = ''
+  imageActionForm.removeOther = false
+  imageActionForm.pushMode = 'reference'
+  imageActionForm.pushReference = ''
+  imageActionForm.pushImageName = ''
+  registryForm.name = ''
+  registryForm.address = ''
+  registryForm.protocol = 'https'
+  registryForm.authEnabled = false
+  registryForm.username = ''
+  registryForm.password = ''
+  templateForm.name = ''
+  templateForm.description = ''
+  templateForm.content = 'services:\n  web:\n    image: nginx:1.27\n'
+  importFile.value = null
+  dialogTarget.value = null
+  formRef.value?.clearValidate()
+}
+
+const getRowKey = (row: Record<string, any>) =>
+  row.ID || row.Id || row.id || row.Name || row.name || row.Project || row.NameWithTag || JSON.stringify(row)
+
+const statusType = (status?: string) => {
+  const value = String(status || '').toLowerCase()
+  if (value.startsWith('up')) return 'success'
+  if (value.includes('paused')) return 'warning'
+  if (value.includes('exited') || value.includes('dead')) return 'danger'
+  return 'info'
+}
+
+const imageReference = (row: ImageItem) => {
+  const repo = row.Repository || '<none>'
+  const tag = row.Tag || '<none>'
+  return `${repo}:${tag}`
+}
+
+const registryLabel = (row: RegistryItem) => `${row.protocol}://${row.address}`
+
+const shortId = (id?: string) => String(id || '').replace(/^sha256:/, '').slice(0, 12) || '--'
+
+const loadRuntime = async () => {
+  runtimeLoading.value = true
+  try {
+    const { data } = await Api.getContainerRuntime()
+    runtime.value = data || { available: false, message: '未获取到 Docker 运行时信息' }
+  } finally {
+    runtimeLoading.value = false
+  }
+}
+
+const loadActiveTab = async (force = false) => {
+  if (!canRead.value) return
+  if (!force && loadedTabs[activeTab.value]) return
+  listLoading.value = true
+  try {
+    if (activeTab.value === 'containers') {
+      const { data } = await Api.getContainers()
+      containers.value = normalizeList<ContainerItem>(data)
+    }
+    if (activeTab.value === 'images') {
+      const { data } = await Api.getContainerImages()
+      images.value = normalizeList<ImageItem>(data)
+    }
+    if (activeTab.value === 'networks') {
+      const { data } = await Api.getContainerNetworks()
+      networks.value = normalizeList<NetworkItem>(data)
+    }
+    if (activeTab.value === 'volumes') {
+      const { data } = await Api.getContainerVolumes()
+      volumes.value = normalizeList<VolumeItem>(data)
+    }
+    if (activeTab.value === 'compose') {
+      const { data } = await Api.getContainerCompose()
+      composeProjects.value = normalizeList<Record<string, any>>(data)
+    }
+    if (activeTab.value === 'templates') {
+      const { data } = await Api.getContainerTemplates()
+      templates.value = normalizeList<TemplateItem>(data)
+      templatesSupported.value = data?.supported !== false
+      templatesMessage.value = data?.message || ''
+    }
+    if (activeTab.value === 'registries') {
+      const { data } = await Api.getContainerRegistries()
+      registries.value = normalizeList<RegistryItem>(data)
+    }
+    if (activeTab.value === 'config') {
+      const { data } = await Api.getContainerConfig()
+      dockerConfig.value = data || null
+      configForm.raw = data?.raw || '{}'
+    }
+    loadedTabs[activeTab.value] = true
+  } finally {
+    listLoading.value = false
+  }
+}
+
+const refreshAll = async () => {
+  await loadRuntime()
+  Object.keys(loadedTabs).forEach((key) => {
+    loadedTabs[key as ResourceTab] = false
+  })
+  await loadActiveTab(true)
+}
+
+const ensureVolumesLoaded = async () => {
+  if (volumes.value.length || loadedTabs.volumes) return
+  try {
+    const { data } = await Api.getContainerVolumes()
+    volumes.value = normalizeList<VolumeItem>(data)
+    loadedTabs.volumes = true
+  } catch (error) {
+    console.warn('加载存储卷列表失败', error)
+  }
+}
+
+const ensureImagesLoaded = async () => {
+  if (images.value.length || loadedTabs.images) return
+  try {
+    const { data } = await Api.getContainerImages()
+    images.value = normalizeList<ImageItem>(data)
+    loadedTabs.images = true
+  } catch (error) {
+    console.warn('加载镜像列表失败', error)
+  }
+}
+
+const ensureRegistriesLoaded = async () => {
+  if (registries.value.length || loadedTabs.registries) return
+  try {
+    const { data } = await Api.getContainerRegistries({ page: 1, pageSize: 100 })
+    registries.value = normalizeList<RegistryItem>(data)
+    loadedTabs.registries = true
+  } catch (error) {
+    console.warn('加载 Registry 列表失败', error)
+  }
+}
+
+const openDialog = (type: DialogType, target?: any) => {
+  resetForm()
+  dialogType.value = type
+  dialogTarget.value = target || null
+  form.driver = type === 'network' ? 'bridge' : type === 'volume' ? 'local' : ''
+  if (type === 'image-tag' && target) imageActionForm.tagReference = imageReference(target)
+  if (type === 'image-push' && target) imageActionForm.pushReference = imageReference(target)
+  if (type === 'registry' && target) {
+    registryForm.name = target.name || ''
+    registryForm.address = target.address || ''
+    registryForm.protocol = target.protocol || 'https'
+    registryForm.authEnabled = !!target.authEnabled
+    registryForm.username = target.username || ''
+  }
+  if (type === 'template' && target) {
+    templateForm.name = target.name || ''
+    templateForm.description = target.description || ''
+    templateForm.content = target.content || ''
+  }
+  dialogVisible.value = true
+  if (type === 'container') {
+    void ensureImagesLoaded()
+    void ensureVolumesLoaded()
+  }
+  if (['image', 'image-push'].includes(type)) void ensureRegistriesLoaded()
+}
+
+const splitTokens = (value: string) =>
+  value.split(/[\n,]+/).map((item) => item.trim()).filter(Boolean)
+
+const parseStringList = (value: string, fieldLabel: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (trimmed.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) return parsed
+    } catch {
+      // fall through to validation error below
+    }
+    throw new Error(`${fieldLabel} 请输入 JSON 字符串数组，或每行一个参数`)
+  }
+  return splitTokens(value)
+}
+
+const parseKeyValueMap = (value: string, fieldLabel: string) => {
+  const trimmed = value.trim()
+  if (!trimmed) return undefined
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return Object.fromEntries(
+          Object.entries(parsed).map(([key, item]) => [key, String(item ?? '')])
+        )
+      }
+    } catch {
+      // fall through to validation error below
+    }
+    throw new Error(`${fieldLabel} 请输入 JSON 对象，或每行一个 key=value`)
+  }
+
+  const result: Record<string, string> = {}
+  splitTokens(value).forEach((line) => {
+    const equalIndex = line.indexOf('=')
+    if (equalIndex <= 0) throw new Error(`${fieldLabel} 格式应为 key=value`)
+    result[line.slice(0, equalIndex).trim()] = line.slice(equalIndex + 1).trim()
+  })
+  return Object.keys(result).length ? result : undefined
+}
+
+const expandPortRange = (value: string, fieldLabel: string) => {
+  const text = value.trim()
+  if (!text) return []
+  if (!/^\d+(-\d+)?$/.test(text)) throw new Error(`${fieldLabel} 端口格式应为 80 或 80-88`)
+  const [startText, endText] = text.split('-')
+  const start = Number(startText)
+  const end = endText ? Number(endText) : start
+  if (start < 1 || end > 65535 || start > end) throw new Error(`${fieldLabel} 端口范围应在 1-65535 之间`)
+  return Array.from({ length: end - start + 1 }, (_, index) => start + index)
+}
+
+const parseHostPortInput = (value: string) => {
+  const text = value.trim()
+  if (!text) return { hostIp: undefined as string | undefined, ports: [] as number[] }
+  const colonIndex = text.lastIndexOf(':')
+  if (colonIndex > -1) {
+    const hostIp = text.slice(0, colonIndex).trim()
+    const portText = text.slice(colonIndex + 1).trim()
+    if (!hostIp || !portText) throw new Error('服务器端口格式应为 80、80-88、IP:80 或 IP:80-88')
+    return { hostIp, ports: expandPortRange(portText, '服务器') }
+  }
+  return { hostIp: undefined, ports: expandPortRange(text, '服务器') }
+}
+
+const buildPorts = () => {
+  if (form.portPublishMode === 'all') return undefined
+  const rows = form.ports.filter((item) => item.host.trim() || item.container.trim())
+  if (!rows.length) return undefined
+  return rows.flatMap((item) => {
+    if (!item.host.trim() || !item.container.trim()) throw new Error('端口映射请同时填写服务器端口和容器端口')
+    const { hostIp, ports: hostPorts } = parseHostPortInput(item.host)
+    const containerPorts = expandPortRange(item.container, '容器')
+    if (hostPorts.length !== containerPorts.length) throw new Error('服务器端口范围和容器端口范围数量需要一致')
+    return hostPorts.map((hostPort, index) => ({
+      hostPort,
+      containerPort: containerPorts[index],
+      protocol: item.protocol,
+      ...(hostIp ? { hostIp } : {})
+    }))
+  })
+}
+
+const buildMounts = () => {
+  const rows = form.mounts
+    .map((item) => ({
+      source: item.source.trim(),
+      target: item.target.trim(),
+      readOnly: item.permission === 'ro'
+    }))
+    .filter((item) => item.source || item.target)
+  rows.forEach((item) => {
+    if (!item.source || !item.target) throw new Error('挂载请同时填写来源和容器目录')
+  })
+  if (!rows.length) return undefined
+  return rows.map((item) => ({
+    source: item.source,
+    target: item.target,
+    readOnly: item.readOnly
+  }))
+}
+
+const addMount = () => {
+  form.mounts.push({ mode: 'bind', source: '', target: '', permission: 'rw' })
+}
+
+const removeMount = (index: number) => {
+  if (form.mounts.length === 1) {
+    form.mounts[0] = { mode: 'bind', source: '', target: '', permission: 'rw' }
+    return
+  }
+  form.mounts.splice(index, 1)
+}
+
+const addPort = () => {
+  form.ports.push({ host: '', container: '', protocol: 'tcp' })
+}
+
+const removePort = (index: number) => {
+  if (form.ports.length === 1) {
+    form.ports[0] = { host: '', container: '', protocol: 'tcp' }
+    return
+  }
+  form.ports.splice(index, 1)
+}
+
+const buildContainerPayload = () => {
+  const payload = {
+    name: form.name.trim(),
+    image: form.image.trim(),
+    ports: buildPorts(),
+    networks: splitTokens(form.networksText),
+    ipv4: form.ipv4.trim() || undefined,
+    ipv6: form.ipv6.trim() || undefined,
+    mounts: buildMounts(),
+    command: parseStringList(form.commandText, '命令'),
+    entrypoint: parseStringList(form.entrypointText, 'EntryPoint') || [],
+    autoRemove: form.autoRemove,
+    privileged: form.privileged,
+    tty: form.tty,
+    openStdin: form.openStdin,
+    restart: form.restart,
+    cpuWeight: form.cpuWeight,
+    cpuLimit: form.cpuLimit,
+    memoryLimitMB: form.memoryLimitMB,
+    labels: parseKeyValueMap(form.labelsText, 'Labels'),
+    environment: parseKeyValueMap(form.environmentText, '环境变量')
+  }
+  return Object.fromEntries(
+    Object.entries(payload).filter(([, value]) => {
+      if (Array.isArray(value)) return true
+      return value !== undefined && value !== ''
+    })
+  ) as Parameters<typeof Api.createContainer>[0]
+}
+
+const confirmContainerCreate = async (payload: Parameters<typeof Api.createContainer>[0]) => {
+  const previewRows = [
+    ['容器名称', payload.name],
+    ['镜像', payload.image],
+    [
+      '端口映射',
+      form.portPublishMode === 'all'
+        ? '暴露所有'
+        : payload.ports?.map((item) => `${item.hostIp ? `${item.hostIp}:` : ''}${item.hostPort}:${item.containerPort}/${item.protocol || 'tcp'}`).join('，') || '无'
+    ],
+    ['网络', payload.networks?.join('，') || '默认 Docker 网络'],
+    ['挂载', payload.mounts?.map((item) => `${item.source}:${item.target}${item.readOnly ? ':ro' : ''}`).join('，') || '无'],
+    ['重启策略', payload.restart || '默认'],
+    ['资源限制', `CPU ${payload.cpuLimit ?? '不限制'} / 内存 ${payload.memoryLimitMB ?? '不限制'} MB`],
+    ['高风险选项', payload.privileged ? '特权模式' : '无']
+  ]
+  const message = h('div', { class: 'container-create-preview' }, [
+    h('div', { class: 'container-create-preview__notice' }, '该操作会创建 Docker 容器，可能拉取镜像并占用网络和磁盘空间。'),
+    h('div', { class: 'container-create-preview__grid' }, previewRows.map(([label, value]) =>
+      h('div', { class: 'container-create-preview__row' }, [
+        h('span', { class: 'container-create-preview__label' }, label),
+        h('span', {
+          class: [
+            'container-create-preview__value',
+            label === '高风险选项' && value !== '无' ? 'is-danger' : ''
+          ]
+        }, value)
+      ])
+    ))
+  ])
+  await ElMessageBox.confirm(message, '创建容器操作预览', {
+    type: payload.privileged ? 'warning' : 'info',
+    confirmButtonText: '确认创建',
+    cancelButtonText: '取消'
+  })
+}
+
+const downloadBlob = (blob: Blob, filename: string) => {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = filename
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+const getExportFilename = (disposition: string, fallback: string) => {
+  const matched = disposition.match(/filename="?([^"]+)"?/i)
+  return matched?.[1] || fallback
+}
+
+const buildImagePullPayload = () => {
+  if (imageActionForm.pullMode === 'registry') {
+    if (!imageActionForm.registryId || !imageActionForm.imageName.trim()) {
+      throw new Error('请选择 Registry 并填写仓库内镜像名')
+    }
+    return {
+      registryId: Number(imageActionForm.registryId),
+      imageName: imageActionForm.imageName.trim()
+    }
+  }
+  if (!imageActionForm.reference.trim()) throw new Error('请输入完整镜像引用')
+  return { reference: imageActionForm.reference.trim() }
+}
+
+const buildImagePushPayload = () => {
+  if (imageActionForm.pushMode === 'registry') {
+    if (!imageActionForm.registryId || !imageActionForm.pushImageName.trim()) {
+      throw new Error('请选择 Registry 并填写仓库内镜像名')
+    }
+    return {
+      registryId: Number(imageActionForm.registryId),
+      imageName: imageActionForm.pushImageName.trim()
+    }
+  }
+  if (!imageActionForm.pushReference.trim()) throw new Error('请输入完整镜像引用')
+  return { reference: imageActionForm.pushReference.trim() }
+}
+
+const buildImageBuildPayload = () => {
+  if (!imageActionForm.buildName.trim()) throw new Error('请输入目标镜像名称和 Tag')
+  if (imageActionForm.buildMode === 'path') {
+    if (!imageActionForm.contextPath.trim()) throw new Error('请输入构建上下文目录')
+    return {
+      name: imageActionForm.buildName.trim(),
+      contextPath: imageActionForm.contextPath.trim(),
+      dockerfilePath: imageActionForm.dockerfilePath.trim() || undefined,
+      labelsText: imageActionForm.labelsText.trim() || undefined
+    }
+  }
+  if (!imageActionForm.dockerfile.trim()) throw new Error('请输入 Dockerfile 内容')
+  return {
+    name: imageActionForm.buildName.trim(),
+    dockerfile: imageActionForm.dockerfile,
+    labelsText: imageActionForm.labelsText.trim() || undefined
+  }
+}
+
+const submitDialog = async () => {
+  await formRef.value?.validate()
+  saving.value = true
+  try {
+    if (dialogType.value === 'container') {
+      let payload: Parameters<typeof Api.createContainer>[0]
+      try {
+        payload = buildContainerPayload()
+      } catch (error: any) {
+        ElMessage.error(error?.message || '创建参数格式不正确')
+        return
+      }
+      await confirmContainerCreate(payload)
+      await Api.createContainer(payload)
+      ElMessage.success('容器创建成功')
+      activeTab.value = 'containers'
+    }
+    if (dialogType.value === 'image') {
+      await Api.pullContainerImage(buildImagePullPayload())
+      ElMessage.success('镜像拉取成功')
+      activeTab.value = 'images'
+    }
+    if (dialogType.value === 'image-import') {
+      if (!importFile.value) throw new Error('请选择 tar 镜像文件')
+      await Api.importContainerImage(importFile.value)
+      ElMessage.success('镜像导入成功')
+      activeTab.value = 'images'
+    }
+    if (dialogType.value === 'image-build') {
+      await ElMessageBox.confirm('构建镜像会读取构建上下文并占用 CPU、磁盘空间；失败后不会修改现有镜像标签。', '构建镜像操作预览', {
+        type: 'warning',
+        confirmButtonText: '确认构建',
+        cancelButtonText: '取消'
+      })
+      await Api.buildContainerImage(buildImageBuildPayload())
+      ElMessage.success('镜像构建成功')
+      activeTab.value = 'images'
+    }
+    if (dialogType.value === 'image-tag') {
+      if (!dialogTarget.value?.ID) throw new Error('未选择镜像')
+      if (!imageActionForm.tagReference.trim()) throw new Error('请输入新标签')
+      await Api.tagContainerImage(dialogTarget.value.ID, {
+        reference: imageActionForm.tagReference.trim(),
+        removeOther: imageActionForm.removeOther,
+        confirm: imageActionForm.removeOther
+      })
+      ElMessage.success('镜像标签已更新')
+      activeTab.value = 'images'
+    }
+    if (dialogType.value === 'image-push') {
+      await ElMessageBox.confirm('推送镜像会向远端 Registry 上传镜像层，请确认 Registry 与镜像名正确。', '推送镜像操作预览', {
+        type: 'info',
+        confirmButtonText: '确认推送',
+        cancelButtonText: '取消'
+      })
+      await Api.pushContainerImage(buildImagePushPayload())
+      ElMessage.success('镜像推送成功')
+      activeTab.value = 'images'
+    }
+    if (dialogType.value === 'network') {
+      await Api.createContainerNetwork({ name: form.name.trim(), driver: form.driver.trim() || undefined })
+      ElMessage.success('网络创建成功')
+      activeTab.value = 'networks'
+    }
+    if (dialogType.value === 'volume') {
+      await Api.createContainerVolume({ name: form.name.trim(), driver: form.driver.trim() || undefined })
+      ElMessage.success('存储卷创建成功')
+      activeTab.value = 'volumes'
+    }
+    if (dialogType.value === 'registry') {
+      if (!registryForm.name.trim() || !registryForm.address.trim()) throw new Error('请填写 Registry 名称和地址')
+      const payload = {
+        name: registryForm.name.trim(),
+        address: registryForm.address.trim(),
+        protocol: registryForm.protocol,
+        authEnabled: registryForm.authEnabled,
+        username: registryForm.authEnabled ? registryForm.username.trim() : undefined,
+        password: registryForm.authEnabled ? registryForm.password : undefined
+      }
+      if (dialogTarget.value?.id) {
+        await Api.updateContainerRegistry(dialogTarget.value.id, payload)
+        ElMessage.success('Registry 已更新')
+      } else {
+        await Api.createContainerRegistry(payload)
+        ElMessage.success('Registry 已创建')
+      }
+      activeTab.value = 'registries'
+    }
+    if (dialogType.value === 'template') {
+      if (!templateForm.name.trim() || !templateForm.content.trim()) throw new Error('请填写模板名称和 YAML 内容')
+      const payload = {
+        name: templateForm.name.trim(),
+        description: templateForm.description.trim() || undefined,
+        content: templateForm.content
+      }
+      if (dialogTarget.value?.id) {
+        await Api.updateContainerTemplate(dialogTarget.value.id, payload)
+        ElMessage.success('模板已更新')
+      } else {
+        await Api.createContainerTemplate(payload)
+        ElMessage.success('模板已创建')
+      }
+      activeTab.value = 'templates'
+    }
+    dialogVisible.value = false
+    loadedTabs[activeTab.value] = false
+    await loadActiveTab(true)
+  } catch (error: any) {
+    const isCancel = error === 'cancel' || error?.message === 'cancel' || error?.name === 'CanceledError'
+    if (!isCancel) ElMessage.error(error?.message || '操作失败')
+  } finally {
+    saving.value = false
+  }
+}
+
+const runContainerAction = async (
+  row: ContainerItem,
+  action: 'start' | 'stop' | 'restart' | 'pause' | 'unpause' | 'kill' | 'rm'
+) => {
+  const actionLabels: Record<string, string> = {
+    start: '启动',
+    stop: '停止',
+    restart: '重启',
+    pause: '暂停',
+    unpause: '恢复',
+    kill: '强制停止',
+    rm: '删除'
+  }
+  const dangerous = ['kill', 'rm'].includes(action)
+  await ElMessageBox.confirm(
+    `${actionLabels[action]}容器 ${row.Names || shortId(row.ID)}？${dangerous ? '该操作会改变容器运行状态，请确认后继续。' : ''}`,
+    `${actionLabels[action]}容器`,
+    {
+      type: dangerous ? 'warning' : 'info',
+      confirmButtonText: actionLabels[action],
+      cancelButtonText: '取消'
+    }
+  )
+  actionLoading.value = `${row.ID}:${action}`
+  try {
+    await Api.runContainerAction(row.ID, {
+      action,
+      confirm: dangerous,
+      force: action === 'kill' || (action === 'rm' && canForceAction.value)
+    })
+    ElMessage.success(`${actionLabels[action]}成功`)
+    loadedTabs.containers = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const openLogs = async (row: ContainerItem) => {
+  logTarget.value = row
+  logsText.value = ''
+  logsVisible.value = true
+  logsLoading.value = true
+  try {
+    const { data } = await Api.getContainerLogs(row.ID, { tail: 500 })
+    logsText.value = data?.logs || ''
+  } finally {
+    logsLoading.value = false
+  }
+}
+
+const deleteImage = async (row: ImageItem) => {
+  await ElMessageBox.confirm(`删除镜像 ${imageReference(row)}？该操作不可撤销。`, '删除镜像', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = row.ID
+  try {
+    await Api.deleteContainerImage(row.ID)
+    ElMessage.success('镜像已删除')
+    loadedTabs.images = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const deleteNetwork = async (row: NetworkItem) => {
+  await ElMessageBox.confirm(`删除网络 ${row.Name}？正在使用中的网络会被后端拦截。`, '删除网络', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = row.ID
+  try {
+    await Api.deleteContainerNetwork(row.ID)
+    ElMessage.success('网络已删除')
+    loadedTabs.networks = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const deleteVolume = async (row: VolumeItem) => {
+  await ElMessageBox.confirm(`删除存储卷 ${row.Name}？卷数据删除后无法恢复。`, '删除存储卷', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = row.Name
+  try {
+    await Api.deleteContainerVolume(row.Name)
+    ElMessage.success('存储卷已删除')
+    loadedTabs.volumes = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const handleImportFileChange = (event: Event) => {
+  const input = event.target as HTMLInputElement
+  importFile.value = input.files?.[0] || null
+}
+
+const exportImage = async (row: ImageItem) => {
+  actionLoading.value = `export:${row.ID}`
+  try {
+    const { blob, disposition } = await Api.exportContainerImage(row.ID)
+    downloadBlob(blob, getExportFilename(disposition, `${imageReference(row).replace(/[/:]/g, '_')}.tar`))
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const pruneImages = async (type: 'images' | 'build-cache') => {
+  const label = type === 'images' ? '清理悬空镜像' : '清理构建缓存'
+  await ElMessageBox.confirm(
+    `${label} 会释放 Docker 磁盘空间，但可能影响后续构建或镜像复用；失败时不会删除已使用资源。`,
+    `${label}操作预览`,
+    {
+      type: 'warning',
+      confirmButtonText: label,
+      cancelButtonText: '取消'
+    }
+  )
+  actionLoading.value = `prune:${type}`
+  try {
+    if (type === 'images') await Api.pruneContainerImages()
+    else await Api.pruneContainerBuildCache()
+    ElMessage.success(`${label}完成`)
+    loadedTabs.images = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const deleteRegistry = async (row: RegistryItem) => {
+  await ElMessageBox.confirm(`删除 Registry ${row.name}？已保存的密码凭据也会移除。`, '删除 Registry', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = `registry:${row.id}`
+  try {
+    await Api.deleteContainerRegistry(row.id)
+    ElMessage.success('Registry 已删除')
+    loadedTabs.registries = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const testRegistry = async (row: RegistryItem) => {
+  actionLoading.value = `registry-test:${row.id}`
+  try {
+    await Api.testContainerRegistry(row.id)
+    ElMessage.success('Registry 连通性正常')
+    loadedTabs.registries = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const deleteTemplate = async (row: TemplateItem) => {
+  if (!row.id) return
+  await ElMessageBox.confirm(`删除编排模板 ${row.name}？`, '删除模板', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = `template:${row.id}`
+  try {
+    await Api.deleteContainerTemplate(row.id)
+    ElMessage.success('模板已删除')
+    loadedTabs.templates = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const saveDockerConfig = async () => {
+  let parsed: Record<string, any>
+  try {
+    parsed = JSON.parse(configForm.raw || '{}')
+  } catch {
+    ElMessage.error('Docker 配置必须是 JSON 对象')
+    return
+  }
+  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+    ElMessage.error('Docker 配置必须是 JSON 对象')
+    return
+  }
+  await ElMessageBox.confirm(
+    `将写入 Docker daemon 配置文件 ${dockerConfig.value?.configPath || 'daemon.json'}。该操作不会自动重启 Docker；如需生效请再手动重启服务。失败时后端会保留原配置。`,
+    '保存 Docker 配置操作预览',
+    {
+      type: 'warning',
+      confirmButtonText: '确认保存',
+      cancelButtonText: '取消'
+    }
+  )
+  actionLoading.value = 'config:save'
+  try {
+    await Api.saveContainerConfig({ raw: JSON.stringify(parsed, null, 2) })
+    ElMessage.success('Docker 配置已保存')
+    loadedTabs.config = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const runRuntimeAction = async (action: 'stop' | 'restart') => {
+  const label = action === 'restart' ? '重启 Docker 服务' : '停止 Docker 服务'
+  await ElMessageBox.confirm(
+    `${label} 会影响当前所有容器和 Docker API 连接。执行前不会写配置文件；失败时请通过系统服务管理工具检查 Docker 状态。`,
+    `${label}操作预览`,
+    {
+      type: 'warning',
+      confirmButtonText: label,
+      cancelButtonText: '取消'
+    }
+  )
+  actionLoading.value = `runtime:${action}`
+  try {
+    await Api.runContainerRuntimeAction({ action, confirm: true })
+    ElMessage.success(`${label}命令已执行`)
+    await refreshAll()
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const handleTabChange = () => {
+  void loadActiveTab()
+}
+
+onMounted(async () => {
+  await loadRuntime()
+  await loadActiveTab()
+})
+</script>
+
+<template>
+  <div class="container-page">
+    <section class="container-hero">
+      <div>
+        <h2>容器管理</h2>
+        <p>管理 Docker 容器、镜像、网络、存储卷和 Compose 项目。</p>
+      </div>
+      <div class="hero-actions">
+        <el-button :icon="Refresh" :loading="runtimeLoading || listLoading" @click="refreshAll">刷新</el-button>
+        <el-button
+          type="primary"
+          :icon="Plus"
+          :disabled="!runtimeAvailable || !canCreateContainer"
+          @click="openDialog('container')"
+        >
+          创建容器
+        </el-button>
+      </div>
+    </section>
+
+    <el-alert
+      v-if="!canRead"
+      class="container-alert"
+      title="当前账号没有容器读取权限"
+      type="warning"
+      show-icon
+      :closable="false"
+    />
+    <el-alert
+      v-else-if="runtime && !runtime.available"
+      class="container-alert"
+      :title="runtime.message || 'Docker 运行时不可用'"
+      type="warning"
+      show-icon
+      :closable="false"
+    />
+
+    <section class="runtime-grid" v-loading="runtimeLoading">
+      <div class="metric-card">
+        <div class="metric-card__label">Docker Client</div>
+        <strong>{{ runtime?.dockerVersion || '--' }}</strong>
+        <span>客户端版本</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card__label">Docker Server</div>
+        <strong>{{ runtime?.serverVersion || '--' }}</strong>
+        <span>服务端版本</span>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card__label">Compose</div>
+        <strong>{{ runtime?.composeVersion || '--' }}</strong>
+        <span>编排运行时</span>
+      </div>
+      <div class="metric-card metric-card--accent">
+        <div class="metric-card__label">容器运行中</div>
+        <strong>{{ runningContainers }} / {{ containers.length }}</strong>
+        <span>当前容器状态</span>
+      </div>
+    </section>
+
+    <section class="resource-panel">
+      <div class="panel-top">
+        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+          <el-tab-pane label="容器" name="containers" />
+          <el-tab-pane label="镜像" name="images" />
+          <el-tab-pane label="网络" name="networks" />
+          <el-tab-pane label="存储卷" name="volumes" />
+          <el-tab-pane label="Compose" name="compose" />
+          <el-tab-pane label="模板" name="templates" />
+          <el-tab-pane label="Registry" name="registries" />
+          <el-tab-pane label="Docker 配置" name="config" />
+        </el-tabs>
+        <div class="panel-actions">
+          <el-button
+            v-if="activeTab === 'images'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canImageWrite"
+            @click="openDialog('image')"
+          >
+            拉取镜像
+          </el-button>
+          <el-button
+            v-if="activeTab === 'images'"
+            :disabled="!runtimeAvailable || !canImageWrite"
+            @click="openDialog('image-import')"
+          >
+            导入
+          </el-button>
+          <el-button
+            v-if="activeTab === 'images'"
+            :disabled="!runtimeAvailable || !canImageWrite"
+            @click="openDialog('image-build')"
+          >
+            构建
+          </el-button>
+          <el-button
+            v-if="activeTab === 'images'"
+            type="warning"
+            plain
+            :loading="actionLoading === 'prune:images'"
+            :disabled="!runtimeAvailable || !canDelete"
+            @click="pruneImages('images')"
+          >
+            清理镜像
+          </el-button>
+          <el-button
+            v-if="activeTab === 'images'"
+            plain
+            :loading="actionLoading === 'prune:build-cache'"
+            :disabled="!runtimeAvailable || !canDelete"
+            @click="pruneImages('build-cache')"
+          >
+            清理构建缓存
+          </el-button>
+          <el-button
+            v-if="activeTab === 'networks'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canNetworkWrite"
+            @click="openDialog('network')"
+          >
+            创建网络
+          </el-button>
+          <el-button
+            v-if="activeTab === 'volumes'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canVolumeWrite"
+            @click="openDialog('volume')"
+          >
+            创建存储卷
+          </el-button>
+          <el-button
+            v-if="activeTab === 'templates'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canComposeWrite || !templatesSupported"
+            @click="openDialog('template')"
+          >
+            创建模板
+          </el-button>
+          <el-button
+            v-if="activeTab === 'registries'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canRegistryWrite"
+            @click="openDialog('registry')"
+          >
+            新增 Registry
+          </el-button>
+          <el-button
+            v-if="activeTab === 'config'"
+            type="primary"
+            :loading="actionLoading === 'config:save'"
+            :disabled="!runtimeAvailable || !canConfigWrite"
+            @click="saveDockerConfig"
+          >
+            保存配置
+          </el-button>
+          <el-button
+            v-if="activeTab === 'config'"
+            type="warning"
+            plain
+            :loading="actionLoading === 'runtime:restart'"
+            :disabled="!runtimeAvailable || !canConfigWrite"
+            @click="runRuntimeAction('restart')"
+          >
+            重启 Docker
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-if="activeTab === 'containers'"
+        v-loading="listLoading"
+        :data="containers"
+        :row-key="getRowKey"
+        empty-text="暂无容器"
+      >
+        <el-table-column label="名称" min-width="170">
+          <template #default="{ row }">
+            <div class="primary-cell">
+              <strong>{{ row.Names || shortId(row.ID) }}</strong>
+              <span>{{ shortId(row.ID) }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="Image" label="镜像" min-width="180" show-overflow-tooltip />
+        <el-table-column label="状态" min-width="130">
+          <template #default="{ row }">
+            <el-tag :type="statusType(row.Status)" effect="light">{{ row.Status || '--' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="Ports" label="端口" min-width="190" show-overflow-tooltip />
+        <el-table-column prop="Networks" label="网络" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="Mounts" label="挂载" min-width="180" show-overflow-tooltip />
+        <el-table-column fixed="right" label="操作" width="360">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <el-button
+                link
+                type="primary"
+                :icon="Document"
+                :disabled="!canReadLogs"
+                @click="openLogs(row)"
+              >
+                日志
+              </el-button>
+              <el-button
+                link
+                type="primary"
+                :icon="VideoPlay"
+                :loading="actionLoading === `${row.ID}:start`"
+                :disabled="!runtimeAvailable || !canWrite"
+                @click="runContainerAction(row, 'start')"
+              >
+                启动
+              </el-button>
+              <el-button
+                link
+                type="primary"
+                :icon="VideoPause"
+                :loading="actionLoading === `${row.ID}:stop`"
+                :disabled="!runtimeAvailable || !canWrite"
+                @click="runContainerAction(row, 'stop')"
+              >
+                停止
+              </el-button>
+              <el-button
+                link
+                type="primary"
+                :icon="Refresh"
+                :loading="actionLoading === `${row.ID}:restart`"
+                :disabled="!runtimeAvailable || !canWrite"
+                @click="runContainerAction(row, 'restart')"
+              >
+                重启
+              </el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :loading="actionLoading === `${row.ID}:rm`"
+                :disabled="!runtimeAvailable || !canDelete"
+                @click="runContainerAction(row, 'rm')"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table
+        v-if="activeTab === 'images'"
+        v-loading="listLoading"
+        :data="images"
+        :row-key="getRowKey"
+        empty-text="暂无镜像"
+      >
+        <el-table-column label="镜像" min-width="260">
+          <template #default="{ row }">
+            <div class="primary-cell">
+              <strong>{{ imageReference(row) }}</strong>
+              <span>{{ shortId(row.ID) }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="CreatedSince" label="创建时间" min-width="150" />
+        <el-table-column prop="Size" label="大小" width="120" />
+        <el-table-column prop="Containers" label="关联容器" width="110" />
+        <el-table-column label="状态" width="100">
+          <template #default="{ row }">
+            <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? '已使用' : '未使用' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="260">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">标签</el-button>
+              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">推送</el-button>
+              <el-button
+                link
+                type="primary"
+                :loading="actionLoading === `export:${row.ID}`"
+                :disabled="!runtimeAvailable"
+                @click="exportImage(row)"
+              >
+                导出
+              </el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :loading="actionLoading === row.ID"
+                :disabled="!runtimeAvailable || !canDelete"
+                @click="deleteImage(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table
+        v-if="activeTab === 'networks'"
+        v-loading="listLoading"
+        :data="networks"
+        :row-key="getRowKey"
+        empty-text="暂无网络"
+      >
+        <el-table-column prop="Name" label="名称" min-width="180" />
+        <el-table-column label="ID" min-width="140">
+          <template #default="{ row }">{{ shortId(row.ID) }}</template>
+        </el-table-column>
+        <el-table-column prop="Driver" label="驱动" width="130" />
+        <el-table-column prop="Scope" label="范围" width="130" />
+        <el-table-column fixed="right" label="操作" width="120">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :loading="actionLoading === row.ID"
+              :disabled="!runtimeAvailable || !canDelete"
+              @click="deleteNetwork(row)"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table
+        v-if="activeTab === 'volumes'"
+        v-loading="listLoading"
+        :data="volumes"
+        :row-key="getRowKey"
+        empty-text="暂无存储卷"
+      >
+        <el-table-column prop="Name" label="名称" min-width="220" />
+        <el-table-column prop="Driver" label="驱动" width="130" />
+        <el-table-column prop="Scope" label="范围" width="130" />
+        <el-table-column prop="Mountpoint" label="挂载点" min-width="260" show-overflow-tooltip />
+        <el-table-column fixed="right" label="操作" width="140">
+          <template #default="{ row }">
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :loading="actionLoading === row.Name"
+              :disabled="!runtimeAvailable || !canDelete"
+              @click="deleteVolume(row)"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table
+        v-if="activeTab === 'compose'"
+        v-loading="listLoading"
+        :data="composeProjects"
+        :row-key="getRowKey"
+        empty-text="暂无 Compose 项目"
+      >
+        <el-table-column prop="Name" label="项目" min-width="180" />
+        <el-table-column prop="Status" label="状态" min-width="160" />
+        <el-table-column prop="ConfigFiles" label="配置文件" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="WorkingDir" label="工作目录" min-width="260" show-overflow-tooltip />
+        <el-table-column label="操作" width="140">
+          <template #default>
+            <el-tooltip content="后端暂未启用 Compose 写操作">
+              <el-button link type="info" :icon="SwitchButton" disabled>暂未启用</el-button>
+            </el-tooltip>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-alert
+        v-if="activeTab === 'templates' && !templatesSupported"
+        class="container-alert"
+        :title="templatesMessage || '编排模板暂未启用'"
+        type="info"
+        show-icon
+        :closable="false"
+      />
+
+      <el-table
+        v-if="activeTab === 'templates'"
+        v-loading="listLoading"
+        :data="templates"
+        :row-key="getRowKey"
+        empty-text="暂无编排模板"
+      >
+        <el-table-column prop="name" label="模板名称" min-width="180" />
+        <el-table-column prop="description" label="说明" min-width="260" show-overflow-tooltip />
+        <el-table-column label="内容" min-width="260" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.content || '--' }}</template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="160">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <el-button link type="primary" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">编辑</el-button>
+              <el-button
+                link
+                type="danger"
+                :loading="actionLoading === `template:${row.id}`"
+                :disabled="!canDelete || !row.id || !templatesSupported"
+                @click="deleteTemplate(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <el-table
+        v-if="activeTab === 'registries'"
+        v-loading="listLoading"
+        :data="registries"
+        :row-key="getRowKey"
+        empty-text="暂无 Registry"
+      >
+        <el-table-column prop="name" label="名称" min-width="160" />
+        <el-table-column label="地址" min-width="240">
+          <template #default="{ row }">{{ registryLabel(row) }}</template>
+        </el-table-column>
+        <el-table-column prop="username" label="用户名" min-width="140" />
+        <el-table-column label="认证" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.authEnabled ? 'success' : 'info'" effect="light">{{ row.authEnabled ? '已启用' : '未启用' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="120" />
+        <el-table-column fixed="right" label="操作" width="230">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <el-button
+                link
+                type="primary"
+                :loading="actionLoading === `registry-test:${row.id}`"
+                :disabled="!runtimeAvailable || !canRegistryWrite"
+                @click="testRegistry(row)"
+              >
+                测试
+              </el-button>
+              <el-button link type="primary" :disabled="!canRegistryWrite" @click="openDialog('registry', row)">编辑</el-button>
+              <el-button
+                link
+                type="danger"
+                :loading="actionLoading === `registry:${row.id}`"
+                :disabled="!canDelete"
+                @click="deleteRegistry(row)"
+              >
+                删除
+              </el-button>
+            </div>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div v-if="activeTab === 'config'" v-loading="listLoading" class="config-editor">
+        <div class="config-editor__meta">
+          <span>配置文件：{{ dockerConfig?.configPath || '--' }}</span>
+          <el-tag :type="dockerConfig?.exists ? 'success' : 'info'" effect="light">
+            {{ dockerConfig?.exists ? '已存在' : '未创建' }}
+          </el-tag>
+        </div>
+        <el-input
+          v-model="configForm.raw"
+          type="textarea"
+          :rows="16"
+          placeholder="{\n  &quot;log-driver&quot;: &quot;json-file&quot;\n}"
+        />
+        <div class="field-help">
+          保存只写入 daemon.json，不会自动重启 Docker。需要生效时请点击“重启 Docker”并确认操作预览。
+        </div>
+      </div>
+
+      <div class="panel-foot">
+        <span v-if="activeTab === 'containers'">共 {{ containers.length }} 个容器，{{ runningContainers }} 个运行中</span>
+        <span v-if="activeTab === 'images'">共 {{ images.length }} 个镜像，大小 {{ totalImagesSize }}</span>
+        <span v-if="activeTab === 'networks'">共 {{ networks.length }} 个网络</span>
+        <span v-if="activeTab === 'volumes'">共 {{ volumes.length }} 个存储卷</span>
+        <span v-if="activeTab === 'compose'">共 {{ composeProjects.length }} 个 Compose 项目，只支持读取</span>
+        <span v-if="activeTab === 'templates'">共 {{ templates.length }} 个模板</span>
+        <span v-if="activeTab === 'registries'">共 {{ registries.length }} 个 Registry</span>
+        <span v-if="activeTab === 'config'">Docker 配置读取与保存</span>
+      </div>
+    </section>
+
+    <custom-drawer
+      :visible="dialogVisible && dialogType === 'container'"
+      title="创建容器"
+      size="760px"
+      :loading="saving"
+      :on-close="() => { dialogVisible = false }"
+      :on-confirm="submitDialog"
+    >
+      <el-form ref="formRef" class="container-create-form" :model="form" :rules="rules" label-width="96px">
+        <el-form-item label="名称" prop="name">
+          <el-input v-model.trim="form.name" placeholder="例如 demo-nginx" />
+          <div class="field-help">容器名称，不能包含空格、斜杠和换行。</div>
+        </el-form-item>
+        <el-form-item label="镜像" prop="image">
+          <div class="image-field">
+            <el-checkbox v-model="form.manualImage" class="image-field__toggle">手动输入</el-checkbox>
+            <el-input
+              v-if="form.manualImage"
+              v-model.trim="form.image"
+              placeholder="例如 nginx:1.27"
+            />
+            <el-select
+              v-else
+              v-model="form.image"
+              placeholder="请选择镜像"
+              filterable
+              clearable
+            >
+              <el-option
+                v-for="item in images"
+                :key="item.ID"
+                :label="imageReference(item)"
+                :value="imageReference(item)"
+              />
+            </el-select>
+          </div>
+          <div class="field-help">可直接选择现有镜像，也可切换为手动输入镜像引用。</div>
+        </el-form-item>
+
+        <el-divider content-position="left">网络与挂载</el-divider>
+        <el-form-item label="端口映射">
+          <div class="port-publish">
+            <el-radio-group v-model="form.portPublishMode" class="port-mode-options">
+              <el-radio value="ports">暴露端口</el-radio>
+              <el-radio value="all">暴露所有</el-radio>
+            </el-radio-group>
+            <div v-if="form.portPublishMode === 'ports'" class="port-card">
+              <div class="port-card__head">
+                <span>服务器</span>
+                <span>容器</span>
+                <span>协议</span>
+                <span></span>
+              </div>
+              <div v-for="(port, index) in form.ports" :key="index" class="port-card__row">
+                <div class="port-field">
+                  <el-input v-model.trim="port.host" placeholder="80, 80-88, ip:80" />
+                  <small>支持 80、80-88、ip:80 或 ip:80-88</small>
+                </div>
+                <div class="port-field">
+                  <el-input v-model.trim="port.container" placeholder="80 或 80-88" />
+                  <small>与服务器端口数量保持一致</small>
+                </div>
+                <el-select v-model="port.protocol">
+                  <el-option label="tcp" value="tcp" />
+                  <el-option label="udp" value="udp" />
+                  <el-option label="sctp" value="sctp" />
+                </el-select>
+                <el-button link type="primary" @click="removePort(index)">删除</el-button>
+              </div>
+              <el-button class="port-add-button" @click="addPort">添加</el-button>
+            </div>
+            <div v-else class="port-all-fields">
+              <label>
+                <span>网络</span>
+                <el-input v-model="form.networksText" placeholder="bridge" />
+              </label>
+              <label>
+                <span>IPv4</span>
+                <el-input v-model.trim="form.ipv4" placeholder="请输入 IPv4 地址" />
+              </label>
+              <label>
+                <span>IPv6</span>
+                <el-input v-model.trim="form.ipv6" placeholder="请输入 IPv6 地址" />
+              </label>
+            </div>
+          </div>
+        </el-form-item>
+        <el-form-item v-if="form.portPublishMode === 'ports'" label="网络">
+          <el-input v-model="form.networksText" placeholder="bridge，多个网络可用换行或逗号分隔" />
+          <div class="field-help">要加入的 Docker 网络名称；固定 IP 需要配合对应网络。</div>
+        </el-form-item>
+        <el-form-item v-if="form.portPublishMode === 'ports'" label="固定 IP">
+          <div class="form-inline-grid">
+            <el-input v-model.trim="form.ipv4" placeholder="IPv4，可选" />
+            <el-input v-model.trim="form.ipv6" placeholder="IPv6，可选" />
+          </div>
+          <div class="field-help">容器 IPv4/IPv6 地址，可选，需配合自定义网络。</div>
+        </el-form-item>
+        <el-form-item label="挂载">
+          <div class="mount-list">
+            <div v-for="(mount, index) in form.mounts" :key="index" class="mount-card">
+              <div class="mount-card__top">
+                <el-segmented
+                  v-model="mount.mode"
+                  :options="[
+                    { label: '挂载卷', value: 'volume' },
+                    { label: '本机目录', value: 'bind' }
+                  ]"
+                />
+                <el-button link type="primary" @click="removeMount(index)">删除</el-button>
+              </div>
+              <div class="mount-card__grid">
+                <label>
+                  <span>{{ mount.mode === 'volume' ? '挂载卷' : '本机目录' }}</span>
+                  <el-select
+                    v-if="mount.mode === 'volume'"
+                    v-model="mount.source"
+                    placeholder="请选择存储卷"
+                    filterable
+                    clearable
+                  >
+                    <el-option
+                      v-for="volume in volumes"
+                      :key="volume.Name"
+                      :label="volume.Name"
+                      :value="volume.Name"
+                    />
+                  </el-select>
+                  <el-input
+                    v-else
+                    v-model.trim="mount.source"
+                    placeholder="例如 /tmp/nginx-html"
+                  />
+                </label>
+                <label>
+                  <span>权限</span>
+                  <el-select v-model="mount.permission">
+                    <el-option label="读写" value="rw" />
+                    <el-option label="只读" value="ro" />
+                  </el-select>
+                </label>
+                <label>
+                  <span>容器目录</span>
+                  <el-input v-model.trim="mount.target" placeholder="例如 /usr/share/nginx/html" />
+                </label>
+              </div>
+            </div>
+            <el-button class="mount-add-button" @click="addMount">添加</el-button>
+          </div>
+          <div class="field-help">
+            挂载卷模式会读取“存储卷”列表供选择；读写提交 `readOnly=false`，只读提交 `readOnly=true`。
+          </div>
+        </el-form-item>
+
+        <el-divider content-position="left">启动参数</el-divider>
+        <el-form-item label="命令">
+          <el-input
+            v-model="form.commandText"
+            type="textarea"
+            :rows="2"
+            placeholder="每行一个参数，或 JSON 数组，例如 [&quot;nginx&quot;,&quot;-g&quot;,&quot;daemon off;&quot;]"
+          />
+          <div class="field-help">容器默认命令参数，提交为 string[]。</div>
+        </el-form-item>
+        <el-form-item label="EntryPoint">
+          <el-input
+            v-model="form.entrypointText"
+            type="textarea"
+            :rows="2"
+            placeholder="每行一个入口命令参数，或 JSON 字符串数组"
+          />
+          <div class="field-help">容器入口命令，未填写时提交空数组。</div>
+        </el-form-item>
+        <el-form-item label="重启策略">
+          <el-radio-group v-model="form.restart" class="restart-options">
+            <el-radio value="no">不重启</el-radio>
+            <el-radio value="always">一直重启</el-radio>
+            <el-radio value="on-failure:5">失败后重启（默认重启 5 次）</el-radio>
+            <el-radio value="unless-stopped">未手动停止则重启</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        <el-form-item label="运行选项">
+          <div class="form-switches">
+            <el-checkbox v-model="form.autoRemove">退出后自动删除</el-checkbox>
+            <el-checkbox v-model="form.tty">TTY</el-checkbox>
+            <el-checkbox v-model="form.openStdin">保持 stdin</el-checkbox>
+            <el-checkbox v-model="form.privileged">特权模式</el-checkbox>
+          </div>
+          <div class="field-help">特权模式风险较高，建议仅管理员按需开放。</div>
+        </el-form-item>
+
+        <el-divider content-position="left">资源限制</el-divider>
+        <el-form-item label="CPU 权重">
+          <el-input-number
+            v-model="form.cpuWeight"
+            :min="10"
+            :max="1000"
+            :step="10"
+            controls-position="right"
+            placeholder="默认 1000"
+          />
+          <div class="resource-help">CPU 权重范围为 10-1000，增大可使当前容器获得更多的 CPU 时间。</div>
+        </el-form-item>
+        <el-form-item label="CPU 限制">
+          <el-input-number
+            v-model="form.cpuLimit"
+            class="resource-limit-input"
+            :min="0"
+            :max="256"
+            :step="0.5"
+            controls-position="right"
+            placeholder="0"
+          />
+          <span class="field-unit">核</span>
+          <div class="resource-help">限制为 0 则关闭限制，最大可用值由宿主机 CPU 核数决定。</div>
+        </el-form-item>
+        <el-form-item label="内存限制">
+          <el-input-number
+            v-model="form.memoryLimitMB"
+            class="resource-limit-input"
+            :min="0"
+            :step="128"
+            controls-position="right"
+            placeholder="0"
+          />
+          <span class="field-unit">MB</span>
+          <div class="resource-help">限制为 0 则关闭限制，单位为 MB。</div>
+        </el-form-item>
+
+        <el-divider content-position="left">Labels 与环境变量</el-divider>
+        <el-form-item label="Labels">
+          <el-input
+            v-model="form.labelsText"
+            type="textarea"
+            :rows="2"
+            placeholder="每行一个 key=value，或 JSON 对象"
+          />
+          <div class="field-help">Docker Labels 键值对，提交为 object。</div>
+        </el-form-item>
+        <el-form-item label="环境变量">
+          <el-input
+            v-model="form.environmentText"
+            type="textarea"
+            :rows="2"
+            placeholder="每行一个 KEY=value；敏感值不会在列表中回显"
+          />
+          <div class="field-help">环境变量键值对，前端不会在普通列表中回显敏感值。</div>
+        </el-form-item>
+      </el-form>
+    </custom-drawer>
+
+    <el-dialog v-if="dialogType !== 'container'" v-model="dialogVisible" :title="{
+      image: '拉取镜像',
+      'image-import': '导入镜像',
+      'image-build': '构建镜像',
+      'image-tag': '修改镜像标签',
+      'image-push': '推送镜像',
+      network: '创建网络',
+      volume: '创建存储卷',
+      registry: dialogTarget ? '编辑 Registry' : '新增 Registry',
+      template: dialogTarget ? '编辑编排模板' : '创建编排模板'
+    }[dialogType]" width="680px">
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="112px" class="resource-dialog-form">
+        <template v-if="dialogType === 'image'">
+          <el-form-item label="拉取方式">
+            <el-radio-group v-model="imageActionForm.pullMode">
+              <el-radio value="reference">完整镜像引用</el-radio>
+              <el-radio value="registry">选择 Registry</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="imageActionForm.pullMode === 'reference'" label="镜像引用">
+            <el-input v-model.trim="imageActionForm.reference" placeholder="例如 nginx:1.27" />
+          </el-form-item>
+          <template v-else>
+            <el-form-item label="Registry">
+              <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
+                <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="镜像名">
+              <el-input v-model.trim="imageActionForm.imageName" placeholder="例如 library/nginx:1.27" />
+            </el-form-item>
+          </template>
+        </template>
+
+        <el-form-item v-if="dialogType === 'image-import'" label="tar 文件">
+          <input class="file-picker" type="file" accept=".tar,.gz,.tgz,.xz,.zst" @change="handleImportFileChange" />
+          <div class="field-help">请选择 Docker save 导出的 tar 镜像文件，字段名会按文档提交为 `file`。</div>
+        </el-form-item>
+
+        <template v-if="dialogType === 'image-build'">
+          <el-form-item label="目标镜像">
+            <el-input v-model.trim="imageActionForm.buildName" placeholder="例如 demo/web:latest" />
+          </el-form-item>
+          <el-form-item label="构建方式">
+            <el-radio-group v-model="imageActionForm.buildMode">
+              <el-radio value="dockerfile">编辑 Dockerfile</el-radio>
+              <el-radio value="path">服务器路径</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="imageActionForm.buildMode === 'dockerfile'" label="Dockerfile">
+            <el-input v-model="imageActionForm.dockerfile" type="textarea" :rows="8" />
+          </el-form-item>
+          <template v-else>
+            <el-form-item label="上下文目录">
+              <el-input v-model.trim="imageActionForm.contextPath" placeholder="/usr/local/one/docker-build/demo" />
+            </el-form-item>
+            <el-form-item label="Dockerfile">
+              <el-input v-model.trim="imageActionForm.dockerfilePath" placeholder="留空使用 contextPath/Dockerfile" />
+            </el-form-item>
+          </template>
+          <el-form-item label="Labels">
+            <el-input v-model="imageActionForm.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
+          </el-form-item>
+        </template>
+
+        <template v-if="dialogType === 'image-tag'">
+          <el-form-item label="当前镜像">
+            <el-input :model-value="dialogTarget ? imageReference(dialogTarget) : ''" disabled />
+          </el-form-item>
+          <el-form-item label="新标签">
+            <el-input v-model.trim="imageActionForm.tagReference" placeholder="例如 demo/web:stable" />
+          </el-form-item>
+          <el-form-item label="移除旧标签">
+            <el-switch v-model="imageActionForm.removeOther" />
+            <div class="field-help">开启时会提交 `removeOther=true` 和 `confirm=true`。</div>
+          </el-form-item>
+        </template>
+
+        <template v-if="dialogType === 'image-push'">
+          <el-form-item label="推送方式">
+            <el-radio-group v-model="imageActionForm.pushMode">
+              <el-radio value="reference">完整镜像引用</el-radio>
+              <el-radio value="registry">选择 Registry</el-radio>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="imageActionForm.pushMode === 'reference'" label="镜像引用">
+            <el-input v-model.trim="imageActionForm.pushReference" placeholder="例如 docker.io/team/demo:latest" />
+          </el-form-item>
+          <template v-else>
+            <el-form-item label="Registry">
+              <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
+                <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="镜像名">
+              <el-input v-model.trim="imageActionForm.pushImageName" placeholder="例如 team/demo:latest" />
+            </el-form-item>
+          </template>
+        </template>
+
+        <template v-if="dialogType === 'network' || dialogType === 'volume'">
+          <el-form-item label="名称" prop="name">
+            <el-input v-model.trim="form.name" placeholder="例如 app-network" />
+          </el-form-item>
+          <el-form-item label="驱动">
+            <el-input v-model.trim="form.driver" :placeholder="dialogType === 'network' ? 'bridge' : 'local'" />
+          </el-form-item>
+        </template>
+
+        <template v-if="dialogType === 'registry'">
+          <el-form-item label="名称">
+            <el-input v-model.trim="registryForm.name" placeholder="例如 Docker Hub" />
+          </el-form-item>
+          <el-form-item label="地址">
+            <el-input v-model.trim="registryForm.address" placeholder="docker.io 或 registry.example.com:5000" />
+          </el-form-item>
+          <el-form-item label="协议">
+            <el-select v-model="registryForm.protocol">
+              <el-option label="https" value="https" />
+              <el-option label="http" value="http" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="认证">
+            <el-switch v-model="registryForm.authEnabled" />
+          </el-form-item>
+          <template v-if="registryForm.authEnabled">
+            <el-form-item label="用户名">
+              <el-input v-model.trim="registryForm.username" placeholder="请输入用户名" />
+            </el-form-item>
+            <el-form-item label="密码">
+              <el-input v-model="registryForm.password" type="password" show-password placeholder="编辑时留空表示不替换密码" />
+            </el-form-item>
+          </template>
+        </template>
+
+        <template v-if="dialogType === 'template'">
+          <el-form-item label="名称">
+            <el-input v-model.trim="templateForm.name" placeholder="例如 nginx-compose" />
+          </el-form-item>
+          <el-form-item label="说明">
+            <el-input v-model.trim="templateForm.description" placeholder="模板用途，可选" />
+          </el-form-item>
+          <el-form-item label="YAML">
+            <el-input v-model="templateForm.content" type="textarea" :rows="10" />
+          </el-form-item>
+        </template>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="submitDialog">确认</el-button>
+      </template>
+    </el-dialog>
+
+    <el-dialog v-model="logsVisible" width="860px" :title="`${logTarget?.Names || '容器'} 日志`">
+      <div v-loading="logsLoading" class="logs-box">
+        <pre v-if="logsText">{{ logsText }}</pre>
+        <el-empty v-else description="暂无日志" />
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<style scoped lang="less">
+.container-page {
+  min-height: 100%;
+  color: var(--text-primary);
+}
+
+.container-alert,
+.resource-panel,
+.runtime-grid {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 16px;
+}
+
+.container-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+
+  h2 {
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 720;
+  }
+
+  p {
+    margin-top: 6px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+  }
+}
+
+.hero-actions,
+.panel-actions,
+.row-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.runtime-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.metric-card {
+  min-height: 106px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+
+  &__label {
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  span {
+    display: block;
+    color: var(--text-secondary);
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  strong {
+    font-size: 22px;
+    line-height: 1.2;
+  }
+
+  &--accent {
+    background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
+  }
+}
+
+.resource-panel {
+  padding: 18px 20px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-soft);
+}
+
+.panel-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 52px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.panel-top :deep(.el-tabs__header) {
+  margin: 0;
+}
+
+.panel-top :deep(.el-tabs__nav-wrap::after) {
+  display: none;
+}
+
+.panel-top :deep(.el-tabs__item) {
+  height: 48px;
+  padding: 0 18px;
+  font-weight: 700;
+}
+
+.panel-actions {
+  min-height: 48px;
+  padding-bottom: 8px;
+  justify-content: flex-end;
+}
+
+.resource-panel :deep(.el-table) {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.resource-panel :deep(.el-table th.el-table__cell) {
+  background: color-mix(in srgb, var(--surface-page) 70%, var(--surface-card));
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.resource-panel :deep(.el-table__empty-block) {
+  min-height: 104px;
+}
+
+.primary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  span {
+    color: var(--text-secondary);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: 12px;
+  }
+}
+
+.panel-foot {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.logs-box {
+  min-height: 360px;
+  max-height: 62vh;
+  overflow: auto;
+  border-radius: 8px;
+  background: #0b1220;
+  color: #e5edf6;
+
+  pre {
+    margin: 0;
+    padding: 16px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: 13px;
+    line-height: 1.7;
+  }
+}
+
+.config-editor {
+  padding: 4px 0 0;
+
+  :deep(.el-textarea__inner) {
+    border-radius: 8px;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    line-height: 1.6;
+  }
+}
+
+.config-editor__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.resource-dialog-form {
+  :deep(.el-select),
+  :deep(.el-input),
+  :deep(.el-textarea) {
+    width: 100%;
+  }
+
+  :deep(.el-radio-group) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+  }
+
+  :deep(.el-radio) {
+    height: 32px;
+    margin-right: 0;
+    font-weight: 700;
+  }
+}
+
+.file-picker {
+  width: 100%;
+  min-height: 42px;
+  padding: 8px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+  color: var(--text-secondary);
+}
+
+:global(.el-message-box:has(.container-create-preview)) {
+  width: 560px;
+  max-width: calc(100vw - 32px);
+}
+
+:global(.container-create-preview) {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--text-primary);
+}
+
+:global(.container-create-preview__notice) {
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent-color) 22%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+:global(.container-create-preview__grid) {
+  display: grid;
+  gap: 8px;
+}
+
+:global(.container-create-preview__row) {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 9px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-page) 58%, var(--surface-card));
+}
+
+:global(.container-create-preview__label) {
+  color: var(--text-tertiary);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.6;
+}
+
+:global(.container-create-preview__value) {
+  color: var(--text-primary);
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+:global(.container-create-preview__value.is-danger) {
+  color: var(--danger-color);
+}
+
+.container-create-form {
+  max-width: 640px;
+  margin: 0 auto;
+
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-form-item__label) {
+    align-items: center;
+    min-height: 44px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  :deep(.el-input),
+  :deep(.el-textarea),
+  :deep(.el-select),
+  :deep(.el-input-number) {
+    width: 100%;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 44px;
+    border-radius: 8px;
+  }
+
+  :deep(.el-textarea__inner) {
+    min-height: 78px;
+    border-radius: 8px;
+    line-height: 1.55;
+    resize: vertical;
+  }
+
+  :deep(.el-divider) {
+    margin: 26px 0 20px;
+  }
+
+  :deep(.el-divider__text) {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 760;
+  }
+
+  :deep(.resource-limit-input) {
+    width: calc(100% - 82px);
+  }
+}
+
+.field-unit {
+  width: 70px;
+  height: 44px;
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-page) 78%, var(--surface-card));
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.field-help,
+.resource-help {
+  flex-basis: 100%;
+  margin-top: 8px;
+  color: var(--text-tertiary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.image-field {
+  width: 100%;
+  display: grid;
+  gap: 10px;
+
+  &__toggle {
+    width: fit-content;
+    margin: 0;
+  }
+}
+
+.form-inline-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  width: 100%;
+
+  &--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.form-switches {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+  width: 100%;
+
+  :deep(.el-checkbox) {
+    height: 34px;
+    margin-right: 0;
+  }
+}
+
+.restart-options {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 34px;
+
+  :deep(.el-radio) {
+    height: 32px;
+    margin-right: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 720;
+  }
+
+  :deep(.el-radio.is-checked) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.el-radio__label) {
+    padding-left: 10px;
+  }
+}
+
+.port-publish {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.port-mode-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px 34px;
+
+  :deep(.el-radio) {
+    height: 32px;
+    margin-right: 0;
+    color: var(--text-secondary);
+    font-size: 15px;
+    font-weight: 760;
+  }
+
+  :deep(.el-radio.is-checked) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.el-radio__label) {
+    padding-left: 10px;
+  }
+}
+
+.port-card {
+  padding: 24px 20px 20px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.port-card__head,
+.port-card__row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) 116px 64px;
+  gap: 14px;
+  align-items: start;
+}
+
+.port-card__head {
+  padding: 0 0 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font-size: 14px;
+  font-weight: 760;
+}
+
+.port-card__row {
+  padding: 12px 0;
+
+  &:nth-child(odd) {
+    background: color-mix(in srgb, var(--surface-page) 62%, transparent);
+  }
+}
+
+.port-field {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+
+  small {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+  }
+}
+
+.port-add-button {
+  margin-top: 8px;
+}
+
+@media (max-width: 1180px) {
+  .port-card__head {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 108px 60px;
+  }
+
+  .port-card__row {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 108px 60px;
+  }
+}
+
+.port-all-fields {
+  display: grid;
+  gap: 18px;
+  width: 100%;
+
+  label {
+    display: grid;
+    gap: 8px;
+
+    > span {
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 720;
+    }
+  }
+}
+
+.mount-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.mount-card {
+  padding: 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.mount-card__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  :deep(.el-segmented) {
+    --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+    --el-segmented-item-selected-color: #fff;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: 6px;
+  }
+
+  :deep(.el-segmented__item) {
+    min-width: 88px;
+    height: 34px;
+    border-radius: 5px;
+    font-weight: 700;
+  }
+}
+
+.mount-card__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(130px, 0.8fr) minmax(0, 1.5fr);
+  gap: 12px;
+
+  label {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    > span {
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+  }
+}
+
+.mount-add-button {
+  align-self: flex-start;
+}
+
+:deep(.el-dialog .el-divider__text) {
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+:deep(.el-dialog .el-dialog__body){
+  max-height: 62vh;
+  overflow: auto;
+}
+
+@media (max-width: 980px) {
+  .container-page {
+    padding: 16px;
+  }
+
+  .container-hero,
+  .panel-top {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .runtime-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .form-inline-grid,
+  .form-inline-grid--three {
+    grid-template-columns: 1fr;
+  }
+
+  .form-switches {
+    grid-template-columns: 1fr;
+  }
+
+  .port-card__head {
+    display: none;
+  }
+
+  .port-card__row {
+    grid-template-columns: 1fr;
+    padding: 12px 0;
+  }
+
+  .mount-card__grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

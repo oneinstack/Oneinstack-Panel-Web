@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import ThemeSwitch from './components/theme-switch.vue'
+import LanguageSwitch from './components/language-switch.vue'
 import sapp from '@/sstore/sapp'
 import { Bell, Expand, Fold } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -25,6 +26,7 @@ interface NavItem {
   event?: () => void
   adminOnly?: boolean
   matrixKeys?: string[]
+  actionKeys?: string[]
 }
 
 const route = useRoute()
@@ -87,6 +89,16 @@ const conf = reactive({
       activeColor: {
         light: ['#eab170', '#8B8B8B'],
         dark: ['#eab170', '#ffffff']
+      }
+    },
+    {
+      name: '容器管理',
+      path: '/container',
+      icon: 'software',
+      matrixKeys: ['container'],
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
       }
     },
     {
@@ -172,6 +184,18 @@ const conf = reactive({
       }
     },
     {
+      name: '配置快照',
+      path: '/config-snapshots',
+      icon: 'log',
+      adminOnly: true,
+      matrixKeys: ['configSnapshots'],
+      actionKeys: ['config.snapshot.read'],
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
+      }
+    },
+    {
       name: '用户管理',
       path: '/user-management',
       icon: 'user-management',
@@ -211,8 +235,9 @@ const isPrivilegedUser = computed(() =>
 )
 const hasMenuPermission = (item: NavItem) => {
   if (isPrivilegedUser.value) return true
-  if (!item.matrixKeys?.length) return true
-  return item.matrixKeys.some((key) => sconfig.hasMenuAccess(key))
+  if (item.matrixKeys?.some((key) => sconfig.hasMenuAccess(key))) return true
+  if (item.actionKeys?.some((key) => sconfig.hasActionAccess(key))) return true
+  return !item.matrixKeys?.length && !item.actionKeys?.length
 }
 const visibleNavList = computed(() =>
   conf.navList.filter((item) => {
@@ -241,13 +266,15 @@ const pageDescriptions: Record<string, string> = {
   '/database': '管理数据库实例、账号与远程连接',
   '/monitor': '跟踪资源指标、告警规则与通知事件',
   '/bastion': '管理远程服务器接入、可达性与资源指标',
+  '/container': '管理容器、镜像、网络、存储卷与 Compose 项目',
   '/security': '管理防火墙、登录防护与系统安全',
   '/file': '浏览、上传和维护服务器文件',
   '/log': '追踪关键操作与安全审计记录',
   '/runtime-log': '查看面板与服务运行日志',
   '/task': '编排周期任务与自动化脚本',
   '/software': '安装、升级和维护服务器软件',
-  '/setting': '配置面板、安全策略与用户账户'
+  '/setting': '配置面板、安全策略与用户账户',
+  '/config-snapshots': '查看配置快照、差异并执行安全回滚'
 }
 const pageDescription = computed(() => pageDescriptions[currentNav.value?.path] || 'OneinStack 服务器管理中心')
 const displayName = computed(
@@ -450,6 +477,7 @@ const BindButton = () => {
           <span class="status-dot"></span>
           <span>服务正常</span>
         </div>
+        <!-- <language-switch /> -->
         <theme-switch />
         <el-dropdown placement="bottom-end">
           <div class="user-menu">

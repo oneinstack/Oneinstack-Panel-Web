@@ -69,7 +69,7 @@
       </div>
     </div>
 
-    <div class="terminal-shell">
+    <div class="terminal-shell" @mousedown="focusTerminal" @click="focusTerminal">
       <div class="terminal-shell__bar">
         <div class="window-dots"><i /><i /><i /></div>
         <span>{{ status?.runtimeUser || 'one-terminal' }}@panel</span>
@@ -164,6 +164,12 @@ const sendSize = () => {
   socket.send(JSON.stringify({ rows: terminal.rows, cols: terminal.cols }))
 }
 
+const focusTerminal = () => {
+  if (!terminal || connectionState.value !== 'connected') return
+  terminal.focus()
+  terminal.textarea?.focus()
+}
+
 const connectTerminal = async () => {
   if (connecting.value || connectionState.value === 'connected') return
   connecting.value = true
@@ -192,9 +198,12 @@ const connectTerminal = async () => {
     socket.onopen = () => {
       connectionState.value = 'connected'
       connecting.value = false
-      terminal?.focus()
       sendSize()
       void loadStatus()
+      void nextTick(() => {
+        focusTerminal()
+        window.setTimeout(focusTerminal, 80)
+      })
     }
     socket.onmessage = event => {
       try {
@@ -227,6 +236,8 @@ const initializeTerminal = async () => {
   await nextTick()
   terminal = new Terminal({
     cursorBlink: true,
+    cursorStyle: 'bar',
+    cursorWidth: 2,
     convertEol: false,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
     fontSize: 14,

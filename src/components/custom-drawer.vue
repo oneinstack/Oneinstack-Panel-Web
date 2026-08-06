@@ -7,6 +7,7 @@ interface Props {
   cancelText?: string
   confirmText?: string
   loading?: boolean
+  size?: string | number
   onClose?: () => void
   onConfirm?: () => void
 }
@@ -15,13 +16,14 @@ const props = withDefaults(defineProps<Props>(), {
   visible: false,
   title: '',
   loading: false,
+  size: '520px',
   cancelText: '取消',
   confirmText: '确认'
 })
 </script>
 
 <template>
-  <el-drawer :model-value="visible" direction="rtl" size="520px" :show-close="false" @close="onClose">
+  <el-drawer :model-value="visible" direction="rtl" :size="size" :show-close="false" @close="onClose">
     <template #header>
       <div class="drawerHeader">
         <div class="back" @click="onClose">
@@ -81,6 +83,8 @@ const props = withDefaults(defineProps<Props>(), {
 .drawerBody {
   min-height: 100%;
   padding: 22px;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .drawerFooter {

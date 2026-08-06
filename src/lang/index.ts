@@ -2,7 +2,7 @@ import { EKey } from '@/enum/Enum'
 import { createI18n } from 'vue-i18n'
 
 const i18n = createI18n({
-  locale: 'en-us',
+  locale: 'es-CH',
   messages: {}
 })
 
@@ -17,7 +17,7 @@ export const langobj: any = {
 }
 
 //@ts-ignore
-i18n.setLang = async (lang: string = Cookie.get(EKey.language) || 'en-us') => {
+i18n.setLang = async (lang: string = Cookie.get(EKey.language) || 'es-CH') => {
   const modules = import.meta.glob('@/lang/**/*.ts')
   const module: any = await modules[`/src/lang/${lang}.ts`]()
   i18n.global.setLocaleMessage(lang, module.default)
