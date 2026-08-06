@@ -209,12 +209,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-drawer
-    :model-value="modelValue"
+  <custom-drawer
+    :visible="modelValue"
     :title="title"
     size="78%"
     destroy-on-close
-    @close="emit('update:modelValue', false)"
+    :show-footer="false"
+    :on-close="() => emit('update:modelValue', false)"
   >
     <el-alert
       title="备份包使用逐文件摘要和整包 SHA-256 校验，包含网站文件、网站元数据、Nginx 配置快照及一个可选 MySQL 数据库；证书私钥不会写入备份。"
@@ -309,7 +310,7 @@ onBeforeUnmount(() => {
     <el-dialog v-model="state.logVisible" :title="state.logTitle" width="760px" append-to-body>
       <pre class="task-log">{{ state.logContent }}</pre>
     </el-dialog>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">

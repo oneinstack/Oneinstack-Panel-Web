@@ -19,8 +19,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue'])
 const dialogVisible = ref(false)
-const drawer = ref(false)
-const direction = ref('rtl')
 const ruleFormRef = ref<FormInstance>()
 
 const ruleForm = reactive<RuleForm>({
@@ -77,19 +75,13 @@ const handleSubmit = async () => {
 }
 
 const handleClose = () => {
-  drawer.value = false
+  dialogVisible.value = false
   emit('update:modelValue', false)
 }
 
 // 监听 modelValue 变化
 watch(() => props.modelValue, (val) => {
-  drawer.value = val
   dialogVisible.value = val
-})
-
-// 监听变化
-watch(() => drawer.value, (val) => {
-  emit('update:modelValue', val)
 })
 
 watch(() => dialogVisible.value, (val) => {
@@ -98,40 +90,30 @@ watch(() => dialogVisible.value, (val) => {
 </script>
 
 <template>
-  <el-drawer
-    v-model="dialogVisible"
-    width="40%"
-    >
-    <template #header>
-      <div class="drawer-header" style="padding: 20px;font-size: 16px;">
-        <span class="title">修改面板端口</span>
-      </div>
-    </template>
-  
+  <custom-drawer
+    :visible="dialogVisible"
+    title="修改面板端口"
+    size="520px"
+    confirm-text="确定"
+    :on-close="handleClose"
+    :on-confirm="handleSubmit"
+  >
     <el-form
       ref="ruleFormRef"
       :model="ruleForm"
       :rules="rules"
-      style="padding: 0 20px;"
+      class="port-form"
       label-width="120px"
     >
       <el-form-item label="面板端口" prop="port" label-position="top" required>
-        <el-input v-model="ruleForm.port" placeholder="请输入端口号" style="margin-top: 8px;" />
+        <el-input v-model="ruleForm.port" placeholder="请输入端口号" />
       </el-form-item>
     </el-form>
-    <template #footer>
-      <span class="dialog-footer">
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </span>
-    </template>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
+.port-form {
+  max-width: 420px;
 }
 </style>

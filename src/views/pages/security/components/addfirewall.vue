@@ -197,11 +197,15 @@ const submit = async () => {
 </script>
 
 <template>
-  <el-dialog
-    v-model="visible"
-    width="560px"
-    :close-on-click-modal="false"
+  <custom-drawer
+    :visible="visible"
+    size="640px"
     :title="props.type ? '添加防火墙规则' : '编辑防火墙规则'"
+    :confirm-text="props.type ? '添加规则' : '保存修改'"
+    :loading="submitting"
+    :confirm-disabled="submitting"
+    :on-close="close"
+    :on-confirm="submit"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="88px" status-icon>
       <el-form-item label="协议" prop="protocol">
@@ -257,14 +261,7 @@ const submit = async () => {
         show-icon
       />
     </el-form>
-
-    <template #footer>
-      <el-button :disabled="submitting" @click="close">取消</el-button>
-      <el-button type="primary" :loading="submitting" @click="submit">
-        {{ props.type ? '添加规则' : '保存修改' }}
-      </el-button>
-    </template>
-  </el-dialog>
+  </custom-drawer>
 </template>
 
 <style scoped>

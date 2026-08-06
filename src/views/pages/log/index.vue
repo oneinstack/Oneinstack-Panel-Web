@@ -309,8 +309,14 @@ onMounted(async () => {
       </div>
     </div>
 
-    <el-drawer v-model="detailVisible" title="审计记录详情" size="600px">
-      <el-descriptions v-if="detail" :column="2" border>
+    <custom-drawer
+      :visible="detailVisible"
+      title="审计记录详情"
+      size="640px"
+      :show-footer="false"
+      :on-close="() => { detailVisible = false }"
+    >
+      <el-descriptions v-if="detail" class="audit-detail-descriptions" :column="2" border>
         <el-descriptions-item label="序号">#{{ detail.sequence }}</el-descriptions-item>
         <el-descriptions-item label="时间">{{ formatTime(detail.createdAt) }}</el-descriptions-item>
         <el-descriptions-item label="用户">{{ detail.username || '未认证' }}（ID {{ detail.userId || 0 }}）</el-descriptions-item>
@@ -327,7 +333,7 @@ onMounted(async () => {
         <el-descriptions-item label="前置摘要" :span="2"><code class="hash">{{ detail.previousHash }}</code></el-descriptions-item>
         <el-descriptions-item label="记录摘要" :span="2"><code class="hash">{{ detail.entryHash }}</code></el-descriptions-item>
       </el-descriptions>
-    </el-drawer>
+    </custom-drawer>
   </div>
 </template>
 
@@ -433,6 +439,20 @@ code {
 
 .hash {
   word-break: break-all;
+}
+
+.audit-detail-descriptions {
+  :deep(.el-descriptions__label) {
+    width: 96px;
+    color: var(--text-secondary);
+    font-weight: 650;
+  }
+
+  :deep(.el-descriptions__content) {
+    color: var(--text-primary);
+    line-height: 1.65;
+    word-break: break-word;
+  }
 }
 
 @media (max-width: 1350px) {

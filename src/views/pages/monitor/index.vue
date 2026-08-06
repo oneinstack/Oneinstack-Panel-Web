@@ -1075,13 +1075,17 @@ onUnmounted(() => {
       </el-tabs>
     </div>
 
-    <el-dialog
-      v-model="ruleDialogVisible"
+    <custom-drawer
+      :visible="ruleDialogVisible"
       :title="editingRuleID ? '编辑告警规则' : '新建告警规则'"
-      width="620px"
+      size="720px"
+      confirm-text="保存"
+      :loading="savingRule"
       destroy-on-close
+      :on-close="() => { ruleDialogVisible = false }"
+      :on-confirm="saveRule"
     >
-      <el-form label-position="top">
+      <el-form label-position="top" class="monitor-drawer-form">
         <el-form-item label="规则名称" required>
           <el-input v-model="ruleForm.name" maxlength="120" show-word-limit placeholder="例如：CPU 持续过高" />
         </el-form-item>
@@ -1123,24 +1127,24 @@ onUnmounted(() => {
           </el-form-item>
         </div>
       </el-form>
-      <template #footer>
-        <el-button @click="ruleDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="savingRule" @click="saveRule">保存</el-button>
-      </template>
-    </el-dialog>
+    </custom-drawer>
 
-    <el-dialog
-      v-model="channelDialogVisible"
+    <custom-drawer
+      :visible="channelDialogVisible"
       :title="editingChannelID ? '编辑通知通道' : '新建通知通道'"
-      width="620px"
+      size="720px"
+      confirm-text="保存"
+      :loading="savingChannel"
       destroy-on-close
+      :on-close="() => { channelDialogVisible = false }"
+      :on-confirm="saveChannel"
     >
       <el-alert
         type="info"
         :closable="false"
         title="支持接入自建告警网关；目标必须为公网 HTTPS 地址，重定向和内网地址会被拒绝。"
       />
-      <el-form label-position="top" class="channel-form">
+      <el-form label-position="top" class="channel-form monitor-drawer-form">
         <el-form-item label="通道名称" required>
           <el-input v-model="channelForm.name" maxlength="120" show-word-limit />
         </el-form-item>
@@ -1159,11 +1163,7 @@ onUnmounted(() => {
           <el-switch v-model="channelForm.enabled" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="channelDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="savingChannel" @click="saveChannel">保存</el-button>
-      </template>
-    </el-dialog>
+    </custom-drawer>
   </div>
 </template>
 
@@ -1434,6 +1434,14 @@ onUnmounted(() => {
   display: flex;
   justify-content: flex-end;
   margin-top: 18px;
+}
+
+.monitor-drawer-form {
+  max-width: 620px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 22px;
+  }
 }
 
 .form-grid {

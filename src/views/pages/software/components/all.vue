@@ -401,7 +401,13 @@ onMounted(() => {
   <div>
     <div class="section-header">
       <div class="title">应用</div>
-      <el-popover v-if="recentTasks.length" placement="bottom-end" width="360" trigger="click">
+      <el-popover
+        v-if="recentTasks.length"
+        placement="bottom-end"
+        width="360"
+        trigger="click"
+        popper-class="software-task-popover"
+      >
         <template #reference>
           <el-button plain>
             软件任务
@@ -417,19 +423,21 @@ onMounted(() => {
             <span>近 30 天 {{ softwareTaskStore.stats.total }} 个任务</span>
             <strong>成功率 {{ softwareTaskStore.stats.successRate }}%</strong>
           </div>
-          <button
-            v-for="task in recentTasks"
-            :key="task.id"
-            class="task-center-item"
-            type="button"
-            @click="showTask(task.id)"
-          >
-            <span>
-              <strong>{{ task.component }}</strong>
-              <small>{{ task.requestedVersion }} · {{ task.message }}</small>
-            </span>
-            <span>{{ task.progress }}%</span>
-          </button>
+          <div class="task-center-scroll">
+            <button
+              v-for="task in recentTasks"
+              :key="task.id"
+              class="task-center-item"
+              type="button"
+              @click="showTask(task.id)"
+            >
+              <span>
+                <strong>{{ task.component }}</strong>
+                <small>{{ task.requestedVersion }} · {{ task.message }}</small>
+              </span>
+              <span>{{ task.progress }}%</span>
+            </button>
+          </div>
         </div>
       </el-popover>
     </div>
@@ -679,11 +687,39 @@ onMounted(() => {
 .task-center-list {
   display: flex;
   flex-direction: column;
+  max-height: min(520px, calc(100vh - 120px));
+  overflow: visible;
+}
+
+.task-center-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
   gap: 6px;
+  min-height: 0;
+  max-height: min(450px, calc(100vh - 190px));
+  padding: 8px 4px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(148, 163, 184, 0.45);
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }
 
 .task-stats {
   display: flex;
+  flex: 0 0 auto;
   padding: 6px 10px 10px;
   align-items: center;
   justify-content: space-between;
@@ -698,6 +734,7 @@ onMounted(() => {
 
 .task-center-item {
   width: 100%;
+  min-height: 60px;
   padding: 10px;
   color: var(--font-color-black);
   text-align: left;
@@ -717,13 +754,18 @@ onMounted(() => {
   }
 
   small {
-    max-width: 270px;
+    max-width: 250px;
     margin-top: 4px;
     overflow: hidden;
     color: var(--font-color-gray-light);
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+:global(.software-task-popover.el-popper) {
+  max-height: calc(100vh - 96px);
+  overflow: hidden;
 }
 
 .list {

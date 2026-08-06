@@ -94,6 +94,18 @@ const approvalDialog = reactive({
   }
 })
 
+const approvalDrawerTitle = computed(() => {
+  if (approvalDialog.mode === 'approve') return '审批通过'
+  if (approvalDialog.mode === 'reject') return '审批拒绝'
+  return '审批详情'
+})
+
+const approvalConfirmText = computed(() => approvalDialog.mode === 'approve' ? '确认通过' : '确认拒绝')
+const approvalConfirmType = computed(() => approvalDialog.mode === 'reject' ? 'danger' : 'primary')
+const closeApprovalDrawer = () => {
+  approvalDialog.show = false
+}
+
 const canReviewApproval = computed(
   () =>
     Boolean(
@@ -293,12 +305,19 @@ onMounted(async () => {
       </custom-table>
     </section>
 
-    <custom-dialog
-      v-model:show="approvalDialog.show"
-      :title="approvalDialog.mode === 'detail' ? '审批详情' : approvalDialog.mode === 'approve' ? '审批通过' : '审批拒绝'"
-      width="720px"
+    <custom-drawer
+      :visible="approvalDialog.show"
+      :title="approvalDrawerTitle"
+      size="760px"
+      cancel-text="关闭"
+      :confirm-text="approvalConfirmText"
+      :confirm-type="approvalConfirmType"
+      :show-confirm="approvalDialog.mode !== 'detail'"
+      :loading="loading.approvalAction"
+      :on-close="closeApprovalDrawer"
+      :on-confirm="submitApprovalAction"
     >
-      <div v-loading="loading.approvalDetail" class="dialog-form dialog-form--scrollable">
+      <div v-loading="loading.approvalDetail" class="approval-drawer-body">
         <template v-if="approvalDialog.data">
           <div class="approval-detail-head">
             <div class="approval-detail-title">
@@ -366,18 +385,7 @@ onMounted(async () => {
           </el-form>
         </template>
       </div>
-      <template #footer>
-        <el-button @click="approvalDialog.show = false">关闭</el-button>
-        <el-button
-          v-if="approvalDialog.mode !== 'detail'"
-          :type="approvalDialog.mode === 'approve' ? 'primary' : 'danger'"
-          :loading="loading.approvalAction"
-          @click="submitApprovalAction"
-        >
-          {{ approvalDialog.mode === 'approve' ? '确认通过' : '确认拒绝' }}
-        </el-button>
-      </template>
-    </custom-dialog>
+    </custom-drawer>
   </div>
 </template>
 
@@ -567,23 +575,8 @@ onMounted(async () => {
   overflow-x: auto;
 }
 
-.dialog-form {
-  padding-top: 8px;
-}
-
-.dialog-form--scrollable {
-  max-height: min(70vh, 820px);
-  padding-right: 6px;
-  overflow-y: auto;
-}
-
-.dialog-form--scrollable::-webkit-scrollbar {
-  width: 8px;
-}
-
-.dialog-form--scrollable::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(148, 163, 184, 0.45);
+.approval-drawer-body {
+  min-height: 100%;
 }
 
 @media (max-width: 960px) {

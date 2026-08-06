@@ -215,12 +215,13 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-drawer
-    :model-value="modelValue"
+  <custom-drawer
+    :visible="modelValue"
     :title="`SSL 证书 · ${website.name || ''}`"
     size="720px"
     destroy-on-close
-    @close="close"
+    :show-footer="false"
+    :on-close="close"
   >
     <div v-loading="loading">
       <el-alert
@@ -307,7 +308,7 @@ onBeforeUnmount(() => {
         </el-table-column>
       </el-table>
     </div>
-  </el-drawer>
+  </custom-drawer>
 
   <el-dialog v-model="logDialog.show" :title="logDialog.title" width="760px">
     <pre v-loading="logDialog.loading" class="task-log">{{ logDialog.content }}</pre>

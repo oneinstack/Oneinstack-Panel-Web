@@ -13,6 +13,9 @@ interface Props {
   showConfirm?: boolean
   confirmDisabled?: boolean
   confirmType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | ''
+  destroyOnClose?: boolean
+  closeOnClickModal?: boolean
+  direction?: 'rtl' | 'ltr' | 'ttb' | 'btt'
   onClose?: () => void
   onConfirm?: () => void
 }
@@ -28,12 +31,24 @@ const props = withDefaults(defineProps<Props>(), {
   showCancel: true,
   showConfirm: true,
   confirmDisabled: false,
-  confirmType: 'primary'
+  confirmType: 'primary',
+  destroyOnClose: false,
+  closeOnClickModal: true,
+  direction: 'rtl'
 })
 </script>
 
 <template>
-  <el-drawer :model-value="visible" direction="rtl" :size="size" :show-close="false" @close="onClose">
+  <el-drawer
+    class="custom-drawer-shell"
+    :model-value="visible"
+    :direction="direction"
+    :size="size"
+    :show-close="false"
+    :destroy-on-close="destroyOnClose"
+    :close-on-click-modal="closeOnClickModal"
+    @close="onClose"
+  >
     <template #header>
       <div class="drawerHeader">
         <div class="back" @click="onClose">
@@ -67,57 +82,103 @@ const props = withDefaults(defineProps<Props>(), {
 
 <style scoped lang="less">
 .drawerHeader {
-  min-height: 68px;
-  padding: 0 22px;
+  min-height: 88px;
+  padding: 0 36px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-raised);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+  background: var(--surface-card);
 
   .back {
-    margin-right: 16px;
-    padding: 7px 13px 7px 0;
+    margin-right: 24px;
+    padding: 10px 20px 10px 0;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
     border-right: 1px solid var(--border-subtle);
     color: var(--text-tertiary);
     cursor: pointer;
-    font-size: 12px;
+    font-size: 15px;
+    line-height: 1;
     transition: color 0.18s ease;
 
     &:hover {
       color: rgb(var(--primary-color));
     }
+
+    .el-icon {
+      font-size: 18px;
+    }
   }
 
   .title {
     color: var(--text-primary);
-    font-size: 15px;
-    font-weight: 680;
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
   }
 }
 
 .drawerBody {
   min-height: 100%;
-  padding: 22px;
+  padding: 38px 36px 32px;
   box-sizing: border-box;
   overflow-x: hidden;
 }
 
 .drawerFooter {
-  padding: 16px 22px;
+  min-height: 84px;
+  padding: 18px 36px;
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
+  align-items: center;
+  gap: 14px;
   border-top: 1px solid var(--border-subtle);
-  background: var(--surface-raised);
+  background: var(--surface-card);
+
+  :deep(.el-button) {
+    min-width: 88px;
+    height: 44px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
 }
 
-:global(.el-drawer__header),
-:global(.el-drawer__body),
-:global(.el-drawer__footer) {
+:global(.custom-drawer-shell) {
+  display: flex;
+  flex-direction: column;
+}
+
+:global(.custom-drawer-shell .el-drawer__header),
+:global(.custom-drawer-shell .el-drawer__body),
+:global(.custom-drawer-shell .el-drawer__footer) {
   margin: 0;
   padding: 0;
+}
+
+:global(.custom-drawer-shell .el-drawer__body) {
+  flex: 1;
+  overflow: auto;
+}
+
+@media (max-width: 768px) {
+  .drawerHeader {
+    min-height: 76px;
+    padding: 0 20px;
+
+    .back {
+      margin-right: 16px;
+      padding-right: 14px;
+    }
+  }
+
+  .drawerBody {
+    padding: 24px 18px 28px;
+  }
+
+  .drawerFooter {
+    padding: 14px 18px;
+  }
 }
 </style>

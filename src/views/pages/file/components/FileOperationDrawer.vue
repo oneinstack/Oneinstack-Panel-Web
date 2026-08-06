@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { Refresh, Search, DocumentChecked } from '@element-plus/icons-vue'
+import { ArrowLeft, Refresh, Search } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 
 const props = defineProps<{ modelValue: boolean }>()
@@ -95,14 +95,20 @@ const displayTime = (value: string) =>
 </script>
 
 <template>
-  <el-drawer v-model="visible" size="min(1180px, 94vw)" class="file-operation-drawer" destroy-on-close>
+  <el-drawer
+    v-model="visible"
+    size="min(1180px, 94vw)"
+    class="file-operation-drawer"
+    destroy-on-close
+    :show-close="false"
+  >
     <template #header>
       <div class="drawer-heading">
-        <div class="heading-icon"><el-icon><DocumentChecked /></el-icon></div>
-        <div>
-          <h3>文件操作记录</h3>
-          <p>记录具体路径、操作账号、来源 IP 和执行结果，并纳入防篡改审计链。</p>
-        </div>
+        <button type="button" class="drawer-back" @click="visible = false">
+          <el-icon><ArrowLeft /></el-icon>
+          <span>返回</span>
+        </button>
+        <h3>文件操作记录</h3>
       </div>
     </template>
 
@@ -176,30 +182,42 @@ const displayTime = (value: string) =>
 .drawer-heading {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 24px;
 
   h3 {
-    margin: 0 0 4px;
+    margin: 0;
     color: var(--text-primary);
     font-size: 20px;
-  }
-
-  p {
-    margin: 0;
-    color: var(--text-tertiary);
-    font-size: 13px;
+    font-weight: 760;
+    line-height: 1.2;
   }
 }
 
-.heading-icon {
-  display: grid;
-  width: 44px;
-  height: 44px;
-  place-items: center;
-  border-radius: 12px;
-  color: rgb(var(--primary-color));
-  background: rgba(var(--primary-color), 0.1);
-  font-size: 21px;
+.drawer-back {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+
+  .el-icon {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 15px;
+  }
 }
 
 .drawer-content {
@@ -208,6 +226,20 @@ const displayTime = (value: string) =>
   flex-direction: column;
   gap: 14px;
   min-width: 0;
+}
+
+:global(.file-operation-drawer .el-drawer__header) {
+  min-height: 88px;
+  margin: 0;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+}
+
+:global(.file-operation-drawer .el-drawer__body) {
+  padding: 24px 28px 28px;
 }
 
 .filter-bar {
@@ -327,11 +359,7 @@ const displayTime = (value: string) =>
 
 @media (max-width: 720px) {
   .drawer-heading {
-    align-items: flex-start;
-
-    p {
-      line-height: 1.5;
-    }
+    gap: 16px;
   }
 
   .filter-bar {

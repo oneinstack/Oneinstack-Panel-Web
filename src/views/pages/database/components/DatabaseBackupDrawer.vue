@@ -224,12 +224,13 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
 </script>
 
 <template>
-  <el-drawer
-    :model-value="modelValue"
+  <custom-drawer
+    :visible="modelValue"
     :title="library ? `${library.name} · 备份与恢复` : '备份与恢复'"
     size="820px"
     destroy-on-close
-    @close="close"
+    :show-footer="false"
+    :on-close="close"
   >
     <el-alert
       type="info"
@@ -310,7 +311,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
         </div>
       </el-tab-pane>
     </el-tabs>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">

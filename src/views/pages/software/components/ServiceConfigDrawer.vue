@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Clock, Close, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
+import { ArrowLeft, Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
@@ -279,19 +279,8 @@ watch(values, () => {
           <span>返回</span>
         </button>
         <div class="drawer-heading">
-          <span>服务配置</span>
           <h2>{{ title }}</h2>
         </div>
-        <span v-if="configuration" class="apply-mode-badge">{{ applyModeLabel }}</span>
-        <button
-          type="button"
-          class="close-button"
-          aria-label="关闭配置抽屉"
-          :disabled="applying"
-          @click="visible = false"
-        >
-          <el-icon><Close /></el-icon>
-        </button>
       </div>
     </template>
 
@@ -522,84 +511,58 @@ watch(values, () => {
   max-width: 680px;
   min-width: 0;
   margin: 0 auto;
-  gap: 12px;
+  gap: 24px;
 }
 
 .drawer-heading {
   min-width: 0;
   flex: 1;
 
-  > span {
-    display: block;
-    margin-bottom: 2px;
-    color: var(--text-tertiary);
-    font-size: 9px;
-    font-weight: 650;
-    letter-spacing: 0.14em;
-  }
-
   h2 {
     min-width: 0;
     margin: 0;
     overflow: hidden;
     color: var(--text-primary);
-    font-size: 17px;
-    font-weight: 650;
-    line-height: 1.35;
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
-.back-button,
-.close-button {
+.back-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  color: var(--text-secondary);
-  background: var(--surface-card);
+  gap: 8px;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
-    color 0.18s ease,
-    background 0.18s ease;
+    color 0.18s ease;
 
   &:hover:not(:disabled) {
-    border-color: rgba(var(--primary-color), 0.28);
     color: rgb(var(--primary-color));
-    background: rgba(var(--primary-color), 0.05);
   }
 
   &:disabled {
     cursor: not-allowed;
     opacity: 0.5;
   }
-}
 
-.back-button {
-  gap: 6px;
-  min-height: 34px;
-  padding: 0 10px;
-  font-size: 11px;
-}
+  :deep(.el-icon) {
+    font-size: 18px;
+  }
 
-.close-button {
-  width: 34px;
-  height: 34px;
-  font-size: 14px;
-}
-
-.apply-mode-badge {
-  flex: 0 0 auto;
-  padding: 5px 9px;
-  border: 1px solid color-mix(in srgb, var(--el-color-success) 26%, var(--border-subtle));
-  border-radius: 999px;
-  color: var(--el-color-success);
-  background: color-mix(in srgb, var(--el-color-success) 7%, var(--surface-card));
-  font-size: 10px;
-  font-weight: 600;
+  span {
+    font-size: 15px;
+  }
 }
 
 .drawer-loading {
@@ -1015,8 +978,8 @@ watch(values, () => {
 }
 
 :deep(.service-config-drawer .el-drawer__header) {
-  min-height: 58px;
-  padding: 12px 22px;
+  min-height: 88px;
+  padding: 0 36px;
   margin-bottom: 0;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
@@ -1039,12 +1002,7 @@ watch(values, () => {
     padding: 18px 22px 28px;
   }
 
-  .apply-mode-badge,
   .notice-check {
-    display: none;
-  }
-
-  .drawer-heading > span {
     display: none;
   }
 

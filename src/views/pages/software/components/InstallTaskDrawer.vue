@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft } from '@element-plus/icons-vue'
 import softwareTaskStore from '@/sstore/softwareTask'
 
 const props = defineProps<{
@@ -98,7 +99,6 @@ const createdAtText = computed(() => {
     hour12: false
   }).format(value)
 })
-const componentInitial = computed(() => (task.value?.component || 'S').slice(0, 1).toUpperCase())
 const fallbackErrorCode = computed(() => {
   if (isConfigurationTask.value) return 'CONFIG_APPLY_FAILED'
   if (isServiceTask.value) return 'SERVICE_ACTION_FAILED'
@@ -257,32 +257,31 @@ onBeforeUnmount(() => {
     v-model="visible"
     class="install-task-drawer"
     size="840px"
+    :show-close="false"
     :close-on-click-modal="terminal"
     :destroy-on-close="false"
   >
     <template #header>
       <div class="task-header">
-        <div class="task-header__top">
-          <div class="task-header__identity">
-            <div class="task-mark">{{ componentInitial }}</div>
-            <div class="task-heading">
-              <span class="task-kicker">软件任务</span>
-              <div class="task-title">
-                <strong>{{ task?.component || '软件' }}</strong>
-                <span class="task-operation">{{ operationLabel }}</span>
-                <small v-if="task?.requestedVersion">{{ task.requestedVersion }}</small>
-              </div>
-            </div>
+        <button type="button" class="task-back" @click="visible = false">
+          <el-icon><ArrowLeft /></el-icon>
+          <span>返回</span>
+        </button>
+        <div class="task-heading">
+          <div class="task-title">
+            <strong>{{ task?.component || '软件任务' }}</strong>
+            <span class="task-operation">{{ operationLabel }}</span>
+            <small v-if="task?.requestedVersion">{{ task.requestedVersion }}</small>
           </div>
-          <el-tag
-            class="task-status"
-            :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'"
-            effect="plain"
-            round
-          >
-            {{ statusText }}
-          </el-tag>
         </div>
+        <el-tag
+          class="task-status"
+          :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'"
+          effect="plain"
+          round
+        >
+          {{ statusText }}
+        </el-tag>
       </div>
     </template>
 
@@ -451,7 +450,6 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped lang="less">
-.task-header,
 .log-toolbar,
 .task-actions {
   display: flex;
@@ -465,55 +463,40 @@ onBeforeUnmount(() => {
   width: 100%;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-
-  &__top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 20px;
-  }
-
-  &__identity {
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 16px;
-  }
+  align-items: center;
+  gap: 24px;
 }
 
-.task-mark {
-  width: 68px;
-  height: 68px;
-  flex: 0 0 68px;
-  display: grid;
-  place-items: center;
-  border: 1px solid rgba(var(--primary-color), 0.15);
-  border-radius: 22px;
-  color: rgb(var(--primary-color));
-  background:
-    radial-gradient(circle at top, rgba(var(--primary-color), 0.18), rgba(var(--primary-color), 0.05) 74%),
-    rgba(255, 255, 255, 0.94);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 14px 28px rgba(var(--primary-color), 0.08);
-  font-size: 30px;
-  font-weight: 820;
+.task-back {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+
+  .el-icon {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 15px;
+  }
 }
 
 .task-heading {
   min-width: 0;
   flex: 1;
-}
-
-.task-kicker {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--text-tertiary);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
 }
 
 .task-title {
@@ -522,8 +505,8 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
   gap: 10px;
   color: var(--text-primary);
-  font-size: 22px;
-  font-weight: 780;
+  font-size: 20px;
+  font-weight: 760;
   line-height: 1.2;
   text-transform: capitalize;
 
@@ -552,10 +535,10 @@ onBeforeUnmount(() => {
 
 .task-status {
   flex: 0 0 auto;
-  min-height: 40px;
-  padding-inline: 16px;
+  min-height: 34px;
+  padding-inline: 14px;
   border-width: 1.5px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 720;
 }
 
@@ -1067,68 +1050,11 @@ onBeforeUnmount(() => {
 
 :deep(.install-task-drawer .el-drawer__header) {
   flex: 0 0 auto;
-  min-height: auto;
-  padding: 24px 68px 24px 24px;
+  min-height: 88px;
+  padding: 0 36px;
   margin-bottom: 0;
-  border: 1px solid var(--border-subtle);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at top left, rgba(var(--primary-color), 0.08), transparent 28%),
-    var(--surface-card);
-}
-
-:deep(.install-task-drawer .el-drawer__close-btn) {
-  position: absolute;
-  top: 5px;
-  right: 10px;
-  z-index: 5;
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
-  display: grid;
-  place-items: center;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  color: var(--text-tertiary);
-  background: rgba(255, 255, 255, 0.72);
-  transition: all 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-    background: rgba(var(--primary-color), 0.08);
-    border-color: rgba(var(--primary-color), 0.16);
-  }
-}
-
-:global(.install-task-drawer .el-drawer__close-btn) {
-  position: fixed !important;
-  top: 5px !important;
-  right: 10px !important;
-  z-index: 2100;
-  width: 38px !important;
-  height: 38px !important;
-  display: grid !important;
-  place-items: center;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 1px solid transparent;
-  border-radius: 12px;
-  color: var(--text-tertiary);
-  background: rgba(255, 255, 255, 0.82);
-  backdrop-filter: blur(8px);
-  transition: all 0.18s ease;
-}
-
-:global(.install-task-drawer .el-drawer__close-btn:hover) {
-  color: rgb(var(--primary-color));
-  border-color: rgba(var(--primary-color), 0.16);
-  background: rgba(var(--primary-color), 0.08);
-}
-
-:global(.install-task-drawer .el-drawer__close-btn .el-icon),
-:global(.install-task-drawer .el-drawer__close-btn svg) {
-  width: 20px !important;
-  height: 20px !important;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-card);
 }
 
 :deep(.install-task-drawer .el-drawer__body) {
@@ -1191,9 +1117,8 @@ onBeforeUnmount(() => {
   }
 
   :deep(.install-task-drawer .el-drawer__header) {
-    min-height: auto;
-    padding: 18px 58px 16px 18px;
-    border-radius: 16px;
+    min-height: 76px;
+    padding: 0 20px;
   }
 
   :deep(.install-task-drawer .el-drawer__body) {
@@ -1204,23 +1129,12 @@ onBeforeUnmount(() => {
     padding: 12px 0 2px;
   }
 
-  :deep(.install-task-drawer .el-drawer__close-btn) {
-    top: 5px;
-    right: 10px;
-  }
-
-  :global(.install-task-drawer .el-drawer__close-btn) {
-    top: 7px !important;
-    right: 16px !important;
-  }
-
-  .task-header__top {
-    align-items: flex-start;
-    flex-direction: column;
+  .task-header {
+    gap: 16px;
   }
 
   .task-status {
-    margin-left: 84px;
+    display: none;
   }
 
   .task-title {

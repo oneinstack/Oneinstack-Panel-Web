@@ -694,11 +694,14 @@ onMounted(() => {
       </div>
     </section>
 
-    <custom-dialog
-      v-model:show="formVisible"
+    <custom-drawer
+      :visible="formVisible"
       :title="editingId ? '编辑服务器' : '添加服务器'"
-      width="640px"
+      size="760px"
+      :confirm-text="editingId ? '保存' : '确认添加'"
+      :loading="saving"
       :on-close="closeForm"
+      :on-confirm="submitForm"
     >
       <el-form
         ref="formRef"
@@ -777,35 +780,23 @@ onMounted(() => {
           :closable="false"
         />
       </el-form>
-      <template #footer>
-        <el-button @click="closeForm">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitForm">
-          {{ editingId ? '保存' : '确认添加' }}
-        </el-button>
-      </template>
-    </custom-dialog>
+    </custom-drawer>
 
-    <el-drawer
-      v-model="detailVisible"
-      class="bastion-detail-drawer"
+    <custom-drawer
+      :visible="detailVisible"
+      :title="`服务器详情 · ${selectedServer?.name || '—'}`"
       size="860px"
+      :show-footer="false"
       :destroy-on-close="false"
+      :on-close="() => { detailVisible = false }"
     >
-      <template #header>
-        <div class="detail-header">
-          <div>
-            <span>服务器详情</span>
-            <strong>{{ selectedServer?.name || '—' }}</strong>
-          </div>
-          <div class="detail-header__status">
-            <el-tag v-if="selectedServer" :type="statusType(selectedServer.status)" effect="light">
-              {{ statusLabel(selectedServer.status) }}
-            </el-tag>
-          </div>
-        </div>
-      </template>
-
       <div v-if="selectedServer" class="detail-content">
+        <div class="detail-status-row">
+          <span>{{ selectedServer.host }}:{{ selectedServer.port }}</span>
+          <el-tag :type="statusType(selectedServer.status)" effect="light">
+            {{ statusLabel(selectedServer.status) }}
+          </el-tag>
+        </div>
         <section class="detail-info">
           <div>
             <small>连接地址</small>
@@ -915,7 +906,7 @@ onMounted(() => {
           </section>
         </div>
       </div>
-    </el-drawer>
+    </custom-drawer>
   </div>
 </template>
 
@@ -927,7 +918,7 @@ onMounted(() => {
 .bastion-toolbar,
 .server-card__header,
 .server-actions,
-.detail-header,
+.detail-status-row,
 .detail-toolbar {
   display: flex;
   align-items: center;
@@ -1412,97 +1403,23 @@ onMounted(() => {
   gap: 12px;
 }
 
-:deep(.bastion-detail-drawer) {
-  border-left: 1px solid var(--border-subtle);
-  background: var(--surface-page);
-}
-
-:deep(.bastion-detail-drawer .el-drawer__header) {
-  position: relative;
-  display: flex;
-  align-items: center;
-  min-height: 92px;
-  margin: 0;
-  padding: 18px 84px 18px 24px;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:deep(.bastion-detail-drawer .el-drawer__close-btn) {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 2;
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transform: none;
-}
-
-:deep(.bastion-detail-drawer .el-drawer__body) {
-  padding: 18px 24px 22px;
-  background: var(--surface-page);
-}
-
-.detail-header {
-  width: 100%;
-  min-width: 0;
-  min-height: 56px;
-  padding-right: 0;
-  align-items: center;
-
-  > div:first-child {
-    min-width: 0;
-  }
-
-  span {
-    display: block;
-    color: var(--text-tertiary);
-    font-size: 11px;
-    font-weight: 650;
-  }
-
-  strong {
-    display: block;
-    margin-top: 5px;
-    overflow: hidden;
-    color: var(--text-primary);
-    font-size: 18px;
-    font-weight: 720;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.detail-header__status {
-  flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  align-self: center;
-  min-height: 32px;
-  margin-left: auto;
-
-  :deep(.el-tag) {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 54px;
-    height: 30px;
-    padding: 0 14px;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 650;
-    line-height: 1;
-  }
-}
-
 .detail-content {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.detail-status-row {
+  padding: 12px 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-subtle);
+
+  span {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 650;
+  }
 }
 
 .detail-info {

@@ -387,7 +387,15 @@ onMounted(async () => {
       </div>
     </section>
 
-    <custom-dialog v-model:show="createUserDialog.show" title="新建用户" width="640px">
+    <custom-drawer
+      :visible="createUserDialog.show"
+      title="新建用户"
+      size="720px"
+      confirm-text="创建"
+      :loading="loading.createUser"
+      :on-close="() => { createUserDialog.show = false }"
+      :on-confirm="submitCreateUser"
+    >
       <div class="dialog-form">
         <el-form label-position="top">
           <el-form-item label="账号名">
@@ -420,13 +428,17 @@ onMounted(async () => {
           </el-form-item>
         </el-form>
       </div>
-      <template #footer>
-        <el-button @click="createUserDialog.show = false">取消</el-button>
-        <el-button type="primary" :loading="loading.createUser" @click="submitCreateUser">创建</el-button>
-      </template>
-    </custom-dialog>
+    </custom-drawer>
 
-    <custom-dialog v-model:show="roleDialog.show" title="修改角色" width="640px">
+    <custom-drawer
+      :visible="roleDialog.show"
+      title="修改角色"
+      size="720px"
+      confirm-text="保存"
+      :loading="loading.updateRoles"
+      :on-close="() => { roleDialog.show = false }"
+      :on-confirm="submitRoleUpdate"
+    >
       <div class="dialog-form">
         <el-alert
           :title="`当前账号：${roleDialog.user?.username || '—'}`"
@@ -451,13 +463,17 @@ onMounted(async () => {
           </el-checkbox>
         </el-checkbox-group>
       </div>
-      <template #footer>
-        <el-button @click="roleDialog.show = false">取消</el-button>
-        <el-button type="primary" :loading="loading.updateRoles" @click="submitRoleUpdate">保存</el-button>
-      </template>
-    </custom-dialog>
+    </custom-drawer>
 
-    <custom-dialog v-model:show="passwordDialog.show" title="重置密码" width="560px">
+    <custom-drawer
+      :visible="passwordDialog.show"
+      title="重置密码"
+      size="640px"
+      confirm-text="确认重置"
+      :loading="loading.resetPassword"
+      :on-close="() => { passwordDialog.show = false }"
+      :on-confirm="submitPasswordReset"
+    >
       <div class="dialog-form">
         <el-alert
           :title="`将为 ${passwordDialog.user?.username || '该账号'} 设置新的登录密码`"
@@ -472,11 +488,7 @@ onMounted(async () => {
           </el-form-item>
         </el-form>
       </div>
-      <template #footer>
-        <el-button @click="passwordDialog.show = false">取消</el-button>
-        <el-button type="primary" :loading="loading.resetPassword" @click="submitPasswordReset">确认重置</el-button>
-      </template>
-    </custom-dialog>
+    </custom-drawer>
   </div>
 </template>
 

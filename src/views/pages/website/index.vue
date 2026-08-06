@@ -469,7 +469,7 @@ webServer.load()
     </div>
     <!--创建网站弹窗-->
     <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据" :loading="conf.drawer.loading"
-      :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
+      size="820px" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
       <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
         <template #send_url="{ row }">
           <el-input v-model="conf.form.data.value.send_url" :placeholder="row.placeholder">

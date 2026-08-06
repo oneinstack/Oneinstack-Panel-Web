@@ -2,7 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
-import { Document, Refresh, Setting } from '@element-plus/icons-vue'
+import { ArrowLeft, Document, Refresh } from '@element-plus/icons-vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 type WebServerInfo = {
@@ -228,19 +228,17 @@ watch(
     class="web-config-drawer"
     size="980px"
     :before-close="close"
+    :show-close="false"
     :close-on-click-modal="false"
     :destroy-on-close="false"
   >
     <template #header>
-      <div class="drawer-heading">
-        <div class="drawer-heading__icon">
-          <el-icon><Setting /></el-icon>
-        </div>
-        <div>
-          <span>WEB SERVER CONFIGURATION</span>
-          <h3>{{ state.server.name || 'Web 服务器' }} 配置管理</h3>
-          <p>编辑受管配置文件，保存时自动备份、检查语法并平滑重载。</p>
-        </div>
+      <div class="web-drawer-header">
+        <button type="button" class="web-drawer-back" @click="close">
+          <el-icon><ArrowLeft /></el-icon>
+          <span>返回</span>
+        </button>
+        <h3>{{ state.server.name || 'Web 服务器' }} 配置管理</h3>
       </div>
     </template>
 
@@ -336,43 +334,45 @@ watch(
 </template>
 
 <style scoped lang="less">
-.drawer-heading {
+.web-drawer-header {
   display: flex;
   align-items: center;
-  gap: 14px;
-
-  span {
-    display: block;
-    color: var(--el-color-primary);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-  }
+  gap: 24px;
 
   h3 {
-    margin: 4px 0 0;
+    margin: 0;
     color: var(--text-primary);
-    font-size: 22px;
-    line-height: 1.25;
-  }
-
-  p {
-    margin: 5px 0 0;
-    color: var(--text-tertiary);
-    font-size: 12px;
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
   }
 }
 
-.drawer-heading__icon {
-  width: 48px;
-  height: 48px;
-  flex: 0 0 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  color: var(--el-color-primary);
-  background: rgba(var(--primary-color), 0.1);
-  font-size: 22px;
+.web-drawer-back {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+
+  .el-icon {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 15px;
+  }
 }
 
 .web-config {
@@ -643,7 +643,10 @@ watch(
 
 :global(.web-config-drawer .el-drawer__header) {
   margin: 0;
-  padding: 22px 28px;
+  min-height: 88px;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-card);
 }

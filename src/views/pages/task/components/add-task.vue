@@ -1,21 +1,18 @@
 <template>
-  <el-drawer
-    v-model="drawer"
-    :direction="direction"
-    size="50%"
-    :before-close="handleClose"
+  <custom-drawer
+    :visible="drawer"
+    :title="type ? '添加计划任务' : '修改计划任务'"
+    size="760px"
+    confirm-text="确定"
+    :on-close="handleClose"
+    :on-confirm="handleSubmit"
   >
-    <template #header>
-      <div class="drawer-header" style="padding: 20px;font-size: 16px;">
-        <span class="title">{{ type ? '添加计划任务' : '修改计划任务' }}</span>
-      </div>
-    </template>
     <el-form
       ref="ruleFormRef"
       :model="ruleForm"
       :rules="rules"
       label-position="top"
-      style="padding: 0 20px"
+      class="task-drawer-form"
     >
       <!-- <el-form-item label="任务类型" prop="cron_type" required>
         <el-select v-model="ruleForm.cron_type" placeholder="请选择任务类型">
@@ -272,14 +269,7 @@
         
       </el-form-item>
     </el-form>
-
-    <template #footer>
-      <div style="flex: auto; text-align: right; padding: 0 20px">
-        <el-button @click="handleClose">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">确定</el-button>
-      </div>
-    </template>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <script setup lang="ts">
@@ -299,7 +289,6 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue', 'success', 'taskAdded'])
 const codeEditorRef = ref(null);
 const drawer = ref(false)
-const direction = ref<'rtl' | 'ltr' | 'ttb' | 'btt'>('rtl')
 const ruleFormRef = ref<FormInstance>()
 const copy_content = ref('')
 const confirmUnsafeShell = ref(false)
@@ -738,11 +727,8 @@ const handleScriptInput = (event: Event) => {
   }
 }
 
-.drawer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ebeef5;
+.task-drawer-form {
+  max-width: 680px;
 }
 
 .cycle-row {

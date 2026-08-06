@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { Document, Refresh, Check } from '@element-plus/icons-vue'
+import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import { formatBytes } from '@/utils/fileSize'
@@ -218,11 +218,15 @@ const beforeClose = async (done: () => void) => {
     size="min(1040px, 92vw)"
     class="file-editor-drawer"
     :before-close="beforeClose"
+    :show-close="false"
     destroy-on-close
   >
     <template #header>
       <div class="editor-heading">
-        <div class="heading-icon"><el-icon><Document /></el-icon></div>
+        <button type="button" class="editor-back" @click="close">
+          <el-icon><ArrowLeft /></el-icon>
+          <span>返回</span>
+        </button>
         <div class="heading-main">
           <div class="heading-title">
             <h3>{{ state.detail?.name || '文件编辑器' }}</h3>
@@ -283,19 +287,34 @@ const beforeClose = async (done: () => void) => {
   display: flex;
   min-width: 0;
   align-items: center;
-  gap: 14px;
+  gap: 24px;
 }
 
-.heading-icon {
-  display: grid;
-  width: 44px;
-  height: 44px;
+.editor-back {
   flex: 0 0 auto;
-  place-items: center;
-  border-radius: 12px;
-  color: rgb(var(--primary-color));
-  background: rgba(var(--primary-color), 0.1);
-  font-size: 21px;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+
+  .el-icon {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 15px;
+  }
 }
 
 .heading-main {
@@ -321,7 +340,23 @@ const beforeClose = async (done: () => void) => {
     margin: 0;
     color: var(--text-primary);
     font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
   }
+}
+
+:global(.file-editor-drawer .el-drawer__header) {
+  min-height: 88px;
+  margin: 0;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+}
+
+:global(.file-editor-drawer .el-drawer__body) {
+  padding: 24px 28px 28px;
 }
 
 .editor-shell {

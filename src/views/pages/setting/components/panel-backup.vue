@@ -131,6 +131,17 @@ const openDialog = (mode: DialogMode, backup?: BackupInfo) => {
   dialogVisible.value = true
 }
 
+const closeDialog = () => {
+  dialogVisible.value = false
+  resetDialog()
+}
+
+const dialogConfirmText = computed(() => {
+  if (dialogMode.value === 'restore') return '预检并恢复'
+  if (dialogMode.value === 'import') return '校验并导入'
+  return '创建备份'
+})
+
 const selectImportFile = (event: Event) => {
   const input = event.target as HTMLInputElement
   importFile.value = input.files?.[0]
@@ -361,13 +372,15 @@ onBeforeUnmount(() => {
     </div>
     <el-empty v-else description="尚未创建 Panel 备份" :image-size="86" />
 
-    <el-dialog
-      v-model="dialogVisible"
+    <custom-drawer
+      :visible="dialogVisible"
       :title="dialogTitle"
-      width="min(520px, calc(100vw - 32px))"
-      append-to-body
+      size="560px"
+      :confirm-text="dialogConfirmText"
+      :loading="submitting"
       destroy-on-close
-      @closed="resetDialog"
+      :on-close="closeDialog"
+      :on-confirm="submitDialog"
     >
       <el-alert
         v-if="dialogMode === 'restore'"
@@ -405,13 +418,7 @@ onBeforeUnmount(() => {
           <el-input v-model="form.confirmation" autocomplete="off" placeholder="输入 RESTORE PANEL" />
         </el-form-item>
       </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitDialog">
-          {{ dialogMode === 'restore' ? '预检并恢复' : dialogMode === 'import' ? '校验并导入' : '创建备份' }}
-        </el-button>
-      </template>
-    </el-dialog>
+    </custom-drawer>
   </section>
 </template>
 
