@@ -405,6 +405,10 @@ export const Api = {
   getContainers: (obj?: { page?: number; pageSize?: number; search?: string; status?: string }) => {
     return http.get('/containers', obj)
   },
+  /** 清理已停止容器 */
+  cleanupContainers: () => {
+    return http.post('/containers/cleanup', { confirm: true })
+  },
   /** 创建容器 */
   createContainer: (obj: {
     name: string
@@ -429,12 +433,29 @@ export const Api = {
   }) => {
     return fetchJson('POST', '/containers', obj)
   },
+  /** 获取容器详情 */
+  getContainerDetail: (id: string) => {
+    return http.get(`/containers/${encodeURIComponent(id)}`)
+  },
+  /** 获取容器单次资源统计 */
+  getContainerStats: (id: string) => {
+    return http.get(`/containers/${encodeURIComponent(id)}/stats`)
+  },
   /** 执行容器生命周期操作 */
   runContainerAction: (
     id: string,
     obj: { action: string; confirm?: boolean; force?: boolean }
   ) => {
     return http.post(`/containers/${encodeURIComponent(id)}/actions`, obj)
+  },
+  /** 批量执行容器生命周期操作 */
+  batchRunContainerAction: (obj: {
+    ids: string[]
+    action: string
+    confirm?: boolean
+    force?: boolean
+  }) => {
+    return http.post('/containers/batch/actions', obj)
   },
   /** 获取容器日志 */
   getContainerLogs: (id: string, obj?: { tail?: number }) => {
@@ -443,6 +464,10 @@ export const Api = {
   /** 获取镜像列表 */
   getContainerImages: (obj?: { page?: number; pageSize?: number; search?: string }) => {
     return http.get('/containers/images', obj)
+  },
+  /** 获取镜像详情 */
+  getContainerImage: (id: string) => {
+    return http.get(`/containers/images/${encodeURIComponent(id)}`)
   },
   /** 拉取镜像 */
   pullContainerImage: (obj: { reference?: string; registryId?: number; imageName?: string }) => {
@@ -496,9 +521,34 @@ export const Api = {
   getContainerNetworks: (obj?: { page?: number; pageSize?: number; search?: string }) => {
     return http.get('/containers/networks', obj)
   },
+  /** 获取 Docker 网络详情 */
+  getContainerNetwork: (id: string) => {
+    return http.get(`/containers/networks/${encodeURIComponent(id)}`)
+  },
   /** 创建 Docker 网络 */
-  createContainerNetwork: (obj: { name: string; driver?: string }) => {
+  createContainerNetwork: (obj: {
+    name: string
+    driver?: string
+    ipv4?: boolean
+    ipv4Subnet?: string
+    ipv4Gateway?: string
+    ipv4IpRange?: string
+    ipv4AuxAddresses?: Record<string, string>
+    ipv6?: boolean
+    ipv6Subnet?: string
+    ipv6Gateway?: string
+    ipv6IpRange?: string
+    ipv6AuxAddresses?: Record<string, string>
+    options?: Record<string, string>
+    optionsText?: string
+    labels?: Record<string, string>
+    labelsText?: string
+  }) => {
     return http.post('/containers/networks', obj)
+  },
+  /** 清理无用 Docker 网络 */
+  pruneContainerNetworks: () => {
+    return http.post('/containers/networks/prune', { confirm: true })
   },
   /** 删除 Docker 网络 */
   deleteContainerNetwork: (id: string) => {
@@ -512,6 +562,10 @@ export const Api = {
   getContainerVolumes: (obj?: { page?: number; pageSize?: number; search?: string }) => {
     return http.get('/containers/volumes', obj)
   },
+  /** 获取 Docker 存储卷详情 */
+  getContainerVolume: (id: string) => {
+    return http.get(`/containers/volumes/${encodeURIComponent(id)}`)
+  },
   /** 创建 Docker 存储卷 */
   createContainerVolume: (obj: {
     name: string
@@ -523,6 +577,10 @@ export const Api = {
     labelsText?: string
   }) => {
     return http.post('/containers/volumes', obj)
+  },
+  /** 清理无用 Docker 存储卷 */
+  pruneContainerVolumes: () => {
+    return http.post('/containers/volumes/prune', { confirm: true })
   },
   /** 删除 Docker 存储卷 */
   deleteContainerVolume: (id: string) => {

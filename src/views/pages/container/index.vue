@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, h, onMounted, reactive, ref } from 'vue'
+import { computed, h, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
 import {
   Delete,
   Document,
@@ -31,6 +31,8 @@ type MountMode = 'bind' | 'volume'
 type MountPermission = 'rw' | 'ro'
 type PortPublishMode = 'ports' | 'all'
 type PortProtocol = 'tcp' | 'udp' | 'sctp'
+type DetailType = 'container' | 'image' | 'network' | 'volume'
+type ContainerAction = 'start' | 'stop' | 'restart' | 'pause' | 'unpause' | 'kill' | 'rm'
 
 interface RuntimeInfo {
   available: boolean
@@ -71,6 +73,14 @@ interface NetworkItem {
   Name: string
   Driver?: string
   Scope?: string
+  Subnet?: string
+  Gateway?: string
+  IPv6Subnet?: string
+  IPv6Gateway?: string
+  Labels?: Record<string, string>
+  Options?: Record<string, string>
+  Internal?: boolean
+  EnableIPv6?: boolean
 }
 
 interface VolumeItem {
@@ -103,6 +113,25 @@ interface TemplateItem {
   message?: string
 }
 
+interface ContainerStats {
+  id?: string
+  name?: string
+  cpuPercent?: string
+  memoryUsage?: string
+  memoryPercent?: string
+  networkIO?: string
+  blockIO?: string
+  pids?: string
+}
+
+interface ListState {
+  page: number
+  pageSize: number
+  total: number
+  search: string
+  status?: string
+}
+
 const activeTab = ref<ResourceTab>('containers')
 const runtime = ref<RuntimeInfo | null>(null)
 const runtimeLoading = ref(false)
@@ -128,17 +157,34 @@ const loadedTabs = reactive<Record<ResourceTab, boolean>>({
   registries: false,
   config: false
 })
+const listState = reactive<Record<'containers' | 'images' | 'networks' | 'volumes' | 'registries', ListState>>({
+  containers: { page: 1, pageSize: 10, total: 0, search: '', status: 'all' },
+  images: { page: 1, pageSize: 10, total: 0, search: '' },
+  networks: { page: 1, pageSize: 10, total: 0, search: '' },
+  volumes: { page: 1, pageSize: 10, total: 0, search: '' },
+  registries: { page: 1, pageSize: 10, total: 0, search: '' }
+})
 
 const formRef = ref<FormInstance>()
 const dialogVisible = ref(false)
 const dialogType = ref<DialogType>('container')
 const saving = ref(false)
+const selectedContainers = ref<ContainerItem[]>([])
+const selectedNetworks = ref<NetworkItem[]>([])
+const selectedVolumes = ref<VolumeItem[]>([])
 const logsVisible = ref(false)
 const logsLoading = ref(false)
 const logTarget = ref<ContainerItem | null>(null)
 const logsText = ref('')
 const dialogTarget = ref<any>(null)
 const importFile = ref<File | null>(null)
+const detailVisible = ref(false)
+const detailLoading = ref(false)
+const detailType = ref<DetailType>('container')
+const detailTarget = ref<any>(null)
+const detailData = ref<Record<string, any> | null>(null)
+const detailStats = ref<ContainerStats | null>(null)
+let statsTimer: ReturnType<typeof setInterval> | undefined
 
 const form = reactive({
   name: '',
@@ -162,6 +208,18 @@ const form = reactive({
   cpuWeight: 1000,
   cpuLimit: 0,
   memoryLimitMB: 0,
+  networkIpv4: false,
+  networkIpv4Subnet: '',
+  networkIpv4Gateway: '',
+  networkIpv4IpRange: '',
+  networkIpv4AuxAddressesText: '',
+  networkIpv6: false,
+  networkIpv6Subnet: '',
+  networkIpv6Gateway: '',
+  networkIpv6IpRange: '',
+  networkIpv6AuxAddressesText: '',
+  optionsText: '',
+  volumeNfs: false,
   labelsText: '',
   environmentText: '',
   autoRemove: false,
@@ -220,6 +278,11 @@ const canVolumeWrite = computed(() => containerScope.value.volumeWrite || sconfi
 const canComposeWrite = computed(() => containerScope.value.composeWrite || sconfig.hasScopeAccess('container', 'composeWrite'))
 const canRegistryWrite = computed(() => containerScope.value.registryWrite || sconfig.hasScopeAccess('container', 'registryWrite'))
 const canConfigWrite = computed(() => containerScope.value.configWrite || sconfig.hasScopeAccess('container', 'configWrite'))
+const canCleanup = computed(() =>
+  sconfig.hasActionAccess('container.dangerous.cleanup') ||
+  containerScope.value.dangerousCleanup ||
+  sconfig.hasScopeAccess('container', 'dangerousCleanup')
+)
 
 const runtimeAvailable = computed(() => runtime.value?.available !== false)
 const runtimeStatusText = computed(() => {
@@ -230,6 +293,16 @@ const runningContainers = computed(() =>
   containers.value.filter((item) => String(item.Status || '').toLowerCase().startsWith('up')).length
 )
 const totalImagesSize = computed(() => images.value.map((item) => item.Size).filter(Boolean).join(' / ') || '--')
+const pageableTabs = ['containers', 'images', 'networks', 'volumes', 'registries'] as const
+const hasPagination = computed(() => pageableTabs.includes(activeTab.value as typeof pageableTabs[number]))
+const activeListState = computed(() => listState[activeTab.value as keyof typeof listState] || listState.containers)
+const detailTitle = computed(() => {
+  const target = detailTarget.value || {}
+  if (detailType.value === 'container') return `${target.Names || shortId(target.ID)} 详情`
+  if (detailType.value === 'image') return `${target.Repository ? imageReference(target) : shortId(target.ID)} 详情`
+  if (detailType.value === 'network') return `${target.Name || shortId(target.ID)} 详情`
+  return `${target.Name || '存储卷'} 详情`
+})
 
 const rules = computed<FormRules>(() => ({
   name: [{ required: ['container', 'network', 'volume'].includes(dialogType.value), message: '请输入名称', trigger: 'blur' }],
@@ -240,6 +313,32 @@ const normalizeList = <T>(data: any): T[] => {
   if (Array.isArray(data)) return data
   if (Array.isArray(data?.items)) return data.items
   return []
+}
+
+const updateListState = (tab: keyof typeof listState, data: any) => {
+  const state = listState[tab]
+  state.total = Number(data?.total ?? normalizeList(data).length ?? 0)
+  state.page = Number(data?.page || state.page || 1)
+  state.pageSize = Number(data?.pageSize || state.pageSize || 10)
+}
+
+const listQuery = (tab: keyof typeof listState) => {
+  const state = listState[tab]
+  return {
+    page: state.page,
+    pageSize: state.pageSize,
+    search: state.search.trim() || undefined,
+    ...(tab === 'containers' && state.status && state.status !== 'all' ? { status: state.status } : {})
+  }
+}
+
+const formatJson = (data: any) => {
+  if (!data) return '{}'
+  try {
+    return JSON.stringify(data, null, 2)
+  } catch {
+    return String(data)
+  }
 }
 
 const resetForm = () => {
@@ -264,6 +363,18 @@ const resetForm = () => {
   form.cpuWeight = 1000
   form.cpuLimit = 0
   form.memoryLimitMB = 0
+  form.networkIpv4 = false
+  form.networkIpv4Subnet = ''
+  form.networkIpv4Gateway = ''
+  form.networkIpv4IpRange = ''
+  form.networkIpv4AuxAddressesText = ''
+  form.networkIpv6 = false
+  form.networkIpv6Subnet = ''
+  form.networkIpv6Gateway = ''
+  form.networkIpv6IpRange = ''
+  form.networkIpv6AuxAddressesText = ''
+  form.optionsText = ''
+  form.volumeNfs = false
   form.labelsText = ''
   form.environmentText = ''
   form.autoRemove = false
@@ -336,20 +447,24 @@ const loadActiveTab = async (force = false) => {
   listLoading.value = true
   try {
     if (activeTab.value === 'containers') {
-      const { data } = await Api.getContainers()
+      const { data } = await Api.getContainers(listQuery('containers'))
       containers.value = normalizeList<ContainerItem>(data)
+      updateListState('containers', data)
     }
     if (activeTab.value === 'images') {
-      const { data } = await Api.getContainerImages()
+      const { data } = await Api.getContainerImages(listQuery('images'))
       images.value = normalizeList<ImageItem>(data)
+      updateListState('images', data)
     }
     if (activeTab.value === 'networks') {
-      const { data } = await Api.getContainerNetworks()
+      const { data } = await Api.getContainerNetworks(listQuery('networks'))
       networks.value = normalizeList<NetworkItem>(data)
+      updateListState('networks', data)
     }
     if (activeTab.value === 'volumes') {
-      const { data } = await Api.getContainerVolumes()
+      const { data } = await Api.getContainerVolumes(listQuery('volumes'))
       volumes.value = normalizeList<VolumeItem>(data)
+      updateListState('volumes', data)
     }
     if (activeTab.value === 'compose') {
       const { data } = await Api.getContainerCompose()
@@ -362,8 +477,9 @@ const loadActiveTab = async (force = false) => {
       templatesMessage.value = data?.message || ''
     }
     if (activeTab.value === 'registries') {
-      const { data } = await Api.getContainerRegistries()
+      const { data } = await Api.getContainerRegistries(listQuery('registries'))
       registries.value = normalizeList<RegistryItem>(data)
+      updateListState('registries', data)
     }
     if (activeTab.value === 'config') {
       const { data } = await Api.getContainerConfig()
@@ -387,7 +503,7 @@ const refreshAll = async () => {
 const ensureVolumesLoaded = async () => {
   if (volumes.value.length || loadedTabs.volumes) return
   try {
-    const { data } = await Api.getContainerVolumes()
+    const { data } = await Api.getContainerVolumes({ page: 1, pageSize: 100 })
     volumes.value = normalizeList<VolumeItem>(data)
     loadedTabs.volumes = true
   } catch (error) {
@@ -398,7 +514,7 @@ const ensureVolumesLoaded = async () => {
 const ensureImagesLoaded = async () => {
   if (images.value.length || loadedTabs.images) return
   try {
-    const { data } = await Api.getContainerImages()
+    const { data } = await Api.getContainerImages({ page: 1, pageSize: 100 })
     images.value = normalizeList<ImageItem>(data)
     loadedTabs.images = true
   } catch (error) {
@@ -701,6 +817,31 @@ const buildImageBuildPayload = () => {
   }
 }
 
+const buildNetworkPayload = () => ({
+  name: form.name.trim(),
+  driver: form.driver.trim() || undefined,
+  ipv4: form.networkIpv4 || undefined,
+  ipv4Subnet: form.networkIpv4Subnet.trim() || undefined,
+  ipv4Gateway: form.networkIpv4Gateway.trim() || undefined,
+  ipv4IpRange: form.networkIpv4IpRange.trim() || undefined,
+  ipv4AuxAddresses: parseKeyValueMap(form.networkIpv4AuxAddressesText, 'IPv4 保留地址'),
+  ipv6: form.networkIpv6 || undefined,
+  ipv6Subnet: form.networkIpv6Subnet.trim() || undefined,
+  ipv6Gateway: form.networkIpv6Gateway.trim() || undefined,
+  ipv6IpRange: form.networkIpv6IpRange.trim() || undefined,
+  ipv6AuxAddresses: parseKeyValueMap(form.networkIpv6AuxAddressesText, 'IPv6 保留地址'),
+  optionsText: form.optionsText.trim() || undefined,
+  labelsText: form.labelsText.trim() || undefined
+})
+
+const buildVolumePayload = () => ({
+  name: form.name.trim(),
+  driver: form.driver.trim() || undefined,
+  nfs: form.volumeNfs || undefined,
+  optionsText: form.optionsText.trim() || undefined,
+  labelsText: form.labelsText.trim() || undefined
+})
+
 const submitDialog = async () => {
   await formRef.value?.validate()
   saving.value = true
@@ -761,12 +902,12 @@ const submitDialog = async () => {
       activeTab.value = 'images'
     }
     if (dialogType.value === 'network') {
-      await Api.createContainerNetwork({ name: form.name.trim(), driver: form.driver.trim() || undefined })
+      await Api.createContainerNetwork(buildNetworkPayload())
       ElMessage.success('网络创建成功')
       activeTab.value = 'networks'
     }
     if (dialogType.value === 'volume') {
-      await Api.createContainerVolume({ name: form.name.trim(), driver: form.driver.trim() || undefined })
+      await Api.createContainerVolume(buildVolumePayload())
       ElMessage.success('存储卷创建成功')
       activeTab.value = 'volumes'
     }
@@ -818,7 +959,7 @@ const submitDialog = async () => {
 
 const runContainerAction = async (
   row: ContainerItem,
-  action: 'start' | 'stop' | 'restart' | 'pause' | 'unpause' | 'kill' | 'rm'
+  action: ContainerAction
 ) => {
   const actionLabels: Record<string, string> = {
     start: '启动',
@@ -854,6 +995,78 @@ const runContainerAction = async (
   }
 }
 
+const showBatchResult = async (data: any, fallbackMessage: string) => {
+  const items = normalizeList<any>(data)
+  const failed = items.filter((item) => item?.success === false || item?.error)
+  if (!items.length || !failed.length) {
+    ElMessage.success(fallbackMessage)
+    return
+  }
+  const message = h('div', { class: 'batch-result' }, [
+    h('p', `完成 ${items.length - failed.length} 项，失败 ${failed.length} 项。`),
+    h('pre', failed.map((item) => {
+      const id = item.id || item.ID || item.name || item.Name || '--'
+      const error = item.error?.detail || item.error?.message || item.message || '操作失败'
+      return `${id}: ${error}`
+    }).join('\n'))
+  ])
+  await ElMessageBox.alert(message, '批量操作结果', { confirmButtonText: '知道了' })
+}
+
+const runBatchContainerAction = async (action: ContainerAction) => {
+  if (!selectedContainers.value.length) return
+  const actionLabels: Record<ContainerAction, string> = {
+    start: '启动',
+    stop: '停止',
+    restart: '重启',
+    pause: '暂停',
+    unpause: '恢复',
+    kill: '强制停止',
+    rm: '删除'
+  }
+  const dangerous = ['kill', 'rm'].includes(action)
+  await ElMessageBox.confirm(
+    `${actionLabels[action]}选中的 ${selectedContainers.value.length} 个容器？${dangerous ? '该操作风险较高，请确认后继续。' : ''}`,
+    `批量${actionLabels[action]}`,
+    {
+      type: dangerous ? 'warning' : 'info',
+      confirmButtonText: `批量${actionLabels[action]}`,
+      cancelButtonText: '取消'
+    }
+  )
+  actionLoading.value = `batch:${action}`
+  try {
+    const { data } = await Api.batchRunContainerAction({
+      ids: selectedContainers.value.map((item) => item.ID),
+      action,
+      confirm: dangerous,
+      force: action === 'kill' || (action === 'rm' && canForceAction.value)
+    })
+    await showBatchResult(data, `批量${actionLabels[action]}完成`)
+    loadedTabs.containers = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const cleanupStoppedContainers = async () => {
+  await ElMessageBox.confirm('清理已停止容器会删除退出状态的容器实例，但不会删除镜像和存储卷。', '清理已停止容器', {
+    type: 'warning',
+    confirmButtonText: '确认清理',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = 'cleanup:containers'
+  try {
+    await Api.cleanupContainers()
+    ElMessage.success('已清理停止的容器')
+    loadedTabs.containers = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
 const openLogs = async (row: ContainerItem) => {
   logTarget.value = row
   logsText.value = ''
@@ -865,6 +1078,57 @@ const openLogs = async (row: ContainerItem) => {
   } finally {
     logsLoading.value = false
   }
+}
+
+const clearStatsTimer = () => {
+  if (!statsTimer) return
+  clearInterval(statsTimer)
+  statsTimer = undefined
+}
+
+const loadContainerStats = async (id: string) => {
+  const { data } = await Api.getContainerStats(id)
+  detailStats.value = data || null
+}
+
+const openDetail = async (type: DetailType, row: any) => {
+  clearStatsTimer()
+  detailType.value = type
+  detailTarget.value = row
+  detailData.value = null
+  detailStats.value = null
+  detailVisible.value = true
+  detailLoading.value = true
+  try {
+    const id = row.ID || row.Id || row.id || row.Name || row.name
+    if (type === 'container') {
+      const { data } = await Api.getContainerDetail(id)
+      detailData.value = data || {}
+      await loadContainerStats(id).catch((error) => console.warn('加载容器资源统计失败', error))
+      statsTimer = setInterval(() => {
+        void loadContainerStats(id).catch((error) => console.warn('刷新容器资源统计失败', error))
+      }, 5000)
+    }
+    if (type === 'image') {
+      const { data } = await Api.getContainerImage(id)
+      detailData.value = data || {}
+    }
+    if (type === 'network') {
+      const { data } = await Api.getContainerNetwork(id)
+      detailData.value = data || {}
+    }
+    if (type === 'volume') {
+      const { data } = await Api.getContainerVolume(id)
+      detailData.value = data || {}
+    }
+  } finally {
+    detailLoading.value = false
+  }
+}
+
+const handleDetailClose = () => {
+  clearStatsTimer()
+  detailVisible.value = false
 }
 
 const deleteImage = async (row: ImageItem) => {
@@ -918,9 +1182,91 @@ const deleteVolume = async (row: VolumeItem) => {
   }
 }
 
+const batchDeleteNetworks = async () => {
+  if (!selectedNetworks.value.length) return
+  await ElMessageBox.confirm(`删除选中的 ${selectedNetworks.value.length} 个网络？系统网络或使用中的网络会被后端拦截。`, '批量删除网络', {
+    type: 'warning',
+    confirmButtonText: '批量删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = 'batch:networks'
+  try {
+    const { data } = await Api.batchDeleteContainerNetworks(selectedNetworks.value.map((item) => item.ID || item.Name))
+    await showBatchResult(data, '网络批量删除完成')
+    loadedTabs.networks = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const batchDeleteVolumes = async () => {
+  if (!selectedVolumes.value.length) return
+  await ElMessageBox.confirm(`删除选中的 ${selectedVolumes.value.length} 个存储卷？卷数据删除后无法恢复。`, '批量删除存储卷', {
+    type: 'warning',
+    confirmButtonText: '批量删除',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = 'batch:volumes'
+  try {
+    const { data } = await Api.batchDeleteContainerVolumes(selectedVolumes.value.map((item) => item.Name))
+    await showBatchResult(data, '存储卷批量删除完成')
+    loadedTabs.volumes = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const pruneNetworks = async () => {
+  await ElMessageBox.confirm('清理无用网络会删除未被容器使用的自定义网络，系统网络会被后端保留。', '清理无用网络', {
+    type: 'warning',
+    confirmButtonText: '确认清理',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = 'prune:networks'
+  try {
+    await Api.pruneContainerNetworks()
+    ElMessage.success('无用网络清理完成')
+    loadedTabs.networks = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
+const pruneVolumes = async () => {
+  await ElMessageBox.confirm('清理无用存储卷会删除未被容器使用的卷数据，该操作不可恢复。', '清理无用存储卷', {
+    type: 'warning',
+    confirmButtonText: '确认清理',
+    cancelButtonText: '取消'
+  })
+  actionLoading.value = 'prune:volumes'
+  try {
+    await Api.pruneContainerVolumes()
+    ElMessage.success('无用存储卷清理完成')
+    loadedTabs.volumes = false
+    await loadActiveTab(true)
+  } finally {
+    actionLoading.value = ''
+  }
+}
+
 const handleImportFileChange = (event: Event) => {
   const input = event.target as HTMLInputElement
   importFile.value = input.files?.[0] || null
+}
+
+const handleContainerSelectionChange = (rows: ContainerItem[]) => {
+  selectedContainers.value = rows
+}
+
+const handleNetworkSelectionChange = (rows: NetworkItem[]) => {
+  selectedNetworks.value = rows
+}
+
+const handleVolumeSelectionChange = (rows: VolumeItem[]) => {
+  selectedVolumes.value = rows
 }
 
 const exportImage = async (row: ImageItem) => {
@@ -1060,9 +1406,35 @@ const handleTabChange = () => {
   void loadActiveTab()
 }
 
+const resetCurrentList = () => {
+  if (!hasPagination.value) return
+  activeListState.value.page = 1
+  loadedTabs[activeTab.value] = false
+  void loadActiveTab(true)
+}
+
+const handlePageChange = (page: number) => {
+  if (!hasPagination.value) return
+  activeListState.value.page = page
+  loadedTabs[activeTab.value] = false
+  void loadActiveTab(true)
+}
+
+const handlePageSizeChange = (pageSize: number) => {
+  if (!hasPagination.value) return
+  activeListState.value.pageSize = pageSize
+  activeListState.value.page = 1
+  loadedTabs[activeTab.value] = false
+  void loadActiveTab(true)
+}
+
 onMounted(async () => {
   await loadRuntime()
   await loadActiveTab()
+})
+
+onBeforeUnmount(() => {
+  clearStatsTimer()
 })
 </script>
 
@@ -1140,6 +1512,16 @@ onMounted(async () => {
         </el-tabs>
         <div class="panel-actions">
           <el-button
+            v-if="activeTab === 'containers'"
+            type="warning"
+            plain
+            :loading="actionLoading === 'cleanup:containers'"
+            :disabled="!runtimeAvailable || !canCleanup"
+            @click="cleanupStoppedContainers"
+          >
+            清理已停止
+          </el-button>
+          <el-button
             v-if="activeTab === 'images'"
             type="primary"
             :icon="Plus"
@@ -1167,7 +1549,7 @@ onMounted(async () => {
             type="warning"
             plain
             :loading="actionLoading === 'prune:images'"
-            :disabled="!runtimeAvailable || !canDelete"
+            :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneImages('images')"
           >
             清理镜像
@@ -1176,7 +1558,7 @@ onMounted(async () => {
             v-if="activeTab === 'images'"
             plain
             :loading="actionLoading === 'prune:build-cache'"
-            :disabled="!runtimeAvailable || !canDelete"
+            :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneImages('build-cache')"
           >
             清理构建缓存
@@ -1191,6 +1573,16 @@ onMounted(async () => {
             创建网络
           </el-button>
           <el-button
+            v-if="activeTab === 'networks'"
+            plain
+            type="warning"
+            :loading="actionLoading === 'prune:networks'"
+            :disabled="!runtimeAvailable || !canCleanup"
+            @click="pruneNetworks"
+          >
+            清理无用网络
+          </el-button>
+          <el-button
             v-if="activeTab === 'volumes'"
             type="primary"
             :icon="Plus"
@@ -1198,6 +1590,16 @@ onMounted(async () => {
             @click="openDialog('volume')"
           >
             创建存储卷
+          </el-button>
+          <el-button
+            v-if="activeTab === 'volumes'"
+            plain
+            type="warning"
+            :loading="actionLoading === 'prune:volumes'"
+            :disabled="!runtimeAvailable || !canCleanup"
+            @click="pruneVolumes"
+          >
+            清理无用卷
           </el-button>
           <el-button
             v-if="activeTab === 'templates'"
@@ -1239,13 +1641,91 @@ onMounted(async () => {
         </div>
       </div>
 
+      <div v-if="hasPagination" class="table-toolbar">
+        <div class="table-toolbar__filters">
+          <el-input
+            v-model.trim="activeListState.search"
+            clearable
+            :placeholder="activeTab === 'containers'
+              ? '搜索容器名称或镜像'
+              : activeTab === 'images'
+                ? '搜索镜像 ID、仓库或 Tag'
+                : activeTab === 'networks'
+                  ? '搜索网络名称、驱动或子网'
+                  : activeTab === 'volumes'
+                    ? '搜索存储卷名称、驱动或挂载点'
+                    : '搜索 Registry 名称或地址'"
+            @clear="resetCurrentList"
+            @keyup.enter="resetCurrentList"
+          />
+          <el-select
+            v-if="activeTab === 'containers'"
+            v-model="listState.containers.status"
+            class="status-filter"
+            @change="resetCurrentList"
+          >
+            <el-option label="全部状态" value="all" />
+            <el-option label="运行中" value="running" />
+            <el-option label="已停止" value="exited" />
+            <el-option label="暂停" value="paused" />
+          </el-select>
+          <el-button :loading="listLoading" @click="resetCurrentList">查询</el-button>
+        </div>
+        <div class="table-toolbar__batch">
+          <template v-if="activeTab === 'containers'">
+            <span v-if="selectedContainers.length">已选 {{ selectedContainers.length }} 个容器</span>
+            <el-dropdown
+              :disabled="!selectedContainers.length || !runtimeAvailable || !canWrite"
+              @command="(command: ContainerAction) => runBatchContainerAction(command)"
+            >
+              <el-button :loading="actionLoading.startsWith('batch:')">
+                批量操作
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="start">启动</el-dropdown-item>
+                  <el-dropdown-item command="stop">停止</el-dropdown-item>
+                  <el-dropdown-item command="restart">重启</el-dropdown-item>
+                  <el-dropdown-item command="pause">暂停</el-dropdown-item>
+                  <el-dropdown-item command="unpause">恢复</el-dropdown-item>
+                  <el-dropdown-item command="kill" :disabled="!canForceAction">强制停止</el-dropdown-item>
+                  <el-dropdown-item command="rm" :disabled="!canDelete" divided>删除</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+          <template v-if="activeTab === 'networks'">
+            <span v-if="selectedNetworks.length">已选 {{ selectedNetworks.length }} 个网络</span>
+            <el-button
+              :loading="actionLoading === 'batch:networks'"
+              :disabled="!selectedNetworks.length || !runtimeAvailable || !canNetworkWrite"
+              @click="batchDeleteNetworks"
+            >
+              批量删除
+            </el-button>
+          </template>
+          <template v-if="activeTab === 'volumes'">
+            <span v-if="selectedVolumes.length">已选 {{ selectedVolumes.length }} 个存储卷</span>
+            <el-button
+              :loading="actionLoading === 'batch:volumes'"
+              :disabled="!selectedVolumes.length || !runtimeAvailable || !canVolumeWrite"
+              @click="batchDeleteVolumes"
+            >
+              批量删除
+            </el-button>
+          </template>
+        </div>
+      </div>
+
       <el-table
         v-if="activeTab === 'containers'"
         v-loading="listLoading"
         :data="containers"
         :row-key="getRowKey"
         empty-text="暂无容器"
+        @selection-change="handleContainerSelectionChange"
       >
+        <el-table-column type="selection" width="44" />
         <el-table-column label="名称" min-width="170">
           <template #default="{ row }">
             <div class="primary-cell">
@@ -1263,9 +1743,17 @@ onMounted(async () => {
         <el-table-column prop="Ports" label="端口" min-width="190" show-overflow-tooltip />
         <el-table-column prop="Networks" label="网络" min-width="120" show-overflow-tooltip />
         <el-table-column prop="Mounts" label="挂载" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" label="操作" width="360">
+        <el-table-column fixed="right" label="操作" width="420">
           <template #default="{ row }">
             <div class="row-actions">
+              <el-button
+                link
+                type="primary"
+                :icon="Document"
+                @click="openDetail('container', row)"
+              >
+                详情
+              </el-button>
               <el-button
                 link
                 type="primary"
@@ -1343,9 +1831,10 @@ onMounted(async () => {
             <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? '已使用' : '未使用' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="260">
+        <el-table-column fixed="right" label="操作" width="310">
           <template #default="{ row }">
             <div class="row-actions">
+              <el-button link type="primary" @click="openDetail('image', row)">详情</el-button>
               <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">标签</el-button>
               <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">推送</el-button>
               <el-button
@@ -1378,25 +1867,37 @@ onMounted(async () => {
         :data="networks"
         :row-key="getRowKey"
         empty-text="暂无网络"
+        @selection-change="handleNetworkSelectionChange"
       >
+        <el-table-column type="selection" width="44" />
         <el-table-column prop="Name" label="名称" min-width="180" />
         <el-table-column label="ID" min-width="140">
           <template #default="{ row }">{{ shortId(row.ID) }}</template>
         </el-table-column>
         <el-table-column prop="Driver" label="驱动" width="130" />
         <el-table-column prop="Scope" label="范围" width="130" />
-        <el-table-column fixed="right" label="操作" width="120">
+        <el-table-column prop="Subnet" label="IPv4 子网" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="Gateway" label="网关" min-width="140" show-overflow-tooltip />
+        <el-table-column label="IPv6" width="90">
           <template #default="{ row }">
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              :loading="actionLoading === row.ID"
-              :disabled="!runtimeAvailable || !canDelete"
-              @click="deleteNetwork(row)"
-            >
-              删除
-            </el-button>
+            <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{ row.EnableIPv6 ? '启用' : '关闭' }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="170">
+          <template #default="{ row }">
+            <div class="row-actions">
+              <el-button link type="primary" @click="openDetail('network', row)">详情</el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :loading="actionLoading === row.ID"
+                :disabled="!runtimeAvailable || !canNetworkWrite"
+                @click="deleteNetwork(row)"
+              >
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -1407,23 +1908,31 @@ onMounted(async () => {
         :data="volumes"
         :row-key="getRowKey"
         empty-text="暂无存储卷"
+        @selection-change="handleVolumeSelectionChange"
       >
+        <el-table-column type="selection" width="44" />
         <el-table-column prop="Name" label="名称" min-width="220" />
         <el-table-column prop="Driver" label="驱动" width="130" />
         <el-table-column prop="Scope" label="范围" width="130" />
         <el-table-column prop="Mountpoint" label="挂载点" min-width="260" show-overflow-tooltip />
-        <el-table-column fixed="right" label="操作" width="140">
+        <el-table-column label="Options" min-width="180" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
+        </el-table-column>
+        <el-table-column fixed="right" label="操作" width="170">
           <template #default="{ row }">
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              :loading="actionLoading === row.Name"
-              :disabled="!runtimeAvailable || !canDelete"
-              @click="deleteVolume(row)"
-            >
-              删除
-            </el-button>
+            <div class="row-actions">
+              <el-button link type="primary" @click="openDetail('volume', row)">详情</el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :loading="actionLoading === row.Name"
+                :disabled="!runtimeAvailable || !canVolumeWrite"
+                @click="deleteVolume(row)"
+              >
+                删除
+              </el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -1550,14 +2059,26 @@ onMounted(async () => {
         </div>
       </div>
 
+      <el-pagination
+        v-if="hasPagination"
+        class="resource-pagination"
+        :current-page="activeListState.page"
+        :page-size="activeListState.pageSize"
+        :total="activeListState.total"
+        :page-sizes="[10, 20, 50, 100]"
+        layout="total, sizes, prev, pager, next"
+        @current-change="handlePageChange"
+        @size-change="handlePageSizeChange"
+      />
+
       <div class="panel-foot">
-        <span v-if="activeTab === 'containers'">共 {{ containers.length }} 个容器，{{ runningContainers }} 个运行中</span>
-        <span v-if="activeTab === 'images'">共 {{ images.length }} 个镜像，大小 {{ totalImagesSize }}</span>
-        <span v-if="activeTab === 'networks'">共 {{ networks.length }} 个网络</span>
-        <span v-if="activeTab === 'volumes'">共 {{ volumes.length }} 个存储卷</span>
+        <span v-if="activeTab === 'containers'">共 {{ listState.containers.total }} 个容器，当前页 {{ runningContainers }} 个运行中</span>
+        <span v-if="activeTab === 'images'">共 {{ listState.images.total }} 个镜像，当前页大小 {{ totalImagesSize }}</span>
+        <span v-if="activeTab === 'networks'">共 {{ listState.networks.total }} 个网络</span>
+        <span v-if="activeTab === 'volumes'">共 {{ listState.volumes.total }} 个存储卷</span>
         <span v-if="activeTab === 'compose'">共 {{ composeProjects.length }} 个 Compose 项目，只支持读取</span>
         <span v-if="activeTab === 'templates'">共 {{ templates.length }} 个模板</span>
-        <span v-if="activeTab === 'registries'">共 {{ registries.length }} 个 Registry</span>
+        <span v-if="activeTab === 'registries'">共 {{ listState.registries.total }} 个 Registry</span>
         <span v-if="activeTab === 'config'">Docker 配置读取与保存</span>
       </div>
     </section>
@@ -1922,6 +2443,69 @@ onMounted(async () => {
           </el-form-item>
         </template>
 
+        <template v-if="dialogType === 'network'">
+          <el-divider content-position="left">IPAM 与扩展参数</el-divider>
+          <el-form-item label="IPv4">
+            <el-switch v-model="form.networkIpv4" />
+          </el-form-item>
+          <template v-if="form.networkIpv4">
+            <el-form-item label="IPv4 子网">
+              <el-input v-model.trim="form.networkIpv4Subnet" placeholder="172.16.10.0/24" />
+            </el-form-item>
+            <el-form-item label="IPv4 网关">
+              <el-input v-model.trim="form.networkIpv4Gateway" placeholder="172.16.10.1" />
+            </el-form-item>
+            <el-form-item label="IPv4 范围">
+              <el-input v-model.trim="form.networkIpv4IpRange" placeholder="172.16.10.0/25，可选" />
+            </el-form-item>
+            <el-form-item label="IPv4 保留">
+              <el-input v-model="form.networkIpv4AuxAddressesText" type="textarea" :rows="2" placeholder="host1=172.16.10.10" />
+            </el-form-item>
+          </template>
+          <el-form-item label="IPv6">
+            <el-switch v-model="form.networkIpv6" />
+          </el-form-item>
+          <template v-if="form.networkIpv6">
+            <el-form-item label="IPv6 子网">
+              <el-input v-model.trim="form.networkIpv6Subnet" placeholder="2408:400e::/48" />
+            </el-form-item>
+            <el-form-item label="IPv6 网关">
+              <el-input v-model.trim="form.networkIpv6Gateway" placeholder="2408:400e::1" />
+            </el-form-item>
+            <el-form-item label="IPv6 范围">
+              <el-input v-model.trim="form.networkIpv6IpRange" placeholder="IPv6 CIDR，可选" />
+            </el-form-item>
+            <el-form-item label="IPv6 保留">
+              <el-input v-model="form.networkIpv6AuxAddressesText" type="textarea" :rows="2" placeholder="host1=2408:400e::10" />
+            </el-form-item>
+          </template>
+          <el-form-item label="Options">
+            <el-input v-model="form.optionsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
+          </el-form-item>
+          <el-form-item label="Labels">
+            <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
+          </el-form-item>
+        </template>
+
+        <template v-if="dialogType === 'volume'">
+          <el-divider content-position="left">存储参数</el-divider>
+          <el-form-item label="NFS">
+            <el-switch v-model="form.volumeNfs" />
+            <div class="field-help">开启后按 NFS 存储卷创建，Options 可填写 type/device/o。</div>
+          </el-form-item>
+          <el-form-item label="Options">
+            <el-input
+              v-model="form.optionsText"
+              type="textarea"
+              :rows="3"
+              placeholder="type=nfs&#10;device=:/export/data&#10;o=addr=192.168.1.10,rw"
+            />
+          </el-form-item>
+          <el-form-item label="Labels">
+            <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
+          </el-form-item>
+        </template>
+
         <template v-if="dialogType === 'registry'">
           <el-form-item label="名称">
             <el-input v-model.trim="registryForm.name" placeholder="例如 Docker Hub" />
@@ -1965,6 +2549,48 @@ onMounted(async () => {
         <el-button type="primary" :loading="saving" @click="submitDialog">确认</el-button>
       </template>
     </el-dialog>
+
+    <el-drawer
+      v-model="detailVisible"
+      :title="detailTitle"
+      size="560px"
+      @close="handleDetailClose"
+      class="container-detail-drawer"
+    >
+      <div v-loading="detailLoading" class="detail-drawer-body">
+        <div v-if="detailType === 'container'" class="stats-grid">
+          <div class="stat-card">
+            <span>CPU</span>
+            <strong>{{ detailStats?.cpuPercent || '--' }}</strong>
+          </div>
+          <div class="stat-card">
+            <span>内存</span>
+            <strong>{{ detailStats?.memoryPercent || '--' }}</strong>
+            <small>{{ detailStats?.memoryUsage || '--' }}</small>
+          </div>
+          <div class="stat-card">
+            <span>网络 IO</span>
+            <strong>{{ detailStats?.networkIO || '--' }}</strong>
+          </div>
+          <div class="stat-card">
+            <span>块设备 IO</span>
+            <strong>{{ detailStats?.blockIO || '--' }}</strong>
+          </div>
+          <div class="stat-card">
+            <span>PIDs</span>
+            <strong>{{ detailStats?.pids || '--' }}</strong>
+          </div>
+        </div>
+
+        <div class="detail-json">
+          <div class="detail-json__head">
+            <strong>{{ detailType === 'container' ? 'Inspect 安全集' : '资源详情' }}</strong>
+            <span v-if="detailType === 'container'">每 5 秒刷新资源快照</span>
+          </div>
+          <pre>{{ formatJson(detailData) }}</pre>
+        </div>
+      </div>
+    </el-drawer>
 
     <el-dialog v-model="logsVisible" width="860px" :title="`${logTarget?.Names || '容器'} 日志`">
       <div v-loading="logsLoading" class="logs-box">
@@ -2093,6 +2719,46 @@ onMounted(async () => {
   justify-content: flex-end;
 }
 
+.table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface-page) 72%, var(--surface-card));
+}
+
+.table-toolbar__filters,
+.table-toolbar__batch {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.table-toolbar__filters {
+  flex: 1;
+  min-width: 0;
+
+  :deep(.el-input) {
+    width: min(360px, 100%);
+  }
+}
+
+.status-filter {
+  width: 128px;
+}
+
+.table-toolbar__batch {
+  justify-content: flex-end;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .resource-panel :deep(.el-table) {
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -2127,6 +2793,89 @@ onMounted(async () => {
   padding-top: 12px;
   color: var(--text-secondary);
   font-weight: 600;
+}
+
+.resource-pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.detail-drawer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 280px;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  min-height: 94px;
+  padding: 14px 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+
+  span,
+  small {
+    display: block;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  strong {
+    display: block;
+    margin-top: 8px;
+    color: var(--text-primary);
+    font-size: 20px;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+  }
+
+  small {
+    margin-top: 6px;
+    font-weight: 600;
+  }
+}
+
+.detail-json {
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0b1220;
+}
+
+.detail-json__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+  color: #e5edf6;
+
+  span {
+    color: #94a3b8;
+    font-size: 12px;
+  }
+}
+
+.detail-json pre {
+  max-height: 58vh;
+  margin: 0;
+  padding: 16px;
+  overflow: auto;
+  color: #e5edf6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.65;
 }
 
 .logs-box {
