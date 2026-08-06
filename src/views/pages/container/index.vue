@@ -9,128 +9,33 @@ import {
   VideoPause,
   VideoPlay
 } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
+import { ElMessage, ElMessageBox, type FormRules } from 'element-plus'
 import { Api } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
-
-type ResourceTab = 'containers' | 'images' | 'networks' | 'volumes' | 'compose'
-  | 'templates'
-  | 'registries'
-  | 'config'
-type DialogType = 'container'
-  | 'image'
-  | 'image-import'
-  | 'image-build'
-  | 'image-tag'
-  | 'image-push'
-  | 'network'
-  | 'volume'
-  | 'registry'
-  | 'template'
-type MountMode = 'bind' | 'volume'
-type MountPermission = 'rw' | 'ro'
-type PortPublishMode = 'ports' | 'all'
-type PortProtocol = 'tcp' | 'udp' | 'sctp'
-type DetailType = 'container' | 'image' | 'network' | 'volume'
-type ContainerAction = 'start' | 'stop' | 'restart' | 'pause' | 'unpause' | 'kill' | 'rm'
-
-interface RuntimeInfo {
-  available: boolean
-  dockerVersion?: string
-  composeVersion?: string
-  serverVersion?: string
-  message?: string
-}
-
-interface ContainerItem {
-  ID: string
-  Names: string
-  Image: string
-  Command?: string
-  CreatedAt?: string
-  Status?: string
-  Ports?: string
-  RunningFor?: string
-  LocalVolumes?: string
-  Size?: string
-  Mounts?: string
-  Networks?: string
-}
-
-interface ImageItem {
-  ID: string
-  Repository: string
-  Tag: string
-  CreatedSince?: string
-  CreatedAt?: string
-  Size?: string
-  Containers?: string | number
-  used?: boolean
-}
-
-interface NetworkItem {
-  ID: string
-  Name: string
-  Driver?: string
-  Scope?: string
-  Subnet?: string
-  Gateway?: string
-  IPv6Subnet?: string
-  IPv6Gateway?: string
-  Labels?: Record<string, string>
-  Options?: Record<string, string>
-  Internal?: boolean
-  EnableIPv6?: boolean
-}
-
-interface VolumeItem {
-  Name: string
-  Driver?: string
-  Scope?: string
-  Mountpoint?: string
-  Options?: Record<string, string>
-  Labels?: Record<string, string>
-}
-
-interface RegistryItem {
-  id: number | string
-  name: string
-  address: string
-  protocol: 'http' | 'https'
-  authEnabled?: boolean
-  username?: string
-  status?: string
-  createdAt?: string
-  updatedAt?: string
-}
-
-interface TemplateItem {
-  id?: number | string
-  name: string
-  description?: string
-  content?: string
-  supported?: boolean
-  message?: string
-}
-
-interface ContainerStats {
-  id?: string
-  name?: string
-  cpuPercent?: string
-  memoryUsage?: string
-  memoryPercent?: string
-  networkIO?: string
-  blockIO?: string
-  pids?: string
-}
-
-interface ListState {
-  page: number
-  pageSize: number
-  total: number
-  search: string
-  status?: string
-}
+import RuntimeSummary from './components/RuntimeSummary.vue'
+import ContainerCreateDrawer from './components/ContainerCreateDrawer.vue'
+import ContainerResourceDialog from './components/ContainerResourceDialog.vue'
+import ContainerDetailDrawer from './components/ContainerDetailDrawer.vue'
+import ContainerLogsDialog from './components/ContainerLogsDialog.vue'
+import type {
+  ContainerAction,
+  ContainerItem,
+  ContainerStats,
+  DetailType,
+  DialogType,
+  ImageItem,
+  ListState,
+  MountMode,
+  MountPermission,
+  NetworkItem,
+  PortProtocol,
+  PortPublishMode,
+  RegistryItem,
+  ResourceTab,
+  RuntimeInfo,
+  TemplateItem,
+  VolumeItem
+} from './types'
 
 const activeTab = ref<ResourceTab>('containers')
 const runtime = ref<RuntimeInfo | null>(null)
@@ -165,7 +70,8 @@ const listState = reactive<Record<'containers' | 'images' | 'networks' | 'volume
   registries: { page: 1, pageSize: 10, total: 0, search: '' }
 })
 
-const formRef = ref<FormInstance>()
+const createDrawerRef = ref<InstanceType<typeof ContainerCreateDrawer>>()
+const resourceDialogRef = ref<InstanceType<typeof ContainerResourceDialog>>()
 const dialogVisible = ref(false)
 const dialogType = ref<DialogType>('container')
 const saving = ref(false)
@@ -332,15 +238,6 @@ const listQuery = (tab: keyof typeof listState) => {
   }
 }
 
-const formatJson = (data: any) => {
-  if (!data) return '{}'
-  try {
-    return JSON.stringify(data, null, 2)
-  } catch {
-    return String(data)
-  }
-}
-
 const resetForm = () => {
   form.name = ''
   form.image = ''
@@ -407,7 +304,8 @@ const resetForm = () => {
   templateForm.content = 'services:\n  web:\n    image: nginx:1.27\n'
   importFile.value = null
   dialogTarget.value = null
-  formRef.value?.clearValidate()
+  createDrawerRef.value?.clearValidate()
+  resourceDialogRef.value?.clearValidate()
 }
 
 const getRowKey = (row: Record<string, any>) =>
@@ -843,7 +741,8 @@ const buildVolumePayload = () => ({
 })
 
 const submitDialog = async () => {
-  await formRef.value?.validate()
+  if (dialogType.value === 'container') await createDrawerRef.value?.validate()
+  else await resourceDialogRef.value?.validate()
   saving.value = true
   try {
     if (dialogType.value === 'container') {
@@ -1475,28 +1374,12 @@ onBeforeUnmount(() => {
       :closable="false"
     />
 
-    <section class="runtime-grid" v-loading="runtimeLoading">
-      <div class="metric-card">
-        <div class="metric-card__label">Docker Client</div>
-        <strong>{{ runtime?.dockerVersion || '--' }}</strong>
-        <span>客户端版本</span>
-      </div>
-      <div class="metric-card">
-        <div class="metric-card__label">Docker Server</div>
-        <strong>{{ runtime?.serverVersion || '--' }}</strong>
-        <span>服务端版本</span>
-      </div>
-      <div class="metric-card">
-        <div class="metric-card__label">Compose</div>
-        <strong>{{ runtime?.composeVersion || '--' }}</strong>
-        <span>编排运行时</span>
-      </div>
-      <div class="metric-card metric-card--accent">
-        <div class="metric-card__label">容器运行中</div>
-        <strong>{{ runningContainers }} / {{ containers.length }}</strong>
-        <span>当前容器状态</span>
-      </div>
-    </section>
+    <RuntimeSummary
+      :runtime="runtime"
+      :runtime-loading="runtimeLoading"
+      :running-containers="runningContainers"
+      :container-count="containers.length"
+    />
 
     <section class="resource-panel">
       <div class="panel-top">
@@ -2083,521 +1966,58 @@ onBeforeUnmount(() => {
       </div>
     </section>
 
-    <custom-drawer
+    <ContainerCreateDrawer
+      ref="createDrawerRef"
       :visible="dialogVisible && dialogType === 'container'"
-      title="创建容器"
-      size="760px"
-      :loading="saving"
-      :on-close="() => { dialogVisible = false }"
-      :on-confirm="submitDialog"
-    >
-      <el-form ref="formRef" class="container-create-form" :model="form" :rules="rules" label-width="96px">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model.trim="form.name" placeholder="例如 demo-nginx" />
-          <div class="field-help">容器名称，不能包含空格、斜杠和换行。</div>
-        </el-form-item>
-        <el-form-item label="镜像" prop="image">
-          <div class="image-field">
-            <el-checkbox v-model="form.manualImage" class="image-field__toggle">手动输入</el-checkbox>
-            <el-input
-              v-if="form.manualImage"
-              v-model.trim="form.image"
-              placeholder="例如 nginx:1.27"
-            />
-            <el-select
-              v-else
-              v-model="form.image"
-              placeholder="请选择镜像"
-              filterable
-              clearable
-            >
-              <el-option
-                v-for="item in images"
-                :key="item.ID"
-                :label="imageReference(item)"
-                :value="imageReference(item)"
-              />
-            </el-select>
-          </div>
-          <div class="field-help">可直接选择现有镜像，也可切换为手动输入镜像引用。</div>
-        </el-form-item>
+      :saving="saving"
+      :form="form"
+      :rules="rules"
+      :images="images"
+      :volumes="volumes"
+      :image-reference="imageReference"
+      @confirm="submitDialog"
+      @update:visible="dialogVisible = $event"
+      @add-port="addPort"
+      @remove-port="removePort"
+      @add-mount="addMount"
+      @remove-mount="removeMount"
+    />
 
-        <el-divider content-position="left">网络与挂载</el-divider>
-        <el-form-item label="端口映射">
-          <div class="port-publish">
-            <el-radio-group v-model="form.portPublishMode" class="port-mode-options">
-              <el-radio value="ports">暴露端口</el-radio>
-              <el-radio value="all">暴露所有</el-radio>
-            </el-radio-group>
-            <div v-if="form.portPublishMode === 'ports'" class="port-card">
-              <div class="port-card__head">
-                <span>服务器</span>
-                <span>容器</span>
-                <span>协议</span>
-                <span></span>
-              </div>
-              <div v-for="(port, index) in form.ports" :key="index" class="port-card__row">
-                <div class="port-field">
-                  <el-input v-model.trim="port.host" placeholder="80, 80-88, ip:80" />
-                  <small>支持 80、80-88、ip:80 或 ip:80-88</small>
-                </div>
-                <div class="port-field">
-                  <el-input v-model.trim="port.container" placeholder="80 或 80-88" />
-                  <small>与服务器端口数量保持一致</small>
-                </div>
-                <el-select v-model="port.protocol">
-                  <el-option label="tcp" value="tcp" />
-                  <el-option label="udp" value="udp" />
-                  <el-option label="sctp" value="sctp" />
-                </el-select>
-                <el-button link type="primary" @click="removePort(index)">删除</el-button>
-              </div>
-              <el-button class="port-add-button" @click="addPort">添加</el-button>
-            </div>
-            <div v-else class="port-all-fields">
-              <label>
-                <span>网络</span>
-                <el-input v-model="form.networksText" placeholder="bridge" />
-              </label>
-              <label>
-                <span>IPv4</span>
-                <el-input v-model.trim="form.ipv4" placeholder="请输入 IPv4 地址" />
-              </label>
-              <label>
-                <span>IPv6</span>
-                <el-input v-model.trim="form.ipv6" placeholder="请输入 IPv6 地址" />
-              </label>
-            </div>
-          </div>
-        </el-form-item>
-        <el-form-item v-if="form.portPublishMode === 'ports'" label="网络">
-          <el-input v-model="form.networksText" placeholder="bridge，多个网络可用换行或逗号分隔" />
-          <div class="field-help">要加入的 Docker 网络名称；固定 IP 需要配合对应网络。</div>
-        </el-form-item>
-        <el-form-item v-if="form.portPublishMode === 'ports'" label="固定 IP">
-          <div class="form-inline-grid">
-            <el-input v-model.trim="form.ipv4" placeholder="IPv4，可选" />
-            <el-input v-model.trim="form.ipv6" placeholder="IPv6，可选" />
-          </div>
-          <div class="field-help">容器 IPv4/IPv6 地址，可选，需配合自定义网络。</div>
-        </el-form-item>
-        <el-form-item label="挂载">
-          <div class="mount-list">
-            <div v-for="(mount, index) in form.mounts" :key="index" class="mount-card">
-              <div class="mount-card__top">
-                <el-segmented
-                  v-model="mount.mode"
-                  :options="[
-                    { label: '挂载卷', value: 'volume' },
-                    { label: '本机目录', value: 'bind' }
-                  ]"
-                />
-                <el-button link type="primary" @click="removeMount(index)">删除</el-button>
-              </div>
-              <div class="mount-card__grid">
-                <label>
-                  <span>{{ mount.mode === 'volume' ? '挂载卷' : '本机目录' }}</span>
-                  <el-select
-                    v-if="mount.mode === 'volume'"
-                    v-model="mount.source"
-                    placeholder="请选择存储卷"
-                    filterable
-                    clearable
-                  >
-                    <el-option
-                      v-for="volume in volumes"
-                      :key="volume.Name"
-                      :label="volume.Name"
-                      :value="volume.Name"
-                    />
-                  </el-select>
-                  <el-input
-                    v-else
-                    v-model.trim="mount.source"
-                    placeholder="例如 /tmp/nginx-html"
-                  />
-                </label>
-                <label>
-                  <span>权限</span>
-                  <el-select v-model="mount.permission">
-                    <el-option label="读写" value="rw" />
-                    <el-option label="只读" value="ro" />
-                  </el-select>
-                </label>
-                <label>
-                  <span>容器目录</span>
-                  <el-input v-model.trim="mount.target" placeholder="例如 /usr/share/nginx/html" />
-                </label>
-              </div>
-            </div>
-            <el-button class="mount-add-button" @click="addMount">添加</el-button>
-          </div>
-          <div class="field-help">
-            挂载卷模式会读取“存储卷”列表供选择；读写提交 `readOnly=false`，只读提交 `readOnly=true`。
-          </div>
-        </el-form-item>
+    <ContainerResourceDialog
+      ref="resourceDialogRef"
+      :visible="dialogVisible && dialogType !== 'container'"
+      :dialog-type="dialogType"
+      :dialog-target="dialogTarget"
+      :saving="saving"
+      :form="form"
+      :rules="rules"
+      :image-action-form="imageActionForm"
+      :registry-form="registryForm"
+      :template-form="templateForm"
+      :registries="registries"
+      :image-reference="imageReference"
+      :registry-label="registryLabel"
+      @confirm="submitDialog"
+      @update:visible="dialogVisible = $event"
+      @import-file-change="handleImportFileChange"
+    />
 
-        <el-divider content-position="left">启动参数</el-divider>
-        <el-form-item label="命令">
-          <el-input
-            v-model="form.commandText"
-            type="textarea"
-            :rows="2"
-            placeholder="每行一个参数，或 JSON 数组，例如 [&quot;nginx&quot;,&quot;-g&quot;,&quot;daemon off;&quot;]"
-          />
-          <div class="field-help">容器默认命令参数，提交为 string[]。</div>
-        </el-form-item>
-        <el-form-item label="EntryPoint">
-          <el-input
-            v-model="form.entrypointText"
-            type="textarea"
-            :rows="2"
-            placeholder="每行一个入口命令参数，或 JSON 字符串数组"
-          />
-          <div class="field-help">容器入口命令，未填写时提交空数组。</div>
-        </el-form-item>
-        <el-form-item label="重启策略">
-          <el-radio-group v-model="form.restart" class="restart-options">
-            <el-radio value="no">不重启</el-radio>
-            <el-radio value="always">一直重启</el-radio>
-            <el-radio value="on-failure:5">失败后重启（默认重启 5 次）</el-radio>
-            <el-radio value="unless-stopped">未手动停止则重启</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="运行选项">
-          <div class="form-switches">
-            <el-checkbox v-model="form.autoRemove">退出后自动删除</el-checkbox>
-            <el-checkbox v-model="form.tty">TTY</el-checkbox>
-            <el-checkbox v-model="form.openStdin">保持 stdin</el-checkbox>
-            <el-checkbox v-model="form.privileged">特权模式</el-checkbox>
-          </div>
-          <div class="field-help">特权模式风险较高，建议仅管理员按需开放。</div>
-        </el-form-item>
-
-        <el-divider content-position="left">资源限制</el-divider>
-        <el-form-item label="CPU 权重">
-          <el-input-number
-            v-model="form.cpuWeight"
-            :min="10"
-            :max="1000"
-            :step="10"
-            controls-position="right"
-            placeholder="默认 1000"
-          />
-          <div class="resource-help">CPU 权重范围为 10-1000，增大可使当前容器获得更多的 CPU 时间。</div>
-        </el-form-item>
-        <el-form-item label="CPU 限制">
-          <el-input-number
-            v-model="form.cpuLimit"
-            class="resource-limit-input"
-            :min="0"
-            :max="256"
-            :step="0.5"
-            controls-position="right"
-            placeholder="0"
-          />
-          <span class="field-unit">核</span>
-          <div class="resource-help">限制为 0 则关闭限制，最大可用值由宿主机 CPU 核数决定。</div>
-        </el-form-item>
-        <el-form-item label="内存限制">
-          <el-input-number
-            v-model="form.memoryLimitMB"
-            class="resource-limit-input"
-            :min="0"
-            :step="128"
-            controls-position="right"
-            placeholder="0"
-          />
-          <span class="field-unit">MB</span>
-          <div class="resource-help">限制为 0 则关闭限制，单位为 MB。</div>
-        </el-form-item>
-
-        <el-divider content-position="left">Labels 与环境变量</el-divider>
-        <el-form-item label="Labels">
-          <el-input
-            v-model="form.labelsText"
-            type="textarea"
-            :rows="2"
-            placeholder="每行一个 key=value，或 JSON 对象"
-          />
-          <div class="field-help">Docker Labels 键值对，提交为 object。</div>
-        </el-form-item>
-        <el-form-item label="环境变量">
-          <el-input
-            v-model="form.environmentText"
-            type="textarea"
-            :rows="2"
-            placeholder="每行一个 KEY=value；敏感值不会在列表中回显"
-          />
-          <div class="field-help">环境变量键值对，前端不会在普通列表中回显敏感值。</div>
-        </el-form-item>
-      </el-form>
-    </custom-drawer>
-
-    <el-dialog v-if="dialogType !== 'container'" v-model="dialogVisible" :title="{
-      image: '拉取镜像',
-      'image-import': '导入镜像',
-      'image-build': '构建镜像',
-      'image-tag': '修改镜像标签',
-      'image-push': '推送镜像',
-      network: '创建网络',
-      volume: '创建存储卷',
-      registry: dialogTarget ? '编辑 Registry' : '新增 Registry',
-      template: dialogTarget ? '编辑编排模板' : '创建编排模板'
-    }[dialogType]" width="680px">
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="112px" class="resource-dialog-form">
-        <template v-if="dialogType === 'image'">
-          <el-form-item label="拉取方式">
-            <el-radio-group v-model="imageActionForm.pullMode">
-              <el-radio value="reference">完整镜像引用</el-radio>
-              <el-radio value="registry">选择 Registry</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item v-if="imageActionForm.pullMode === 'reference'" label="镜像引用">
-            <el-input v-model.trim="imageActionForm.reference" placeholder="例如 nginx:1.27" />
-          </el-form-item>
-          <template v-else>
-            <el-form-item label="Registry">
-              <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
-                <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="镜像名">
-              <el-input v-model.trim="imageActionForm.imageName" placeholder="例如 library/nginx:1.27" />
-            </el-form-item>
-          </template>
-        </template>
-
-        <el-form-item v-if="dialogType === 'image-import'" label="tar 文件">
-          <input class="file-picker" type="file" accept=".tar,.gz,.tgz,.xz,.zst" @change="handleImportFileChange" />
-          <div class="field-help">请选择 Docker save 导出的 tar 镜像文件，字段名会按文档提交为 `file`。</div>
-        </el-form-item>
-
-        <template v-if="dialogType === 'image-build'">
-          <el-form-item label="目标镜像">
-            <el-input v-model.trim="imageActionForm.buildName" placeholder="例如 demo/web:latest" />
-          </el-form-item>
-          <el-form-item label="构建方式">
-            <el-radio-group v-model="imageActionForm.buildMode">
-              <el-radio value="dockerfile">编辑 Dockerfile</el-radio>
-              <el-radio value="path">服务器路径</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item v-if="imageActionForm.buildMode === 'dockerfile'" label="Dockerfile">
-            <el-input v-model="imageActionForm.dockerfile" type="textarea" :rows="8" />
-          </el-form-item>
-          <template v-else>
-            <el-form-item label="上下文目录">
-              <el-input v-model.trim="imageActionForm.contextPath" placeholder="/usr/local/one/docker-build/demo" />
-            </el-form-item>
-            <el-form-item label="Dockerfile">
-              <el-input v-model.trim="imageActionForm.dockerfilePath" placeholder="留空使用 contextPath/Dockerfile" />
-            </el-form-item>
-          </template>
-          <el-form-item label="Labels">
-            <el-input v-model="imageActionForm.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
-          </el-form-item>
-        </template>
-
-        <template v-if="dialogType === 'image-tag'">
-          <el-form-item label="当前镜像">
-            <el-input :model-value="dialogTarget ? imageReference(dialogTarget) : ''" disabled />
-          </el-form-item>
-          <el-form-item label="新标签">
-            <el-input v-model.trim="imageActionForm.tagReference" placeholder="例如 demo/web:stable" />
-          </el-form-item>
-          <el-form-item label="移除旧标签">
-            <el-switch v-model="imageActionForm.removeOther" />
-            <div class="field-help">开启时会提交 `removeOther=true` 和 `confirm=true`。</div>
-          </el-form-item>
-        </template>
-
-        <template v-if="dialogType === 'image-push'">
-          <el-form-item label="推送方式">
-            <el-radio-group v-model="imageActionForm.pushMode">
-              <el-radio value="reference">完整镜像引用</el-radio>
-              <el-radio value="registry">选择 Registry</el-radio>
-            </el-radio-group>
-          </el-form-item>
-          <el-form-item v-if="imageActionForm.pushMode === 'reference'" label="镜像引用">
-            <el-input v-model.trim="imageActionForm.pushReference" placeholder="例如 docker.io/team/demo:latest" />
-          </el-form-item>
-          <template v-else>
-            <el-form-item label="Registry">
-              <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
-                <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
-              </el-select>
-            </el-form-item>
-            <el-form-item label="镜像名">
-              <el-input v-model.trim="imageActionForm.pushImageName" placeholder="例如 team/demo:latest" />
-            </el-form-item>
-          </template>
-        </template>
-
-        <template v-if="dialogType === 'network' || dialogType === 'volume'">
-          <el-form-item label="名称" prop="name">
-            <el-input v-model.trim="form.name" placeholder="例如 app-network" />
-          </el-form-item>
-          <el-form-item label="驱动">
-            <el-input v-model.trim="form.driver" :placeholder="dialogType === 'network' ? 'bridge' : 'local'" />
-          </el-form-item>
-        </template>
-
-        <template v-if="dialogType === 'network'">
-          <el-divider content-position="left">IPAM 与扩展参数</el-divider>
-          <el-form-item label="IPv4">
-            <el-switch v-model="form.networkIpv4" />
-          </el-form-item>
-          <template v-if="form.networkIpv4">
-            <el-form-item label="IPv4 子网">
-              <el-input v-model.trim="form.networkIpv4Subnet" placeholder="172.16.10.0/24" />
-            </el-form-item>
-            <el-form-item label="IPv4 网关">
-              <el-input v-model.trim="form.networkIpv4Gateway" placeholder="172.16.10.1" />
-            </el-form-item>
-            <el-form-item label="IPv4 范围">
-              <el-input v-model.trim="form.networkIpv4IpRange" placeholder="172.16.10.0/25，可选" />
-            </el-form-item>
-            <el-form-item label="IPv4 保留">
-              <el-input v-model="form.networkIpv4AuxAddressesText" type="textarea" :rows="2" placeholder="host1=172.16.10.10" />
-            </el-form-item>
-          </template>
-          <el-form-item label="IPv6">
-            <el-switch v-model="form.networkIpv6" />
-          </el-form-item>
-          <template v-if="form.networkIpv6">
-            <el-form-item label="IPv6 子网">
-              <el-input v-model.trim="form.networkIpv6Subnet" placeholder="2408:400e::/48" />
-            </el-form-item>
-            <el-form-item label="IPv6 网关">
-              <el-input v-model.trim="form.networkIpv6Gateway" placeholder="2408:400e::1" />
-            </el-form-item>
-            <el-form-item label="IPv6 范围">
-              <el-input v-model.trim="form.networkIpv6IpRange" placeholder="IPv6 CIDR，可选" />
-            </el-form-item>
-            <el-form-item label="IPv6 保留">
-              <el-input v-model="form.networkIpv6AuxAddressesText" type="textarea" :rows="2" placeholder="host1=2408:400e::10" />
-            </el-form-item>
-          </template>
-          <el-form-item label="Options">
-            <el-input v-model="form.optionsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
-          </el-form-item>
-          <el-form-item label="Labels">
-            <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
-          </el-form-item>
-        </template>
-
-        <template v-if="dialogType === 'volume'">
-          <el-divider content-position="left">存储参数</el-divider>
-          <el-form-item label="NFS">
-            <el-switch v-model="form.volumeNfs" />
-            <div class="field-help">开启后按 NFS 存储卷创建，Options 可填写 type/device/o。</div>
-          </el-form-item>
-          <el-form-item label="Options">
-            <el-input
-              v-model="form.optionsText"
-              type="textarea"
-              :rows="3"
-              placeholder="type=nfs&#10;device=:/export/data&#10;o=addr=192.168.1.10,rw"
-            />
-          </el-form-item>
-          <el-form-item label="Labels">
-            <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="每行 key=value，可选" />
-          </el-form-item>
-        </template>
-
-        <template v-if="dialogType === 'registry'">
-          <el-form-item label="名称">
-            <el-input v-model.trim="registryForm.name" placeholder="例如 Docker Hub" />
-          </el-form-item>
-          <el-form-item label="地址">
-            <el-input v-model.trim="registryForm.address" placeholder="docker.io 或 registry.example.com:5000" />
-          </el-form-item>
-          <el-form-item label="协议">
-            <el-select v-model="registryForm.protocol">
-              <el-option label="https" value="https" />
-              <el-option label="http" value="http" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="认证">
-            <el-switch v-model="registryForm.authEnabled" />
-          </el-form-item>
-          <template v-if="registryForm.authEnabled">
-            <el-form-item label="用户名">
-              <el-input v-model.trim="registryForm.username" placeholder="请输入用户名" />
-            </el-form-item>
-            <el-form-item label="密码">
-              <el-input v-model="registryForm.password" type="password" show-password placeholder="编辑时留空表示不替换密码" />
-            </el-form-item>
-          </template>
-        </template>
-
-        <template v-if="dialogType === 'template'">
-          <el-form-item label="名称">
-            <el-input v-model.trim="templateForm.name" placeholder="例如 nginx-compose" />
-          </el-form-item>
-          <el-form-item label="说明">
-            <el-input v-model.trim="templateForm.description" placeholder="模板用途，可选" />
-          </el-form-item>
-          <el-form-item label="YAML">
-            <el-input v-model="templateForm.content" type="textarea" :rows="10" />
-          </el-form-item>
-        </template>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="submitDialog">确认</el-button>
-      </template>
-    </el-dialog>
-
-    <el-drawer
-      v-model="detailVisible"
+    <ContainerDetailDrawer
+      v-model:visible="detailVisible"
       :title="detailTitle"
-      size="560px"
+      :loading="detailLoading"
+      :detail-type="detailType"
+      :detail-data="detailData"
+      :detail-stats="detailStats"
       @close="handleDetailClose"
-      class="container-detail-drawer"
-    >
-      <div v-loading="detailLoading" class="detail-drawer-body">
-        <div v-if="detailType === 'container'" class="stats-grid">
-          <div class="stat-card">
-            <span>CPU</span>
-            <strong>{{ detailStats?.cpuPercent || '--' }}</strong>
-          </div>
-          <div class="stat-card">
-            <span>内存</span>
-            <strong>{{ detailStats?.memoryPercent || '--' }}</strong>
-            <small>{{ detailStats?.memoryUsage || '--' }}</small>
-          </div>
-          <div class="stat-card">
-            <span>网络 IO</span>
-            <strong>{{ detailStats?.networkIO || '--' }}</strong>
-          </div>
-          <div class="stat-card">
-            <span>块设备 IO</span>
-            <strong>{{ detailStats?.blockIO || '--' }}</strong>
-          </div>
-          <div class="stat-card">
-            <span>PIDs</span>
-            <strong>{{ detailStats?.pids || '--' }}</strong>
-          </div>
-        </div>
+    />
 
-        <div class="detail-json">
-          <div class="detail-json__head">
-            <strong>{{ detailType === 'container' ? 'Inspect 安全集' : '资源详情' }}</strong>
-            <span v-if="detailType === 'container'">每 5 秒刷新资源快照</span>
-          </div>
-          <pre>{{ formatJson(detailData) }}</pre>
-        </div>
-      </div>
-    </el-drawer>
-
-    <el-dialog v-model="logsVisible" width="860px" :title="`${logTarget?.Names || '容器'} 日志`">
-      <div v-loading="logsLoading" class="logs-box">
-        <pre v-if="logsText">{{ logsText }}</pre>
-        <el-empty v-else description="暂无日志" />
-      </div>
-    </el-dialog>
+    <ContainerLogsDialog
+      v-model:visible="logsVisible"
+      :loading="logsLoading"
+      :target="logTarget"
+      :logs-text="logsText"
+    />
   </div>
 </template>
 
@@ -2608,8 +2028,7 @@ onBeforeUnmount(() => {
 }
 
 .container-alert,
-.resource-panel,
-.runtime-grid {
+.resource-panel {
   width: 100%;
   max-width: none;
   margin: 0 0 16px;
@@ -2642,43 +2061,6 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-}
-
-.runtime-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.metric-card {
-  min-height: 106px;
-  padding: 18px 20px 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-card);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-
-  &__label {
-    color: var(--text-secondary);
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-
-  span {
-    display: block;
-    color: var(--text-secondary);
-    margin-top: 6px;
-    font-size: 12px;
-  }
-
-  strong {
-    font-size: 22px;
-    line-height: 1.2;
-  }
-
-  &--accent {
-    background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
-  }
 }
 
 .resource-panel {
@@ -2800,103 +2182,6 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
 }
 
-.detail-drawer-body {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 280px;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.stat-card {
-  min-height: 94px;
-  padding: 14px 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-card);
-
-  span,
-  small {
-    display: block;
-    color: var(--text-tertiary);
-    font-size: 12px;
-    font-weight: 700;
-  }
-
-  strong {
-    display: block;
-    margin-top: 8px;
-    color: var(--text-primary);
-    font-size: 20px;
-    line-height: 1.25;
-    overflow-wrap: anywhere;
-  }
-
-  small {
-    margin-top: 6px;
-    font-weight: 600;
-  }
-}
-
-.detail-json {
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  overflow: hidden;
-  background: #0b1220;
-}
-
-.detail-json__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.2);
-  color: #e5edf6;
-
-  span {
-    color: #94a3b8;
-    font-size: 12px;
-  }
-}
-
-.detail-json pre {
-  max-height: 58vh;
-  margin: 0;
-  padding: 16px;
-  overflow: auto;
-  color: #e5edf6;
-  white-space: pre-wrap;
-  word-break: break-word;
-  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-  font-size: 12px;
-  line-height: 1.65;
-}
-
-.logs-box {
-  min-height: 360px;
-  max-height: 62vh;
-  overflow: auto;
-  border-radius: 8px;
-  background: #0b1220;
-  color: #e5edf6;
-
-  pre {
-    margin: 0;
-    padding: 16px;
-    white-space: pre-wrap;
-    word-break: break-word;
-    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
-    font-size: 13px;
-    line-height: 1.7;
-  }
-}
-
 .config-editor {
   padding: 4px 0 0;
 
@@ -2914,36 +2199,6 @@ onBeforeUnmount(() => {
   margin-bottom: 12px;
   color: var(--text-secondary);
   font-weight: 700;
-}
-
-.resource-dialog-form {
-  :deep(.el-select),
-  :deep(.el-input),
-  :deep(.el-textarea) {
-    width: 100%;
-  }
-
-  :deep(.el-radio-group) {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px 24px;
-  }
-
-  :deep(.el-radio) {
-    height: 32px;
-    margin-right: 0;
-    font-weight: 700;
-  }
-}
-
-.file-picker {
-  width: 100%;
-  min-height: 42px;
-  padding: 8px 10px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-card);
-  color: var(--text-secondary);
 }
 
 :global(.el-message-box:has(.container-create-preview)) {
@@ -3005,313 +2260,12 @@ onBeforeUnmount(() => {
   color: var(--danger-color);
 }
 
-.container-create-form {
-  max-width: 640px;
-  margin: 0 auto;
-
-  :deep(.el-form-item) {
-    margin-bottom: 20px;
-  }
-
-  :deep(.el-form-item__label) {
-    align-items: center;
-    min-height: 44px;
-    color: var(--text-secondary);
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.3;
-  }
-
-  :deep(.el-input),
-  :deep(.el-textarea),
-  :deep(.el-select),
-  :deep(.el-input-number) {
-    width: 100%;
-  }
-
-  :deep(.el-input__wrapper),
-  :deep(.el-select__wrapper) {
-    min-height: 44px;
-    border-radius: 8px;
-  }
-
-  :deep(.el-textarea__inner) {
-    min-height: 78px;
-    border-radius: 8px;
-    line-height: 1.55;
-    resize: vertical;
-  }
-
-  :deep(.el-divider) {
-    margin: 26px 0 20px;
-  }
-
-  :deep(.el-divider__text) {
-    color: var(--text-primary);
-    font-size: 16px;
-    font-weight: 760;
-  }
-
-  :deep(.resource-limit-input) {
-    width: calc(100% - 82px);
-  }
-}
-
-.field-unit {
-  width: 70px;
-  height: 44px;
-  margin-left: 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--surface-page) 78%, var(--surface-card));
-  color: var(--text-tertiary);
-  font-weight: 700;
-}
-
-.field-help,
-.resource-help {
+.field-help {
   flex-basis: 100%;
   margin-top: 8px;
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 1.5;
-}
-
-.image-field {
-  width: 100%;
-  display: grid;
-  gap: 10px;
-
-  &__toggle {
-    width: fit-content;
-    margin: 0;
-  }
-}
-
-.form-inline-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-
-  &--three {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.form-switches {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 18px;
-  width: 100%;
-
-  :deep(.el-checkbox) {
-    height: 34px;
-    margin-right: 0;
-  }
-}
-
-.restart-options {
-  width: 100%;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 34px;
-
-  :deep(.el-radio) {
-    height: 32px;
-    margin-right: 0;
-    color: var(--text-secondary);
-    font-size: 15px;
-    font-weight: 720;
-  }
-
-  :deep(.el-radio.is-checked) {
-    color: var(--el-color-primary);
-  }
-
-  :deep(.el-radio__label) {
-    padding-left: 10px;
-  }
-}
-
-.port-publish {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.port-mode-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 18px 34px;
-
-  :deep(.el-radio) {
-    height: 32px;
-    margin-right: 0;
-    color: var(--text-secondary);
-    font-size: 15px;
-    font-weight: 760;
-  }
-
-  :deep(.el-radio.is-checked) {
-    color: var(--el-color-primary);
-  }
-
-  :deep(.el-radio__label) {
-    padding-left: 10px;
-  }
-}
-
-.port-card {
-  padding: 24px 20px 20px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-card);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-}
-
-.port-card__head,
-.port-card__row {
-  display: grid;
-  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) 116px 64px;
-  gap: 14px;
-  align-items: start;
-}
-
-.port-card__head {
-  padding: 0 0 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  font-size: 14px;
-  font-weight: 760;
-}
-
-.port-card__row {
-  padding: 12px 0;
-
-  &:nth-child(odd) {
-    background: color-mix(in srgb, var(--surface-page) 62%, transparent);
-  }
-}
-
-.port-field {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-
-  small {
-    color: var(--text-tertiary);
-    font-size: 12px;
-    line-height: 1.4;
-    white-space: normal;
-  }
-}
-
-.port-add-button {
-  margin-top: 8px;
-}
-
-@media (max-width: 1180px) {
-  .port-card__head {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 108px 60px;
-  }
-
-  .port-card__row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 108px 60px;
-  }
-}
-
-.port-all-fields {
-  display: grid;
-  gap: 18px;
-  width: 100%;
-
-  label {
-    display: grid;
-    gap: 8px;
-
-    > span {
-      color: var(--text-secondary);
-      font-size: 14px;
-      font-weight: 720;
-    }
-  }
-}
-
-.mount-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-}
-
-.mount-card {
-  padding: 18px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 8px;
-  background: var(--surface-card);
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
-}
-
-.mount-card__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-
-  :deep(.el-segmented) {
-    --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
-    --el-segmented-item-selected-color: #fff;
-    padding: 0;
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
-  }
-
-  :deep(.el-segmented__item) {
-    min-width: 88px;
-    height: 34px;
-    border-radius: 5px;
-    font-weight: 700;
-  }
-}
-
-.mount-card__grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(130px, 0.8fr) minmax(0, 1.5fr);
-  gap: 12px;
-
-  label {
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-
-    > span {
-      color: var(--text-secondary);
-      font-size: 13px;
-      font-weight: 700;
-    }
-  }
-}
-
-.mount-add-button {
-  align-self: flex-start;
-}
-
-:deep(.el-dialog .el-divider__text) {
-  color: var(--text-secondary);
-  font-weight: 700;
-}
-
-:deep(.el-dialog .el-dialog__body){
-  max-height: 62vh;
-  overflow: auto;
 }
 
 @media (max-width: 980px) {
@@ -3323,32 +2277,6 @@ onBeforeUnmount(() => {
   .panel-top {
     align-items: stretch;
     flex-direction: column;
-  }
-
-  .runtime-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .form-inline-grid,
-  .form-inline-grid--three {
-    grid-template-columns: 1fr;
-  }
-
-  .form-switches {
-    grid-template-columns: 1fr;
-  }
-
-  .port-card__head {
-    display: none;
-  }
-
-  .port-card__row {
-    grid-template-columns: 1fr;
-    padding: 12px 0;
-  }
-
-  .mount-card__grid {
-    grid-template-columns: 1fr;
   }
 }
 </style>
