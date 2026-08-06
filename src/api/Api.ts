@@ -1,5 +1,54 @@
 import System from '@/utils/System'
 
+export type SnapshotResourceType = 'website' | 'nginx' | 'firewall' | 'panel_access'
+export type SnapshotOperation = 'create' | 'update' | 'delete' | 'restore'
+export type SnapshotStatus = 'pending' | 'applying' | 'succeeded' | 'failed' | 'rolled_back' | 'rollback_failed'
+
+export interface ConfigurationSnapshot {
+  id: string
+  resourceType: SnapshotResourceType
+  resourceId: string
+  operation: SnapshotOperation
+  status: SnapshotStatus
+  beforeRevision?: string
+  afterRevision?: string
+  artifactSha256?: string
+  taskId?: string
+  requestedBy: number
+  failureMessage?: string
+  createdAt: string
+  finishedAt?: string
+  name?: string
+  version?: string
+  backupAccount?: string
+  sizeBytes?: number
+  description?: string
+}
+
+export interface SnapshotDiff {
+  added: string[]
+  changed: string[]
+  removed: string[]
+  summary: string
+}
+
+export interface SnapshotListParams {
+  page?: number
+  pageSize?: number
+  resourceType?: SnapshotResourceType | ''
+  resourceId?: string
+  status?: SnapshotStatus | ''
+}
+
+export interface CreateConfigurationSnapshotPayload {
+  resourceType: SnapshotResourceType
+  resourceId: string
+  name?: string
+  version?: string
+  backupAccount?: string
+  description?: string
+}
+
 const apiUrl = (path: string) => {
   const base = String(System.env.API || '/v1').replace(/\/$/, '')
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
@@ -80,6 +129,27 @@ const fetchJson = async (method: 'POST' | 'PUT', url: string, payload: Record<st
   const data = await response.json().catch(() => ({}))
   if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
     throw new Error(data?.error?.detail || data?.message || '请求失败')
+  }
+  return data
+}
+
+const deleteJson = async (url: string, fallbackUrl?: string) => {
+  const response = await fetch(apiUrl(url), {
+    method: 'DELETE',
+    credentials: 'include',
+    headers: {
+      Accept: 'application/json'
+    }
+  })
+  if (response.status === 204) {
+    return { success: true, code: 0 }
+  }
+  const data = await response.json().catch(() => ({}))
+  if (response.status === 404 && fallbackUrl) {
+    return fetchJson('POST', fallbackUrl, { confirm: true })
+  }
+  if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
+    throw new Error(data?.error?.detail || data?.message || '删除失败')
   }
   return data
 }
@@ -999,14 +1069,16 @@ export const Api = {
     return http.get(`/sys/network/transactions/${transactionId}`)
   },
   /** 分页查询配置快照 */
-  getConfigurationSnapshots: (obj?: {
-    page?: number
-    pageSize?: number
-    resourceType?: string
-    resourceId?: string
-    status?: string
-  }) => {
+  getConfigurationSnapshots: (obj?: SnapshotListParams) => {
     return http.get('/config-snapshots', obj)
+  },
+  /** 手动创建配置快照 */
+  createConfigurationSnapshot: (obj: CreateConfigurationSnapshotPayload) => {
+    return postAccepted('/config-snapshots', obj)
+  },
+  /** 按资源类型读取可创建快照的资源列表 */
+  getConfigurationSnapshotResources: (resourceType: string) => {
+    return http.get(`/config-snapshots/resources/${encodeURIComponent(resourceType)}`)
   },
   /** 查询配置快照详情 */
   getConfigurationSnapshot: (id: string) => {
@@ -1021,12 +1093,29 @@ export const Api = {
     return http.post(`/config-snapshots/${encodeURIComponent(id)}/restore/preview`, {})
   },
   /** 执行配置快照回滚 */
-  restoreConfigurationSnapshot: (id: string, obj: { force: boolean }) => {
-    return postAccepted(`/config-snapshots/${encodeURIComponent(id)}/restore`, obj)
+  restoreConfigurationSnapshot: (id: string, force: boolean | { force: boolean }) => {
+    return postAccepted(`/config-snapshots/${encodeURIComponent(id)}/restore`, typeof force === 'boolean' ? { force } : force)
+  },
+  /** 分页查询配置快照 */
+  listSnapshots: (params: SnapshotListParams) => {
+    return http.get('/config-snapshots', params)
+  },
+  /** 查询配置快照详情 */
+  getSnapshot: (id: string) => {
+    return http.get(`/config-snapshots/${encodeURIComponent(id)}`)
+  },
+  /** 预览配置快照回滚 */
+  previewRestore: (id: string) => {
+    return http.post(`/config-snapshots/${encodeURIComponent(id)}/restore/preview`, {})
+  },
+  /** 执行配置快照回滚 */
+  restoreSnapshot: (id: string, force: boolean) => {
+    return postAccepted(`/config-snapshots/${encodeURIComponent(id)}/restore`, { force })
   },
   /** 删除配置快照 */
   deleteConfigurationSnapshot: (id: string) => {
-    return requestJson('DELETE', `/config-snapshots/${encodeURIComponent(id)}`)
+    const snapshotId = encodeURIComponent(id)
+    return deleteJson(`/config-snapshots/${snapshotId}`, `/config-snapshots/${snapshotId}/delete`)
   },
   /** 修改标题 */
   updateSystemTitley: (obj: any) => {

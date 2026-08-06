@@ -41,7 +41,7 @@ defineExpose({
   >
     <el-form ref="formRef" class="container-create-form" :model="form" :rules="rules" label-width="96px">
       <el-form-item label="名称" prop="name">
-        <el-input v-model.trim="form.name" placeholder="例如 demo-nginx" />
+        <el-input v-model.trim="form.name" placeholder="请输入容器名称，例如 demo-nginx" />
         <div class="field-help">容器名称，不能包含空格、斜杠和换行。</div>
       </el-form-item>
       <el-form-item label="镜像" prop="image">
@@ -50,7 +50,7 @@ defineExpose({
           <el-input
             v-if="form.manualImage"
             v-model.trim="form.image"
-            placeholder="例如 nginx:1.27"
+            placeholder="请输入镜像引用，例如 nginx:1.27"
           />
           <el-select
             v-else
@@ -86,11 +86,11 @@ defineExpose({
             </div>
             <div v-for="(port, index) in form.ports" :key="index" class="port-card__row">
               <div class="port-field">
-                <el-input v-model.trim="port.host" placeholder="80, 80-88, ip:80" />
+                <el-input v-model.trim="port.host" placeholder="请输入服务器端口，例如 80、80-88 或 ip:80" />
                 <small>支持 80、80-88、ip:80 或 ip:80-88</small>
               </div>
               <div class="port-field">
-                <el-input v-model.trim="port.container" placeholder="80 或 80-88" />
+                <el-input v-model.trim="port.container" placeholder="请输入容器端口，例如 80 或 80-88" />
                 <small>与服务器端口数量保持一致</small>
               </div>
               <el-select v-model="port.protocol">
@@ -105,7 +105,7 @@ defineExpose({
           <div v-else class="port-all-fields">
             <label>
               <span>网络</span>
-              <el-input v-model="form.networksText" placeholder="bridge" />
+              <el-input v-model="form.networksText" placeholder="请输入网络名称，例如 bridge" />
             </label>
             <label>
               <span>IPv4</span>
@@ -119,13 +119,13 @@ defineExpose({
         </div>
       </el-form-item>
       <el-form-item v-if="form.portPublishMode === 'ports'" label="网络">
-        <el-input v-model="form.networksText" placeholder="bridge，多个网络可用换行或逗号分隔" />
+        <el-input v-model="form.networksText" placeholder="请输入网络名称，例如 bridge，多个网络可用换行或逗号分隔" />
         <div class="field-help">要加入的 Docker 网络名称；固定 IP 需要配合对应网络。</div>
       </el-form-item>
       <el-form-item v-if="form.portPublishMode === 'ports'" label="固定 IP">
         <div class="form-inline-grid">
-          <el-input v-model.trim="form.ipv4" placeholder="IPv4，可选" />
-          <el-input v-model.trim="form.ipv6" placeholder="IPv6，可选" />
+          <el-input v-model.trim="form.ipv4" placeholder="请输入 IPv4 地址，可选" />
+          <el-input v-model.trim="form.ipv6" placeholder="请输入 IPv6 地址，可选" />
         </div>
         <div class="field-help">容器 IPv4/IPv6 地址，可选，需配合自定义网络。</div>
       </el-form-item>
@@ -162,7 +162,7 @@ defineExpose({
                 <el-input
                   v-else
                   v-model.trim="mount.source"
-                  placeholder="例如 /tmp/nginx-html"
+                  placeholder="请输入本机目录，例如 /tmp/nginx-html"
                 />
               </label>
               <label>
@@ -174,7 +174,7 @@ defineExpose({
               </label>
               <label>
                 <span>容器目录</span>
-                <el-input v-model.trim="mount.target" placeholder="例如 /usr/share/nginx/html" />
+                <el-input v-model.trim="mount.target" placeholder="请输入容器目录，例如 /usr/share/nginx/html" />
               </label>
             </div>
           </div>
@@ -191,7 +191,7 @@ defineExpose({
           v-model="form.commandText"
           type="textarea"
           :rows="2"
-          placeholder="每行一个参数，或 JSON 数组，例如 [&quot;nginx&quot;,&quot;-g&quot;,&quot;daemon off;&quot;]"
+          placeholder="请输入命令参数，每行一个参数，或 JSON 数组，例如 [&quot;nginx&quot;,&quot;-g&quot;,&quot;daemon off;&quot;]"
         />
         <div class="field-help">容器默认命令参数，提交为 string[]。</div>
       </el-form-item>
@@ -200,7 +200,7 @@ defineExpose({
           v-model="form.entrypointText"
           type="textarea"
           :rows="2"
-          placeholder="每行一个入口命令参数，或 JSON 字符串数组"
+          placeholder="请输入入口命令参数，每行一个参数，或 JSON 字符串数组"
         />
         <div class="field-help">容器入口命令，未填写时提交空数组。</div>
       </el-form-item>
@@ -230,7 +230,7 @@ defineExpose({
           :max="1000"
           :step="10"
           controls-position="right"
-          placeholder="默认 1000"
+          placeholder="请输入 CPU 权重，默认 1000"
         />
         <div class="resource-help">CPU 权重范围为 10-1000，增大可使当前容器获得更多的 CPU 时间。</div>
       </el-form-item>
@@ -242,7 +242,7 @@ defineExpose({
           :max="256"
           :step="0.5"
           controls-position="right"
-          placeholder="0"
+          placeholder="请输入 CPU 限制，0 表示不限制"
         />
         <span class="field-unit">核</span>
         <div class="resource-help">限制为 0 则关闭限制，最大可用值由宿主机 CPU 核数决定。</div>
@@ -254,7 +254,7 @@ defineExpose({
           :min="0"
           :step="128"
           controls-position="right"
-          placeholder="0"
+          placeholder="请输入内存限制，0 表示不限制"
         />
         <span class="field-unit">MB</span>
         <div class="resource-help">限制为 0 则关闭限制，单位为 MB。</div>
@@ -266,7 +266,7 @@ defineExpose({
           v-model="form.labelsText"
           type="textarea"
           :rows="2"
-          placeholder="每行一个 key=value，或 JSON 对象"
+          placeholder="请输入 Labels，每行一个 key=value，或 JSON 对象"
         />
         <div class="field-help">Docker Labels 键值对，提交为 object。</div>
       </el-form-item>
@@ -275,7 +275,7 @@ defineExpose({
           v-model="form.environmentText"
           type="textarea"
           :rows="2"
-          placeholder="每行一个 KEY=value；敏感值不会在列表中回显"
+          placeholder="请输入环境变量，每行一个 KEY=value；敏感值不会在列表中回显"
         />
         <div class="field-help">环境变量键值对，前端不会在普通列表中回显敏感值。</div>
       </el-form-item>

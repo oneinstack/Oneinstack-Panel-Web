@@ -8,6 +8,11 @@ interface Props {
   confirmText?: string
   loading?: boolean
   size?: string | number
+  showFooter?: boolean
+  showCancel?: boolean
+  showConfirm?: boolean
+  confirmDisabled?: boolean
+  confirmType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | ''
   onClose?: () => void
   onConfirm?: () => void
 }
@@ -18,7 +23,12 @@ const props = withDefaults(defineProps<Props>(), {
   loading: false,
   size: '520px',
   cancelText: '取消',
-  confirmText: '确认'
+  confirmText: '确认',
+  showFooter: true,
+  showCancel: true,
+  showConfirm: true,
+  confirmDisabled: false,
+  confirmType: 'primary'
 })
 </script>
 
@@ -38,10 +48,18 @@ const props = withDefaults(defineProps<Props>(), {
         <slot />
       </div>
     </template>
-    <template #footer>
+    <template v-if="showFooter" #footer>
       <div class="drawerFooter">
-        <el-button @click="onClose">{{ cancelText }}</el-button>
-        <el-button :loading="loading" type="primary" @click="onConfirm">{{ confirmText }}</el-button>
+        <el-button v-if="showCancel" @click="onClose">{{ cancelText }}</el-button>
+        <el-button
+          v-if="showConfirm"
+          :loading="loading"
+          :disabled="confirmDisabled"
+          :type="confirmType"
+          @click="onConfirm"
+        >
+          {{ confirmText }}
+        </el-button>
       </div>
     </template>
   </el-drawer>

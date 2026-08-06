@@ -31,13 +31,14 @@ const handleClose = () => {
 </script>
 
 <template>
-  <el-drawer
-    :model-value="visible"
+  <custom-drawer
+    :visible="visible"
     :title="title"
     size="560px"
     class="container-detail-drawer"
-    @update:model-value="emit('update:visible', $event)"
-    @close="handleClose"
+    cancel-text="关闭"
+    :show-confirm="false"
+    :on-close="handleClose"
   >
     <div v-loading="loading" class="detail-drawer-body">
       <div v-if="detailType === 'container'" class="stats-grid">
@@ -72,29 +73,30 @@ const handleClose = () => {
         <pre>{{ formatJson(detailData) }}</pre>
       </div>
     </div>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
 .detail-drawer-body {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 280px;
+  gap: 18px;
+  min-height: calc(100vh - 168px);
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .stat-card {
-  min-height: 94px;
-  padding: 14px 16px;
+  min-height: 104px;
+  padding: 18px;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 14px;
   background: var(--surface-card);
+  box-shadow: 0 10px 28px rgb(15 23 42 / 0.04);
 
   span,
   small {
@@ -106,9 +108,10 @@ const handleClose = () => {
 
   strong {
     display: block;
-    margin-top: 8px;
+    margin-top: 10px;
     color: var(--text-primary);
-    font-size: 20px;
+    font-size: 18px;
+    font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
@@ -121,9 +124,11 @@ const handleClose = () => {
 
 .detail-json {
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 14px;
   overflow: hidden;
   background: #0b1220;
+  flex: 1;
+  min-height: 0;
 }
 
 .detail-json__head {
@@ -142,9 +147,9 @@ const handleClose = () => {
 }
 
 .detail-json pre {
-  max-height: 58vh;
+  max-height: calc(100vh - 390px);
   margin: 0;
-  padding: 16px;
+  padding: 18px;
   overflow: auto;
   color: #e5edf6;
   white-space: pre-wrap;
@@ -152,5 +157,19 @@ const handleClose = () => {
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
   font-size: 12px;
   line-height: 1.65;
+}
+
+@media (max-width: 768px) {
+  .detail-drawer-body {
+    min-height: auto;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-json pre {
+    max-height: 48vh;
+  }
 }
 </style>

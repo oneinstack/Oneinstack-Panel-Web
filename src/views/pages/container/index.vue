@@ -63,7 +63,7 @@ const loadedTabs = reactive<Record<ResourceTab, boolean>>({
   config: false
 })
 const listState = reactive<Record<'containers' | 'images' | 'networks' | 'volumes' | 'registries', ListState>>({
-  containers: { page: 1, pageSize: 10, total: 0, search: '', status: 'all' },
+  containers: { page: 1, pageSize: 10, total: 0, search: '', status: '' },
   images: { page: 1, pageSize: 10, total: 0, search: '' },
   networks: { page: 1, pageSize: 10, total: 0, search: '' },
   volumes: { page: 1, pageSize: 10, total: 0, search: '' },
@@ -82,6 +82,7 @@ const logsVisible = ref(false)
 const logsLoading = ref(false)
 const logTarget = ref<ContainerItem | null>(null)
 const logsText = ref('')
+const logTail = ref(500)
 const dialogTarget = ref<any>(null)
 const importFile = ref<File | null>(null)
 const detailVisible = ref(false)
@@ -318,6 +319,22 @@ const statusType = (status?: string) => {
   if (value.includes('exited') || value.includes('dead')) return 'danger'
   return 'info'
 }
+
+const normalizedContainerStatus = (row: ContainerItem) => String(row.Status || '').toLowerCase()
+const isContainerPaused = (row: ContainerItem) => normalizedContainerStatus(row).includes('paused')
+const isContainerRunning = (row: ContainerItem) =>
+  normalizedContainerStatus(row).startsWith('up') && !isContainerPaused(row)
+const isContainerRestarting = (row: ContainerItem) => normalizedContainerStatus(row).includes('restarting')
+const isContainerRemoving = (row: ContainerItem) => normalizedContainerStatus(row).includes('removing')
+const canStartContainer = (row: ContainerItem) =>
+  !isContainerRunning(row) && !isContainerPaused(row) && !isContainerRestarting(row) && !isContainerRemoving(row)
+const canStopContainer = (row: ContainerItem) =>
+  isContainerRunning(row) || isContainerPaused(row) || isContainerRestarting(row)
+const canRestartContainer = (row: ContainerItem) => isContainerRunning(row) || isContainerRestarting(row)
+const canPauseContainer = (row: ContainerItem) => isContainerRunning(row)
+const canUnpauseContainer = (row: ContainerItem) => isContainerPaused(row)
+const canDeleteContainer = (row: ContainerItem) =>
+  !isContainerRunning(row) && !isContainerPaused(row) && !isContainerRestarting(row) && !isContainerRemoving(row)
 
 const imageReference = (row: ImageItem) => {
   const repo = row.Repository || '<none>'
@@ -970,9 +987,16 @@ const openLogs = async (row: ContainerItem) => {
   logTarget.value = row
   logsText.value = ''
   logsVisible.value = true
+  await loadLogs(row, logTail.value)
+}
+
+const loadLogs = async (row = logTarget.value, tail = logTail.value) => {
+  if (!row?.ID) return
   logsLoading.value = true
   try {
-    const { data } = await Api.getContainerLogs(row.ID, { tail: 500 })
+    const normalizedTail = Math.min(10000, Math.max(1, Number(tail) || 500))
+    logTail.value = normalizedTail
+    const { data } = await Api.getContainerLogs(row.ID, { tail: normalizedTail })
     logsText.value = data?.logs || ''
   } finally {
     logsLoading.value = false
@@ -1530,14 +1554,14 @@ onBeforeUnmount(() => {
             v-model.trim="activeListState.search"
             clearable
             :placeholder="activeTab === 'containers'
-              ? '搜索容器名称或镜像'
+              ? '请输入容器名称或镜像'
               : activeTab === 'images'
-                ? '搜索镜像 ID、仓库或 Tag'
+                ? '请输入镜像 ID、仓库或 Tag'
                 : activeTab === 'networks'
-                  ? '搜索网络名称、驱动或子网'
+                  ? '请输入网络名称、驱动或子网'
                   : activeTab === 'volumes'
-                    ? '搜索存储卷名称、驱动或挂载点'
-                    : '搜索 Registry 名称或地址'"
+                    ? '请输入存储卷名称、驱动或挂载点'
+                    : '请输入 Registry 名称或地址'"
             @clear="resetCurrentList"
             @keyup.enter="resetCurrentList"
           />
@@ -1545,12 +1569,17 @@ onBeforeUnmount(() => {
             v-if="activeTab === 'containers'"
             v-model="listState.containers.status"
             class="status-filter"
+            placeholder="请选择状态"
             @change="resetCurrentList"
           >
-            <el-option label="全部状态" value="all" />
-            <el-option label="运行中" value="running" />
-            <el-option label="已停止" value="exited" />
-            <el-option label="暂停" value="paused" />
+            <el-option label="所有" value="" />
+            <el-option label="已创建" value="created" />
+            <el-option label="运行中" value="up" />
+            <el-option label="已退出" value="exited" />
+            <el-option label="重启中" value="restarting" />
+            <el-option label="已暂停" value="paused" />
+            <el-option label="移除中" value="removing" />
+            <el-option label="异常终止" value="dead" />
           </el-select>
           <el-button :loading="listLoading" @click="resetCurrentList">查询</el-button>
         </div>
@@ -1647,6 +1676,7 @@ onBeforeUnmount(() => {
                 日志
               </el-button>
               <el-button
+                v-if="canStartContainer(row)"
                 link
                 type="primary"
                 :icon="VideoPlay"
@@ -1657,9 +1687,10 @@ onBeforeUnmount(() => {
                 启动
               </el-button>
               <el-button
+                v-if="canStopContainer(row)"
                 link
                 type="primary"
-                :icon="VideoPause"
+                :icon="SwitchButton"
                 :loading="actionLoading === `${row.ID}:stop`"
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'stop')"
@@ -1667,6 +1698,29 @@ onBeforeUnmount(() => {
                 停止
               </el-button>
               <el-button
+                v-if="canPauseContainer(row)"
+                link
+                type="primary"
+                :icon="VideoPause"
+                :loading="actionLoading === `${row.ID}:pause`"
+                :disabled="!runtimeAvailable || !canWrite"
+                @click="runContainerAction(row, 'pause')"
+              >
+                暂停
+              </el-button>
+              <el-button
+                v-if="canUnpauseContainer(row)"
+                link
+                type="primary"
+                :icon="VideoPlay"
+                :loading="actionLoading === `${row.ID}:unpause`"
+                :disabled="!runtimeAvailable || !canWrite"
+                @click="runContainerAction(row, 'unpause')"
+              >
+                恢复
+              </el-button>
+              <el-button
+                v-if="canRestartContainer(row)"
                 link
                 type="primary"
                 :icon="Refresh"
@@ -1677,6 +1731,7 @@ onBeforeUnmount(() => {
                 重启
               </el-button>
               <el-button
+                v-if="canDeleteContainer(row)"
                 link
                 type="danger"
                 :icon="Delete"
@@ -1935,7 +1990,7 @@ onBeforeUnmount(() => {
           v-model="configForm.raw"
           type="textarea"
           :rows="16"
-          placeholder="{\n  &quot;log-driver&quot;: &quot;json-file&quot;\n}"
+          placeholder="请输入 Docker 配置 JSON，例如 {\n  &quot;log-driver&quot;: &quot;json-file&quot;\n}"
         />
         <div class="field-help">
           保存只写入 daemon.json，不会自动重启 Docker。需要生效时请点击“重启 Docker”并确认操作预览。
@@ -2017,6 +2072,9 @@ onBeforeUnmount(() => {
       :loading="logsLoading"
       :target="logTarget"
       :logs-text="logsText"
+      :tail="logTail"
+      @update:tail="logTail = $event"
+      @refresh="loadLogs()"
     />
   </div>
 </template>
