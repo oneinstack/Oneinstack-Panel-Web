@@ -15,6 +15,7 @@ export const menuKeyLabelMap: Record<string, string> = {
   software: '软件商店',
   panelSettings: '面板设置',
   configSnapshots: '配置快照',
+  systemManagement: '系统管理',
   userManagement: '用户管理',
   approval: '审批中心',
   logout: '退出'
@@ -35,6 +36,7 @@ export const menuPathKeyMap: Array<{ path: string; key: string }> = [
   { path: '/software', key: 'software' },
   { path: '/setting', key: 'panelSettings' },
   { path: '/config-snapshots', key: 'configSnapshots' },
+  { path: '/system-management', key: 'systemManagement' },
   { path: '/user-management', key: 'userManagement' },
   { path: '/approval-center', key: 'approval' }
 ]
@@ -55,10 +57,17 @@ const hasConfigSnapshotAccess = () =>
   Boolean((sconfig.scopeAccess as any)?.config?.snapshot?.read) ||
   Boolean((sconfig.scopeAccess as any)?.['config.snapshot']?.read)
 
+const hasSystemManagementAccess = () =>
+  sconfig.hasMenuAccess('systemManagement') ||
+  sconfig.hasActionAccess('system.settings.read') ||
+  Boolean((sconfig.scopeAccess as any)?.system?.settings?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
+
 export const canAccessPath = (path: string) => {
   const key = resolveMenuKeyByPath(path)
   if (!key) return true
   if (key === 'configSnapshots') return hasConfigSnapshotAccess()
+  if (key === 'systemManagement') return hasSystemManagementAccess()
   return sconfig.hasMenuAccess(key)
 }
 

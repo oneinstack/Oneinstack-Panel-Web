@@ -196,6 +196,16 @@ const conf = reactive({
       }
     },
     {
+      name: '系统管理',
+      path: '/system-management',
+      icon: 'setting',
+      actionKeys: ['system.settings.read'],
+      activeColor: {
+        light: ['#8B8B8B', '#eab170'],
+        dark: ['#ffffff', '#eab170']
+      }
+    },
+    {
       name: '用户管理',
       path: '/user-management',
       icon: 'user-management',
@@ -274,7 +284,8 @@ const pageDescriptions: Record<string, string> = {
   '/task': '编排周期任务与自动化脚本',
   '/software': '安装、升级和维护服务器软件',
   '/setting': '配置面板、安全策略与用户账户',
-  '/config-snapshots': '查看配置快照、差异并执行安全回滚'
+  '/config-snapshots': '查看配置快照、差异并执行安全回滚',
+  '/system-management': '查看系统进程、SSH 生效配置与磁盘挂载状态'
 }
 const pageDescription = computed(() => pageDescriptions[currentNav.value?.path] || 'OneinStack 服务器管理中心')
 const displayName = computed(

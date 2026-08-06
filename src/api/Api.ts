@@ -49,6 +49,61 @@ export interface CreateConfigurationSnapshotPayload {
   description?: string
 }
 
+export interface SystemProcessItem {
+  pid: number
+  ppid: number
+  name: string
+  username?: string
+  status: string
+  cpuPercent: number
+  memoryRss: number
+  createTime: number
+}
+
+export interface SystemProcessDetail extends SystemProcessItem {
+  executable?: string
+  command?: string
+  cwd?: string
+  children?: number[]
+}
+
+export interface SystemProcessListData {
+  items: SystemProcessItem[]
+  total: number
+  offset: number
+  limit: number
+}
+
+export interface SystemDiskDevice {
+  device: string
+  mountpoint: string
+  fsType: string
+  options: string
+  totalBytes: number
+  usedBytes: number
+  freeBytes: number
+  uuid?: string
+  persistent: boolean
+}
+
+export interface SystemDiskData {
+  devices: SystemDiskDevice[]
+  fstab: string[]
+}
+
+export interface SystemSshConfig {
+  supported: boolean
+  service?: string
+  configPath?: string
+  port?: string
+  passwordAuthentication?: string
+  permitRootLogin?: string
+  pubkeyAuthentication?: string
+  permitEmptyPasswords?: string
+  listenAddress?: string
+  error?: string
+}
+
 const apiUrl = (path: string) => {
   const base = String(System.env.API || '/v1').replace(/\/$/, '')
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
@@ -1067,6 +1122,28 @@ export const Api = {
   /** 获取面板访问配置自动应用/恢复事务 */
   getPanelNetworkTransaction: (transactionId: string) => {
     return http.get(`/sys/network/transactions/${transactionId}`)
+  },
+  /** 获取系统进程列表 */
+  getSystemProcesses: (obj?: {
+    offset?: number
+    limit?: number
+    keyword?: string
+    sort?: 'pid' | 'cpu' | 'memory' | 'name'
+    order?: 'asc' | 'desc'
+  }) => {
+    return http.get('/sys/processes', obj)
+  },
+  /** 获取系统进程详情 */
+  getSystemProcessDetail: (pid: number | string) => {
+    return http.get(`/sys/processes/${encodeURIComponent(String(pid))}`)
+  },
+  /** 获取系统磁盘信息 */
+  getSystemDisks: () => {
+    return http.get('/sys/disks')
+  },
+  /** 获取系统 SSH 配置 */
+  getSystemSshConfig: () => {
+    return http.get('/sys/ssh/config')
   },
   /** 分页查询配置快照 */
   getConfigurationSnapshots: (obj?: SnapshotListParams) => {
