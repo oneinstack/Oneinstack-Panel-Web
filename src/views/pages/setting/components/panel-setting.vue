@@ -41,6 +41,115 @@ const props = withDefaults(defineProps<Props>(), {
   allinfo: () => ({})
 })
 
+const getSettingValue = (prop: string) => String(conf.settingData.find(item => item.prop === prop)?.value || '').trim()
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) return error.message
+  if (typeof error === 'string') return error
+  return fallback
+}
+
+const setActionLoading = (prop: string, loading: boolean) => {
+  const action = conf.settingData.find(item => item.prop === prop)?.action
+  if (!action) return
+  if (Array.isArray(action)) {
+    action.forEach(item => {
+      item.loading = loading
+      item.disabled = loading
+    })
+    return
+  }
+  action.loading = loading
+  action.disabled = loading
+}
+
+const promptCurrentPassword = async (title: string, message: string, confirmButtonText = '确认修改') => {
+  const { value } = await ElMessageBox.prompt(message, title, {
+    type: 'warning',
+    confirmButtonText,
+    cancelButtonText: '取消',
+    inputType: 'password',
+    inputPlaceholder: '当前面板密码',
+    inputValidator: input => Boolean(input) || '请输入当前面板密码'
+  })
+  return value
+}
+
+async function savePanelTitle() {
+  const title = getSettingValue('title')
+  if (!title) {
+    ElMessage.warning('请输入面板别名')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认将面板别名修改为「${title}」吗？这只影响页面标题和展示名称，不会修改登录账号。`,
+      '修改面板别名',
+      {
+        type: 'warning',
+        confirmButtonText: '确认修改',
+        cancelButtonText: '取消'
+      }
+    )
+    setActionLoading('title', true)
+    await Api.updateSystemTitley({ title })
+    document.title = title
+    ElMessage.success('面板别名已修改')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板别名失败'))
+  } finally {
+    setActionLoading('title', false)
+  }
+}
+
+async function savePanelUsername() {
+  const username = getSettingValue('username')
+  if (!username) {
+    ElMessage.warning('请输入面板账号')
+    return
+  }
+  try {
+    const currentPassword = await promptCurrentPassword(
+      '修改面板账号',
+      `确认将登录账号修改为「${username}」吗？修改后请使用新账号登录；请输入当前面板密码继续。`
+    )
+    setActionLoading('username', true)
+    await Api.updateUpdateuser({ username, currentPassword })
+    ElMessage.success('面板账号已修改')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板账号失败'))
+  } finally {
+    setActionLoading('username', false)
+  }
+}
+
+async function savePanelPassword() {
+  const password = getSettingValue('password')
+  if (!password || password === '******') {
+    ElMessage.warning('请先输入一个新密码')
+    return
+  }
+  try {
+    const currentPassword = await promptCurrentPassword(
+      '修改面板密码',
+      '修改密码会让所有设备立即退出登录。请输入当前面板密码确认。',
+      '确认修改密码'
+    )
+    setActionLoading('password', true)
+    await Api.updateResetpassword({
+      currentPassword,
+      password
+    })
+    ElMessage.success('密码修改成功，请重新登录')
+    sconfig.logout()
+    await System.router.replace('/login')
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板密码失败'))
+  } finally {
+    setActionLoading('password', false)
+  }
+}
+
 const conf = reactive<Config>({
   settingData: [
     // {
@@ -69,19 +178,7 @@ const conf = reactive<Config>({
       action: {
         type: 'primary',
         text: '保存',
-        click: async () => {
-          try {
-            const title = conf.settingData.find(item => item.prop === 'title')?.value
-            
-            const { data } = await Api.updateSystemTitley({ title :title})
-            if(data) {
-              document.title = title+''
-              ElMessage.success('修改成功')
-            }
-          } catch(error) {
-            ElMessage.error('修改失败')
-          }
-        }
+        click: savePanelTitle
       },
       tip: '给面板取个别的名称，用于网页标题'
     },
@@ -167,17 +264,7 @@ const conf = reactive<Config>({
       action: {
         type: 'primary',
         text: '保存',
-        click: async() => {
-          try {
-            const username = conf.settingData.find(item => item.prop === 'username')?.value
-            const { data } = await Api.updateUpdateuser({ username :username})
-            if(data) {
-              ElMessage.success('修改成功')
-            }
-          } catch(error) {
-            ElMessage.error('修改失败')
-          }
-        }
+        click: savePanelUsername
       },
       tip: '设置面板账号，用于登录面板'
     },
@@ -190,37 +277,7 @@ const conf = reactive<Config>({
       action: {
         type: 'primary',
         text: '保存',
-        click: async() => {
-          try {
-            const password = conf.settingData.find(item => item.prop === 'password')?.value
-            if (!password || password === '******') {
-              ElMessage.warning('请先输入一个新密码')
-              return
-            }
-            const { value: currentPassword } = await ElMessageBox.prompt(
-              '修改密码会让所有设备立即退出，请输入当前密码确认。',
-              '修改面板密码',
-              {
-                confirmButtonText: '确认修改',
-                cancelButtonText: '取消',
-                inputType: 'password',
-                inputPlaceholder: '当前密码',
-                inputValidator: value => Boolean(value) || '请输入当前密码'
-              }
-            )
-            const { data } = await Api.updateResetpassword({
-              currentPassword,
-              password
-            })
-            if(data) {
-              ElMessage.success('密码修改成功，请重新登录')
-              sconfig.logout()
-              await System.router.replace('/login')
-            }
-          } catch(error) {
-            if (error !== 'cancel' && error !== 'close') ElMessage.error('修改失败')
-          }
-        }
+        click: savePanelPassword
       },
       tip: '设置面板密码，用于登录面板'
     },
@@ -331,6 +388,12 @@ const currentPanelAccessURL = computed(() => {
   const normalizedPath = entryPath.startsWith('/') ? entryPath : `/${entryPath}`
   return `${window.location.origin}${normalizedPath}`
 })
+const panelEntryPathText = computed(() => panelEntry.panelEntryEnabled ? (panelEntry.panelEntryPath || '后端自动生成') : '安全入口未启用')
+const panelEntryStatusText = computed(() => {
+  if (!panelEntry.panelEntryEnabled) return '当前使用根路径访问'
+  return panelEntry.restartRequired ? '需要重启生效' : '已生效'
+})
+const panelEntryAccessText = computed(() => currentPanelAccessURL.value || window.location.origin)
 
 const applyPanelEntry = (data?: Record<string, any>) => {
   if (!data) return
@@ -495,7 +558,10 @@ onMounted(() => {
     <div class="panel-entry-card" v-loading="panelEntry.loading">
       <div class="panel-entry-card__header">
         <div>
-          <div class="panel-entry-card__title">面板安全入口</div>
+          <div class="panel-entry-card__title">
+            面板安全入口
+            <el-tag class="risk-tag" size="small" type="danger">高风险</el-tag>
+          </div>
           <p class="panel-entry-card__desc">启用后面板将通过随机路径访问，可有效降低被扫描和暴力探测的风险。</p>
         </div>
         <div class="panel-entry-card__status" :class="{ active: panelEntry.panelEntryEnabled }">
@@ -506,21 +572,24 @@ onMounted(() => {
       <div class="panel-entry-overview">
         <div class="panel-entry-overview__item">
           <span>当前入口路径</span>
-          <strong>{{ panelEntry.panelEntryPath || '自动生成 / 未启用' }}</strong>
+          <strong>{{ panelEntryPathText }}</strong>
         </div>
         <div class="panel-entry-overview__item">
           <span>生效状态</span>
-          <strong>{{ panelEntry.restartRequired ? '需要重启生效' : '已生效' }}</strong>
+          <strong>{{ panelEntryStatusText }}</strong>
         </div>
         <div class="panel-entry-overview__item panel-entry-overview__item--wide">
           <span>当前访问地址</span>
-          <strong>{{ currentPanelAccessURL || '未生成' }}</strong>
+          <strong>{{ panelEntryAccessText }}</strong>
         </div>
       </div>
 
       <div class="panel-entry-form">
         <div class="panel-entry-form__row">
-          <label>启用安全入口</label>
+          <label>
+            启用安全入口
+            <el-tag class="risk-tag" size="small" type="danger">高风险</el-tag>
+          </label>
           <div class="panel-entry-form__control panel-entry-form__control--inline">
             <el-switch v-model="panelEntry.panelEntryEnabled" />
             <span class="panel-entry-form__hint">关闭时保持根路径访问；开启后根路径会返回 404。</span>
@@ -541,7 +610,11 @@ onMounted(() => {
       </div>
 
       <div class="panel-entry-actions">
-        <el-button type="primary" :loading="panelEntry.saving" @click="savePanelEntry(false)">保存配置</el-button>
+        <div class="panel-entry-actions__risk">
+          <el-tag size="small" type="danger">高风险</el-tag>
+          <span>入口路径变更会影响面板访问地址，请保存新地址后再离开页面。</span>
+        </div>
+        <el-button type="warning" :loading="panelEntry.saving" @click="savePanelEntry(false)">保存配置</el-button>
         <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">复制访问地址</el-button>
         <el-button
           type="warning"
@@ -665,6 +738,11 @@ onMounted(() => {
   }
 }
 
+.risk-tag {
+  margin-left: 8px;
+  vertical-align: 1px;
+}
+
 .panel-entry-overview {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -738,9 +816,21 @@ onMounted(() => {
 
 .panel-entry-actions {
   display: flex;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 22px;
+
+  &__risk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 220px;
+    margin-right: auto;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
 }
 
 @media (max-width: 900px) {

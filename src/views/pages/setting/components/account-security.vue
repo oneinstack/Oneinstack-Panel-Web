@@ -32,6 +32,7 @@ const status = reactive<SecurityStatus>({
 })
 const sessions = ref<SessionItem[]>([])
 const setupVisible = ref(false)
+const setupLoading = ref(false)
 const setup = reactive({ secret: '', otpauthUri: '', password: '', code: '' })
 const recoveryVisible = ref(false)
 const recoveryCodes = ref<string[]>([])
@@ -40,8 +41,28 @@ const verifyMode = ref<'disable' | 'regenerate'>('regenerate')
 const verifyForm = reactive({ password: '', code: '' })
 
 const otherSessionCount = computed(() => sessions.value.filter(item => !item.current).length)
+const totpStateLabel = computed(() => {
+  if (status.totpEnabled) return '已启用'
+  if (status.totpSetupPending) return '待验证'
+  return '未启用'
+})
+const totpStateType = computed(() => {
+  if (status.totpEnabled) return 'success'
+  if (status.totpSetupPending) return 'warning'
+  return 'info'
+})
+const totpDescription = computed(() => {
+  if (status.totpEnabled) {
+    return `使用标准 TOTP 身份验证器保护登录；当前剩余 ${status.recoveryCodesRemaining} 条恢复码。`
+  }
+  if (status.totpSetupPending) {
+    return '已生成待确认的动态口令配置，完成验证后才会启用；关闭弹窗不会启用动态口令。'
+  }
+  return '使用标准 TOTP 身份验证器保护登录；启用后会生成恢复码用于紧急登录。'
+})
+const setupButtonText = computed(() => status.totpSetupPending ? '继续验证' : '启用')
 
-const load = async () => {
+const load = async (notify = false) => {
   loading.value = true
   try {
     const [statusResponse, sessionsResponse] = await Promise.all([
@@ -50,20 +71,33 @@ const load = async () => {
     ])
     Object.assign(status, statusResponse.data)
     sessions.value = sessionsResponse.data || []
+    if (notify) ElMessage.success('账号与会话状态已刷新')
+  } catch (error) {
+    const message = error instanceof Error && error.message ? error.message : '获取账号与会话状态失败'
+    ElMessage.error(message)
   } finally {
     loading.value = false
   }
 }
 
 const openSetup = async () => {
-  const { data } = await Api.setupTOTP()
-  Object.assign(setup, {
-    secret: data.secret,
-    otpauthUri: data.otpauthUri,
-    password: '',
-    code: ''
-  })
-  setupVisible.value = true
+  setupLoading.value = true
+  try {
+    const { data } = await Api.setupTOTP()
+    Object.assign(setup, {
+      secret: data.secret,
+      otpauthUri: data.otpauthUri,
+      password: '',
+      code: ''
+    })
+    status.totpSetupPending = true
+    setupVisible.value = true
+  } catch (error) {
+    const message = error instanceof Error && error.message ? error.message : '创建动态口令配置失败'
+    ElMessage.error(message)
+  } finally {
+    setupLoading.value = false
+  }
 }
 
 const confirmSetup = async () => {
@@ -71,15 +105,23 @@ const confirmSetup = async () => {
     ElMessage.warning('请输入当前密码和 6 位动态口令')
     return
   }
-  const { data } = await Api.confirmTOTP({
-    password: setup.password,
-    code: setup.code
-  })
-  recoveryCodes.value = data.recoveryCodes || []
-  setupVisible.value = false
-  recoveryVisible.value = true
-  ElMessage.success('动态口令认证已启用')
-  await load()
+  setupLoading.value = true
+  try {
+    const { data } = await Api.confirmTOTP({
+      password: setup.password,
+      code: setup.code
+    })
+    recoveryCodes.value = data.recoveryCodes || []
+    setupVisible.value = false
+    recoveryVisible.value = true
+    ElMessage.success('动态口令认证已启用')
+    await load()
+  } catch (error) {
+    const message = error instanceof Error && error.message ? error.message : '动态口令验证失败'
+    ElMessage.error(message)
+  } finally {
+    setupLoading.value = false
+  }
 }
 
 const openVerification = (mode: 'disable' | 'regenerate') => {
@@ -117,9 +159,13 @@ const copyRecoveryCodes = async () => {
 
 const revokeSession = async (item: SessionItem) => {
   await ElMessageBox.confirm(
-    `确定让 ${item.remoteIp || '未知地址'} 的会话立即退出吗？`,
+    `高风险操作：确定让 ${item.remoteIp || '未知地址'} 的会话立即退出吗？该设备下一次请求会立即失效。`,
     '吊销会话',
-    { type: 'warning' }
+    {
+      type: 'warning',
+      confirmButtonText: '确认吊销',
+      cancelButtonText: '取消'
+    }
   )
   await Api.revokeSession(item.id)
   ElMessage.success('会话已吊销')
@@ -127,9 +173,15 @@ const revokeSession = async (item: SessionItem) => {
 }
 
 const revokeOthers = async () => {
-  await ElMessageBox.confirm('确定让除当前浏览器外的所有会话立即退出吗？', '退出其他设备', {
-    type: 'warning'
-  })
+  await ElMessageBox.confirm(
+    '高风险操作：确定让除当前浏览器外的所有会话立即退出吗？其他设备需要重新登录。',
+    '退出其他设备',
+    {
+      type: 'warning',
+      confirmButtonText: '确认退出其他设备',
+      cancelButtonText: '取消'
+    }
+  )
   const { data } = await Api.revokeOtherSessions()
   ElMessage.success(`已吊销 ${data.revokedSessions || 0} 个会话`)
   await load()
@@ -137,7 +189,7 @@ const revokeOthers = async () => {
 
 const formatDate = (value: string) => value ? new Date(value).toLocaleString() : '-'
 
-onMounted(load)
+onMounted(() => load())
 </script>
 
 <template>
@@ -147,23 +199,26 @@ onMounted(load)
         <div class="section-title">账号与会话安全</div>
         <div class="section-description">管理动态口令、恢复码以及当前账号的登录设备。</div>
       </div>
-      <el-button @click="load">刷新</el-button>
+      <el-button :loading="loading" @click="load(true)">刷新会话状态</el-button>
     </div>
 
     <div class="security-row">
       <div>
         <div class="row-title">
           动态口令认证
-          <el-tag :type="status.totpEnabled ? 'success' : 'info'" size="small">
-            {{ status.totpEnabled ? '已启用' : '未启用' }}
+          <el-tag size="small" type="warning">中风险</el-tag>
+          <el-tag :type="totpStateType" size="small">
+            {{ totpStateLabel }}
           </el-tag>
         </div>
         <div class="row-description">
-          使用标准 TOTP 身份验证器保护登录；当前剩余 {{ status.recoveryCodesRemaining }} 条恢复码。
+          {{ totpDescription }}
         </div>
       </div>
       <div class="row-actions">
-        <el-button v-if="!status.totpEnabled" type="primary" @click="openSetup">启用</el-button>
+        <el-button v-if="!status.totpEnabled" type="primary" :loading="setupLoading" @click="openSetup">
+          {{ setupButtonText }}
+        </el-button>
         <template v-else>
           <el-button @click="openVerification('regenerate')">重新生成恢复码</el-button>
           <el-button type="danger" plain @click="openVerification('disable')">停用</el-button>
@@ -173,10 +228,15 @@ onMounted(load)
 
     <div class="sessions-header">
       <div>
-        <div class="row-title">有效登录会话</div>
+        <div class="row-title">
+          有效登录会话
+          <el-tag size="small" type="danger">高风险</el-tag>
+        </div>
         <div class="row-description">被吊销的会话无需等待 JWT 到期，会在下一次请求时立即失效。</div>
       </div>
-      <el-button :disabled="otherSessionCount === 0" @click="revokeOthers">退出其他设备</el-button>
+      <el-button type="warning" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
+        退出其他设备
+      </el-button>
     </div>
     <el-table :data="sessions" empty-text="暂无有效会话">
       <el-table-column label="IP 地址" min-width="150">
@@ -211,7 +271,7 @@ onMounted(load)
       </el-table-column>
       <el-table-column label="操作" width="96" align="right">
         <template #default="{ row }">
-          <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">吊销</el-button>
+          <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">吊销会话</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -229,7 +289,7 @@ onMounted(load)
     </div>
     <template #footer>
       <el-button @click="setupVisible = false">取消</el-button>
-      <el-button type="primary" @click="confirmSetup">验证并启用</el-button>
+      <el-button type="primary" :loading="setupLoading" @click="confirmSetup">验证并启用</el-button>
     </template>
   </el-dialog>
 

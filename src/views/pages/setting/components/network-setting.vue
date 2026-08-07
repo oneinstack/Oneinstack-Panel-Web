@@ -114,13 +114,15 @@ const applySettings = (settings: NetworkSettings) => {
   proxyText.value = (settings.trustedProxies || []).join('\n')
 }
 
-const loadSettings = async () => {
+const loadSettings = async (notify = false) => {
   loading.value = true
   try {
     const { data } = await Api.getPanelNetwork()
     applySettings(data)
-  } catch {
-    ElMessage.error('获取面板访问配置失败')
+    if (notify) ElMessage.success('面板访问配置已刷新')
+  } catch (error) {
+    const message = error instanceof Error && error.message ? error.message : '获取面板访问配置失败'
+    ElMessage.error(message)
   } finally {
     loading.value = false
   }
@@ -263,7 +265,7 @@ const saveSettings = async () => {
   }
 }
 
-onMounted(loadSettings)
+onMounted(() => loadSettings())
 onBeforeUnmount(stopApplyPolling)
 </script>
 
@@ -274,7 +276,14 @@ onBeforeUnmount(stopApplyPolling)
         <div class="network-setting__title">面板访问方式</div>
         <p class="network-setting__subtitle">配置面板入口、HTTPS 证书和可信代理，保证远程访问稳定且安全。</p>
       </div>
-      <el-button class="network-setting__refresh" @click="loadSettings">刷新</el-button>
+      <el-button
+        class="network-setting__refresh"
+        :loading="loading"
+        :disabled="saving || applyPolling"
+        @click="loadSettings(true)"
+      >
+        刷新访问配置
+      </el-button>
     </div>
 
     <div class="network-overview">
@@ -325,7 +334,10 @@ onBeforeUnmount(stopApplyPolling)
       <div class="form-section">
         <div class="form-section__header">
           <div>
-            <h3>基础访问</h3>
+            <h3>
+              基础访问
+              <el-tag class="risk-tag" size="small" type="warning">中风险</el-tag>
+            </h3>
             <p>配置监听地址和默认 HTTP 入口，确保面板始终可访问。</p>
           </div>
         </div>
@@ -345,7 +357,10 @@ onBeforeUnmount(stopApplyPolling)
       <div class="form-section">
         <div class="https-toggle">
           <div class="https-toggle__content">
-            <span class="https-toggle__title">启用 HTTPS（可选）</span>
+            <span class="https-toggle__title">
+              启用 HTTPS（可选）
+              <el-tag class="risk-tag" size="small" type="warning">中风险</el-tag>
+            </span>
             <span class="https-toggle__desc">开启独立加密入口，但不会替换当前 HTTP 地址。</span>
           </div>
           <el-switch v-model="form.httpsEnabled" />
@@ -408,9 +423,13 @@ onBeforeUnmount(stopApplyPolling)
       </div>
 
       <div class="network-form__footer">
-        <el-button type="primary" :loading="saving || applyPolling" @click="saveSettings">
+        <el-button type="warning" :loading="saving || applyPolling" @click="saveSettings">
           {{ applyPolling ? '正在应用配置' : '校验并保存' }}
         </el-button>
+        <div class="network-form__risk">
+          <el-tag size="small" type="warning">中风险</el-tag>
+          <span>保存后可能重启面板访问服务，端口或证书配置错误时会影响当前访问。</span>
+        </div>
       </div>
     </el-form>
   </section>
@@ -548,9 +567,26 @@ onBeforeUnmount(stopApplyPolling)
 
   &__footer {
     display: flex;
+    align-items: center;
     justify-content: flex-start;
+    gap: 12px;
     margin-top: 8px;
   }
+
+  &__risk {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+}
+
+.risk-tag {
+  margin-left: 8px;
+  vertical-align: 1px;
 }
 
 .form-tip {

@@ -14,6 +14,8 @@ type FormItemType =
 interface ActionBtn {
   type?: 'default' | 'primary'
   text: string
+  loading?: boolean
+  disabled?: boolean
   click: () => void
 }
 
@@ -61,6 +63,8 @@ const props = defineProps<Props>()
               v-if="Array.isArray(item.action)"
               v-for="action in item.action"
               :type="action.type || 'default'"
+              :loading="action.loading"
+              :disabled="action.disabled"
               class="setting-form-item__button"
               @click="action.click"
             >
@@ -69,6 +73,8 @@ const props = defineProps<Props>()
             <el-button
               v-else
               :type="item.action?.type || 'default'"
+              :loading="item.action?.loading"
+              :disabled="item.action?.disabled"
               class="setting-form-item__button"
               @click="item.action.click"
             >

@@ -52,6 +52,7 @@ const check = ref<UpdateCheck>()
 const status = ref<UpdateStatus>({ state: 'idle', rollbackAttempted: false, rollbackSucceeded: false })
 const loading = ref(false)
 const applying = ref(false)
+const errorMessage = ref('')
 let reconnectTimer: number | undefined
 
 const stateNames: Record<string, string> = {
@@ -99,6 +100,12 @@ const maskedInstanceID = computed(() => {
   return `…${value.slice(-8)}`
 })
 
+const getErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) return error.message
+  if (typeof error === 'string') return error
+  return fallback
+}
+
 const loadBaseState = async () => {
   const [versionResponse, statusResponse] = await Promise.all([
     Api.getPanelVersion(),
@@ -110,6 +117,7 @@ const loadBaseState = async () => {
 
 const checkForUpdate = async () => {
   loading.value = true
+  errorMessage.value = ''
   try {
     const { data } = await Api.checkPanelUpdate()
     check.value = data
@@ -122,6 +130,10 @@ const checkForUpdate = async () => {
     } else {
       ElMessage.success('当前已经是最新版本')
     }
+  } catch (error) {
+    const message = getErrorMessage(error, '检查更新失败')
+    errorMessage.value = message
+    ElMessage.error(message)
   } finally {
     loading.value = false
   }
@@ -142,12 +154,16 @@ const applyUpdate = async () => {
       }
     )
     applying.value = true
+    errorMessage.value = ''
     await Api.applyPanelUpdate({ confirm: value })
     ElMessage.success('更新任务已启动，正在等待面板重新上线')
     beginReconnectPolling()
   } catch (error) {
     applying.value = false
     if (error !== 'cancel' && error !== 'close') {
+      const message = getErrorMessage(error, '启动更新失败')
+      errorMessage.value = message
+      ElMessage.error(message)
       await loadBaseState().catch(() => undefined)
     }
   }
@@ -157,26 +173,18 @@ const beginReconnectPolling = () => {
   if (reconnectTimer) window.clearTimeout(reconnectTimer)
   const poll = async () => {
     try {
-      const response = await fetch('/v1/sys/update/status', {
-        method: 'GET',
-        credentials: 'same-origin',
-        headers: { Accept: 'application/json' },
-        cache: 'no-store'
-      })
-      if (response.ok) {
-        const body = await response.json()
-        if (body?.code === 0 && body?.data) {
-          status.value = body.data
-          if (!activeStates.includes(status.value.state)) {
-            applying.value = false
-            ElMessage.success(
-              status.value.state === 'succeeded'
-                ? '面板更新完成'
-                : status.value.message || '面板更新已结束'
-            )
-            await loadBaseState()
-            return
-          }
+      const { data } = await Api.pollPanelUpdateStatus()
+      if (data) {
+        status.value = data
+        if (!activeStates.includes(status.value.state)) {
+          applying.value = false
+          ElMessage.success(
+            status.value.state === 'succeeded'
+              ? '面板更新完成'
+              : status.value.message || '面板更新已结束'
+          )
+          await loadBaseState()
+          return
         }
       }
     } catch {
@@ -193,6 +201,8 @@ onMounted(() => {
       applying.value = true
       beginReconnectPolling()
     }
+  }).catch((error) => {
+    errorMessage.value = getErrorMessage(error, '加载更新状态失败')
   })
 })
 
@@ -243,6 +253,16 @@ onBeforeUnmount(() => {
         <small v-else-if="check?.trustSource === 'static'">本机静态信任配置</small>
       </div>
     </div>
+
+    <el-alert
+      v-if="errorMessage"
+      class="update-message"
+      :title="errorMessage"
+      type="error"
+      :closable="true"
+      show-icon
+      @close="errorMessage = ''"
+    />
 
     <el-alert
       v-if="status.message"

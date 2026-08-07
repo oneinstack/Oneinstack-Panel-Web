@@ -1,4 +1,5 @@
 import System from '@/utils/System'
+import { formatHttpStatusMessage, resolveHttpErrorMessage } from '@/utils/http-error'
 
 export type SnapshotResourceType = 'website' | 'nginx' | 'firewall' | 'panel_access'
 export type SnapshotOperation = 'create' | 'update' | 'delete' | 'restore'
@@ -143,6 +144,30 @@ const requestJson = async (
   return await http.get(request as any, payload || {})
 }
 
+const httpPost = (url: string, payload: Record<string, any> = {}) => {
+  return new Promise<any>((resolve, reject) => {
+    let settled = false
+    const resolveOnce = (response: any) => {
+      if (settled) return
+      settled = true
+      resolve(response)
+    }
+    const rejectOnce = (_ok: boolean, _config: any, xhr: any) => {
+      if (settled) return
+      settled = true
+      reject(new Error(resolveHttpErrorMessage(
+        xhr?.data,
+        formatHttpStatusMessage(xhr?.status || xhr?.statusCode, xhr?.statusText)
+      )))
+    }
+    http.post(url, { ...payload, success: resolveOnce, fail: rejectOnce })
+      .then(resolveOnce)
+      .catch((error: any) => {
+        if (!settled) reject(error)
+      })
+  })
+}
+
 const fetchFormAccepted = async (url: string, formData: FormData) => {
   const response = await fetch(apiUrl(url), {
     method: 'POST',
@@ -151,7 +176,7 @@ const fetchFormAccepted = async (url: string, formData: FormData) => {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
-    throw new Error(data?.error?.detail || data?.message || '请求失败')
+    throw new Error(resolveHttpErrorMessage(data, response.ok ? '请求失败' : formatHttpStatusMessage(response.status, response.statusText, '请求失败')))
   }
   return data
 }
@@ -163,29 +188,12 @@ const fetchBlob = async (url: string) => {
   })
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(data?.error?.detail || data?.message || '下载失败')
+    throw new Error(resolveHttpErrorMessage(data, formatHttpStatusMessage(response.status, response.statusText, '下载失败')))
   }
   return {
     blob: await response.blob(),
     disposition: response.headers.get('Content-Disposition') || ''
   }
-}
-
-const fetchJson = async (method: 'POST' | 'PUT', url: string, payload: Record<string, any>) => {
-  const response = await fetch(apiUrl(url), {
-    method,
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  })
-  const data = await response.json().catch(() => ({}))
-  if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
-    throw new Error(data?.error?.detail || data?.message || '请求失败')
-  }
-  return data
 }
 
 const deleteJson = async (url: string, fallbackUrl?: string) => {
@@ -201,10 +209,10 @@ const deleteJson = async (url: string, fallbackUrl?: string) => {
   }
   const data = await response.json().catch(() => ({}))
   if (response.status === 404 && fallbackUrl) {
-    return fetchJson('POST', fallbackUrl, { confirm: true })
+    return requestJson('POST', fallbackUrl, { confirm: true })
   }
   if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
-    throw new Error(data?.error?.detail || data?.message || '删除失败')
+    throw new Error(resolveHttpErrorMessage(data, response.ok ? '删除失败' : formatHttpStatusMessage(response.status, response.statusText, '删除失败')))
   }
   return data
 }
@@ -1095,16 +1103,23 @@ export const Api = {
     return http.get('/sys/version')
   },
   /** 获取最近一次面板更新状态 */
-  getPanelUpdateStatus: () => {
-    return http.get('/sys/update/status')
+  getPanelUpdateStatus: (obj?: { ignoreUnauthorizedLogout?: boolean; silentError?: boolean }) => {
+    return http.get('/sys/update/status', obj || {})
   },
   /** 校验签名清单并检查面板更新 */
   checkPanelUpdate: () => {
-    return http.post('/sys/update/check', {})
+    return httpPost('/sys/update/check')
   },
   /** 交给独立 systemd 单元执行面板更新 */
   applyPanelUpdate: (obj: { confirm: string }) => {
-    return http.post('/sys/update/apply', obj)
+    return httpPost('/sys/update/apply', obj)
+  },
+  /** 静默轮询面板更新状态，用于更新期间等待服务重启 */
+  pollPanelUpdateStatus: () => {
+    return http.get('/sys/update/status', {
+      ignoreUnauthorizedLogout: true,
+      silentError: true
+    })
   },
   /** 获取 Panel 配置、数据库与证书备份 */
   getPanelBackups: () => {

@@ -326,8 +326,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="backup-card__actions">
-        <el-button :disabled="restoreRunning" @click="openDialog('import')">导入备份</el-button>
-        <el-button type="primary" :disabled="restoreRunning" @click="openDialog('create')">
+        <el-tag size="small" type="warning">中风险</el-tag>
+        <el-button type="warning" plain :disabled="restoreRunning" @click="openDialog('import')">导入备份</el-button>
+        <el-button type="warning" :disabled="restoreRunning" @click="openDialog('create')">
           创建备份
         </el-button>
       </div>
@@ -385,6 +386,20 @@ onBeforeUnmount(() => {
       <el-alert
         v-if="dialogMode === 'restore'"
         title="恢复会替换当前配置与数据库，期间 Panel 会短暂离线；健康检查失败时将自动回滚。"
+        type="warning"
+        :closable="false"
+        show-icon
+      />
+      <el-alert
+        v-else-if="dialogMode === 'create'"
+        title="中风险操作：创建备份会写入加密备份文件；请妥善保存备份密码，密码丢失后无法恢复该备份。"
+        type="warning"
+        :closable="false"
+        show-icon
+      />
+      <el-alert
+        v-else
+        title="中风险操作：导入备份会写入备份列表，恢复前请确认来源可信且密码正确。"
         type="warning"
         :closable="false"
         show-icon

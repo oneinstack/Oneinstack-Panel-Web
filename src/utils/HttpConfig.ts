@@ -3,6 +3,7 @@ import sconfig from '@/sstore/sconfig'
 import { globalType } from '../../build/env/globalVar'
 import System from './System'
 import { HttpCode } from '@/enum/HttpCode'
+import { formatHttpStatusMessage, resolveHttpErrorMessage } from '@/utils/http-error'
 
 export default class HttpConfig {
   static init(env: globalType) {
@@ -33,9 +34,10 @@ export default class HttpConfig {
       }
 
       let code = xhr?.data?.code ?? _code,
-        msg = xhr?.data?.message || xhr?.data?.error || ''
+        msg = resolveHttpErrorMessage(xhr?.data, formatHttpStatusMessage(_code, xhr?.statusText))
 
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
+      if (config.param?.silentError) return
       if (_code === HttpCode.LOGIN_EXPIRED) {
         if (config.param?.ignoreUnauthorizedLogout) {
           return
@@ -62,7 +64,7 @@ export default class HttpConfig {
           System.er('请求超时，请稍后再试', { type: 'error' })
           break
         default:
-          System.er(msg, { type: 'error' })
+          System.er(msg || formatHttpStatusMessage(_code, xhr?.statusText), { type: 'error' })
           break
       }
     }
@@ -94,6 +96,10 @@ export default class HttpConfig {
           config.param.ignoreUnauthorizedLogout = config.data.ignoreUnauthorizedLogout
           delete config.data.ignoreUnauthorizedLogout
         }
+        if (config.data?.silentError !== undefined) {
+          config.param.silentError = config.data.silentError
+          delete config.data.silentError
+        }
       },
       after(xhr, config) {
         if (config.data?.isBlob) {
@@ -110,7 +116,7 @@ export default class HttpConfig {
         if (code === undefined) return
         if (code != 0) {
           error(code, config, xhr)
-          throw new Error(code)
+          throw new Error(resolveHttpErrorMessage(xhr.data, String(code)))
         }
         funrun(config.data, ['final', 'success', 'complete'], xhr.data, config, xhr)
       },
