@@ -53,7 +53,7 @@ defineExpose({
         <el-input v-model.trim="form.name" placeholder="请输入容器名称，例如 demo-nginx" />
         <div class="field-help">容器名称，不能包含空格、斜杠和换行。</div>
       </el-form-item>
-      <el-form-item label="镜像" prop="image">
+      <el-form-item label="镜像" prop="image" required>
         <div class="image-field">
           <el-checkbox v-model="form.manualImage" class="image-field__toggle">手动输入</el-checkbox>
           <el-input
@@ -67,6 +67,7 @@ defineExpose({
             placeholder="请选择镜像"
             filterable
             clearable
+            :disabled="!images.length"
           >
             <el-option
               v-for="item in images"
@@ -75,6 +76,14 @@ defineExpose({
               :value="imageReference(item)"
             />
           </el-select>
+          <el-alert
+            v-if="!form.manualImage && !images.length"
+            class="image-empty-alert"
+            type="warning"
+            :closable="false"
+            show-icon
+            title="当前无本地镜像，请手动输入镜像或先配置可用 Registry/镜像加速器"
+          />
         </div>
         <div class="field-help">可直接选择现有镜像，也可切换为手动输入镜像引用。</div>
       </el-form-item>
@@ -401,6 +410,10 @@ defineExpose({
     width: fit-content;
     margin: 0;
   }
+}
+
+.image-empty-alert {
+  margin-top: 2px;
 }
 
 .form-inline-grid {

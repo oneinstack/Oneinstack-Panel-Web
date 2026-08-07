@@ -1622,9 +1622,9 @@ onBeforeUnmount(() => {
               : activeTab === 'images'
                 ? '请输入镜像 ID、仓库或 Tag'
                 : activeTab === 'networks'
-                  ? '请输入网络名称、驱动或子网'
+                  ? '请输入网络名称、模式或子网'
                   : activeTab === 'volumes'
-                    ? '请输入存储卷名称、驱动或挂载点'
+                    ? '请输入存储卷名称、模式或挂载点'
                     : '请输入 Registry 名称或地址'"
             @clear="resetCurrentList"
             @keyup.enter="resetCurrentList"
@@ -1876,7 +1876,7 @@ onBeforeUnmount(() => {
         <el-table-column label="ID" min-width="140">
           <template #default="{ row }">{{ shortId(row.ID) }}</template>
         </el-table-column>
-        <el-table-column prop="Driver" label="驱动" width="130" />
+        <el-table-column prop="Driver" label="模式" width="130" />
         <el-table-column prop="Scope" label="范围" width="130" />
         <el-table-column prop="Subnet" label="IPv4 子网" min-width="160" show-overflow-tooltip />
         <el-table-column prop="Gateway" label="网关" min-width="140" show-overflow-tooltip />
@@ -1914,7 +1914,7 @@ onBeforeUnmount(() => {
       >
         <el-table-column type="selection" width="44" />
         <el-table-column prop="Name" label="名称" min-width="220" />
-        <el-table-column prop="Driver" label="驱动" width="130" />
+        <el-table-column prop="Driver" label="模式" width="130" />
         <el-table-column prop="Scope" label="范围" width="130" />
         <el-table-column prop="Mountpoint" label="挂载点" min-width="260" show-overflow-tooltip />
         <el-table-column label="Options" min-width="180" show-overflow-tooltip>
