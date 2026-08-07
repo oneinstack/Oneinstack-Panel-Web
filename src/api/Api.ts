@@ -960,6 +960,13 @@ export const Api = {
   deleteDatabaseLib: (obj: { id: number; confirmName: string }) => {
     return http.post('/storage/dellib', obj)
   },
+  /** 校验当前面板登录密码 */
+  verifyPanelPassword: (obj: { password: string }) => {
+    return http.post('/auth/verify-password', {
+      ...obj,
+      ignoreUnauthorizedLogout: true
+    })
+  },
   /** 二次认证后查看数据库专用账号 */
   revealDatabaseCredential: (libraryId: number, obj: { panelPassword: string }) => {
     return http.post(`/storage/libraries/${libraryId}/credential/reveal`, obj)

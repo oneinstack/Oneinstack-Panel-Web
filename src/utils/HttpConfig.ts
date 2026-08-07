@@ -37,6 +37,9 @@ export default class HttpConfig {
 
       funrun(config.data, ['final', 'fail', 'complete'], _code == 200, config, xhr)
       if (_code === HttpCode.LOGIN_EXPIRED) {
+        if (config.param?.ignoreUnauthorizedLogout) {
+          return
+        }
         System.er(msg || '登录已过期，请重新登录', { type: 'error' })
         sconfig.logout(true)
         return
@@ -86,6 +89,10 @@ export default class HttpConfig {
         if (config.data?.json) {
           config.param.headers['Content-Type'] = 'application/json'
           delete config.data.json
+        }
+        if (config.data?.ignoreUnauthorizedLogout !== undefined) {
+          config.param.ignoreUnauthorizedLogout = config.data.ignoreUnauthorizedLogout
+          delete config.data.ignoreUnauthorizedLogout
         }
       },
       after(xhr, config) {

@@ -482,11 +482,6 @@ onMounted(() => {
               </template>
             </el-table-column>
           </el-table>
-
-          <div class="coming-soon">
-            <span>未挂载设备、格式化、挂载与卸载操作：后续开放</span>
-            <small><code>persistent=false</code> 仅表示未在 fstab 中匹配，不等同于故障。</small>
-          </div>
         </article>
       </section>
 

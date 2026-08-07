@@ -17,6 +17,22 @@ const backupPanel = reactive({
   library: null as any
 })
 
+const verifyPanelPasswordDialog = reactive({
+  visible: false,
+  title: '',
+  password: '',
+  resolve: null as null | ((value: string) => void),
+  reject: null as null | ((reason?: string) => void)
+})
+
+const credentialPasswordDialog = reactive({
+  visible: false,
+  title: '',
+  password: '',
+  resolve: null as null | ((value: string) => void),
+  reject: null as null | ((reason?: string) => void)
+})
+
 const openBackupPanel = (row: any) => {
   backupPanel.library = row
   backupPanel.visible = true
@@ -28,55 +44,113 @@ const createBackup = async (row: any) => {
   openBackupPanel(row)
 }
 
+const closeVerifyPanelPasswordDialog = (reason: 'cancel' | 'close' = 'close') => {
+  const reject = verifyPanelPasswordDialog.reject
+  verifyPanelPasswordDialog.visible = false
+  verifyPanelPasswordDialog.title = ''
+  verifyPanelPasswordDialog.password = ''
+  verifyPanelPasswordDialog.resolve = null
+  verifyPanelPasswordDialog.reject = null
+  reject?.(reason)
+}
+
+const confirmVerifyPanelPasswordDialog = () => {
+  if (!verifyPanelPasswordDialog.password) {
+    ElMessage.warning('请输入当前面板登录密码')
+    return
+  }
+  const resolve = verifyPanelPasswordDialog.resolve
+  verifyPanelPasswordDialog.visible = false
+  verifyPanelPasswordDialog.title = ''
+  verifyPanelPasswordDialog.resolve = null
+  verifyPanelPasswordDialog.reject = null
+  const password = verifyPanelPasswordDialog.password
+  verifyPanelPasswordDialog.password = ''
+  resolve?.(password)
+}
+
 const requestPanelPassword = async (title: string) => {
-  const { value } = await ElMessageBox.prompt(
-    '为保护数据库密码，请输入当前面板登录密码完成二次认证。',
-    title,
-    {
-      inputType: 'password',
-      inputPlaceholder: '当前面板登录密码',
-      inputValidator: (value: string) => !!value || '请输入当前面板登录密码',
-      confirmButtonText: '确认',
-      cancelButtonText: '取消'
-    }
-  )
-  return value
+  return await new Promise<string>((resolve, reject) => {
+    verifyPanelPasswordDialog.visible = true
+    verifyPanelPasswordDialog.title = title
+    verifyPanelPasswordDialog.password = ''
+    verifyPanelPasswordDialog.resolve = resolve
+    verifyPanelPasswordDialog.reject = reject
+  })
+}
+
+const verifyPanelPassword = async (title: string) => {
+  const password = await requestPanelPassword(title)
+  await Api.verifyPanelPassword({ password })
+  return password
+}
+
+const closeCredentialPasswordDialog = (reason: 'cancel' | 'close' = 'close') => {
+  const reject = credentialPasswordDialog.reject
+  credentialPasswordDialog.visible = false
+  credentialPasswordDialog.title = ''
+  credentialPasswordDialog.password = ''
+  credentialPasswordDialog.resolve = null
+  credentialPasswordDialog.reject = null
+  reject?.(reason)
+}
+
+const confirmCredentialPasswordDialog = () => {
+  const password = credentialPasswordDialog.password.trim()
+  if (password && (password.length < 12 || password.length > 128)) {
+    ElMessage.warning('密码长度必须为 12–128 位')
+    return
+  }
+  const resolve = credentialPasswordDialog.resolve
+  credentialPasswordDialog.visible = false
+  credentialPasswordDialog.title = ''
+  credentialPasswordDialog.password = ''
+  credentialPasswordDialog.resolve = null
+  credentialPasswordDialog.reject = null
+  resolve?.(password)
+}
+
+const requestCredentialPassword = async (title: string) => {
+  return await new Promise<string>((resolve, reject) => {
+    credentialPasswordDialog.visible = true
+    credentialPasswordDialog.title = title
+    credentialPasswordDialog.password = ''
+    credentialPasswordDialog.resolve = resolve
+    credentialPasswordDialog.reject = reject
+  })
 }
 
 const viewCredential = async (row: any) => {
   try {
-    const panelPassword = await requestPanelPassword('查看数据库账号')
+    const panelPassword = await verifyPanelPassword('查看数据库账号')
     const { data } = await Api.revealDatabaseCredential(row.id, { panelPassword })
     conf.credential.open(data)
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
+    if (error?.status === 401 || error?.response?.status === 401) {
+      ElMessage.error('当前面板登录密码错误')
+      return
+    }
     throw error
   }
 }
 
 const updateCredential = async (row: any) => {
   try {
-    const panelPassword = await requestPanelPassword('修改数据库密码')
-    const { value: password } = await ElMessageBox.prompt(
-      '输入 12–128 位新密码；留空则由服务端生成高强度随机密码。',
-      `修改 ${row.name} 的账号密码`,
-      {
-        inputType: 'password',
-        inputPlaceholder: '留空自动生成随机密码',
-        inputValidator: (value: string) =>
-          !value || (value.length >= 12 && value.length <= 128) || '密码长度必须为 12–128 位',
-        confirmButtonText: '修改密码',
-        cancelButtonText: '取消'
-      }
-    )
+    const panelPassword = await verifyPanelPassword('修改数据库密码')
+    const password = await requestCredentialPassword(`修改 ${row.name} 的账号密码`)
     const { data } = await Api.updateDatabaseCredential(row.id, {
       panelPassword,
-      password
+      password: password || undefined
     })
     ElMessage.success('数据库账号密码已修改')
     conf.credential.open(data)
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
+    if (error?.status === 401 || error?.response?.status === 401) {
+      ElMessage.error('当前面板登录密码错误')
+      return
+    }
     throw error
   }
 }
@@ -168,7 +242,6 @@ const deleteDatabase = async (row: any) => {
           style="margin-right: 18px"
           @search="conf.list.getData"
         />
-        <el-button :icon="Setting" type="primary" />
       </div>
     </div>
     <div class="box2">
@@ -206,6 +279,66 @@ const deleteDatabase = async (row: any) => {
       </custom-table>
     </div>
     <database-backup-drawer v-model="backupPanel.visible" :library="backupPanel.library" />
+    <custom-dialog
+      v-model:show="verifyPanelPasswordDialog.visible"
+      :title="verifyPanelPasswordDialog.title"
+      width="560px"
+      :show-close="false"
+      :on-close="() => closeVerifyPanelPasswordDialog('close')"
+    >
+      <div class="verify-password-dialog">
+        <div class="verify-password-dialog__desc">
+          为保护数据库密码，请输入当前面板登录密码完成二次认证。
+        </div>
+        <el-input
+          v-model="verifyPanelPasswordDialog.password"
+          type="password"
+          show-password
+          autocomplete="current-password"
+          placeholder="请输入当前面板登录密码"
+          @keyup.enter="confirmVerifyPanelPasswordDialog"
+        />
+      </div>
+      <template #footer>
+        <el-button @click="closeVerifyPanelPasswordDialog('cancel')">取消</el-button>
+        <el-button type="primary" @click="confirmVerifyPanelPasswordDialog">确认</el-button>
+      </template>
+    </custom-dialog>
+    <custom-dialog
+      v-model:show="credentialPasswordDialog.visible"
+      :title="credentialPasswordDialog.title"
+      width="620px"
+      :show-close="false"
+      :on-close="() => closeCredentialPasswordDialog('close')"
+    >
+      <div class="credential-password-dialog">
+        <div class="credential-password-dialog__desc">
+          输入 12–128 位新密码；留空则由服务端生成高强度随机密码。
+        </div>
+        <el-input
+          v-model="credentialPasswordDialog.password"
+          type="password"
+          show-password
+          autocomplete="new-password"
+          placeholder="请输入新密码，留空则自动生成随机密码"
+          @keyup.enter="confirmCredentialPasswordDialog"
+        />
+        <div
+          v-if="
+            credentialPasswordDialog.password &&
+            (credentialPasswordDialog.password.trim().length < 12 ||
+              credentialPasswordDialog.password.trim().length > 128)
+          "
+          class="credential-password-dialog__error"
+        >
+          密码长度必须为 12–128 位
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="closeCredentialPasswordDialog('cancel')">取消</el-button>
+        <el-button type="primary" @click="confirmCredentialPasswordDialog">修改密码</el-button>
+      </template>
+    </custom-dialog>
   </div>
 </template>
 
@@ -229,6 +362,29 @@ const deleteDatabase = async (row: any) => {
       color: var(--text-tertiary);
       font-size: 13px;
     }
+  }
+}
+
+.verify-password-dialog {
+  &__desc {
+    margin-bottom: 18px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+}
+
+.credential-password-dialog {
+  &__desc {
+    margin-bottom: 18px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+  }
+
+  &__error {
+    margin-top: 10px;
+    color: var(--el-color-danger);
+    font-size: 13px;
+    line-height: 1.6;
   }
 }
 </style>
