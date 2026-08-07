@@ -123,7 +123,15 @@ const postAccepted = (url: string, payload: Record<string, any> = {}) => {
       settled = true
       resolve(response)
     }
-    http.post(url, { ...payload, success: resolveOnce })
+    const rejectOnce = (_ok: boolean, _config: any, xhr: any) => {
+      if (settled) return
+      settled = true
+      reject(new Error(resolveHttpErrorMessage(
+        xhr?.data,
+        formatHttpStatusMessage(xhr?.status || xhr?.statusCode, xhr?.statusText)
+      )))
+    }
+    http.post(url, { ...payload, success: resolveOnce, fail: rejectOnce })
       .then(resolveOnce)
       .catch((error: any) => {
         if (!settled) reject(error)
