@@ -39,6 +39,23 @@ const openBackupPanel = (row: any) => {
 }
 
 const createBackup = async (row: any) => {
+  const databaseName = row.name || row.databaseName || row.id || '当前数据库'
+
+  try {
+    await ElMessageBox.confirm(
+      `确认立即备份数据库“${databaseName}”吗？备份任务创建后会在后台执行。`,
+      '备份确认',
+      {
+        confirmButtonText: '确认备份',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+
   await Api.createDatabaseBackup({ libraryId: row.id })
   ElMessage.success('备份任务已创建')
   openBackupPanel(row)
