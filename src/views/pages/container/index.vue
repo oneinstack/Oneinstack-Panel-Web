@@ -219,7 +219,22 @@ const detailTitle = computed(() => {
 
 const rules = computed<FormRules>(() => ({
   name: [{ required: ['container', 'network', 'volume'].includes(dialogType.value), message: '请输入名称', trigger: 'blur' }],
-  image: [{ required: dialogType.value === 'container', message: '请输入镜像引用', trigger: 'blur' }]
+  image: [
+    {
+      validator: (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+        if (dialogType.value !== 'container') {
+          callback()
+          return
+        }
+        if (typeof value === 'string' && value.trim()) {
+          callback()
+          return
+        }
+        callback(new Error(form.manualImage ? '请输入镜像引用' : '请选择镜像'))
+      },
+      trigger: ['blur', 'change'],
+    },
+  ]
 }))
 
 const normalizeList = <T>(data: any): T[] => {

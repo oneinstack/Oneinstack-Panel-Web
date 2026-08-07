@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { ImageItem, NetworkItem, VolumeItem } from '../types'
 
-defineProps<{
+const props = defineProps<{
   visible: boolean
   saving: boolean
   form: Record<string, any>
@@ -24,6 +24,14 @@ const emit = defineEmits<{
 }>()
 
 const formRef = ref<FormInstance>()
+
+watch(
+  () => props.form.manualImage,
+  () => {
+    props.form.image = ''
+    formRef.value?.clearValidate?.(['image'])
+  },
+)
 
 defineExpose({
   validate: () => formRef.value?.validate(),
