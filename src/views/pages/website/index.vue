@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Refresh, Setting } from '@element-plus/icons-vue'
+import { FolderOpened, Refresh, Setting } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/Api'
@@ -12,6 +12,20 @@ import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
 import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
 import WebServerConfigDrawer from './components/WebServerConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
+import System from '@/utils/System'
+
+const openWebsiteRoot = (rootDir: unknown) => {
+  const path = typeof rootDir === 'string' ? rootDir.trim() : ''
+  if (!path) {
+    ElMessage.warning('当前网站没有可管理的根目录')
+    return
+  }
+  System.router.push({
+    path: '/file',
+    query: { path }
+  })
+}
 
 const webServer = reactive({
   loading: true,
@@ -55,6 +69,45 @@ const backupDrawer = reactive({
     backupDrawer.show = true
   }
 })
+
+const settingsDrawer = reactive({
+  show: false,
+  website: null as Record<string, any> | null,
+  open: (website: Record<string, any>) => {
+    settingsDrawer.website = website
+    settingsDrawer.show = true
+  }
+})
+
+const statusLoading = reactive(new Set<number>())
+const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
+  statusLoading.add(row.id)
+  try {
+    await Api.setWebsiteStatus(row.id, enabled)
+    ElMessage.success(enabled ? '网站已启用' : '网站已停用')
+    await conf.website.getData()
+  } finally {
+    statusLoading.delete(row.id)
+  }
+}
+
+const formatWebsiteTraffic = (value: unknown) => {
+  let bytes = Number(value || 0)
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B'
+  const units = ['B', 'KB', 'MB', 'GB', 'TB']
+  let index = 0
+  while (bytes >= 1024 && index < units.length - 1) {
+    bytes /= 1024
+    index++
+  }
+  return `${bytes >= 100 || index === 0 ? bytes.toFixed(0) : bytes.toFixed(2)} ${units[index]}`
+}
+
+const formatWebsiteExpiration = (value?: string | null) => {
+  if (!value) return '永久'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false })
+}
 
 const conf = reactive({
   tabs: {
@@ -106,12 +159,14 @@ const conf = reactive({
     data: [],
     total: 0,
     columns: [
-      { prop: 'name', label: '网站名', width: 200 },
-      { prop: 'domain', label: '域名', width: 200 },
+      { prop: 'name', label: '网站名', width: 180 },
+      { prop: 'domain', label: '域名', width: 180 },
       { prop: 'root_dir', label: '根目录' },
-      { prop: 'remark', label: '备注', width: 200 },
-      { prop: 'ssl', label: 'SSL', width: 110 },
-      { prop: 'action', label: '操作' }
+      { prop: 'status', label: '状态', width: 130 },
+      { prop: 'traffic', label: '今日流量', width: 120 },
+      { prop: 'expiration', label: '到期时间', width: 180 },
+      { prop: 'ssl', label: 'SSL', width: 100 },
+      { prop: 'action', label: '操作', minWidth: 230 }
     ],
     params: {
       type: 'php',
@@ -128,7 +183,7 @@ const conf = reactive({
     },
     handleAdd: () => {
       conf.drawer.open('add')
-      conf.form.data.value.type = conf.website.params.type
+      conf.form.data.value = { type: conf.website.params.type, expires_at: null }
     }
   },
   drawer: {
@@ -245,6 +300,11 @@ const conf = reactive({
                 label: '备注',
                 type: 'textarea',
                 prop: 'remark'
+              },
+              {
+                label: '到期时间',
+                type: 'custom',
+                prop: 'expires_at'
               }
             ]
           case 'proxy':
@@ -278,6 +338,11 @@ const conf = reactive({
                 label: '备注',
                 type: 'textarea',
                 prop: 'remark'
+              },
+              {
+                label: '到期时间',
+                type: 'custom',
+                prop: 'expires_at'
               }
             ]
           default:
@@ -453,11 +518,51 @@ webServer.load()
       <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据" :data="conf.website.data"
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
         :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
+        <template #root_dir="{ row }">
+          <el-link
+            v-if="row.root_dir"
+            class="website-root-link"
+            type="primary"
+            :underline="false"
+            :title="row.root_dir"
+            @click="openWebsiteRoot(row.root_dir)"
+          >
+            <el-icon><FolderOpened /></el-icon>
+            <span class="website-root-link__path">{{ row.root_dir }}</span>
+          </el-link>
+          <span v-else class="website-root-link__empty">—</span>
+        </template>
         <template #action="{ row }">
           <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
           <el-button type="primary" link @click="backupDrawer.open(row)">备份</el-button>
-          <el-button type="primary" link @click="conf.drawer.open('edit', row)">设置</el-button>
+          <el-button type="primary" link @click="settingsDrawer.open(row)">设置</el-button>
           <el-button type="danger" link @click="conf.dialog.open('delete', row)">删除</el-button>
+        </template>
+        <template #status="{ row }">
+          <div class="website-status">
+            <el-switch
+              :model-value="Boolean(row.enabled)"
+              :loading="statusLoading.has(row.id)"
+              @change="toggleWebsiteStatus(row, Boolean($event))"
+            />
+            <span :class="{ expired: row.disabled_reason === 'expired' }">
+              {{ row.enabled ? '运行中' : row.disabled_reason === 'expired' ? '已到期' : '已停用' }}
+            </span>
+          </div>
+        </template>
+        <template #traffic="{ row }">
+          <div class="website-traffic">
+            <strong>{{ formatWebsiteTraffic(row.today_traffic_bytes) }}</strong>
+            <span>{{ Number(row.today_requests || 0).toLocaleString() }} 次请求</span>
+          </div>
+        </template>
+        <template #expiration="{ row }">
+          <el-tag
+            :type="row.expires_at && new Date(row.expires_at).getTime() <= Date.now() ? 'danger' : row.expires_at ? 'warning' : 'info'"
+            effect="plain"
+          >
+            {{ formatWebsiteExpiration(row.expires_at) }}
+          </el-tag>
         </template>
         <template #ssl="{ row }">
           <el-tag v-if="row.ssl_enabled" :type="row.certificate_status === 'active' ? 'success' : 'warning'">
@@ -480,6 +585,15 @@ webServer.load()
               </el-select>
             </template>
           </el-input>
+        </template>
+        <template #expires_at>
+          <el-date-picker
+            v-model="conf.form.data.value.expires_at"
+            type="datetime"
+            placeholder="不设置表示永久有效"
+            clearable
+            style="width: 100%"
+          />
         </template>
       </custom-form>
     </custom-drawer>
@@ -540,6 +654,11 @@ webServer.load()
     <web-server-config-drawer
       v-model="webServer.configVisible"
       @changed="webServer.load"
+    />
+    <website-settings-drawer
+      v-model="settingsDrawer.show"
+      :website="settingsDrawer.website"
+      @changed="conf.website.getData()"
     />
   </div>
 </template>
@@ -661,6 +780,63 @@ webServer.load()
   flex: 0 0 auto;
   min-width: 44px;
   padding-inline: 14px;
+}
+
+.website-root-link {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.website-root-link :deep(.el-link__inner) {
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.website-root-link__path {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+.website-root-link__empty {
+  color: var(--text-tertiary, #94a3b8);
+}
+
+.website-status,
+.website-traffic {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.website-status span {
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  &.expired {
+    color: var(--el-color-danger);
+  }
+}
+
+.website-traffic {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 10px;
+  }
 }
 
 .delete-form {

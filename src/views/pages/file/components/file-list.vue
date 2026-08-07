@@ -1508,6 +1508,12 @@ defineExpose({
   border: 1px solid var(--border-subtle);
   border-radius: 11px;
   background: var(--surface-subtle);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
@@ -1543,6 +1549,23 @@ defineExpose({
     border-color: rgba(var(--primary-color), 0.22);
     font-size: 12px;
     background: rgba(var(--primary-color), 0.07);
+  }
+}
+
+// 桌面端保持操作列简洁，只在当前行悬停或通过键盘聚焦时显示按钮。
+:deep(.smart-table .el-table__body tr:hover) .row-actions,
+:deep(.smart-table .el-table__body tr:focus-within) .row-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+// 触屏设备没有可靠的 hover，必须始终保留可操作入口。
+@media (hover: none), (pointer: coarse) {
+  .row-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
   }
 }
 

@@ -872,6 +872,30 @@ export const Api = {
   updateWebsite: (obj: any) => {
     return http.post('/website/update', obj)
   },
+  /** 平滑启用或停用单个网站 */
+  setWebsiteStatus: (websiteId: number, enabled: boolean) => {
+    return http.post(`/website/${websiteId}/status`, { enabled })
+  },
+  /** 读取单站点结构化设置 */
+  getWebsiteSettings: (websiteId: number) => {
+    return http.get(`/website/${websiteId}/settings`)
+  },
+  /** 保存单站点设置，后端校验配置后平滑重载 */
+  updateWebsiteSettings: (websiteId: number, obj: any) => {
+    return requestJson('PUT', `/website/${websiteId}/settings`, obj)
+  },
+  /** 读取单站点访问或错误日志 */
+  getWebsiteLog: (websiteId: number, obj?: { type?: 'access' | 'error'; lines?: number }) => {
+    return http.get(`/website/${websiteId}/log`, obj)
+  },
+  /** 读取单站点实际运行配置 */
+  getWebsiteManagedConfig: (websiteId: number) => {
+    return http.get(`/website/${websiteId}/config`)
+  },
+  /** 更新单站点实际运行配置 */
+  updateWebsiteManagedConfig: (websiteId: number, obj: { content: string; revision: string }) => {
+    return requestJson('PUT', `/website/${websiteId}/config`, obj)
+  },
   /** 删除站点 */
   delWebsite: (obj: any) => {
     return postAccepted('/website/del', obj)
@@ -947,6 +971,10 @@ export const Api = {
   /** 获取远程服务器列表 */
   getConnlist: (obj: any) => {
     return http.get('/storage/connlist', obj)
+  },
+  /** 获取本机 MySQL、Redis 安装状态 */
+  getStorageInfo: () => {
+    return http.post('/storage/info', {})
   },
   /** 添加远程服务器 */
   addDatabaseConn: (obj: any) => {
@@ -1053,6 +1081,53 @@ export const Api = {
   /** 修改防火墙规则 */
   updateFirewallRule: (obj: any) => {
     return http.post('/safe/update', obj)
+  },
+  /** 启用或停用单条防火墙规则 */
+  setFirewallRuleState: (obj: { id: number; enabled: boolean }) => {
+    return http.post('/safe/rules/state', obj)
+  },
+  /** 批量启用、停用或删除防火墙规则 */
+  batchFirewallRules: (obj: { ids: number[]; action: 'enable' | 'disable' | 'delete' }) => {
+    return http.post('/safe/rules/batch', obj)
+  },
+  /** 清理已到期的临时规则 */
+  cleanupFirewallRules: () => {
+    return http.post('/safe/rules/cleanup', {})
+  },
+  /** 导入防火墙规则 */
+  importFirewallRules: (obj: { rules: any[] }) => {
+    return http.post('/safe/rules/import', obj)
+  },
+  /** 获取端口转发列表 */
+  getFirewallForwards: (obj: any) => {
+    return http.post('/safe/forwards', obj)
+  },
+  addFirewallForward: (obj: any) => {
+    return http.post('/safe/forwards/add', obj)
+  },
+  updateFirewallForward: (obj: any) => {
+    return http.post('/safe/forwards/update', obj)
+  },
+  deleteFirewallForward: (obj: { id: number }) => {
+    return http.post('/safe/forwards/del', obj)
+  },
+  setFirewallForwardState: (obj: { id: number; enabled: boolean }) => {
+    return http.post('/safe/forwards/state', obj)
+  },
+  /** SSH 恶意 IP 自动封禁配置 */
+  getFirewallAutoBlock: () => {
+    return http.get('/safe/auto-block')
+  },
+  saveFirewallAutoBlock: (obj: {
+    enabled: boolean
+    threshold: number
+    windowMinutes: number
+    banMinutes: number
+  }) => {
+    return http.post('/safe/auto-block', obj)
+  },
+  runFirewallAutoBlock: () => {
+    return http.post('/safe/auto-block/run', {})
   },
   /** 获取计划任务列表 */
   getPlanTaskList: (obj: any) => {

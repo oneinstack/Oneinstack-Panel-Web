@@ -6,6 +6,7 @@ import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
 import { Api } from '@/api/Api'
 import { ElMessage } from 'element-plus'
+import System from '@/utils/System'
 
 export interface ChildProps {
   list: any[]
@@ -124,7 +125,7 @@ const conf = reactive({
     data: [],
     params: {
       tags: undefined as undefined | string,
-      name: undefined,
+      name: undefined as string | undefined,
       isUpdate: undefined as undefined | boolean,
       installed: undefined as undefined | boolean,
       page: 1,
@@ -158,6 +159,18 @@ const conf = reactive({
     }
   }
 })
+
+const requestedComponent = String(System.getRouterParams().component || '').toLowerCase()
+const componentSearchNames: Record<string, string> = {
+  mysql: 'MySQL',
+  redis: 'Redis',
+  php: 'PHP',
+  phpmyadmin: 'phpMyAdmin',
+  nginx: 'Nginx'
+}
+if (componentSearchNames[requestedComponent]) {
+  conf.list.params.name = componentSearchNames[requestedComponent]
+}
 
 conf.list.getData()
 void conf.catalog.getStatus()

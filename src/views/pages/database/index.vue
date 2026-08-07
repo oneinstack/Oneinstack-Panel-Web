@@ -17,6 +17,21 @@ const conf = reactive({
     dark: ['#EAB170']
   },
   showTips: true,
+  environment: {
+    loading: true,
+    mysql: false,
+    redis: false,
+    getData: async () => {
+      conf.environment.loading = true
+      try {
+        const { data } = await Api.getStorageInfo()
+        conf.environment.mysql = Boolean(data?.mysql)
+        conf.environment.redis = Boolean(data?.redis)
+      } finally {
+        conf.environment.loading = false
+      }
+    }
+  },
   credential: {
     show: false,
     database: '',
@@ -89,7 +104,7 @@ const conf = reactive({
             { prop: 'encoding', label: '字符集', placeholder: 'utf8mb4' },
             { prop: 'capacity', label: '容量', placeholder: '未配置' },
             { prop: 'p_addr', label: '数据库位置' },
-            { prop: 'action', label: '操作' }
+            { prop: 'action', label: '操作', minWidth: 320 }
           ]
         case 'redis':
           return [
