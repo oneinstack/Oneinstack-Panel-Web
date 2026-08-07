@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import type { ImageItem, VolumeItem } from '../types'
+import type { ImageItem, NetworkItem, VolumeItem } from '../types'
 
 defineProps<{
   visible: boolean
@@ -9,6 +9,7 @@ defineProps<{
   form: Record<string, any>
   rules: FormRules
   images: ImageItem[]
+  networks: NetworkItem[]
   volumes: VolumeItem[]
   imageReference: (row: ImageItem) => string
 }>()
@@ -105,7 +106,19 @@ defineExpose({
           <div v-else class="port-all-fields">
             <label>
               <span>网络</span>
-              <el-input v-model="form.networksText" placeholder="请输入网络名称，例如 bridge" />
+              <el-select
+                v-model="form.networksText"
+                placeholder="请选择网络"
+                filterable
+                clearable
+              >
+                <el-option
+                  v-for="network in networks"
+                  :key="network.ID"
+                  :label="network.Name"
+                  :value="network.Name"
+                />
+              </el-select>
             </label>
             <label>
               <span>IPv4</span>
@@ -119,7 +132,19 @@ defineExpose({
         </div>
       </el-form-item>
       <el-form-item v-if="form.portPublishMode === 'ports'" label="网络">
-        <el-input v-model="form.networksText" placeholder="请输入网络名称，例如 bridge，多个网络可用换行或逗号分隔" />
+        <el-select
+          v-model="form.networksText"
+          placeholder="请选择网络"
+          filterable
+          clearable
+        >
+          <el-option
+            v-for="network in networks"
+            :key="network.ID"
+            :label="network.Name"
+            :value="network.Name"
+          />
+        </el-select>
         <div class="field-help">要加入的 Docker 网络名称；固定 IP 需要配合对应网络。</div>
       </el-form-item>
       <el-form-item v-if="form.portPublishMode === 'ports'" label="固定 IP">

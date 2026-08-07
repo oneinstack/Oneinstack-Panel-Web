@@ -26,6 +26,13 @@ const emit = defineEmits<{
 
 const formRef = ref<FormInstance>()
 
+const networkModeOptions = [
+  { label: 'bridge', value: 'bridge' },
+  { label: 'ipvlan', value: 'ipvlan' },
+  { label: 'macvlan', value: 'macvlan' },
+  { label: 'overlay', value: 'overlay' }
+]
+
 const title = computed<string>(() => {
   switch (props.dialogType) {
     case 'image':
@@ -160,8 +167,18 @@ defineExpose({
         <el-form-item label="名称" prop="name">
           <el-input v-model.trim="form.name" placeholder="请输入名称，例如 app-network" />
         </el-form-item>
-        <el-form-item label="驱动">
-          <el-input v-model.trim="form.driver" :placeholder="dialogType === 'network' ? '请输入驱动，例如 bridge' : '请输入驱动，例如 local'" />
+        <el-form-item v-if="dialogType === 'network'" label="模式">
+          <el-select v-model="form.driver" placeholder="请选择模式">
+            <el-option
+              v-for="item in networkModeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-else label="驱动">
+          <el-input v-model.trim="form.driver" placeholder="请输入驱动，例如 local" />
         </el-form-item>
       </template>
 

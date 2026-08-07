@@ -443,6 +443,17 @@ const ensureImagesLoaded = async () => {
   }
 }
 
+const ensureNetworksLoaded = async () => {
+  if (networks.value.length || loadedTabs.networks) return
+  try {
+    const { data } = await Api.getContainerNetworks({ page: 1, pageSize: 100 })
+    networks.value = normalizeList<NetworkItem>(data)
+    loadedTabs.networks = true
+  } catch (error) {
+    console.warn('加载网络列表失败', error)
+  }
+}
+
 const ensureRegistriesLoaded = async () => {
   if (registries.value.length || loadedTabs.registries) return
   try {
@@ -476,6 +487,7 @@ const openDialog = (type: DialogType, target?: any) => {
   dialogVisible.value = true
   if (type === 'container') {
     void ensureImagesLoaded()
+    void ensureNetworksLoaded()
     void ensureVolumesLoaded()
   }
   if (['image', 'image-push'].includes(type)) void ensureRegistriesLoaded()
@@ -2065,6 +2077,7 @@ onBeforeUnmount(() => {
       :form="form"
       :rules="rules"
       :images="images"
+      :networks="networks"
       :volumes="volumes"
       :image-reference="imageReference"
       @confirm="submitDialog"
