@@ -411,7 +411,7 @@ export const Api = {
   createTerminalTicket: (obj: { password: string }) => {
     return http.post('/ssh/ticket', obj)
   },
-  /** 获取低权限终端隔离与并发状态 */
+  /** 获取 Root 终端运行与并发状态 */
   getTerminalStatus: () => {
     return http.get('/ssh/status')
   },

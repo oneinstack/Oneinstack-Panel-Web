@@ -144,7 +144,7 @@ const conf = reactive({
       }
     },
     {
-      name: '安全终端',
+      name: '服务器终端',
       path: '/terminal',
       icon: 'terminal',
       adminOnly: true,

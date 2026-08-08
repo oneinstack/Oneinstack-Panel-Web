@@ -184,7 +184,7 @@ onMounted(async () => {
     <div class="page-heading">
       <div>
         <h2>审计日志</h2>
-        <p>记录登录、安全操作和失败请求；请求正文、密码、Token 与查询参数不会写入审计库。</p>
+        <p>记录登录、安全操作、失败请求和脱敏后的终端指令；HTTP 请求正文、密码、Token 与查询参数不会写入审计库。</p>
       </div>
       <div class="heading-actions">
         <el-button :loading="verifying" @click="verifyChain">校验完整性</el-button>
@@ -227,14 +227,14 @@ onMounted(async () => {
 
     <div class="audit-panel">
       <div class="filters">
-        <el-input v-model="filters.q" clearable placeholder="请求 ID、动作、路径或 IP" @keyup.enter="search" />
+        <el-input v-model="filters.q" clearable placeholder="请求 ID、动作、指令、路径或 IP" @keyup.enter="search" />
         <el-input v-model="filters.username" clearable placeholder="操作用户" @keyup.enter="search" />
         <el-select v-model="filters.outcome" clearable placeholder="执行结果">
           <el-option label="成功" value="success" />
           <el-option label="失败" value="failure" />
         </el-select>
         <el-select v-model="filters.method" clearable placeholder="请求方法">
-          <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']" :key="method" :label="method" :value="method" />
+          <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'PTY']" :key="method" :label="method" :value="method" />
         </el-select>
         <el-select v-model="filters.sensitive" clearable placeholder="敏感级别">
           <el-option label="敏感操作" value="true" />
@@ -261,7 +261,10 @@ onMounted(async () => {
         <el-table-column prop="username" label="用户" width="120">
           <template #default="{ row }">{{ row.username || '未认证' }}</template>
         </el-table-column>
-        <el-table-column prop="action" label="动作" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="action" label="动作" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="message" label="说明 / 指令" min-width="300" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.message || '—' }}</template>
+        </el-table-column>
         <el-table-column prop="remoteIp" label="来源 IP" min-width="135">
           <template #default="{ row }">{{ row.remoteIp || '—' }}</template>
         </el-table-column>
