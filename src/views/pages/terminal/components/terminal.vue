@@ -473,13 +473,13 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .secure-terminal {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  height: calc(100vh - 150px);
+  gap: 14px;
   min-height: 0;
   overflow: hidden;
-  padding: 22px;
 }
 
 .terminal-header {
@@ -633,8 +633,8 @@ onBeforeUnmount(() => {
 .terminal-shell {
   position: relative;
   flex: 1 1 auto;
-  min-height: 360px;
-  max-height: clamp(420px, 56vh, 680px);
+  min-height: 0;
+  max-height: none;
   overflow: hidden;
   border: 1px solid #25344a;
   border-radius: 17px;
@@ -1034,10 +1034,6 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 560px) {
-  .secure-terminal {
-    padding: 14px;
-  }
-
   .terminal-actions {
     align-items: stretch;
     flex-direction: column;
@@ -1050,7 +1046,7 @@ onBeforeUnmount(() => {
   }
 
   .terminal-shell {
-    min-height: 400px;
+    min-height: 0;
   }
 
   .terminal-identity small,

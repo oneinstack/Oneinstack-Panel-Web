@@ -85,7 +85,7 @@ export const getPlugins = (env: globalType) => {
           let _str = readFileSync(htmlDir).toString()
           _str = _str.replace(new RegExp(`"./static/`, 'g'), `"${env.static}/`)
           writeFileSync(htmlDir, _str)
-          const versionDir = path.join(__dirname, '../../dist/version.json ')
+          const versionDir = path.join(__dirname, '../../dist/version.json')
           const appName = `app-${env.version}.zip`
           writeFileSync(versionDir, JSON.stringify({ version: env.version, url: appName }))
           await tozip(path.join(__dirname, '../../dist'), path.join(__dirname, `../../version/${appName}`))

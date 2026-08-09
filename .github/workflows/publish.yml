@@ -1,0 +1,65 @@
+name: Publish Web Assets
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: oneinstack-web-publish
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: Build main and update Publish
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Scan tracked source for secrets
+        run: ./scripts/secret-scan.sh
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build production frontend
+        run: npm run build
+
+      - name: Prepare immutable publish tree
+        shell: bash
+        run: ./scripts/prepare-publish.sh "${RUNNER_TEMP}/web-publish" "${GITHUB_SHA}"
+
+      - name: Update Publish branch
+        shell: bash
+        env:
+          PUBLISH_TREE: ${{ runner.temp }}/publish-worktree
+          PUBLISH_ASSETS: ${{ runner.temp }}/web-publish
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git worktree add --detach "${PUBLISH_TREE}"
+          git -C "${PUBLISH_TREE}" switch --orphan Publish
+          git -C "${PUBLISH_TREE}" rm -rf --ignore-unmatch .
+          cp -R "${PUBLISH_ASSETS}/." "${PUBLISH_TREE}/"
+          git -C "${PUBLISH_TREE}" add --all
+          git -C "${PUBLISH_TREE}" commit \
+            -m "build: publish web ${GITHUB_SHA}"
+          git -C "${PUBLISH_TREE}" push --force origin HEAD:Publish
