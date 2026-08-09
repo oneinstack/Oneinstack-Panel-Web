@@ -758,7 +758,7 @@ onMounted(() => {
               resize="vertical"
               maxlength="65536"
               show-word-limit
-              :placeholder="editingId ? '粘贴新的 SSH 私钥文本；留空表示保留原私钥' : '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----'"
+              :placeholder="editingId ? '粘贴新的 SSH 私钥文本；留空表示保留原私钥' : '粘贴 SSH 私钥内容'"
             />
             <span class="private-key-field__hint">
               请粘贴完整 SSH 私钥文本；当前不支持带口令的加密私钥。
