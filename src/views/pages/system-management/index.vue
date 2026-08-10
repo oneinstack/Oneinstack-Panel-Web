@@ -361,7 +361,7 @@ onMounted(() => {
           <el-table-column prop="createTime" :label="$t('systemManagement.startTime')" min-width="176">
             <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
           </el-table-column>
-          <el-table-column :label="$t('common.action')" min-width="120" fixed="right">
+          <el-table-column :label="$t('common.action')" min-width="120" fixed="right" class-name="table-action-column">
             <template #default="{ row }">
               <el-button link type="primary" @click.stop="openProcessDetail(row)">{{ $t('common.detail') }}</el-button>
             </template>
@@ -491,7 +491,7 @@ onMounted(() => {
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column :label="$t('common.action')" min-width="120" fixed="right">
+            <el-table-column :label="$t('common.action')" min-width="120" fixed="right" class-name="table-action-column">
               <template #default="{ row }">
                 <el-button link type="primary" @click="openDiskDetail(row)">{{ $t('common.detail') }}</el-button>
               </template>

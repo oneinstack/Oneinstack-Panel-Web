@@ -1717,20 +1717,21 @@ onBeforeUnmount(() => {
             <span v-if="selectedContainers.length">{{ t('container.selectedContainers', '{count} containers selected', { count: selectedContainers.length }) }}</span>
             <el-dropdown
               :disabled="!selectedContainers.length || !runtimeAvailable || !canWrite"
+              popper-class="table-action-popper"
               @command="(command: ContainerAction) => runBatchContainerAction(command)"
             >
               <el-button :loading="actionLoading.startsWith('batch:')">
                 {{ t('container.batchActions', 'Batch actions') }}
               </el-button>
               <template #dropdown>
-                <el-dropdown-menu>
+                <el-dropdown-menu class="table-action-menu">
                   <el-dropdown-item command="start">{{ t('container.start', 'Start') }}</el-dropdown-item>
                   <el-dropdown-item command="stop">{{ t('container.stop', 'Stop') }}</el-dropdown-item>
                   <el-dropdown-item command="restart">{{ t('container.restart', 'Restart') }}</el-dropdown-item>
                   <el-dropdown-item command="pause">{{ t('container.pause', 'Pause') }}</el-dropdown-item>
                   <el-dropdown-item command="unpause">{{ t('container.resume', 'Resume') }}</el-dropdown-item>
                   <el-dropdown-item command="kill" :disabled="!canForceAction">{{ t('container.forceStop', 'Force stop') }}</el-dropdown-item>
-                  <el-dropdown-item command="rm" :disabled="!canDelete" divided>{{ t('container.delete', 'Delete') }}</el-dropdown-item>
+                  <el-dropdown-item class="table-action-menu__danger" command="rm" :disabled="!canDelete" divided>{{ t('container.delete', 'Delete') }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -1784,9 +1785,9 @@ onBeforeUnmount(() => {
         <el-table-column prop="Ports" :label="t('container.columns.ports', 'Ports')" min-width="190" show-overflow-tooltip />
         <el-table-column prop="Networks" :label="t('container.columns.networks', 'Networks')" min-width="120" show-overflow-tooltip />
         <el-table-column prop="Mounts" :label="t('container.columns.mounts', 'Mounts')" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="420">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="420" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button
                 link
                 type="primary"
@@ -1898,9 +1899,9 @@ onBeforeUnmount(() => {
             <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? t('container.used', 'Used') : t('container.unused', 'Unused') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="310">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="310" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button link type="primary" @click="openDetail('image', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">{{ t('container.tag', 'Tag') }}</el-button>
               <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">{{ t('container.push', 'Push') }}</el-button>
@@ -1950,9 +1951,9 @@ onBeforeUnmount(() => {
             <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{ row.EnableIPv6 ? t('container.enabledShort', 'Enabled') : t('container.closed', 'Off') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button link type="primary" @click="openDetail('network', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
@@ -1985,9 +1986,9 @@ onBeforeUnmount(() => {
         <el-table-column :label="t('container.columns.options', 'Options')" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
         </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button link type="primary" @click="openDetail('volume', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
@@ -2015,7 +2016,7 @@ onBeforeUnmount(() => {
         <el-table-column prop="Status" :label="t('container.columns.status', 'Status')" min-width="160" />
         <el-table-column prop="ConfigFiles" :label="t('container.columns.configFiles', 'Config files')" min-width="260" show-overflow-tooltip />
         <el-table-column prop="WorkingDir" :label="t('container.columns.workDir', 'Working directory')" min-width="260" show-overflow-tooltip />
-        <el-table-column :label="t('container.columns.action', 'Actions')" width="140">
+        <el-table-column :label="t('container.columns.action', 'Actions')" width="140" class-name="table-action-column">
           <template #default>
             <el-tooltip :content="t('container.composeWriteDisabled', 'Compose write operations are not enabled by the backend')">
               <el-button link type="info" :icon="SwitchButton" disabled>{{ t('container.notEnabled', 'Not enabled') }}</el-button>
@@ -2045,9 +2046,9 @@ onBeforeUnmount(() => {
         <el-table-column :label="t('container.columns.content', 'Content')" min-width="260" show-overflow-tooltip>
           <template #default="{ row }">{{ row.content || '--' }}</template>
         </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="160">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="160" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button link type="primary" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">{{ t('container.edit', 'Edit') }}</el-button>
               <el-button
                 link
@@ -2081,9 +2082,9 @@ onBeforeUnmount(() => {
           </template>
         </el-table-column>
         <el-table-column prop="status" :label="t('container.columns.status', 'Status')" width="120" />
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="230">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="230" class-name="table-action-column">
           <template #default="{ row }">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
               <el-button
                 link
                 type="primary"

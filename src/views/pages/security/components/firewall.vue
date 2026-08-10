@@ -880,7 +880,7 @@ onMounted(() => {
         <el-table-column :label="t('security.expiresAt', '过期时间')" min-width="168">
           <template #default="{ row }">{{ formatTime(row.expiresAt) }}</template>
         </el-table-column>
-        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right">
+        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right" class-name="table-action-column">
           <template #default="{ row }">
             <el-button link type="primary" :disabled="row.protected || !canManageRules" @click="editRule(row)">{{ t('common.edit', '编辑') }}</el-button>
             <el-button link type="danger" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">{{ t('common.delete', '删除') }}</el-button>
@@ -917,7 +917,7 @@ onMounted(() => {
         <el-table-column :label="t('security.createdAt', '添加时间')" min-width="180">
           <template #default="{ row }">{{ formatTime(row.create_time) }}</template>
         </el-table-column>
-        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right">
+        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right" class-name="table-action-column">
           <template #default="{ row }">
             <el-button link type="primary" :disabled="!canManageRules" @click="editForward(row)">{{ t('common.edit', '编辑') }}</el-button>
             <el-button link type="danger" :disabled="!canManageRules" @click="deleteForward(row)">{{ t('common.delete', '删除') }}</el-button>

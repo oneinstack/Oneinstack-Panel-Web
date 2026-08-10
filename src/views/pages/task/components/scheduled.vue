@@ -505,9 +505,9 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" :label="t('task.action', 'Action')" min-width="340" class-name="task-actions-column">
+        <el-table-column prop="address" :label="t('task.action', 'Action')" min-width="340" class-name="task-actions-column table-action-column">
           <template #default="scope">
-            <div class="row-actions">
+            <div class="row-actions table-row-actions">
             <el-button link type="primary" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
               {{ t('task.enable', 'Enable') }} </el-button>
             <el-button link type="primary" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">

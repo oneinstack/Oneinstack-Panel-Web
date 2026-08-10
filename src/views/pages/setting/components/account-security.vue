@@ -275,7 +275,7 @@ onMounted(() => load())
       <el-table-column :label="$t('setting.accountSecurity.expiresAt')" min-width="160">
         <template #default="{ row }">{{ formatDate(row.expiresAt) }}</template>
       </el-table-column>
-      <el-table-column :label="$t('common.action')" width="96" align="right">
+      <el-table-column :label="$t('common.action')" width="96" align="right" class-name="table-action-column">
         <template #default="{ row }">
           <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
         </template>

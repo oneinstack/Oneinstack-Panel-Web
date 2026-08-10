@@ -947,7 +947,7 @@ onUnmounted(() => {
                 <span v-else>{{ $t('monitor.notSilenced') }}</span>
               </template>
             </el-table-column>
-            <el-table-column :label="$t('common.action')" width="270" fixed="right">
+            <el-table-column :label="$t('common.action')" width="270" fixed="right" class-name="table-action-column">
               <template #default="{ row }">
                 <el-button link type="primary" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
                 <el-button v-if="!isSilenced(row)" link type="warning" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
@@ -1030,7 +1030,7 @@ onUnmounted(() => {
             <el-table-column prop="updatedAt" :label="$t('monitor.updatedAt')" min-width="170">
               <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
             </el-table-column>
-            <el-table-column :label="$t('common.action')" width="200" fixed="right">
+            <el-table-column :label="$t('common.action')" width="200" fixed="right" class-name="table-action-column">
               <template #default="{ row }">
                 <el-button link type="primary" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
                 <el-button link type="primary" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>

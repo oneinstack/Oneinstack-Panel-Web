@@ -292,7 +292,7 @@ onMounted(async () => {
         <el-table-column prop="durationMs" :label="$t('audit.duration')" width="90" align="right">
           <template #default="{ row }">{{ row.durationMs }} ms</template>
         </el-table-column>
-        <el-table-column :label="$t('common.action')" width="82" fixed="right">
+        <el-table-column :label="$t('common.action')" width="82" fixed="right" class-name="table-action-column">
           <template #default="{ row }">
             <el-button link type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
           </template>

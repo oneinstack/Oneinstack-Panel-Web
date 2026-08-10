@@ -41,6 +41,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+const actionColumnProps = new Set(['action', 'actions', 'actionColumn', 'operation', 'operations'])
 
 const t = (key: string, fallback?: string) => {
   const value = (i18n.t as any)(key)
@@ -88,6 +89,7 @@ const conf = reactive({
         :min-width="item.minWidth"
         :sortable="item.sortable"
         :sort-method="item.sortMethod"
+        :class-name="actionColumnProps.has(item.prop) ? 'table-action-column' : ''"
       >
         <template #default="{ row, $index }">
           <slot v-if="$slots[item.prop]" :name="item.prop" :row="row" :index="$index" />

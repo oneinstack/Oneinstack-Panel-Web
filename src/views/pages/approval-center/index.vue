@@ -288,7 +288,7 @@ onMounted(async () => {
           <span>{{ formatTime(row.createdAt) }}</span>
         </template>
         <template #actionColumn="{ row }">
-          <div class="action-wrap">
+          <div class="action-wrap table-row-actions">
             <el-button
               v-if="isPendingApproval(row)"
               link

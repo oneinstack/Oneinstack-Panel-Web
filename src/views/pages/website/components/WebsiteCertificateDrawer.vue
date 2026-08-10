@@ -293,7 +293,7 @@ onBeforeUnmount(() => {
         <el-table-column label="时间" width="170">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="105" fixed="right">
+        <el-table-column label="操作" width="105" fixed="right" class-name="table-action-column">
           <template #default="{ row }">
             <el-button link type="primary" @click="showLog(row)">日志</el-button>
             <el-button

@@ -260,7 +260,7 @@ onBeforeUnmount(() => {
           <el-table-column label="创建时间" width="180">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right">
+          <el-table-column label="操作" width="220" fixed="right" class-name="table-action-column">
             <template #default="{ row }">
               <el-button type="primary" link @click="downloadBackup(row)">下载</el-button>
               <el-button type="warning" link @click="restoreBackup(row)">恢复</el-button>
@@ -290,7 +290,7 @@ onBeforeUnmount(() => {
           <el-table-column label="创建时间" width="180">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="150" fixed="right">
+          <el-table-column label="操作" width="150" fixed="right" class-name="table-action-column">
             <template #default="{ row }">
               <el-button type="primary" link @click="showLog(row)">日志</el-button>
               <el-button

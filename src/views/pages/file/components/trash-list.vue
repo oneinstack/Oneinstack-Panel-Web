@@ -166,7 +166,7 @@ watch(
       <el-table-column prop="deletedBy" :label="t('file.trashDialog.deletedBy', 'Deleted by')" width="120">
         <template #default="{ row }">{{ row.deletedBy || '-' }}</template>
       </el-table-column>
-      <el-table-column :label="t('common.action', 'Action')" width="180" fixed="right">
+      <el-table-column :label="t('common.action', 'Action')" width="180" fixed="right" class-name="table-action-column">
         <template #default="{ row }">
           <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
           <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>

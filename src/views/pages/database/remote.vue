@@ -201,10 +201,12 @@ conf.list.getData()
             </el-tag>
           </template>
           <template #action="{ row }">
-            <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
-            <el-button type="primary" link @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
-            <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
-            <el-button type="danger" link @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
+            <div class="table-row-actions">
+              <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
+              <el-button type="primary" link @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
+              <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
+              <el-button type="danger" link @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
+            </div>
           </template>
         </custom-table>
       </div>

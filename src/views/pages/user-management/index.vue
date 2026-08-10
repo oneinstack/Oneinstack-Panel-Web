@@ -412,7 +412,7 @@ onMounted(async () => {
             <span class="time-text">{{ formatTime(row.createdAt) }}</span>
           </template>
           <template #action="{ row }">
-            <div class="action-wrap action-wrap--compact">
+            <div class="action-wrap action-wrap--compact table-row-actions">
               <el-button link type="primary" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
               <span class="action-divider"></span>
               <el-button link :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>

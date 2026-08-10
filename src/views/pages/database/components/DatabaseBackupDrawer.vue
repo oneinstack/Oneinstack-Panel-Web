@@ -284,7 +284,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
           <el-table-column :label="t('database.backup.createdAt', '创建时间')" width="180">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column :label="t('common.action', '操作')" width="190" fixed="right">
+          <el-table-column :label="t('common.action', '操作')" width="190" fixed="right" class-name="table-action-column">
             <template #default="{ row }">
               <el-button type="primary" link @click="downloadBackup(row)">{{ t('common.download', '下载') }}</el-button>
               <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">{{ t('database.backup.restore', '恢复') }}</el-button>

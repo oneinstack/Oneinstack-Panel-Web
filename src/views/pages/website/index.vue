@@ -542,10 +542,12 @@ webServer.load()
           <span v-else class="website-root-link__empty">—</span>
         </template>
         <template #action="{ row }">
-          <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
-          <el-button type="primary" link @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
-          <el-button type="primary" link @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
-          <el-button type="danger" link @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
+          <div class="table-row-actions">
+            <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
+            <el-button type="primary" link @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
+            <el-button type="primary" link @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
+            <el-button type="danger" link @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
+          </div>
         </template>
         <template #status="{ row }">
           <div class="website-status">

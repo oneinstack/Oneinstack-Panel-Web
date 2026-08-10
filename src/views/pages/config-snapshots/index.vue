@@ -574,7 +574,7 @@ onMounted(() => {
         <el-table-column :label="$t('configSnapshots.createdAt')" min-width="170">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column fixed="right" :label="$t('common.action')" width="230">
+        <el-table-column fixed="right" :label="$t('common.action')" width="230" class-name="table-action-column">
           <template #default="{ row }">
             <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
             <el-button

@@ -193,7 +193,7 @@ onUnmounted(() => {
           <template #default="{ row }">{{ formatDuration(row.duration_ms) }}</template>
         </el-table-column>
         <el-table-column prop="exit_code" :label="t('task.log.exitCode', 'Exit code')" width="80" />
-        <el-table-column :label="t('task.action', 'Action')" width="100">
+        <el-table-column :label="t('task.action', 'Action')" width="100" class-name="table-action-column">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 'running'"

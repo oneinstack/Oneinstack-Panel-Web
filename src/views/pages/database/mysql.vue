@@ -492,7 +492,7 @@ const handleMoreAction = async (command: string, row: any) => {
           </div>
         </template>
         <template #action="{ row }">
-          <div class="database-row-actions">
+          <div class="database-row-actions table-row-actions">
             <el-button
               v-if="phpMyAdminInstalled"
               type="primary"
@@ -502,16 +502,16 @@ const handleMoreAction = async (command: string, row: any) => {
             >{{ t('database.quickManage', '快捷管理') }}</el-button>
             <el-button type="primary" link @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
             <el-button type="primary" link @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
-            <el-dropdown trigger="click" @command="(command: string) => handleMoreAction(command, row)">
+            <el-dropdown trigger="click" popper-class="table-action-popper" @command="(command: string) => handleMoreAction(command, row)">
               <el-button type="primary" link>
                 {{ t('database.more', '更多') }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
-                <el-dropdown-menu>
+                <el-dropdown-menu class="table-action-menu">
                   <el-dropdown-item command="backup">{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
                   <el-dropdown-item command="backup-manager">{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
-                  <el-dropdown-item command="delete" divided>
+                  <el-dropdown-item class="table-action-menu__danger" command="delete" divided>
                     <span class="database-danger-action">{{ t('database.deleteDatabase', '删除数据库') }}</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
