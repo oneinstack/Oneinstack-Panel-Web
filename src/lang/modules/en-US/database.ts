@@ -18,6 +18,7 @@ export default {
   credentialTip: 'This account only has permission for the current database. Keep the password safe.',
   copyCredential: 'Copy account and password',
   credentialCopied: 'Account and password copied',
+  credentialCopyFailed: 'Copy failed. Check browser clipboard permission.',
   remoteDatabase: 'Remote database',
   searchDatabasePlaceholder: 'Enter database name',
   emptyListPrefix: 'Your database list is empty. You can',

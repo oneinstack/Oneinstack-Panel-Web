@@ -221,8 +221,38 @@ conf.list.params.type = routeName
 
 const copyCredential = async () => {
   const text = `${t('database.database', 'Database')}: ${conf.credential.database}\n${t('common.username', 'Username')}: ${conf.credential.username}\n${t('common.password', 'Password')}: ${conf.credential.password}`
-  await navigator.clipboard.writeText(text)
-  ElMessage.success(t('database.credentialCopied', 'Account and password copied'))
+  try {
+    let copied = false
+    if (window.isSecureContext && navigator.clipboard) {
+      try {
+        await navigator.clipboard.writeText(text)
+        copied = true
+      } catch {
+        // Continue with the compatibility copy below.
+      }
+    }
+
+    if (!copied) {
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      textarea.style.pointerEvents = 'none'
+      document.body.appendChild(textarea)
+      try {
+        textarea.focus()
+        textarea.select()
+        copied = document.execCommand('copy')
+      } finally {
+        textarea.remove()
+      }
+    }
+
+    if (!copied) throw new Error(t('database.credentialCopyFailed', 'Copy failed. Check browser clipboard permission.'))
+    ElMessage.success(t('database.credentialCopied', 'Account and password copied'))
+  } catch (error: any) {
+    ElMessage.error(error?.message || t('database.credentialCopyFailed', 'Copy failed. Check browser clipboard permission.'))
+  }
 }
 </script>
 

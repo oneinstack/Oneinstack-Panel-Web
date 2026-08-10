@@ -18,6 +18,7 @@ export default {
   credentialTip: '该账号只拥有当前数据库权限，请妥善保存密码。',
   copyCredential: '复制账号密码',
   credentialCopied: '账号密码已复制',
+  credentialCopyFailed: '复制失败，请检查浏览器剪贴板权限',
   remoteDatabase: '远程数据库',
   searchDatabasePlaceholder: '请输入数据库名称',
   emptyListPrefix: '您的数据库列表为空，您可以',

@@ -92,6 +92,21 @@ const close = () => {
 
 const createBackup = async () => {
   if (!props.library || state.submitting) return
+  try {
+    await ElMessageBox.confirm(
+      t('database.backup.createConfirmMessage', 'Back up database "{name}" now? The backup task will run in the background after it is created.', { name: props.library.name }),
+      t('database.backup.createConfirmTitle', 'Confirm backup'),
+      {
+        confirmButtonText: t('database.backup.confirmCreate', 'Confirm backup'),
+        cancelButtonText: t('common.cancel', 'Cancel'),
+        type: 'warning'
+      }
+    )
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+
   state.submitting = true
   try {
     await Api.createDatabaseBackup({ libraryId: props.library.id })
