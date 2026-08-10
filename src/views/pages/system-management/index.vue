@@ -96,6 +96,15 @@ const getErrorMessage = (error: any, fallback: string) => {
   return data?.message || data?.error?.message || error?.message || fallback
 }
 
+const localizedSshError = (message?: string | null) => {
+  const value = String(message || '')
+  if (!value) return ''
+  if (value.includes('无法读取 sshd 生效配置')) {
+    return t('systemManagement.sshReadEffectiveConfigFailed', '无法读取 sshd 生效配置')
+  }
+  return value
+}
+
 const isNotFoundError = (error: any) => {
   const data = error?.response?.data || error?.data || error?.xhr?.data || {}
   const code = String(data?.code || data?.error?.code || error?.code || '')
@@ -393,7 +402,7 @@ onMounted(() => {
             show-icon
           >
             <template #title>
-              {{ sshError || sshConfig?.error || $t('systemManagement.sshUnsupportedProbe') }}
+              {{ localizedSshError(sshError || sshConfig?.error) || $t('systemManagement.sshUnsupportedProbe') }}
             </template>
           </el-alert>
 
@@ -606,7 +615,7 @@ onMounted(() => {
 
           <div class="detail-block" v-if="sshConfig?.error">
             <label>{{ $t('systemManagement.diagnosticInfo') }}</label>
-            <pre>{{ sshConfig.error }}</pre>
+            <pre>{{ localizedSshError(sshConfig.error) }}</pre>
           </div>
         </div>
       </custom-drawer>

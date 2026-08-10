@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { ChildProps } from '../index.vue'
+import i18n from '@/lang'
 
 withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 </script>
 
 <template>
   <div>
-    <div class="title">可升级</div>
+    <div class="title">{{ t('software.tabs.upgradeable', '可升级') }}</div>
     <div class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
@@ -21,31 +27,31 @@ withDefaults(defineProps<ChildProps>(), {
                 <div class="flex justify-between" style="gap: 16px">
                   <div>
                     <span class="menuTitle">{{ item.name }}</span>
-                    <span class="remark">（已启动）</span>
+                    <span class="remark">{{ t('software.installedPage.started', '（已启动）') }}</span>
                   </div>
                   <div class="flex" style="gap: 16px">
-                    <div class="btn primary">安装目录</div>
-                    <div class="btn primary">日志</div>
+                    <div class="btn primary">{{ t('software.installedPage.installDir', '安装目录') }}</div>
+                    <div class="btn primary">{{ t('software.installedPage.logs', '日志') }}</div>
                   </div>
                 </div>
                 <div class="tip">
-                  <div class="btn">版本：1.21.4</div>
-                  <div class="btn">服务端口：80</div>
-                  <div class="btn">服务端口：443</div>
+                  <div class="btn">{{ t('software.installedPage.version', '版本：{version}', { version: '1.21.4' }) }}</div>
+                  <div class="btn">{{ t('software.installedPage.servicePort', '服务端口：{port}', { port: 80 }) }}</div>
+                  <div class="btn">{{ t('software.installedPage.servicePort', '服务端口：{port}', { port: 443 }) }}</div>
                 </div>
-                <span style="color: var(--font-color-gray); margin-top: 10px">已安装：194天1小时</span>
+                <span style="color: var(--font-color-gray); margin-top: 10px">{{ t('software.installedPage.installedDuration', '已安装：{days}天{hours}小时', { days: 194, hours: 1 }) }}</span>
               </div>
             </div>
             <div class="xian" />
             <div class="below">
-              <div class="btn round">升级</div>
+              <div class="btn round">{{ t('software.upgrade', '升级') }}</div>
             </div>
           </div>
         </div>
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>暂无需要升级的应用</span>
+        <span>{{ t('software.noUpgradeableApps', '暂无需要升级的应用') }}</span>
       </div>
     </div>
   </div>

@@ -41,6 +41,45 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
+const softwareTagKeys: Record<string, string> = {
+  运行环境: 'software.componentTags.runtime',
+  数据库: 'software.componentTags.database',
+  容器: 'software.componentTags.container',
+  建站: 'software.componentTags.website',
+  Web服务器: 'software.componentTags.webServer',
+  实用工具: 'software.componentTags.utility'
+}
+
+const softwareDescriptionKeys: Record<string, string> = {
+  php: 'software.componentDescriptions.php',
+  db: 'software.componentDescriptions.mysql',
+  mysql: 'software.componentDescriptions.mysql',
+  docker: 'software.componentDescriptions.docker',
+  'docker-engine': 'software.componentDescriptions.docker'
+}
+
+const softwareDescriptionTextKeys: Record<string, string> = {
+  'OneinStack PHP-FPM 运行环境': 'software.componentDescriptions.php',
+  'MySQL 数据库，默认端口 3306，root 密码由 Panel 随机生成': 'software.componentDescriptions.mysql',
+  '容器运行环境与 Docker 服务管理': 'software.componentDescriptions.docker'
+}
+
+const localizedSoftwareTags = (tags?: string) => {
+  if (!tags) return ''
+  return String(tags)
+    .split(/[,，]/)
+    .map((tag) => tag.trim())
+    .filter(Boolean)
+    .map((tag) => t(softwareTagKeys[tag] || '', tag))
+    .join(', ')
+}
+
+const localizedSoftwareDescription = (item: any) => {
+  const raw = String(item?.describe || '')
+  const key = softwareDescriptionKeys[String(item?.key || '').toLowerCase()] || softwareDescriptionTextKeys[raw]
+  return key ? t(key, raw) : raw
+}
+
 const formRef = ref<FormInstance | null>(null)
 const submitting = ref(false)
 const serviceLoading = ref(false)
@@ -460,7 +499,7 @@ onMounted(() => {
               <div class="content">
                 <div>
                   <span class="menuTitle">{{ item.name }}</span>
-                  <span v-if="item.tags" class="remark">（{{ item.tags }}）</span>
+                  <span v-if="item.tags" class="remark">（{{ localizedSoftwareTags(item.tags) }}）</span>
                   <span
                     v-if="activeTask(item)"
                     class="status installing"
@@ -480,7 +519,7 @@ onMounted(() => {
                     }}
                   </span>
                 </div>
-                <div class="tip">{{ item.describe }}</div>
+                <div class="tip">{{ localizedSoftwareDescription(item) }}</div>
               </div>
             </div>
 

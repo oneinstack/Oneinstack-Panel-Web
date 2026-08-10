@@ -65,6 +65,7 @@ export default {
   processListFailed: 'Failed to load process list',
   diskInfoFailed: 'Failed to load disk information',
   sshConfigFailed: 'Failed to load SSH config',
+  sshReadEffectiveConfigFailed: 'Unable to read effective sshd configuration',
   processDetailFailed: 'Failed to read process details',
   pid: 'PID',
   parentProcess: 'Parent process',

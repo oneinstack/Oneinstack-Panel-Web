@@ -9,6 +9,7 @@ export default {
   createFolder: '新建文件夹',
   file: '文件',
   folder: '文件夹',
+  managedRootPath: '管理根目录 {path}',
   editPermissions: '编辑权限',
   changeUserGroup: '修改用户和用户组',
   rename: '重命名',
@@ -22,6 +23,8 @@ export default {
   urlDownload: 'URL 链接下载',
   rootDir: '根目录',
   rootPath: '管理根目录',
+  goParent: '返回上一级',
+  refreshCurrentDirectory: '刷新当前目录',
   writable: '可写',
   owner: '所有者',
   group: '用户组',
@@ -149,6 +152,20 @@ export default {
   path: '路径',
   directory: '目录',
   symlink: '符号链接',
+  emptyDirectory: '当前目录没有文件',
+  typeLabels: {
+    directorySymlink: '目录链接',
+    fileSymlink: '文件链接',
+    image: '图片',
+    archive: '压缩包'
+  },
+  summary: {
+    total: '共 {total} 项',
+    directories: '{count} 个文件夹',
+    files: '{count} 个文件',
+    hidden: '{count} 个隐藏项',
+    filtered: '已从 {count} 项中筛选'
+  },
   mimeType: 'MIME 类型',
   createAndCopyShare: '创建并复制外链',
   copyToCurrentDir: '复制到当前目录',

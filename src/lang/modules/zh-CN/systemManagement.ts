@@ -65,6 +65,7 @@ export default {
   processListFailed: '获取进程列表失败',
   diskInfoFailed: '获取磁盘信息失败',
   sshConfigFailed: '获取 SSH 配置失败',
+  sshReadEffectiveConfigFailed: '无法读取 sshd 生效配置',
   processDetailFailed: '读取进程详情失败',
   pid: 'PID',
   parentProcess: '父进程',

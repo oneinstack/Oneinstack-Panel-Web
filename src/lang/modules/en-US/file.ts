@@ -9,6 +9,7 @@ export default {
   createFolder: 'New folder',
   file: 'File',
   folder: 'Folder',
+  managedRootPath: 'Managed root {path}',
   editPermissions: 'Edit permissions',
   changeUserGroup: 'Change user and group',
   rename: 'Rename',
@@ -22,6 +23,8 @@ export default {
   urlDownload: 'URL download',
   rootDir: 'Root directory',
   rootPath: 'Managed root',
+  goParent: 'Go to parent directory',
+  refreshCurrentDirectory: 'Refresh current directory',
   writable: 'Writable',
   owner: 'Owner',
   group: 'Group',
@@ -149,6 +152,20 @@ export default {
   path: 'Path',
   directory: 'Directory',
   symlink: 'Symbolic link',
+  emptyDirectory: 'The current directory is empty',
+  typeLabels: {
+    directorySymlink: 'Directory symlink',
+    fileSymlink: 'File symlink',
+    image: 'Image',
+    archive: 'Archive'
+  },
+  summary: {
+    total: '{total} items',
+    directories: '{count} folders',
+    files: '{count} files',
+    hidden: '{count} hidden items',
+    filtered: 'Filtered from {count} items'
+  },
   mimeType: 'MIME type',
   createAndCopyShare: 'Create and copy share link',
   copyToCurrentDir: 'Copy to current directory',

@@ -45,12 +45,26 @@ export default {
   install: '安装',
   disabled: '已停用',
   noApps: '暂无应用',
+  noUpgradeableApps: '暂无需要升级的应用',
   versionSelect: '版本选择',
   version: '版本',
   selectVersion: '请选择版本',
   installPaused: 'Center 当前已暂停该软件的安装',
   inputField: '请输入{field}',
   installTitle: '安装 {name} {version}',
+  componentTags: {
+    runtime: '运行环境',
+    database: '数据库',
+    container: '容器',
+    website: '建站',
+    webServer: 'Web服务器',
+    utility: '实用工具'
+  },
+  componentDescriptions: {
+    php: 'OneinStack PHP-FPM 运行环境',
+    mysql: 'MySQL 数据库，默认端口 3306，root 密码由 Panel 随机生成',
+    docker: '容器运行环境与 Docker 服务管理'
+  },
   uninstallTaskCreated: '卸载任务已创建，可在后台继续运行',
   serviceActionTimeout: '等待服务操作完成超时，请在右上角任务中心查看结果',
   serviceActionTaskCreated: '{action}任务已创建，可在后台继续运行',

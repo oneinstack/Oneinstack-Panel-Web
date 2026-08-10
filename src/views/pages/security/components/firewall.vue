@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 
 import { Api } from '@/api/Api'
 import SearchInput from '@/components/search-input.vue'
+import i18n from '@/lang'
 import softwareTaskStore from '@/sstore/softwareTask'
 import System from '@/utils/System'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
@@ -94,19 +95,23 @@ const defaultStatus = (): FirewallStatus => ({
   counts: emptyCounts()
 })
 
-const tabs: Array<{ key: RuleTab; label: string; countKey: keyof FirewallCounts }> = [
-  { key: 'port', label: '端口规则', countKey: 'portRules' },
-  { key: 'ip', label: 'IP 规则', countKey: 'ipRules' },
-  { key: 'forward', label: '端口转发', countKey: 'portForwards' },
-  { key: 'region', label: '地区规则', countKey: 'regionRules' },
-  { key: 'auto_block', label: '恶意 IP 自动封禁', countKey: 'autoBlockRules' }
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
+const tabs: Array<{ key: RuleTab; labelKey: string; fallback: string; countKey: keyof FirewallCounts }> = [
+  { key: 'port', labelKey: 'security.ruleTabs.port', fallback: '端口规则', countKey: 'portRules' },
+  { key: 'ip', labelKey: 'security.ruleTabs.ip', fallback: 'IP 规则', countKey: 'ipRules' },
+  { key: 'forward', labelKey: 'security.ruleTabs.forward', fallback: '端口转发', countKey: 'portForwards' },
+  { key: 'region', labelKey: 'security.ruleTabs.region', fallback: '地区规则', countKey: 'regionRules' },
+  { key: 'auto_block', labelKey: 'security.ruleTabs.autoBlock', fallback: '恶意 IP 自动封禁', countKey: 'autoBlockRules' }
 ]
 
 const backendNames: Record<string, string> = {
   ufw: 'UFW',
   firewalld: 'firewalld',
-  iptables: 'iptables',
-  none: '未检测到'
+  iptables: 'iptables'
 }
 
 const status = ref<FirewallStatus>(defaultStatus())
@@ -130,10 +135,10 @@ const refreshedTerminalTasks = new Set<string>()
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('firewalld'))
 const installButtonText = computed(() =>
   activeInstallTask.value
-    ? '查看任务进度'
+    ? t('security.viewTaskProgress', '查看任务进度')
     : status.value.repairRequired
-      ? '修复 firewalld'
-      : '安装 firewalld'
+      ? t('security.repairFirewalld', '修复 firewalld')
+      : t('security.installFirewalld', '安装 firewalld')
 )
 
 const portDialogVisible = ref(false)
@@ -181,6 +186,38 @@ const isRuleTab = computed(() => activeTab.value !== 'forward')
 const canManageRules = computed(() =>
   status.value.install && status.value.enabled && status.value.persistent
 )
+
+const addRuleButtonText = computed(() => {
+  if (activeTab.value === 'ip') return t('security.addIpRule', '添加 IP 规则')
+  if (activeTab.value === 'region') return t('security.addRegionRule', '添加地区规则')
+  if (activeTab.value === 'forward') return t('security.addPortForward', '添加端口转发')
+  return t('security.addPortRule', '添加端口规则')
+})
+
+const searchPlaceholder = computed(() =>
+  activeTab.value === 'forward'
+    ? t('security.searchForwardPlaceholder', '请输入目标 IP / 备注')
+    : t('security.searchRulePlaceholder', '请输入 IP / 备注')
+)
+
+const ipDialogTitle = computed(() => {
+  const action = ipDialogIsAdd.value ? t('common.add', '添加') : t('common.edit', '编辑')
+  const target = activeTab.value === 'region' ? t('security.region', '地区') : 'IP'
+  return `${action}${target}${t('security.rule', '规则')}`
+})
+
+const forwardDialogTitle = computed(() =>
+  forwardDialogIsAdd.value ? t('security.addPortForward', '添加端口转发') : t('security.editPortForward', '编辑端口转发')
+)
+
+const directionLabel = (direction: FirewallRule['direction']) =>
+  direction === 'in' ? t('security.inbound', '入站') : t('security.outbound', '出站')
+
+const strategyLabel = (strategy: FirewallRule['strategy']) =>
+  strategy === 'allow' ? t('security.allow', '放行') : t('security.reject', '拒绝')
+
+const backendLabel = (backend: string) =>
+  backend === 'none' ? t('security.backendNotDetected', '未检测到') : (backendNames[backend] || backend)
 
 const getFirewallInfo = async () => {
   statusLoading.value = true
@@ -241,20 +278,20 @@ const handleFirewallChange = async (value: string | number | boolean) => {
     let confirm = ''
     if (!enabled) {
       const result = await ElMessageBox.prompt(
-        '关闭防火墙会扩大服务器暴露面。请输入 DISABLE FIREWALL 继续。',
-        '关闭防火墙',
+        t('security.disableFirewallPrompt', '关闭防火墙会扩大服务器暴露面。请输入 DISABLE FIREWALL 继续。'),
+        t('security.disableFirewallTitle', '关闭防火墙'),
         {
           type: 'warning',
           inputPlaceholder: 'DISABLE FIREWALL',
-          inputValidator: (input) => input === 'DISABLE FIREWALL' || '确认文本不正确',
-          confirmButtonText: '确认关闭',
-          cancelButtonText: '取消'
+          inputValidator: (input) => input === 'DISABLE FIREWALL' || t('security.confirmTextIncorrect', '确认文本不正确'),
+          confirmButtonText: t('security.confirmDisable', '确认关闭'),
+          cancelButtonText: t('common.cancel', '取消')
         }
       )
       confirm = result.value
     }
     await submitOperation('firewall.toggle', { enabled, confirm })
-    ElMessage.success(enabled ? '防火墙已启用' : '防火墙已关闭')
+    ElMessage.success(enabled ? t('security.firewallEnabled', '防火墙已启用') : t('security.firewallDisabled', '防火墙已关闭'))
   } catch (error) {
     status.value.enabled = previous
     if (!isOperationCancelled(error)) {
@@ -272,7 +309,7 @@ const handlePingChange = async (value: string | number | boolean) => {
   pingChanging.value = true
   try {
     await submitOperation('firewall.rule_change', { action: 'set_ping', blocked })
-    ElMessage.success(blocked ? '已禁止外部 Ping' : '已允许外部 Ping')
+    ElMessage.success(blocked ? t('security.pingBlocked', '已禁止外部 Ping') : t('security.pingAllowed', '已允许外部 Ping'))
   } catch (error) {
     status.value.pingBlocked = previous
     if (!isOperationCancelled(error)) {
@@ -288,7 +325,7 @@ const handleCleanup = async () => {
   cleanupLoading.value = true
   try {
     const { data } = await Api.cleanupFirewallRules()
-    ElMessage.success(`清理完成，共移除 ${data?.cleaned || 0} 条过期规则`)
+    ElMessage.success(t('security.cleanupComplete', '清理完成，共移除 {count} 条过期规则', { count: data?.cleaned || 0 }))
     await refreshAll()
   } finally {
     cleanupLoading.value = false
@@ -304,10 +341,10 @@ const handleInstallFirewall = async () => {
   try {
     await ElMessageBox.confirm(
       status.value.repairRequired
-        ? '系统将通过受校验脚本修复 firewalld 配置，完成后仍保持关闭。'
-        : '系统将安装默认 firewalld，完成后保持关闭，首次启用时自动保护面板端口。',
-      status.value.repairRequired ? '修复 firewalld' : '安装默认防火墙',
-      { type: 'info', confirmButtonText: '开始', cancelButtonText: '取消' }
+        ? t('security.repairFirewalldConfirm', '系统将通过受校验脚本修复 firewalld 配置，完成后仍保持关闭。')
+        : t('security.installFirewalldConfirm', '系统将安装默认 firewalld，完成后保持关闭，首次启用时自动保护面板端口。'),
+      status.value.repairRequired ? t('security.repairFirewalld', '修复 firewalld') : t('security.installDefaultFirewall', '安装默认防火墙'),
+      { type: 'info', confirmButtonText: t('common.start', '开始'), cancelButtonText: t('common.cancel', '取消') }
     )
   } catch {
     return
@@ -323,7 +360,7 @@ const handleInstallFirewall = async () => {
     installTaskId.value = data.taskId
     installTaskVisible.value = true
     ElMessage.success(
-      status.value.repairRequired ? 'firewalld 修复任务已创建' : 'firewalld 安装任务已创建'
+      status.value.repairRequired ? t('security.repairTaskCreated', 'firewalld 修复任务已创建') : t('security.installTaskCreated', 'firewalld 安装任务已创建')
     )
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
@@ -388,11 +425,11 @@ const editRule = (row: FirewallRule) => {
 const saveIPRule = async () => {
   const ips = ipForm.ips.split(/[\n,]+/).map((item) => item.trim()).filter(Boolean)
   if (!ips.length) {
-    ElMessage.warning('请输入至少一个 IPv4 地址或 CIDR 网段')
+    ElMessage.warning(t('security.ipRequired', '请输入至少一个 IPv4 地址或 CIDR 网段'))
     return
   }
   if (activeTab.value === 'region' && !ipForm.location.trim()) {
-    ElMessage.warning('地区规则必须填写地区名称')
+    ElMessage.warning(t('security.regionRequired', '地区规则必须填写地区名称'))
     return
   }
   ipSubmitting.value = true
@@ -412,7 +449,7 @@ const saveIPRule = async () => {
     }
     if (ipDialogIsAdd.value) await Api.addFirewallRule(payload)
     else await Api.updateFirewallRule(payload)
-    ElMessage.success(ipDialogIsAdd.value ? '规则已添加' : '规则已更新')
+    ElMessage.success(ipDialogIsAdd.value ? t('security.ruleAdded', '规则已添加') : t('security.ruleUpdated', '规则已更新'))
     ipDialogVisible.value = false
     await refreshAll()
   } finally {
@@ -440,7 +477,7 @@ const saveForward = async () => {
     forwardForm.destinationPort < 1 || forwardForm.destinationPort > 65535 ||
     !forwardForm.destinationIp.trim()
   ) {
-    ElMessage.warning('请填写有效的源端口、目标 IPv4 和目标端口')
+    ElMessage.warning(t('security.forwardRequired', '请填写有效的源端口、目标 IPv4 和目标端口'))
     return
   }
   forwardSubmitting.value = true
@@ -456,7 +493,7 @@ const saveForward = async () => {
     }
     if (forwardDialogIsAdd.value) await Api.addFirewallForward(payload)
     else await Api.updateFirewallForward(payload)
-    ElMessage.success(forwardDialogIsAdd.value ? '端口转发已添加' : '端口转发已更新')
+    ElMessage.success(forwardDialogIsAdd.value ? t('security.forwardAdded', '端口转发已添加') : t('security.forwardUpdated', '端口转发已更新'))
     forwardDialogVisible.value = false
     await refreshAll()
   } finally {
@@ -467,7 +504,7 @@ const saveForward = async () => {
 const setRuleState = async (row: FirewallRule, enabled: boolean) => {
   try {
     await Api.setFirewallRuleState({ id: row.id, enabled })
-    ElMessage.success(enabled ? '规则已启用' : '规则已停用')
+    ElMessage.success(enabled ? t('security.ruleEnabled', '规则已启用') : t('security.ruleDisabled', '规则已停用'))
   } finally {
     await refreshAll()
   }
@@ -476,7 +513,7 @@ const setRuleState = async (row: FirewallRule, enabled: boolean) => {
 const setForwardState = async (row: PortForward, enabled: boolean) => {
   try {
     await Api.setFirewallForwardState({ id: row.id, enabled })
-    ElMessage.success(enabled ? '端口转发已启用' : '端口转发已停用')
+    ElMessage.success(enabled ? t('security.forwardEnabled', '端口转发已启用') : t('security.forwardDisabled', '端口转发已停用'))
   } finally {
     await refreshAll()
   }
@@ -484,12 +521,12 @@ const setForwardState = async (row: PortForward, enabled: boolean) => {
 
 const deleteRule = async (row: FirewallRule) => {
   if (row.protected) {
-    ElMessage.warning('系统保护规则不能删除')
+    ElMessage.warning(t('security.protectedRuleDeleteDenied', '系统保护规则不能删除'))
     return
   }
   try {
     await submitOperation('firewall.rule_change', { action: 'delete', id: row.id })
-    ElMessage.success('规则已删除')
+    ElMessage.success(t('security.ruleDeleted', '规则已删除'))
     await refreshAll()
   } catch (error) {
     if (!isOperationCancelled(error)) {
@@ -500,11 +537,11 @@ const deleteRule = async (row: FirewallRule) => {
 
 const deleteForward = async (row: PortForward) => {
   try {
-    await ElMessageBox.confirm('确定删除这条端口转发吗？', '删除端口转发', {
-      type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消'
+    await ElMessageBox.confirm(t('security.deleteForwardConfirm', '确定删除这条端口转发吗？'), t('security.deletePortForward', '删除端口转发'), {
+      type: 'warning', confirmButtonText: t('common.delete', '删除'), cancelButtonText: t('common.cancel', '取消')
     })
     await Api.deleteFirewallForward({ id: row.id })
-    ElMessage.success('端口转发已删除')
+    ElMessage.success(t('security.forwardDeleted', '端口转发已删除'))
     await refreshAll()
   } catch {
     // 用户取消时保持页面不变。
@@ -513,15 +550,15 @@ const deleteForward = async (row: PortForward) => {
 
 const handleBatch = async () => {
   if (!batchAction.value || !selectedRows.value.length) {
-    ElMessage.warning('请选择规则和批量操作')
+    ElMessage.warning(t('security.batchRequired', '请选择规则和批量操作'))
     return
   }
   if (batchAction.value === 'delete') {
     try {
       await ElMessageBox.confirm(
-        `确定删除选中的 ${selectedRows.value.length} 条规则吗？`,
-        '批量删除',
-        { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+        t('security.batchDeleteConfirm', '确定删除选中的 {count} 条规则吗？', { count: selectedRows.value.length }),
+        t('security.batchDelete', '批量删除'),
+        { type: 'warning', confirmButtonText: t('common.delete', '删除'), cancelButtonText: t('common.cancel', '取消') }
       )
     } catch {
       return
@@ -531,7 +568,7 @@ const handleBatch = async () => {
     ids: selectedRows.value.map((row) => row.id),
     action: batchAction.value
   })
-  ElMessage.success(`批量操作完成，共处理 ${data?.completed || 0} 条规则`)
+  ElMessage.success(t('security.batchComplete', '批量操作完成，共处理 {count} 条规则', { count: data?.completed || 0 }))
   batchAction.value = ''
   await refreshAll()
 }
@@ -551,7 +588,7 @@ const exportRules = async () => {
   anchor.download = `oneinstack-firewall-${activeTab.value}.json`
   anchor.click()
   URL.revokeObjectURL(url)
-  ElMessage.success('规则已导出')
+  ElMessage.success(t('security.ruleExported', '规则已导出'))
 }
 
 const chooseImport = () => importInput.value?.click()
@@ -566,10 +603,10 @@ const importRules = async (event: Event) => {
     const rules = Array.isArray(parsed) ? parsed : parsed?.rules
     if (!Array.isArray(rules)) throw new Error('rules is not an array')
     const { data } = await Api.importFirewallRules({ rules })
-    ElMessage.success(`成功导入 ${data?.imported || 0} 条规则`)
+    ElMessage.success(t('security.ruleImported', '成功导入 {count} 条规则', { count: data?.imported || 0 }))
     await refreshAll()
   } catch {
-    ElMessage.error('导入失败，请检查文件格式和规则内容')
+    ElMessage.error(t('security.importFailed', '导入失败，请检查文件格式和规则内容'))
   }
 }
 
@@ -578,7 +615,7 @@ const loadAutoConfig = async () => {
     const { data } = await Api.getFirewallAutoBlock()
     Object.assign(autoConfig, data?.config || {})
   } catch {
-    // 保留安全的默认关闭状态。
+    // Keep the safe default disabled state.
   }
 }
 
@@ -592,7 +629,7 @@ const saveAutoConfig = async () => {
       banMinutes: Number(autoConfig.banMinutes)
     })
     Object.assign(autoConfig, data?.config || {})
-    ElMessage.success(autoConfig.enabled ? '自动封禁已启用' : '自动封禁已关闭')
+    ElMessage.success(autoConfig.enabled ? t('security.autoBlockEnabled', '自动封禁已启用') : t('security.autoBlockDisabled', '自动封禁已关闭'))
   } finally {
     autoSaving.value = false
   }
@@ -602,7 +639,7 @@ const runAutoBlock = async () => {
   autoRunning.value = true
   try {
     const { data } = await Api.runFirewallAutoBlock()
-    ElMessage.success(`检测完成，本次新增封禁 ${data?.blocked || 0} 个 IP`)
+    ElMessage.success(t('security.autoBlockRunComplete', '检测完成，本次新增封禁 {count} 个 IP', { count: data?.blocked || 0 }))
     await refreshAll()
   } finally {
     autoRunning.value = false
@@ -610,9 +647,9 @@ const runAutoBlock = async () => {
 }
 
 const formatTime = (value?: string | null) => {
-  if (!value) return '永久'
+  if (!value) return t('common.permanent', '永久')
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false })
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(i18n.locale || 'zh-CN', { hour12: false })
 }
 
 const handleCurrentChange = (page: number) => {
@@ -655,7 +692,7 @@ onMounted(() => {
     <section class="control-card" v-loading="statusLoading">
       <div class="switch-row">
         <div class="switch-control">
-          <span class="control-label">防火墙开关</span>
+          <span class="control-label">{{ t('security.firewallSwitch', '防火墙开关') }}</span>
           <el-switch
             v-model="status.enabled"
             :loading="firewallChanging"
@@ -665,7 +702,7 @@ onMounted(() => {
         </div>
         <span class="divider" />
         <div class="switch-control">
-          <span class="control-label">禁 Ping</span>
+          <span class="control-label">{{ t('security.blockPing', '禁 Ping') }}</span>
           <el-switch
             v-model="status.pingBlocked"
             :loading="pingChanging"
@@ -674,13 +711,15 @@ onMounted(() => {
           />
         </div>
         <span class="divider" />
-        <el-button :loading="cleanupLoading" @click="handleCleanup">清理缓存</el-button>
+        <el-button :loading="cleanupLoading" @click="handleCleanup">{{ t('security.cleanupCache', '清理缓存') }}</el-button>
         <div class="status-summary">
           <el-tag :type="status.install ? 'success' : 'danger'">
-            {{ backendNames[status.backend] || status.backend }}
+            {{ backendLabel(status.backend) }}
           </el-tag>
           <el-tag :type="status.panelPortProtected ? 'success' : 'warning'">
-            面板端口 {{ status.panelPort }} {{ status.panelPortProtected ? '已保护' : '待保护' }}
+            {{ status.panelPortProtected
+              ? t('security.panelPortProtected', '面板端口 {port} 已保护', { port: status.panelPort })
+              : t('security.panelPortUnprotected', '面板端口 {port} 待保护', { port: status.panelPort }) }}
           </el-tag>
         </div>
       </div>
@@ -689,12 +728,12 @@ onMounted(() => {
     <section v-if="!status.install || status.repairRequired" class="install-card">
       <div class="install-mark">FW</div>
       <div class="install-copy">
-        <strong>{{ status.repairRequired ? 'firewalld 需要修复' : '未检测到受支持的防火墙' }}</strong>
+        <strong>{{ status.repairRequired ? t('security.firewalldRepairRequired', 'firewalld 需要修复') : t('security.unsupportedFirewall', '未检测到受支持的防火墙') }}</strong>
         <span>
           {{
             status.repairRequired
-              ? '检测到 firewalld 配置异常，修复完成后仍保持关闭。'
-              : 'OneinStack Panel 默认安装 firewalld，安装完成后由管理员手动启用。'
+              ? t('security.firewalldRepairDescriptionShort', '检测到 firewalld 配置异常，修复完成后仍保持关闭。')
+              : t('security.firewalldInstallDescriptionShort', 'OneinStack Panel 默认安装 firewalld，安装完成后由管理员手动启用。')
           }}
         </span>
       </div>
@@ -721,7 +760,7 @@ onMounted(() => {
         :class="{ active: activeTab === tab.key }"
         @click="switchTab(tab.key)"
       >
-        <span>{{ tab.label }}</span>
+        <span>{{ t(tab.labelKey, tab.fallback) }}</span>
         <strong>{{ status.counts[tab.countKey] }}</strong>
       </button>
     </nav>
@@ -729,32 +768,32 @@ onMounted(() => {
     <section v-if="activeTab === 'auto_block'" class="auto-card">
       <div class="auto-heading">
         <div>
-          <h3>SSH 恶意 IP 自动封禁</h3>
-          <p>统计 SSH 失败登录次数，达到阈值后生成带过期时间的防火墙拒绝规则。</p>
+          <h3>{{ t('security.autoBlockTitle', 'SSH 恶意 IP 自动封禁') }}</h3>
+          <p>{{ t('security.autoBlockDesc', '统计 SSH 失败登录次数，达到阈值后生成带过期时间的防火墙拒绝规则。') }}</p>
         </div>
-        <el-switch v-model="autoConfig.enabled" active-text="启用" inactive-text="关闭" />
+        <el-switch v-model="autoConfig.enabled" :active-text="t('common.enable', '启用')" :inactive-text="t('common.disable', '关闭')" />
       </div>
       <div class="auto-fields">
         <label>
-          <span>触发次数</span>
+          <span>{{ t('security.triggerCount', '触发次数') }}</span>
           <el-input-number v-model="autoConfig.threshold" :min="3" :max="100" />
         </label>
         <label>
-          <span>统计周期（分钟）</span>
+          <span>{{ t('security.windowMinutes', '统计周期（分钟）') }}</span>
           <el-input-number v-model="autoConfig.windowMinutes" :min="1" :max="1440" />
         </label>
         <label>
-          <span>封禁时长（分钟）</span>
+          <span>{{ t('security.banMinutes', '封禁时长（分钟）') }}</span>
           <el-input-number v-model="autoConfig.banMinutes" :min="5" :max="525600" />
         </label>
         <div class="auto-actions">
           <el-button :loading="autoRunning" :disabled="!autoConfig.enabled" @click="runAutoBlock">
-            立即检测
+            {{ t('security.runNow', '立即检测') }}
           </el-button>
-          <el-button type="primary" :loading="autoSaving" @click="saveAutoConfig">保存配置</el-button>
+          <el-button type="primary" :loading="autoSaving" @click="saveAutoConfig">{{ t('common.saveConfig', '保存配置') }}</el-button>
         </div>
       </div>
-      <p class="last-run">上次检测：{{ formatTime(autoConfig.lastRunAt) }}</p>
+      <p class="last-run">{{ t('security.lastRun', '上次检测：{time}', { time: formatTime(autoConfig.lastRunAt) }) }}</p>
     </section>
 
     <section class="rules-card">
@@ -766,17 +805,17 @@ onMounted(() => {
             :disabled="!canManageRules || (activeTab === 'forward' && status.backend !== 'firewalld')"
             @click="openAddDialog"
           >
-            {{ activeTab === 'ip' ? '添加 IP 规则' : activeTab === 'region' ? '添加地区规则' : activeTab === 'forward' ? '添加端口转发' : '添加端口规则' }}
+            {{ addRuleButtonText }}
           </el-button>
           <template v-if="isRuleTab">
-            <el-button :disabled="!canManageRules" @click="chooseImport">导入规则</el-button>
-            <el-button @click="exportRules">导出规则</el-button>
+            <el-button :disabled="!canManageRules" @click="chooseImport">{{ t('security.importRules', '导入规则') }}</el-button>
+            <el-button @click="exportRules">{{ t('security.exportRules', '导出规则') }}</el-button>
           </template>
         </div>
         <search-input
           v-model="searchValue"
           class="rule-search"
-          :placeholder="activeTab === 'forward' ? '请输入目标 IP / 备注' : '请输入 IP / 备注'"
+          :placeholder="searchPlaceholder"
           @search="getData"
         />
       </header>
@@ -786,41 +825,41 @@ onMounted(() => {
         v-loading="tableLoading"
         :data="ruleRows"
         row-key="id"
-        empty-text="暂无规则"
+        :empty-text="t('security.noRules', '暂无规则')"
         @selection-change="selectedRows = $event"
       >
         <el-table-column type="selection" width="48" :selectable="(row: FirewallRule) => !row.protected" />
 
         <template v-if="activeTab === 'port'">
-          <el-table-column label="方向" width="82">
-            <template #default="{ row }">{{ row.direction === 'in' ? '入站' : '出站' }}</template>
+          <el-table-column :label="t('security.direction', '方向')" width="82">
+            <template #default="{ row }">{{ directionLabel(row.direction) }}</template>
           </el-table-column>
-          <el-table-column label="协议" width="82">
+          <el-table-column :label="t('security.protocol', '协议')" width="82">
             <template #default="{ row }">{{ row.protocol.toUpperCase() }}</template>
           </el-table-column>
-          <el-table-column label="端口" prop="ports" min-width="120">
-            <template #default="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || '全部') }}</template>
+          <el-table-column :label="t('security.ports', '端口')" prop="ports" min-width="120">
+            <template #default="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || t('security.allPorts', '全部')) }}</template>
           </el-table-column>
-          <el-table-column label="来源 / 目标" prop="ips" min-width="180">
-            <template #default="{ row }">{{ row.ips === '0.0.0.0/0' ? '全部 IPv4' : row.ips }}</template>
+          <el-table-column :label="t('security.sourceTarget', '来源 / 目标')" prop="ips" min-width="180">
+            <template #default="{ row }">{{ row.ips === '0.0.0.0/0' ? t('security.allIpv4', '全部 IPv4') : row.ips }}</template>
           </el-table-column>
         </template>
 
         <template v-else>
-          <el-table-column label="IP 地址" prop="ips" min-width="190" />
-          <el-table-column label="IP 归属地" prop="location" min-width="130">
-            <template #default="{ row }">{{ row.location || '未知' }}</template>
+          <el-table-column :label="t('security.ipAddress', 'IP 地址')" prop="ips" min-width="190" />
+          <el-table-column :label="t('security.ipLocation', 'IP 归属地')" prop="location" min-width="130">
+            <template #default="{ row }">{{ row.location || t('common.unknown', '未知') }}</template>
           </el-table-column>
         </template>
 
-        <el-table-column label="策略" width="94">
+        <el-table-column :label="t('security.strategy', '策略')" width="94">
           <template #default="{ row }">
             <el-tag :type="row.strategy === 'allow' ? 'success' : 'danger'" effect="plain">
-              {{ row.strategy === 'allow' ? '放行' : '拒绝' }}
+              {{ strategyLabel(row.strategy) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="状态" width="92">
+        <el-table-column :label="t('common.status', '状态')" width="92">
           <template #default="{ row }">
             <el-switch
               :model-value="row.state === 1"
@@ -829,22 +868,22 @@ onMounted(() => {
             />
           </template>
         </el-table-column>
-        <el-table-column label="备注" prop="remark" min-width="160">
+        <el-table-column :label="t('security.remark', '备注')" prop="remark" min-width="160">
           <template #default="{ row }">
             {{ row.remark || '—' }}
-            <el-tag v-if="row.protected" size="small" type="warning" class="protected-tag">系统保护</el-tag>
+            <el-tag v-if="row.protected" size="small" type="warning" class="protected-tag">{{ t('security.systemProtected', '系统保护') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="添加时间" min-width="168">
+        <el-table-column :label="t('security.createdAt', '添加时间')" min-width="168">
           <template #default="{ row }">{{ formatTime(row.create_time) }}</template>
         </el-table-column>
-        <el-table-column label="过期时间" min-width="168">
+        <el-table-column :label="t('security.expiresAt', '过期时间')" min-width="168">
           <template #default="{ row }">{{ formatTime(row.expiresAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="128" fixed="right">
+        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" :disabled="row.protected || !canManageRules" @click="editRule(row)">编辑</el-button>
-            <el-button link type="danger" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">删除</el-button>
+            <el-button link type="primary" :disabled="row.protected || !canManageRules" @click="editRule(row)">{{ t('common.edit', '编辑') }}</el-button>
+            <el-button link type="danger" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">{{ t('common.delete', '删除') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -854,16 +893,16 @@ onMounted(() => {
         v-loading="tableLoading"
         :data="forwardRows"
         row-key="id"
-        empty-text="暂无端口转发"
+        :empty-text="t('security.noPortForwards', '暂无端口转发')"
       >
-        <el-table-column label="协议" width="90">
+        <el-table-column :label="t('security.protocol', '协议')" width="90">
           <template #default="{ row }">{{ row.protocol.toUpperCase() }}</template>
         </el-table-column>
-        <el-table-column label="源端口" prop="sourcePort" min-width="120" />
-        <el-table-column label="转发目标" min-width="220">
+        <el-table-column :label="t('security.sourcePort', '源端口')" prop="sourcePort" min-width="120" />
+        <el-table-column :label="t('security.forwardTarget', '转发目标')" min-width="220">
           <template #default="{ row }">{{ row.destinationIp }}:{{ row.destinationPort }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="100">
+        <el-table-column :label="t('common.status', '状态')" width="100">
           <template #default="{ row }">
             <el-switch
               :model-value="row.state === 1"
@@ -872,26 +911,26 @@ onMounted(() => {
             />
           </template>
         </el-table-column>
-        <el-table-column label="备注" prop="remark" min-width="180">
+        <el-table-column :label="t('security.remark', '备注')" prop="remark" min-width="180">
           <template #default="{ row }">{{ row.remark || '—' }}</template>
         </el-table-column>
-        <el-table-column label="添加时间" min-width="180">
+        <el-table-column :label="t('security.createdAt', '添加时间')" min-width="180">
           <template #default="{ row }">{{ formatTime(row.create_time) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="128" fixed="right">
+        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" :disabled="!canManageRules" @click="editForward(row)">编辑</el-button>
-            <el-button link type="danger" :disabled="!canManageRules" @click="deleteForward(row)">删除</el-button>
+            <el-button link type="primary" :disabled="!canManageRules" @click="editForward(row)">{{ t('common.edit', '编辑') }}</el-button>
+            <el-button link type="danger" :disabled="!canManageRules" @click="deleteForward(row)">{{ t('common.delete', '删除') }}</el-button>
           </template>
         </el-table-column>
       </el-table>
 
       <footer class="table-footer">
         <div v-if="isRuleTab" class="batch-bar">
-          <el-select v-model="batchAction" placeholder="请选择批量操作" clearable>
-            <el-option label="启用规则" value="enable" />
-            <el-option label="停用规则" value="disable" />
-            <el-option label="删除规则" value="delete" />
+          <el-select v-model="batchAction" :placeholder="t('security.batchPlaceholder', '请选择批量操作')" clearable>
+            <el-option :label="t('security.enableRule', '启用规则')" value="enable" />
+            <el-option :label="t('security.disableRule', '停用规则')" value="disable" />
+            <el-option :label="t('security.deleteRule', '删除规则')" value="delete" />
           </el-select>
           <el-button
             type="primary"
@@ -899,9 +938,9 @@ onMounted(() => {
             :disabled="!batchAction || !selectedRows.length || !canManageRules"
             @click="handleBatch"
           >
-            批量操作
+            {{ t('security.batchAction', '批量操作') }}
           </el-button>
-          <span v-if="selectedRows.length">已选择 {{ selectedRows.length }} 条</span>
+          <span v-if="selectedRows.length">{{ t('security.selectedCount', '已选择 {count} 条', { count: selectedRows.length }) }}</span>
         </div>
         <span v-else />
         <el-pagination
@@ -932,45 +971,45 @@ onMounted(() => {
       v-model="ipDialogVisible"
       width="600px"
       :close-on-click-modal="false"
-      :title="`${ipDialogIsAdd ? '添加' : '编辑'}${activeTab === 'region' ? '地区' : ' IP'}规则`"
+      :title="ipDialogTitle"
     >
       <el-form label-position="top" class="dialog-form">
-        <el-form-item :label="activeTab === 'region' ? 'IPv4 / CIDR 网段' : 'IP 地址 / CIDR 网段'" required>
+        <el-form-item :label="activeTab === 'region' ? t('security.ipv4CidrRange', 'IPv4 / CIDR 网段') : t('security.ipCidrRange', 'IP 地址 / CIDR 网段')" required>
           <el-input
             v-model="ipForm.ips"
             type="textarea"
             :rows="4"
-            placeholder="每行一个地址，例如：&#10;192.168.1.20&#10;10.0.0.0/24"
+            :placeholder="t('security.ipTextareaPlaceholder', '每行一个地址，例如：\n192.168.1.20\n10.0.0.0/24')"
           />
         </el-form-item>
-        <el-form-item v-if="activeTab === 'region'" label="地区名称" required>
-          <el-input v-model="ipForm.location" placeholder="例如：中国大陆 / 北京" />
+        <el-form-item v-if="activeTab === 'region'" :label="t('security.regionName', '地区名称')" required>
+          <el-input v-model="ipForm.location" :placeholder="t('security.regionPlaceholder', '例如：中国大陆 / 北京')" />
         </el-form-item>
-        <el-form-item label="访问策略">
+        <el-form-item :label="t('security.accessPolicy', '访问策略')">
           <el-radio-group v-model="ipForm.strategy">
-            <el-radio-button value="allow">放行</el-radio-button>
-            <el-radio-button value="deny">拒绝</el-radio-button>
+            <el-radio-button value="allow">{{ t('security.allow', '放行') }}</el-radio-button>
+            <el-radio-button value="deny">{{ t('security.reject', '拒绝') }}</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="过期时间">
-          <el-date-picker v-model="ipForm.expiresAt" type="datetime" class="full-width" placeholder="不设置表示永久有效" />
+        <el-form-item :label="t('security.expiresAt', '过期时间')">
+          <el-date-picker v-model="ipForm.expiresAt" type="datetime" class="full-width" :placeholder="t('security.noExpirePlaceholder', '不设置表示永久有效')" />
         </el-form-item>
-        <el-form-item label="备注">
-          <el-input v-model="ipForm.remark" maxlength="200" show-word-limit placeholder="可选" />
+        <el-form-item :label="t('security.remark', '备注')">
+          <el-input v-model="ipForm.remark" maxlength="200" show-word-limit :placeholder="t('common.optional', '可选')" />
         </el-form-item>
-        <el-form-item label="规则状态">
-          <el-switch v-model="ipForm.enabled" active-text="立即启用" />
+        <el-form-item :label="t('security.ruleStatus', '规则状态')">
+          <el-switch v-model="ipForm.enabled" :active-text="t('security.enableImmediately', '立即启用')" />
         </el-form-item>
         <el-alert
-          title="为避免服务器失联，不允许添加拒绝全部 IPv4 入站流量的规则。"
+          :title="t('security.blockAllWarning', '为避免服务器失联，不允许添加拒绝全部 IPv4 入站流量的规则。')"
           type="warning"
           :closable="false"
           show-icon
         />
       </el-form>
       <template #footer>
-        <el-button @click="ipDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="ipSubmitting" @click="saveIPRule">保存规则</el-button>
+        <el-button @click="ipDialogVisible = false">{{ t('common.cancel', '取消') }}</el-button>
+        <el-button type="primary" :loading="ipSubmitting" @click="saveIPRule">{{ t('security.saveRule', '保存规则') }}</el-button>
       </template>
     </el-dialog>
 
@@ -978,44 +1017,44 @@ onMounted(() => {
       v-model="forwardDialogVisible"
       width="560px"
       :close-on-click-modal="false"
-      :title="forwardDialogIsAdd ? '添加端口转发' : '编辑端口转发'"
+      :title="forwardDialogTitle"
     >
       <el-form label-position="top" class="dialog-form">
         <div class="form-grid">
-          <el-form-item label="协议">
+          <el-form-item :label="t('security.protocol', '协议')">
             <el-select v-model="forwardForm.protocol" class="full-width">
               <el-option label="TCP" value="tcp" />
               <el-option label="UDP" value="udp" />
             </el-select>
           </el-form-item>
-          <el-form-item label="源端口" required>
+          <el-form-item :label="t('security.sourcePort', '源端口')" required>
             <el-input-number v-model="forwardForm.sourcePort" :min="1" :max="65535" class="full-width" />
           </el-form-item>
         </div>
         <div class="form-grid">
-          <el-form-item label="目标 IPv4" required>
+          <el-form-item :label="t('security.destinationIpv4', '目标 IPv4')" required>
             <el-input v-model="forwardForm.destinationIp" placeholder="192.168.1.10" />
           </el-form-item>
-          <el-form-item label="目标端口" required>
+          <el-form-item :label="t('security.destinationPort', '目标端口')" required>
             <el-input-number v-model="forwardForm.destinationPort" :min="1" :max="65535" class="full-width" />
           </el-form-item>
         </div>
-        <el-form-item label="备注">
-          <el-input v-model="forwardForm.remark" maxlength="200" show-word-limit placeholder="可选" />
+        <el-form-item :label="t('security.remark', '备注')">
+          <el-input v-model="forwardForm.remark" maxlength="200" show-word-limit :placeholder="t('common.optional', '可选')" />
         </el-form-item>
-        <el-form-item label="规则状态">
-          <el-switch v-model="forwardForm.enabled" active-text="立即启用" />
+        <el-form-item :label="t('security.ruleStatus', '规则状态')">
+          <el-switch v-model="forwardForm.enabled" :active-text="t('security.enableImmediately', '立即启用')" />
         </el-form-item>
         <el-alert
-          title="端口转发当前由 firewalld 提供，不能占用面板管理端口。"
+          :title="t('security.forwardPanelPortWarning', '端口转发当前由 firewalld 提供，不能占用面板管理端口。')"
           type="info"
           :closable="false"
           show-icon
         />
       </el-form>
       <template #footer>
-        <el-button @click="forwardDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="forwardSubmitting" @click="saveForward">保存转发</el-button>
+        <el-button @click="forwardDialogVisible = false">{{ t('common.cancel', '取消') }}</el-button>
+        <el-button type="primary" :loading="forwardSubmitting" @click="saveForward">{{ t('security.saveForward', '保存转发') }}</el-button>
       </template>
     </el-dialog>
 

@@ -166,12 +166,12 @@ const loadImagePreviewUrl = async (path: string) => {
 }
 
 const fileTypeLabel = (row: any) => {
-  if (row?.isSymlink) return row?.isDir ? '目录链接' : '文件链接'
-  if (row?.isDir) return '文件夹'
-  if (imageExtensionPattern.test(row?.name || '')) return '图片'
-  if (archiveExtensionPattern.test(row?.name || '')) return '压缩包'
+  if (row?.isSymlink) return row?.isDir ? t('file.typeLabels.directorySymlink', '目录链接') : t('file.typeLabels.fileSymlink', '文件链接')
+  if (row?.isDir) return t('file.folder', '文件夹')
+  if (imageExtensionPattern.test(row?.name || '')) return t('file.typeLabels.image', '图片')
+  if (archiveExtensionPattern.test(row?.name || '')) return t('file.typeLabels.archive', '压缩包')
   const extension = String(row?.name || '').split('.').pop()
-  return extension && extension !== row?.name ? extension.toUpperCase() : '文件'
+  return extension && extension !== row?.name ? extension.toUpperCase() : t('file.file', '文件')
 }
 
 const conf = reactive({
@@ -741,7 +741,7 @@ const capacityUsedPercent = computed(() => {
           class="path-action"
           :icon="ArrowLeft"
           :disabled="conf.path.length === 1"
-          aria-label="返回上一级"
+          :aria-label="t('file.goParent', '返回上一级')"
           @click="conf.handleBackLevel()"
         />
         <div class="path-field" @click.stop="conf.handleInputPath">
@@ -763,7 +763,7 @@ const capacityUsedPercent = computed(() => {
             @keyup.enter="conf.handleInputPathConfirm"
           />
         </div>
-        <el-button class="path-action" :icon="Refresh" aria-label="刷新当前目录" @click="conf.refresh" />
+        <el-button class="path-action" :icon="Refresh" :aria-label="t('file.refreshCurrentDirectory', '刷新当前目录')" @click="conf.refresh" />
       </div>
       <div class="navigation-search">
         <el-input
@@ -910,7 +910,7 @@ const capacityUsedPercent = computed(() => {
               <span class="ellipsis file-name">{{ row.name }}</span>
             </el-link>
             <el-icon v-if="conf.isFavorite(row.path)" class="favorite-mark"><Star /></el-icon>
-            <span v-if="row.isSymlink" class="symlink-mark">链接</span>
+            <span v-if="row.isSymlink" class="symlink-mark">{{ t('file.symlink', '符号链接') }}</span>
           </div>
         </template>
         <template #type="{ row }">
@@ -1033,11 +1033,11 @@ const capacityUsedPercent = computed(() => {
         </template>
         <template #summary>
           <div class="file-summary">
-            <span>共 <strong>{{ fileStats.total }}</strong> 项</span>
-            <span>{{ fileStats.directories }} 个文件夹</span>
-            <span>{{ fileStats.files }} 个文件</span>
-            <span v-if="fileStats.hidden">{{ fileStats.hidden }} 个隐藏项</span>
-            <span v-if="conf.quickFilter" class="file-summary__filter">已从 {{ conf.fileList.length }} 项中筛选</span>
+            <span>{{ t('file.summary.total', '共 {total} 项', { total: fileStats.total }) }}</span>
+            <span>{{ t('file.summary.directories', '{count} 个文件夹', { count: fileStats.directories }) }}</span>
+            <span>{{ t('file.summary.files', '{count} 个文件', { count: fileStats.files }) }}</span>
+            <span v-if="fileStats.hidden">{{ t('file.summary.hidden', '{count} 个隐藏项', { count: fileStats.hidden }) }}</span>
+            <span v-if="conf.quickFilter" class="file-summary__filter">{{ t('file.summary.filtered', '已从 {count} 项中筛选', { count: conf.fileList.length }) }}</span>
           </div>
         </template>
       </custom-table>
@@ -1063,20 +1063,20 @@ const capacityUsedPercent = computed(() => {
             <small>{{ row.modTime }}</small>
           </div>
           <el-dropdown trigger="click" class="file-card__menu">
-            <el-button text :icon="MoreFilled" aria-label="更多操作" @click.stop />
+            <el-button text :icon="MoreFilled" :aria-label="t('file.more', '更多')" @click.stop />
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item v-if="canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
-                  <el-icon><FolderOpened /></el-icon>{{ row.isDir ? '打开' : conf.isImage(row) ? '预览' : '编辑' }}
+                  <el-icon><FolderOpened /></el-icon>{{ row.isDir ? t('file.open', '打开') : conf.isImage(row) ? t('file.preview', '预览') : t('file.edit', '编辑') }}
                 </el-dropdown-item>
                 <el-dropdown-item v-if="!row.isDir && canFilePermission('read')" @click="conf.handleFileDownload(row)">
-                  <el-icon><Download /></el-icon>下载
+                  <el-icon><Download /></el-icon>{{ t('file.download', '下载') }}
                 </el-dropdown-item>
                 <el-dropdown-item v-if="canFilePermission('read')" @click="conf.toggleFavorite(row)">
-                  <el-icon><Star /></el-icon>{{ conf.isFavorite(row.path) ? '取消收藏' : '收藏' }}
+                  <el-icon><Star /></el-icon>{{ conf.isFavorite(row.path) ? t('file.removeFavorite', '取消收藏') : t('file.addFavorite', '收藏') }}
                 </el-dropdown-item>
                 <el-dropdown-item v-if="canFilePermission('read')" @click="conf.operationDialog.open('properties', row)">
-                  <el-icon><InfoFilled /></el-icon>属性
+                  <el-icon><InfoFilled /></el-icon>{{ t('file.properties', '属性') }}
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-if="canFilePermission('delete')"
@@ -1084,21 +1084,21 @@ const capacityUsedPercent = computed(() => {
                   class="danger-menu-item"
                   @click="conf.fileDialog.open('delete', row)"
                 >
-                  <el-icon><Delete /></el-icon>删除
+                  <el-icon><Delete /></el-icon>{{ t('file.delete', '删除') }}
                 </el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </article>
       </div>
-      <el-empty v-else description="当前目录没有文件" />
+      <el-empty v-else :description="t('file.emptyDirectory', '当前目录没有文件')" />
       <footer class="file-grid-footer">
         <div class="file-summary">
-          <span>共 <strong>{{ fileStats.total }}</strong> 项</span>
-          <span>{{ fileStats.directories }} 个文件夹</span>
-          <span>{{ fileStats.files }} 个文件</span>
+          <span>{{ t('file.summary.total', '共 {total} 项', { total: fileStats.total }) }}</span>
+          <span>{{ t('file.summary.directories', '{count} 个文件夹', { count: fileStats.directories }) }}</span>
+          <span>{{ t('file.summary.files', '{count} 个文件', { count: fileStats.files }) }}</span>
         </div>
-        <span>管理根目录 {{ conf.rootPath }}</span>
+        <span>{{ t('file.managedRootPath', '管理根目录 {path}', { path: conf.rootPath }) }}</span>
       </footer>
     </section>
 

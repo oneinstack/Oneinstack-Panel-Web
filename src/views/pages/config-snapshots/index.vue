@@ -140,6 +140,17 @@ const statusType = (value?: string) => {
   return 'info'
 }
 
+const snapshotTextKeys: Record<string, string> = {
+  当前配置: 'configSnapshots.currentConfig',
+  服务器磁盘: 'configSnapshots.serverDisk'
+}
+
+const localizedSnapshotText = (value?: string | null) => {
+  if (!value) return '—'
+  const key = snapshotTextKeys[value]
+  return key ? t(key, value) : value
+}
+
 const formatTime = (value?: string | null) => value ? new Date(value).toLocaleString() : '—'
 const formatJson = (value: unknown) => JSON.stringify(value ?? {}, null, 2)
 const shortHash = (value?: string) => value ? value.replace(/^sha256:?/, '').slice(0, 12) : '—'
@@ -517,8 +528,8 @@ onMounted(() => {
         <el-table-column :label="$t('configSnapshots.snapshot')" min-width="240">
           <template #default="{ row }">
             <div class="snapshot-name-cell">
-              <strong>{{ row.name || row.id }}</strong>
-              <span>{{ row.description || row.id }}</span>
+              <strong>{{ localizedSnapshotText(row.name) || row.id }}</strong>
+              <span>{{ localizedSnapshotText(row.description) || row.id }}</span>
             </div>
           </template>
         </el-table-column>
@@ -533,8 +544,8 @@ onMounted(() => {
         <el-table-column :label="$t('configSnapshots.versionBackupAccount')" min-width="190">
           <template #default="{ row }">
             <div class="snapshot-meta-cell">
-              <strong>{{ row.version || '—' }}</strong>
-              <span>{{ row.backupAccount || '—' }}</span>
+              <strong>{{ localizedSnapshotText(row.version) }}</strong>
+              <span>{{ localizedSnapshotText(row.backupAccount) }}</span>
             </div>
           </template>
         </el-table-column>

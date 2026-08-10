@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 
+import i18n from '@/lang'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface FirewallRuleForm {
@@ -51,6 +52,11 @@ const form = reactive<FirewallRuleForm>({
   expiresAt: undefined
 })
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const visible = computed({
   get: () => props.modelValue,
   set: (value) => {
@@ -75,13 +81,13 @@ const validateIPs = (_rule: unknown, _value: unknown, callback: (error?: Error) 
   }
   const values = customIPs.value.split(',').map((item) => item.trim()).filter(Boolean)
   if (!values.length) {
-    callback(new Error('请输入 IPv4 地址或 CIDR 网段'))
+    callback(new Error(t('security.ipRequired', '请输入 IPv4 地址或 CIDR 网段')))
     return
   }
   for (const value of values) {
     const [ip, prefix, extra] = value.split('/')
     if (extra !== undefined || !isIPv4(ip) || (prefix !== undefined && (!/^\d{1,2}$/.test(prefix) || Number(prefix) > 32))) {
-      callback(new Error(`IP 格式不正确：${value}`))
+      callback(new Error(t('security.invalidIpFormat', 'IP 格式不正确：{value}', { value })))
       return
     }
   }
@@ -113,7 +119,7 @@ const validatePorts = (_rule: unknown, value: string, callback: (error?: Error) 
   }
   const values = String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
   if (values.some((item) => !parsePortRange(item))) {
-    callback(new Error('端口格式应为 80,443,8000-8100，范围为 1-65535'))
+    callback(new Error(t('security.invalidPortFormat', '端口格式应为 80,443,8000-8100，范围为 1-65535')))
     return
   }
   if (
@@ -121,19 +127,19 @@ const validatePorts = (_rule: unknown, value: string, callback: (error?: Error) 
     form.strategy === 'deny' &&
     portsContain(String(value || ''), props.panelPort)
   ) {
-    callback(new Error(`不能拒绝面板端口 ${props.panelPort}`))
+    callback(new Error(t('security.denyPanelPortBlocked', '不能拒绝面板端口 {port}', { port: props.panelPort })))
     return
   }
   callback()
 }
 
 const rules: FormRules = {
-  protocol: [{ required: true, message: '请选择协议', trigger: 'change' }],
-  direction: [{ required: true, message: '请选择方向', trigger: 'change' }],
-  strategy: [{ required: true, message: '请选择策略', trigger: 'change' }],
+  protocol: [{ required: true, message: t('security.selectProtocol', '请选择协议'), trigger: 'change' }],
+  direction: [{ required: true, message: t('security.selectDirection', '请选择方向'), trigger: 'change' }],
+  strategy: [{ required: true, message: t('security.selectStrategy', '请选择策略'), trigger: 'change' }],
   ports: [{ validator: validatePorts, trigger: ['blur', 'change'] }],
   ips: [{ validator: validateIPs, trigger: ['blur', 'change'] }],
-  remark: [{ max: 200, message: '备注不能超过 200 个字符', trigger: 'blur' }]
+  remark: [{ max: 200, message: t('security.remarkMax', '备注不能超过 200 个字符'), trigger: 'blur' }]
 }
 
 const resetFromProps = () => {
@@ -196,7 +202,7 @@ const submit = async () => {
       if (isOperationCancelled(error)) return
       throw error
     }
-    ElMessage.success(props.type ? '规则已添加' : '规则已更新')
+    ElMessage.success(props.type ? t('security.ruleAdded', '规则已添加') : t('security.ruleUpdated', '规则已更新'))
     emit('saved')
   } finally {
     submitting.value = false
@@ -208,15 +214,15 @@ const submit = async () => {
   <custom-drawer
     :visible="visible"
     size="640px"
-    :title="props.type ? '添加防火墙规则' : '编辑防火墙规则'"
-    :confirm-text="props.type ? '添加规则' : '保存修改'"
+    :title="props.type ? t('security.addFirewallRule', '添加防火墙规则') : t('security.editFirewallRule', '编辑防火墙规则')"
+    :confirm-text="props.type ? t('security.addRule', '添加规则') : t('common.saveChanges', '保存修改')"
     :loading="submitting"
     :confirm-disabled="submitting"
     :on-close="close"
     :on-confirm="submit"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="88px" status-icon>
-      <el-form-item label="协议" prop="protocol">
+      <el-form-item :label="t('security.protocol', '协议')" prop="protocol">
         <el-select v-model="form.protocol" class="full-width">
           <el-option label="TCP" value="tcp" />
           <el-option label="UDP" value="udp" />
@@ -224,59 +230,59 @@ const submit = async () => {
         </el-select>
       </el-form-item>
 
-      <el-form-item v-if="form.protocol !== 'icmp'" label="端口" prop="ports">
-        <el-input v-model="form.ports" placeholder="留空表示全部端口，例如 80,443,8000-8100" />
+      <el-form-item v-if="form.protocol !== 'icmp'" :label="t('security.ports', '端口')" prop="ports">
+        <el-input v-model="form.ports" :placeholder="t('security.portsPlaceholder', '留空表示全部端口，例如 80,443,8000-8100')" />
       </el-form-item>
 
-      <el-form-item label="IP 范围" prop="ips">
+      <el-form-item :label="t('security.ipRange', 'IP 范围')" prop="ips">
         <div class="source-field">
           <el-radio-group v-model="sourceMode" @change="formRef?.validateField('ips')">
-            <el-radio value="all">全部 IPv4</el-radio>
-            <el-radio value="custom">指定 IPv4/CIDR</el-radio>
+            <el-radio value="all">{{ t('security.allIpv4', '全部 IPv4') }}</el-radio>
+            <el-radio value="custom">{{ t('security.customIpv4Cidr', '指定 IPv4/CIDR') }}</el-radio>
           </el-radio-group>
           <el-input
             v-if="sourceMode === 'custom'"
             v-model="customIPs"
-            placeholder="例如 192.168.1.10,10.0.0.0/24"
+            :placeholder="t('security.customIpPlaceholder', '例如 192.168.1.10,10.0.0.0/24')"
             @blur="formRef?.validateField('ips')"
           />
         </div>
       </el-form-item>
 
-      <el-form-item label="策略" prop="strategy">
+      <el-form-item :label="t('security.strategy', '策略')" prop="strategy">
         <el-radio-group v-model="form.strategy">
-          <el-radio-button value="allow">放行</el-radio-button>
-          <el-radio-button value="deny">拒绝</el-radio-button>
+          <el-radio-button value="allow">{{ t('security.allow', '放行') }}</el-radio-button>
+          <el-radio-button value="deny">{{ t('security.reject', '拒绝') }}</el-radio-button>
         </el-radio-group>
       </el-form-item>
 
-      <el-form-item label="方向" prop="direction">
+      <el-form-item :label="t('security.direction', '方向')" prop="direction">
         <el-radio-group v-model="form.direction">
-          <el-radio-button value="in">入站</el-radio-button>
-          <el-radio-button value="out">出站</el-radio-button>
+          <el-radio-button value="in">{{ t('security.inbound', '入站') }}</el-radio-button>
+          <el-radio-button value="out">{{ t('security.outbound', '出站') }}</el-radio-button>
         </el-radio-group>
       </el-form-item>
 
-      <el-form-item label="备注" prop="remark">
-        <el-input v-model="form.remark" maxlength="200" show-word-limit placeholder="可选" />
+      <el-form-item :label="t('security.remark', '备注')" prop="remark">
+        <el-input v-model="form.remark" maxlength="200" show-word-limit :placeholder="t('common.optional', '可选')" />
       </el-form-item>
 
-      <el-form-item label="有效期">
+      <el-form-item :label="t('security.validUntil', '有效期')">
         <el-date-picker
           v-model="form.expiresAt"
           type="datetime"
-          placeholder="永久有效"
+          :placeholder="t('security.permanentValid', '永久有效')"
           class="full-width"
         />
       </el-form-item>
 
-      <el-form-item label="规则状态">
-        <el-switch v-model="form.state" :active-value="1" :inactive-value="0" active-text="立即启用" />
+      <el-form-item :label="t('security.ruleStatus', '规则状态')">
+        <el-switch v-model="form.state" :active-value="1" :inactive-value="0" :active-text="t('security.enableImmediately', '立即启用')" />
       </el-form-item>
 
       <el-alert
         v-if="form.direction === 'in' && form.strategy === 'deny'"
-        :title="`为防止失联，入站拒绝规则不能包含面板端口 ${props.panelPort}`"
+        :title="t('security.denyPanelPortWarning', '为防止失联，入站拒绝规则不能包含面板端口 {port}', { port: props.panelPort })"
         type="warning"
         :closable="false"
         show-icon
