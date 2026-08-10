@@ -80,6 +80,33 @@ html {
   }
 }
 
+.el-date-editor {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.el-input-number {
+  .el-input__wrapper {
+    padding-right: 13px !important;
+  }
+
+  .el-input__inner {
+    text-align: left !important;
+  }
+
+  &__increase,
+  &__decrease {
+    display: none !important;
+  }
+}
+
+.el-form-item__content {
+  > .el-input-number:only-child,
+  > .el-date-editor:only-child {
+    width: 100% !important;
+  }
+}
+
 .el-textarea__inner {
   min-height: 112px;
   padding: 12px 14px;
