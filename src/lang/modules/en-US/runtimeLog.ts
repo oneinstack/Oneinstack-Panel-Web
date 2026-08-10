@@ -35,5 +35,6 @@ export default {
   noCopyLogs: 'No logs available to copy',
   copied: 'Current view copied',
   copyRejected: 'Browser rejected copy',
+  copyFailed: 'Copy failed. Check browser clipboard permission.',
   droppedTitle: '{count} logs could not be persisted during runtime. Check disk, SQLite status, or log burst traffic.'
 }

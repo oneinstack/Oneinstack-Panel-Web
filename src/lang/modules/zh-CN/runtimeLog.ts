@@ -35,5 +35,6 @@ export default {
   noCopyLogs: '当前没有可复制的日志',
   copied: '当前视图已复制',
   copyRejected: '浏览器拒绝复制',
+  copyFailed: '复制失败，请检查浏览器剪贴板权限',
   droppedTitle: '运行期间有 {count} 条日志未能持久化，请检查磁盘、SQLite 状态或日志突发流量。'
 }
