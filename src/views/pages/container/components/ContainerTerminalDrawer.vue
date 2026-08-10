@@ -304,12 +304,9 @@ const connectTerminal = async () => {
       silentError: true
     })
     const apiBase = new URL(System.env.API || '/v1', window.location.origin)
-    if (apiBase.origin !== window.location.origin) {
-      throw new Error(t('container.terminal.sameOriginOnly', 'Terminal only allows same-origin connections'))
-    }
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    const protocol = apiBase.protocol === 'https:' ? 'wss:' : 'ws:'
     const apiPath = apiBase.pathname.replace(/\/$/, '')
-    const url = `${protocol}//${window.location.host}${apiPath}/containers/${encodeURIComponent(props.target.ID)}/terminal/open?ticket=${encodeURIComponent(data.ticket)}`
+    const url = `${protocol}//${apiBase.host}${apiPath}/containers/${encodeURIComponent(props.target.ID)}/terminal/open?ticket=${encodeURIComponent(data.ticket)}`
     socket = new WebSocket(url)
     socket.onopen = () => {
       connectionState.value = 'connected'
