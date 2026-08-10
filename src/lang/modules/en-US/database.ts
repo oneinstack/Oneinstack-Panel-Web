@@ -30,6 +30,31 @@ export default {
   deleteSuccess: 'Database and dedicated user deleted',
   backupScheduleTipPrefix: 'After adding a database, make sure to add a scheduled backup task in [',
   backupScheduleTipSuffix: '] to keep data safe. Tip: databases created through third-party tools or the MySQL CLI must be synced from the server before they can be backed up in scheduled tasks.',
+  more: 'More',
+  quickManage: 'Quick manage',
+  phpMyAdmin: {
+    quickTitle: 'phpMyAdmin quick management',
+    installed: 'Installed',
+    installing: 'Installing',
+    notInstalled: 'Not installed',
+    taskRunning: 'The installation task is running in the background. Click to view realtime progress and logs.',
+    installedDescription: 'Installed {version}. You can open it directly or enter management for a database.',
+    phpRequired: 'Install the PHP runtime before installing phpMyAdmin.',
+    webServerRequired: 'Install Nginx, OpenResty, Apache, or Caddy before installing phpMyAdmin.',
+    installDescription: 'phpMyAdmin {version}, compatible with PHP {phpVersion}, will be installed.',
+    prerequisiteConfirm: 'phpMyAdmin requires {name}. Go to Software store to install it?',
+    missingPrerequisite: 'Missing {name}',
+    installPrerequisite: 'Install {name}',
+    skipInstall: 'Not now',
+    packageUnavailable: 'Center does not currently provide a phpMyAdmin package. Sync Software store first.',
+    installPaused: 'Center has paused phpMyAdmin installation.',
+    compatibleVersionUnavailable: 'Center does not provide a phpMyAdmin version compatible with the current PHP.',
+    taskCreated: 'phpMyAdmin installation task created',
+    viewProgress: 'View install progress',
+    open: 'Open phpMyAdmin',
+    quickInstall: 'Quick install',
+    versionDetail: 'Versions and details'
+  },
   security: {
     inputPanelPassword: 'Enter current panel login password',
     passwordLengthWarning: 'Password length must be 12-128 characters',
@@ -71,7 +96,8 @@ export default {
   },
   redisPanel: {
     currentServerHint: 'All current operations are associated with',
-    selectServer: 'Select a server'
+    selectServer: 'Select a server',
+    emptyKeys: 'No keys in the current database'
   },
   backup: {
     title: 'Backup and restore',

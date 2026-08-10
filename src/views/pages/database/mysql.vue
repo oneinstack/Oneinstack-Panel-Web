@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
-import { CircleClose, Setting } from '@element-plus/icons-vue'
+import { ArrowDown, CircleClose, DataAnalysis, Download, Link, Setting } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
 import { Api } from '@/api/Api'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import DatabaseBackupDrawer from './components/DatabaseBackupDrawer.vue'
 import i18n from '@/lang'
+import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
+import softwareTaskStore from '@/sstore/softwareTask'
+import InstallTaskDrawer from '../software/components/InstallTaskDrawer.vue'
 
 const { conf } = defineProps<ConfProps>()
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -15,7 +18,182 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback
 }
 
-conf.list.getData()
+const phpMyAdminCatalog = reactive({
+  loading: true,
+  installing: false,
+  items: [] as any[],
+  getData: async () => {
+    phpMyAdminCatalog.loading = true
+    try {
+      const { data } = await Api.getSoftList({ page: 1, pageSize: 100 })
+      phpMyAdminCatalog.items = data?.data ?? []
+    } finally {
+      phpMyAdminCatalog.loading = false
+    }
+  }
+})
+
+const phpMyAdminItem = computed(() =>
+  phpMyAdminCatalog.items.find((item: any) => item.key === 'phpmyadmin')
+)
+const phpItem = computed(() =>
+  phpMyAdminCatalog.items.find((item: any) => item.key === 'php')
+)
+const webServerItem = computed(() =>
+  phpMyAdminCatalog.items.find((item: any) =>
+    ['webserver', 'openresty', 'apache', 'caddy'].includes(item.key) && item.installed
+  )
+)
+const phpMyAdminInstalled = computed(() => phpMyAdminItem.value?.installed === true)
+const phpMyAdminTask = computed(() => softwareTaskStore.activeForKey('phpmyadmin'))
+const phpMyAdminVersion = computed(() => {
+  const versions = (phpMyAdminItem.value?.versions ?? []) as string[]
+  const phpVersion = String(phpItem.value?.install_version || '')
+  const match = phpVersion.match(/^(\d+)\.(\d+)/)
+  if (match) {
+    const major = Number(match[1])
+    const minor = Number(match[2])
+    if (major < 7 || (major === 7 && minor <= 1)) {
+      return versions.find((version) => version === '4.4.15.10') || versions[0] || ''
+    }
+  }
+  return phpMyAdminItem.value?.recommendedVersion ||
+    versions.find((version) => version === '5.2.3') || versions[0] || ''
+})
+const phpMyAdminDescription = computed(() => {
+  if (phpMyAdminTask.value) return t('database.phpMyAdmin.taskRunning', 'The installation task is running in the background. Click to view realtime progress and logs.')
+  if (phpMyAdminInstalled.value) {
+    return t('database.phpMyAdmin.installedDescription', 'Installed {version}. You can open it directly or enter management for a database.', { version: phpMyAdminItem.value.install_version || '' })
+  }
+  if (!phpItem.value?.installed) return t('database.phpMyAdmin.phpRequired', 'Install the PHP runtime before installing phpMyAdmin.')
+  if (!webServerItem.value) return t('database.phpMyAdmin.webServerRequired', 'Install Nginx, OpenResty, Apache, or Caddy before installing phpMyAdmin.')
+  return t('database.phpMyAdmin.installDescription', 'phpMyAdmin {version}, compatible with PHP {phpVersion}, will be installed.', {
+    phpVersion: phpItem.value.install_version || '',
+    version: phpMyAdminVersion.value
+  })
+})
+
+const phpMyAdminDrawer = reactive({
+  visible: false,
+  taskId: ''
+})
+
+const showPhpMyAdminTask = (taskId?: string) => {
+  if (!taskId) return
+  phpMyAdminDrawer.taskId = taskId
+  phpMyAdminDrawer.visible = true
+}
+
+const routeToPrerequisite = async (name: string, component: string) => {
+  try {
+    await ElMessageBox.confirm(
+      t('database.phpMyAdmin.prerequisiteConfirm', 'phpMyAdmin requires {name}. Go to Software store to install it?', { name }),
+      t('database.phpMyAdmin.missingPrerequisite', 'Missing {name}', { name }),
+      {
+        type: 'warning',
+        confirmButtonText: t('database.phpMyAdmin.installPrerequisite', 'Install {name}', { name }),
+        cancelButtonText: t('database.phpMyAdmin.skipInstall', 'Not now')
+      }
+    )
+  } catch {
+    return false
+  }
+  System.router.push(`/software?component=${component}`)
+  return false
+}
+
+const installPhpMyAdmin = async () => {
+  if (phpMyAdminTask.value) {
+    showPhpMyAdminTask(phpMyAdminTask.value.id)
+    return
+  }
+  const item = phpMyAdminItem.value
+  if (!item) {
+    ElMessage.warning(t('database.phpMyAdmin.packageUnavailable', 'Center does not currently provide a phpMyAdmin package. Sync Software store first.'))
+    return
+  }
+  if (item.installable === false) {
+    ElMessage.warning(t('database.phpMyAdmin.installPaused', 'Center has paused phpMyAdmin installation.'))
+    return
+  }
+  if (!phpItem.value?.installed) {
+    await routeToPrerequisite('PHP', 'php')
+    return
+  }
+  if (!webServerItem.value) {
+    await routeToPrerequisite('Web Server', 'nginx')
+    return
+  }
+  if (!phpMyAdminVersion.value) {
+    ElMessage.warning(t('database.phpMyAdmin.compatibleVersionUnavailable', 'Center does not provide a phpMyAdmin version compatible with the current PHP.'))
+    return
+  }
+
+  phpMyAdminCatalog.installing = true
+  try {
+    const request = { key: item.key, version: phpMyAdminVersion.value }
+    const { data: result } = await Api.installSoft(request)
+    softwareTaskStore.acceptCreated(result, request)
+    showPhpMyAdminTask(result.taskId)
+    ElMessage.success(t('database.phpMyAdmin.taskCreated', 'phpMyAdmin installation task created'))
+  } finally {
+    phpMyAdminCatalog.installing = false
+  }
+}
+
+const openPhpMyAdmin = (database?: string) => {
+  if (!phpMyAdminInstalled.value) {
+    void installPhpMyAdmin()
+    return
+  }
+  const target = new URL(window.location.href)
+  target.protocol = 'http:'
+  target.port = ''
+  target.pathname = '/phpMyAdmin/index.php'
+  target.search = ''
+  target.hash = ''
+  if (database) target.searchParams.set('db', database)
+  window.open(target.toString(), '_blank', 'noopener,noreferrer')
+}
+
+const connectionState = reactive({
+  loading: true,
+  data: [] as any[],
+  getData: async () => {
+    connectionState.loading = true
+    try {
+      const { data } = await Api.getConnlist({ type: 'mysql' })
+      connectionState.data = data ?? []
+    } finally {
+      connectionState.loading = false
+    }
+  }
+})
+
+const showEnvironmentEmpty = computed(() => {
+  if (connectionState.loading || conf.environment.loading) return false
+  const hasRemoteConnection = connectionState.data.some((item: any) => !item.managed)
+  const hasManagedLocalConnection = connectionState.data.some((item: any) => item.managed)
+  const hasUsableConnection = hasRemoteConnection ||
+    (conf.environment.mysql && hasManagedLocalConnection)
+  return !hasUsableConnection
+})
+
+void Promise.allSettled([
+  conf.environment.getData(),
+  connectionState.getData(),
+  conf.list.getData(),
+  phpMyAdminCatalog.getData()
+])
+
+watch(
+  () => softwareTaskStore.terminalRevision,
+  () => void phpMyAdminCatalog.getData().catch(() => undefined)
+)
+
+onMounted(() => {
+  void softwareTaskStore.loadAll().catch(() => undefined)
+})
 
 const backupPanel = reactive({
   visible: false,
@@ -44,6 +222,23 @@ const openBackupPanel = (row: any) => {
 }
 
 const createBackup = async (row: any) => {
+  const databaseName = row.name || row.databaseName || row.id || '当前数据库'
+
+  try {
+    await ElMessageBox.confirm(
+      `确认立即备份数据库“${databaseName}”吗？备份任务创建后会在后台执行。`,
+      '备份确认',
+      {
+        confirmButtonText: '确认备份',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  }
+
   await Api.createDatabaseBackup({ libraryId: row.id })
   ElMessage.success(t('database.backup.backupTaskCreated', 'Backup task created'))
   openBackupPanel(row)
@@ -181,6 +376,20 @@ const deleteDatabase = async (row: any) => {
     throw error
   }
 }
+
+const handleMoreAction = async (command: string, row: any) => {
+  switch (command) {
+    case 'backup':
+      await createBackup(row)
+      break
+    case 'backup-manager':
+      openBackupPanel(row)
+      break
+    case 'delete':
+      await deleteDatabase(row)
+      break
+  }
+}
 </script>
 
 <template>
@@ -196,10 +405,52 @@ const deleteDatabase = async (row: any) => {
     <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false" style="margin-left: 24px;"><CircleClose /></el-icon>
   </div>
   <div class="container">
+    <div class="phpmyadmin-card">
+      <div class="phpmyadmin-card__icon">
+        <el-icon><DataAnalysis /></el-icon>
+      </div>
+      <div class="phpmyadmin-card__content">
+        <div class="phpmyadmin-card__title">
+          <strong>{{ $t('database.phpMyAdmin.quickTitle') }}</strong>
+          <el-tag v-if="phpMyAdminInstalled" type="success" effect="plain">{{ $t('database.phpMyAdmin.installed') }}</el-tag>
+          <el-tag v-else-if="phpMyAdminTask" type="warning" effect="plain">{{ $t('database.phpMyAdmin.installing') }}</el-tag>
+          <el-tag v-else type="info" effect="plain">{{ $t('database.phpMyAdmin.notInstalled') }}</el-tag>
+        </div>
+        <span>{{ phpMyAdminDescription }}</span>
+      </div>
+      <div class="phpmyadmin-card__actions">
+        <el-button
+          v-if="phpMyAdminTask"
+          type="primary"
+          plain
+          @click="showPhpMyAdminTask(phpMyAdminTask.id)"
+        >
+          {{ $t('database.phpMyAdmin.viewProgress') }}
+        </el-button>
+        <el-button
+          v-else-if="phpMyAdminInstalled"
+          type="primary"
+          :icon="Link"
+          @click="openPhpMyAdmin()"
+        >
+          {{ $t('database.phpMyAdmin.open') }}
+        </el-button>
+        <el-button
+          v-else
+          type="primary"
+          :icon="Download"
+          :loading="phpMyAdminCatalog.loading || phpMyAdminCatalog.installing"
+          @click="installPhpMyAdmin"
+        >
+          {{ $t('database.phpMyAdmin.quickInstall') }}
+        </el-button>
+        <el-button @click="System.router.push('/software?component=phpmyadmin')">{{ $t('database.phpMyAdmin.versionDetail') }}</el-button>
+      </div>
+    </div>
     <div class="tool-bar">
       <el-space class="btn-group" :size="14">
-        <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('database.addDatabase') }}</el-button>
-        <el-button type="primary" @click="System.router.push('/database/remote')">{{ $t('database.remoteDatabase') }}</el-button>
+        <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ $t('database.addDatabase') }}</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ $t('database.remoteDatabase') }}</el-button>
       </el-space>
       <div class="demo-form-inline">
         <search-input
@@ -222,7 +473,12 @@ const deleteDatabase = async (row: any) => {
         @update:page="conf.list.getData"
       >
         <template #empty>
-          <div style="margin-top: 40px">
+          <database-environment-empty
+            v-if="showEnvironmentEmpty"
+            type="mysql"
+            :installed="conf.environment.mysql"
+          />
+          <div v-else style="margin-top: 40px">
             <span>
               {{ $t('database.emptyListPrefix') }}
               <a
@@ -236,11 +492,32 @@ const deleteDatabase = async (row: any) => {
           </div>
         </template>
         <template #action="{ row }">
-          <el-button type="primary" link @click="viewCredential(row)">{{ $t('database.viewAccount') }}</el-button>
-          <el-button type="primary" link @click="updateCredential(row)">{{ $t('database.modifyPassword') }}</el-button>
-          <el-button type="primary" link @click="createBackup(row)">{{ $t('database.backup.backup') }}</el-button>
-          <el-button type="primary" link @click="openBackupPanel(row)">{{ $t('database.backup.manageBackups') }}</el-button>
-          <el-button type="danger" link @click="deleteDatabase(row)">{{ $t('common.delete') }}</el-button>
+          <div class="database-row-actions">
+            <el-button
+              v-if="phpMyAdminInstalled"
+              type="primary"
+              link
+              :icon="Link"
+              @click="openPhpMyAdmin(row.name)"
+            >{{ $t('database.quickManage') }}</el-button>
+            <el-button type="primary" link @click="viewCredential(row)">{{ $t('database.viewAccount') }}</el-button>
+            <el-button type="primary" link @click="updateCredential(row)">{{ $t('database.modifyPassword') }}</el-button>
+            <el-dropdown trigger="click" @command="(command: string) => handleMoreAction(command, row)">
+              <el-button type="primary" link>
+                {{ $t('database.more') }}
+                <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="backup">{{ $t('database.backup.backupNow') }}</el-dropdown-item>
+                  <el-dropdown-item command="backup-manager">{{ $t('database.backup.manageBackups') }}</el-dropdown-item>
+                  <el-dropdown-item command="delete" divided>
+                    <span class="database-danger-action">{{ $t('database.deleteDatabase') }}</span>
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </template>
       </custom-table>
     </div>
@@ -305,6 +582,11 @@ const deleteDatabase = async (row: any) => {
         <el-button type="primary" @click="confirmCredentialPasswordDialog">{{ $t('database.modifyPassword') }}</el-button>
       </template>
     </custom-dialog>
+    <install-task-drawer
+      v-model="phpMyAdminDrawer.visible"
+      :task-id="phpMyAdminDrawer.taskId"
+      @retry="installPhpMyAdmin"
+    />
   </div>
 </template>
 
@@ -327,6 +609,99 @@ const deleteDatabase = async (row: any) => {
     span {
       color: var(--text-tertiary);
       font-size: 13px;
+    }
+  }
+
+  .phpmyadmin-card {
+    margin-bottom: 18px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background:
+      linear-gradient(110deg, color-mix(in srgb, var(--el-color-primary) 7%, transparent), transparent 48%),
+      var(--surface-card);
+    box-shadow: var(--shadow-xs);
+
+    &__icon {
+      width: 48px;
+      height: 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      color: var(--el-color-primary);
+      background: color-mix(in srgb, var(--el-color-primary) 12%, var(--surface-card));
+
+      .el-icon {
+        font-size: 24px;
+      }
+    }
+
+    &__content {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+
+      > span {
+        color: var(--text-tertiary);
+        font-size: 13px;
+        line-height: 1.5;
+      }
+    }
+
+    &__title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      strong {
+        color: var(--text-primary);
+        font-size: 15px;
+        font-weight: 650;
+      }
+    }
+
+    &__actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+  }
+
+  .database-row-actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 6px;
+    white-space: nowrap;
+
+    :deep(.el-button) {
+      margin-left: 0;
+      padding-inline: 4px;
+    }
+
+    :deep(.el-dropdown) {
+      display: inline-flex;
+      align-items: center;
+    }
+  }
+}
+
+.database-danger-action {
+  color: var(--el-color-danger);
+}
+
+@media (max-width: 920px) {
+  .database-container .phpmyadmin-card {
+    grid-template-columns: 48px minmax(0, 1fr);
+
+    &__actions {
+      grid-column: 1 / -1;
+      justify-content: flex-end;
     }
   }
 }

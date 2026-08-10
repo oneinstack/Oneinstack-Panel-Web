@@ -114,7 +114,10 @@ const conf = reactive({
         </template>
       </el-table-column>
     </el-table>
-    <div class="pagination">
+    <div class="pagination" :class="{ 'has-summary': Boolean($slots.summary) }">
+      <div v-if="$slots.summary" class="pagination__summary">
+        <slot name="summary" />
+      </div>
       <el-pagination
         background
         layout="prev, pager, next"
@@ -146,6 +149,18 @@ const conf = reactive({
   display: flex;
   justify-content: flex-end;
   margin-top: 14px;
+}
+
+.pagination.has-summary {
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.pagination__summary {
+  min-width: 0;
+  color: var(--text-tertiary);
+  font-size: 12px;
 }
 
 .table-empty {
@@ -256,6 +271,11 @@ const conf = reactive({
 
   .pagination {
     justify-content: center;
+  }
+
+  .pagination.has-summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>

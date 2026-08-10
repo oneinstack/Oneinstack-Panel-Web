@@ -7,6 +7,7 @@ import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 
 interface FirewallRuleForm {
   id?: number
+  ruleType: 'port'
   direction: 'in' | 'out'
   protocol: 'tcp' | 'udp' | 'icmp'
   strategy: 'allow' | 'deny'
@@ -14,6 +15,7 @@ interface FirewallRuleForm {
   ports: string
   state: number
   remark: string
+  expiresAt?: string | Date
 }
 
 const props = withDefaults(defineProps<{
@@ -38,13 +40,15 @@ const submitting = ref(false)
 const sourceMode = ref<'all' | 'custom'>('all')
 const customIPs = ref('')
 const form = reactive<FirewallRuleForm>({
+  ruleType: 'port',
   direction: 'in',
   protocol: 'tcp',
   strategy: 'allow',
   ips: '',
   ports: '',
   state: 1,
-  remark: ''
+  remark: '',
+  expiresAt: undefined
 })
 
 const visible = computed({
@@ -135,12 +139,14 @@ const rules: FormRules = {
 const resetFromProps = () => {
   const source = props.formData || {}
   form.id = source.id
+  form.ruleType = 'port'
   form.direction = source.direction || 'in'
   form.protocol = source.protocol || 'tcp'
   form.strategy = source.strategy || 'allow'
   form.ports = source.protocol === 'icmp' ? '' : (source.ports || '')
-  form.state = 1
+  form.state = source.state === 0 ? 0 : 1
   form.remark = source.remark || ''
+  form.expiresAt = source.expiresAt || undefined
   const sourceIPs = source.ips || ''
   if (sourceIPs && sourceIPs !== '0.0.0.0/0') {
     sourceMode.value = 'custom'
@@ -171,13 +177,15 @@ const submit = async () => {
   try {
     const payload = {
       id: props.type ? undefined : form.id,
+      ruleType: 'port',
       direction: form.direction,
       protocol: form.protocol,
       strategy: form.strategy,
       ips: sourceMode.value === 'custom' ? customIPs.value.trim() : '',
       ports: form.protocol === 'icmp' ? '' : form.ports.trim(),
-      state: 1,
-      remark: form.remark.trim()
+      state: form.state,
+      remark: form.remark.trim(),
+      expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : null
     }
     try {
       await submitOperation('firewall.rule_change', {
@@ -251,6 +259,19 @@ const submit = async () => {
 
       <el-form-item label="备注" prop="remark">
         <el-input v-model="form.remark" maxlength="200" show-word-limit placeholder="可选" />
+      </el-form-item>
+
+      <el-form-item label="有效期">
+        <el-date-picker
+          v-model="form.expiresAt"
+          type="datetime"
+          placeholder="永久有效"
+          class="full-width"
+        />
+      </el-form-item>
+
+      <el-form-item label="规则状态">
+        <el-switch v-model="form.state" :active-value="1" :inactive-value="0" active-text="立即启用" />
       </el-form-item>
 
       <el-alert

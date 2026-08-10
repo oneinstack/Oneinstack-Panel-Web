@@ -211,6 +211,13 @@ const runtimeStatusText = computed(() => {
 const runningContainers = computed(() =>
   containers.value.filter((item) => String(item.Status || '').toLowerCase().startsWith('up')).length
 )
+const latestTaskId = computed(() => containerTaskStore.order[0] || '')
+const activeTaskCount = computed(() =>
+  containerTaskStore.order.filter((id) => {
+    const task = containerTaskStore.tasks[id]
+    return task && !containerTaskStore.isTerminal(task.status)
+  }).length
+)
 const totalImagesSize = computed(() => images.value.map((item) => item.Size).filter(Boolean).join(' / ') || '--')
 const pageableTabs = ['containers', 'images', 'networks', 'volumes', 'registries'] as const
 const hasPagination = computed(() => pageableTabs.includes(activeTab.value as typeof pageableTabs[number]))
@@ -807,6 +814,16 @@ const openContainerTask = (result: any, request: Record<string, any>, targetTab:
   taskDrawer.show = true
   dialogVisible.value = false
   activeTab.value = targetTab
+}
+
+const openTaskDrawer = () => {
+  const taskId = latestTaskId.value
+  if (!taskId) {
+    ElMessage.info('暂无容器任务')
+    return
+  }
+  taskDrawer.taskId = taskId
+  taskDrawer.show = true
 }
 
 const submitDialog = async () => {
@@ -1440,6 +1457,9 @@ onBeforeUnmount(() => {
       </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" :loading="runtimeLoading || listLoading" @click="refreshAll">{{ t('common.refresh', 'Refresh') }}</el-button>
+        <el-button :disabled="!latestTaskId" @click="openTaskDrawer">
+          {{ t('container.task.containerTask', 'Container task') }}<span v-if="activeTaskCount">（{{ activeTaskCount }}）</span>
+        </el-button>
         <el-button
           type="primary"
           :icon="Plus"

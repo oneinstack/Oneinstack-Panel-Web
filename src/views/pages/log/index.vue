@@ -240,7 +240,7 @@ onMounted(async () => {
           <el-option :label="$t('common.failed')" value="failure" />
         </el-select>
         <el-select v-model="filters.method" clearable :placeholder="$t('audit.method')">
-          <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']" :key="method" :label="method" :value="method" />
+          <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'PTY']" :key="method" :label="method" :value="method" />
         </el-select>
         <el-select v-model="filters.sensitive" clearable :placeholder="$t('audit.sensitiveLevel')">
           <el-option :label="$t('audit.sensitiveOperations')" value="true" />
@@ -267,7 +267,10 @@ onMounted(async () => {
         <el-table-column prop="username" :label="$t('common.user')" width="120">
           <template #default="{ row }">{{ row.username || $t('common.unauthenticated') }}</template>
         </el-table-column>
-        <el-table-column prop="action" :label="$t('approvalCenter.action')" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="action" :label="$t('approvalCenter.action')" min-width="220" show-overflow-tooltip />
+        <el-table-column prop="message" :label="$t('audit.messageCommand')" min-width="300" show-overflow-tooltip>
+          <template #default="{ row }">{{ row.message || '—' }}</template>
+        </el-table-column>
         <el-table-column prop="remoteIp" :label="$t('audit.remoteIp')" min-width="135">
           <template #default="{ row }">{{ row.remoteIp || '—' }}</template>
         </el-table-column>

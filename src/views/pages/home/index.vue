@@ -43,6 +43,8 @@ interface ChartData {
   descend: { value: number; strValue: string }[]
 }
 
+const monitorChartMaxPoints = 60
+
 const conf = reactive({
   themeColor: {
     light: ['#F7911C'],
@@ -166,6 +168,12 @@ const conf = reactive({
       conf.monitorData.chartData.times.push(new Date().toLocaleTimeString())
       conf.monitorData.chartData.ascend.push(ascend)
       conf.monitorData.chartData.descend.push(descend)
+      const overflow = conf.monitorData.chartData.times.length - monitorChartMaxPoints
+      if (overflow > 0) {
+        conf.monitorData.chartData.times.splice(0, overflow)
+        conf.monitorData.chartData.ascend.splice(0, overflow)
+        conf.monitorData.chartData.descend.splice(0, overflow)
+      }
       conf.monitorData.chartOptions = {
         color: ['#FFAD79', '#79D1FF'],
         tooltip: {
@@ -225,45 +233,71 @@ const conf = reactive({
           {
             name: conf.monitorData.selectedType == 'network' ? t('home.upload', '上行') : t('home.read', '读取'),
             type: 'line',
-            smooth: false,
+            smooth: 0.42,
+            smoothMonotone: 'x',
             lineStyle: {
-              width: 1,
+              width: 2.5,
+              cap: 'round',
+              join: 'round',
               color: '#FFAD79'
             },
-            showSymbol: false,
+            showSymbol: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            itemStyle: {
+              color: '#FFAD79',
+              borderColor: '#FFFFFF',
+              borderWidth: 1.5
+            },
             areaStyle: {
-              opacity: 0.5,
+              opacity: 1,
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#FFAD79' },
-                { offset: 0.5, color: 'rgba(255,173,121,0.3)' },
-                { offset: 1, color: 'rgba(255,173,121,0.1)' }
+                { offset: 0, color: 'rgba(255, 173, 121, 0.42)' },
+                { offset: 0.55, color: 'rgba(255, 173, 121, 0.16)' },
+                { offset: 1, color: 'rgba(255, 173, 121, 0)' }
               ])
             },
             emphasis: {
-              focus: 'series'
+              focus: 'series',
+              scale: 1.35
             },
+            animationDurationUpdate: 500,
+            animationEasingUpdate: 'cubicOut',
             data: conf.monitorData.chartData.ascend
           },
           {
             name: conf.monitorData.selectedType == 'network' ? t('home.download', '下行') : t('home.write', '写入'),
             type: 'line',
-            smooth: false,
+            smooth: 0.42,
+            smoothMonotone: 'x',
             lineStyle: {
-              width: 1,
+              width: 2.5,
+              cap: 'round',
+              join: 'round',
               color: '#79D1FF'
             },
-            showSymbol: false,
+            showSymbol: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            itemStyle: {
+              color: '#79D1FF',
+              borderColor: '#FFFFFF',
+              borderWidth: 1.5
+            },
             areaStyle: {
-              opacity: 0.5,
+              opacity: 1,
               color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                { offset: 0, color: '#79D1FF' },
-                { offset: 0.5, color: 'rgba(121,240,255,0.3)' },
-                { offset: 1, color: 'rgba(121,240,255,0.1)' }
+                { offset: 0, color: 'rgba(121, 209, 255, 0.42)' },
+                { offset: 0.55, color: 'rgba(121, 209, 255, 0.16)' },
+                { offset: 1, color: 'rgba(121, 209, 255, 0)' }
               ])
             },
             emphasis: {
-              focus: 'series'
+              focus: 'series',
+              scale: 1.35
             },
+            animationDurationUpdate: 500,
+            animationEasingUpdate: 'cubicOut',
             data: conf.monitorData.chartData.descend
           }
         ]

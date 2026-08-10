@@ -285,9 +285,10 @@ const conf = reactive({
 </script>
 
 <template>
-  <div class="file-container relative">
-    <div class="absolute fit-width" style="padding-bottom: 30px">
-      <div class="box1">
+  <div class="file-container">
+    <div class="file-workspace">
+      <div class="workspace-tabs">
+        <div class="workspace-tabs__scroller">
         <div
           v-for="(item, index) in conf.tab.list"
           :key="index"
@@ -297,9 +298,9 @@ const conf = reactive({
         >
           <v-s-icon
             name="folder"
-            size="24"
+            size="19"
             :color="conf.theme[sapp.theme]"
-            style="transform: rotateY(180deg); margin-right: 14px"
+            style="transform: rotateY(180deg)"
           />
           <span class="path-tab-text">
             {{ item.path[item.path.length - 1] === '/' ? $t('file.rootDir') : item.path[item.path.length - 1] }}
@@ -308,7 +309,8 @@ const conf = reactive({
             <Close />
           </el-icon>
         </div>
-        <div class="add-btn hover-opacity" @click.stop="conf.tab.handleAddTab">+</div>
+        </div>
+        <button class="add-btn" aria-label="打开新文件标签" @click.stop="conf.tab.handleAddTab">+</button>
       </div>
       <file-list
         v-for="(_, index) in conf.tab.list"
@@ -337,45 +339,117 @@ const conf = reactive({
 </template>
 
 <style scoped lang="less">
-
 .file-container {
-  .box1 {
-    min-height: 62px;
-    border-radius: 12px;
-    margin-top: 0;
-    justify-content: flex-start;
+  min-width: 0;
+  padding: 0 2px 24px;
+}
 
-    .path-tab {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-right: 22px;
-      padding-inline-end: 12px;
-      border-right: 1px solid var(--border-subtle);
-      color: var(--text-tertiary);
-      font-size: 13px;
-      cursor: pointer;
+.file-workspace {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: 0 12px 34px rgba(15, 23, 42, 0.05);
+}
 
-      &.active,
-      &:hover {
-        .path-tab-text {
-          color: var(--text-primary);
-        }
-      }
+.workspace-tabs {
+  height: 45px;
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-subtle);
+}
 
-      .path-tab-text {
-        margin-right: 10px;
-      }
+.workspace-tabs__scroller {
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.path-tab {
+  min-width: 138px;
+  max-width: 220px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 13px;
+  position: relative;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.16s ease, color 0.16s ease;
+
+  &::after {
+    content: '';
+    height: 2px;
+    position: absolute;
+    right: 10px;
+    bottom: -1px;
+    left: 10px;
+    border-radius: 2px 2px 0 0;
+    background: transparent;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+    background: rgba(var(--primary-color), 0.035);
+  }
+
+  &.active {
+    color: var(--text-primary);
+    background: var(--surface-card);
+
+    &::after {
+      background: rgb(var(--primary-color));
     }
+  }
+}
 
-    .add-btn {
-      font-size: 24px;
-      color: var(--text-tertiary);
+.path-tab-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-weight: 620;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
-      &:hover {
-        color: rgb(var(--primary-color));
-      }
-    }
+.add-btn {
+  width: 45px;
+  flex: 0 0 45px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font: inherit;
+  font-size: 21px;
+  background: transparent;
+  cursor: pointer;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+    background: rgba(var(--primary-color), 0.06);
+  }
+}
+
+@media (max-width: 768px) {
+  .file-container {
+    padding-inline: 0;
+  }
+
+  .file-workspace {
+    border-radius: 10px;
+  }
+
+  .path-tab {
+    min-width: 122px;
   }
 }
 </style>

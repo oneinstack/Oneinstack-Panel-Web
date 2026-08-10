@@ -177,8 +177,8 @@ defineExpose({
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-else label="驱动">
-          <el-input v-model.trim="form.driver" placeholder="请输入驱动，例如 local" />
+        <el-form-item v-else label="模式·">
+          <el-input v-model.trim="form.driver" placeholder="请输入模式，例如 local" />
         </el-form-item>
       </template>
 

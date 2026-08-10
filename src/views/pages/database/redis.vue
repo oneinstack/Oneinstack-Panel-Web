@@ -1,29 +1,36 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { ConfProps } from './index.vue'
 import { Api } from '@/api/Api'
 import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
+import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 
 const { conf: parentConf } = defineProps<ConfProps>()
 
 const conf = reactive({
   ...parentConf,
   server: {
+    loading: true,
     options: [] as { label: string; value: number }[],
     getOptions: async () => {
-      const { data } = await Api.getConnlist(conf.list.params)
-      conf.server.options = data.map((item: any) => ({
-        label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
-        value: item.id
-      }))
-      if (conf.server.options.length) {
-        await conf.server.onChange(conf.server.options[0].value)
-      } else {
-        conf.list.params.id = 0
-        conf.dbList.params.id = 0
-        conf.dbList.data = []
-        conf.list.data = []
+      conf.server.loading = true
+      try {
+        const { data } = await Api.getConnlist(conf.list.params)
+        conf.server.options = data.map((item: any) => ({
+          label: item.remark ? `${item.remark}(${item.addr})` : item.addr,
+          value: item.id
+        }))
+        if (conf.server.options.length) {
+          await conf.server.onChange(conf.server.options[0].value)
+        } else {
+          conf.list.params.id = 0
+          conf.dbList.params.id = 0
+          conf.dbList.data = []
+          conf.list.data = []
+        }
+      } finally {
+        conf.server.loading = false
       }
     },
     onChange: async (value: number) => {
@@ -56,11 +63,18 @@ const conf = reactive({
 conf.list.loading = false
 
 const handleTabClick = async ({ paneName }: { paneName: string | number | undefined }) => {
-  conf.list.params.r_db = paneName
+  const database = Number(paneName ?? 0)
+  if (!Number.isInteger(database) || database < 0) return
+  conf.list.params.r_db = database
+  conf.list.params.page = 1
   await conf.list.getData()
 }
 
-conf.server.getOptions()
+const showEnvironmentEmpty = computed(
+  () => !conf.server.loading && conf.server.options.length === 0
+)
+
+void Promise.allSettled([parentConf.environment.getData(), conf.server.getOptions()])
 </script>
 
 <template>
@@ -79,6 +93,7 @@ conf.server.getOptions()
           :placeholder="$t('database.redisPanel.selectServer')"
           style="width: 200px"
           :no-data-text="$t('common.noData')"
+          :loading="conf.server.loading"
           @change="conf.server.onChange"
         >
           <el-option v-for="item in conf.server.options" v-bind="item" />
@@ -87,7 +102,12 @@ conf.server.getOptions()
     </div>
     <div class="box2">
       <el-tabs v-if="conf.dbList.data.length" v-model="conf.list.params.r_db" @tab-click="handleTabClick">
-        <el-tab-pane v-for="item in conf.dbList.data" :key="item.index" :label="`DB${item.name}`" :name="item.name" />
+        <el-tab-pane
+          v-for="item in conf.dbList.data"
+          :key="item.name"
+          :label="`DB${item.name}`"
+          :name="Number(item.name)"
+        />
       </el-tabs>
       <custom-table
         v-model:page="conf.list.params.page"
@@ -100,9 +120,14 @@ conf.server.getOptions()
         @update:page="conf.list.getData"
       >
         <template #empty>
-          <div class="no-data">
+          <database-environment-empty
+            v-if="showEnvironmentEmpty"
+            type="redis"
+            :installed="parentConf.environment.redis"
+          />
+          <div v-else class="no-data">
             <img src="/static/images/empty.webp" alt="" />
-            <span>{{ $t('common.noData') }}</span>
+            <span>{{ $t('database.redisPanel.emptyKeys') }}</span>
           </div>
         </template>
       </custom-table>

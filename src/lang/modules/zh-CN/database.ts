@@ -30,6 +30,31 @@ export default {
   deleteSuccess: '数据库和专用用户已删除',
   backupScheduleTipPrefix: '请在添加数据库后，务必到[',
   backupScheduleTipSuffix: ']添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者 MySQL 命令行创建的数据库需要点击“从服务器获取”才能在计划任务中备份',
+  more: '更多',
+  quickManage: '快捷管理',
+  phpMyAdmin: {
+    quickTitle: 'phpMyAdmin 快捷管理',
+    installed: '已安装',
+    installing: '安装中',
+    notInstalled: '未安装',
+    taskRunning: '安装任务正在后台运行，点击可查看实时进度与日志。',
+    installedDescription: '已安装 {version}，可直接打开或按数据库进入管理。',
+    phpRequired: '安装 phpMyAdmin 前需要先安装 PHP 运行环境。',
+    webServerRequired: '安装 phpMyAdmin 前需要先安装 Nginx、OpenResty、Apache 或 Caddy。',
+    installDescription: '将安装与 PHP {phpVersion} 兼容的 phpMyAdmin {version}。',
+    prerequisiteConfirm: 'phpMyAdmin 需要先安装 {name}。是否前往软件商城安装？',
+    missingPrerequisite: '缺少 {name}',
+    installPrerequisite: '安装 {name}',
+    skipInstall: '暂不安装',
+    packageUnavailable: 'Center 当前没有提供 phpMyAdmin 安装包，请先同步软件商城',
+    installPaused: 'Center 当前已暂停 phpMyAdmin 安装',
+    compatibleVersionUnavailable: 'Center 没有提供与当前 PHP 兼容的 phpMyAdmin 版本',
+    taskCreated: 'phpMyAdmin 安装任务已创建',
+    viewProgress: '查看安装进度',
+    open: '打开 phpMyAdmin',
+    quickInstall: '快捷安装',
+    versionDetail: '版本与详情'
+  },
   security: {
     inputPanelPassword: '请输入当前面板登录密码',
     passwordLengthWarning: '密码长度必须为 12–128 位',
@@ -71,7 +96,8 @@ export default {
   },
   redisPanel: {
     currentServerHint: '当前所有操作都关联至',
-    selectServer: '请选择一个服务器'
+    selectServer: '请选择一个服务器',
+    emptyKeys: '当前数据库暂无 Key'
   },
   backup: {
     title: '备份与恢复',

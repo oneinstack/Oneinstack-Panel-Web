@@ -24,10 +24,18 @@ import {
   InfoFilled,
   Download,
   PictureFilled,
-  View
+  View,
+  Grid,
+  List,
+  UploadFilled,
+  FolderAdd,
+  Monitor,
+  Tickets,
+  Folder,
+  Document
 } from '@element-plus/icons-vue'
 import { ElMessage, FormInstance, UploadFile, UploadInstance } from 'element-plus'
-import { nextTick, onMounted, reactive, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, reactive, useTemplateRef } from 'vue'
 import type { DrawerType, DrawerOpenType } from '../index.vue'
 import System from '@/utils/System'
 import { formatBytes } from '@/utils/fileSize'
@@ -66,6 +74,7 @@ const requireFilePermission = (permission: FilePermission) => {
   return false
 }
 const imageExtensionPattern = /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/i
+const archiveExtensionPattern = /\.(7z|bz2|gz|rar|tar|tgz|xz|zip)$/i
 const currentPath = () => conf.path.join('/').replace(/\/\//g, '/')
 const normalizeBool = (value: any) => value === true || value === 1 || value === '1' || value === 'true'
 const joinVirtualPath = (dir: string, name: string) => `${dir === '/' ? '' : dir}/${name}`
@@ -156,9 +165,20 @@ const loadImagePreviewUrl = async (path: string) => {
   return URL.createObjectURL(blob)
 }
 
+const fileTypeLabel = (row: any) => {
+  if (row?.isSymlink) return row?.isDir ? '目录链接' : '文件链接'
+  if (row?.isDir) return '文件夹'
+  if (imageExtensionPattern.test(row?.name || '')) return '图片'
+  if (archiveExtensionPattern.test(row?.name || '')) return '压缩包'
+  const extension = String(row?.name || '').split('.').pop()
+  return extension && extension !== row?.name ? extension.toUpperCase() : '文件'
+}
+
 const conf = reactive({
   tipPaste: '',
   path: ['/'],
+  quickFilter: '',
+  viewMode: 'list' as 'list' | 'grid',
   searchVisible: false,
   operationsVisible: false,
   editorVisible: false,
@@ -195,13 +215,14 @@ const conf = reactive({
     }
   },
   columns: [
-    { prop: 'name', label: t('file.columns.name', 'File name'), minWidth: '250', sortable: true },
-    { prop: 'identity', label: t('file.columns.identity', 'Permissions / Owner'), width: '170' },
-    { prop: 'size', label: t('file.columns.size', 'Size'), width: '120', sortable: true },
-    { prop: 'modTime', label: t('file.columns.modTime', 'Modified time'), width: '180', sortable: true },
-    { prop: 'action', label: t('file.columns.action', 'Actions'), minWidth: '390' }
+    { prop: 'name', label: t('file.columns.name', 'File name'), minWidth: '270', sortable: true },
+    { prop: 'type', label: t('file.columns.type', 'Type'), width: '110' },
+    { prop: 'identity', label: t('file.columns.identity', 'Permissions / Owner'), width: '150' },
+    { prop: 'size', label: t('file.columns.size', 'Size'), width: '110', sortable: true },
+    { prop: 'modTime', label: t('file.columns.modTime', 'Modified time'), width: '170', sortable: true },
+    { prop: 'action', label: t('file.columns.action', 'Actions'), minWidth: '360' }
   ],
-  fileList: [],
+  fileList: [] as any[],
   clipboard: {
     mode: '' as ClipboardMode,
     source: null as any
@@ -264,6 +285,7 @@ const conf = reactive({
     conf.getFileList(true)
     conf.getCapacity()
   },
+  openTerminal: () => System.router.push('/terminal'),
   handleFileClick: (row: any) => {
     if (!row.isDir) {
       if (conf.isImage(row)) {
@@ -686,16 +708,43 @@ onMounted(() => {
 defineExpose({
   refresh: () => conf.refresh()
 })
+
+const filteredFileList = computed(() => {
+  const keyword = conf.quickFilter.trim().toLowerCase()
+  if (!keyword) return conf.fileList
+  return conf.fileList.filter((row: any) => String(row?.name || '').toLowerCase().includes(keyword))
+})
+
+const fileStats = computed(() => {
+  const rows = filteredFileList.value as any[]
+  return {
+    total: rows.length,
+    directories: rows.filter((row) => row.isDir).length,
+    files: rows.filter((row) => !row.isDir).length,
+    hidden: rows.filter((row) => String(row?.name || '').startsWith('.')).length
+  }
+})
+
+const capacityUsedPercent = computed(() => {
+  const total = Number(conf.capacity?.diskTotalBytes || 0)
+  const available = Number(conf.capacity?.diskAvailableBytes || 0)
+  if (total <= 0) return 0
+  return Math.max(0, Math.min(100, Math.round(((total - available) / total) * 100)))
+})
 </script>
 
 <template>
-  <div>
-    <div class="box1" style="border-radius: 4px;">
-      <div class="flex items-center" style="width: 100%; flex: 0.8">
-        <div class="back-level hover-opacity" @click="conf.handleBackLevel()">
-          <el-icon size="24"><ArrowLeft /></el-icon>
-        </div>
-        <div style="flex: 1" @click.stop="conf.handleInputPath">
+  <div class="file-explorer">
+    <section class="navigation-bar">
+      <div class="path-navigator">
+        <el-button
+          class="path-action"
+          :icon="ArrowLeft"
+          :disabled="conf.path.length === 1"
+          aria-label="返回上一级"
+          @click="conf.handleBackLevel()"
+        />
+        <div class="path-field" @click.stop="conf.handleInputPath">
           <el-breadcrumb v-if="!conf.isInputPath" :separator-icon="ArrowRight">
             <el-breadcrumb-item
               v-for="(item, index) in conf.path"
@@ -707,130 +756,167 @@ defineExpose({
           </el-breadcrumb>
           <el-input
             v-else
-            v-model="conf.inputPath"
             ref="inputPathRef"
+            v-model="conf.inputPath"
+            class="path-input"
             @blur="conf.handleInputPathConfirm"
             @keyup.enter="conf.handleInputPathConfirm"
           />
         </div>
+        <el-button class="path-action" :icon="Refresh" aria-label="刷新当前目录" @click="conf.refresh" />
       </div>
-      <el-space :size="42">
-        <el-link @click.stop="conf.searchVisible = true">{{ t('file.searchFiles', 'Search files/folders') }}</el-link>
-        <div class="flex items-center">
-          <el-button class="refresh-btn" type="primary" :icon="Refresh" @click="conf.refresh" />
-          <el-button class="search-btn" type="primary" :icon="Search" @click="conf.searchVisible = true" />
-        </div>
-      </el-space>
-    </div>
-    <div class="tool-bar">
-      <div class="tool-bar__content">
-        <div class="tool-bar__row tool-bar__row--actions">
-          <el-dropdown v-if="canFilePermission('create')">
-            <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
-              {{ t('file.uploadDownload', 'Upload / Download') }}
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="conf.upload.handleOpenDialog">{{ t('file.uploadFiles', 'Upload files/folders') }}</el-dropdown-item>
-                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">{{ t('file.urlDownload', 'URL download') }}</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-dropdown v-if="canFilePermission('read')">
-            <el-button class="tool-bar__button tool-bar__button--soft" plain>
-              {{ t('file.favorites', 'Favorites') }}
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu class="favorite-menu">
-                <el-dropdown-item v-if="conf.favoritesLoading" disabled>{{ t('file.favoritesLoading', 'Loading favorites...') }}</el-dropdown-item>
-                <el-dropdown-item v-else-if="!conf.favorites.length" disabled>{{ t('file.noFavorites', 'No favorites') }}</el-dropdown-item>
-                <el-dropdown-item
-                  v-for="item in conf.favorites"
-                  :key="item.path"
-                  :disabled="item.isMissing"
-                  @click="conf.openFavorite(item)"
-                >
-                  <el-icon><Star /></el-icon>
-                  <span class="favorite-name">{{ item.name }}</span>
-                  <el-tag v-if="item.isMissing" size="small" type="warning" effect="plain">{{ t('file.missing', 'Missing') }}</el-tag>
-                  <small>{{ item.path }}</small>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-dropdown v-if="canFilePermission('create')">
-            <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
-              {{ t('file.newItem', 'New') }}
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
-            </el-button>
-            <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item @click="conf.handleOpenDrawer('create', 'file')">
-                  <div class="flex items-center" style="gap: 10px">
-                    <v-s-icon name="txt" size="22" />
-                    <span>{{ t('file.file', 'File') }}</span>
-                  </div>
-                </el-dropdown-item>
-                <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
-                  <div class="flex items-center" style="gap: 10px">
-                    <v-s-icon name="folder" size="22" />
-                    <span>{{ t('file.folder', 'Folder') }}</span>
-                  </div>
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-          </el-dropdown>
-          <el-button
-            v-if="conf.clipboard.source && canPasteClipboard()"
-            class="tool-bar__button tool-bar__button--clipboard"
-            type="success"
-            plain
-            @click="conf.pasteClipboard"
-          >
-            <span>{{ conf.tipPaste }}</span>
-            <span class="clipboard-name">{{ conf.clipboard.source.name }}</span>
+      <div class="navigation-search">
+        <el-input
+          v-model="conf.quickFilter"
+          clearable
+          :prefix-icon="Search"
+          :placeholder="t('file.filterCurrentDirectory', 'Filter current directory')"
+        />
+        <el-button :icon="Search" @click="conf.searchVisible = true">{{ t('file.deepSearch', 'Deep search') }}</el-button>
+      </div>
+    </section>
+
+    <section class="command-bar">
+      <div class="command-bar__primary">
+        <el-dropdown v-if="canFilePermission('create')">
+          <el-button class="command-button command-button--primary" type="primary" :icon="UploadFilled">
+            {{ t('file.uploadDownload', 'Upload / Download') }}
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
-        </div>
-        <div class="tool-bar__row tool-bar__row--meta">
-          <el-tag v-if="conf.capacity" class="tool-bar__pill tool-bar__pill--capacity" type="info" effect="plain">
-            {{ t('file.writable', 'Writable') }} {{ formatBytes(conf.capacity.writableBytes) }}
-          </el-tag>
-          <div class="tool-bar__location">
-            <span class="tool-bar__location-label">{{ t('file.rootPath', 'Managed root') }}</span>
-            <span class="tool-bar__location-value">{{ conf.rootPath }}</span>
-          </div>
-        </div>
-      </div>
-      <div class="tool-bar__actions">
-        <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="conf.operationsVisible = true">
-          {{ t('file.operationRecords', 'Operation records') }}
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="conf.upload.handleOpenDialog">{{ t('file.uploadFiles', 'Upload files/folders') }}</el-dropdown-item>
+              <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">{{ t('file.urlDownload', 'URL download') }}</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <el-dropdown v-if="canFilePermission('create')">
+          <el-button class="command-button" :icon="FolderAdd">
+            {{ t('file.newItem', 'New') }}
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item @click="conf.handleOpenDrawer('create', 'file')">
+                <el-icon><Document /></el-icon>{{ t('file.createFile', 'New file') }}
+              </el-dropdown-item>
+              <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
+                <el-icon><Folder /></el-icon>{{ t('file.createFolder', 'New folder') }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <el-dropdown v-if="canFilePermission('read')">
+          <el-button class="command-button" :icon="Star">
+            {{ t('file.favorites', 'Favorites') }}
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu class="favorite-menu">
+              <el-dropdown-item v-if="conf.favoritesLoading" disabled>{{ t('file.favoritesLoading', 'Loading favorites...') }}</el-dropdown-item>
+              <el-dropdown-item v-else-if="!conf.favorites.length" disabled>{{ t('file.noFavorites', 'No favorites') }}</el-dropdown-item>
+              <el-dropdown-item
+                v-for="item in conf.favorites"
+                :key="item.path"
+                :disabled="item.isMissing"
+                @click="conf.openFavorite(item)"
+              >
+                <el-icon><Star /></el-icon>
+                <span class="favorite-name">{{ item.name }}</span>
+                <el-tag v-if="item.isMissing" size="small" type="warning" effect="plain">{{ t('file.missing', 'Missing') }}</el-tag>
+                <small>{{ item.path }}</small>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+        <el-button
+          v-if="canFilePermission('read')"
+          class="command-button"
+          :icon="FolderOpened"
+          @click="conf.treeDialog.open()"
+        >
+          {{ t('file.directoryTree', 'Directory tree') }}
         </el-button>
         <el-button
-          v-if="canFilePermission('delete')"
-          class="tool-bar__button tool-bar__button--ghost"
-          type="primary"
-          plain
-          @click="emit('open-trash')"
+          v-if="sconfig.hasMenuAccess('terminal')"
+          class="command-button"
+          :icon="Monitor"
+          @click="conf.openTerminal"
         >
-          <span class="mr-1">{{ t('file.trash', 'Trash') }}</span>
-          <el-icon size="16"><Delete /></el-icon>
+          {{ t('file.terminal', 'Terminal') }}
         </el-button>
       </div>
+
+      <div class="command-bar__secondary">
+        <div v-if="conf.capacity" class="capacity-compact">
+          <div class="capacity-compact__label">
+            <span>{{ t('file.disk', 'Disk') }} {{ capacityUsedPercent }}%</span>
+            <strong>{{ t('file.writable', 'Writable') }} {{ formatBytes(conf.capacity.writableBytes) }}</strong>
+          </div>
+          <div class="capacity-compact__track">
+            <span :style="{ width: `${capacityUsedPercent}%` }" />
+          </div>
+        </div>
+        <el-tooltip :content="t('file.operationRecords', 'Operation records')" placement="bottom">
+          <el-button class="icon-command" :icon="Tickets" :aria-label="t('file.operationRecords', 'Operation records')" @click="conf.operationsVisible = true" />
+        </el-tooltip>
+        <el-tooltip v-if="canFilePermission('delete')" :content="t('file.trash', 'Trash')" placement="bottom">
+          <el-button class="icon-command" :icon="Delete" :aria-label="t('file.trash', 'Trash')" @click="emit('open-trash')" />
+        </el-tooltip>
+        <div class="view-switch" :aria-label="t('file.fileViewSwitch', 'File view switch')">
+          <el-button
+            :class="{ active: conf.viewMode === 'list' }"
+            :icon="List"
+            :aria-label="t('file.listView', 'List view')"
+            @click="conf.viewMode = 'list'"
+          />
+          <el-button
+            :class="{ active: conf.viewMode === 'grid' }"
+            :icon="Grid"
+            :aria-label="t('file.gridView', 'Grid view')"
+            @click="conf.viewMode = 'grid'"
+          />
+        </div>
+      </div>
+    </section>
+
+    <div v-if="conf.clipboard.source && canPasteClipboard()" class="clipboard-strip">
+      <div>
+        <el-icon><CopyDocument /></el-icon>
+        <span>{{ conf.tipPaste }}</span>
+        <strong>{{ conf.clipboard.source.name }}</strong>
+      </div>
+      <div>
+        <el-button type="primary" size="small" @click="conf.pasteClipboard">{{ t('file.pasteNow', 'Paste now') }}</el-button>
+        <el-button size="small" @click="conf.clearClipboard">{{ t('common.cancel', 'Cancel') }}</el-button>
+      </div>
     </div>
-    <div class="box2">
-      <custom-table :data="conf.fileList" :columns="conf.columns" :loading="conf.loading">
+
+    <section v-if="conf.viewMode === 'list'" class="file-table-shell">
+      <custom-table
+        class="file-data-table"
+        :data="filteredFileList"
+        :columns="conf.columns"
+        :loading="conf.loading"
+        :page-size="50"
+      >
         <template #name="{ row }">
-          <div class="flex items-center" style="gap: 10px">
+          <div class="file-name-cell">
             <span v-if="conf.isImage(row)" class="image-file-icon">
               <el-icon><PictureFilled /></el-icon>
             </span>
-            <v-s-icon v-else :name="row.isDir ? 'folder' : 'txt'" size="22" />
+            <v-s-icon v-else :name="row.isDir ? 'folder' : 'txt'" size="21" />
             <el-link :disabled="!canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
               <span class="ellipsis file-name">{{ row.name }}</span>
             </el-link>
+            <el-icon v-if="conf.isFavorite(row.path)" class="favorite-mark"><Star /></el-icon>
+            <span v-if="row.isSymlink" class="symlink-mark">链接</span>
           </div>
+        </template>
+        <template #type="{ row }">
+          <span class="file-type" :class="{ 'is-directory': row.isDir, 'is-image': conf.isImage(row) }">
+            {{ fileTypeLabel(row) }}
+          </span>
         </template>
         <template #identity="{ row }">
           <div class="identity-cell">
@@ -945,8 +1031,76 @@ defineExpose({
             </el-dropdown>
           </div>
         </template>
+        <template #summary>
+          <div class="file-summary">
+            <span>共 <strong>{{ fileStats.total }}</strong> 项</span>
+            <span>{{ fileStats.directories }} 个文件夹</span>
+            <span>{{ fileStats.files }} 个文件</span>
+            <span v-if="fileStats.hidden">{{ fileStats.hidden }} 个隐藏项</span>
+            <span v-if="conf.quickFilter" class="file-summary__filter">已从 {{ conf.fileList.length }} 项中筛选</span>
+          </div>
+        </template>
       </custom-table>
-    </div>
+    </section>
+
+    <section v-else class="file-grid-shell" v-loading="conf.loading">
+      <div v-if="filteredFileList.length" class="file-grid">
+        <article
+          v-for="row in filteredFileList"
+          :key="row.path"
+          class="file-card"
+          tabindex="0"
+          @dblclick="conf.handleFileClick(row)"
+          @keyup.enter="conf.handleFileClick(row)"
+        >
+          <div class="file-card__icon" :class="{ 'is-image': conf.isImage(row) }">
+            <el-icon v-if="conf.isImage(row)"><PictureFilled /></el-icon>
+            <v-s-icon v-else :name="row.isDir ? 'folder' : 'txt'" size="42" />
+          </div>
+          <div class="file-card__body">
+            <strong :title="row.name">{{ row.name }}</strong>
+            <span>{{ fileTypeLabel(row) }} · {{ row.isDir ? '—' : row.size }}</span>
+            <small>{{ row.modTime }}</small>
+          </div>
+          <el-dropdown trigger="click" class="file-card__menu">
+            <el-button text :icon="MoreFilled" aria-label="更多操作" @click.stop />
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-if="canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
+                  <el-icon><FolderOpened /></el-icon>{{ row.isDir ? '打开' : conf.isImage(row) ? '预览' : '编辑' }}
+                </el-dropdown-item>
+                <el-dropdown-item v-if="!row.isDir && canFilePermission('read')" @click="conf.handleFileDownload(row)">
+                  <el-icon><Download /></el-icon>下载
+                </el-dropdown-item>
+                <el-dropdown-item v-if="canFilePermission('read')" @click="conf.toggleFavorite(row)">
+                  <el-icon><Star /></el-icon>{{ conf.isFavorite(row.path) ? '取消收藏' : '收藏' }}
+                </el-dropdown-item>
+                <el-dropdown-item v-if="canFilePermission('read')" @click="conf.operationDialog.open('properties', row)">
+                  <el-icon><InfoFilled /></el-icon>属性
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canFilePermission('delete')"
+                  divided
+                  class="danger-menu-item"
+                  @click="conf.fileDialog.open('delete', row)"
+                >
+                  <el-icon><Delete /></el-icon>删除
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </article>
+      </div>
+      <el-empty v-else description="当前目录没有文件" />
+      <footer class="file-grid-footer">
+        <div class="file-summary">
+          <span>共 <strong>{{ fileStats.total }}</strong> 项</span>
+          <span>{{ fileStats.directories }} 个文件夹</span>
+          <span>{{ fileStats.files }} 个文件</span>
+        </div>
+        <span>管理根目录 {{ conf.rootPath }}</span>
+      </footer>
+    </section>
 
     <custom-dialog
       v-model="conf.imagePreview.show"
@@ -1259,219 +1413,307 @@ defineExpose({
 </template>
 
 <style scoped lang="less">
-.back-level {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 22px;
-  padding-inline-end: 22px;
-  border-right: 1px solid var(--font-color-gray);
-}
-
-.refresh-btn,
-.search-btn {
-  width: 36px;
-  height: 36px;
-}
-
-.tool-bar {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
-  gap: 16px 20px;
-  padding: 16px 18px;
-  border: 1px solid rgba(148, 163, 184, 0.18);
-  border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.92)),
-    var(--surface-subtle);
-  box-shadow:
-    0 10px 28px rgba(15, 23, 42, 0.035),
-    inset 0 1px 0 rgba(255, 255, 255, 0.7);
-}
-
-.tool-bar__content {
+.file-explorer {
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 10px;
 }
 
-.tool-bar__row {
+.navigation-bar {
   min-width: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(280px, 420px);
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
-.tool-bar__row--meta {
-  align-items: stretch;
-  padding-top: 2px;
-}
-
-.tool-bar__actions {
-  display: flex;
-  flex-direction: row;
-  align-items: stretch;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.tool-bar__button {
-  min-height: 40px;
-  padding-inline: 16px;
-  border-radius: 10px;
-  font-weight: 600;
-}
-
-.tool-bar__button--accent {
-  min-width: 124px;
-  box-shadow: 0 10px 20px rgba(244, 63, 94, 0.14);
-}
-
-.tool-bar__button--soft {
-  min-width: 112px;
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.tool-bar__button--clipboard {
-  max-width: min(100%, 360px);
-  background: linear-gradient(180deg, rgba(240, 253, 244, 0.95), rgba(220, 252, 231, 0.92));
-}
-
-.tool-bar__button--ghost {
-  min-width: 112px;
-  background: rgba(255, 241, 242, 0.82);
-}
-
-.tool-bar__pill {
-  min-height: 34px;
+.path-navigator,
+.navigation-search {
+  min-width: 0;
+  height: 40px;
   display: flex;
   align-items: center;
-  justify-content: center;
-  padding-inline: 12px;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
+  gap: 6px;
 }
 
-.tool-bar__pill--capacity {
-  white-space: nowrap;
+.path-navigator {
+  padding: 3px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: var(--surface-card);
 }
 
-.tool-bar__location {
-  min-height: 34px;
+.path-field {
   min-width: 0;
-  // flex: 1 1 320px;
+  height: 32px;
   display: flex;
+  flex: 1;
   align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  border: 1px solid rgba(34, 197, 94, 0.24);
-  border-radius: 10px;
-  color: #2f7d32;
-  background: rgba(240, 253, 244, 0.72);
-  font-size: 13px;
-}
-
-.tool-bar__location-label {
-  flex: 0 0 auto;
-  font-weight: 700;
-}
-
-.tool-bar__location-value {
-  min-width: 0;
+  padding: 0 10px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0.92;
-}
+  border-radius: 6px;
+  cursor: text;
 
-.clipboard-name {
-  max-width: 180px;
-  margin-left: 6px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  opacity: 0.75;
-}
-
-@media (max-width: 1200px) {
-  .tool-bar {
-    grid-template-columns: 1fr;
+  &:hover {
+    background: var(--surface-subtle);
   }
 
-  .tool-bar__actions {
-    justify-content: flex-start;
+  :deep(.el-breadcrumb) {
+    min-width: 0;
+    display: flex;
+    overflow: hidden;
   }
 
-  .tool-bar__actions > * {
+  :deep(.el-breadcrumb__item) {
     flex: 0 0 auto;
   }
-}
 
-@media (max-width: 768px) {
-  .tool-bar {
-    gap: 12px;
-    padding: 14px;
-    border-radius: 16px;
+  :deep(.el-breadcrumb__inner) {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 560;
+    cursor: pointer;
   }
 
-  .tool-bar__row,
-  .tool-bar__actions {
-    gap: 10px;
-  }
-
-  .tool-bar__row > *,
-  .tool-bar__actions > * {
-    flex: 1 1 calc(50% - 10px);
-    min-width: 0;
-  }
-
-  .tool-bar__button,
-  .tool-bar__pill,
-  .tool-bar__location {
-    width: 100%;
-    justify-content: center;
-  }
-
-  .tool-bar__button--clipboard {
-    max-width: none;
-  }
-
-  .clipboard-name {
-    max-width: 120px;
+  :deep(.el-breadcrumb__item:last-child .el-breadcrumb__inner) {
+    color: var(--text-primary);
+    font-weight: 680;
   }
 }
 
-@media (max-width: 560px) {
-  .tool-bar__row > *,
-  .tool-bar__actions > * {
-    flex-basis: 100%;
-  }
+.path-input {
+  width: 100%;
 
-  .tool-bar__location {
-    align-items: flex-start;
-    justify-content: flex-start;
-    flex-direction: column;
-    padding-block: 10px;
+  :deep(.el-input__wrapper) {
+    padding: 0;
+    box-shadow: none;
   }
+}
 
-  .tool-bar__location-value {
-    width: 100%;
-  }
+.path-action {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  margin: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  background: transparent;
+}
 
-  .tool-bar__button--ghost {
+.navigation-search {
+  :deep(.el-input) {
     min-width: 0;
   }
+
+  :deep(.el-input__wrapper) {
+    min-height: 40px;
+    border-radius: 9px;
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
+  }
+
+  > .el-button {
+    height: 40px;
+    margin: 0;
+    border-radius: 9px;
+  }
+}
+
+.command-bar {
+  min-width: 0;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 7px 9px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-subtle);
+}
+
+.command-bar__primary,
+.command-bar__secondary {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.command-bar__primary {
+  flex-wrap: wrap;
+}
+
+.command-bar__secondary {
+  flex: 0 0 auto;
+}
+
+.command-button,
+.icon-command {
+  height: 34px;
+  margin: 0;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 620;
+  background: var(--surface-card);
+}
+
+.command-button--primary {
+  background: rgb(var(--primary-color));
+}
+
+.capacity-compact {
+  width: 194px;
+  padding: 3px 8px;
+}
+
+.capacity-compact__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+
+  strong {
+    color: var(--text-secondary);
+    font-weight: 650;
+  }
+}
+
+.capacity-compact__track {
+  height: 3px;
+  margin-top: 4px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--border-subtle);
+
+  span {
+    height: 100%;
+    display: block;
+    border-radius: inherit;
+    background: linear-gradient(90deg, rgb(var(--primary-color)), var(--primary-color-light));
+  }
+}
+
+.view-switch {
+  display: flex;
+  padding: 2px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+
+  .el-button {
+    width: 30px;
+    height: 28px;
+    margin: 0;
+    border: 0;
+    border-radius: 6px;
+    color: var(--text-tertiary);
+    background: transparent;
+
+    &.active {
+      color: rgb(var(--primary-color));
+      background: rgba(var(--primary-color), 0.1);
+    }
+  }
+}
+
+.clipboard-strip {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 6px 10px;
+  border: 1px solid rgba(var(--primary-color), 0.24);
+  border-radius: 9px;
+  color: var(--text-secondary);
+  background: rgba(var(--primary-color), 0.055);
+  font-size: 12px;
+
+  > div {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  strong {
+    max-width: 360px;
+    overflow: hidden;
+    color: var(--text-primary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.file-table-shell,
+.file-grid-shell {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-card);
+}
+
+:deep(.file-data-table .smart-table) {
+  border-radius: 0;
+  background: var(--surface-card);
+  box-shadow: none;
+}
+
+:deep(.file-data-table .smart-table th.el-table__cell) {
+  height: 41px;
+  color: var(--text-secondary);
+  background: var(--surface-subtle);
+}
+
+:deep(.file-data-table .smart-table td.el-table__cell) {
+  height: 45px;
+}
+
+:deep(.file-data-table .smart-table .cell) {
+  padding: 0 11px;
+}
+
+:deep(.file-data-table .pagination) {
+  min-height: 49px;
+  margin: 0;
+  padding: 7px 11px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+:deep(.file-data-table .pagination .el-pagination.is-background .btn-next),
+:deep(.file-data-table .pagination .el-pagination.is-background .btn-prev),
+:deep(.file-data-table .pagination .el-pagination.is-background .el-pager li) {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 7px;
+}
+
+.file-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+
+  strong {
+    color: var(--text-primary);
+  }
+}
+
+.file-summary__filter {
+  color: rgb(var(--primary-color));
 }
 
 .identity-cell {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
 
   .identity-owner {
     color: var(--text-tertiary);
@@ -1480,16 +1722,58 @@ defineExpose({
 }
 
 .file-name {
-  max-width: 210px;
+  max-width: 220px;
+}
+
+.file-name-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.favorite-mark {
+  flex: 0 0 auto;
+  color: #f59e0b;
+  font-size: 13px;
+}
+
+.symlink-mark {
+  flex: 0 0 auto;
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #0891b2;
+  font-size: 10px;
+  background: rgba(6, 182, 212, 0.09);
+}
+
+.file-type {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 5px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  background: var(--surface-subtle);
+
+  &.is-directory {
+    color: #2563eb;
+    background: rgba(59, 130, 246, 0.09);
+  }
+
+  &.is-image {
+    color: #7c3aed;
+    background: rgba(139, 92, 246, 0.09);
+  }
 }
 
 .image-file-icon {
-  width: 26px;
-  height: 26px;
+  width: 23px;
+  height: 23px;
   display: grid;
   flex: 0 0 auto;
   place-items: center;
-  border-radius: 8px;
+  border-radius: 6px;
   color: #3b82f6;
   font-size: 16px;
   background: rgba(59, 130, 246, 0.1);
@@ -1500,19 +1784,25 @@ defineExpose({
   align-items: center;
   flex-wrap: nowrap;
   gap: 0;
-  padding: 4px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 11px;
-  background: var(--surface-subtle);
+  padding: 0;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(6px);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
 
   :deep(.el-button + .el-button) {
     margin-left: 0;
   }
 
   :deep(.el-button) {
-    min-height: 30px;
-    padding: 6px 9px;
-    border-radius: 8px;
+    min-height: 28px;
+    padding: 5px 7px;
+    border-radius: 6px;
   }
 
   :deep(.el-button.is-link) {
@@ -1535,10 +1825,186 @@ defineExpose({
   }
 
   :deep(.action-main) {
-    margin-right: 3px;
+    margin-right: 2px;
     border-color: rgba(var(--primary-color), 0.22);
     font-size: 12px;
     background: rgba(var(--primary-color), 0.07);
+  }
+}
+
+// 桌面端保持操作列简洁，只在当前行悬停或通过键盘聚焦时显示按钮。
+:deep(.smart-table .el-table__body tr:hover) .row-actions,
+:deep(.smart-table .el-table__body tr:focus-within) .row-actions {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(0);
+}
+
+// 触屏设备没有可靠的 hover，必须始终保留可操作入口。
+@media (hover: none), (pointer: coarse) {
+  .row-actions {
+    opacity: 1;
+    pointer-events: auto;
+    transform: none;
+  }
+}
+
+.file-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 8px;
+  padding: 10px;
+}
+
+.file-card {
+  min-width: 0;
+  min-height: 92px;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 28px;
+  align-items: center;
+  gap: 9px;
+  padding: 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 9px;
+  background: var(--surface-card);
+  cursor: default;
+  transition: border-color 0.16s ease, background 0.16s ease, transform 0.16s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(var(--primary-color), 0.32);
+    outline: none;
+    background: rgba(var(--primary-color), 0.025);
+    transform: translateY(-1px);
+  }
+}
+
+.file-card__icon {
+  height: 48px;
+  display: grid;
+  place-items: center;
+
+  &.is-image {
+    border-radius: 9px;
+    color: #7c3aed;
+    font-size: 28px;
+    background: rgba(139, 92, 246, 0.09);
+  }
+}
+
+.file-card__body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  strong,
+  span,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: var(--text-primary);
+    font-size: 13px;
+  }
+
+  span,
+  small {
+    color: var(--text-tertiary);
+    font-size: 10px;
+  }
+}
+
+.file-card__menu {
+  align-self: start;
+
+  .el-button {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+  }
+}
+
+.file-grid-footer {
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 7px 11px;
+  border-top: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+@media (max-width: 1180px) {
+  .navigation-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .command-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .command-bar__secondary {
+    width: 100%;
+  }
+
+  .capacity-compact {
+    flex: 1;
+  }
+}
+
+@media (max-width: 720px) {
+  .file-explorer {
+    padding: 7px;
+  }
+
+  .navigation-bar {
+    gap: 7px;
+  }
+
+  .navigation-search > .el-button {
+    width: 40px;
+    padding: 0;
+    overflow: hidden;
+    color: transparent;
+
+    :deep(.el-icon) {
+      margin: 0;
+      color: var(--text-secondary);
+    }
+  }
+
+  .command-bar__primary,
+  .command-bar__secondary {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .capacity-compact {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .clipboard-strip,
+  .file-grid-footer {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .file-summary {
+    flex-wrap: wrap;
+    gap: 6px 12px;
+  }
+
+  :deep(.file-data-table .pagination.has-summary) {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 
