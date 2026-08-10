@@ -359,15 +359,19 @@ onUnmounted(() => {
           />
         </el-select>
         <el-input v-model="keyword" clearable :placeholder="$t('runtimeLog.keyword')" @keyup.enter="applyFilters" />
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          :start-placeholder="$t('runtimeLog.startTime')"
-          :end-placeholder="$t('runtimeLog.endTime')"
-          :range-separator="$t('runtimeLog.rangeSeparator')"
-        />
-        <el-button class="filter-action" type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
-        <el-button class="filter-action" @click="resetFilters">{{ $t('common.reset') }}</el-button>
+        <div class="filter-date">
+          <el-date-picker
+            v-model="dateRange"
+            type="datetimerange"
+            :start-placeholder="$t('runtimeLog.startTime')"
+            :end-placeholder="$t('runtimeLog.endTime')"
+            :range-separator="$t('runtimeLog.rangeSeparator')"
+          />
+        </div>
+        <div class="filter-actions">
+          <el-button type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
+          <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
+        </div>
       </div>
 
       <div class="console-toolbar">
@@ -472,13 +476,22 @@ onUnmounted(() => {
 
 .filters {
   display: grid;
-  grid-template-columns: 140px 180px minmax(220px, 1fr) minmax(320px, 1.3fr) auto auto;
+  grid-template-columns: 140px 180px minmax(220px, 1fr) minmax(320px, 1.3fr) auto;
   gap: 10px;
   margin-bottom: 16px;
+}
 
-  .filter-action {
+.filter-actions {
+  display: flex;
+  gap: 10px;
+
+  .el-button + .el-button {
     margin-left: 0;
   }
+}
+
+.filter-date :deep(.el-date-editor) {
+  width: 100%;
 }
 
 .console-toolbar {
@@ -511,7 +524,7 @@ onUnmounted(() => {
   &:hover { background: rgba(255, 255, 255, .05); }
   .cursor, .time, .source { color: #8490a4; }
   .level { font-weight: 700; }
-  .message { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .message { white-space: pre; overflow-wrap: normal; }
 
   &.level-debug .level { color: #8a97aa; }
   &.level-info .level { color: #61afef; }
@@ -523,15 +536,33 @@ onUnmounted(() => {
   margin-top: 14px;
 }
 
+@media (max-width: 1500px) {
+  .filters {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+
+    .filter-date { grid-column: span 2; }
+  }
+
+  .filter-actions {
+    justify-self: end;
+  }
+}
+
 @media (max-width: 1250px) {
   .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .filters { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
 }
 
 @media (max-width: 760px) {
   .page-heading, .console-toolbar { align-items: flex-start; flex-direction: column; }
   .heading-actions { flex-wrap: wrap; }
   .stats-grid, .filters { grid-template-columns: 1fr; }
+  .filters .filter-date { grid-column: auto; }
+  .filter-actions {
+    grid-column: auto;
+    justify-self: stretch;
+
+    .el-button { flex: 1; }
+  }
   .log-panel { padding: 12px; }
   .log-console { max-height: 65vh; }
   .log-line {
