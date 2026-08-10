@@ -246,14 +246,15 @@ onMounted(async () => {
           <el-option :label="$t('audit.sensitiveOperations')" value="true" />
           <el-option :label="$t('audit.normalOperation')" value="false" />
         </el-select>
-        <el-date-picker
-          class="filter-date"
-          v-model="dateRange"
-          type="datetimerange"
-          :start-placeholder="$t('audit.startTime')"
-          :end-placeholder="$t('audit.endTime')"
-          :range-separator="$t('audit.rangeSeparator')"
-        />
+        <div class="filter-date">
+          <el-date-picker
+            v-model="dateRange"
+            type="datetimerange"
+            :start-placeholder="$t('audit.startTime')"
+            :end-placeholder="$t('audit.endTime')"
+            :range-separator="$t('audit.rangeSeparator')"
+          />
+        </div>
         <el-button class="filter-action" type="primary" @click="search">{{ $t('common.query') }}</el-button>
         <el-button class="filter-action" @click="reset">{{ $t('common.reset') }}</el-button>
       </div>
