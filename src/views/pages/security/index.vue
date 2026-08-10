@@ -8,32 +8,39 @@ const conf = reactive({
   list: markRaw([
     {
       name: '系统防火墙',
+      nameKey: 'security.systemFirewall',
       index: 0,
       component: Firewall
     }
     // ,
     // {
     //   name: 'SSH管理',
+    //   nameKey: 'security.sshManagement',
     //   index: 1
     // },
     // {
     //   name: '安全检测',
+    //   nameKey: 'security.safetyDetection',
     //   index: 2
     // },
     // {
     //   name: '违规词检测',
+    //   nameKey: 'security.violationWordDetection',
     //   index: 3
     // },
     // {
     //   name: 'PHP网站安全',
+    //   nameKey: 'security.phpWebsiteSecurity',
     //   index: 4
     // },
     // {
     //   name: '入侵防御',
+    //   nameKey: 'security.intrusionPrevention',
     //   index: 5
     // },
     // {
     //   name: '系统加固',
+    //   nameKey: 'security.systemHardening',
     //   index: 6
     // }
   ]),

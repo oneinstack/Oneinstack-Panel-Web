@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import LoginContainer from './components/login-container.vue'
 import System from '@/utils/System'
 import { Api } from '@/api/Api'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import sconfig from '@/sstore/sconfig'
+import i18n from '@/lang'
 
 const isDesktop = ref(window.innerWidth > 980)
 const updateViewport = () => {
@@ -25,6 +26,12 @@ const goAfterLogin = (routePath: string) => {
   System.router.push(normalizedRoute)
 }
 
+const loginRules = computed<FormRules>(() => ({
+  username: [{ required: true, message: i18n.t('login.usernameRequired'), trigger: 'blur' }],
+  password: [{ required: true, message: i18n.t('login.passwordRequired'), trigger: 'blur' }],
+  totpCode: [{ required: true, message: i18n.t('login.totpRequired'), trigger: 'blur' }]
+}))
+
 const conf = reactive({
   form: {
     username: '',
@@ -35,11 +42,6 @@ const conf = reactive({
   requiresTwoFactor: false,
   loading: false,
   formRef: useTemplateRef<FormInstance>('formRef'),
-  rules: {
-    username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-    password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
-    totpCode: [{ required: true, message: '请输入动态口令或恢复码', trigger: 'blur' }]
-  } as FormRules,
   handleLogin: () => {
     conf.formRef?.validate(async valid => {
       if (!valid) return
@@ -54,7 +56,7 @@ const conf = reactive({
         if (res.requiresTwoFactor && !res.authenticated) {
           conf.requiresTwoFactor = true
           conf.form.totpCode = ''
-          ElMessage.info('请输入身份验证器动态口令或恢复码')
+          ElMessage.info(i18n.t('login.totpMessage'))
           return
         }
 
@@ -70,7 +72,7 @@ const conf = reactive({
           }
         }
 
-        ElMessage.success('登录成功')
+        ElMessage.success(i18n.t('login.loginSuccess'))
         setTimeout(() => {
           goAfterLogin(res.mustChangePassword ? '/first-login' : '/')
         }, 500)
@@ -89,23 +91,23 @@ const conf = reactive({
         <div class="brand-mark">1S</div>
         <div>
           <strong>OneinStack Panel</strong>
-          <span>服务器管理控制台</span>
+          <span>{{ $t('login.mobileBrandSubtitle') }}</span>
         </div>
       </div>
 
       <div class="login-heading">
-        <div class="eyebrow">WELCOME BACK</div>
-        <h2>{{ conf.requiresTwoFactor ? '验证您的身份' : '登录管理面板' }}</h2>
+        <div class="eyebrow">{{ $t('login.welcomeBack') }}</div>
+        <h2>{{ conf.requiresTwoFactor ? $t('login.verifyIdentity') : $t('login.loginPanel') }}</h2>
         <p>
-          {{ conf.requiresTwoFactor ? '完成二次认证后即可安全进入控制台。' : '使用面板管理员账号继续访问服务器。' }}
+          {{ conf.requiresTwoFactor ? $t('login.twoFactorDescription') : $t('login.loginDescription') }}
         </p>
       </div>
 
-      <el-form ref="formRef" :model="conf.form" :rules="conf.rules" class="login-form">
+      <el-form ref="formRef" :model="conf.form" :rules="loginRules" class="login-form">
         <el-alert
           v-if="conf.requiresTwoFactor"
-          title="二次认证"
-          description="请输入身份验证器中的 6 位动态口令，也可以使用一条未使用的恢复码。"
+          :title="$t('login.twoFactorTitle')"
+          :description="$t('login.twoFactorAlert')"
           type="info"
           :closable="false"
           show-icon
@@ -116,11 +118,11 @@ const conf = reactive({
           v-if="!conf.requiresTwoFactor"
           :class="className.formItemGap"
           prop="username"
-          label="账号"
+          :label="$t('login.username')"
         >
           <el-input
             v-model="conf.form.username"
-            placeholder="请输入管理员账号"
+            :placeholder="$t('login.usernamePlaceholder')"
             clearable
             autocomplete="username"
             @keyup.enter="conf.handleLogin"
@@ -131,10 +133,10 @@ const conf = reactive({
           </el-input>
         </el-form-item>
 
-        <el-form-item v-if="!conf.requiresTwoFactor" prop="password" label="密码">
+        <el-form-item v-if="!conf.requiresTwoFactor" prop="password" :label="$t('login.password')">
           <el-input
             v-model="conf.form.password"
-            placeholder="请输入登录密码"
+            :placeholder="$t('login.passwordPlaceholder')"
             type="password"
             show-password
             autocomplete="current-password"
@@ -146,10 +148,10 @@ const conf = reactive({
           </el-input>
         </el-form-item>
 
-        <el-form-item v-else prop="totpCode" label="动态口令或恢复码">
+        <el-form-item v-else prop="totpCode" :label="$t('login.totpCode')">
           <el-input
             v-model="conf.form.totpCode"
-            placeholder="请输入认证代码"
+            :placeholder="$t('login.totpPlaceholder')"
             clearable
             autocomplete="one-time-code"
             @keyup.enter="conf.handleLogin"
@@ -161,8 +163,8 @@ const conf = reactive({
         </el-form-item>
 
         <div v-if="!conf.requiresTwoFactor" class="form-options">
-          <el-checkbox v-model="conf.form.remember" label="记住登录状态" />
-          <span class="security-tip"><i></i> 加密连接</span>
+          <el-checkbox v-model="conf.form.remember" :label="$t('login.rememberLogin')" />
+          <span class="security-tip"><i></i> {{ $t('login.encryptedConnection') }}</span>
         </div>
         <el-button
           v-else
@@ -170,11 +172,11 @@ const conf = reactive({
           class="back-button"
           @click="conf.requiresTwoFactor = false; conf.form.totpCode = ''"
         >
-          ← 返回账号密码登录
+          ← {{ $t('login.backToPasswordLogin') }}
         </el-button>
 
         <button :class="className.loginBtn" type="button" @click="conf.handleLogin">
-          <span>{{ conf.requiresTwoFactor ? '验证并登录' : '安全登录' }}</span>
+          <span>{{ conf.requiresTwoFactor ? $t('login.verifyAndLogin') : $t('login.secureLogin') }}</span>
           <span aria-hidden="true">→</span>
         </button>
       </el-form>
@@ -182,8 +184,8 @@ const conf = reactive({
       <div class="login-note">
         <span class="shield">✓</span>
         <div>
-          <strong>安全提示</strong>
-          <p>请确认访问地址正确，不要在公共设备保存登录信息。</p>
+          <strong>{{ $t('login.noticeTitle') }}</strong>
+          <p>{{ $t('login.noticeDescription') }}</p>
         </div>
       </div>
     </template>

@@ -3,6 +3,7 @@ import { Api } from '@/api/Api'
 import { Document, FolderOpened, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive } from 'vue'
+import i18n from '@/lang'
 
 interface TreeNode {
   name: string
@@ -21,6 +22,11 @@ const props = withDefaults(defineProps<{ path?: string }>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const treeProps = {
   label: 'name',
@@ -47,7 +53,7 @@ const normalizeNodes = (items: any[], parentPath = '/'): TreeNode[] => {
       const path = normalizePath(item.path, parentPath === '/' ? `/${name}` : `${parentPath}/${name}`)
       const isDir = Boolean(item.isDir ?? item.type === 'directory' ?? item.children?.length)
       return {
-        name: path === '/' ? '根目录' : name,
+        name: path === '/' ? t('file.rootDir', 'Root directory') : name,
         path,
         isDir,
         children: normalizeNodes(item.children || item.dirs || item.directories || [], path)
@@ -62,7 +68,7 @@ const normalizeTreeData = (data: any): TreeNode[] => {
   if (nodes.length === 1 && nodes[0].path === '/') return nodes
   return [
     {
-      name: '根目录',
+      name: t('file.rootDir', 'Root directory'),
       path: '/',
       isDir: true,
       children: nodes
@@ -87,11 +93,11 @@ const loadTree = async () => {
     const { data } = await Api.getFileTree({ path: queryPath })
     state.treeData = normalizeTreeData(data)
     if (!state.treeData.length) {
-      state.treeData = [{ name: queryPath === '/' ? '根目录' : queryPath.split('/').pop() || queryPath, path: queryPath, isDir: true, children: [] }]
+      state.treeData = [{ name: queryPath === '/' ? t('file.rootDir', 'Root directory') : queryPath.split('/').pop() || queryPath, path: queryPath, isDir: true, children: [] }]
     }
     selectPath(queryPath)
   } catch (error: any) {
-    ElMessage.error(error?.message || '目录树读取失败')
+    ElMessage.error(error?.message || t('file.treeReadFailed', 'Failed to read directory tree'))
   } finally {
     state.loading = false
   }
@@ -108,7 +114,7 @@ defineExpose({
   <div class="file-tree-panel">
     <div class="file-tree-panel__header">
       <span class="file-tree-panel__path">{{ state.selectedPath }}</span>
-      <el-button :icon="Refresh" link @click="loadTree">刷新</el-button>
+      <el-button :icon="Refresh" link @click="loadTree">{{ $t('common.refresh') }}</el-button>
     </div>
     <el-tree
       v-loading="state.loading"

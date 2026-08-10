@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { Back } from '@element-plus/icons-vue'
+import { computed } from 'vue'
+import i18n from '@/lang'
 
 interface Props {
   visible: boolean
@@ -25,8 +27,6 @@ const props = withDefaults(defineProps<Props>(), {
   title: '',
   loading: false,
   size: '520px',
-  cancelText: '取消',
-  confirmText: '确认',
   showFooter: true,
   showCancel: true,
   showConfirm: true,
@@ -36,6 +36,14 @@ const props = withDefaults(defineProps<Props>(), {
   closeOnClickModal: true,
   direction: 'rtl'
 })
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
+
+const cancelLabel = computed(() => props.cancelText || t('common.cancel', 'Cancel'))
+const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Confirm'))
 </script>
 
 <template>
@@ -53,7 +61,7 @@ const props = withDefaults(defineProps<Props>(), {
       <div class="drawerHeader">
         <div class="back" @click="onClose">
           <el-icon><Back /></el-icon>
-          <span>返回</span>
+          <span>{{ $t('common.back') }}</span>
         </div>
         <span class="title">{{ props.title }}</span>
       </div>
@@ -65,7 +73,7 @@ const props = withDefaults(defineProps<Props>(), {
     </template>
     <template v-if="showFooter" #footer>
       <div class="drawerFooter">
-        <el-button v-if="showCancel" @click="onClose">{{ cancelText }}</el-button>
+        <el-button v-if="showCancel" @click="onClose">{{ cancelLabel }}</el-button>
         <el-button
           v-if="showConfirm"
           :loading="loading"
@@ -73,7 +81,7 @@ const props = withDefaults(defineProps<Props>(), {
           :type="confirmType"
           @click="onConfirm"
         >
-          {{ confirmText }}
+          {{ confirmLabel }}
         </el-button>
       </div>
     </template>

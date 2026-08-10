@@ -6,9 +6,15 @@ import { ElMessage, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
+import i18n from '@/lang'
 
 export interface ConfProps {
   conf: typeof conf
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 const conf = reactive({
@@ -34,6 +40,7 @@ const conf = reactive({
     list: [
       {
         name: 'MySQL',
+        nameKey: 'database.mysql',
         index: 0,
         value: 'mysql'
       },
@@ -47,6 +54,7 @@ const conf = reactive({
       // },
       {
         name: 'Redis',
+        nameKey: 'database.redis',
         index: 3,
         value: 'redis'
       },
@@ -84,19 +92,19 @@ const conf = reactive({
       switch (conf.list.params.type) {
         case 'mysql':
           return [
-            { prop: 'name', label: '数据库名' },
-            { prop: 'user', label: '用户名' },
-            { prop: 'encoding', label: '字符集', placeholder: 'utf8mb4' },
-            { prop: 'capacity', label: '容量', placeholder: '未配置' },
-            { prop: 'p_addr', label: '数据库位置' },
-            { prop: 'action', label: '操作' }
+            { prop: 'name', label: t('database.databaseName', 'Database name') },
+            { prop: 'user', label: t('common.username', 'Username') },
+            { prop: 'encoding', label: t('database.encoding', 'Charset'), placeholder: 'utf8mb4' },
+            { prop: 'capacity', label: t('database.capacity', 'Capacity'), placeholder: t('database.notConfigured', 'Not configured') },
+            { prop: 'p_addr', label: t('database.databaseLocation', 'Database location') },
+            { prop: 'action', label: t('common.action', 'Action') }
           ]
         case 'redis':
           return [
-            { prop: 'key', label: '键' },
-            { prop: 'type', label: '类型' },
-            { prop: 'length', label: '长度' },
-            { prop: 'expiration', label: '有效期' }
+            { prop: 'key', label: t('database.key', 'Key') },
+            { prop: 'type', label: t('common.type', 'Type') },
+            { prop: 'length', label: t('database.length', 'Length') },
+            { prop: 'expiration', label: t('database.expiration', 'Expiration') }
           ]
         default:
           return []
@@ -113,13 +121,13 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: '添加数据库',
+    title: 'Add database',
     type: 'add',
     loading: false,
     open: (type: 'add') => {
       conf.drawer.type = type
       conf.drawer.show = true
-      conf.drawer.title = '添加数据库'
+      conf.drawer.title = t('database.addDatabase', 'Add database')
     },
     onClose: () => {
       conf.form.instance?.clearValidate()
@@ -138,7 +146,7 @@ const conf = reactive({
             type: 'mysql'
           }
           const { data: credential } = await Api.addDatabaseLib(request)
-          ElMessage.success('数据库和专用用户创建成功')
+          ElMessage.success(t('database.createSuccess', 'Database and dedicated user created'))
           await conf.list.getData()
           conf.drawer.show = false
           conf.credential.open(credential)
@@ -160,13 +168,13 @@ const conf = reactive({
           case 'mysql':
             return [
               {
-                label: '数据库名',
+                label: t('database.databaseName', 'Database name'),
                 prop: 'name',
                 type: 'custom',
-                rules: [{ required: true, message: '请输入数据库名', trigger: 'blur' }]
+                rules: [{ required: true, message: t('database.databaseNameRequired', 'Enter database name'), trigger: 'blur' }]
               },
               {
-                label: '添加至',
+                label: t('database.addTo', 'Add to'),
                 prop: 'id',
                 asyncOptions: async () => {
                   const { data } = await Api.getConnlist(conf.list.params)
@@ -181,7 +189,7 @@ const conf = reactive({
                   }))
                 },
                 type: 'select',
-                rules: [{ required: true, message: '请选择', trigger: 'change' }]
+                rules: [{ required: true, message: t('common.selectPlaceholder', 'Select'), trigger: 'change' }]
               }
             ]
           default:
@@ -197,9 +205,9 @@ conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)!
 conf.list.params.type = routeName
 
 const copyCredential = async () => {
-  const text = `数据库：${conf.credential.database}\n用户名：${conf.credential.username}\n密码：${conf.credential.password}`
+  const text = `${t('database.database', 'Database')}: ${conf.credential.database}\n${t('common.username', 'Username')}: ${conf.credential.username}\n${t('common.password', 'Password')}: ${conf.credential.password}`
   await navigator.clipboard.writeText(text)
-  ElMessage.success('账号密码已复制')
+  ElMessage.success(t('database.credentialCopied', 'Account and password copied'))
 }
 </script>
 
@@ -235,29 +243,29 @@ const copyCredential = async () => {
 
     <custom-dialog
       v-model:show="conf.credential.show"
-      title="数据库账号"
+      :title="$t('database.databaseAccount')"
     >
       <el-alert
-        title="该账号只拥有当前数据库权限，请妥善保存密码。"
+        :title="$t('database.credentialTip')"
         type="success"
         :closable="false"
         show-icon
         style="margin-bottom: 18px"
       />
       <el-form label-width="78px">
-        <el-form-item label="数据库">
+        <el-form-item :label="$t('database.database')">
           <el-input :model-value="conf.credential.database" readonly />
         </el-form-item>
-        <el-form-item label="用户名">
+        <el-form-item :label="$t('common.username')">
           <el-input :model-value="conf.credential.username" readonly />
         </el-form-item>
-        <el-form-item label="密码">
+        <el-form-item :label="$t('common.password')">
           <el-input :model-value="conf.credential.password" readonly show-password />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="conf.credential.show = false">关闭</el-button>
-        <el-button type="primary" @click="copyCredential">复制账号密码</el-button>
+        <el-button @click="conf.credential.show = false">{{ $t('common.close') }}</el-button>
+        <el-button type="primary" @click="copyCredential">{{ $t('database.copyCredential') }}</el-button>
       </template>
     </custom-dialog>
   </div>

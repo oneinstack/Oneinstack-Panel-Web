@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import sapp from '@/sstore/sapp'
 import { computed, reactive } from 'vue'
+import i18n from '@/lang'
 
 export interface ColumnItem {
   label: string
@@ -20,6 +21,7 @@ interface Props {
   pageSize?: number
   autoPagination?: boolean
   total?: number
+  emptyText?: string
   columns: ColumnItem[]
   data: any[]
 }
@@ -39,6 +41,11 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<Emits>()
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const conf = reactive({
   total: computed(() => (props.autoPagination ? props.data.length : props.total)),
@@ -61,14 +68,14 @@ const conf = reactive({
       class="smart-table"
       style="width: 100%"
       @selection-change="selectionChange"
-      empty-text="暂无数据"
+      :empty-text="props.emptyText || t('common.noData', 'No data')"
     >
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
         <div v-else class="table-empty">
           <div class="table-empty__icon">[]</div>
-          <strong>暂无数据</strong>
-          <p>当前筛选条件下还没有记录，试试调整搜索或筛选项。</p>
+          <strong>{{ props.emptyText || t('common.noData', 'No data') }}</strong>
+          <p>{{ t('common.noDataDescription', 'No records match the current filters. Try adjusting search or filters.') }}</p>
         </div>
       </template>
       <el-table-column v-if="selection" type="selection" width="55"/>

@@ -5,11 +5,16 @@ import { Api } from '@/api/Api'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 const requestedConnectionType = String(System.getRouterParams().type || 'mysql')
 const connectionType = ['mysql', 'redis'].includes(requestedConnectionType)
   ? requestedConnectionType
   : 'mysql'
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 
 const conf: Record<string, any> = reactive({
   themeColor: {
@@ -22,14 +27,14 @@ const conf: Record<string, any> = reactive({
     params: {
       type: connectionType
     },
-    columns: [
-      { prop: 'addr', label: '数据库地址' },
-      { prop: 'port', label: '端口' },
-      { prop: 'root', label: '用户名' },
-      { prop: 'passwordConfigured', label: '密码状态' },
-      { prop: 'remark', label: '备注' },
-      { prop: 'action', label: '操作' }
-    ],
+    columns: computed(() => [
+      { prop: 'addr', label: t('database.remote.databaseAddress', 'Database address') },
+      { prop: 'port', label: t('database.remote.port', 'Port') },
+      { prop: 'root', label: t('common.username', 'Username') },
+      { prop: 'passwordConfigured', label: t('database.remote.passwordStatus', 'Password status') },
+      { prop: 'remark', label: t('common.remark', 'Remark') },
+      { prop: 'action', label: t('common.action', 'Action') }
+    ]),
     getData: async () => {
       conf.list.loading = true
       const { data } = await Api.getConnlist(conf.list.params)
@@ -38,25 +43,25 @@ const conf: Record<string, any> = reactive({
     },
     syncData: async (id: number) => {
       await Api.syncDatabaseConn({ id })
-      ElMessage.success('同步成功！')
+      ElMessage.success(t('database.remote.syncSuccess', 'Sync succeeded'))
     },
     testData: async (row: any) => {
       await Api.testDatabaseConn({ ...row, password: '' })
-      ElMessage.success('连接测试成功')
+      ElMessage.success(t('database.remote.testSuccess', 'Connection test succeeded'))
     },
     deleteData: async (row: any) => {
       try {
         await ElMessageBox.confirm(
-          `确定从面板移除 ${row.addr}:${row.port}？此操作只删除连接和面板中的同步记录，不会删除远端数据库。`,
-          '移除数据库连接',
+          t('database.remote.removeConfirmMessage', 'Remove {address} from the panel? This only deletes the connection and synced records in the panel, not the remote database.', { address: `${row.addr}:${row.port}` }),
+          t('database.remote.removeConnection', 'Remove database connection'),
           {
             type: 'warning',
-            confirmButtonText: '确认移除',
-            cancelButtonText: '取消'
+            confirmButtonText: t('database.remote.confirmRemove', 'Confirm removal'),
+            cancelButtonText: t('common.cancel', 'Cancel')
           }
         )
         await Api.deleteDatabaseConn({ id: row.id })
-        ElMessage.success('数据库连接已移除')
+        ElMessage.success(t('database.remote.connectionRemoved', 'Database connection removed'))
         await conf.list.getData()
       } catch (error: any) {
         if (error === 'cancel' || error === 'close') return
@@ -66,13 +71,13 @@ const conf: Record<string, any> = reactive({
   },
   drawer: {
     show: false,
-    title: '添加数据库',
+    title: '',
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
-      conf.drawer.title = '添加数据库'
+      conf.drawer.title = t('database.remote.addDatabase', 'Add database')
       if (type === 'edit') {
-        conf.drawer.title = '编辑数据库'
+        conf.drawer.title = t('database.remote.editDatabase', 'Edit database')
         const cloneRow = structuredClone(toRaw(row))
         cloneRow.password = ''
         conf.form.data.value = cloneRow
@@ -93,7 +98,7 @@ const conf: Record<string, any> = reactive({
           const api = conf.drawer.type === 'add' ? Api.addDatabaseConn : Api.updateDatabaseConn
           await api(conf.form.data.value)
           conf.form.data.value.password = ''
-          ElMessage.success(conf.drawer.type === 'add' ? '连接测试并添加成功' : '连接测试并保存成功')
+          ElMessage.success(conf.drawer.type === 'add' ? t('database.remote.addSuccess', 'Connection tested and added') : t('database.remote.saveSuccess', 'Connection tested and saved'))
           await conf.list.getData()
           conf.drawer.show = false
         } finally {
@@ -114,36 +119,36 @@ const conf: Record<string, any> = reactive({
           case 'redis':
             return [
               {
-                label: '数据库地址',
+                label: t('database.remote.databaseAddress', 'Database address'),
                 prop: 'addr',
                 type: 'input',
-                rules: [{ required: true, message: '请输入数据库地址', trigger: 'blur' }]
+                rules: [{ required: true, message: t('database.remote.inputDatabaseAddress', 'Enter database address'), trigger: 'blur' }]
               },
               {
-                label: '端口',
+                label: t('database.remote.port', 'Port'),
                 prop: 'port',
                 type: 'input',
-                rules: [{ required: true, message: '请输入端口', trigger: 'blur' }]
+                rules: [{ required: true, message: t('database.remote.inputPort', 'Enter port'), trigger: 'blur' }]
               },
               {
-                label: '用户名',
+                label: t('common.username', 'Username'),
                 prop: 'root',
                 type: 'input',
-                rules: [{ required: true, message: '请输入用户名', trigger: 'blur' }]
+                rules: [{ required: true, message: t('database.remote.inputUsername', 'Enter username'), trigger: 'blur' }]
               },
               {
-                label: '密码',
+                label: t('common.password', 'Password'),
                 prop: 'password',
                 type: 'password',
-                placeholder: conf.drawer.type === 'edit' ? '留空表示保持现有密码' : '',
+                placeholder: conf.drawer.type === 'edit' ? t('database.remote.keepPasswordPlaceholder', 'Leave blank to keep existing password') : '',
                 rules: [{
                   required: conf.list.params.type === 'mysql' && conf.drawer.type === 'add',
-                  message: '请输入密码',
+                  message: t('database.remote.inputPassword', 'Enter password'),
                   trigger: 'blur'
                 }]
               },
               {
-                label: '备注',
+                label: t('common.remark', 'Remark'),
                 prop: 'remark',
                 type: 'textarea'
               }
@@ -164,42 +169,42 @@ conf.list.getData()
     <div class="container">
       <div class="tool-bar">
         <div class="btn-group">
-          <el-button type="primary" @click="conf.drawer.open('add')">添加远程服务器</el-button>
+          <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('database.remote.addRemoteServer') }}</el-button>
         </div>
       </div>
       <div class="box2">
         <div class="drawerHeader">
           <div class="back" @click="System.router.back()">
             <el-icon><Back /></el-icon>
-            <span>返回</span>
+            <span>{{ $t('common.back') }}</span>
           </div>
-          <span class="title">远程服务器</span>
+          <span class="title">{{ $t('database.remote.remoteServer') }}</span>
         </div>
         <custom-table :loading="conf.list.loading" :data="conf.list.data" :columns="conf.list.columns">
           <template #empty>
             <div style="margin-top: 40px">
               <span>
-                您的远程服务器列表为空，您可以
+                {{ $t('database.remote.emptyPrefix') }}
                 <a
                   class="cursor-pointer"
                   style="color: var(--el-color-primary); text-decoration: underline"
                   @click="conf.drawer.open('add')"
                 >
-                  添加一个远程服务器
+                  {{ $t('database.remote.emptyAction') }}
                 </a>
               </span>
             </div>
           </template>
           <template #passwordConfigured="{ row }">
             <el-tag :type="row.passwordConfigured ? 'success' : 'info'">
-              {{ row.passwordConfigured ? '已安全配置' : '未配置' }}
+              {{ row.passwordConfigured ? $t('database.remote.passwordConfigured') : $t('database.notConfigured') }}
             </el-tag>
           </template>
           <template #action="{ row }">
-            <el-button type="primary" link @click="conf.drawer.open('edit', row)">编辑</el-button>
-            <el-button type="primary" link @click="conf.list.testData(row)">测试</el-button>
-            <el-button type="primary" link @click="conf.list.syncData(row.id)">同步</el-button>
-            <el-button type="danger" link @click="conf.list.deleteData(row)">移除</el-button>
+            <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ $t('common.edit') }}</el-button>
+            <el-button type="primary" link @click="conf.list.testData(row)">{{ $t('database.remote.test') }}</el-button>
+            <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ $t('common.sync') }}</el-button>
+            <el-button type="danger" link @click="conf.list.deleteData(row)">{{ $t('common.remove') }}</el-button>
           </template>
         </custom-table>
       </div>

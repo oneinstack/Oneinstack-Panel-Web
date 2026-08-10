@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 interface RuntimeLogEntry {
   id: number
@@ -27,6 +28,11 @@ interface RuntimeLogStats {
   dropped: number
   retentionDays: number
   sources: Array<{ source: string; count: number }>
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 const entries = ref<RuntimeLogEntry[]>([])
@@ -57,11 +63,11 @@ let statsTimer: ReturnType<typeof setInterval> | undefined
 
 const historicalMode = computed(() => Boolean(dateRange.value?.length))
 const streamLabel = computed(() => ({
-  connecting: '正在连接',
-  live: '实时连接',
-  reconnecting: '断线重连',
-  paused: '已暂停',
-  history: '历史查询'
+  connecting: t('runtimeLog.connecting', '正在连接'),
+  live: t('runtimeLog.live', '实时连接'),
+  reconnecting: t('runtimeLog.reconnecting', '断线重连'),
+  paused: t('runtimeLog.paused', '已暂停'),
+  history: t('runtimeLog.history', '历史查询')
 }[streamState.value]))
 const streamType = computed(() => ({
   connecting: 'warning',
@@ -217,12 +223,12 @@ const clearView = () => {
   entries.value = []
   oldestID.value = 0
   hasOlder.value = false
-  ElMessage.success('已清空浏览器中的当前视图，服务器日志未删除')
+  ElMessage.success(t('runtimeLog.clearViewSuccess', '已清空浏览器中的当前视图，服务器日志未删除'))
 }
 
 const exportVisible = () => {
   if (!entries.value.length) {
-    ElMessage.warning('当前没有可导出的日志')
+    ElMessage.warning(t('runtimeLog.noExportLogs', '当前没有可导出的日志'))
     return
   }
   const content = entries.value.map((entry) =>
@@ -239,7 +245,7 @@ const exportVisible = () => {
 
 const copyVisible = async () => {
   if (!entries.value.length) {
-    ElMessage.warning('当前没有可复制的日志')
+    ElMessage.warning(t('runtimeLog.noCopyLogs', '当前没有可复制的日志'))
     return
   }
   const content = entries.value.map((entry) =>
@@ -248,7 +254,7 @@ const copyVisible = async () => {
   if (window.isSecureContext && navigator.clipboard) {
       try {
         await navigator.clipboard.writeText(content)
-        ElMessage.success('当前视图已复制')
+        ElMessage.success(t('runtimeLog.copied', '当前视图已复制'))
         return
       } catch {
         // 剪贴板权限被拒绝时继续尝试兼容复制
@@ -263,7 +269,7 @@ const copyVisible = async () => {
     document.body.appendChild(textarea)
     try {
       textarea.select()
-      if (!document.execCommand('copy')) throw new Error('浏览器拒绝复制')
+      if (!document.execCommand('copy')) throw new Error(t('runtimeLog.copyRejected', '浏览器拒绝复制'))
     } finally {
       textarea.remove()
     }
@@ -297,50 +303,50 @@ onUnmounted(() => {
   <div class="runtime-page">
     <div class="page-heading">
       <div>
-        <h2>运行日志中心</h2>
-        <p>持久化面板进程与 HTTP 访问日志，使用游标和 SSE 实时续传；密码、Token、Cookie 等凭据会在写入前脱敏。</p>
+        <h2>{{ $t('runtimeLog.title') }}</h2>
+        <p>{{ $t('runtimeLog.fullDescription') }}</p>
       </div>
       <div class="heading-actions">
         <el-tag :type="streamType" effect="dark">{{ streamLabel }}</el-tag>
         <el-button v-if="!historicalMode" @click="toggleStream">
-          {{ streamState === 'paused' ? '恢复实时日志' : '暂停实时日志' }}
+          {{ streamState === 'paused' ? $t('runtimeLog.resumeLive') : $t('runtimeLog.pauseLive') }}
         </el-button>
-        <el-button type="primary" :loading="loading" @click="applyFilters">刷新</el-button>
+        <el-button type="primary" :loading="loading" @click="applyFilters">{{ $t('common.refresh') }}</el-button>
       </div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <span>当前保留</span>
+        <span>{{ $t('runtimeLog.currentRetention') }}</span>
         <strong>{{ stats.total }}</strong>
-        <small>保留 {{ stats.retentionDays || '—' }} 天</small>
+        <small>{{ $t('runtimeLog.retentionDays', { days: stats.retentionDays || '—' }) }}</small>
       </div>
       <div class="stat-card success">
-        <span>最近 24 小时</span>
+        <span>{{ $t('runtimeLog.last24Hours') }}</span>
         <strong>{{ stats.last24Hours }}</strong>
-        <small>最新游标 #{{ stats.latestId || 0 }}</small>
+        <small>{{ $t('runtimeLog.latestCursor', { cursor: stats.latestId || 0 }) }}</small>
       </div>
       <div class="stat-card danger">
-        <span>错误日志</span>
+        <span>{{ $t('runtimeLog.errorLogs') }}</span>
         <strong>{{ stats.errorCount }}</strong>
-        <small>按当前保留周期统计</small>
+        <small>{{ $t('runtimeLog.retentionCycleHint') }}</small>
       </div>
       <div class="stat-card warning">
-        <span>写入丢弃</span>
+        <span>{{ $t('runtimeLog.droppedWrites') }}</span>
         <strong>{{ stats.dropped }}</strong>
-        <small>队列过载或持久化失败</small>
+        <small>{{ $t('runtimeLog.droppedHint') }}</small>
       </div>
     </div>
 
     <div class="log-panel">
       <div class="filters">
-        <el-select v-model="level" clearable placeholder="日志级别">
+        <el-select v-model="level" clearable :placeholder="$t('runtimeLog.level')">
           <el-option label="DEBUG" value="debug" />
           <el-option label="INFO" value="info" />
           <el-option label="WARNING" value="warning" />
           <el-option label="ERROR" value="error" />
         </el-select>
-        <el-select v-model="source" clearable filterable placeholder="日志来源">
+        <el-select v-model="source" clearable filterable :placeholder="$t('runtimeLog.source')">
           <el-option
             v-for="item in stats.sources"
             :key="item.source"
@@ -348,31 +354,31 @@ onUnmounted(() => {
             :value="item.source"
           />
         </el-select>
-        <el-input v-model="keyword" clearable placeholder="日志内容关键词" @keyup.enter="applyFilters" />
+        <el-input v-model="keyword" clearable :placeholder="$t('runtimeLog.keyword')" @keyup.enter="applyFilters" />
         <el-date-picker
           v-model="dateRange"
           type="datetimerange"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          range-separator="至"
+          :start-placeholder="$t('runtimeLog.startTime')"
+          :end-placeholder="$t('runtimeLog.endTime')"
+          :range-separator="$t('runtimeLog.rangeSeparator')"
         />
-        <el-button type="primary" @click="applyFilters">查询</el-button>
-        <el-button @click="resetFilters">重置</el-button>
+        <el-button type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
+        <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
       <div class="console-toolbar">
         <div>
           <el-button :disabled="!hasOlder || !oldestID" :loading="loadingOlder" @click="loadOlder">
-            加载更早日志
+            {{ $t('runtimeLog.loadOlder') }}
           </el-button>
-          <span>当前显示 {{ entries.length }} 条，浏览器最多保留 2000 条</span>
+          <span>{{ $t('runtimeLog.visibleCount', { count: entries.length }) }}</span>
         </div>
         <div>
-          <el-switch v-model="autoScroll" active-text="自动滚动" />
-          <el-button link type="primary" @click="scrollToBottom">滚动到底部</el-button>
-          <el-button link type="primary" @click="copyVisible">复制</el-button>
-          <el-button link type="primary" @click="exportVisible">导出当前视图</el-button>
-          <el-button link @click="clearView">清空视图</el-button>
+          <el-switch v-model="autoScroll" :active-text="$t('runtimeLog.autoScroll')" />
+          <el-button link type="primary" @click="scrollToBottom">{{ $t('runtimeLog.scrollBottom') }}</el-button>
+          <el-button link type="primary" @click="copyVisible">{{ $t('common.copy') }}</el-button>
+          <el-button link type="primary" @click="exportVisible">{{ $t('runtimeLog.exportVisible') }}</el-button>
+          <el-button link @click="clearView">{{ $t('runtimeLog.clearView') }}</el-button>
         </div>
       </div>
 
@@ -384,7 +390,7 @@ onUnmounted(() => {
           <span class="source">[{{ entry.source }}]</span>
           <span class="message">{{ entry.message }}</span>
         </div>
-        <el-empty v-if="!loading && !entries.length" description="当前筛选条件下没有运行日志" />
+        <el-empty v-if="!loading && !entries.length" :description="$t('runtimeLog.noLogs')" />
       </div>
 
       <el-alert
@@ -393,7 +399,7 @@ onUnmounted(() => {
         type="warning"
         :closable="false"
         show-icon
-        :title="`运行期间有 ${stats.dropped} 条日志未能持久化，请检查磁盘、SQLite 状态或日志突发流量。`"
+        :title="$t('runtimeLog.droppedTitle', { count: stats.dropped })"
       />
     </div>
   </div>

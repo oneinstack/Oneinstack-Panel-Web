@@ -6,10 +6,16 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { Api } from '@/api/Api'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import sconfig from '@/sstore/sconfig'
+import i18n from '@/lang'
 
 type BastionStatus = 'online' | 'offline' | 'error' | 'unknown'
 type AuthMethod = 'password' | 'key'
 type TimeRange = '1h' | '6h' | '24h' | '7d'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 interface BastionServer {
   id: number
@@ -102,25 +108,25 @@ const canWrite = computed(() =>
 )
 
 const rules = computed<FormRules>(() => ({
-  name: [{ required: true, message: '请输入服务器名称', trigger: 'blur' }],
-  host: [{ required: true, message: '请输入 IP 地址或主机名', trigger: 'blur' }],
-  port: [{ required: true, message: '请输入 SSH 端口', trigger: 'blur' }],
-  username: [{ required: true, message: '请输入 SSH 用户名', trigger: 'blur' }],
+  name: [{ required: true, message: t('bastion.serverNameRequired', '请输入服务器名称'), trigger: 'blur' }],
+  host: [{ required: true, message: t('bastion.hostRequired', '请输入 IP 地址或主机名'), trigger: 'blur' }],
+  port: [{ required: true, message: t('bastion.portRequired', '请输入 SSH 端口'), trigger: 'blur' }],
+  username: [{ required: true, message: t('bastion.usernameRequired', '请输入 SSH 用户名'), trigger: 'blur' }],
   password: [{
     required: !editingId.value && form.authMethod === 'password',
-    message: '请输入 SSH 密码',
+    message: t('bastion.passwordRequired', '请输入 SSH 密码'),
     trigger: 'blur'
   }],
   privateKey: [
     {
       required: form.authMethod === 'key' && (!editingId.value || !form.keyConfigured),
-      message: '请输入完整 SSH 私钥文本',
+      message: t('bastion.privateKeyRequired', '请输入完整 SSH 私钥文本'),
       trigger: 'blur'
     },
     {
       validator: (_rule, value, callback) => {
         if (form.authMethod !== 'key' || !value) return callback()
-        if (String(value).length > 64 * 1024) return callback(new Error('私钥文本不能超过 64KB'))
+        if (String(value).length > 64 * 1024) return callback(new Error(t('bastion.privateKeyTooLong', '私钥文本不能超过 64KB')))
         callback()
       },
       trigger: 'blur'
@@ -150,16 +156,16 @@ const totalNetworkSend = computed(() =>
   servers.value.reduce((sum, server) => sum + (server.latestNetworkSend || 0), 0)
 )
 
-const groupKey = (server: BastionServer) => splitTags(server.tags)[0] || '未分组'
+const groupKey = (server: BastionServer) => splitTags(server.tags)[0] || t('bastion.ungrouped', '未分组')
 const statusOptions = computed(() => [
-  { label: '全部状态', value: '' },
-  { label: '在线', value: 'online' },
-  { label: '离线', value: 'offline' },
-  { label: '异常', value: 'error' },
-  { label: '未知', value: 'unknown' }
+  { label: t('bastion.allStatus', '全部状态'), value: '' },
+  { label: t('bastion.status.online', '在线'), value: 'online' },
+  { label: t('bastion.status.offline', '离线'), value: 'offline' },
+  { label: t('bastion.status.error', '异常'), value: 'error' },
+  { label: t('bastion.status.unknown', '未知'), value: 'unknown' }
 ])
 const groupOptions = computed(() => [
-  { label: '全部分组', value: '' },
+  { label: t('bastion.allGroups', '全部分组'), value: '' },
   ...Array.from(new Set(servers.value.map(groupKey))).map((group) => ({
     label: group,
     value: group
@@ -189,12 +195,12 @@ const resourceGroups = computed(() => {
   }))
 })
 
-const timeRangeOptions: Array<{ label: string; value: TimeRange; hours: number; limit: number }> = [
-  { label: '1 小时', value: '1h', hours: 1, limit: 120 },
-  { label: '6 小时', value: '6h', hours: 6, limit: 360 },
-  { label: '24 小时', value: '24h', hours: 24, limit: 720 },
-  { label: '7 天', value: '7d', hours: 24 * 7, limit: 1200 }
-]
+const timeRangeOptions = computed<Array<{ label: string; value: TimeRange; hours: number; limit: number }>>(() => [
+  { label: t('bastion.timeRanges.1h', '1 小时'), value: '1h', hours: 1, limit: 120 },
+  { label: t('bastion.timeRanges.6h', '6 小时'), value: '6h', hours: 6, limit: 360 },
+  { label: t('bastion.timeRanges.24h', '24 小时'), value: '24h', hours: 24, limit: 720 },
+  { label: t('bastion.timeRanges.7d', '7 天'), value: '7d', hours: 24 * 7, limit: 1200 }
+])
 
 const chartLabels = computed(() =>
   metrics.value.map((item) => new Date(item.capturedAt).toLocaleTimeString([], {
@@ -213,8 +219,8 @@ const usageChartOption = computed<EChartsOption>(() => ({
   yAxis: { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
   series: [
     { name: 'CPU', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.cpuPercent) },
-    { name: '内存', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.memoryPercent) },
-    { name: '磁盘', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskPercent) }
+    { name: t('bastion.memory', '内存'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.memoryPercent) },
+    { name: t('bastion.disk', '磁盘'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskPercent) }
   ]
 }))
 
@@ -228,10 +234,10 @@ const networkChartOption = computed<EChartsOption>(() => ({
   xAxis: { type: 'category', boundaryGap: false, data: chartLabels.value },
   yAxis: { type: 'value', axisLabel: { align: 'right', formatter: (value: number) => formatRate(value) } },
   series: [
-    { name: '接收', type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkReceiveBps) },
-    { name: '发送', type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkSendBps) },
-    { name: '磁盘读', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskReadBps) },
-    { name: '磁盘写', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskWriteBps) }
+    { name: t('bastion.receive', '接收'), type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkReceiveBps) },
+    { name: t('bastion.send', '发送'), type: 'line', smooth: true, showSymbol: false, areaStyle: {}, data: metrics.value.map((item) => item.networkSendBps) },
+    { name: t('bastion.diskRead', '磁盘读'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskReadBps) },
+    { name: t('bastion.diskWrite', '磁盘写'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskWriteBps) }
   ]
 }))
 
@@ -261,7 +267,7 @@ const fetchServers = async () => {
 const loadMetrics = async (serverId: number) => {
   metricsLoading.value = true
   try {
-    const option = timeRangeOptions.find((item) => item.value === timeRange.value)!
+    const option = timeRangeOptions.value.find((item) => item.value === timeRange.value)!
     const to = new Date()
     const from = new Date(to.getTime() - option.hours * 60 * 60 * 1000)
     const { data } = await Api.getBastionMetrics(serverId, {
@@ -319,7 +325,7 @@ const openForm = async (server?: BastionServer) => {
     fillForm({ ...server, ...(data || {}) })
   } catch {
     fillForm(server)
-    ElMessage.warning('读取服务器详情失败，已使用列表信息初始化表单')
+    ElMessage.warning(t('bastion.detailReadFailedFallback', '读取服务器详情失败，已使用列表信息初始化表单'))
   } finally {
     formLoading.value = false
   }
@@ -349,12 +355,12 @@ const submitForm = async () => {
     if (form.authMethod === 'key' && form.privateKey.trim()) payload.privateKey = form.privateKey
     if (editingId.value) {
       await Api.updateBastionServer(editingId.value, payload)
-      ElMessage.success('服务器已更新')
+      ElMessage.success(t('bastion.serverUpdated', '服务器已更新'))
     } else {
       if (form.authMethod === 'password') payload.password = form.password
       if (form.authMethod === 'key') payload.privateKey = form.privateKey
       await Api.addBastionServer(payload)
-      ElMessage.success('服务器已添加')
+      ElMessage.success(t('bastion.serverAdded', '服务器已添加'))
     }
     form.password = ''
     form.privateKey = ''
@@ -369,19 +375,19 @@ const deleteServer = async (server: BastionServer) => {
   if (!canWrite.value) return
   try {
     await ElMessageBox.confirm(
-      `确定删除 ${server.name}？该服务器的历史指标数据也会一起删除。`,
-      '删除堡垒机服务器',
+      t('bastion.deleteConfirmMessage', '确定删除 {name}？该服务器的历史指标数据也会一起删除。', { name: server.name }),
+      t('bastion.deleteConfirmTitle', '删除堡垒机服务器'),
       {
         type: 'warning',
-        confirmButtonText: '确认删除',
-        cancelButtonText: '取消'
+        confirmButtonText: t('bastion.confirmDelete', '确认删除'),
+        cancelButtonText: t('common.cancel', '取消')
       }
     )
   } catch {
     return
   }
   await Api.deleteBastionServer(server.id)
-  ElMessage.success('服务器已删除')
+  ElMessage.success(t('bastion.serverDeleted', '服务器已删除'))
   if (selectedServer.value?.id === server.id) detailVisible.value = false
   await fetchServers()
 }
@@ -391,14 +397,14 @@ const testConnection = async (server: BastionServer) => {
     let payload: { password?: string } = {}
     if (server.authMethod === 'password') {
       const { value } = await ElMessageBox.prompt(
-        `请输入 ${server.username}@${server.host}:${server.port} 的 SSH 密码`,
-        '测试 SSH 密码连接',
+        t('bastion.testPasswordPrompt', '请输入 {target} 的 SSH 密码', { target: `${server.username}@${server.host}:${server.port}` }),
+        t('bastion.testPasswordTitle', '测试 SSH 密码连接'),
         {
           inputType: 'password',
-          inputPlaceholder: 'SSH 密码',
-          confirmButtonText: '测试连接',
-          cancelButtonText: '取消',
-          inputValidator: (value) => Boolean(value) || '请输入 SSH 密码'
+          inputPlaceholder: t('bastion.sshPassword', 'SSH 密码'),
+          confirmButtonText: t('bastion.testConnection', '测试连接'),
+          cancelButtonText: t('common.cancel', '取消'),
+          inputValidator: (value) => Boolean(value) || t('bastion.passwordRequired', '请输入 SSH 密码')
         }
       )
       payload = { password: value }
@@ -406,9 +412,9 @@ const testConnection = async (server: BastionServer) => {
     testingId.value = server.id
     const { data } = await Api.testBastionServer(server.id, payload)
     if (data?.reachable) {
-      ElMessage.success(`连接可达：${data.hostname || server.host}`)
+      ElMessage.success(t('bastion.connectionReachableWithHost', '连接可达：{host}', { host: data.hostname || server.host }))
     } else {
-      ElMessage.error(data?.error || '连接不可达')
+      ElMessage.error(data?.error || t('bastion.connectionUnreachable', '连接不可达'))
     }
   } catch {
     // 用户取消密码输入时不提示错误。
@@ -423,10 +429,10 @@ const refreshDetailMetrics = async () => {
 }
 
 const statusLabel = (status?: BastionStatus) => ({
-  online: '在线',
-  offline: '离线',
-  error: '异常',
-  unknown: '未知'
+  online: t('bastion.status.online', '在线'),
+  offline: t('bastion.status.offline', '离线'),
+  error: t('bastion.status.error', '异常'),
+  unknown: t('bastion.status.unknown', '未知')
 }[status || 'unknown'])
 
 const statusType = (status?: BastionStatus) => ({
@@ -476,8 +482,8 @@ const formatUptime = (seconds?: number) => {
   if (!Number.isFinite(seconds)) return '—'
   const days = Math.floor(Number(seconds) / 86400)
   const hours = Math.floor((Number(seconds) % 86400) / 3600)
-  if (days > 0) return `${days} 天 ${hours} 小时`
-  return `${hours} 小时`
+  if (days > 0) return t('bastion.uptimeDaysHours', '{days} 天 {hours} 小时', { days, hours })
+  return t('bastion.uptimeHours', '{hours} 小时', { hours })
 }
 
 onMounted(() => {
@@ -489,50 +495,50 @@ onMounted(() => {
   <div class="bastion-page">
     <section class="bastion-toolbar">
       <div>
-        <h2>堡垒机</h2>
-        <p>通过短连接采集远端服务器资源状态，集中查看 SSH 接入和健康指标。</p>
+        <h2>{{ $t('bastion.title') }}</h2>
+        <p>{{ $t('bastion.description') }}</p>
       </div>
       <div class="toolbar-actions">
-        <el-button :icon="Refresh" :loading="loading" @click="fetchServers">刷新</el-button>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">添加服务器</el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="fetchServers">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
       </div>
     </section>
 
     <section class="summary-grid">
       <div class="summary-card">
-        <small>服务器总数</small>
+        <small>{{ $t('bastion.serverTotal') }}</small>
         <strong>{{ totalCount }}</strong>
       </div>
       <div class="summary-card success">
-        <small>在线服务器</small>
+        <small>{{ $t('bastion.onlineServers') }}</small>
         <strong>{{ onlineCount }}</strong>
       </div>
       <div class="summary-card warning">
-        <small>异常/离线</small>
+        <small>{{ $t('bastion.abnormalOffline') }}</small>
         <strong>{{ abnormalCount }}</strong>
       </div>
       <div class="summary-card">
-        <small>平均 CPU</small>
+        <small>{{ $t('bastion.averageCpu') }}</small>
         <strong>{{ formatPercent(avgCpu) }}</strong>
       </div>
       <div class="summary-card">
-        <small>平均内存</small>
+        <small>{{ $t('bastion.averageMemory') }}</small>
         <strong>{{ formatPercent(avgMemory) }}</strong>
       </div>
       <div class="summary-card">
-        <small>平均磁盘</small>
+        <small>{{ $t('bastion.averageDisk') }}</small>
         <strong>{{ formatPercent(avgDisk) }}</strong>
       </div>
       <div class="summary-card">
-        <small>网络接收</small>
+        <small>{{ $t('bastion.networkReceive') }}</small>
         <strong>{{ formatRate(totalNetworkRecv) }}</strong>
       </div>
       <div class="summary-card">
-        <small>网络发送</small>
+        <small>{{ $t('bastion.networkSend') }}</small>
         <strong>{{ formatRate(totalNetworkSend) }}</strong>
       </div>
       <div class="summary-card">
-        <small>启用采集</small>
+        <small>{{ $t('bastion.enableCollection') }}</small>
         <strong>{{ enabledCount }}</strong>
       </div>
     </section>
@@ -540,8 +546,8 @@ onMounted(() => {
     <section v-if="servers.length" class="group-overview">
       <div class="section-heading">
         <div>
-          <h3>资源组概览</h3>
-          <span>按服务器第一个标签自动分组，快速定位组内运行状态</span>
+          <h3>{{ $t('bastion.resourceGroupOverview') }}</h3>
+          <span>{{ $t('bastion.groupHint') }}</span>
         </div>
       </div>
       <div class="group-grid">
@@ -555,7 +561,7 @@ onMounted(() => {
         >
           <div class="group-card__top">
             <strong>{{ group.name }}</strong>
-            <span>{{ group.online }}/{{ group.total }} 在线</span>
+            <span>{{ $t('bastion.onlineRatio', { online: group.online, total: group.total }) }}</span>
           </div>
           <div class="group-card__bars">
             <div>
@@ -564,12 +570,12 @@ onMounted(() => {
               <em>{{ formatPercent(group.avgCpu) }}</em>
             </div>
             <div>
-              <small>内存</small>
+              <small>{{ $t('bastion.memory') }}</small>
               <span><i :style="{ width: `${Math.min(group.avgMemory, 100)}%` }" /></span>
               <em>{{ formatPercent(group.avgMemory) }}</em>
             </div>
             <div>
-              <small>磁盘</small>
+              <small>{{ $t('bastion.disk') }}</small>
               <span><i :style="{ width: `${Math.min(group.avgDisk, 100)}%` }" /></span>
               <em>{{ formatPercent(group.avgDisk) }}</em>
             </div>
@@ -588,11 +594,11 @@ onMounted(() => {
 
     <section v-if="servers.length" class="resource-filters">
       <div>
-        <h3>服务器资源</h3>
-        <span>展示自选添加的全部服务器资源，点击卡片查看运行详情</span>
+        <h3>{{ $t('bastion.serverResources') }}</h3>
+        <span>{{ $t('bastion.serverResourcesDescription') }}</span>
       </div>
       <div class="filter-actions">
-        <el-select v-model="groupFilter" placeholder="分组" style="width: 150px">
+        <el-select v-model="groupFilter" :placeholder="$t('bastion.group')" style="width: 150px">
           <el-option
             v-for="item in groupOptions"
             :key="item.value"
@@ -600,7 +606,7 @@ onMounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-select v-model="statusFilter" placeholder="状态" style="width: 130px">
+        <el-select v-model="statusFilter" :placeholder="$t('common.status')" style="width: 130px">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -643,12 +649,12 @@ onMounted(() => {
                 <span><i :style="{ width: `${Math.min(server.latestCpu || 0, 100)}%` }" /></span>
               </div>
               <div>
-                <small>内存</small>
+                <small>{{ $t('bastion.memory') }}</small>
                 <strong>{{ formatPercent(server.latestMemory) }}</strong>
                 <span><i :style="{ width: `${Math.min(server.latestMemory || 0, 100)}%` }" /></span>
               </div>
               <div>
-                <small>磁盘</small>
+                <small>{{ $t('bastion.disk') }}</small>
                 <strong>{{ formatPercent(server.latestDisk) }}</strong>
                 <span><i :style="{ width: `${Math.min(server.latestDisk || 0, 100)}%` }" /></span>
               </div>
@@ -659,8 +665,8 @@ onMounted(() => {
               <span>↑ {{ formatRate(server.latestNetworkSend) }}</span>
             </div>
             <div class="server-meta">
-              <span>{{ server.osInfo || '等待采集系统信息' }}</span>
-              <span>最近采集 {{ formatTime(server.latestCapturedAt || server.lastSeenAt) }}</span>
+              <span>{{ server.osInfo || $t('bastion.waitingForSystemInfo') }}</span>
+              <span>{{ $t('bastion.latestCollection', { time: formatTime(server.latestCapturedAt || server.lastSeenAt) }) }}</span>
             </div>
             <div v-if="splitTags(server.tags).length" class="tag-row">
               <el-tag v-for="tag in splitTags(server.tags)" :key="tag" size="small" effect="plain">
@@ -671,34 +677,34 @@ onMounted(() => {
 
           <div class="server-actions">
             <el-button link type="primary" :loading="testingId === server.id" @click="testConnection(server)">
-              测试连接
+              {{ $t('bastion.testConnection') }}
             </el-button>
             <template v-if="canWrite">
-              <el-button link type="primary" :icon="Edit" @click="openForm(server)">编辑</el-button>
-              <el-button link type="danger" :icon="Delete" @click="deleteServer(server)">删除</el-button>
+              <el-button link type="primary" :icon="Edit" @click="openForm(server)">{{ $t('common.edit') }}</el-button>
+              <el-button link type="danger" :icon="Delete" @click="deleteServer(server)">{{ $t('common.delete') }}</el-button>
             </template>
           </div>
         </article>
       </div>
       <div v-else-if="servers.length" class="empty-state">
         <img src="/static/images/empty.webp" alt="" />
-        <strong>没有匹配的服务器</strong>
-        <span>调整分组或状态筛选后再查看资源卡片。</span>
-        <el-button @click="groupFilter = ''; statusFilter = ''">清除筛选</el-button>
+        <strong>{{ $t('bastion.noMatchedServers') }}</strong>
+        <span>{{ $t('bastion.noMatchedServersDescription') }}</span>
+        <el-button @click="groupFilter = ''; statusFilter = ''">{{ $t('bastion.clearFilters') }}</el-button>
       </div>
       <div v-else class="empty-state">
         <img src="/static/images/empty.webp" alt="" />
-        <strong>还没有堡垒机服务器</strong>
-        <span>添加第一台服务器后，面板会按配置周期采集资源指标。</span>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">添加服务器</el-button>
+        <strong>{{ $t('bastion.noServers') }}</strong>
+        <span>{{ $t('bastion.noServersDescription') }}</span>
+        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
       </div>
     </section>
 
     <custom-drawer
       :visible="formVisible"
-      :title="editingId ? '编辑服务器' : '添加服务器'"
+      :title="editingId ? $t('bastion.editServer') : $t('bastion.addServer')"
       size="760px"
-      :confirm-text="editingId ? '保存' : '确认添加'"
+      :confirm-text="editingId ? $t('common.save') : $t('bastion.confirmAdd')"
       :loading="saving"
       :on-close="closeForm"
       :on-confirm="submitForm"
@@ -711,43 +717,43 @@ onMounted(() => {
         label-width="112px"
         class="server-form"
       >
-        <el-form-item label="服务器名称" prop="name">
+        <el-form-item :label="$t('bastion.serverName')" prop="name">
           <el-input v-model="form.name" placeholder="web-prod-01" />
         </el-form-item>
-        <el-form-item label="主机地址" prop="host">
-          <el-input v-model="form.host" placeholder="192.168.1.10 或主机名" />
+        <el-form-item :label="$t('bastion.hostAddress')" prop="host">
+          <el-input v-model="form.host" :placeholder="$t('bastion.hostPlaceholder')" />
         </el-form-item>
         <div class="form-grid">
-          <el-form-item label="SSH 端口" prop="port">
+          <el-form-item :label="$t('bastion.sshPort')" prop="port">
             <el-input-number v-model="form.port" :min="1" :max="65535" controls-position="right" />
           </el-form-item>
-          <el-form-item label="用户名" prop="username">
+          <el-form-item :label="$t('common.username')" prop="username">
             <el-input v-model="form.username" />
           </el-form-item>
         </div>
-        <el-form-item label="认证方式" prop="authMethod">
+        <el-form-item :label="$t('bastion.authMethod')" prop="authMethod">
           <el-segmented
             v-model="form.authMethod"
             :options="[
-              { label: '密码', value: 'password' },
-              { label: '私钥', value: 'key' }
+              { label: $t('bastion.password'), value: 'password' },
+              { label: $t('bastion.privateKey'), value: 'key' }
             ]"
           />
         </el-form-item>
-        <el-form-item v-if="form.authMethod === 'password'" label="SSH 密码" prop="password">
+        <el-form-item v-if="form.authMethod === 'password'" :label="$t('bastion.sshPassword')" prop="password">
           <el-input
             v-model="form.password"
             type="password"
             show-password
-            :placeholder="editingId ? '留空表示不修改密码' : '请输入 SSH 密码'"
+            :placeholder="editingId ? $t('bastion.keepPasswordPlaceholder') : $t('bastion.passwordRequired')"
           />
         </el-form-item>
-        <el-form-item v-else label="SSH 私钥" prop="privateKey">
+        <el-form-item v-else :label="$t('bastion.sshPrivateKey')" prop="privateKey">
           <div class="private-key-field">
             <el-alert
               v-if="editingId && form.keyConfigured"
               type="info"
-              title="私钥已配置，留空表示不替换"
+              :title="$t('bastion.privateKeyConfiguredTip')"
               :closable="false"
               show-icon
             />
@@ -758,23 +764,23 @@ onMounted(() => {
               resize="vertical"
               maxlength="65536"
               show-word-limit
-              :placeholder="editingId ? '粘贴新的 SSH 私钥文本；留空表示保留原私钥' : '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----'"
+              :placeholder="editingId ? $t('bastion.privateKeyReplacePlaceholder') : '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----'"
             />
             <span class="private-key-field__hint">
-              请粘贴完整 SSH 私钥文本；当前不支持带口令的加密私钥。
+              {{ $t('bastion.privateKeyHint') }}
             </span>
           </div>
         </el-form-item>
-        <el-form-item label="标签" prop="tags">
-          <el-input v-model="form.tags" placeholder="生产环境,Web 服务器" />
+        <el-form-item :label="$t('bastion.tags')" prop="tags">
+          <el-input v-model="form.tags" :placeholder="$t('bastion.tagsPlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="editingId" label="启用采集" prop="enabled">
+        <el-form-item v-if="editingId" :label="$t('bastion.enableCollection')" prop="enabled">
           <el-switch v-model="form.enabled" />
         </el-form-item>
         <el-alert
           v-if="testResult"
           :type="testResult.reachable ? 'success' : 'error'"
-          :title="testResult.reachable ? '连接可达' : '连接不可达'"
+          :title="testResult.reachable ? $t('bastion.connectionReachable') : $t('bastion.connectionUnreachable')"
           :description="testResult.reachable ? testResult.osInfo : testResult.error"
           show-icon
           :closable="false"
@@ -784,7 +790,7 @@ onMounted(() => {
 
     <custom-drawer
       :visible="detailVisible"
-      :title="`服务器详情 · ${selectedServer?.name || '—'}`"
+      :title="$t('bastion.serverDetailTitle', { name: selectedServer?.name || '—' })"
       size="860px"
       :show-footer="false"
       :destroy-on-close="false"
@@ -799,24 +805,24 @@ onMounted(() => {
         </div>
         <section class="detail-info">
           <div>
-            <small>连接地址</small>
+            <small>{{ $t('bastion.connectionAddress') }}</small>
             <strong>{{ selectedServer.username }}@{{ selectedServer.host }}:{{ selectedServer.port }}</strong>
           </div>
           <div>
-            <small>认证方式</small>
+            <small>{{ $t('bastion.authMethod') }}</small>
             <strong>
               {{ selectedServer.authMethod === 'key'
-                ? `私钥 · ${selectedServer.keyConfigured ? '已配置' : '未配置'}`
-                : '密码'
+                ? $t('bastion.privateKeyConfigStatus', { status: selectedServer.keyConfigured ? $t('common.enabled') : $t('common.disabled') })
+                : $t('bastion.password')
               }}
             </strong>
           </div>
           <div>
-            <small>最后在线</small>
+            <small>{{ $t('bastion.lastOnline') }}</small>
             <strong>{{ formatTime(selectedServer.lastSeenAt) }}</strong>
           </div>
           <div>
-            <small>系统信息</small>
+            <small>{{ $t('bastion.systemInfo') }}</small>
             <strong>{{ selectedServer.osInfo || '—' }}</strong>
           </div>
         </section>
@@ -827,46 +833,46 @@ onMounted(() => {
             :options="timeRangeOptions.map((item) => ({ label: item.label, value: item.value }))"
             @change="refreshDetailMetrics"
           />
-          <el-button :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">刷新指标</el-button>
+          <el-button :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">{{ $t('bastion.refreshMetrics') }}</el-button>
         </div>
 
         <div v-loading="metricsLoading" class="chart-grid">
           <section class="chart-card">
-            <div class="chart-title">CPU / 内存 / 磁盘</div>
+            <div class="chart-title">{{ $t('bastion.usageChartTitle') }}</div>
             <div class="chart-legend">
               <span class="chart-legend__item is-blue">CPU</span>
-              <span class="chart-legend__item is-green">内存</span>
-              <span class="chart-legend__item is-yellow">磁盘</span>
+              <span class="chart-legend__item is-green">{{ $t('bastion.memory') }}</span>
+              <span class="chart-legend__item is-yellow">{{ $t('bastion.disk') }}</span>
             </div>
             <div class="chart-body">
               <basic-chart v-if="metrics.length" :option="usageChartOption" />
-              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+              <div v-if="!metrics.length" class="chart-empty">{{ $t('common.noData') }}</div>
             </div>
           </section>
           <section class="chart-card">
-            <div class="chart-title">网络与磁盘吞吐</div>
+            <div class="chart-title">{{ $t('bastion.networkDiskThroughput') }}</div>
             <div class="chart-legend">
-              <span class="chart-legend__item is-blue">接收</span>
-              <span class="chart-legend__item is-green">发送</span>
-              <span class="chart-legend__item is-yellow">磁盘读</span>
-              <span class="chart-legend__item is-red">磁盘写</span>
+              <span class="chart-legend__item is-blue">{{ $t('bastion.receive') }}</span>
+              <span class="chart-legend__item is-green">{{ $t('bastion.send') }}</span>
+              <span class="chart-legend__item is-yellow">{{ $t('bastion.diskRead') }}</span>
+              <span class="chart-legend__item is-red">{{ $t('bastion.diskWrite') }}</span>
             </div>
             <div class="chart-body">
               <basic-chart v-if="metrics.length" :option="networkChartOption" />
-              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+              <div v-if="!metrics.length" class="chart-empty">{{ $t('common.noData') }}</div>
             </div>
           </section>
           <section class="chart-card">
             <div class="chart-title">
-              <span>系统负载</span>
+              <span>{{ $t('bastion.systemLoad') }}</span>
               <el-tooltip placement="top" effect="light" popper-class="load-help-tooltip">
                 <template #content>
                   <div class="load-help">
-                    <p>负载平均值衡量一段时间内等待 CPU/IO 的任务数，不等于 CPU 使用率。</p>
-                    <p><strong>load1</strong>：过去 1 分钟平均负载（最灵敏，反映瞬时压力）</p>
-                    <p><strong>load5</strong>：过去 5 分钟平均负载（平稳，适合观察趋势）</p>
-                    <p><strong>load15</strong>：过去 15 分钟平均负载（最平滑，反映长期水位）</p>
-                    <p>参考：小于 CPU 核数 = 健康；约等于核数 = 满载；大于核数 = 过载排队。</p>
+                    <p>{{ $t('bastion.loadHelp.intro') }}</p>
+                    <p><strong>load1</strong>{{ $t('bastion.loadHelp.load1') }}</p>
+                    <p><strong>load5</strong>{{ $t('bastion.loadHelp.load5') }}</p>
+                    <p><strong>load15</strong>{{ $t('bastion.loadHelp.load15') }}</p>
+                    <p>{{ $t('bastion.loadHelp.reference') }}</p>
                   </div>
                 </template>
                 <el-icon class="chart-title__help"><InfoFilled /></el-icon>
@@ -879,12 +885,12 @@ onMounted(() => {
             </div>
             <div class="chart-body">
               <basic-chart v-if="metrics.length" :option="loadChartOption" />
-              <div v-if="!metrics.length" class="chart-empty">暂无数据</div>
+              <div v-if="!metrics.length" class="chart-empty">{{ $t('common.noData') }}</div>
             </div>
           </section>
           <section class="health-card">
             <div class="health-card__time">
-              <small>最新采集</small>
+              <small>{{ $t('bastion.latestCollected') }}</small>
               <strong>{{ formatTime(selectedServer.latestCapturedAt) }}</strong>
             </div>
             <div>
@@ -892,15 +898,15 @@ onMounted(() => {
               <strong>{{ formatPercent(selectedServer.latestCpu) }}</strong>
             </div>
             <div>
-              <small>内存</small>
+              <small>{{ $t('bastion.memory') }}</small>
               <strong>{{ formatPercent(selectedServer.latestMemory) }}</strong>
             </div>
             <div>
-              <small>磁盘</small>
+              <small>{{ $t('bastion.disk') }}</small>
               <strong>{{ formatPercent(selectedServer.latestDisk) }}</strong>
             </div>
             <div v-if="metrics[metrics.length - 1]">
-              <small>运行时长</small>
+              <small>{{ $t('bastion.uptime') }}</small>
               <strong>{{ formatUptime(metrics[metrics.length - 1].uptimeSeconds) }}</strong>
             </div>
           </section>

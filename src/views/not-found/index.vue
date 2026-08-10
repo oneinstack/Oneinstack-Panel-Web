@@ -4,8 +4,8 @@
     <div class="not-found__halo not-found__halo--right"></div>
     <div class="not-found__card">
       <div class="not-found__code">404</div>
-      <h1>页面不存在</h1>
-      <p>当前访问地址不可用，请检查面板入口地址是否正确。</p>
+      <h1>{{ $t('notFound.title') }}</h1>
+      <p>{{ $t('notFound.description') }}</p>
     </div>
   </section>
 </template>

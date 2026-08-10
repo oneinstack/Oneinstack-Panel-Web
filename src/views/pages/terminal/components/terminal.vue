@@ -3,8 +3,8 @@
     <header class="terminal-header">
       <div>
         <div class="terminal-eyebrow">ISOLATED WEB SHELL</div>
-        <h2>安全终端</h2>
-        <p>以独立低权限用户运行，命令参数不会写入审计日志。</p>
+        <h2>{{ $t('terminal.title') }}</h2>
+        <p>{{ $t('terminal.subtitle') }}</p>
       </div>
       <div class="terminal-actions">
         <span class="connection-state" :class="connectionState">
@@ -18,10 +18,10 @@
           :disabled="!status?.enabled || !status?.isolationAvailable"
           @click="connectTerminal"
         >
-          建立安全会话
+          {{ $t('terminal.connectSession') }}
         </el-button>
         <el-button v-else type="danger" plain @click="disconnectTerminal">
-          断开会话
+          {{ $t('terminal.disconnectSession') }}
         </el-button>
       </div>
     </header>
@@ -32,31 +32,29 @@
       type="warning"
       :closable="false"
       show-icon
-      :title="status.enabled ? '终端隔离环境不可用' : 'Web 终端当前未启用'"
-      :description="status.reason || '请在 Panel 配置中启用终端后重新加载。'"
+      :title="status.enabled ? $t('terminal.runtimeUnavailableTitle') : $t('terminal.disabledTitle')"
+      :description="terminalAlertDescription"
     />
 
     <div v-if="status" class="security-grid">
       <div class="security-item">
-        <span>运行身份</span>
-        <strong>{{ status.runtimeUser || '不可用' }}</strong>
+        <span>{{ $t('terminal.runtimeIdentity') }}</span>
+        <strong>{{ status.runtimeUser || $t('terminal.unavailable') }}</strong>
       </div>
       <div class="security-item">
-        <span>权限边界</span>
-        <strong>无 sudo · 无 capabilities</strong>
+        <span>{{ $t('terminal.permissionBoundary') }}</span>
+        <strong>{{ $t('terminal.noSudoCapabilities') }}</strong>
       </div>
       <div class="security-item">
-        <span>会话限制</span>
+        <span>{{ $t('terminal.sessionLimit') }}</span>
         <strong>
-          {{ status.maxSessionMinutes }} 分钟 · 空闲 {{ status.idleMinutes }} 分钟
-          · 输出 {{ status.maxOutputMB }} MB
+          {{ $t('terminal.sessionLimitValue', { max: status.maxSessionMinutes, idle: status.idleMinutes, output: status.maxOutputMB }) }}
         </strong>
       </div>
       <div class="security-item">
-        <span>并发会话</span>
+        <span>{{ $t('terminal.concurrentSessions') }}</span>
         <strong>
-          全局 {{ status.activeSessions }} / {{ status.maxConcurrent }}
-          · 单账号 {{ status.maxPerUser }}
+          {{ $t('terminal.concurrentSessionsValue', { active: status.activeSessions, max: status.maxConcurrent, perUser: status.maxPerUser }) }}
         </strong>
       </div>
     </div>
@@ -64,8 +62,8 @@
     <div class="audit-notice">
       <el-icon><Lock /></el-icon>
       <div>
-        <strong>命令级安全审计已开启</strong>
-        <span>记录会话、命令提交时间和操作者；命令内容、参数、交互输入和终端输出均不保存。</span>
+        <strong>{{ $t('terminal.auditEnabledTitle') }}</strong>
+        <span>{{ $t('terminal.auditEnabledDescription') }}</span>
       </div>
     </div>
 
@@ -78,8 +76,8 @@
       <div ref="terminalDiv" class="terminal-screen" />
       <div v-if="connectionState !== 'connected'" class="terminal-placeholder">
         <el-icon><Monitor /></el-icon>
-        <strong>{{ status?.enabled ? '终端尚未连接' : '终端已关闭' }}</strong>
-        <span>连接时需要再次输入当前管理员密码。</span>
+        <strong>{{ status?.enabled ? $t('terminal.notConnected') : $t('terminal.closed') }}</strong>
+        <span>{{ $t('terminal.passwordRequiredTip') }}</span>
       </div>
     </div>
   </section>
@@ -95,6 +93,12 @@ import 'xterm/css/xterm.css'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import sapp from '@/sstore/sapp'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 interface TerminalStatus {
   enabled: boolean
@@ -127,11 +131,18 @@ let statusTimer: number | undefined
 
 const connectionLabel = computed(() => {
   switch (connectionState.value) {
-    case 'connecting': return '正在认证'
-    case 'connected': return '会话已连接'
-    case 'closed': return '会话已结束'
-    default: return '未连接'
+    case 'connecting': return t('terminal.connection.authenticating', 'Authenticating')
+    case 'connected': return t('terminal.connection.connected', 'Session connected')
+    case 'closed': return t('terminal.connection.ended', 'Session ended')
+    default: return t('terminal.connection.disconnected', 'Disconnected')
   }
+})
+const terminalAlertDescription = computed(() => {
+  const reason = status.value?.reason || ''
+  if (/Pane .*root|root .*管理进程|安全降权/i.test(reason)) {
+    return t('terminal.reasons.paneRequiresRoot', 'Pane must be started by the root management process so terminal child processes can safely drop privileges')
+  }
+  return reason || t('terminal.enableInPanelTip', 'Enable terminal in Panel settings and reload.')
 })
 
 const encodeInput = (value: string) => {
@@ -155,7 +166,7 @@ const loadStatus = async (quiet = false) => {
     const { data } = await Api.getTerminalStatus()
     status.value = data
   } catch {
-    if (!quiet) ElMessage.error('读取终端安全状态失败')
+    if (!quiet) ElMessage.error(t('terminal.statusReadFailed', 'Failed to read terminal security status'))
   }
 }
 
@@ -176,20 +187,20 @@ const connectTerminal = async () => {
   connectionState.value = 'connecting'
   try {
     const { value: password } = await ElMessageBox.prompt(
-      '终端以独立低权限用户运行。请输入当前管理员密码完成二次认证。',
-      '建立安全终端会话',
+      t('terminal.passwordPromptMessage', 'The terminal runs as an isolated low-privilege user. Enter the current administrator password to complete secondary authentication.'),
+      t('terminal.passwordPromptTitle', 'Start secure terminal session'),
       {
         inputType: 'password',
-        inputPlaceholder: '管理员密码',
-        confirmButtonText: '认证并连接',
-        cancelButtonText: '取消',
-        inputValidator: value => Boolean(value) || '请输入密码'
+        inputPlaceholder: t('terminal.adminPassword', 'Administrator password'),
+        confirmButtonText: t('terminal.authenticateAndConnect', 'Authenticate and connect'),
+        cancelButtonText: t('common.cancel', 'Cancel'),
+        inputValidator: value => Boolean(value) || t('terminal.passwordRequired', 'Enter password')
       }
     )
     const { data } = await Api.createTerminalTicket({ password })
     const apiBase = new URL(System.env.API || '/v1', window.location.origin)
     if (apiBase.origin !== window.location.origin) {
-      throw new Error('终端只允许同源连接')
+      throw new Error(t('terminal.sameOriginOnly', 'Terminal only allows same-origin connections'))
     }
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const apiPath = apiBase.pathname.replace(/\/$/, '')
@@ -209,17 +220,17 @@ const connectTerminal = async () => {
       try {
         terminal?.write(decodeOutput(String(event.data)))
       } catch {
-        terminal?.write('\r\n\x1b[31m无法解析终端输出。\x1b[0m\r\n')
+        terminal?.write(`\r\n\x1b[31m${t('terminal.outputDecodeFailed', 'Failed to decode terminal output.')}\x1b[0m\r\n`)
       }
     }
     socket.onerror = () => {
-      ElMessage.error('安全终端连接失败')
+      ElMessage.error(t('terminal.connectionFailed', 'Secure terminal connection failed'))
     }
     socket.onclose = () => {
       connectionState.value = 'closed'
       connecting.value = false
       socket = undefined
-      terminal?.write('\r\n\x1b[33m终端会话已关闭。\x1b[0m\r\n')
+      terminal?.write(`\r\n\x1b[33m${t('terminal.sessionClosedMessage', 'Terminal session closed.')}\x1b[0m\r\n`)
       void loadStatus()
     }
   } catch {

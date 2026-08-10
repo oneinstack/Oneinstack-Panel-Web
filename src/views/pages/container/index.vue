@@ -38,6 +38,12 @@ import type {
   TemplateItem,
   VolumeItem
 } from './types'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const activeTab = ref<ResourceTab>('containers')
 const runtime = ref<RuntimeInfo | null>(null)
@@ -199,8 +205,8 @@ const canCleanup = computed(() =>
 
 const runtimeAvailable = computed(() => runtime.value?.available !== false)
 const runtimeStatusText = computed(() => {
-  if (runtimeLoading.value) return '检测中'
-  return runtimeAvailable.value ? '运行时可用' : '运行时不可用'
+  if (runtimeLoading.value) return t('container.checking', 'Checking')
+  return runtimeAvailable.value ? t('container.runtimeAvailable', 'Runtime available') : t('container.runtimeUnavailable', 'Runtime unavailable')
 })
 const runningContainers = computed(() =>
   containers.value.filter((item) => String(item.Status || '').toLowerCase().startsWith('up')).length
@@ -211,14 +217,14 @@ const hasPagination = computed(() => pageableTabs.includes(activeTab.value as ty
 const activeListState = computed(() => listState[activeTab.value as keyof typeof listState] || listState.containers)
 const detailTitle = computed(() => {
   const target = detailTarget.value || {}
-  if (detailType.value === 'container') return `${target.Names || shortId(target.ID)} 详情`
-  if (detailType.value === 'image') return `${target.Repository ? imageReference(target) : shortId(target.ID)} 详情`
-  if (detailType.value === 'network') return `${target.Name || shortId(target.ID)} 详情`
-  return `${target.Name || '存储卷'} 详情`
+  if (detailType.value === 'container') return t('container.detailTitle', '{name} details', { name: target.Names || shortId(target.ID) })
+  if (detailType.value === 'image') return t('container.detailTitle', '{name} details', { name: target.Repository ? imageReference(target) : shortId(target.ID) })
+  if (detailType.value === 'network') return t('container.detailTitle', '{name} details', { name: target.Name || shortId(target.ID) })
+  return t('container.detailTitle', '{name} details', { name: target.Name || t('container.volume', 'Volume') })
 })
 
 const rules = computed<FormRules>(() => ({
-  name: [{ required: ['container', 'network', 'volume'].includes(dialogType.value), message: '请输入名称', trigger: 'blur' }],
+  name: [{ required: ['container', 'network', 'volume'].includes(dialogType.value), message: t('common.inputPlaceholder', 'Enter'), trigger: 'blur' }],
   image: [
     {
       validator: (_rule: unknown, value: string, callback: (error?: Error) => void) => {
@@ -230,7 +236,7 @@ const rules = computed<FormRules>(() => ({
           callback()
           return
         }
-        callback(new Error(form.manualImage ? '请输入镜像引用' : '请选择镜像'))
+        callback(new Error(form.manualImage ? t('container.searchPlaceholders.images', 'Enter image ID, repository, or tag') : t('container.create.selectImage', 'Select image')))
       },
       trigger: ['blur', 'change'],
     },
@@ -1429,18 +1435,18 @@ onBeforeUnmount(() => {
   <div class="container-page">
     <section class="container-hero">
       <div>
-        <h2>容器管理</h2>
-        <p>管理 Docker 容器、镜像、网络、存储卷和 Compose 项目。</p>
+        <h2>{{ t('container.title', 'Containers') }}</h2>
+        <p>{{ t('container.description', 'Manage containers, images, networks, volumes, templates, and registries') }}</p>
       </div>
       <div class="hero-actions">
-        <el-button :icon="Refresh" :loading="runtimeLoading || listLoading" @click="refreshAll">刷新</el-button>
+        <el-button :icon="Refresh" :loading="runtimeLoading || listLoading" @click="refreshAll">{{ t('common.refresh', 'Refresh') }}</el-button>
         <el-button
           type="primary"
           :icon="Plus"
           :disabled="!runtimeAvailable || !canCreateContainer"
           @click="openDialog('container')"
         >
-          创建容器
+          {{ t('container.createContainer', 'Create container') }}
         </el-button>
       </div>
     </section>
@@ -1448,7 +1454,7 @@ onBeforeUnmount(() => {
     <el-alert
       v-if="!canRead"
       class="container-alert"
-      title="当前账号没有容器读取权限"
+      :title="t('container.noReadPermission', 'The current account does not have container read permission')"
       type="warning"
       show-icon
       :closable="false"
@@ -1456,7 +1462,7 @@ onBeforeUnmount(() => {
     <el-alert
       v-else-if="runtime && !runtime.available"
       class="container-alert"
-      :title="runtime.message || 'Docker 运行时不可用'"
+      :title="runtime.message || t('container.dockerRuntimeUnavailable', 'Docker runtime unavailable')"
       type="warning"
       show-icon
       :closable="false"
@@ -1472,14 +1478,14 @@ onBeforeUnmount(() => {
     <section class="resource-panel">
       <div class="panel-top">
         <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-          <el-tab-pane label="容器" name="containers" />
-          <el-tab-pane label="镜像" name="images" />
-          <el-tab-pane label="网络" name="networks" />
-          <el-tab-pane label="存储卷" name="volumes" />
+          <el-tab-pane :label="t('container.containers', 'Containers')" name="containers" />
+          <el-tab-pane :label="t('container.images', 'Images')" name="images" />
+          <el-tab-pane :label="t('container.networks', 'Networks')" name="networks" />
+          <el-tab-pane :label="t('container.volumes', 'Volumes')" name="volumes" />
           <el-tab-pane label="Compose" name="compose" />
-          <el-tab-pane label="模板" name="templates" />
+          <el-tab-pane :label="t('container.templates', 'Templates')" name="templates" />
           <el-tab-pane label="Registry" name="registries" />
-          <el-tab-pane label="Docker 配置" name="config" />
+          <el-tab-pane :label="t('container.dockerConfig', 'Docker config')" name="config" />
         </el-tabs>
         <div class="panel-actions">
           <el-button
@@ -1490,7 +1496,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canCleanup"
             @click="cleanupStoppedContainers"
           >
-            清理已停止
+            {{ t('container.cleanupStopped', 'Clean stopped') }}
           </el-button>
           <el-button
             v-if="activeTab === 'images'"
@@ -1499,21 +1505,21 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canImageWrite"
             @click="openDialog('image')"
           >
-            拉取镜像
+            {{ t('container.pullImage', 'Pull image') }}
           </el-button>
           <el-button
             v-if="activeTab === 'images'"
             :disabled="!runtimeAvailable || !canImageWrite"
             @click="openDialog('image-import')"
           >
-            导入
+            {{ t('container.import', 'Import') }}
           </el-button>
           <el-button
             v-if="activeTab === 'images'"
             :disabled="!runtimeAvailable || !canImageWrite"
             @click="openDialog('image-build')"
           >
-            构建
+            {{ t('container.build', 'Build') }}
           </el-button>
           <el-button
             v-if="activeTab === 'images'"
@@ -1523,7 +1529,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneImages('images')"
           >
-            清理镜像
+            {{ t('container.cleanupImages', 'Clean images') }}
           </el-button>
           <el-button
             v-if="activeTab === 'images'"
@@ -1532,7 +1538,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneImages('build-cache')"
           >
-            清理构建缓存
+            {{ t('container.cleanupBuildCache', 'Clean build cache') }}
           </el-button>
           <el-button
             v-if="activeTab === 'networks'"
@@ -1541,7 +1547,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canNetworkWrite"
             @click="openDialog('network')"
           >
-            创建网络
+            {{ t('container.createNetwork', 'Create network') }}
           </el-button>
           <el-button
             v-if="activeTab === 'networks'"
@@ -1551,7 +1557,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneNetworks"
           >
-            清理无用网络
+            {{ t('container.cleanupUnusedNetworks', 'Clean unused networks') }}
           </el-button>
           <el-button
             v-if="activeTab === 'volumes'"
@@ -1560,7 +1566,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canVolumeWrite"
             @click="openDialog('volume')"
           >
-            创建存储卷
+            {{ t('container.createVolume', 'Create volume') }}
           </el-button>
           <el-button
             v-if="activeTab === 'volumes'"
@@ -1570,7 +1576,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canCleanup"
             @click="pruneVolumes"
           >
-            清理无用卷
+            {{ t('container.cleanupUnusedVolumes', 'Clean unused volumes') }}
           </el-button>
           <el-button
             v-if="activeTab === 'templates'"
@@ -1579,7 +1585,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canComposeWrite || !templatesSupported"
             @click="openDialog('template')"
           >
-            创建模板
+            {{ t('container.createTemplate', 'Create template') }}
           </el-button>
           <el-button
             v-if="activeTab === 'registries'"
@@ -1588,7 +1594,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canRegistryWrite"
             @click="openDialog('registry')"
           >
-            新增 Registry
+            {{ t('container.addRegistry', 'Add Registry') }}
           </el-button>
           <el-button
             v-if="activeTab === 'config'"
@@ -1597,7 +1603,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canConfigWrite"
             @click="saveDockerConfig"
           >
-            保存配置
+            {{ t('container.saveConfig', 'Save config') }}
           </el-button>
           <el-button
             v-if="activeTab === 'config'"
@@ -1607,7 +1613,7 @@ onBeforeUnmount(() => {
             :disabled="!runtimeAvailable || !canConfigWrite"
             @click="runRuntimeAction('restart')"
           >
-            重启 Docker
+            {{ t('container.restartDocker', 'Restart Docker') }}
           </el-button>
         </div>
       </div>
@@ -1618,14 +1624,14 @@ onBeforeUnmount(() => {
             v-model.trim="activeListState.search"
             clearable
             :placeholder="activeTab === 'containers'
-              ? '请输入容器名称或镜像'
+              ? t('container.searchPlaceholders.containers', 'Enter container name or image')
               : activeTab === 'images'
-                ? '请输入镜像 ID、仓库或 Tag'
+                ? t('container.searchPlaceholders.images', 'Enter image ID, repository, or tag')
                 : activeTab === 'networks'
-                  ? '请输入网络名称、驱动或子网'
+                  ? t('container.searchPlaceholders.networks', 'Enter network name, driver, or subnet')
                   : activeTab === 'volumes'
-                    ? '请输入存储卷名称、驱动或挂载点'
-                    : '请输入 Registry 名称或地址'"
+                    ? t('container.searchPlaceholders.volumes', 'Enter volume name, driver, or mount point')
+                    : t('container.searchPlaceholders.registries', 'Enter Registry name or address')"
             @clear="resetCurrentList"
             @keyup.enter="resetCurrentList"
           />
@@ -1633,61 +1639,61 @@ onBeforeUnmount(() => {
             v-if="activeTab === 'containers'"
             v-model="listState.containers.status"
             class="status-filter"
-            placeholder="请选择状态"
+            :placeholder="t('container.statusFilterPlaceholder', 'Select status')"
             @change="resetCurrentList"
           >
-            <el-option label="所有" value="" />
-            <el-option label="已创建" value="created" />
-            <el-option label="运行中" value="up" />
-            <el-option label="已退出" value="exited" />
-            <el-option label="重启中" value="restarting" />
-            <el-option label="已暂停" value="paused" />
-            <el-option label="移除中" value="removing" />
-            <el-option label="异常终止" value="dead" />
+            <el-option :label="t('container.statusOptions.all', 'All')" value="" />
+            <el-option :label="t('container.statusOptions.created', 'Created')" value="created" />
+            <el-option :label="t('container.statusOptions.up', 'Running')" value="up" />
+            <el-option :label="t('container.statusOptions.exited', 'Exited')" value="exited" />
+            <el-option :label="t('container.statusOptions.restarting', 'Restarting')" value="restarting" />
+            <el-option :label="t('container.statusOptions.paused', 'Paused')" value="paused" />
+            <el-option :label="t('container.statusOptions.removing', 'Removing')" value="removing" />
+            <el-option :label="t('container.statusOptions.dead', 'Dead')" value="dead" />
           </el-select>
-          <el-button :loading="listLoading" @click="resetCurrentList">查询</el-button>
+          <el-button :loading="listLoading" @click="resetCurrentList">{{ t('common.query', 'Query') }}</el-button>
         </div>
         <div class="table-toolbar__batch">
           <template v-if="activeTab === 'containers'">
-            <span v-if="selectedContainers.length">已选 {{ selectedContainers.length }} 个容器</span>
+            <span v-if="selectedContainers.length">{{ t('container.selectedContainers', '{count} containers selected', { count: selectedContainers.length }) }}</span>
             <el-dropdown
               :disabled="!selectedContainers.length || !runtimeAvailable || !canWrite"
               @command="(command: ContainerAction) => runBatchContainerAction(command)"
             >
               <el-button :loading="actionLoading.startsWith('batch:')">
-                批量操作
+                {{ t('container.batchActions', 'Batch actions') }}
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="start">启动</el-dropdown-item>
-                  <el-dropdown-item command="stop">停止</el-dropdown-item>
-                  <el-dropdown-item command="restart">重启</el-dropdown-item>
-                  <el-dropdown-item command="pause">暂停</el-dropdown-item>
-                  <el-dropdown-item command="unpause">恢复</el-dropdown-item>
-                  <el-dropdown-item command="kill" :disabled="!canForceAction">强制停止</el-dropdown-item>
-                  <el-dropdown-item command="rm" :disabled="!canDelete" divided>删除</el-dropdown-item>
+                  <el-dropdown-item command="start">{{ t('container.start', 'Start') }}</el-dropdown-item>
+                  <el-dropdown-item command="stop">{{ t('container.stop', 'Stop') }}</el-dropdown-item>
+                  <el-dropdown-item command="restart">{{ t('container.restart', 'Restart') }}</el-dropdown-item>
+                  <el-dropdown-item command="pause">{{ t('container.pause', 'Pause') }}</el-dropdown-item>
+                  <el-dropdown-item command="unpause">{{ t('container.resume', 'Resume') }}</el-dropdown-item>
+                  <el-dropdown-item command="kill" :disabled="!canForceAction">{{ t('container.forceStop', 'Force stop') }}</el-dropdown-item>
+                  <el-dropdown-item command="rm" :disabled="!canDelete" divided>{{ t('container.delete', 'Delete') }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </template>
           <template v-if="activeTab === 'networks'">
-            <span v-if="selectedNetworks.length">已选 {{ selectedNetworks.length }} 个网络</span>
+            <span v-if="selectedNetworks.length">{{ t('container.selectedNetworks', '{count} networks selected', { count: selectedNetworks.length }) }}</span>
             <el-button
               :loading="actionLoading === 'batch:networks'"
               :disabled="!selectedNetworks.length || !runtimeAvailable || !canNetworkWrite"
               @click="batchDeleteNetworks"
             >
-              批量删除
+              {{ t('container.batchDelete', 'Batch delete') }}
             </el-button>
           </template>
           <template v-if="activeTab === 'volumes'">
-            <span v-if="selectedVolumes.length">已选 {{ selectedVolumes.length }} 个存储卷</span>
+            <span v-if="selectedVolumes.length">{{ t('container.selectedVolumes', '{count} volumes selected', { count: selectedVolumes.length }) }}</span>
             <el-button
               :loading="actionLoading === 'batch:volumes'"
               :disabled="!selectedVolumes.length || !runtimeAvailable || !canVolumeWrite"
               @click="batchDeleteVolumes"
             >
-              批量删除
+              {{ t('container.batchDelete', 'Batch delete') }}
             </el-button>
           </template>
         </div>
@@ -1698,11 +1704,11 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="containers"
         :row-key="getRowKey"
-        empty-text="暂无容器"
+        :empty-text="t('container.empty.containers', 'No containers')"
         @selection-change="handleContainerSelectionChange"
       >
         <el-table-column type="selection" width="44" />
-        <el-table-column label="名称" min-width="170">
+        <el-table-column :label="t('container.columns.name', 'Name')" min-width="170">
           <template #default="{ row }">
             <div class="primary-cell">
               <strong>{{ row.Names || shortId(row.ID) }}</strong>
@@ -1710,16 +1716,16 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="Image" label="镜像" min-width="180" show-overflow-tooltip />
-        <el-table-column label="状态" min-width="130">
+        <el-table-column prop="Image" :label="t('container.columns.image', 'Image')" min-width="180" show-overflow-tooltip />
+        <el-table-column :label="t('container.columns.status', 'Status')" min-width="130">
           <template #default="{ row }">
             <el-tag :type="statusType(row.Status)" effect="light">{{ row.Status || '--' }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="Ports" label="端口" min-width="190" show-overflow-tooltip />
-        <el-table-column prop="Networks" label="网络" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="Mounts" label="挂载" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" label="操作" width="420">
+        <el-table-column prop="Ports" :label="t('container.columns.ports', 'Ports')" min-width="190" show-overflow-tooltip />
+        <el-table-column prop="Networks" :label="t('container.columns.networks', 'Networks')" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="Mounts" :label="t('container.columns.mounts', 'Mounts')" min-width="180" show-overflow-tooltip />
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="420">
           <template #default="{ row }">
             <div class="row-actions">
               <el-button
@@ -1728,7 +1734,7 @@ onBeforeUnmount(() => {
                 :icon="Document"
                 @click="openDetail('container', row)"
               >
-                详情
+                {{ t('container.detail', 'Details') }}
               </el-button>
               <el-button
                 link
@@ -1737,7 +1743,7 @@ onBeforeUnmount(() => {
                 :disabled="!canReadLogs"
                 @click="openLogs(row)"
               >
-                日志
+                {{ t('container.logs', 'Logs') }}
               </el-button>
               <el-button
                 v-if="canStartContainer(row)"
@@ -1748,7 +1754,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'start')"
               >
-                启动
+                {{ t('container.start', 'Start') }}
               </el-button>
               <el-button
                 v-if="canStopContainer(row)"
@@ -1759,7 +1765,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'stop')"
               >
-                停止
+                {{ t('container.stop', 'Stop') }}
               </el-button>
               <el-button
                 v-if="canPauseContainer(row)"
@@ -1770,7 +1776,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'pause')"
               >
-                暂停
+                {{ t('container.pause', 'Pause') }}
               </el-button>
               <el-button
                 v-if="canUnpauseContainer(row)"
@@ -1781,7 +1787,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'unpause')"
               >
-                恢复
+                {{ t('container.resume', 'Resume') }}
               </el-button>
               <el-button
                 v-if="canRestartContainer(row)"
@@ -1792,7 +1798,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canWrite"
                 @click="runContainerAction(row, 'restart')"
               >
-                重启
+                {{ t('container.restart', 'Restart') }}
               </el-button>
               <el-button
                 v-if="canDeleteContainer(row)"
@@ -1803,7 +1809,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canDelete"
                 @click="runContainerAction(row, 'rm')"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -1815,9 +1821,9 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="images"
         :row-key="getRowKey"
-        empty-text="暂无镜像"
+        :empty-text="t('container.empty.images', 'No images')"
       >
-        <el-table-column label="镜像" min-width="260">
+        <el-table-column :label="t('container.columns.image', 'Image')" min-width="260">
           <template #default="{ row }">
             <div class="primary-cell">
               <strong>{{ imageReference(row) }}</strong>
@@ -1825,20 +1831,20 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="CreatedSince" label="创建时间" min-width="150" />
-        <el-table-column prop="Size" label="大小" width="120" />
-        <el-table-column prop="Containers" label="关联容器" width="110" />
-        <el-table-column label="状态" width="100">
+        <el-table-column prop="CreatedSince" :label="t('container.columns.createdAt', 'Created at')" min-width="150" />
+        <el-table-column prop="Size" :label="t('container.columns.size', 'Size')" width="120" />
+        <el-table-column prop="Containers" :label="t('container.columns.linkedContainers', 'Linked containers')" width="110" />
+        <el-table-column :label="t('container.columns.status', 'Status')" width="100">
           <template #default="{ row }">
-            <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? '已使用' : '未使用' }}</el-tag>
+            <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? t('container.used', 'Used') : t('container.unused', 'Unused') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="310">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="310">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button link type="primary" @click="openDetail('image', row)">详情</el-button>
-              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">标签</el-button>
-              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">推送</el-button>
+              <el-button link type="primary" @click="openDetail('image', row)">{{ t('container.detail', 'Details') }}</el-button>
+              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">{{ t('container.tag', 'Tag') }}</el-button>
+              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">{{ t('container.push', 'Push') }}</el-button>
               <el-button
                 link
                 type="primary"
@@ -1846,7 +1852,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable"
                 @click="exportImage(row)"
               >
-                导出
+                {{ t('container.export', 'Export') }}
               </el-button>
               <el-button
                 link
@@ -1856,7 +1862,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canDelete"
                 @click="deleteImage(row)"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -1868,27 +1874,27 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="networks"
         :row-key="getRowKey"
-        empty-text="暂无网络"
+        :empty-text="t('container.empty.networks', 'No networks')"
         @selection-change="handleNetworkSelectionChange"
       >
         <el-table-column type="selection" width="44" />
-        <el-table-column prop="Name" label="名称" min-width="180" />
+        <el-table-column prop="Name" :label="t('container.columns.name', 'Name')" min-width="180" />
         <el-table-column label="ID" min-width="140">
           <template #default="{ row }">{{ shortId(row.ID) }}</template>
         </el-table-column>
-        <el-table-column prop="Driver" label="驱动" width="130" />
-        <el-table-column prop="Scope" label="范围" width="130" />
-        <el-table-column prop="Subnet" label="IPv4 子网" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="Gateway" label="网关" min-width="140" show-overflow-tooltip />
+        <el-table-column prop="Driver" :label="t('container.columns.driver', 'Driver')" width="130" />
+        <el-table-column prop="Scope" :label="t('container.columns.scope', 'Scope')" width="130" />
+        <el-table-column prop="Subnet" :label="t('container.columns.ipv4Subnet', 'IPv4 subnet')" min-width="160" show-overflow-tooltip />
+        <el-table-column prop="Gateway" :label="t('container.columns.gateway', 'Gateway')" min-width="140" show-overflow-tooltip />
         <el-table-column label="IPv6" width="90">
           <template #default="{ row }">
-            <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{ row.EnableIPv6 ? '启用' : '关闭' }}</el-tag>
+            <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{ row.EnableIPv6 ? t('container.enabledShort', 'Enabled') : t('container.closed', 'Off') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="170">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button link type="primary" @click="openDetail('network', row)">详情</el-button>
+              <el-button link type="primary" @click="openDetail('network', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -1897,7 +1903,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canNetworkWrite"
                 @click="deleteNetwork(row)"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -1909,21 +1915,21 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="volumes"
         :row-key="getRowKey"
-        empty-text="暂无存储卷"
+        :empty-text="t('container.empty.volumes', 'No volumes')"
         @selection-change="handleVolumeSelectionChange"
       >
         <el-table-column type="selection" width="44" />
-        <el-table-column prop="Name" label="名称" min-width="220" />
-        <el-table-column prop="Driver" label="驱动" width="130" />
-        <el-table-column prop="Scope" label="范围" width="130" />
-        <el-table-column prop="Mountpoint" label="挂载点" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="Name" :label="t('container.columns.name', 'Name')" min-width="220" />
+        <el-table-column prop="Driver" :label="t('container.columns.driver', 'Driver')" width="130" />
+        <el-table-column prop="Scope" :label="t('container.columns.scope', 'Scope')" width="130" />
+        <el-table-column prop="Mountpoint" :label="t('container.columns.mountPoint', 'Mount point')" min-width="260" show-overflow-tooltip />
         <el-table-column label="Options" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="170">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button link type="primary" @click="openDetail('volume', row)">详情</el-button>
+              <el-button link type="primary" @click="openDetail('volume', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -1932,7 +1938,7 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canVolumeWrite"
                 @click="deleteVolume(row)"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -1944,16 +1950,16 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="composeProjects"
         :row-key="getRowKey"
-        empty-text="暂无 Compose 项目"
+        :empty-text="t('container.empty.compose', 'No Compose projects')"
       >
-        <el-table-column prop="Name" label="项目" min-width="180" />
-        <el-table-column prop="Status" label="状态" min-width="160" />
-        <el-table-column prop="ConfigFiles" label="配置文件" min-width="260" show-overflow-tooltip />
-        <el-table-column prop="WorkingDir" label="工作目录" min-width="260" show-overflow-tooltip />
-        <el-table-column label="操作" width="140">
+        <el-table-column prop="Name" :label="t('container.columns.project', 'Project')" min-width="180" />
+        <el-table-column prop="Status" :label="t('container.columns.status', 'Status')" min-width="160" />
+        <el-table-column prop="ConfigFiles" :label="t('container.columns.configFiles', 'Config files')" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="WorkingDir" :label="t('container.columns.workDir', 'Working directory')" min-width="260" show-overflow-tooltip />
+        <el-table-column :label="t('container.columns.action', 'Actions')" width="140">
           <template #default>
-            <el-tooltip content="后端暂未启用 Compose 写操作">
-              <el-button link type="info" :icon="SwitchButton" disabled>暂未启用</el-button>
+            <el-tooltip :content="t('container.composeWriteDisabled', 'Compose write operations are not enabled by the backend')">
+              <el-button link type="info" :icon="SwitchButton" disabled>{{ t('container.notEnabled', 'Not enabled') }}</el-button>
             </el-tooltip>
           </template>
         </el-table-column>
@@ -1962,7 +1968,7 @@ onBeforeUnmount(() => {
       <el-alert
         v-if="activeTab === 'templates' && !templatesSupported"
         class="container-alert"
-        :title="templatesMessage || '编排模板暂未启用'"
+        :title="templatesMessage || t('container.templatesDisabled', 'Compose templates are not enabled')"
         type="info"
         show-icon
         :closable="false"
@@ -1973,17 +1979,17 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="templates"
         :row-key="getRowKey"
-        empty-text="暂无编排模板"
+        :empty-text="t('container.empty.templates', 'No templates')"
       >
-        <el-table-column prop="name" label="模板名称" min-width="180" />
-        <el-table-column prop="description" label="说明" min-width="260" show-overflow-tooltip />
-        <el-table-column label="内容" min-width="260" show-overflow-tooltip>
+        <el-table-column prop="name" :label="t('container.columns.templateName', 'Template name')" min-width="180" />
+        <el-table-column prop="description" :label="t('container.columns.description', 'Description')" min-width="260" show-overflow-tooltip />
+        <el-table-column :label="t('container.columns.content', 'Content')" min-width="260" show-overflow-tooltip>
           <template #default="{ row }">{{ row.content || '--' }}</template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="160">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="160">
           <template #default="{ row }">
             <div class="row-actions">
-              <el-button link type="primary" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">编辑</el-button>
+              <el-button link type="primary" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">{{ t('container.edit', 'Edit') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -1991,7 +1997,7 @@ onBeforeUnmount(() => {
                 :disabled="!canDelete || !row.id || !templatesSupported"
                 @click="deleteTemplate(row)"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -2003,20 +2009,20 @@ onBeforeUnmount(() => {
         v-loading="listLoading"
         :data="registries"
         :row-key="getRowKey"
-        empty-text="暂无 Registry"
+        :empty-text="t('container.empty.registries', 'No registries')"
       >
-        <el-table-column prop="name" label="名称" min-width="160" />
-        <el-table-column label="地址" min-width="240">
+        <el-table-column prop="name" :label="t('container.columns.name', 'Name')" min-width="160" />
+        <el-table-column :label="t('container.columns.address', 'Address')" min-width="240">
           <template #default="{ row }">{{ registryLabel(row) }}</template>
         </el-table-column>
-        <el-table-column prop="username" label="用户名" min-width="140" />
-        <el-table-column label="认证" width="90">
+        <el-table-column prop="username" :label="t('container.columns.username', 'Username')" min-width="140" />
+        <el-table-column :label="t('container.columns.auth', 'Auth')" width="90">
           <template #default="{ row }">
-            <el-tag :type="row.authEnabled ? 'success' : 'info'" effect="light">{{ row.authEnabled ? '已启用' : '未启用' }}</el-tag>
+            <el-tag :type="row.authEnabled ? 'success' : 'info'" effect="light">{{ row.authEnabled ? t('container.enabled', 'Enabled') : t('container.disabled', 'Disabled') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="120" />
-        <el-table-column fixed="right" label="操作" width="230">
+        <el-table-column prop="status" :label="t('container.columns.status', 'Status')" width="120" />
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="230">
           <template #default="{ row }">
             <div class="row-actions">
               <el-button
@@ -2026,9 +2032,9 @@ onBeforeUnmount(() => {
                 :disabled="!runtimeAvailable || !canRegistryWrite"
                 @click="testRegistry(row)"
               >
-                测试
+                {{ t('container.test', 'Test') }}
               </el-button>
-              <el-button link type="primary" :disabled="!canRegistryWrite" @click="openDialog('registry', row)">编辑</el-button>
+              <el-button link type="primary" :disabled="!canRegistryWrite" @click="openDialog('registry', row)">{{ t('container.edit', 'Edit') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -2036,7 +2042,7 @@ onBeforeUnmount(() => {
                 :disabled="!canDelete"
                 @click="deleteRegistry(row)"
               >
-                删除
+                {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
           </template>
@@ -2045,19 +2051,19 @@ onBeforeUnmount(() => {
 
       <div v-if="activeTab === 'config'" v-loading="listLoading" class="config-editor">
         <div class="config-editor__meta">
-          <span>配置文件：{{ dockerConfig?.configPath || '--' }}</span>
+          <span>{{ t('container.configFile', 'Config file: {path}', { path: dockerConfig?.configPath || '--' }) }}</span>
           <el-tag :type="dockerConfig?.exists ? 'success' : 'info'" effect="light">
-            {{ dockerConfig?.exists ? '已存在' : '未创建' }}
+            {{ dockerConfig?.exists ? t('container.exists', 'Exists') : t('container.notCreated', 'Not created') }}
           </el-tag>
         </div>
         <el-input
           v-model="configForm.raw"
           type="textarea"
           :rows="16"
-          placeholder="请输入 Docker 配置 JSON，例如 {\n  &quot;log-driver&quot;: &quot;json-file&quot;\n}"
+          :placeholder="t('container.configPlaceholder', 'Enter Docker config JSON, for example {\\n  &quot;log-driver&quot;: &quot;json-file&quot;\\n}')"
         />
         <div class="field-help">
-          保存只写入 daemon.json，不会自动重启 Docker。需要生效时请点击“重启 Docker”并确认操作预览。
+          {{ t('container.configSaveTip', 'Saving only writes daemon.json and does not restart Docker automatically. To apply changes, click &quot;Restart Docker&quot; and confirm the operation preview.') }}
         </div>
       </div>
 
@@ -2074,14 +2080,14 @@ onBeforeUnmount(() => {
       />
 
       <div class="panel-foot">
-        <span v-if="activeTab === 'containers'">共 {{ listState.containers.total }} 个容器，当前页 {{ runningContainers }} 个运行中</span>
-        <span v-if="activeTab === 'images'">共 {{ listState.images.total }} 个镜像，当前页大小 {{ totalImagesSize }}</span>
-        <span v-if="activeTab === 'networks'">共 {{ listState.networks.total }} 个网络</span>
-        <span v-if="activeTab === 'volumes'">共 {{ listState.volumes.total }} 个存储卷</span>
-        <span v-if="activeTab === 'compose'">共 {{ composeProjects.length }} 个 Compose 项目，只支持读取</span>
-        <span v-if="activeTab === 'templates'">共 {{ templates.length }} 个模板</span>
-        <span v-if="activeTab === 'registries'">共 {{ listState.registries.total }} 个 Registry</span>
-        <span v-if="activeTab === 'config'">Docker 配置读取与保存</span>
+        <span v-if="activeTab === 'containers'">{{ t('container.footer.containers', '{total} containers, {running} running on current page', { total: listState.containers.total, running: runningContainers }) }}</span>
+        <span v-if="activeTab === 'images'">{{ t('container.footer.images', '{total} images, current page size {size}', { total: listState.images.total, size: totalImagesSize }) }}</span>
+        <span v-if="activeTab === 'networks'">{{ t('container.footer.networks', '{total} networks', { total: listState.networks.total }) }}</span>
+        <span v-if="activeTab === 'volumes'">{{ t('container.footer.volumes', '{total} volumes', { total: listState.volumes.total }) }}</span>
+        <span v-if="activeTab === 'compose'">{{ t('container.footer.compose', '{total} Compose projects, read-only', { total: composeProjects.length }) }}</span>
+        <span v-if="activeTab === 'templates'">{{ t('container.footer.templates', '{total} templates', { total: templates.length }) }}</span>
+        <span v-if="activeTab === 'registries'">{{ t('container.footer.registries', '{total} registries', { total: listState.registries.total }) }}</span>
+        <span v-if="activeTab === 'config'">{{ t('container.footer.config', 'Docker config read and save') }}</span>
       </div>
     </section>
 

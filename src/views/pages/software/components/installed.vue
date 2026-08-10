@@ -2,10 +2,15 @@
 import { Api } from '@/api/Api'
 import { ChildProps } from '../index.vue'
 import { dayjs } from 'element-plus'
+import i18n from '@/lang'
 
 const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const hanldeCheckRunState = async (id: number) => {
   const { data: isRun } = await Api.getSoftRunState({ id })
@@ -19,7 +24,7 @@ props.list.forEach(async (item) => {
 
 <template>
   <div>
-    <div class="title">已安装</div>
+    <div class="title">{{ t('software.installedPage.title', 'Installed') }}</div>
     <div class="list">
       <template v-if="list.length">
         <div v-for="item in list" class="item">
@@ -33,43 +38,45 @@ props.list.forEach(async (item) => {
                   <div>
                     <span class="menuTitle">{{ item.name }}</span>
                     <span class="remark" :class="{ stop: !item.isRun }">
-                      {{ item.isRun ? '（已启动）' : '（未启动）' }}
+                      {{ item.isRun ? t('software.installedPage.started', ' (Started)') : t('software.installedPage.stopped', ' (Stopped)') }}
                     </span>
                   </div>
                   <div class="flex" style="gap: 16px">
-                    <div class="btn primary">安装目录</div>
-                    <div class="btn primary">日志</div>
+                    <div class="btn primary">{{ t('software.installedPage.installDir', 'Install directory') }}</div>
+                    <div class="btn primary">{{ t('software.installedPage.logs', 'Logs') }}</div>
                   </div>
                 </div>
                 <div class="tip">
-                  <div class="btn">版本：1.21.4</div>
-                  <div class="btn">服务端口：80</div>
-                  <div class="btn">服务端口：443</div>
+                  <div class="btn">{{ t('software.installedPage.version', 'Version: {version}', { version: '1.21.4' }) }}</div>
+                  <div class="btn">{{ t('software.installedPage.servicePort', 'Service port: {port}', { port: 80 }) }}</div>
+                  <div class="btn">{{ t('software.installedPage.servicePort', 'Service port: {port}', { port: 443 }) }}</div>
                 </div>
                 <span style="color: var(--font-color-gray); margin-top: 10px">
-                  已安装：{{ `${dayjs().diff(item.install_time, 'd')}天`
-                  }}{{ `${dayjs().diff(item.install_time, 'h') - dayjs().diff(item.install_time, 'd') * 24}小时` }}
+                  {{ t('software.installedPage.installedDuration', 'Installed: {days}d {hours}h', {
+                    days: dayjs().diff(item.install_time, 'd'),
+                    hours: dayjs().diff(item.install_time, 'h') - dayjs().diff(item.install_time, 'd') * 24
+                  }) }}
                 </span>
               </div>
             </div>
             <div class="xian" />
             <div class="below">
-              <div class="btn round">同步</div>
-              <div class="btn round">重建</div>
-              <div class="btn round">重启</div>
-              <div class="btn round">启动</div>
-              <div class="btn round">停止</div>
-              <div class="btn round">卸载</div>
-              <div class="btn round">参数</div>
-              <div class="btn round">备份</div>
-              <div class="btn round">导入重启</div>
+              <div class="btn round">{{ t('software.installedPage.sync', 'Sync') }}</div>
+              <div class="btn round">{{ t('software.installedPage.rebuild', 'Rebuild') }}</div>
+              <div class="btn round">{{ t('software.installedPage.restart', 'Restart') }}</div>
+              <div class="btn round">{{ t('software.installedPage.start', 'Start') }}</div>
+              <div class="btn round">{{ t('software.installedPage.stop', 'Stop') }}</div>
+              <div class="btn round">{{ t('software.installedPage.uninstall', 'Uninstall') }}</div>
+              <div class="btn round">{{ t('software.installedPage.params', 'Parameters') }}</div>
+              <div class="btn round">{{ t('software.installedPage.backup', 'Backup') }}</div>
+              <div class="btn round">{{ t('software.installedPage.importRestart', 'Import and restart') }}</div>
             </div>
           </div>
         </div>
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>尚未安装任何应用</span>
+        <span>{{ t('software.installedPage.empty', 'No apps installed yet') }}</span>
       </div>
     </div>
   </div>

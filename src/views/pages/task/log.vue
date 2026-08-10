@@ -4,8 +4,13 @@ import { Back, Download, Refresh } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import i18n from '@/lang'
 
 const taskID = Number(System.getRouterParams().id || 0)
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 const loading = ref(false)
 const exporting = ref(false)
 const cleaning = ref(false)
@@ -51,25 +56,25 @@ const reset = () => {
 
 const cancelExecution = async (execution: any) => {
   await ElMessageBox.confirm(
-    '取消会终止本次执行及其子进程，已经产生的外部副作用不会自动回滚。确定继续吗？',
-    '取消计划任务执行',
-    { confirmButtonText: '确认取消', cancelButtonText: '返回', type: 'warning' }
+    t('task.log.cancelConfirm', 'Cancel this execution?'),
+    t('task.log.cancelTitle', 'Cancel task execution'),
+    { confirmButtonText: t('task.log.confirmCancel', 'Confirm cancel'), cancelButtonText: t('task.log.back', 'Back'), type: 'warning' }
   )
   await Api.cancelPlanTaskExecution(execution.id)
-  ElMessage.success('已提交取消请求')
+  ElMessage.success(t('task.log.cancelSubmitted', 'Cancel request submitted'))
   await getData()
 }
 
 const cleanupLogs = async () => {
   await ElMessageBox.confirm(
-    '将按照服务器配置的保留天数清理所有计划任务的过期执行日志，运行中的记录不会删除。',
-    '清理过期日志',
-    { confirmButtonText: '确认清理', cancelButtonText: '返回', type: 'warning' }
+    t('task.log.cleanupConfirm', 'Clean expired scheduled-task execution logs?'),
+    t('task.log.cleanupTitle', 'Clean expired logs'),
+    { confirmButtonText: t('task.log.confirmCleanup', 'Confirm cleanup'), cancelButtonText: t('task.log.back', 'Back'), type: 'warning' }
   )
   cleaning.value = true
   try {
     const { data } = await Api.cleanupPlanTaskLogs()
-    ElMessage.success(`已清理 ${data.deleted || 0} 条过期执行日志`)
+    ElMessage.success(t('task.log.cleanupSuccess', '{count} expired execution logs cleaned', { count: data.deleted || 0 }))
     await getData()
   } finally {
     cleaning.value = false
@@ -96,7 +101,7 @@ const exportLogs = async () => {
     anchor.click()
     URL.revokeObjectURL(url)
   } catch {
-    ElMessage.error('导出执行日志失败')
+    ElMessage.error(t('task.log.exportFailed', 'Failed to export execution logs'))
   } finally {
     exporting.value = false
   }
@@ -104,16 +109,16 @@ const exportLogs = async () => {
 
 const formatDate = (value: string) => value ? new Date(value).toLocaleString() : '-'
 const formatDuration = (value: number) => value >= 1000
-  ? `${(value / 1000).toFixed(2)} 秒`
-  : `${value || 0} 毫秒`
+  ? t('task.log.second', '{value} s', { value: (value / 1000).toFixed(2) })
+  : t('task.log.millisecond', '{value} ms', { value: value || 0 })
 
 const statusText = (status: string) => ({
-  running: '执行中',
-  success: '成功',
-  failed: '失败',
-  timeout: '超时',
-  canceled: '已取消',
-  skipped: '已跳过'
+  running: t('task.log.statuses.running', 'Running'),
+  success: t('task.log.statuses.success', 'Success'),
+  failed: t('task.log.statuses.failed', 'Failed'),
+  timeout: t('task.log.statuses.timeout', 'Timeout'),
+  canceled: t('task.log.statuses.canceled', 'Canceled'),
+  skipped: t('task.log.statuses.skipped', 'Skipped')
 }[status] || status)
 
 const statusType = (status: string) => {
@@ -139,71 +144,71 @@ onUnmounted(() => {
   <div class="task-container">
     <el-card>
       <div class="toolbar">
-        <el-button :icon="Back" @click="System.router.back()">返回</el-button>
-        <strong>任务 #{{ taskID }} 执行日志</strong>
-        <el-button :icon="Download" :loading="exporting" @click="exportLogs">导出 CSV</el-button>
-        <el-button :loading="cleaning" @click="cleanupLogs">清理过期日志</el-button>
-        <el-button :icon="Refresh" :loading="loading" @click="getData">刷新</el-button>
+        <el-button :icon="Back" @click="System.router.back()">{{ t('task.log.back', 'Back') }}</el-button>
+        <strong>{{ t('task.log.title', 'Task #{id} execution logs', { id: taskID }) }}</strong>
+        <el-button :icon="Download" :loading="exporting" @click="exportLogs">{{ t('task.log.exportCsv', 'Export CSV') }}</el-button>
+        <el-button :loading="cleaning" @click="cleanupLogs">{{ t('task.log.cleanupExpired', 'Clean expired logs') }}</el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="getData">{{ t('task.log.refresh', 'Refresh') }}</el-button>
       </div>
       <div class="filters">
-        <el-select v-model="status" clearable placeholder="执行状态" @change="search">
-          <el-option label="执行中" value="running" />
-          <el-option label="成功" value="success" />
-          <el-option label="失败" value="failed" />
-          <el-option label="超时" value="timeout" />
-          <el-option label="已取消" value="canceled" />
-          <el-option label="已跳过" value="skipped" />
+        <el-select v-model="status" clearable :placeholder="t('task.log.statusPlaceholder', 'Execution status')" @change="search">
+          <el-option :label="t('task.log.statuses.running', 'Running')" value="running" />
+          <el-option :label="t('task.log.statuses.success', 'Success')" value="success" />
+          <el-option :label="t('task.log.statuses.failed', 'Failed')" value="failed" />
+          <el-option :label="t('task.log.statuses.timeout', 'Timeout')" value="timeout" />
+          <el-option :label="t('task.log.statuses.canceled', 'Canceled')" value="canceled" />
+          <el-option :label="t('task.log.statuses.skipped', 'Skipped')" value="skipped" />
         </el-select>
         <el-date-picker
           v-model="dateRange"
           type="datetimerange"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          range-separator="至"
+          :start-placeholder="t('task.log.startTime', 'Start time')"
+          :end-placeholder="t('task.log.endTime', 'End time')"
+          :range-separator="t('task.log.rangeSeparator', 'to')"
         />
-        <el-button type="primary" @click="search">查询</el-button>
-        <el-button @click="reset">重置</el-button>
+        <el-button type="primary" @click="search">{{ t('task.log.search', 'Search') }}</el-button>
+        <el-button @click="reset">{{ t('task.log.reset', 'Reset') }}</el-button>
       </div>
       <el-table
         v-loading="loading"
         :data="tableData"
         border
-        empty-text="暂无执行记录"
+        :empty-text="t('task.log.empty', 'No execution records')"
         :row-key="(row: any) => row.id"
       >
-        <el-table-column label="状态" width="100">
+        <el-table-column :label="t('task.status', 'Status')" width="100">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="触发方式" width="100">
-          <template #default="{ row }">{{ row.trigger === 'manual' ? '手动' : '调度' }}</template>
+        <el-table-column :label="t('task.log.trigger', 'Trigger')" width="100">
+          <template #default="{ row }">{{ row.trigger === 'manual' ? t('task.log.manual', 'Manual') : t('task.log.scheduled', 'Scheduled') }}</template>
         </el-table-column>
-        <el-table-column label="执行时间" width="320">
+        <el-table-column :label="t('task.log.executionTime', 'Execution time')" width="320">
           <template #default="{ row }">
-            {{ formatDate(row.start_time) }} 至 {{ row.status === 'running' ? '执行中' : formatDate(row.end_time) }}
+            {{ formatDate(row.start_time) }} {{ t('task.log.rangeSeparator', 'to') }} {{ row.status === 'running' ? t('task.log.statuses.running', 'Running') : formatDate(row.end_time) }}
           </template>
         </el-table-column>
-        <el-table-column label="耗时" width="110">
+        <el-table-column :label="t('task.log.duration', 'Duration')" width="110">
           <template #default="{ row }">{{ formatDuration(row.duration_ms) }}</template>
         </el-table-column>
-        <el-table-column prop="exit_code" label="退出码" width="80" />
-        <el-table-column label="操作" width="100">
+        <el-table-column prop="exit_code" :label="t('task.log.exitCode', 'Exit code')" width="80" />
+        <el-table-column :label="t('task.action', 'Action')" width="100">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 'running'"
               link type="danger"
               @click="cancelExecution(row)"
             >
-              取消
+              {{ t('task.log.cancel', 'Cancel') }}
             </el-button>
             <span v-else>—</span>
           </template>
         </el-table-column>
-        <el-table-column label="输出日志" min-width="360">
+        <el-table-column :label="t('task.log.output', 'Output logs')" min-width="360">
           <template #default="{ row }">
-            <pre class="execution-output">{{ row.output || (row.status === 'running' ? '任务执行中…' : '无输出') }}</pre>
-            <el-tag v-if="row.output_truncated" type="warning" size="small">输出已截断</el-tag>
+            <pre class="execution-output">{{ row.output || (row.status === 'running' ? t('task.log.runningOutput', 'Task running...') : t('task.log.noOutput', 'No output')) }}</pre>
+            <el-tag v-if="row.output_truncated" type="warning" size="small">{{ t('task.log.outputTruncated', 'Output truncated') }}</el-tag>
           </template>
         </el-table-column>
       </el-table>

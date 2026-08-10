@@ -10,6 +10,7 @@ import type {
   SnapshotStatus
 } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
+import i18n from '@/lang'
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot
@@ -31,6 +32,11 @@ interface SnapshotResourceOption {
   label: string
   value: string
   description?: string
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 const loading = ref(false)
@@ -63,164 +69,28 @@ const createForm = reactive({
   resourceType: 'website' as SnapshotResourceType,
   resourceId: '',
   name: '',
-  version: '当前配置',
-  backupAccount: '服务器磁盘',
+  version: t('configSnapshots.currentConfig', 'Current configuration'),
+  backupAccount: t('configSnapshots.serverDisk', 'Server disk'),
   description: ''
 })
 
-const resourceOptions = [
-  { label: '全部资源', value: '' },
-  { label: '网站配置', value: 'website' },
-  { label: 'Nginx 配置', value: 'nginx' },
-  { label: '防火墙规则', value: 'firewall' },
-  { label: '面板访问', value: 'panel_access' }
-]
+const resourceOptions = computed(() => [
+  { label: t('configSnapshots.allResources', 'All resources'), value: '' },
+  { label: t('configSnapshots.resources.website', 'Website configuration'), value: 'website' },
+  { label: t('configSnapshots.resources.nginx', 'Nginx configuration'), value: 'nginx' },
+  { label: t('configSnapshots.resources.firewall', 'Firewall rules'), value: 'firewall' },
+  { label: t('configSnapshots.resources.panelAccess', 'Panel access'), value: 'panel_access' }
+])
 
-const statusOptions = [
-  { label: '全部状态', value: '' },
-  { label: '待处理', value: 'pending' },
-  { label: '应用中', value: 'applying' },
-  { label: '成功', value: 'succeeded' },
-  { label: '失败', value: 'failed' },
-  { label: '已回滚', value: 'rolled_back' },
-  { label: '回滚失败', value: 'rollback_failed' }
-]
-
-const resourceGuideGroups = [
-  {
-    title: '网站',
-    type: 'website',
-    resourceId: '网站 ID，例如 12',
-    note: '网站回滚会重新通过网站校验和 Nginx 发布流程。',
-    fields: [
-      { name: 'running_directory', type: 'string', description: '网站根目录下的运行目录' },
-      { name: 'directory_listing', type: 'boolean', description: '是否允许目录浏览' },
-      { name: 'default_documents', type: 'string', description: '默认首页，空格分隔' },
-      { name: 'allowed_ips', type: 'string', description: '允许 IP/CIDR，每行一个' },
-      { name: 'denied_ips', type: 'string', description: '拒绝 IP/CIDR，每行一个' },
-      { name: 'rewrite_rules', type: 'string', description: 'rewrite 规则' },
-      { name: 'bindings', type: 'array', description: '目录绑定' },
-      { name: 'redirects', type: 'array', description: '重定向规则' },
-      { name: 'proxy_rules', type: 'array', description: '反向代理规则' },
-      { name: 'php_backend', type: 'string', description: 'PHP 后端地址' },
-      { name: 'security_headers', type: 'boolean', description: '安全响应头开关' },
-      { name: 'access_log_enabled', type: 'boolean', description: '访问日志开关' },
-      { name: 'error_log_enabled', type: 'boolean', description: '错误日志开关' }
-    ]
-  },
-  {
-    title: 'Nginx',
-    type: 'nginx',
-    resourceId: '受管配置路径，例如 example.com.conf',
-    note: 'Nginx 变更会先语法校验，再原子发布和 reload；前端不传递 Shell 命令。',
-    fields: [
-      { name: 'path', type: 'string', description: '受管配置路径' },
-      { name: 'name', type: 'string', description: '配置文件名称' },
-      { name: 'size', type: 'number', description: '文件大小' },
-      { name: 'modifiedAt', type: 'string', description: '最近修改时间' },
-      { name: 'revision', type: 'string', description: '版本摘要或版本号' },
-      { name: 'main', type: 'boolean', description: '是否主配置' },
-      { name: 'site', type: 'boolean', description: '是否站点配置' },
-      { name: 'content', type: 'string', description: '配置文件内容' }
-    ]
-  },
-  {
-    title: '防火墙',
-    type: 'firewall',
-    resourceId: '固定为 host',
-    note: '面板保护规则不会被快照恢复过程删除。',
-    fields: [
-      { name: 'ruleType', type: 'string', description: '规则类型，通常为 port' },
-      { name: 'direction', type: 'string', description: '入站或出站' },
-      { name: 'protocol', type: 'string', description: 'tcp、udp、icmp 等' },
-      { name: 'strategy', type: 'string', description: 'allow 或 deny' },
-      { name: 'ips', type: 'string', description: 'IP/CIDR' },
-      { name: 'ports', type: 'string', description: '端口或范围' },
-      { name: 'state', type: 'number', description: '启用状态' },
-      { name: 'remark', type: 'string', description: '备注' },
-      { name: 'expiresAt', type: 'string/null', description: '过期时间' },
-      { name: 'location', type: 'string', description: '位置说明' }
-    ]
-  },
-  {
-    title: '面板访问',
-    type: 'panel_access',
-    resourceId: '固定为 panel',
-    note: 'httpsPrivateKeyFile 只表示路径，接口不会返回私钥内容。端口变更后建议刷新面板访问配置获取最终运行状态。',
-    fields: [
-      { name: 'bindAddress', type: 'string', description: '监听地址' },
-      { name: 'httpPort', type: 'string', description: 'HTTP 端口' },
-      { name: 'httpsEnabled', type: 'boolean', description: 'HTTPS 开关' },
-      { name: 'httpsPort', type: 'string', description: 'HTTPS 端口' },
-      { name: 'httpsCertificateFile', type: 'string', description: '证书文件路径' },
-      { name: 'httpsPrivateKeyFile', type: 'string', description: '私钥文件路径' },
-      { name: 'trustedProxies', type: 'array', description: '可信代理列表' },
-      { name: 'panelEntryEnabled', type: 'boolean', description: '安全入口开关' },
-      { name: 'panelEntryPath', type: 'string', description: '安全入口路径' },
-      { name: 'rotatePanelEntry', type: 'boolean', description: '是否轮换安全入口' }
-    ]
-  }
-]
-
-const integrationChecklist = [
-  {
-    text: '登录会话、CSRF、权限请求正常。'
-  },
-  {
-    text: '点击“创建快照”调用',
-    code: 'POST /v1/config-snapshots',
-    suffix: '并传递资源类型、资源 ID、名称和描述。'
-  },
-  {
-    text: '手动创建成功后列表显示名称、版本、备份位置、大小、状态、描述和时间。'
-  },
-  {
-    text: '网站配置变更产生',
-    code: 'resourceType=website',
-    suffix: '快照。'
-  },
-  {
-    text: 'Nginx 受管配置变更产生',
-    code: 'resourceType=nginx',
-    suffix: '快照。'
-  },
-  {
-    text: '防火墙规则变更产生',
-    code: 'resourceType=firewall',
-    suffix: '快照。'
-  },
-  {
-    text: '面板端口变更产生',
-    code: 'resourceType=panel_access',
-    suffix: '快照。'
-  },
-  {
-    text: '详情包含',
-    codes: ['before', 'after', 'diff'],
-    suffix: '。'
-  },
-  {
-    text: '漂移时显示强制覆盖确认。'
-  },
-  {
-    text: '回滚成功后列表新增',
-    code: 'operation=restore',
-    suffix: '快照。'
-  },
-  {
-    text: '审计日志能看到',
-    code: 'config.snapshot.update/restore/delete',
-    suffix: '事件。'
-  },
-  {
-    text: '页面不展示密码、令牌、私钥原文。'
-  },
-  {
-    text: '不把',
-    code: 'failureMessage',
-    suffix: '当 HTML 渲染。'
-  }
-]
+const statusOptions = computed(() => [
+  { label: t('configSnapshots.allStatus', 'All statuses'), value: '' },
+  { label: t('configSnapshots.status.pending', 'Pending'), value: 'pending' },
+  { label: t('configSnapshots.status.applying', 'Applying'), value: 'applying' },
+  { label: t('common.success', 'Success'), value: 'succeeded' },
+  { label: t('common.failed', 'Failed'), value: 'failed' },
+  { label: t('configSnapshots.status.rolledBack', 'Rolled back'), value: 'rolled_back' },
+  { label: t('configSnapshots.status.rollbackFailed', 'Rollback failed'), value: 'rollback_failed' }
+])
 
 const canRead = computed(() =>
   sconfig.hasActionAccess('config.snapshot.read') ||
@@ -241,26 +111,26 @@ const restoreCount = computed(() => snapshots.value.filter((item) => item.operat
 const restoreRequiresForce = computed(() => Boolean(restorePreview.value?.hasDrift || restorePreview.value?.requiresForce))
 
 const resourceLabel = (value?: string) => ({
-  website: '网站配置',
-  nginx: 'Nginx 配置',
-  firewall: '防火墙规则',
-  panel_access: '面板访问'
+  website: t('configSnapshots.resources.website', 'Website configuration'),
+  nginx: t('configSnapshots.resources.nginx', 'Nginx configuration'),
+  firewall: t('configSnapshots.resources.firewall', 'Firewall rules'),
+  panel_access: t('configSnapshots.resources.panelAccess', 'Panel access')
 }[value || ''] || value || '—')
 
 const operationLabel = (value?: string) => ({
-  create: '创建',
-  update: '更新',
-  delete: '删除',
-  restore: '回滚'
+  create: t('common.create', 'Create'),
+  update: t('configSnapshots.operations.update', 'Update'),
+  delete: t('common.delete', 'Delete'),
+  restore: t('configSnapshots.operations.restore', 'Rollback')
 }[value || ''] || value || '—')
 
 const statusLabel = (value?: string) => ({
-  pending: '待处理',
-  applying: '应用中',
-  succeeded: '成功',
-  failed: '失败',
-  rolled_back: '已回滚',
-  rollback_failed: '回滚失败'
+  pending: t('configSnapshots.status.pending', 'Pending'),
+  applying: t('configSnapshots.status.applying', 'Applying'),
+  succeeded: t('common.success', 'Success'),
+  failed: t('common.failed', 'Failed'),
+  rolled_back: t('configSnapshots.status.rolledBack', 'Rolled back'),
+  rollback_failed: t('configSnapshots.status.rollbackFailed', 'Rollback failed')
 }[value || ''] || value || '—')
 
 const statusType = (value?: string) => {
@@ -288,21 +158,21 @@ const formatBytes = (value?: number) => {
 const diffCount = (diff?: SnapshotDiff) =>
   (diff?.added?.length || 0) + (diff?.changed?.length || 0) + (diff?.removed?.length || 0)
 
-const snapshotErrorMessages: Record<string, string> = {
-  BAD_REQUEST: '请求参数无效，请检查资源类型和资源标识',
-  CONFIG_ERROR: '目标配置校验失败，请检查当前配置是否可读取或格式是否正确',
-  UNAUTHORIZED: '登录会话已失效，请重新登录',
-  FORBIDDEN: '当前账号没有配置快照权限',
-  NOT_FOUND: '快照不存在或当前账号无权访问',
-  CONFLICT: '检测到配置漂移，请重新预览；确认覆盖时需要强制回滚',
-  INTERNAL_ERROR: '系统应用失败，请稍后重试或查看运行日志',
-  400: '请求参数无效，请检查资源类型和资源标识',
-  401: '登录会话已失效，请重新登录',
-  403: '当前账号没有配置快照权限',
-  404: '快照不存在或当前账号无权访问',
-  409: '检测到配置漂移，请重新预览；确认覆盖时需要强制回滚',
-  500: '系统应用失败，请稍后重试或查看运行日志'
-}
+const snapshotErrorMessages = computed<Record<string, string>>(() => ({
+  BAD_REQUEST: t('configSnapshots.errors.badRequest', 'Invalid request parameters. Check the resource type and identifier.'),
+  CONFIG_ERROR: t('configSnapshots.errors.configError', 'Target configuration validation failed. Check whether the current configuration can be read and parsed.'),
+  UNAUTHORIZED: t('configSnapshots.errors.unauthorized', 'Login session expired. Sign in again.'),
+  FORBIDDEN: t('configSnapshots.errors.forbidden', 'This account does not have configuration snapshot permission.'),
+  NOT_FOUND: t('configSnapshots.errors.notFound', 'Snapshot does not exist or this account cannot access it.'),
+  CONFLICT: t('configSnapshots.errors.conflict', 'Configuration drift detected. Preview again; forced rollback is required to overwrite.'),
+  INTERNAL_ERROR: t('configSnapshots.errors.internalError', 'System apply failed. Try again later or check runtime logs.'),
+  400: t('configSnapshots.errors.badRequest', 'Invalid request parameters. Check the resource type and identifier.'),
+  401: t('configSnapshots.errors.unauthorized', 'Login session expired. Sign in again.'),
+  403: t('configSnapshots.errors.forbidden', 'This account does not have configuration snapshot permission.'),
+  404: t('configSnapshots.errors.notFound', 'Snapshot does not exist or this account cannot access it.'),
+  409: t('configSnapshots.errors.conflict', 'Configuration drift detected. Preview again; forced rollback is required to overwrite.'),
+  500: t('configSnapshots.errors.internalError', 'System apply failed. Try again later or check runtime logs.')
+}))
 
 const getSnapshotErrorMessage = (error: any, fallback: string) => {
   const data = error?.response?.data || error?.data || error?.xhr?.data || {}
@@ -310,12 +180,12 @@ const getSnapshotErrorMessage = (error: any, fallback: string) => {
   const status = error?.response?.status || data?.status || error?.status
   const detail = data?.error?.detail || data?.detail
   const rawMessage = data?.error?.message || data?.message || error?.message
-  const mapped = snapshotErrorMessages[String(code)] || snapshotErrorMessages[String(status)]
+  const mapped = snapshotErrorMessages.value[String(code)] || snapshotErrorMessages.value[String(status)]
   if (mapped && detail) return `${mapped}：${detail}`
   return mapped || rawMessage || fallback
 }
 
-const createResourceOptions = computed(() => resourceOptions.filter((item) => item.value))
+const createResourceOptions = computed(() => resourceOptions.value.filter((item) => item.value))
 const useResourceSelect = computed(() => createForm.resourceType === 'website' || createForm.resourceType === 'nginx')
 const currentCreateResourceOptions = computed(() => {
   if (createForm.resourceType === 'website') return websiteResourceOptions.value
@@ -324,19 +194,19 @@ const currentCreateResourceOptions = computed(() => {
 })
 const resourceIdPlaceholder = computed(() => {
   const placeholders: Record<SnapshotResourceType, string> = {
-    website: '请选择网站',
-    nginx: '请选择受管配置文件',
-    firewall: '请输入资源标识',
-    panel_access: '请输入资源标识'
+    website: t('configSnapshots.placeholders.selectWebsite', 'Select a website'),
+    nginx: t('configSnapshots.placeholders.selectManagedConfig', 'Select a managed configuration file'),
+    firewall: t('configSnapshots.placeholders.inputResourceIdentifier', 'Enter a resource identifier'),
+    panel_access: t('configSnapshots.placeholders.inputResourceIdentifier', 'Enter a resource identifier')
   }
-  return placeholders[createForm.resourceType] || '请输入资源标识'
+  return placeholders[createForm.resourceType] || t('configSnapshots.placeholders.inputResourceIdentifier', 'Enter a resource identifier')
 })
 const resourceIdHelp = computed(() => {
   const helpText: Record<SnapshotResourceType, string> = {
-    website: '选择网站，提交时使用网站 ID。',
-    nginx: '选择 Nginx 受管配置文件，提交时使用 resourceId。',
-    firewall: '防火墙规则固定填写 host。',
-    panel_access: '面板访问配置固定填写 panel。'
+    website: t('configSnapshots.resourceHelp.website', 'Select a website. The website ID is submitted.'),
+    nginx: t('configSnapshots.resourceHelp.nginx', 'Select a managed Nginx configuration file. resourceId is submitted.'),
+    firewall: t('configSnapshots.resourceHelp.firewall', 'Firewall rules always use host.'),
+    panel_access: t('configSnapshots.resourceHelp.panelAccess', 'Panel access configuration always uses panel.')
   }
   return helpText[createForm.resourceType] || ''
 })
@@ -354,7 +224,7 @@ const normalizeArray = (value: any): any[] => {
 const formatWebsiteOption = (item: any): SnapshotResourceOption | null => {
   const id = item?.id ?? item?.ID ?? item?.websiteId ?? item?.siteId
   if (id === undefined || id === null || id === '') return null
-  const domain = item?.primaryDomain || item?.domain || item?.mainDomain || item?.siteName || item?.name || `网站 ${id}`
+  const domain = item?.primaryDomain || item?.domain || item?.mainDomain || item?.siteName || item?.name || t('configSnapshots.websiteFallbackName', 'Website {id}', { id })
   const remark = item?.remark || item?.note || item?.description || ''
   return {
     label: remark ? `${domain} (${remark})` : String(domain),
@@ -368,7 +238,7 @@ const formatNginxOption = (item: any): SnapshotResourceOption | null => {
   if (!resourceId) return null
   const path = item?.path || item?.filePath || item?.name || resourceId
   const name = item?.name || String(path).split('/').pop() || resourceId
-  const tags = [item?.main ? '主配置' : '', item?.site ? '站点配置' : ''].filter(Boolean)
+  const tags = [item?.main ? t('configSnapshots.mainConfig', 'Main config') : '', item?.site ? t('configSnapshots.siteConfig', 'Site config') : ''].filter(Boolean)
   return {
     label: name,
     value: String(resourceId),
@@ -395,7 +265,7 @@ const loadCreateResourceOptions = async (type = createForm.resourceType) => {
         .filter(Boolean) as SnapshotResourceOption[]
     }
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '读取资源列表失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.resourceListReadFailed', 'Failed to read resource list')))
   } finally {
     createResourceLoading.value = false
   }
@@ -419,7 +289,7 @@ const loadSnapshots = async () => {
     filters.page = data?.page || filters.page
     filters.pageSize = data?.pageSize || filters.pageSize
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '读取配置快照失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.snapshotListReadFailed', 'Failed to read configuration snapshots')))
   } finally {
     loading.value = false
   }
@@ -437,8 +307,8 @@ const resetCreateForm = () => {
   createForm.resourceType = 'website'
   createForm.resourceId = ''
   createForm.name = ''
-  createForm.version = '当前配置'
-  createForm.backupAccount = '服务器磁盘'
+  createForm.version = t('configSnapshots.currentConfig', 'Current configuration')
+  createForm.backupAccount = t('configSnapshots.serverDisk', 'Server disk')
   createForm.description = ''
 }
 
@@ -463,7 +333,7 @@ const syncCreateResourceId = () => {
 
 const submitCreateSnapshot = async () => {
   if (!createForm.resourceType || !createForm.resourceId.trim()) {
-    ElMessage.warning(useResourceSelect.value ? '请选择资源标识' : '请选择资源类型并填写资源标识')
+    ElMessage.warning(useResourceSelect.value ? t('configSnapshots.messages.selectResourceIdentifier', 'Select a resource identifier') : t('configSnapshots.messages.selectTypeAndIdentifier', 'Select a resource type and enter a resource identifier'))
     return
   }
   createLoading.value = true
@@ -476,12 +346,12 @@ const submitCreateSnapshot = async () => {
       backupAccount: createForm.backupAccount.trim() || undefined,
       description: createForm.description.trim() || undefined
     })
-    ElMessage.success('配置快照已创建')
+    ElMessage.success(t('configSnapshots.messages.snapshotCreated', 'Configuration snapshot created'))
     createVisible.value = false
     filters.page = 1
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '创建配置快照失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.createFailed', 'Failed to create configuration snapshot')))
   } finally {
     createLoading.value = false
   }
@@ -502,7 +372,7 @@ const openDetail = async (row: ConfigurationSnapshot) => {
       diff: detailResponse.data?.diff || diffResponse.data?.diff || diffResponse.data
     }
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '读取快照详情失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.detailReadFailed', 'Failed to read snapshot details')))
   } finally {
     detailLoading.value = false
   }
@@ -518,7 +388,7 @@ const openRestore = async (row: ConfigurationSnapshot) => {
     const { data } = await Api.previewConfigurationSnapshotRestore(row.id)
     restorePreview.value = data || {}
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '读取回滚预览失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restorePreviewReadFailed', 'Failed to read rollback preview')))
   } finally {
     restoreLoading.value = false
   }
@@ -528,43 +398,43 @@ const executeRestore = async () => {
   if (!selectedSnapshot.value || !restorePreview.value) return
   const force = restoreRequiresForce.value && forceRestoreConfirmed.value
   if (restoreRequiresForce.value && !forceRestoreConfirmed.value) {
-    ElMessage.warning('请先确认覆盖当前人工修改')
+    ElMessage.warning(t('configSnapshots.messages.confirmOverwriteFirst', 'Confirm overwriting current manual changes first'))
     return
   }
   if (!force) {
-    await ElMessageBox.confirm('确认回滚到该配置快照？回滚会创建新的 restore 快照记录。', '回滚配置', {
+    await ElMessageBox.confirm(t('configSnapshots.restoreConfirmMessage', 'Rollback to this configuration snapshot? Rollback creates a new restore snapshot record.'), t('configSnapshots.rollbackConfig', 'Rollback configuration'), {
       type: 'warning',
-      confirmButtonText: '确认回滚',
-      cancelButtonText: '取消'
+      confirmButtonText: t('configSnapshots.confirmRollback', 'Confirm rollback'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     })
   }
   restoreLoading.value = true
   try {
     await Api.restoreConfigurationSnapshot(selectedSnapshot.value.id, { force })
-    ElMessage.success('回滚已执行')
+    ElMessage.success(t('configSnapshots.messages.restoreExecuted', 'Rollback executed'))
     restoreVisible.value = false
     forceRestoreConfirmed.value = false
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '执行回滚失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restoreFailed', 'Failed to execute rollback')))
   } finally {
     restoreLoading.value = false
   }
 }
 
 const deleteSnapshot = async (row: ConfigurationSnapshot) => {
-  await ElMessageBox.confirm(`删除快照 ${row.id}？活动中的快照不能删除。`, '删除配置快照', {
+  await ElMessageBox.confirm(t('configSnapshots.deleteConfirmMessage', 'Delete snapshot {id}? Active snapshots cannot be deleted.', { id: row.id }), t('configSnapshots.deleteSnapshot', 'Delete configuration snapshot'), {
     type: 'warning',
-    confirmButtonText: '删除',
-    cancelButtonText: '取消'
+    confirmButtonText: t('common.delete', 'Delete'),
+    cancelButtonText: t('common.cancel', 'Cancel')
   })
   deletingId.value = row.id
   try {
     await Api.deleteConfigurationSnapshot(row.id)
-    ElMessage.success('快照已删除')
+    ElMessage.success(t('configSnapshots.messages.snapshotDeleted', 'Snapshot deleted'))
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, '删除配置快照失败'))
+    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.deleteFailed', 'Failed to delete configuration snapshot')))
   } finally {
     deletingId.value = ''
   }
@@ -579,19 +449,19 @@ onMounted(() => {
   <div class="snapshot-page">
     <section class="snapshot-toolbar">
       <div>
-        <h2>配置快照</h2>
-        <p>查看网站、Nginx、防火墙和面板访问配置的快照差异，并在确认后安全回滚。</p>
+        <h2>{{ $t('configSnapshots.title') }}</h2>
+        <p>{{ $t('configSnapshots.pageDescription') }}</p>
       </div>
       <div class="toolbar-actions">
-        <el-button type="primary" :icon="Plus" :disabled="!canWrite" @click="openCreateSnapshot">创建快照</el-button>
-        <el-button :icon="Refresh" :loading="loading" @click="loadSnapshots">刷新</el-button>
+        <el-button type="primary" :icon="Plus" :disabled="!canWrite" @click="openCreateSnapshot">{{ $t('configSnapshots.createSnapshot') }}</el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="loadSnapshots">{{ $t('common.refresh') }}</el-button>
       </div>
     </section>
 
     <el-alert
       v-if="!canRead"
       class="snapshot-alert"
-      title="当前账号没有配置快照读取权限"
+      :title="$t('configSnapshots.noReadPermission')"
       type="warning"
       show-icon
       :closable="false"
@@ -599,30 +469,30 @@ onMounted(() => {
 
     <section class="summary-grid">
       <div class="summary-card">
-        <small>当前页快照</small>
+        <small>{{ $t('configSnapshots.currentPageSnapshots') }}</small>
         <strong>{{ snapshots.length }}</strong>
       </div>
       <div class="summary-card">
-        <small>全部记录</small>
+        <small>{{ $t('configSnapshots.allRecords') }}</small>
         <strong>{{ total }}</strong>
       </div>
       <div class="summary-card success">
-        <small>成功快照</small>
+        <small>{{ $t('configSnapshots.succeededSnapshots') }}</small>
         <strong>{{ succeededCount }}</strong>
       </div>
       <div class="summary-card warning">
-        <small>回滚记录</small>
+        <small>{{ $t('configSnapshots.restoreRecords') }}</small>
         <strong>{{ restoreCount }}</strong>
       </div>
       <div class="summary-card danger">
-        <small>失败记录</small>
+        <small>{{ $t('configSnapshots.failedRecords') }}</small>
         <strong>{{ failedCount }}</strong>
       </div>
     </section>
 
     <section class="snapshot-panel">
       <div class="filter-bar">
-        <el-select v-model="filters.resourceType" placeholder="资源类型" clearable style="width: 170px">
+        <el-select v-model="filters.resourceType" :placeholder="$t('configSnapshots.resourceType')" clearable style="width: 170px">
           <el-option
             v-for="item in resourceOptions"
             :key="item.value"
@@ -630,8 +500,8 @@ onMounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-input v-model="filters.resourceId" placeholder="资源 ID / 配置路径" clearable style="width: 220px" />
-        <el-select v-model="filters.status" placeholder="状态" clearable style="width: 150px">
+        <el-input v-model="filters.resourceId" :placeholder="$t('configSnapshots.resourceId')" clearable style="width: 220px" />
+        <el-select v-model="filters.status" :placeholder="$t('common.status')" clearable style="width: 150px">
           <el-option
             v-for="item in statusOptions"
             :key="item.value"
@@ -639,12 +509,12 @@ onMounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-button type="primary" @click="filters.page = 1; loadSnapshots()">查询</el-button>
-        <el-button @click="resetFilters">重置</el-button>
+        <el-button type="primary" @click="filters.page = 1; loadSnapshots()">{{ $t('common.query') }}</el-button>
+        <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="snapshots" row-key="id" empty-text="暂无配置快照">
-        <el-table-column label="快照" min-width="240">
+      <el-table v-loading="loading" :data="snapshots" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
+        <el-table-column :label="$t('configSnapshots.snapshot')" min-width="240">
           <template #default="{ row }">
             <div class="snapshot-name-cell">
               <strong>{{ row.name || row.id }}</strong>
@@ -652,7 +522,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="资源" min-width="210">
+        <el-table-column :label="$t('configSnapshots.resource')" min-width="210">
           <template #default="{ row }">
             <div class="resource-cell">
               <strong>{{ resourceLabel(row.resourceType) }}</strong>
@@ -660,7 +530,7 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="版本 / 备份账号" min-width="190">
+        <el-table-column :label="$t('configSnapshots.versionBackupAccount')" min-width="190">
           <template #default="{ row }">
             <div class="snapshot-meta-cell">
               <strong>{{ row.version || '—' }}</strong>
@@ -668,34 +538,34 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="大小" width="110">
+        <el-table-column :label="$t('common.size')" width="110">
           <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
         </el-table-column>
-        <el-table-column label="动作" width="100">
+        <el-table-column :label="$t('configSnapshots.action')" width="100">
           <template #default="{ row }">{{ operationLabel(row.operation) }}</template>
         </el-table-column>
-        <el-table-column label="状态" width="120">
+        <el-table-column :label="$t('common.status')" width="120">
           <template #default="{ row }">
             <el-tag :type="statusType(row.status)" effect="light">{{ statusLabel(row.status) }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="版本" min-width="210">
+        <el-table-column :label="$t('configSnapshots.version')" min-width="210">
           <template #default="{ row }">
             <div class="revision-cell">
-              <span>前 {{ shortHash(row.beforeRevision) }}</span>
-              <span>后 {{ shortHash(row.afterRevision) }}</span>
+              <span>{{ $t('configSnapshots.beforeRevision', { hash: shortHash(row.beforeRevision) }) }}</span>
+              <span>{{ $t('configSnapshots.afterRevision', { hash: shortHash(row.afterRevision) }) }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="制品摘要" width="150">
+        <el-table-column :label="$t('configSnapshots.artifactHash')" width="150">
           <template #default="{ row }">{{ shortHash(row.artifactSha256) }}</template>
         </el-table-column>
-        <el-table-column label="创建时间" min-width="170">
+        <el-table-column :label="$t('configSnapshots.createdAt')" min-width="170">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column fixed="right" label="操作" width="230">
+        <el-table-column fixed="right" :label="$t('common.action')" width="230">
           <template #default="{ row }">
-            <el-button link type="primary" :icon="View" @click="openDetail(row)">详情</el-button>
+            <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
             <el-button
               link
               type="warning"
@@ -703,7 +573,7 @@ onMounted(() => {
               :disabled="!canWrite || row.status !== 'succeeded'"
               @click="openRestore(row)"
             >
-              回滚
+              {{ $t('configSnapshots.operations.restore') }}
             </el-button>
             <el-button
               link
@@ -713,7 +583,7 @@ onMounted(() => {
               :disabled="!canWrite || row.status === 'pending' || row.status === 'applying'"
               @click="deleteSnapshot(row)"
             >
-              删除
+              {{ $t('common.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -736,18 +606,18 @@ onMounted(() => {
 
     <custom-drawer
       :visible="createVisible"
-      title="创建配置快照"
+      :title="$t('configSnapshots.createSnapshot')"
       size="760px"
-      confirm-text="确认"
+      :confirm-text="$t('common.confirm')"
       :loading="createLoading"
       :on-close="() => { createVisible = false }"
       :on-confirm="submitCreateSnapshot"
     >
       <el-form class="snapshot-create-form" label-width="108px">
-        <el-form-item label="资源类型" required>
+        <el-form-item :label="$t('configSnapshots.resourceType')" required>
           <el-select
             v-model="createForm.resourceType"
-            placeholder="请选择资源类型"
+            :placeholder="$t('configSnapshots.placeholders.selectResourceType')"
             style="width: 100%"
             @change="syncCreateResourceId"
           >
@@ -759,7 +629,7 @@ onMounted(() => {
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="资源标识" required>
+        <el-form-item :label="$t('configSnapshots.resourceIdentifier')" required>
           <el-select
             v-if="useResourceSelect"
             v-model="createForm.resourceId"
@@ -785,23 +655,23 @@ onMounted(() => {
           <el-input v-else v-model="createForm.resourceId" :placeholder="resourceIdPlaceholder" />
           <p class="form-help">{{ resourceIdHelp }}</p>
         </el-form-item>
-        <el-form-item label="快照名称">
-          <el-input v-model="createForm.name" placeholder="请输入快照名称" maxlength="128" />
+        <el-form-item :label="$t('configSnapshots.snapshotName')">
+          <el-input v-model="createForm.name" :placeholder="$t('configSnapshots.placeholders.inputSnapshotName')" maxlength="128" />
         </el-form-item>
-        <el-form-item label="版本">
-          <el-input v-model="createForm.version" placeholder="请输入版本" maxlength="64" />
+        <el-form-item :label="$t('configSnapshots.version')">
+          <el-input v-model="createForm.version" :placeholder="$t('configSnapshots.placeholders.inputVersion')" maxlength="64" />
         </el-form-item>
-        <el-form-item label="备份账号">
-          <el-input v-model="createForm.backupAccount" placeholder="请输入备份账号" maxlength="64" />
+        <el-form-item :label="$t('configSnapshots.backupAccount')">
+          <el-input v-model="createForm.backupAccount" :placeholder="$t('configSnapshots.placeholders.inputBackupAccount')" maxlength="64" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="$t('common.description')">
           <el-input
             v-model="createForm.description"
             type="textarea"
             :rows="4"
             maxlength="255"
             show-word-limit
-            placeholder="请输入描述"
+            :placeholder="$t('common.inputPlaceholder')"
           />
         </el-form-item>
       </el-form>
@@ -809,29 +679,29 @@ onMounted(() => {
 
     <custom-drawer
       :visible="detailVisible"
-      :title="`快照详情 · ${selectedSnapshot?.id || ''}`"
+      :title="$t('configSnapshots.snapshotDetailTitle', { id: selectedSnapshot?.id || '' })"
       size="960px"
-      cancel-text="关闭"
+      :cancel-text="$t('common.close')"
       :show-confirm="false"
       :on-close="() => { detailVisible = false }"
     >
       <div v-loading="detailLoading" class="snapshot-detail">
         <div class="diff-summary">
-          <el-tag type="primary" effect="light">{{ detail?.diff?.summary || '暂无差异摘要' }}</el-tag>
-          <span>变更字段 {{ diffCount(detail?.diff) }} 项</span>
+          <el-tag type="primary" effect="light">{{ detail?.diff?.summary || $t('configSnapshots.noDiffSummary') }}</el-tag>
+          <span>{{ $t('configSnapshots.changedFieldsCount', { count: diffCount(detail?.diff) }) }}</span>
         </div>
         <div class="diff-lists">
-          <div><strong>新增</strong><span>{{ detail?.diff?.added?.join('，') || '无' }}</span></div>
-          <div><strong>修改</strong><span>{{ detail?.diff?.changed?.join('，') || '无' }}</span></div>
-          <div><strong>删除</strong><span>{{ detail?.diff?.removed?.join('，') || '无' }}</span></div>
+          <div><strong>{{ $t('configSnapshots.diffAdded') }}</strong><span>{{ detail?.diff?.added?.join('，') || $t('configSnapshots.none') }}</span></div>
+          <div><strong>{{ $t('configSnapshots.diffChanged') }}</strong><span>{{ detail?.diff?.changed?.join('，') || $t('configSnapshots.none') }}</span></div>
+          <div><strong>{{ $t('configSnapshots.diffRemoved') }}</strong><span>{{ detail?.diff?.removed?.join('，') || $t('configSnapshots.none') }}</span></div>
         </div>
         <div class="json-grid">
           <section>
-            <h4>变更前</h4>
+            <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
             <pre>{{ formatJson(detail?.before) }}</pre>
           </section>
           <section>
-            <h4>变更后</h4>
+            <h4>{{ $t('configSnapshots.afterChange') }}</h4>
             <pre>{{ formatJson(detail?.after) }}</pre>
           </section>
         </div>
@@ -840,10 +710,10 @@ onMounted(() => {
 
     <custom-drawer
       :visible="restoreVisible"
-      title="回滚预览"
+      :title="$t('configSnapshots.rollbackPreview')"
       size="960px"
       confirm-type="warning"
-      :confirm-text="restoreRequiresForce ? '强制覆盖并回滚' : '确认回滚'"
+      :confirm-text="restoreRequiresForce ? $t('configSnapshots.forceOverwriteAndRollback') : $t('configSnapshots.confirmRollback')"
       :loading="restoreLoading"
       :confirm-disabled="!restorePreview || (restoreRequiresForce && !forceRestoreConfirmed)"
       :on-close="() => { restoreVisible = false }"
@@ -852,31 +722,31 @@ onMounted(() => {
       <div v-loading="restoreLoading" class="snapshot-detail">
         <el-alert
           v-if="restoreRequiresForce"
-          title="检测到配置漂移，执行回滚需要强制覆盖当前配置"
-          description="只有明确确认覆盖人工修改后，才会向后端发送 force=true。回滚会创建新的 operation=restore 快照，不会覆盖原历史记录。"
+          :title="$t('configSnapshots.driftWarningTitle')"
+          :description="$t('configSnapshots.driftWarningDescription')"
           type="warning"
           show-icon
           :closable="false"
         />
         <div v-if="restoreRequiresForce" class="force-restore-box">
           <el-checkbox v-model="forceRestoreConfirmed">
-            我确认用历史快照覆盖当前人工修改
+            {{ $t('configSnapshots.confirmOverwriteManualChanges') }}
           </el-checkbox>
-          <span>确认后将提交 <code>{"force":true}</code></span>
+          <span>{{ $t('configSnapshots.forceSubmitTip') }} <code>{"force":true}</code></span>
         </div>
         <div class="diff-summary">
           <el-tag :type="restoreRequiresForce ? 'warning' : 'success'" effect="light">
-            {{ restorePreview?.diff?.summary || '暂无回滚差异摘要' }}
+            {{ restorePreview?.diff?.summary || $t('configSnapshots.noRestoreDiffSummary') }}
           </el-tag>
-          <span>变更字段 {{ diffCount(restorePreview?.diff) }} 项</span>
+          <span>{{ $t('configSnapshots.changedFieldsCount', { count: diffCount(restorePreview?.diff) }) }}</span>
         </div>
         <div class="json-grid">
           <section>
-            <h4>当前配置</h4>
+            <h4>{{ $t('configSnapshots.currentConfig') }}</h4>
             <pre>{{ formatJson(restorePreview?.current) }}</pre>
           </section>
           <section>
-            <h4>目标配置</h4>
+            <h4>{{ $t('configSnapshots.targetConfig') }}</h4>
             <pre>{{ formatJson(restorePreview?.target) }}</pre>
           </section>
         </div>

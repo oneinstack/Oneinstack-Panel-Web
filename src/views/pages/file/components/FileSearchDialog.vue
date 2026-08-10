@@ -4,6 +4,7 @@ import { Search, FolderOpened, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { Api } from '@/api/Api'
 import { formatBytes } from '@/utils/fileSize'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -19,6 +20,10 @@ const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const state = reactive({
   loading: false,
@@ -51,7 +56,7 @@ const searchPath = computed(() => (state.scope === 'server' ? '/' : props.curren
 const runSearch = async () => {
   const query = state.query.trim()
   if (!query) {
-    ElMessage.warning('请输入文件或目录名称')
+    ElMessage.warning(t('file.searchDialog.nameRequired', 'Enter a file or directory name'))
     return
   }
   state.loading = true
@@ -101,8 +106,8 @@ const displayTime = (value: string) => {
       <div class="dialog-heading">
         <div class="heading-icon"><el-icon><Search /></el-icon></div>
         <div>
-          <h3>搜索服务器文件</h3>
-          <p>按名称搜索，不读取文件内容；全盘搜索会跳过 proc、sys、dev 和 run。</p>
+          <h3>{{ t('file.searchDialog.title', 'Search server files') }}</h3>
+          <p>{{ t('file.searchDialog.subtitle', 'Search by name only. File contents are not read. Full-server search skips proc, sys, dev, and run.') }}</p>
         </div>
       </div>
     </template>
@@ -113,38 +118,38 @@ const displayTime = (value: string) => {
         size="large"
         clearable
         autofocus
-        placeholder="输入文件名或目录名，例如 nginx.conf"
+        :placeholder="t('file.searchDialog.placeholder', 'Enter a file or directory name, for example nginx.conf')"
         @keyup.enter="runSearch"
       >
         <template #prefix><el-icon><Search /></el-icon></template>
         <template #append>
-          <el-button type="primary" :loading="state.loading" @click="runSearch">搜索</el-button>
+          <el-button type="primary" :loading="state.loading" @click="runSearch">{{ t('common.search', 'Search') }}</el-button>
         </template>
       </el-input>
       <div class="search-options">
         <el-segmented
           v-model="state.scope"
           :options="[
-            { label: `当前目录 ${currentPath}`, value: 'current' },
-            { label: '整个服务器', value: 'server' }
+            { label: t('file.searchDialog.currentDirectory', 'Current directory {path}', { path: currentPath }), value: 'current' },
+            { label: t('file.searchDialog.wholeServer', 'Whole server'), value: 'server' }
           ]"
         />
         <el-radio-group v-model="state.type">
-          <el-radio-button value="all">全部</el-radio-button>
-          <el-radio-button value="file">文件</el-radio-button>
-          <el-radio-button value="dir">目录</el-radio-button>
+          <el-radio-button value="all">{{ t('file.searchDialog.all', 'All') }}</el-radio-button>
+          <el-radio-button value="file">{{ t('file.file', 'File') }}</el-radio-button>
+          <el-radio-button value="dir">{{ t('file.directory', 'Directory') }}</el-radio-button>
         </el-radio-group>
       </div>
     </div>
 
     <div v-loading="state.loading" class="result-panel">
       <div v-if="state.searched" class="result-summary">
-        <span>找到 {{ state.result.total }} 项</span>
+        <span>{{ t('file.searchDialog.resultFound', 'Found {total} items', { total: state.result.total }) }}</span>
         <span class="summary-muted">
-          已扫描 {{ state.result.visited }} 项
-          <template v-if="state.result.skipped"> · 跳过 {{ state.result.skipped }} 个受限目录</template>
+          {{ t('file.searchDialog.scanned', 'Scanned {visited} items', { visited: state.result.visited }) }}
+          <template v-if="state.result.skipped"> · {{ t('file.searchDialog.skipped', 'Skipped {skipped} restricted directories', { skipped: state.result.skipped }) }}</template>
         </span>
-        <el-tag v-if="state.result.truncated" type="warning" effect="plain">结果已截断</el-tag>
+        <el-tag v-if="state.result.truncated" type="warning" effect="plain">{{ t('file.searchDialog.truncated', 'Results truncated') }}</el-tag>
       </div>
       <el-scrollbar v-if="state.result.items.length" height="430px">
         <button
@@ -162,19 +167,19 @@ const displayTime = (value: string) => {
             <span>{{ item.path }}</span>
           </div>
           <div class="result-meta">
-            <span>{{ item.isDir ? '目录' : formatBytes(item.size) }}</span>
+            <span>{{ item.isDir ? t('file.directory', 'Directory') : formatBytes(item.size) }}</span>
             <span>{{ displayTime(item.modTime) }}</span>
           </div>
-          <el-button type="primary" link @click.stop="openResult(item)">定位</el-button>
+          <el-button type="primary" link @click.stop="openResult(item)">{{ t('file.searchDialog.locate', 'Locate') }}</el-button>
         </button>
       </el-scrollbar>
       <el-empty
         v-else-if="state.searched && !state.loading"
-        :description="`在 ${state.result.searchedPath} 没有找到匹配项`"
+        :description="t('file.searchDialog.empty', 'No matches found in {path}', { path: state.result.searchedPath })"
       />
       <div v-else class="search-placeholder">
         <el-icon><Search /></el-icon>
-        <span>输入名称后开始搜索</span>
+        <span>{{ t('file.searchDialog.placeholderText', 'Enter a name to start searching') }}</span>
       </div>
     </div>
   </el-dialog>

@@ -184,7 +184,7 @@ const fetchFormAccepted = async (url: string, formData: FormData) => {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
-    throw new Error(resolveHttpErrorMessage(data, response.ok ? '请求失败' : formatHttpStatusMessage(response.status, response.statusText, '请求失败')))
+    throw new Error(resolveHttpErrorMessage(data, response.ok ? 'Request failed' : formatHttpStatusMessage(response.status, response.statusText, 'Request failed')))
   }
   return data
 }
@@ -196,7 +196,7 @@ const fetchBlob = async (url: string) => {
   })
   if (!response.ok) {
     const data = await response.json().catch(() => ({}))
-    throw new Error(resolveHttpErrorMessage(data, formatHttpStatusMessage(response.status, response.statusText, '下载失败')))
+    throw new Error(resolveHttpErrorMessage(data, formatHttpStatusMessage(response.status, response.statusText, 'Download failed')))
   }
   return {
     blob: await response.blob(),
@@ -220,7 +220,7 @@ const deleteJson = async (url: string, fallbackUrl?: string) => {
     return requestJson('POST', fallbackUrl, { confirm: true })
   }
   if (!response.ok || (data?.success === false || (data?.code !== undefined && data.code !== 0))) {
-    throw new Error(resolveHttpErrorMessage(data, response.ok ? '删除失败' : formatHttpStatusMessage(response.status, response.statusText, '删除失败')))
+    throw new Error(resolveHttpErrorMessage(data, response.ok ? 'Delete failed' : formatHttpStatusMessage(response.status, response.statusText, 'Delete failed')))
   }
   return data
 }

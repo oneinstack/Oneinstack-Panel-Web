@@ -2,15 +2,15 @@
 import { computed, ref } from 'vue'
 import i18n from '@/lang'
 
-type SupportedLocale = 'es-CH' | 'en-us'
+type SupportedLocale = 'zh-CN' | 'en-US'
 
-const currentLanguage = ref<SupportedLocale>(i18n.locale === 'en-us' ? 'en-us' : 'es-CH')
-const languageOptions: Array<{ label: string; value: SupportedLocale; mark: string }> = [
-  { label: '中文', value: 'es-CH', mark: '中' },
-  { label: 'English', value: 'en-us', mark: 'EN' }
-]
+const currentLanguage = ref<SupportedLocale>(i18n.locale === 'en-US' ? 'en-US' : 'zh-CN')
+const languageOptions = computed<Array<{ label: string; value: SupportedLocale; mark: string }>>(() => [
+  { label: i18n.t('common.chinese'), value: 'zh-CN', mark: '中' },
+  { label: i18n.t('common.english'), value: 'en-US', mark: 'EN' }
+])
 const activeLanguage = computed(
-  () => languageOptions.find((item) => item.value === currentLanguage.value) || languageOptions[0]
+  () => languageOptions.value.find((item) => item.value === currentLanguage.value) || languageOptions.value[0]
 )
 
 const setLanguage = async (lang: SupportedLocale) => {
@@ -26,7 +26,7 @@ const handleLanguageCommand = (command: string | number | object) => {
 
 <template>
   <el-dropdown placement="bottom-end" trigger="click" @command="handleLanguageCommand">
-    <button class="language-switch" type="button" aria-label="切换语言">
+    <button class="language-switch" type="button" :aria-label="$t('common.switchLanguage')">
       <span class="language-switch__mark">{{ activeLanguage.mark }}</span>
       <span class="language-switch__text">{{ activeLanguage.label }}</span>
       <span class="language-switch__chevron">⌄</span>

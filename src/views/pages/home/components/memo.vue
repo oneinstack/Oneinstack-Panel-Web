@@ -15,11 +15,11 @@ defineProps<Props>()
 </script>
 
 <template>
-  <custom-dialog :show="show" title="备忘录" width="624px" :show-close="false" @update:show="close">
-    <el-input v-model="memo.content" type="textarea" placeholder="请输入备忘录内容" />
+  <custom-dialog :show="show" :title="$t('home.memo')" width="624px" :show-close="false" @update:show="close">
+    <el-input v-model="memo.content" type="textarea" :placeholder="$t('home.memoPlaceholder')" />
     <template #footer>
-      <el-button type="primary" @click="update">保存</el-button>
-      <el-button @click="close">取消</el-button>
+      <el-button type="primary" @click="update">{{ $t('common.save') }}</el-button>
+      <el-button @click="close">{{ $t('common.cancel') }}</el-button>
     </template>
   </custom-dialog>
 </template>

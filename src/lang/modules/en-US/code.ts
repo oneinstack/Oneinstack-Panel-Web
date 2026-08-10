@@ -1,0 +1,21 @@
+export default {
+  '000': 'Invalid request parameters or format',
+  1001: 'Resource not found',
+  1002: 'Resource state conflict',
+  1003: 'Internal server error',
+  1004: 'Too many requests',
+  1100: 'Not logged in or invalid identity',
+  1101: 'Invalid token',
+  1103: 'Incorrect password or two-factor verification',
+  1109: 'Login session has expired',
+  1200: 'Access denied',
+  1203: 'Insufficient permissions',
+  1205: 'CSRF verification failed',
+  2000: 'User does not exist',
+  2003: 'Website does not exist',
+  3000: 'System capability error',
+  3001: 'Managed system action failed',
+  3004: 'Docker runtime is unavailable',
+  3008: 'Configuration validation failed',
+  4000: 'Operation execution failed'
+}

@@ -5,6 +5,7 @@ import QrcodeVue from 'qrcode.vue'
 import { Api } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 interface SecurityStatus {
   totpEnabled: boolean
@@ -40,11 +41,16 @@ const verifyVisible = ref(false)
 const verifyMode = ref<'disable' | 'regenerate'>('regenerate')
 const verifyForm = reactive({ password: '', code: '' })
 
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
+
 const otherSessionCount = computed(() => sessions.value.filter(item => !item.current).length)
 const totpStateLabel = computed(() => {
-  if (status.totpEnabled) return '已启用'
-  if (status.totpSetupPending) return '待验证'
-  return '未启用'
+  if (status.totpEnabled) return t('setting.accountSecurity.enabled', 'Enabled')
+  if (status.totpSetupPending) return t('setting.accountSecurity.pendingVerification', 'Pending verification')
+  return t('setting.accountSecurity.notEnabled', 'Not enabled')
 })
 const totpStateType = computed(() => {
   if (status.totpEnabled) return 'success'
@@ -53,14 +59,14 @@ const totpStateType = computed(() => {
 })
 const totpDescription = computed(() => {
   if (status.totpEnabled) {
-    return `使用标准 TOTP 身份验证器保护登录；当前剩余 ${status.recoveryCodesRemaining} 条恢复码。`
+    return t('setting.accountSecurity.totpEnabledDescription', 'Protect sign-in with a standard TOTP authenticator. {count} recovery codes remain.', { count: status.recoveryCodesRemaining })
   }
   if (status.totpSetupPending) {
-    return '已生成待确认的动态口令配置，完成验证后才会启用；关闭弹窗不会启用动态口令。'
+    return t('setting.accountSecurity.totpPendingDescription', 'A pending TOTP configuration has been generated. It is enabled only after verification; closing the dialog does not enable TOTP.')
   }
-  return '使用标准 TOTP 身份验证器保护登录；启用后会生成恢复码用于紧急登录。'
+  return t('setting.accountSecurity.totpDisabledDescription', 'Protect sign-in with a standard TOTP authenticator. Recovery codes are generated for emergency sign-in after enabling.')
 })
-const setupButtonText = computed(() => status.totpSetupPending ? '继续验证' : '启用')
+const setupButtonText = computed(() => status.totpSetupPending ? t('setting.accountSecurity.continueVerification', 'Continue verification') : t('setting.accountSecurity.enable', 'Enable'))
 
 const load = async (notify = false) => {
   loading.value = true
@@ -71,9 +77,9 @@ const load = async (notify = false) => {
     ])
     Object.assign(status, statusResponse.data)
     sessions.value = sessionsResponse.data || []
-    if (notify) ElMessage.success('账号与会话状态已刷新')
+    if (notify) ElMessage.success(t('setting.accountSecurity.statusRefreshed', 'Account and session status refreshed'))
   } catch (error) {
-    const message = error instanceof Error && error.message ? error.message : '获取账号与会话状态失败'
+    const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.statusLoadFailed', 'Failed to load account and session status')
     ElMessage.error(message)
   } finally {
     loading.value = false
@@ -93,7 +99,7 @@ const openSetup = async () => {
     status.totpSetupPending = true
     setupVisible.value = true
   } catch (error) {
-    const message = error instanceof Error && error.message ? error.message : '创建动态口令配置失败'
+    const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.setupCreateFailed', 'Failed to create TOTP configuration')
     ElMessage.error(message)
   } finally {
     setupLoading.value = false
@@ -102,7 +108,7 @@ const openSetup = async () => {
 
 const confirmSetup = async () => {
   if (!setup.password || !setup.code) {
-    ElMessage.warning('请输入当前密码和 6 位动态口令')
+    ElMessage.warning(t('setting.accountSecurity.inputPasswordAndTotpCode', 'Enter current password and 6-digit TOTP code'))
     return
   }
   setupLoading.value = true
@@ -114,10 +120,10 @@ const confirmSetup = async () => {
     recoveryCodes.value = data.recoveryCodes || []
     setupVisible.value = false
     recoveryVisible.value = true
-    ElMessage.success('动态口令认证已启用')
+    ElMessage.success(t('setting.accountSecurity.totpEnabledSuccess', 'TOTP authentication enabled'))
     await load()
   } catch (error) {
-    const message = error instanceof Error && error.message ? error.message : '动态口令验证失败'
+    const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.totpVerifyFailed', 'TOTP verification failed')
     ElMessage.error(message)
   } finally {
     setupLoading.value = false
@@ -133,13 +139,13 @@ const openVerification = (mode: 'disable' | 'regenerate') => {
 
 const submitVerification = async () => {
   if (!verifyForm.password || !verifyForm.code) {
-    ElMessage.warning('请输入当前密码和动态口令')
+    ElMessage.warning(t('setting.accountSecurity.inputPasswordAndCode', 'Enter current password and TOTP code'))
     return
   }
   if (verifyMode.value === 'disable') {
     await Api.disableTOTP({ ...verifyForm })
     verifyVisible.value = false
-    ElMessage.success('动态口令认证已停用，请重新登录')
+    ElMessage.success(t('setting.accountSecurity.totpDisabledSuccess', 'TOTP authentication disabled. Sign in again.'))
     sconfig.logout()
     await System.router.replace('/login')
     return
@@ -148,42 +154,42 @@ const submitVerification = async () => {
   recoveryCodes.value = data.recoveryCodes || []
   verifyVisible.value = false
   recoveryVisible.value = true
-  ElMessage.success('恢复码已重新生成，其他会话已退出')
+  ElMessage.success(t('setting.accountSecurity.recoveryRegenerated', 'Recovery codes regenerated. Other sessions have been signed out.'))
   await load()
 }
 
 const copyRecoveryCodes = async () => {
   await navigator.clipboard.writeText(recoveryCodes.value.join('\n'))
-  ElMessage.success('恢复码已复制')
+  ElMessage.success(t('setting.accountSecurity.recoveryCopied', 'Recovery codes copied'))
 }
 
 const revokeSession = async (item: SessionItem) => {
   await ElMessageBox.confirm(
-    `高风险操作：确定让 ${item.remoteIp || '未知地址'} 的会话立即退出吗？该设备下一次请求会立即失效。`,
-    '吊销会话',
+    t('setting.accountSecurity.revokeSessionConfirm', 'High-risk operation: sign out the session from {ip} immediately? The next request from that device will be invalid.', { ip: item.remoteIp || t('setting.accountSecurity.unknownAddress', 'Unknown address') }),
+    t('setting.accountSecurity.revokeSession', 'Revoke session'),
     {
       type: 'warning',
-      confirmButtonText: '确认吊销',
-      cancelButtonText: '取消'
+      confirmButtonText: t('setting.accountSecurity.confirmRevoke', 'Confirm revoke'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     }
   )
   await Api.revokeSession(item.id)
-  ElMessage.success('会话已吊销')
+  ElMessage.success(t('setting.accountSecurity.sessionRevoked', 'Session revoked'))
   await load()
 }
 
 const revokeOthers = async () => {
   await ElMessageBox.confirm(
-    '高风险操作：确定让除当前浏览器外的所有会话立即退出吗？其他设备需要重新登录。',
-    '退出其他设备',
+    t('setting.accountSecurity.revokeOthersConfirm', 'High-risk operation: sign out all sessions except the current browser? Other devices need to sign in again.'),
+    t('setting.accountSecurity.signOutOtherDevices', 'Sign out other devices'),
     {
       type: 'warning',
-      confirmButtonText: '确认退出其他设备',
-      cancelButtonText: '取消'
+      confirmButtonText: t('setting.accountSecurity.confirmSignOutOthers', 'Confirm sign out other devices'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     }
   )
   const { data } = await Api.revokeOtherSessions()
-  ElMessage.success(`已吊销 ${data.revokedSessions || 0} 个会话`)
+  ElMessage.success(t('setting.accountSecurity.revokedSessionCount', '{count} sessions revoked', { count: data.revokedSessions || 0 }))
   await load()
 }
 
@@ -196,17 +202,17 @@ onMounted(() => load())
   <div v-loading="loading" class="account-security">
     <div class="section-header">
       <div>
-        <div class="section-title">账号与会话安全</div>
-        <div class="section-description">管理动态口令、恢复码以及当前账号的登录设备。</div>
+        <div class="section-title">{{ $t('setting.accountSecurity.title') }}</div>
+        <div class="section-description">{{ $t('setting.accountSecurity.description') }}</div>
       </div>
-      <el-button :loading="loading" @click="load(true)">刷新会话状态</el-button>
+      <el-button :loading="loading" @click="load(true)">{{ $t('setting.accountSecurity.refreshSessionStatus') }}</el-button>
     </div>
 
     <div class="security-row">
       <div>
         <div class="row-title">
-          动态口令认证
-          <el-tag size="small" type="warning">中风险</el-tag>
+          {{ $t('setting.accountSecurity.totpAuth') }}
+          <el-tag size="small" type="warning">{{ $t('setting.backup.mediumRisk') }}</el-tag>
           <el-tag :type="totpStateType" size="small">
             {{ totpStateLabel }}
           </el-tag>
@@ -220,8 +226,8 @@ onMounted(() => load())
           {{ setupButtonText }}
         </el-button>
         <template v-else>
-          <el-button @click="openVerification('regenerate')">重新生成恢复码</el-button>
-          <el-button type="danger" plain @click="openVerification('disable')">停用</el-button>
+          <el-button @click="openVerification('regenerate')">{{ $t('setting.accountSecurity.regenerateRecoveryCodes') }}</el-button>
+          <el-button type="danger" plain @click="openVerification('disable')">{{ $t('setting.accountSecurity.disable') }}</el-button>
         </template>
       </div>
     </div>
@@ -229,17 +235,17 @@ onMounted(() => load())
     <div class="sessions-header">
       <div>
         <div class="row-title">
-          有效登录会话
-          <el-tag size="small" type="danger">高风险</el-tag>
+          {{ $t('setting.accountSecurity.activeSessions') }}
+          <el-tag size="small" type="danger">{{ $t('setting.accountSecurity.highRisk') }}</el-tag>
         </div>
-        <div class="row-description">被吊销的会话无需等待 JWT 到期，会在下一次请求时立即失效。</div>
+        <div class="row-description">{{ $t('setting.accountSecurity.sessionDescription') }}</div>
       </div>
       <el-button type="warning" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
-        退出其他设备
+        {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
-    <el-table :data="sessions" empty-text="暂无有效会话">
-      <el-table-column label="IP 地址" min-width="150">
+    <el-table :data="sessions" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
+      <el-table-column :label="$t('setting.accountSecurity.ipAddress')" min-width="150">
         <template #default="{ row }">
           <el-popover
             placement="top-start"
@@ -250,80 +256,80 @@ onMounted(() => load())
             <template #reference>
               <div class="session-ip">
                 <span class="session-ip__text">{{ row.remoteIp || '-' }}</span>
-                <el-tag v-if="row.current" type="success" size="small">当前会话</el-tag>
+                <el-tag v-if="row.current" type="success" size="small">{{ $t('setting.accountSecurity.currentSession') }}</el-tag>
               </div>
             </template>
             <div class="session-device">
-              <div class="session-device__label">设备信息</div>
-              <div class="session-device__value">{{ row.userAgent || '未知浏览器' }}</div>
+              <div class="session-device__label">{{ $t('setting.accountSecurity.deviceInfo') }}</div>
+              <div class="session-device__value">{{ row.userAgent || $t('setting.accountSecurity.unknownBrowser') }}</div>
             </div>
           </el-popover>
         </template>
       </el-table-column>
-      <el-table-column label="登录时间" min-width="160">
+      <el-table-column :label="$t('setting.accountSecurity.loginTime')" min-width="160">
         <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
       </el-table-column>
-      <el-table-column label="最近活动" min-width="160">
+      <el-table-column :label="$t('setting.accountSecurity.lastActivity')" min-width="160">
         <template #default="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
       </el-table-column>
-      <el-table-column label="到期时间" min-width="160">
+      <el-table-column :label="$t('setting.accountSecurity.expiresAt')" min-width="160">
         <template #default="{ row }">{{ formatDate(row.expiresAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="96" align="right">
+      <el-table-column :label="$t('common.action')" width="96" align="right">
         <template #default="{ row }">
-          <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">吊销会话</el-button>
+          <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
   </div>
 
-  <el-dialog v-model="setupVisible" title="启用动态口令认证" width="520px">
+  <el-dialog v-model="setupVisible" :title="$t('setting.accountSecurity.enableTotpAuth')" width="520px">
     <div class="setup-content">
       <qrcode-vue :value="setup.otpauthUri" :size="180" level="M" />
-      <div class="setup-help">使用身份验证器扫描二维码，或手动输入下面的密钥。</div>
+      <div class="setup-help">{{ $t('setting.accountSecurity.setupHelp') }}</div>
       <el-input :model-value="setup.secret" readonly>
-        <template #prepend>密钥</template>
+        <template #prepend>{{ $t('setting.accountSecurity.secret') }}</template>
       </el-input>
-      <el-input v-model="setup.password" type="password" show-password placeholder="当前账号密码" />
-      <el-input v-model="setup.code" maxlength="6" placeholder="身份验证器中的 6 位动态口令" />
+      <el-input v-model="setup.password" type="password" show-password :placeholder="$t('setting.accountSecurity.currentPasswordPlaceholder')" />
+      <el-input v-model="setup.code" maxlength="6" :placeholder="$t('setting.accountSecurity.totpCodePlaceholder')" />
     </div>
     <template #footer>
-      <el-button @click="setupVisible = false">取消</el-button>
-      <el-button type="primary" :loading="setupLoading" @click="confirmSetup">验证并启用</el-button>
+      <el-button @click="setupVisible = false">{{ $t('common.cancel') }}</el-button>
+      <el-button type="primary" :loading="setupLoading" @click="confirmSetup">{{ $t('setting.accountSecurity.verifyAndEnable') }}</el-button>
     </template>
   </el-dialog>
 
   <el-dialog
     v-model="verifyVisible"
-    :title="verifyMode === 'disable' ? '停用动态口令认证' : '重新生成恢复码'"
+    :title="verifyMode === 'disable' ? $t('setting.accountSecurity.disableTotpAuth') : $t('setting.accountSecurity.regenerateRecoveryCodes')"
     width="460px"
   >
     <el-alert
       :title="verifyMode === 'disable'
-        ? '停用后所有登录会话将立即失效。'
-        : '生成新恢复码后旧恢复码作废，其他登录会话将退出。'"
+        ? $t('setting.accountSecurity.disableWarning')
+        : $t('setting.accountSecurity.regenerateWarning')"
       type="warning"
       :closable="false"
       style="margin-bottom: 18px"
     />
-    <el-input v-model="verifyForm.password" type="password" show-password placeholder="当前账号密码" />
+    <el-input v-model="verifyForm.password" type="password" show-password :placeholder="$t('setting.accountSecurity.currentPasswordPlaceholder')" />
     <el-input
       v-model="verifyForm.code"
       maxlength="6"
-      placeholder="身份验证器中的 6 位动态口令"
+      :placeholder="$t('setting.accountSecurity.totpCodePlaceholder')"
       style="margin-top: 14px"
     />
     <template #footer>
-      <el-button @click="verifyVisible = false">取消</el-button>
+      <el-button @click="verifyVisible = false">{{ $t('common.cancel') }}</el-button>
       <el-button :type="verifyMode === 'disable' ? 'danger' : 'primary'" @click="submitVerification">
-        确认
+        {{ $t('common.confirm') }}
       </el-button>
     </template>
   </el-dialog>
 
-  <el-dialog v-model="recoveryVisible" title="请立即保存恢复码" width="520px">
+  <el-dialog v-model="recoveryVisible" :title="$t('setting.accountSecurity.saveRecoveryCodesNow')" width="520px">
     <el-alert
-      title="恢复码只显示这一次，每条只能使用一次。请离线保存在安全位置。"
+      :title="$t('setting.accountSecurity.recoveryCodesOnlyShownOnce')"
       type="warning"
       :closable="false"
       show-icon
@@ -332,8 +338,8 @@ onMounted(() => load())
       <code v-for="code in recoveryCodes" :key="code">{{ code }}</code>
     </div>
     <template #footer>
-      <el-button @click="copyRecoveryCodes">复制全部</el-button>
-      <el-button type="primary" @click="recoveryVisible = false">我已安全保存</el-button>
+      <el-button @click="copyRecoveryCodes">{{ $t('setting.accountSecurity.copyAll') }}</el-button>
+      <el-button type="primary" @click="recoveryVisible = false">{{ $t('setting.accountSecurity.savedSafely') }}</el-button>
     </template>
   </el-dialog>
 </template>

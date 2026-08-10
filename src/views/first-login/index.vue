@@ -5,6 +5,12 @@ import { ElMessage } from 'element-plus'
 import { Api } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const formRef = ref<FormInstance>()
 const form = reactive({
@@ -13,28 +19,28 @@ const form = reactive({
 })
 const loading = ref(false)
 const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,128}$/
-const rules: FormRules = {
+const rules = computed<FormRules>(() => ({
   password: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
+    { required: true, message: t('firstLogin.newPasswordRequired', 'Enter a new password'), trigger: 'blur' },
     {
       validator: (_rule, value, callback) => {
         passwordRule.test(value)
           ? callback()
-          : callback(new Error('密码需包含大写字母、小写字母、数字和特殊字符，长度至少 8 位'))
+          : callback(new Error(t('firstLogin.passwordPolicy', 'Password must include uppercase, lowercase, number, and special character, at least 8 characters.')))
       },
       trigger: ['blur', 'change']
     }
   ],
   confirmPassword: [
-    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    { required: true, message: t('firstLogin.confirmPasswordRequired', 'Enter the new password again'), trigger: 'blur' },
     {
       validator: (_rule, value, callback) => {
-        value === form.password ? callback() : callback(new Error('两次输入的密码不一致'))
+        value === form.password ? callback() : callback(new Error(t('firstLogin.passwordMismatch', 'The two passwords do not match')))
       },
       trigger: ['blur', 'change']
     }
   ]
-}
+}))
 const passwordValid = computed(() => passwordRule.test(form.password))
 const confirmValid = computed(() => form.confirmPassword.length > 0 && form.confirmPassword === form.password)
 const submitDisabled = computed(
@@ -47,7 +53,7 @@ const submit = async () => {
   loading.value = true
   try {
     await Api.updateResetpassword({ password: form.password })
-    ElMessage.success('密码修改成功，请使用新密码重新登录')
+    ElMessage.success(t('firstLogin.passwordChanged', 'Password changed. Sign in again with the new password.'))
     sconfig.logout()
     await System.router.replace('/login')
   } finally {
@@ -71,42 +77,42 @@ const submit = async () => {
           <span>✓</span>
         </div>
         <div class="eyebrow">FIRST LOGIN PROTECTION</div>
-        <h1>只差一步，完成您的<br />面板安全初始化</h1>
-        <p>初始凭据仅用于首次登录。设置独立强密码后，即可进入服务器管理控制台。</p>
+        <h1>{{ $t('firstLogin.heroTitleLine1') }}<br />{{ $t('firstLogin.heroTitleLine2') }}</h1>
+        <p>{{ $t('firstLogin.heroDescription') }}</p>
         <div class="protection-list">
-          <div><i>01</i><span><b>强密码策略</b>降低暴力破解和凭据泄露风险</span></div>
-          <div><i>02</i><span><b>本地安全存储</b>密码加密后保存在您的服务器</span></div>
-          <div><i>03</i><span><b>操作可审计</b>关键账户行为均可追踪</span></div>
+          <div><i>01</i><span><b>{{ $t('firstLogin.strongPasswordTitle') }}</b>{{ $t('firstLogin.strongPasswordText') }}</span></div>
+          <div><i>02</i><span><b>{{ $t('firstLogin.localStorageTitle') }}</b>{{ $t('firstLogin.localStorageText') }}</span></div>
+          <div><i>03</i><span><b>{{ $t('firstLogin.auditTitle') }}</b>{{ $t('firstLogin.auditText') }}</span></div>
         </div>
       </div>
     </div>
 
     <main class="password-panel">
       <div class="password-card">
-        <div class="step">安全初始化 · 第 1/1 步</div>
-        <div class="title">设置新的管理密码</div>
-        <div class="description">为了保护服务器，完成密码修改前暂时无法进入管理面板。</div>
+        <div class="step">{{ $t('firstLogin.step') }}</div>
+        <div class="title">{{ $t('firstLogin.setPasswordTitle') }}</div>
+        <div class="description">{{ $t('firstLogin.setPasswordDescription') }}</div>
         <el-alert
-          title="密码需包含大写字母、小写字母、数字和特殊字符，长度至少 8 位。"
+          :title="$t('firstLogin.passwordPolicy')"
           type="warning"
           :closable="false"
           show-icon
         />
         <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
-          <el-form-item label="新密码" prop="password">
+          <el-form-item :label="$t('firstLogin.newPassword')" prop="password">
             <el-input
               v-model="form.password"
               type="password"
-              placeholder="请输入新的管理密码"
+              :placeholder="$t('firstLogin.newPasswordPlaceholder')"
               show-password
               autocomplete="new-password"
             />
           </el-form-item>
-          <el-form-item label="确认新密码" prop="confirmPassword">
+          <el-form-item :label="$t('firstLogin.confirmPassword')" prop="confirmPassword">
             <el-input
               v-model="form.confirmPassword"
               type="password"
-              placeholder="请再次输入新密码"
+              :placeholder="$t('firstLogin.confirmPasswordPlaceholder')"
               show-password
               autocomplete="new-password"
               @keyup.enter="!submitDisabled && submit()"
@@ -119,11 +125,11 @@ const submit = async () => {
             class="submit"
             @click="submit"
           >
-            保存密码并重新登录
+            {{ $t('firstLogin.saveAndRelogin') }}
             <span>→</span>
           </el-button>
         </el-form>
-        <div class="privacy-note">密码仅用于本机面板认证，不会上传到 OneinStack 服务中心。</div>
+        <div class="privacy-note">{{ $t('firstLogin.privacyNote') }}</div>
       </div>
     </main>
   </div>

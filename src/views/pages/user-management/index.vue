@@ -5,6 +5,7 @@ import { Api } from '@/api/Api'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck, CollectionTag, Key, User } from '@element-plus/icons-vue'
+import i18n from '@/lang'
 
 interface AccessRole {
   code: string
@@ -19,6 +20,11 @@ interface AccessUser {
   mustChangePassword?: boolean
   createdAt?: string
   roles?: AccessRole[]
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 const loading = reactive({
@@ -41,14 +47,14 @@ const userState = reactive({
   },
   total: 0,
   list: [] as AccessUser[],
-  columns: [
-    { prop: 'username', label: '账号', minWidth: 160 },
-    { prop: 'roles', label: '角色', minWidth: 240 },
-    { prop: 'scope', label: '权限范围', minWidth: 140 },
-    { prop: 'mustChangePassword', label: '状态', minWidth: 120 },
-    { prop: 'createdAt', label: '创建时间', minWidth: 180 },
-    { prop: 'action', label: '操作', width: 220 }
-  ] as ColumnItem[]
+  columns: computed<ColumnItem[]>(() => [
+    { prop: 'username', label: t('userManagement.account', 'Account'), minWidth: 160 },
+    { prop: 'roles', label: t('userManagement.role', 'Role'), minWidth: 240 },
+    { prop: 'scope', label: t('userManagement.scope', 'Permission scope'), minWidth: 140 },
+    { prop: 'mustChangePassword', label: t('common.status', 'Status'), minWidth: 120 },
+    { prop: 'createdAt', label: t('userManagement.createdAt', 'Created at'), minWidth: 180 },
+    { prop: 'action', label: t('common.action', 'Action'), width: 220 }
+  ])
 })
 
 const createUserDialog = reactive({
@@ -111,10 +117,39 @@ const roleIndeterminate = computed(
 )
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
+const roleKeyByCode: Record<string, string> = {
+  read_only_observer: 'readOnlyObserver',
+  readonly_observer: 'readOnlyObserver',
+  observer: 'readOnlyObserver',
+  security_auditor: 'securityAuditor',
+  security_audit: 'securityAuditor',
+  system_operator: 'systemOperator',
+  system_ops: 'systemOperator',
+  database_manager: 'databaseManager',
+  db_manager: 'databaseManager',
+  operation_approver: 'operationApprover',
+  ops_approver: 'operationApprover',
+  website_manager: 'websiteManager',
+  site_manager: 'websiteManager'
+}
+const roleKeyByName: Record<string, string> = {
+  '\u53ea\u8bfb\u89c2\u5bdf\u5458': 'readOnlyObserver',
+  '\u5b89\u5168\u5ba1\u8ba1\u5458': 'securityAuditor',
+  '\u7cfb\u7edf\u8fd0\u7ef4': 'systemOperator',
+  '\u6570\u636e\u5e93\u7ba1\u7406\u5458': 'databaseManager',
+  '\u64cd\u4f5c\u5ba1\u6279\u5458': 'operationApprover',
+  '\u7f51\u7ad9\u7ba1\u7406\u5458': 'websiteManager'
+}
+const normalizeRoleCode = (value?: string) => String(value || '').trim().replace(/-/g, '_').toLowerCase()
+const roleLabel = (role: AccessRole) => {
+  const roleKey = roleKeyByCode[normalizeRoleCode(role.code)] || roleKeyByName[role.name]
+  if (roleKey) return t(`userManagement.roles.${roleKey}`, role.name || role.code)
+  return role.name || role.code
+}
 const userScopeLabel = (row: AccessUser) => {
-  if (row.isSuperAdmin || row.isAdmin) return '超级管理员'
-  if (!(row.roles || []).length) return '未授权'
-  return '角色授权'
+  if (row.isSuperAdmin || row.isAdmin) return t('userManagement.superAdmin', 'Super administrator')
+  if (!(row.roles || []).length) return t('userManagement.unauthorized', 'Unauthorized')
+  return t('userManagement.roleAuthorized', 'Role authorized')
 }
 
 const loadBootstrap = async () => {
@@ -158,15 +193,15 @@ const resetUsers = () => {
 const submitCreateUser = async () => {
   const username = createUserDialog.form.username.trim()
   if (!username) {
-    ElMessage.warning('请输入账号名')
+    ElMessage.warning(t('userManagement.inputUsername', 'Enter an account name'))
     return
   }
   if (username.length < 3) {
-    ElMessage.warning('账号名长度不能少于3个字符')
+    ElMessage.warning(t('userManagement.usernameMinLength', 'Account name must be at least 3 characters'))
     return
   }
   if (!createUserDialog.form.password.trim()) {
-    ElMessage.warning('请输入初始密码')
+    ElMessage.warning(t('userManagement.inputInitialPassword', 'Enter the initial password'))
     return
   }
 
@@ -178,11 +213,11 @@ const submitCreateUser = async () => {
       roleCodes: createUserDialog.form.isAdmin ? [] : createUserDialog.form.roleCodes,
       isAdmin: createUserDialog.form.isAdmin
     })
-    ElMessage.success('用户创建成功')
+    ElMessage.success(t('userManagement.createSuccess', 'User created'))
     createUserDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || '创建用户失败')
+    ElMessage.error(error?.message || t('userManagement.createFailed', 'Failed to create user'))
   } finally {
     loading.createUser = false
   }
@@ -195,11 +230,11 @@ const submitRoleUpdate = async () => {
     await Api.updateAccessUserRoles(roleDialog.user.id, {
       roleCodes: roleDialog.roleCodes
     })
-    ElMessage.success('角色更新成功')
+    ElMessage.success(t('userManagement.roleUpdateSuccess', 'Roles updated'))
     roleDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || '角色更新失败')
+    ElMessage.error(error?.message || t('userManagement.roleUpdateFailed', 'Failed to update roles'))
   } finally {
     loading.updateRoles = false
   }
@@ -216,7 +251,7 @@ const toggleCreateAllRoles = (value: string | number | boolean) => {
 const submitPasswordReset = async () => {
   if (!passwordDialog.user) return
   if (!passwordDialog.password.trim()) {
-    ElMessage.warning('请输入新密码')
+    ElMessage.warning(t('userManagement.inputNewPassword', 'Enter a new password'))
     return
   }
 
@@ -225,11 +260,11 @@ const submitPasswordReset = async () => {
     await Api.resetAccessUserPassword(passwordDialog.user.id, {
       password: passwordDialog.password
     })
-    ElMessage.success('密码重置成功')
+    ElMessage.success(t('userManagement.resetPasswordSuccess', 'Password reset'))
     passwordDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || '密码重置失败')
+    ElMessage.error(error?.message || t('userManagement.resetPasswordFailed', 'Failed to reset password'))
   } finally {
     loading.resetPassword = false
   }
@@ -240,7 +275,7 @@ onMounted(async () => {
     await loadBootstrap()
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || '页面初始化失败')
+    ElMessage.error(error?.message || t('userManagement.initFailed', 'Failed to initialize page'))
   }
 })
 </script>
@@ -250,9 +285,9 @@ onMounted(async () => {
     <section class="hero-card">
       <div class="hero-main">
         <div class="hero-copy">
-          <span class="eyebrow">Access Control</span>
-          <h2>账号权限中心</h2>
-          <p>统一管理用户账号、角色分配与密码重置，支持按角色模型快速联调。</p>
+          <span class="eyebrow">{{ $t('userManagement.eyebrow') }}</span>
+          <h2>{{ $t('userManagement.title') }}</h2>
+          <p>{{ $t('userManagement.fullDescription') }}</p>
         </div>
         <div class="role-tags">
           <el-tag
@@ -261,10 +296,10 @@ onMounted(async () => {
             effect="plain"
             round
           >
-            {{ item.name || item.code }}
+            {{ roleLabel(item) }}
           </el-tag>
           <el-tag v-if="currentUser?.isSuperAdmin || currentUser?.isAdmin" type="danger" round>
-            超级管理员
+            {{ $t('userManagement.superAdmin') }}
           </el-tag>
         </div>
         <div class="hero-metrics">
@@ -274,7 +309,7 @@ onMounted(async () => {
               <el-icon><User /></el-icon>
             </div>
             <div class="metric-chip__content">
-              <span>用户总数</span>
+              <span>{{ $t('userManagement.userTotal') }}</span>
               <strong>{{ userState.total }}</strong>
             </div>
           </div>
@@ -284,7 +319,7 @@ onMounted(async () => {
               <el-icon><CircleCheck /></el-icon>
             </div>
             <div class="metric-chip__content">
-              <span>已授权用户</span>
+              <span>{{ $t('userManagement.grantedUsers') }}</span>
               <strong>{{ totalAssignedUsers }}</strong>
             </div>
           </div>
@@ -294,7 +329,7 @@ onMounted(async () => {
               <el-icon><Key /></el-icon>
             </div>
             <div class="metric-chip__content">
-              <span>待改密账号</span>
+              <span>{{ $t('userManagement.pendingPasswordUsers') }}</span>
               <strong>{{ totalPendingUsers }}</strong>
             </div>
           </div>
@@ -304,7 +339,7 @@ onMounted(async () => {
               <el-icon><CollectionTag /></el-icon>
             </div>
             <div class="metric-chip__content">
-              <span>角色仓库</span>
+              <span>{{ $t('userManagement.roleRepository') }}</span>
               <strong>{{ roles.length }}</strong>
             </div>
           </div>
@@ -315,26 +350,26 @@ onMounted(async () => {
     <section class="panel-card">
       <div class="panel-head">
         <div>
-          <span class="panel-kicker">Account Directory</span>
-          <h3>用户与角色</h3>
+          <span class="panel-kicker">{{ $t('userManagement.accountDirectory') }}</span>
+          <h3>{{ $t('userManagement.userAndRole') }}</h3>
         </div>
         <div class="panel-summary">
-          <span>支持账号检索、角色授权与密码重置</span>
+          <span>{{ $t('userManagement.panelHint') }}</span>
         </div>
       </div>
       <div class="toolbar-shell">
         <div class="toolbar">
           <div class="toolbar-left">
-            <search-input v-model:model-value="userState.keyword" placeholder="搜索账号名" @search="searchUsers" />
+            <search-input v-model:model-value="userState.keyword" :placeholder="$t('userManagement.searchPlaceholder')" @search="searchUsers" />
           </div>
           <div class="toolbar-right">
-            <el-button @click="resetUsers">重置</el-button>
-            <el-button type="primary" :disabled="!canManageUsers" @click="createUserDialog.open()">新建用户</el-button>
+            <el-button @click="resetUsers">{{ $t('common.reset') }}</el-button>
+            <el-button type="primary" :disabled="!canManageUsers" @click="createUserDialog.open()">{{ $t('userManagement.createUser') }}</el-button>
           </div>
         </div>
         <div class="toolbar-note">
-          <span>当前列表 {{ userState.total }} 个账号</span>
-          <span>支持按角色模型进行快速授权</span>
+          <span>{{ $t('userManagement.toolbarCount', { count: userState.total }) }}</span>
+          <span>{{ $t('userManagement.toolbarHint') }}</span>
         </div>
       </div>
 
@@ -357,10 +392,10 @@ onMounted(async () => {
                   size="small"
                   class="role-pill"
                 >
-                  {{ item.name || item.code }}
+                  {{ roleLabel(item) }}
                 </el-tag>
               </div>
-              <span v-else class="role-empty">未分配</span>
+              <span v-else class="role-empty">{{ $t('userManagement.unassigned') }}</span>
             </div>
           </template>
           <template #scope="{ row }">
@@ -370,7 +405,7 @@ onMounted(async () => {
           </template>
           <template #mustChangePassword="{ row }">
             <el-tag :type="row.mustChangePassword ? 'warning' : 'success'" effect="light" round>
-              {{ row.mustChangePassword ? '需改密' : '正常' }}
+              {{ row.mustChangePassword ? $t('userManagement.mustChangePassword') : $t('userManagement.healthy') }}
             </el-tag>
           </template>
           <template #createdAt="{ row }">
@@ -378,9 +413,9 @@ onMounted(async () => {
           </template>
           <template #action="{ row }">
             <div class="action-wrap action-wrap--compact">
-              <el-button link type="primary" :disabled="!canManageUsers" @click="roleDialog.open(row)">改角色</el-button>
+              <el-button link type="primary" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
               <span class="action-divider"></span>
-              <el-button link :disabled="!canManageUsers" @click="passwordDialog.open(row)">重置密码</el-button>
+              <el-button link :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
             </div>
           </template>
         </custom-table>
@@ -389,25 +424,25 @@ onMounted(async () => {
 
     <custom-drawer
       :visible="createUserDialog.show"
-      title="新建用户"
+      :title="$t('userManagement.createUser')"
       size="720px"
-      confirm-text="创建"
+      :confirm-text="$t('userManagement.create')"
       :loading="loading.createUser"
       :on-close="() => { createUserDialog.show = false }"
       :on-confirm="submitCreateUser"
     >
       <div class="dialog-form">
         <el-form label-position="top">
-          <el-form-item label="账号名">
-            <el-input v-model="createUserDialog.form.username" placeholder="请输入用户名" />
+          <el-form-item :label="$t('userManagement.accountName')">
+            <el-input v-model="createUserDialog.form.username" :placeholder="$t('login.usernamePlaceholder')" />
           </el-form-item>
-          <el-form-item label="初始密码">
-            <el-input v-model="createUserDialog.form.password" type="password" show-password placeholder="请输入初始密码" />
+          <el-form-item :label="$t('userManagement.initialPassword')">
+            <el-input v-model="createUserDialog.form.password" type="password" show-password :placeholder="$t('userManagement.inputInitialPassword')" />
           </el-form-item>
-          <el-form-item label="是否超级管理员">
+          <el-form-item :label="$t('userManagement.isSuperAdmin')">
             <el-switch v-model="createUserDialog.form.isAdmin" />
           </el-form-item>
-          <el-form-item v-if="!createUserDialog.form.isAdmin" label="角色分配">
+          <el-form-item v-if="!createUserDialog.form.isAdmin" :label="$t('userManagement.roleAssignment')">
             <div class="role-select-panel">
               <div class="role-dialog-toolbar">
                 <el-checkbox
@@ -415,13 +450,13 @@ onMounted(async () => {
                   :indeterminate="createRoleIndeterminate"
                   @change="toggleCreateAllRoles"
                 >
-                  全选
+                  {{ $t('userManagement.selectAll') }}
                 </el-checkbox>
-                <span class="role-dialog-count">已选 {{ createUserDialog.form.roleCodes.length }} / {{ allRoleCodes.length }}</span>
+                <span class="role-dialog-count">{{ $t('userManagement.selectedCount', { selected: createUserDialog.form.roleCodes.length, total: allRoleCodes.length }) }}</span>
               </div>
               <el-checkbox-group v-model="createUserDialog.form.roleCodes" class="checkbox-grid">
                 <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
-                  {{ item.name }}
+                  {{ roleLabel(item) }}
                 </el-checkbox>
               </el-checkbox-group>
             </div>
@@ -432,16 +467,16 @@ onMounted(async () => {
 
     <custom-drawer
       :visible="roleDialog.show"
-      title="修改角色"
+      :title="$t('userManagement.editRole')"
       size="720px"
-      confirm-text="保存"
+      :confirm-text="$t('common.save')"
       :loading="loading.updateRoles"
       :on-close="() => { roleDialog.show = false }"
       :on-confirm="submitRoleUpdate"
     >
       <div class="dialog-form">
         <el-alert
-          :title="`当前账号：${roleDialog.user?.username || '—'}`"
+          :title="$t('userManagement.currentAccount', { username: roleDialog.user?.username || '—' })"
           type="info"
           :closable="false"
           show-icon
@@ -453,13 +488,13 @@ onMounted(async () => {
             :indeterminate="roleIndeterminate"
             @change="toggleAllRoles"
           >
-            全选
+            {{ $t('userManagement.selectAll') }}
           </el-checkbox>
-          <span class="role-dialog-count">已选 {{ roleDialog.roleCodes.length }} / {{ allRoleCodes.length }}</span>
+          <span class="role-dialog-count">{{ $t('userManagement.selectedCount', { selected: roleDialog.roleCodes.length, total: allRoleCodes.length }) }}</span>
         </div>
         <el-checkbox-group v-model="roleDialog.roleCodes" class="checkbox-grid">
           <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
-            {{ item.name }}
+            {{ roleLabel(item) }}
           </el-checkbox>
         </el-checkbox-group>
       </div>
@@ -467,24 +502,24 @@ onMounted(async () => {
 
     <custom-drawer
       :visible="passwordDialog.show"
-      title="重置密码"
+      :title="$t('userManagement.resetPassword')"
       size="640px"
-      confirm-text="确认重置"
+      :confirm-text="$t('userManagement.confirmResetPassword')"
       :loading="loading.resetPassword"
       :on-close="() => { passwordDialog.show = false }"
       :on-confirm="submitPasswordReset"
     >
       <div class="dialog-form">
         <el-alert
-          :title="`将为 ${passwordDialog.user?.username || '该账号'} 设置新的登录密码`"
+          :title="$t('userManagement.resetPasswordWarning', { username: passwordDialog.user?.username || $t('userManagement.thisAccount') })"
           type="warning"
           :closable="false"
           show-icon
           style="margin-bottom: 16px"
         />
         <el-form label-position="top">
-          <el-form-item label="新密码">
-            <el-input v-model="passwordDialog.password" type="password" show-password placeholder="请输入新密码" />
+          <el-form-item :label="$t('userManagement.newPassword')">
+            <el-input v-model="passwordDialog.password" type="password" show-password :placeholder="$t('userManagement.inputNewPassword')" />
           </el-form-item>
         </el-form>
       </div>

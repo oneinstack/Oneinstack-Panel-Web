@@ -12,21 +12,29 @@ import { ElMessage } from 'element-plus'
 import System from '@/utils/System'
 import sconfig from '@/sstore/sconfig'
 import { resolveMenuLabelByKey } from '@/utils/access'
+import i18n from '@/lang'
 
 type MonitorType = 'network' | 'disk'
 
 interface Options {
   label: string
+  labelKey?: string
   value: string | number | object
 }
 
 interface HomeCategory {
   name: string
+  nameKey: string
   icon: string
   value: string | number
   matrixKey?: string
-  permissionName?: string
+  permissionKey?: string
   linkFn?: () => void
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 interface ChartData {
@@ -43,35 +51,40 @@ const conf = reactive({
   category: [
     {
       name: '网站-全部',
+      nameKey: 'home.websiteAll',
       icon: 'home-website',
       value: 0,
       matrixKey: 'website',
-      permissionName: '网站',
+      permissionKey: 'layout.menu.website',
       linkFn: () => System.router.push('/website')
     },
     {
       name: '数据-全部',
+      nameKey: 'home.databaseAll',
       icon: 'home-data',
       value: 0,
       matrixKey: 'database',
-      permissionName: '数据库',
+      permissionKey: 'layout.menu.database',
       linkFn: () => System.router.push('/database')
     },
     {
       name: '安全风险',
+      nameKey: 'home.securityRisk',
       icon: 'home-software',
       value: 0
     },
     {
       name: '备忘录',
+      nameKey: 'home.memo',
       icon: 'home-mome',
-      value: '当前内容为空，点击编辑',
+      value: '',
       linkFn: () => conf.memo.open()
     }
   ] as HomeCategory[],
   handleCategoryClick: (item: HomeCategory) => {
     if (item.matrixKey && !sconfig.hasMenuAccess(item.matrixKey)) {
-      ElMessage.warning(`当前账号暂无${item.permissionName || resolveMenuLabelByKey(item.matrixKey) || item.name}菜单权限`)
+      const name = item.permissionKey ? t(item.permissionKey, item.name) : resolveMenuLabelByKey(item.matrixKey) || t(item.nameKey, item.name)
+      ElMessage.warning(t('home.noMenuPermission', `当前账号暂无${name}菜单权限`, { name }))
       return
     }
     item.linkFn?.()
@@ -91,36 +104,44 @@ const conf = reactive({
     network: [
       {
         label: '上行',
+        labelKey: 'home.upload',
         value: '--'
       },
       {
         label: '下行',
+        labelKey: 'home.download',
         value: '--'
       },
       {
         label: '总发送',
+        labelKey: 'home.totalSent',
         value: '--'
       },
       {
         label: '总接收',
+        labelKey: 'home.totalReceived',
         value: '--'
       }
     ] as Options[],
     disk: [
       {
         label: '读取',
+        labelKey: 'home.read',
         value: '--'
       },
       {
         label: '写入',
+        labelKey: 'home.write',
         value: '--'
       },
       {
         label: '读取',
+        labelKey: 'home.ioCount',
         value: '--'
       },
       {
         label: '写入',
+        labelKey: 'home.averageLatency',
         value: '--'
       }
     ] as Options[],
@@ -202,7 +223,7 @@ const conf = reactive({
         ],
         series: [
           {
-            name: conf.monitorData.selectedType == 'network' ? '上行' : '读取',
+            name: conf.monitorData.selectedType == 'network' ? t('home.upload', '上行') : t('home.read', '读取'),
             type: 'line',
             smooth: false,
             lineStyle: {
@@ -224,7 +245,7 @@ const conf = reactive({
             data: conf.monitorData.chartData.ascend
           },
           {
-            name: conf.monitorData.selectedType == 'network' ? '下行' : '写入',
+            name: conf.monitorData.selectedType == 'network' ? t('home.download', '下行') : t('home.write', '写入'),
             type: 'line',
             smooth: false,
             lineStyle: {
@@ -275,10 +296,10 @@ const conf = reactive({
               strValue: sutil.bytesTransform(RecvRate).strValue
             }
             conf.monitorData.network = [
-              { label: '上行', value: `${sutil.bytesTransform(SendRate).strValue}/s` },
-              { label: '下行', value: `${sutil.bytesTransform(RecvRate).strValue}/s` },
-              { label: '总发送', value: sutil.bytesTransform(BytesSent).strValue },
-              { label: '总接收', value: sutil.bytesTransform(BytesRecv).strValue }
+              { label: '上行', labelKey: 'home.upload', value: `${sutil.bytesTransform(SendRate).strValue}/s` },
+              { label: '下行', labelKey: 'home.download', value: `${sutil.bytesTransform(RecvRate).strValue}/s` },
+              { label: '总发送', labelKey: 'home.totalSent', value: sutil.bytesTransform(BytesSent).strValue },
+              { label: '总接收', labelKey: 'home.totalReceived', value: sutil.bytesTransform(BytesRecv).strValue }
             ]
           }
           break
@@ -296,10 +317,10 @@ const conf = reactive({
               strValue: sutil.bytesTransform(WriteSpeed).strValue
             }
             conf.monitorData.disk = [
-              { label: '读取', value: sutil.bytesTransform(ReadSpeed).strValue },
-              { label: '写入', value: sutil.bytesTransform(WriteSpeed).strValue },
-              { label: '读写次数', value: `${ReadOpsPerSec + WriteOpsPerSec}次/s` },
-              { label: '平均延迟', value: `${AvgIoLatency.toFixed(2)}ms` }
+              { label: '读取', labelKey: 'home.read', value: sutil.bytesTransform(ReadSpeed).strValue },
+              { label: '写入', labelKey: 'home.write', value: sutil.bytesTransform(WriteSpeed).strValue },
+              { label: '读写次数', labelKey: 'home.ioCount', value: `${ReadOpsPerSec + WriteOpsPerSec}${t('home.timesPerSecond', '次/s')}` },
+              { label: '平均延迟', labelKey: 'home.averageLatency', value: `${AvgIoLatency.toFixed(2)}ms` }
             ]
           }
           break
@@ -313,7 +334,7 @@ const conf = reactive({
       const gaugeData = [
         {
           value: conf.statusData.usage.usedPercent,
-          name: conf.statusData.selected.label
+          name: conf.statusData.getStatusLabel(conf.statusData.selected)
         }
       ]
       conf.statusData.chartOptions = {
@@ -404,20 +425,24 @@ const conf = reactive({
     },
     selected: {
       value: 1,
-      label: '内存'
+      label: '内存',
+      labelKey: 'home.memory'
     },
     options: markRaw([
       {
         value: 1,
-        label: '内存'
+        label: '内存',
+        labelKey: 'home.memory'
       },
       {
         value: 2,
-        label: '磁盘'
+        label: '磁盘',
+        labelKey: 'home.disk'
       },
       {
         value: 3,
-        label: 'CPU'
+        label: 'CPU',
+        labelKey: 'home.cpu'
       }
     ]),
     usage: {
@@ -427,6 +452,7 @@ const conf = reactive({
       usedPercent: 0
     } as { total: string; available: string; used: string; usedPercent: number },
     cpuInfo: '',
+    getStatusLabel: (item: Options) => item.labelKey ? t(item.labelKey, item.label) : item.label,
     handleStatusChange: () => conf.statusData.update(),
     update: async () => {
       const { data: res } = await Api.getSysinfo()
@@ -468,7 +494,7 @@ const conf = reactive({
             conf.statusData.usage.used = '--'
             conf.statusData.usage.available = '--'
             conf.statusData.usage.usedPercent = usedPercent
-            conf.statusData.cpuInfo = `${modelName} ${cores}核`
+            conf.statusData.cpuInfo = `${modelName} ${cores}${t('home.cores', '核')}`
           }
           break
       }
@@ -493,7 +519,7 @@ const conf = reactive({
     },
     update: async () => {
       await Api.updateSysRemark(conf.memo.data)
-      ElMessage.success('保存成功')
+      ElMessage.success(t('home.saveSuccess', '保存成功'))
       conf.memo.getData()
       conf.memo.show = false
     }
@@ -524,11 +550,11 @@ onMounted(() => {
           <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px">
             <div class="dashboard-intro">
               <div>
-                <div class="intro-eyebrow">SERVER OVERVIEW</div>
-                <h2>服务器概览</h2>
-                <p>快速掌握站点、数据库和系统资源的实时运行情况。</p>
+                <div class="intro-eyebrow">{{ $t('home.overviewEyebrow') }}</div>
+                <h2>{{ $t('home.overviewTitle') }}</h2>
+                <p>{{ $t('home.overviewDescription') }}</p>
               </div>
-              <div class="live-badge"><i></i> 实时数据 · 5 秒刷新</div>
+              <div class="live-badge"><i></i> {{ $t('home.liveBadge') }}</div>
             </div>
             <el-row :gutter="20">
               <el-col v-for="item in conf.category" :key="item.name" :lg="6" :md="12" :sm="24">
@@ -538,9 +564,9 @@ onMounted(() => {
                   </div>
                   <div class="text column items-center">
                     <span :class="{ 'link': typeof item.value === 'string' }">
-                      {{ item.value }}
+                      {{ typeof item.value === 'string' && !item.value ? $t('home.emptyMemo') : item.value }}
                     </span>
-                    <div class="name">{{ item.name }}</div>
+                    <div class="name">{{ $t(item.nameKey) }}</div>
                   </div>
                 </div>
               </el-col>
@@ -549,13 +575,13 @@ onMounted(() => {
               <el-col :lg="16" :md="16" :sm="24">
                 <div class="basic-card flex column no-wrap fit-height">
                   <div class="basic-card__header">
-                    <div class="basic-card__title">监控</div>
+                    <div class="basic-card__title">{{ $t('home.monitor') }}</div>
                     <div class="miscellaneous">
                       <div class="switch">
-                        <span>{{ conf.monitorData.selectedType == 'network' ? '网卡' : '磁盘' }}</span>
+                        <span>{{ conf.monitorData.selectedType == 'network' ? $t('home.networkCard') : $t('home.diskCard') }}</span>
                         <el-select
                           v-model="conf.monitorData.selectedCard"
-                          placeholder="请选择"
+                          :placeholder="$t('home.selectPlaceholder')"
                           style="width: 100%"
                           @change="conf.monitorData.handleChangeCard"
                         >
@@ -573,14 +599,14 @@ onMounted(() => {
                           :class="conf.monitorData.selectedType == 'network' ? 'active' : ''"
                           @click="conf.monitorData.handleChangeType('network')"
                         >
-                          流量
+                          {{ $t('home.traffic') }}
                         </div>
                         <div
                           class="item"
                           :class="conf.monitorData.selectedType == 'disk' ? 'active' : ''"
                           @click="conf.monitorData.handleChangeType('disk')"
                         >
-                          磁盘IO
+                          {{ $t('home.diskIo') }}
                         </div>
                       </div>
                     </div>
@@ -593,18 +619,18 @@ onMounted(() => {
                           :key="item.label"
                           class="item"
                         >
-                          <span class="label">{{ item.label }}：</span>
+                          <span class="label">{{ item.labelKey ? $t(item.labelKey) : item.label }}：</span>
                           <span class="value">{{ item.value }}</span>
                         </div>
                       </el-space>
                       <div class="rights">
                         <div class="upper">
                           <div class="yuan"></div>
-                          <span>{{ conf.monitorData.selectedType == 'network' ? '上行' : '读取' }}</span>
+                          <span>{{ conf.monitorData.selectedType == 'network' ? $t('home.upload') : $t('home.read') }}</span>
                         </div>
                         <div class="below">
                           <div class="yuan"></div>
-                          <span>{{ conf.monitorData.selectedType == 'network' ? '下行' : '写入' }}</span>
+                          <span>{{ conf.monitorData.selectedType == 'network' ? $t('home.download') : $t('home.write') }}</span>
                         </div>
                       </div>
                     </div>
@@ -619,18 +645,18 @@ onMounted(() => {
               <el-col :lg="8" :md="8" :sm="24">
                 <div ref="statusCard" class="basic-card flex column no-wrap fit-height">
                   <div class="basic-card__header">
-                    <div class="basic-card__title">状态</div>
+                    <div class="basic-card__title">{{ $t('home.status') }}</div>
                     <div class="status-right">
                       <el-select
                         v-model="conf.statusData.selected"
-                        placeholder="选择状态"
+                        :placeholder="$t('home.selectStatus')"
                         style="width: 100px; margin-right: 10px"
                         @change="conf.statusData.handleStatusChange"
                       >
                         <el-option
                           v-for="item in conf.statusData.options"
                           :key="item.value"
-                          :label="item.label"
+                          :label="item.labelKey ? $t(item.labelKey) : item.label"
                           :value="item"
                         />
                       </el-select>
@@ -651,21 +677,21 @@ onMounted(() => {
                       </div>
                       <div class="status-menu" style="margin-bottom: 20px">
                         <div class="b1">
-                          总数：
+                          {{ $t('home.total') }}：
                           <span>{{ conf.statusData.usage.total }}</span>
                         </div>
                         <div class="b2">
-                          已用：
+                          {{ $t('home.used') }}：
                           <span>{{ conf.statusData.usage.used }}</span>
                         </div>
                       </div>
                       <div class="status-menu">
                         <div class="b1">
-                          可用：
+                          {{ $t('home.available') }}：
                           <span>{{ conf.statusData.usage.available }}</span>
                         </div>
                         <div class="b2">
-                          使用率：
+                          {{ $t('home.usage') }}：
                           <span>{{ conf.statusData.usage.usedPercent.toFixed(2) }} %</span>
                         </div>
                       </div>

@@ -116,10 +116,10 @@ onMounted(() => {
       </el-form-item>
     </template>
 
-    <custom-dialog v-model="conf.selectFolder.show" title="选择文件夹">
+    <custom-dialog v-model="conf.selectFolder.show" :title="$t('common.selectFolder')">
       <file-panel @select="(path) => (conf.selectFolder.path = path)" />
       <template #footer>
-        <el-button type="primary" @click="conf.selectFolder.confirm">确定</el-button>
+        <el-button type="primary" @click="conf.selectFolder.confirm">{{ $t('common.confirm') }}</el-button>
       </template>
     </custom-dialog>
   </el-form>

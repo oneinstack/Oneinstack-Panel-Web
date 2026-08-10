@@ -12,6 +12,12 @@ import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
 import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
 import WebServerConfigDrawer from './components/WebServerConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const webServer = reactive({
   loading: true,
@@ -62,6 +68,7 @@ const conf = reactive({
     list: [
       {
         name: 'PHP项目',
+        nameKey: 'website.tabs.php',
         index: 0,
         value: 'php'
       },
@@ -83,11 +90,13 @@ const conf = reactive({
       // },
       {
         name: '反向代理',
+        nameKey: 'website.tabs.proxy',
         index: 5,
         value: 'proxy'
       },
       {
         name: 'HTML项目',
+        nameKey: 'website.tabs.static',
         index: 6,
         value: 'static'
       }
@@ -105,14 +114,14 @@ const conf = reactive({
   website: {
     data: [],
     total: 0,
-    columns: [
-      { prop: 'name', label: '网站名', width: 200 },
-      { prop: 'domain', label: '域名', width: 200 },
-      { prop: 'root_dir', label: '根目录' },
-      { prop: 'remark', label: '备注', width: 200 },
+    columns: computed(() => [
+      { prop: 'name', label: t('website.websiteName', '网站名'), width: 200 },
+      { prop: 'domain', label: t('website.domain', '域名'), width: 200 },
+      { prop: 'root_dir', label: t('website.rootDir', '根目录') },
+      { prop: 'remark', label: t('common.remark', '备注'), width: 200 },
       { prop: 'ssl', label: 'SSL', width: 110 },
-      { prop: 'action', label: '操作' }
-    ],
+      { prop: 'action', label: t('common.action', '操作') }
+    ]),
     params: {
       type: 'php',
       page: 1,
@@ -137,10 +146,10 @@ const conf = reactive({
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
-      conf.drawer.title = '创建网站'
+      conf.drawer.title = t('website.createWebsite', '创建网站')
       conf.drawer.type = type
       if (type === 'edit') {
-        conf.drawer.title = '设置网站'
+        conf.drawer.title = t('website.setWebsite', '设置网站')
         const cloneRow = structuredClone(toRaw(row))
         const domain = cloneRow.domain?.split(',')
         conf.form.data.value = cloneRow
@@ -171,7 +180,7 @@ const conf = reactive({
           await submitOperation(operation, structuredClone(toRaw(conf.form.data.value)))
           ElMessage({
             type: 'success',
-            message: conf.drawer.type === 'add' ? '创建网站成功' : '更新网站成功'
+            message: conf.drawer.type === 'add' ? t('website.createSuccess', '创建网站成功') : t('website.updateSuccess', '更新网站成功')
           })
           conf.drawer.show = false
           conf.website.getData()
@@ -179,7 +188,7 @@ const conf = reactive({
           if (isOperationCancelled(error)) return
           ElMessage({
             type: 'error',
-            message: error.message || '操作失败'
+            message: error.message || t('common.operationFailed', '操作失败')
           })
         } finally {
           conf.drawer.loading = false
@@ -204,15 +213,15 @@ const conf = reactive({
           case 'static':
             return [
               {
-                label: '主域名',
+                label: t('website.primaryDomain', '主域名'),
                 type: 'input',
-                placeholder: '支持域名:端口',
+                placeholder: t('website.domainPortPlaceholder', '支持域名:端口'),
                 prop: 'hostDomain',
                 rules: [
-                  { required: true, message: '请输入主域名', trigger: 'blur' },
+                  { required: true, message: t('website.primaryDomainRequired', '请输入主域名'), trigger: 'blur' },
                   {
                     pattern: /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/,
-                    message: '域名格式错误',
+                    message: t('website.domainFormatError', '域名格式错误'),
                     trigger: 'blur'
                   }
                 ],
@@ -227,22 +236,22 @@ const conf = reactive({
                 }
               },
               {
-                label: '其他域名',
+                label: t('website.otherDomains', '其他域名'),
                 type: 'textarea',
-                placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
+                placeholder: t('website.otherDomainsPlaceholder', '一行一个域名，支持*和IP地址，支持"域名:端口"'),
                 prop: 'otherDomain'
               },
               {
-                label: '根目录',
+                label: t('website.rootDir', '根目录'),
                 type: 'input',
                 prop: 'root_dir',
                 rules: [
-                  { required: true, message: '请选择根目录', trigger: 'blur' },
-                  { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: '路径格式错误' }
+                  { required: true, message: t('website.rootDirRequired', '请选择根目录'), trigger: 'blur' },
+                  { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: t('website.pathFormatError', '路径格式错误') }
                 ]
               },
               {
-                label: '备注',
+                label: t('common.remark', '备注'),
                 type: 'textarea',
                 prop: 'remark'
               }
@@ -252,30 +261,30 @@ const conf = reactive({
             conf.form.data.value.tar_url ||= '$http_host'
             return [
               {
-                label: '主域名',
+                label: t('website.primaryDomain', '主域名'),
                 type: 'input',
-                placeholder: '支持域名:端口',
+                placeholder: t('website.domainPortPlaceholder', '支持域名:端口'),
                 prop: 'hostDomain',
                 rules: [
-                  { required: true, message: '请输入主域名', trigger: 'blur' },
-                  { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: '域名格式错误', trigger: 'blur' }
+                  { required: true, message: t('website.primaryDomainRequired', '请输入主域名'), trigger: 'blur' },
+                  { pattern: /^([0-9a-zA-Z-]{1,}\.)+([a-zA-Z]{2,})$/, message: t('website.domainFormatError', '域名格式错误'), trigger: 'blur' }
                 ]
               },
               {
-                label: '其他域名',
+                label: t('website.otherDomains', '其他域名'),
                 type: 'textarea',
-                placeholder: '一行一个域名，支持*和IP地址，支持"域名:端口"',
+                placeholder: t('website.otherDomainsPlaceholder', '一行一个域名，支持*和IP地址，支持"域名:端口"'),
                 prop: 'otherDomain'
               },
               {
-                label: '代理地址',
+                label: t('website.proxyAddress', '代理地址'),
                 type: 'custom',
-                placeholder: '例：127.0.0.1:8080',
+                placeholder: t('website.proxyAddressPlaceholder', '例：127.0.0.1:8080'),
                 prop: 'send_url',
-                rules: [{ required: true, message: '请输入代理地址', trigger: 'blur' }]
+                rules: [{ required: true, message: t('website.proxyAddressRequired', '请输入代理地址'), trigger: 'blur' }]
               },
               {
-                label: '备注',
+                label: t('common.remark', '备注'),
                 type: 'textarea',
                 prop: 'remark'
               }
@@ -288,7 +297,7 @@ const conf = reactive({
   },
   dialog: {
     show: false,
-    title: '网站删除确认',
+    title: t('website.deleteConfirmTitle', '网站删除确认'),
     type: 'delete',
     row: {} as any,
     loading: false,
@@ -304,7 +313,7 @@ const conf = reactive({
       conf.dialog.deleteFiles = false
       switch (type) {
         case 'delete':
-          conf.dialog.title = '网站删除确认'
+          conf.dialog.title = t('website.deleteConfirmTitle', '网站删除确认')
           break
       }
       conf.dialog.show = true
@@ -317,7 +326,7 @@ const conf = reactive({
     },
     confirm: async () => {
       if (conf.dialog.confirmName !== conf.dialog.row.name) {
-        ElMessage.error('网站名不匹配')
+        ElMessage.error(t('website.websiteNameMismatch', '网站名不匹配'))
         return
       }
       conf.dialog.loading = true
@@ -328,7 +337,7 @@ const conf = reactive({
           databaseId: conf.dialog.databaseId || 0,
           deleteFiles: conf.dialog.deleteFiles
         })
-        ElMessage.success('安全删除任务已创建，完整快照验证成功后才会删除网站')
+        ElMessage.success(t('website.deleteTaskCreated', '安全删除任务已创建，完整快照验证成功后才会删除网站'))
         backupDrawer.open(conf.dialog.row)
         conf.dialog.show = false
         conf.website.getData()
@@ -351,32 +360,32 @@ webServer.load()
           {{ webServer.data.component === 'openresty' ? 'O' : webServer.data.available ? 'N' : '?' }}
         </div>
         <div class="web-server-card__copy">
-          <span>当前网站 Web 服务器</span>
+          <span>{{ $t('website.currentWebServer') }}</span>
           <div>
-            <h3>{{ webServer.data.available ? webServer.data.name : '未检测到 Nginx 或 OpenResty' }}</h3>
+            <h3>{{ webServer.data.available ? webServer.data.name : $t('website.webServerNotDetected') }}</h3>
             <el-tag
               :type="webServer.data.running ? 'success' : webServer.data.available ? 'warning' : 'info'"
               effect="plain"
               round
             >
-              {{ webServer.data.running ? '运行中' : webServer.data.available ? '服务已停止' : '未安装' }}
+              {{ webServer.data.running ? $t('website.running') : webServer.data.available ? $t('website.serviceStopped') : $t('website.notInstalled') }}
             </el-tag>
           </div>
           <p v-if="webServer.data.available">
-            {{ webServer.data.version || '版本未知' }} · 站点配置目录 {{ webServer.data.siteConfigDir || '-' }}
+            {{ webServer.data.version || $t('website.versionUnknown') }} · {{ $t('website.siteConfigDir') }} {{ webServer.data.siteConfigDir || '-' }}
           </p>
-          <p v-else>请先在软件商城安装 Nginx 或 OpenResty，网站模块会自动识别并使用已安装的服务。</p>
+          <p v-else>{{ $t('website.installWebServerTip') }}</p>
         </div>
       </div>
       <div class="web-server-card__actions">
-        <el-button :icon="Refresh" @click="webServer.load">刷新状态</el-button>
+        <el-button :icon="Refresh" @click="webServer.load">{{ $t('website.refreshStatus') }}</el-button>
         <el-button
           type="primary"
           :icon="Setting"
           :disabled="!webServer.data.configurationAvailable"
           @click="webServer.configVisible = true"
         >
-          管理配置文件
+          {{ $t('website.manageConfigFiles') }}
         </el-button>
       </div>
     </section>
@@ -384,8 +393,8 @@ webServer.load()
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <div class="tool-bar website-toolbar">
       <el-space class="btn-group website-toolbar__actions" :size="14" style="width: 100%;">
-        <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">添加站点</el-button>
-        <el-button @click="backupDrawer.open()">整站备份管理</el-button>
+        <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
+        <el-button @click="backupDrawer.open()">{{ $t('website.fullBackupManagement') }}</el-button>
 
         <!-- <el-dropdown>
             <el-button type="primary">
@@ -441,7 +450,7 @@ webServer.load()
           <search-input
             v-model="conf.website.params.name"
             class="website-search-panel__input"
-            placeholder="请输入域名"
+            :placeholder="$t('website.domainPlaceholder')"
             @search="conf.website.getData()"
           />
           <el-button class="website-search-panel__refresh" :icon="Refresh" type="primary" @click="conf.website.getData()" />
@@ -450,25 +459,25 @@ webServer.load()
       </div>
     </div>
     <div class="box2">
-      <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" empty-text="暂无数据" :data="conf.website.data"
+      <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" :empty-text="$t('common.noData')" :data="conf.website.data"
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
         :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
         <template #action="{ row }">
           <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
-          <el-button type="primary" link @click="backupDrawer.open(row)">备份</el-button>
-          <el-button type="primary" link @click="conf.drawer.open('edit', row)">设置</el-button>
-          <el-button type="danger" link @click="conf.dialog.open('delete', row)">删除</el-button>
+          <el-button type="primary" link @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
+          <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ $t('website.settings') }}</el-button>
+          <el-button type="danger" link @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
         </template>
         <template #ssl="{ row }">
           <el-tag v-if="row.ssl_enabled" :type="row.certificate_status === 'active' ? 'success' : 'warning'">
-            {{ row.certificate_status === 'active' ? '已启用' : row.certificate_status === 'expired' ? '已过期' : '即将到期' }}
+            {{ row.certificate_status === 'active' ? $t('common.enabled') : row.certificate_status === 'expired' ? $t('website.expired') : $t('website.expiringSoon') }}
           </el-tag>
-          <el-tag v-else type="info">未启用</el-tag>
+          <el-tag v-else type="info">{{ $t('common.disabled') }}</el-tag>
         </template>
       </custom-table>
     </div>
     <!--创建网站弹窗-->
-    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" empty-text="暂无数据" :loading="conf.drawer.loading"
+    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" :empty-text="$t('common.noData')" :loading="conf.drawer.loading"
       size="820px" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
       <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
         <template #send_url="{ row }">
@@ -487,15 +496,15 @@ webServer.load()
     <custom-dialog v-model="conf.dialog.show" :title="conf.dialog.title">
       <template v-if="conf.dialog.type === 'delete'">
         <el-alert
-          title="删除前会强制创建并验证整站快照。默认只移除 Nginx/证书状态并保留业务文件；选择删除文件后，目录只会在受管根路径校验通过时删除。"
+          :title="$t('website.deleteSnapshotTip')"
           type="warning"
           show-icon
           :closable="false"
         />
         <el-form label-position="top" class="delete-form">
-          <el-form-item label="关联 MySQL 数据库（可选）">
-            <el-select v-model="conf.dialog.databaseId" style="width: 100%" placeholder="不包含数据库">
-              <el-option label="不包含数据库" :value="0" />
+          <el-form-item :label="$t('website.databaseOptional')">
+            <el-select v-model="conf.dialog.databaseId" style="width: 100%" :placeholder="$t('website.noDatabase')">
+              <el-option :label="$t('website.noDatabase')" :value="0" />
               <el-option
                 v-for="database in conf.dialog.databases"
                 :key="database.id"
@@ -504,25 +513,25 @@ webServer.load()
               />
             </el-select>
           </el-form-item>
-          <el-form-item label="文件处理">
+          <el-form-item :label="$t('website.fileHandling')">
             <el-checkbox v-model="conf.dialog.deleteFiles">
-              快照成功后同时删除网站目录与业务文件
+              {{ $t('website.deleteFilesAfterSnapshot') }}
             </el-checkbox>
           </el-form-item>
-          <el-form-item :label="`请输入网站名 ${conf.dialog.row.name || ''} 确认`">
+          <el-form-item :label="$t('website.confirmWebsiteName', { name: conf.dialog.row.name || '' })">
             <el-input v-model="conf.dialog.confirmName" :placeholder="conf.dialog.row.name" />
           </el-form-item>
         </el-form>
       </template>
       <template #footer>
-        <el-button @click="conf.dialog.close">取消</el-button>
+        <el-button @click="conf.dialog.close">{{ $t('common.cancel') }}</el-button>
         <el-button
           type="danger"
           :loading="conf.dialog.loading"
           :disabled="conf.dialog.confirmName !== conf.dialog.row.name"
           @click="conf.dialog.confirm"
         >
-          创建快照并删除
+          {{ $t('website.createSnapshotAndDelete') }}
         </el-button>
       </template>
     </custom-dialog>

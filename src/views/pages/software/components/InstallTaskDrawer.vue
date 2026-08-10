@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import softwareTaskStore from '@/sstore/softwareTask'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -32,20 +33,24 @@ const isServiceTask = computed(() =>
   ['start', 'stop', 'restart', 'reload'].includes(task.value?.operation || '')
 )
 const isConfigurationTask = computed(() => task.value?.operation === 'configure')
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 const operationLabel = computed(() => {
   const labels: Record<string, string> = {
-    install: '安装',
-    upgrade: '升级',
-    uninstall: '卸载',
-    start: '启动',
-    stop: '停止',
-    restart: '重启',
-    reload: '平滑重载',
-    configure: '配置发布'
+    install: t('layout.operation.install', 'Install'),
+    upgrade: t('layout.operation.upgrade', 'Upgrade'),
+    uninstall: t('layout.operation.uninstall', 'Uninstall'),
+    start: t('layout.operation.start', 'Start'),
+    stop: t('layout.operation.stop', 'Stop'),
+    restart: t('layout.operation.restart', 'Restart'),
+    reload: t('layout.operation.reload', 'Reload'),
+    configure: t('layout.operation.configure', 'Publish configuration')
   }
-  return labels[task.value?.operation || ''] || '任务'
+  return labels[task.value?.operation || ''] || t('layout.task', 'Task')
 })
-const logs = computed(() => softwareTaskStore.logs[props.taskId] || '等待脚本输出...')
+const logs = computed(() => softwareTaskStore.logs[props.taskId] || t('software.task.waitingScriptOutput', 'Waiting for script output...'))
 const terminal = computed(() => softwareTaskStore.isTerminal(task.value?.status))
 const failed = computed(() => ['failed', 'interrupted'].includes(task.value?.status))
 const cancelable = computed(() => !!task.value && !terminal.value && !task.value.cancelRequested)
@@ -56,41 +61,41 @@ const progressStatus = computed(() => {
 })
 const statusText = computed(() => {
   const labels: Record<string, string> = {
-    queued: '排队中',
-    resolving: '正在获取安装包',
-    prechecking: '正在检查环境',
-    installing: '正在安装',
-    upgrading: '正在升级',
-    uninstalling: '正在卸载',
-    starting: '正在启动服务',
-    stopping: '正在停止服务',
-    restarting: '正在重启服务',
-    reloading: '正在平滑重载服务',
-    configuring: '正在写入配置',
-    verifying: '正在启动并验证',
-    finalizing: '正在保存状态',
-    canceling: '正在取消',
-    rolling_back: '正在回滚',
-    succeeded: `${operationLabel.value}成功`,
-    failed: `${operationLabel.value}失败`,
-    canceled: '已取消',
-    interrupted: '任务已中断'
+    queued: t('software.task.status.queued', 'Queued'),
+    resolving: t('software.task.status.resolving', 'Resolving package'),
+    prechecking: t('software.task.status.prechecking', 'Checking environment'),
+    installing: t('software.task.status.installing', 'Installing'),
+    upgrading: t('software.task.status.upgrading', 'Upgrading'),
+    uninstalling: t('software.task.status.uninstalling', 'Uninstalling'),
+    starting: t('software.task.status.starting', 'Starting service'),
+    stopping: t('software.task.status.stopping', 'Stopping service'),
+    restarting: t('software.task.status.restarting', 'Restarting service'),
+    reloading: t('software.task.status.reloading', 'Reloading service'),
+    configuring: t('software.task.status.configuring', 'Writing configuration'),
+    verifying: t('software.task.status.verifying', 'Starting and verifying'),
+    finalizing: t('software.task.status.finalizing', 'Saving status'),
+    canceling: t('software.task.status.canceling', 'Canceling'),
+    rolling_back: t('software.task.status.rollingBack', 'Rolling back'),
+    succeeded: t('software.task.status.succeeded', '{operation} succeeded', { operation: operationLabel.value }),
+    failed: t('software.task.status.failed', '{operation} failed', { operation: operationLabel.value }),
+    canceled: t('software.task.status.canceled', 'Canceled'),
+    interrupted: t('software.task.status.interrupted', 'Task interrupted')
   }
-  return labels[task.value?.status] || task.value?.status || '正在加载'
+  return labels[task.value?.status] || task.value?.status || t('common.loading', 'Loading')
 })
 const elapsed = computed(() => {
-  if (!task.value?.createdAt) return '0 秒'
+  if (!task.value?.createdAt) return t('software.task.duration.seconds', '{value} seconds', { value: 0 })
   const end = task.value.finishedAt ? Date.parse(task.value.finishedAt) : now.value
   const seconds = Math.max(0, Math.floor((end - Date.parse(task.value.createdAt)) / 1000))
-  if (seconds < 60) return `${seconds} 秒`
+  if (seconds < 60) return t('software.task.duration.seconds', '{value} seconds', { value: seconds })
   const minutes = Math.floor(seconds / 60)
-  return `${minutes} 分 ${seconds % 60} 秒`
+  return t('software.task.duration.minutesSeconds', '{minutes} min {seconds} sec', { minutes, seconds: seconds % 60 })
 })
 const createdAtText = computed(() => {
-  if (!task.value?.createdAt) return '时间未知'
+  if (!task.value?.createdAt) return t('software.task.unknownTime', 'Unknown time')
   const value = new Date(task.value.createdAt)
-  if (Number.isNaN(value.getTime())) return '时间未知'
-  return new Intl.DateTimeFormat('zh-CN', {
+  if (Number.isNaN(value.getTime())) return t('software.task.unknownTime', 'Unknown time')
+  return new Intl.DateTimeFormat(i18n.locale || 'zh-CN', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -107,64 +112,64 @@ const fallbackErrorCode = computed(() => {
 })
 const metaCards = computed(() => [
   {
-    label: '任务 ID',
+    label: t('software.task.summary.taskId', 'Task ID'),
     value: task.value?.id || '-',
     className: 'task-meta-card--mono task-meta-card--wide'
   },
   {
-    label: terminal.value ? '任务类型' : '创建时间',
-    value: terminal.value ? '历史任务' : createdAtText.value,
+    label: terminal.value ? t('software.task.summary.taskType', 'Task type') : t('software.task.summary.createdAt', 'Created at'),
+    value: terminal.value ? t('software.task.historyTask', 'History task') : createdAtText.value,
     className: terminal.value ? 'task-meta-card--accent' : ''
   },
   {
-    label: '当前阶段',
+    label: t('software.task.summary.currentPhase', 'Current phase'),
     value: task.value?.phase || task.value?.status || 'waiting',
     className: 'task-meta-card--mono'
   },
   {
-    label: '已用时',
+    label: t('software.task.summary.elapsed', 'Elapsed'),
     value: elapsed.value,
     className: 'task-meta-card--strong'
   }
 ])
 const summaryItems = computed(() => [
-  { label: '组件', value: task.value?.component || '-' },
-  { label: '版本', value: task.value?.requestedVersion || '-' },
-  { label: '错误码', value: task.value?.errorCode || (failed.value ? fallbackErrorCode.value : '-') },
-  { label: '回滚状态', value: task.value?.rollbackStatus || 'not_required' }
+  { label: t('software.task.summary.component', 'Component'), value: task.value?.component || '-' },
+  { label: t('software.task.summary.version', 'Version'), value: task.value?.requestedVersion || '-' },
+  { label: t('software.task.summary.errorCode', 'Error code'), value: task.value?.errorCode || (failed.value ? fallbackErrorCode.value : '-') },
+  { label: t('software.task.summary.rollbackStatus', 'Rollback status'), value: task.value?.rollbackStatus || 'not_required' }
 ])
 
 const stages = computed(() => {
   const currentProgress = task.value?.progress || 0
   const definitions = isServiceTask.value
     ? [
-        { key: 'resolving', name: '获取控制脚本', end: 5 },
-        { key: task.value?.operation || 'restart', name: `${operationLabel.value}服务`, end: 96 },
-        { key: 'finalizing', name: '保存任务状态', end: 100 }
+        { key: 'resolving', name: t('software.task.stages.fetchControlScript', 'Fetch control script'), end: 5 },
+        { key: task.value?.operation || 'restart', name: t('software.task.stages.serviceAction', '{operation} service', { operation: operationLabel.value }), end: 96 },
+        { key: 'finalizing', name: t('software.task.stages.saveTaskStatus', 'Save task status'), end: 100 }
       ]
     : isConfigurationTask.value
     ? [
-        { key: 'resolving', name: '获取配置脚本', end: 5 },
-        { key: 'config_apply', name: '备份、校验并发布', end: 96 },
-        { key: 'finalizing', name: '保存任务状态', end: 100 }
+        { key: 'resolving', name: t('software.task.stages.fetchConfigScript', 'Fetch configuration script'), end: 5 },
+        { key: 'config_apply', name: t('software.task.stages.backupValidatePublish', 'Back up, validate, and publish'), end: 96 },
+        { key: 'finalizing', name: t('software.task.stages.saveTaskStatus', 'Save task status'), end: 100 }
       ]
     : isUninstall.value
     ? [
-        { key: 'resolving', name: '获取卸载包', end: 5 },
-        { key: 'uninstall', name: '卸载组件', end: 96 },
-        { key: 'finalizing', name: '保存状态', end: 100 }
+        { key: 'resolving', name: t('software.task.stages.fetchUninstallPackage', 'Fetch uninstall package'), end: 5 },
+        { key: 'uninstall', name: t('software.task.stages.uninstallComponent', 'Uninstall component'), end: 96 },
+        { key: 'finalizing', name: t('software.task.stages.saveStatus', 'Save status'), end: 100 }
       ]
     : [
-        { key: 'resolving', name: '获取安装包', end: 5 },
-        { key: 'precheck', name: '环境预检', end: 12 },
+        { key: 'resolving', name: t('software.task.stages.fetchInstallPackage', 'Fetch install package'), end: 5 },
+        { key: 'precheck', name: t('software.task.stages.environmentPrecheck', 'Environment precheck'), end: 12 },
         {
           key: task.value?.operation === 'upgrade' ? 'upgrade' : 'install',
-          name: task.value?.operation === 'upgrade' ? '升级软件' : '安装软件',
+          name: task.value?.operation === 'upgrade' ? t('software.task.stages.upgradeSoftware', 'Upgrade software') : t('software.task.stages.installSoftware', 'Install software'),
           end: 72
         },
-        { key: 'configure', name: '写入配置', end: 84 },
-        { key: 'verify', name: '启动并验证', end: 96 },
-        { key: 'finalizing', name: '保存状态', end: 100 }
+        { key: 'configure', name: t('software.task.stages.writeConfiguration', 'Write configuration'), end: 84 },
+        { key: 'verify', name: t('software.task.stages.startAndVerify', 'Start and verify'), end: 96 },
+        { key: 'finalizing', name: t('software.task.stages.saveStatus', 'Save status'), end: 100 }
       ]
   return definitions.map((stage) => ({
     ...stage,
@@ -187,21 +192,21 @@ const cancelTask = async () => {
   const configurationTask = isConfigurationTask.value
   await ElMessageBox.confirm(
     configurationTask
-      ? '取消后系统会终止配置脚本；如果配置已经发布，会自动恢复发布前快照。确定继续吗？'
+      ? t('software.task.cancelMessages.configure', 'Canceling will stop the configuration script. If configuration has already been published, the snapshot before publish will be restored automatically. Continue?')
       : serviceTask
-      ? `取消后系统会终止${operationLabel.value}脚本并重新核验服务状态，确定继续吗？`
+      ? t('software.task.cancelMessages.service', 'Canceling will stop the {operation} script and recheck service status. Continue?', { operation: operationLabel.value })
       : uninstall
-      ? '取消后系统会安全终止卸载脚本并重新核验组件状态；已经完成的组件步骤可能无法自动恢复。确定继续吗？'
-      : '取消可能触发回滚，正在执行的不可中断步骤会先等待安全退出。确定继续吗？',
+      ? t('software.task.cancelMessages.uninstall', 'Canceling will safely stop the uninstall script and recheck component status. Completed component steps may not be restored automatically. Continue?')
+      : t('software.task.cancelMessages.install', 'Canceling may trigger rollback. Running non-interruptible steps will wait for a safe exit first. Continue?'),
     configurationTask
-      ? '取消配置发布任务'
-      : serviceTask ? `取消${operationLabel.value}任务` : uninstall ? '取消卸载任务' : '取消安装任务',
+      ? t('software.task.cancelTitles.configure', 'Cancel configuration publish task')
+      : serviceTask ? t('software.task.cancelTitles.service', 'Cancel {operation} task', { operation: operationLabel.value }) : uninstall ? t('software.task.cancelTitles.uninstall', 'Cancel uninstall task') : t('software.task.cancelTitles.install', 'Cancel install task'),
     {
       type: 'warning',
-      confirmButtonText: '确认取消',
+      confirmButtonText: t('software.task.confirmCancel', 'Confirm cancel'),
       cancelButtonText: configurationTask
-        ? '继续发布'
-        : serviceTask ? `继续${operationLabel.value}` : uninstall ? '继续卸载' : '继续安装'
+        ? t('software.task.continuePublish', 'Continue publishing')
+        : serviceTask ? t('software.task.continueOperation', 'Continue {operation}', { operation: operationLabel.value }) : uninstall ? t('software.task.continueUninstall', 'Continue uninstalling') : t('software.task.continueInstall', 'Continue installing')
     }
   )
   await softwareTaskStore.cancel(props.taskId)
@@ -218,7 +223,7 @@ const copyDiagnostics = async () => {
     logs.value
   ].join('\n')
   await navigator.clipboard.writeText(value)
-  ElMessage.success('诊断信息已复制')
+  ElMessage.success(t('software.task.diagnosticsCopied', 'Diagnostics copied'))
 }
 
 const downloadLog = async () => {
@@ -226,9 +231,9 @@ const downloadLog = async () => {
   downloading.value = true
   try {
     await softwareTaskStore.downloadLog(props.taskId)
-    ElMessage.success('完整任务日志已开始下载')
+    ElMessage.success(t('software.task.logDownloadStarted', 'Full task log download started'))
   } catch (error: any) {
-    ElMessage.error(error?.message || '下载任务日志失败')
+    ElMessage.error(error?.message || t('software.task.logDownloadFailed', 'Failed to download task log'))
   } finally {
     downloading.value = false
   }
@@ -265,11 +270,11 @@ onBeforeUnmount(() => {
       <div class="task-header">
         <button type="button" class="task-back" @click="visible = false">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ $t('common.back') }}</span>
         </button>
         <div class="task-heading">
           <div class="task-title">
-            <strong>{{ task?.component || '软件任务' }}</strong>
+            <strong>{{ task?.component || $t('software.task.softwareTask') }}</strong>
             <span class="task-operation">{{ operationLabel }}</span>
             <small v-if="task?.requestedVersion">{{ task.requestedVersion }}</small>
           </div>
@@ -290,16 +295,16 @@ onBeforeUnmount(() => {
         <div class="overview-hero">
           <div class="overview-copy">
             <div class="overview-label">
-              <span class="overview-label__title">当前进度</span>
+              <span class="overview-label__title">{{ $t('software.task.currentProgress') }}</span>
               <span class="overview-phase">{{ task.phase || task.status }}</span>
             </div>
             <h3>{{ statusText }}</h3>
-            <p>{{ task.message || '任务已创建，正在准备执行。' }}</p>
+            <p>{{ task.message || $t('software.task.createdPreparing') }}</p>
           </div>
           <div class="overview-progress-card">
-            <small>完成度</small>
+            <small>{{ $t('software.task.completion') }}</small>
             <strong>{{ task.progress }}%</strong>
-            <span>{{ terminal ? '任务已结束' : '实时刷新中' }}</span>
+            <span>{{ terminal ? $t('software.task.taskEnded') : $t('software.task.realtimeRefreshing') }}</span>
           </div>
         </div>
         <div class="overview-track">
@@ -323,16 +328,16 @@ onBeforeUnmount(() => {
             <strong>{{ item.value }}</strong>
           </div>
           <div class="overview-foot__item">
-            <small>任务状态</small>
+            <small>{{ $t('software.task.summary.taskStatus') }}</small>
             <strong>{{ task.status }}</strong>
           </div>
           <div class="overview-foot__item">
-            <small>执行模式</small>
-            <strong>{{ isConfigurationTask ? '配置发布' : isServiceTask ? '服务动作' : isUninstall ? '卸载任务' : '安装任务' }}</strong>
+            <small>{{ $t('software.task.summary.executionMode') }}</small>
+            <strong>{{ isConfigurationTask ? $t('software.task.modes.configure') : isServiceTask ? $t('software.task.modes.service') : isUninstall ? $t('software.task.modes.uninstall') : $t('software.task.modes.install') }}</strong>
           </div>
           <div class="overview-foot__item">
-            <small>日志状态</small>
-            <strong>{{ autoScroll ? '自动滚动开启' : '手动查看' }}</strong>
+            <small>{{ $t('software.task.summary.logStatus') }}</small>
+            <strong>{{ autoScroll ? $t('software.task.autoScrollEnabled') : $t('software.task.manualViewing') }}</strong>
           </div>
         </div>
       </section>
@@ -341,9 +346,9 @@ onBeforeUnmount(() => {
         <div class="section-heading">
           <div>
             <span class="section-heading__eyebrow">EXECUTION FLOW</span>
-            <h4>任务执行路径</h4>
+            <h4>{{ $t('software.task.executionFlow') }}</h4>
           </div>
-          <span class="section-heading__hint">按阶段展示当前安装流程</span>
+          <span class="section-heading__hint">{{ $t('software.task.executionFlowHint') }}</span>
         </div>
         <div class="stage-list">
           <div
@@ -367,17 +372,17 @@ onBeforeUnmount(() => {
         type="error"
         :closable="false"
         show-icon
-        :title="task.errorMessage || task.message || '任务执行失败'"
+        :title="task.errorMessage || task.message || $t('software.task.executionFailed')"
       >
         <template #default>
           <div class="failure__row">
-            错误码：{{ task.errorCode || fallbackErrorCode }}
+            {{ $t('software.task.summary.errorCode') }}: {{ task.errorCode || fallbackErrorCode }}
           </div>
           <div v-if="task.rollbackStatus && task.rollbackStatus !== 'not_required'" class="failure__row">
-            回滚状态：{{ task.rollbackStatus }}
+            {{ $t('software.task.summary.rollbackStatus') }}: {{ task.rollbackStatus }}
           </div>
           <div v-if="task.recoveryStatus" class="failure__row">
-            重启核验：{{ task.recoveryStatus }} · {{ task.recoveryMessage }}
+            {{ $t('software.task.restartVerification') }}: {{ task.recoveryStatus }} · {{ task.recoveryMessage }}
           </div>
         </template>
       </el-alert>
@@ -388,11 +393,11 @@ onBeforeUnmount(() => {
             <div class="log-toolbar__title">
               <span class="log-live-dot"></span>
               <div class="log-toolbar__copy">
-                <strong>实时任务日志</strong>
-                <span>安装脚本输出会持续追加到这里，便于定位当前步骤。</span>
+                <strong>{{ $t('software.task.realtimeLogs') }}</strong>
+                <span>{{ $t('software.task.scriptOutputHint') }}</span>
               </div>
             </div>
-            <el-checkbox v-model="autoScroll">自动滚动</el-checkbox>
+            <el-checkbox v-model="autoScroll">{{ $t('software.task.autoScroll') }}</el-checkbox>
           </div>
           <pre ref="logElement" class="task-log">{{ logs }}</pre>
         </section>
@@ -401,13 +406,13 @@ onBeforeUnmount(() => {
           <div class="section-heading section-heading--aside">
             <div>
               <span class="section-heading__eyebrow">DIAGNOSTICS</span>
-              <h4>诊断摘要</h4>
+              <h4>{{ $t('software.task.diagnostics') }}</h4>
             </div>
           </div>
           <div class="summary-panel__card">
-            <small>当前结果</small>
+            <small>{{ $t('software.task.currentResult') }}</small>
             <strong>{{ statusText }}</strong>
-            <p>{{ task.errorMessage || task.message || '暂无附加说明' }}</p>
+            <p>{{ task.errorMessage || task.message || $t('software.task.noAdditionalNotes') }}</p>
           </div>
           <div class="summary-panel__list">
             <div v-for="item in summaryItems" :key="item.label" class="summary-panel__item">
@@ -423,25 +428,25 @@ onBeforeUnmount(() => {
     <template #footer>
       <div class="task-actions">
         <div class="task-actions__group task-actions__group--tools">
-          <el-button :loading="downloading" @click="downloadLog">下载完整日志</el-button>
-          <el-button v-if="failed" @click="copyDiagnostics">复制诊断信息</el-button>
+          <el-button :loading="downloading" @click="downloadLog">{{ $t('software.task.downloadFullLog') }}</el-button>
+          <el-button v-if="failed" @click="copyDiagnostics">{{ $t('software.task.copyDiagnostics') }}</el-button>
         </div>
         <div class="task-actions__group task-actions__group--main">
-          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">取消任务</el-button>
+          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">{{ $t('software.task.cancelTask') }}</el-button>
           <el-button
             v-if="failed && !isUninstall && !isServiceTask && !isConfigurationTask"
             type="primary"
             class="task-actions__retry"
             @click="emit('retry', taskId)"
           >
-            重新填写并重试
+            {{ $t('software.task.retryWithNewInput') }}
           </el-button>
           <el-button
             :type="failed && !cancelable ? 'info' : 'primary'"
             :plain="failed && !cancelable"
             @click="visible = false"
           >
-            {{ terminal ? '完成' : '后台运行' }}
+            {{ terminal ? $t('common.done') : $t('software.task.runInBackground') }}
           </el-button>
         </div>
       </div>

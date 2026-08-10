@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
 import { Api } from '@/api/Api'
+import i18n from '@/lang'
 
 interface VersionInfo {
   version: string
@@ -55,19 +56,24 @@ const applying = ref(false)
 const errorMessage = ref('')
 let reconnectTimer: number | undefined
 
-const stateNames: Record<string, string> = {
-  idle: '未执行',
-  checking: '检查更新',
-  downloading: '下载并校验',
-  preflight: '数据库迁移预检',
-  switching: '切换版本',
-  health_checking: '健康检查',
-  succeeded: '更新成功',
-  failed: '更新失败',
-  rolled_back: '已自动回滚',
-  rollback_failed: '回滚失败',
-  recovery_required: '需要恢复'
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
 }
+
+const stateNames = computed<Record<string, string>>(() => ({
+  idle: t('setting.update.states.idle', 'Not executed'),
+  checking: t('setting.update.states.checking', 'Checking updates'),
+  downloading: t('setting.update.states.downloading', 'Downloading and verifying'),
+  preflight: t('setting.update.states.preflight', 'Database migration precheck'),
+  switching: t('setting.update.states.switching', 'Switching version'),
+  health_checking: t('setting.update.states.healthChecking', 'Health checking'),
+  succeeded: t('setting.update.states.succeeded', 'Update succeeded'),
+  failed: t('setting.update.states.failed', 'Update failed'),
+  rolled_back: t('setting.update.states.rolledBack', 'Automatically rolled back'),
+  rollback_failed: t('setting.update.states.rollbackFailed', 'Rollback failed'),
+  recovery_required: t('setting.update.states.recoveryRequired', 'Recovery required')
+}))
 
 const activeStates = ['checking', 'downloading', 'preflight', 'switching', 'health_checking']
 const isRunning = computed(() => activeStates.includes(status.value.state) || applying.value)
@@ -90,8 +96,8 @@ const formatBytes = (value?: number) => {
 
 const updateSource = computed(() => {
   if (check.value?.source === 'center') return 'OneinStack Center'
-  if (check.value?.source === 'manifest') return '独立签名清单'
-  return '尚未检查'
+  if (check.value?.source === 'manifest') return t('setting.update.standaloneSignedManifest', 'Standalone signed manifest')
+  return t('setting.update.notChecked', 'Not checked')
 })
 
 const maskedInstanceID = computed(() => {
@@ -124,14 +130,14 @@ const checkForUpdate = async () => {
     if (data.updateAvailable) {
       ElMessage.success(
         data.source === 'center'
-          ? `Center 已为本机分配新版本 ${data.latestVersion}`
-          : `发现新版本 ${data.latestVersion}`
+          ? t('setting.update.centerAssignedVersion', 'Center assigned version {version} to this instance', { version: data.latestVersion })
+          : t('setting.update.newVersionFound', 'New version {version} found', { version: data.latestVersion })
       )
     } else {
-      ElMessage.success('当前已经是最新版本')
+      ElMessage.success(t('setting.update.alreadyLatest', 'Already on the latest version'))
     }
   } catch (error) {
-    const message = getErrorMessage(error, '检查更新失败')
+    const message = getErrorMessage(error, t('setting.update.checkFailed', 'Failed to check updates'))
     errorMessage.value = message
     ElMessage.error(message)
   } finally {
@@ -143,25 +149,25 @@ const applyUpdate = async () => {
   if (!check.value?.updateAvailable || applying.value) return
   try {
     const { value } = await ElMessageBox.prompt(
-      `将更新到 ${check.value.latestVersion}。更新期间面板会短暂离线，失败时自动恢复旧版本。请输入 UPDATE PANEL 继续。`,
-      '更新面板',
+      t('setting.update.applyConfirmMessage', 'The panel will update to {version}. It will be briefly offline during update and automatically restore the old version if it fails. Enter UPDATE PANEL to continue.', { version: check.value.latestVersion }),
+      t('setting.update.updatePanel', 'Update panel'),
       {
         type: 'warning',
         inputPlaceholder: 'UPDATE PANEL',
-        inputValidator: (input) => input === 'UPDATE PANEL' || '确认文本不正确',
-        confirmButtonText: '开始更新',
-        cancelButtonText: '取消'
+        inputValidator: (input) => input === 'UPDATE PANEL' || t('setting.update.confirmTextIncorrect', 'Confirmation text is incorrect'),
+        confirmButtonText: t('setting.update.startUpdate', 'Start update'),
+        cancelButtonText: t('common.cancel', 'Cancel')
       }
     )
     applying.value = true
     errorMessage.value = ''
     await Api.applyPanelUpdate({ confirm: value })
-    ElMessage.success('更新任务已启动，正在等待面板重新上线')
+    ElMessage.success(t('setting.update.taskStarted', 'Update task started. Waiting for the panel to come back online.'))
     beginReconnectPolling()
   } catch (error) {
     applying.value = false
     if (error !== 'cancel' && error !== 'close') {
-      const message = getErrorMessage(error, '启动更新失败')
+      const message = getErrorMessage(error, t('setting.update.startFailed', 'Failed to start update'))
       errorMessage.value = message
       ElMessage.error(message)
       await loadBaseState().catch(() => undefined)
@@ -180,15 +186,15 @@ const beginReconnectPolling = () => {
           applying.value = false
           ElMessage.success(
             status.value.state === 'succeeded'
-              ? '面板更新完成'
-              : status.value.message || '面板更新已结束'
+              ? t('setting.update.completed', 'Panel update completed')
+              : status.value.message || t('setting.update.ended', 'Panel update ended')
           )
           await loadBaseState()
           return
         }
       }
     } catch {
-      // 主服务切换期间连接失败是预期状态，保持静默并继续重连。
+      // Connection failures are expected while the main service switches; keep reconnecting quietly.
     }
     reconnectTimer = window.setTimeout(poll, 2500)
   }
@@ -202,7 +208,7 @@ onMounted(() => {
       beginReconnectPolling()
     }
   }).catch((error) => {
-    errorMessage.value = getErrorMessage(error, '加载更新状态失败')
+    errorMessage.value = getErrorMessage(error, t('setting.update.loadStatusFailed', 'Failed to load update status'))
   })
 })
 
@@ -215,42 +221,42 @@ onBeforeUnmount(() => {
   <div class="update-card">
     <div class="update-card__header">
       <div>
-        <div class="update-card__title">面板更新</div>
-        <div class="update-card__subtitle">Center 版本策略、签名校验、迁移预检、健康确认和失败自动回滚</div>
+        <div class="update-card__title">{{ $t('setting.update.title') }}</div>
+        <div class="update-card__subtitle">{{ $t('setting.update.description') }}</div>
       </div>
       <el-tag :type="statusType">{{ stateNames[status.state] || status.state }}</el-tag>
     </div>
 
     <div class="version-grid">
       <div class="version-item">
-        <span>当前版本</span>
+        <span>{{ $t('setting.update.currentVersion') }}</span>
         <strong>{{ version?.version || '—' }}</strong>
       </div>
       <div class="version-item">
-        <span>平台</span>
+        <span>{{ $t('setting.update.platform') }}</span>
         <strong>{{ version ? `${version.os}/${version.arch}` : '—' }}</strong>
       </div>
       <div class="version-item">
-        <span>最新版本</span>
-        <strong>{{ check?.latestVersion || status.targetVersion || '尚未检查' }}</strong>
+        <span>{{ $t('setting.update.latestVersion') }}</span>
+        <strong>{{ check?.latestVersion || status.targetVersion || $t('setting.update.notChecked') }}</strong>
       </div>
       <div class="version-item">
-        <span>更新包</span>
+        <span>{{ $t('setting.update.updatePackage') }}</span>
         <strong>{{ formatBytes(check?.artifactSize) }}</strong>
       </div>
       <div class="version-item">
-        <span>版本来源</span>
+        <span>{{ $t('setting.update.versionSource') }}</span>
         <strong>{{ updateSource }}</strong>
-        <small v-if="maskedInstanceID">实例 {{ maskedInstanceID }}</small>
+        <small v-if="maskedInstanceID">{{ $t('setting.update.instance', { id: maskedInstanceID }) }}</small>
       </div>
       <div class="version-item trust-item">
-        <span>签名信任</span>
-        <strong>{{ check?.signingKeyId || '尚未检查' }}</strong>
+        <span>{{ $t('setting.update.signatureTrust') }}</span>
+        <strong>{{ check?.signingKeyId || $t('setting.update.notChecked') }}</strong>
         <small v-if="check?.trustSource === 'center'">
-          Center 状态 #{{ check.trustRevision }} · 信任 {{ check.trustedKeyCount }} 把密钥
-          <template v-if="check.revokedKeyCount"> · 已撤销 {{ check.revokedKeyCount }}</template>
+          {{ $t('setting.update.centerTrustStatus', { revision: check.trustRevision, count: check.trustedKeyCount }) }}
+          <template v-if="check.revokedKeyCount"> · {{ $t('setting.update.revokedCount', { count: check.revokedKeyCount }) }}</template>
         </small>
-        <small v-else-if="check?.trustSource === 'static'">本机静态信任配置</small>
+        <small v-else-if="check?.trustSource === 'static'">{{ $t('setting.update.localStaticTrust') }}</small>
       </div>
     </div>
 
@@ -274,19 +280,19 @@ onBeforeUnmount(() => {
     />
 
     <div v-if="check?.releaseNotes" class="release-notes">
-      <span>版本说明</span>
+      <span>{{ $t('setting.update.releaseNotes') }}</span>
       <p>{{ check.releaseNotes }}</p>
     </div>
 
     <div class="update-actions">
-      <el-button :loading="loading" :disabled="isRunning" @click="checkForUpdate">检查更新</el-button>
+      <el-button :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
       <el-button
         type="primary"
         :loading="applying"
         :disabled="!check?.updateAvailable || !check?.compatible || isRunning"
         @click="applyUpdate"
       >
-        更新到 {{ check?.latestVersion || '新版本' }}
+        {{ $t('setting.update.updateTo', { version: check?.latestVersion || $t('setting.update.newVersion') }) }}
       </el-button>
     </div>
   </div>

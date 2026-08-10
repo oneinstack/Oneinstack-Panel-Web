@@ -1,17 +1,23 @@
 <script setup lang="ts">
 import { Close } from '@element-plus/icons-vue'
 import { ElMessage, FormInstance } from 'element-plus'
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import FileList from './components/file-list.vue'
 import sapp from '@/sstore/sapp'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import { Api } from '@/api/Api'
 import CustomForm from '@/components/custom-form.vue'
 import TrashList from './components/trash-list.vue'
+import i18n from '@/lang'
 
 
 export type DrawerType = 'file' | 'dir'
 export type DrawerOpenType = 'create' | 'editPER' | 'editUser'
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const perms = {
   codes: {
@@ -54,7 +60,7 @@ const conf = reactive({
       } as any
     ],
     handleAddTab: () => {
-      if (conf.tab.list.length >= 10) return ElMessage.warning('最多只能打开10个文件夹')
+      if (conf.tab.list.length >= 10) return ElMessage.warning(t('file.maxTabsWarning', 'Up to 10 folders can be opened'))
       conf.tab.list.push({
         path: ['/'],
         active: true,
@@ -76,12 +82,12 @@ const conf = reactive({
     visible: false,
     openType: 'create' as DrawerOpenType,
     type: 'file' as DrawerType,
-    title: '创建',
+    title: t('file.create', 'Create'),
     open: (openType: DrawerOpenType, type: DrawerType, row?: any) => {
       conf.drawer.openType = openType
       switch (openType) {
         case 'create':
-          conf.drawer.title = '创建'
+          conf.drawer.title = t('file.create', 'Create')
           break
         case 'editPER':
         case 'editUser':
@@ -95,7 +101,7 @@ const conf = reactive({
           conf.form.editUser.value.isDir = row.isDir
           conf.form.editUser.value.user = row.user
           conf.form.editUser.value.group = row.group
-          conf.drawer.title = openType === 'editPER' ? '编辑权限' : '修改用户和用户组'
+          conf.drawer.title = openType === 'editPER' ? t('file.editPermissions', 'Edit permissions') : t('file.changeUserGroup', 'Change user and group')
           break
       }
       conf.drawer.type = type
@@ -147,14 +153,14 @@ const conf = reactive({
         type: 'file',
         name: ''
       },
-      items: [
+      items: computed(() => [
         {
-          label: '名称',
+          label: t('common.name', 'Name'),
           type: 'input',
           prop: 'name',
-          rules: [{ required: true, message: '请输入名称', trigger: 'blur' }]
+          rules: [{ required: true, message: t('file.nameRequired', 'Enter a name'), trigger: 'blur' }]
         }
-      ]
+      ])
     },
     editPER: {
       value: {
@@ -164,22 +170,22 @@ const conf = reactive({
         perm: '',
         recursive: false
       },
-      items: [
+      items: computed(() => [
         {
-          label: '所有者',
+          label: t('file.owner', 'Owner'),
           type: 'checkbox-group',
           prop: 'owner',
           options: [
             {
-              label: '读取',
+              label: t('file.read', 'Read'),
               value: '0400'
             },
             {
-              label: '写入',
+              label: t('file.write', 'Write'),
               value: '0200'
             },
             {
-              label: '可执行',
+              label: t('file.execute', 'Execute'),
               value: '0100'
             }
           ],
@@ -188,20 +194,20 @@ const conf = reactive({
           }
         },
         {
-          label: '用户组',
+          label: t('file.group', 'Group'),
           type: 'checkbox-group',
           prop: 'group',
           options: [
             {
-              label: '读取',
+              label: t('file.read', 'Read'),
               value: '0040'
             },
             {
-              label: '写入',
+              label: t('file.write', 'Write'),
               value: '0020'
             },
             {
-              label: '可执行',
+              label: t('file.execute', 'Execute'),
               value: '0010'
             }
           ],
@@ -210,20 +216,20 @@ const conf = reactive({
           }
         },
         {
-          label: '公共',
+          label: t('file.public', 'Public'),
           type: 'checkbox-group',
           prop: 'public',
           options: [
             {
-              label: '读取',
+              label: t('file.read', 'Read'),
               value: '0004'
             },
             {
-              label: '写入',
+              label: t('file.write', 'Write'),
               value: '0002'
             },
             {
-              label: '可执行',
+              label: t('file.execute', 'Execute'),
               value: '0001'
             }
           ],
@@ -232,12 +238,12 @@ const conf = reactive({
           }
         },
         {
-          label: '权限',
+          label: t('file.permission', 'Permission'),
           type: 'input',
           prop: 'perm',
           rules: [
-            { required: true, message: '请输入权限', trigger: 'blur' },
-            { pattern: /^[0-7]{4}$/, message: '权限错误', trigger: 'blur' }
+            { required: true, message: t('file.permissionRequired', 'Enter permissions'), trigger: 'blur' },
+            { pattern: /^[0-7]{4}$/, message: t('file.permissionError', 'Invalid permissions'), trigger: 'blur' }
           ],
           change: (value: string) => {
             if (value.length !== 4) return
@@ -248,31 +254,31 @@ const conf = reactive({
         },
         {
           ifShow: (value: any) => value.isDir,
-          label: '同时修改子文件属性',
+          label: t('file.recursiveChildren', 'Also update child file attributes'),
           type: 'checkbox',
           prop: 'recursive'
         }
-      ]
+      ])
     },
     editUser: {
       value: {
         user: '',
         group: ''
       },
-      items: [
+      items: computed(() => [
         {
-          label: '用户',
+          label: t('common.user', 'User'),
           type: 'input',
           prop: 'user',
-          rules: [{ required: true, message: '请输入用户', trigger: 'blur' }]
+          rules: [{ required: true, message: t('file.userRequired', 'Enter user'), trigger: 'blur' }]
         },
         {
-          label: '用户组',
+          label: t('file.group', 'Group'),
           type: 'input',
           prop: 'group',
-          rules: [{ required: true, message: '请输入用户组', trigger: 'blur' }]
+          rules: [{ required: true, message: t('file.groupRequired', 'Enter group'), trigger: 'blur' }]
         }
-      ]
+      ])
     }
   } as any
 })
@@ -296,7 +302,7 @@ const conf = reactive({
             style="transform: rotateY(180deg); margin-right: 14px"
           />
           <span class="path-tab-text">
-            {{ item.path[item.path.length - 1] === '/' ? '根目录' : item.path[item.path.length - 1] }}
+            {{ item.path[item.path.length - 1] === '/' ? $t('file.rootDir') : item.path[item.path.length - 1] }}
           </span>
           <el-icon v-if="index > 0" class="hover-opacity" @click.stop="conf.tab.handleCloseTab(index)">
             <Close />

@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 interface BackupInfo {
   id: string
@@ -46,6 +47,11 @@ const selectedBackup = ref<BackupInfo>()
 const importFile = ref<File>()
 let reconnectTimer: number | undefined
 
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
+
 const form = reactive({
   passphrase: '',
   confirmPassphrase: '',
@@ -53,17 +59,17 @@ const form = reactive({
   includeCertificates: true
 })
 
-const stateNames: Record<string, string> = {
-  idle: '未执行恢复',
-  validating: '恢复预检',
-  stopping: '停止服务',
-  restoring: '恢复数据',
-  health_checking: '健康检查',
-  succeeded: '恢复成功',
-  failed: '恢复失败',
-  rolled_back: '已自动回滚',
-  rollback_failed: '回滚失败'
-}
+const stateNames = computed<Record<string, string>>(() => ({
+  idle: t('setting.backup.states.idle', 'No restore executed'),
+  validating: t('setting.backup.states.validating', 'Restore precheck'),
+  stopping: t('setting.backup.states.stopping', 'Stopping services'),
+  restoring: t('setting.backup.states.restoring', 'Restoring data'),
+  health_checking: t('setting.backup.states.healthChecking', 'Health checking'),
+  succeeded: t('setting.backup.states.succeeded', 'Restore succeeded'),
+  failed: t('setting.backup.states.failed', 'Restore failed'),
+  rolled_back: t('setting.backup.states.rolledBack', 'Automatically rolled back'),
+  rollback_failed: t('setting.backup.states.rollbackFailed', 'Rollback failed')
+}))
 
 const activeStates = ['validating', 'stopping', 'restoring', 'health_checking']
 const restoreRunning = computed(() => activeStates.includes(status.value.state))
@@ -74,9 +80,9 @@ const statusType = computed(() => {
   return 'info'
 })
 const dialogTitle = computed(() => {
-  if (dialogMode.value === 'import') return '导入加密备份'
-  if (dialogMode.value === 'restore') return `恢复备份 · ${selectedBackup.value?.panelVersion || '未知版本'}`
-  return '创建 Panel 备份'
+  if (dialogMode.value === 'import') return t('setting.backup.importEncryptedBackup', 'Import encrypted backup')
+  if (dialogMode.value === 'restore') return t('setting.backup.restoreBackupTitle', 'Restore backup · {version}', { version: selectedBackup.value?.panelVersion || t('setting.backup.unknownVersion', 'Unknown version') })
+  return t('setting.backup.createPanelBackup', 'Create Panel backup')
 })
 
 const apiURL = (path: string) => {
@@ -137,9 +143,9 @@ const closeDialog = () => {
 }
 
 const dialogConfirmText = computed(() => {
-  if (dialogMode.value === 'restore') return '预检并恢复'
-  if (dialogMode.value === 'import') return '校验并导入'
-  return '创建备份'
+  if (dialogMode.value === 'restore') return t('setting.backup.precheckAndRestore', 'Precheck and restore')
+  if (dialogMode.value === 'import') return t('setting.backup.verifyAndImport', 'Verify and import')
+  return t('setting.backup.createBackup', 'Create backup')
 })
 
 const selectImportFile = (event: Event) => {
@@ -150,7 +156,7 @@ const selectImportFile = (event: Event) => {
 const validatePassphrase = () => {
   const length = new TextEncoder().encode(form.passphrase).length
   if (length < 12 || length > 256) {
-    ElMessage.warning('备份密码需要包含 12–256 个字节')
+    ElMessage.warning(t('setting.backup.passphraseLengthWarning', 'Backup password must contain 12-256 bytes'))
     return false
   }
   return true
@@ -159,19 +165,19 @@ const validatePassphrase = () => {
 const parseFetchError = async (response: Response) => {
   try {
     const body = await response.json()
-    return body?.message || body?.error?.message || `请求失败（${response.status}）`
+    return body?.message || body?.error?.message || t('setting.backup.requestFailedWithStatus', 'Request failed ({status})', { status: response.status })
   } catch {
-    return `请求失败（${response.status}）`
+    return t('setting.backup.requestFailedWithStatus', 'Request failed ({status})', { status: response.status })
   }
 }
 
 const importBackup = async () => {
   if (!importFile.value) {
-    ElMessage.warning('请选择 .onebak 备份文件')
+    ElMessage.warning(t('setting.backup.selectOnebakFile', 'Select a .onebak backup file'))
     return
   }
   if (!importFile.value.name.toLowerCase().endsWith('.onebak')) {
-    ElMessage.warning('仅支持 .onebak 备份文件')
+    ElMessage.warning(t('setting.backup.onlyOnebakSupported', 'Only .onebak backup files are supported'))
     return
   }
   const payload = new FormData()
@@ -185,17 +191,17 @@ const importBackup = async () => {
   })
   if (!response.ok) throw new Error(await parseFetchError(response))
   const body = await response.json()
-  if (body?.code !== 0) throw new Error(body?.message || '导入备份失败')
+  if (body?.code !== 0) throw new Error(body?.message || t('setting.backup.importFailed', 'Failed to import backup'))
 }
 
 const submitDialog = async () => {
   if (!validatePassphrase() || submitting.value) return
   if (dialogMode.value === 'create' && form.passphrase !== form.confirmPassphrase) {
-    ElMessage.warning('两次输入的备份密码不一致')
+    ElMessage.warning(t('setting.backup.passphraseMismatch', 'The two backup passwords do not match'))
     return
   }
   if (dialogMode.value === 'restore' && form.confirmation !== 'RESTORE PANEL') {
-    ElMessage.warning('确认文本必须为 RESTORE PANEL')
+    ElMessage.warning(t('setting.backup.confirmationRequired', 'Confirmation text must be RESTORE PANEL'))
     return
   }
 
@@ -206,24 +212,24 @@ const submitDialog = async () => {
         passphrase: form.passphrase,
         includeCertificates: form.includeCertificates
       })
-      ElMessage.success('加密备份创建成功')
+      ElMessage.success(t('setting.backup.createSuccess', 'Encrypted backup created'))
     } else if (dialogMode.value === 'import') {
       await importBackup()
-      ElMessage.success('备份已导入并通过完整性校验')
+      ElMessage.success(t('setting.backup.importSuccess', 'Backup imported and integrity verified'))
     } else if (selectedBackup.value) {
       await Api.preflightPanelBackup(selectedBackup.value.id, { passphrase: form.passphrase })
       await Api.restorePanelBackup(selectedBackup.value.id, {
         passphrase: form.passphrase,
         confirm: form.confirmation
       })
-      ElMessage.success('恢复任务已启动，面板将短暂离线')
+      ElMessage.success(t('setting.backup.restoreStarted', 'Restore task started. The panel will be briefly offline.'))
       beginReconnectPolling()
     }
     dialogVisible.value = false
     resetDialog()
     if (dialogMode.value !== 'restore') await loadData(true)
   } catch (error: any) {
-    ElMessage.error(error?.message || '操作失败')
+    ElMessage.error(error?.message || t('common.operationFailed', 'Operation failed'))
   } finally {
     submitting.value = false
   }
@@ -251,19 +257,19 @@ const downloadBackup = async (backup: BackupInfo) => {
 const deleteBackup = async (backup: BackupInfo) => {
   try {
     await ElMessageBox.confirm(
-      `将永久删除 ${backup.fileName}。如果没有其他副本，删除后无法恢复。`,
-      '删除备份',
+      t('setting.backup.deleteConfirmMessage', '{fileName} will be permanently deleted. If there is no other copy, it cannot be restored.', { fileName: backup.fileName }),
+      t('setting.backup.deleteBackup', 'Delete backup'),
       {
         type: 'warning',
-        confirmButtonText: '永久删除',
-        cancelButtonText: '取消'
+        confirmButtonText: t('setting.backup.permanentlyDelete', 'Permanently delete'),
+        cancelButtonText: t('common.cancel', 'Cancel')
       }
     )
     await Api.deletePanelBackup(backup.id)
-    ElMessage.success('备份已删除')
+    ElMessage.success(t('setting.backup.deleteSuccess', 'Backup deleted'))
     await loadData(true)
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error('删除备份失败')
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(t('setting.backup.deleteFailed', 'Failed to delete backup'))
   }
 }
 
@@ -278,7 +284,7 @@ const beginReconnectPolling = () => {
         cache: 'no-store'
       })
       if (response.status === 401) {
-        ElMessage.warning('恢复后的数据库未保留当前会话，请重新登录后查看恢复结果')
+        ElMessage.warning(t('setting.backup.sessionLostAfterRestore', 'The restored database did not retain the current session. Sign in again to view the restore result.'))
         sconfig.logout(true)
         return
       }
@@ -289,8 +295,8 @@ const beginReconnectPolling = () => {
           if (!activeStates.includes(status.value.state)) {
             ElMessage.success(
               status.value.state === 'succeeded'
-                ? 'Panel 数据恢复完成'
-                : status.value.message || '恢复任务已结束'
+                ? t('setting.backup.restoreCompleted', 'Panel data restore completed')
+                : status.value.message || t('setting.backup.restoreTaskEnded', 'Restore task ended')
             )
             await loadData(true)
             return
@@ -298,7 +304,7 @@ const beginReconnectPolling = () => {
         }
       }
     } catch {
-      // 恢复期间主服务会短暂不可访问，继续静默重连。
+      // The main service can be temporarily unavailable during restore; keep reconnecting quietly.
     }
     reconnectTimer = window.setTimeout(poll, 2500)
   }
@@ -320,27 +326,27 @@ onBeforeUnmount(() => {
   <section class="backup-card" v-loading="loading">
     <div class="backup-card__header">
       <div>
-        <div class="backup-card__title">配置与数据备份</div>
+        <div class="backup-card__title">{{ $t('setting.backup.title') }}</div>
         <div class="backup-card__subtitle">
-          加密保存 Panel 配置、SQLite 数据、实例身份、更新信任状态和可选证书
+          {{ $t('setting.backup.description') }}
         </div>
       </div>
       <div class="backup-card__actions">
-        <el-tag size="small" type="warning">中风险</el-tag>
-        <el-button type="warning" plain :disabled="restoreRunning" @click="openDialog('import')">导入备份</el-button>
+        <el-tag size="small" type="warning">{{ $t('setting.backup.mediumRisk') }}</el-tag>
+        <el-button type="warning" plain :disabled="restoreRunning" @click="openDialog('import')">{{ $t('setting.backup.importBackup') }}</el-button>
         <el-button type="warning" :disabled="restoreRunning" @click="openDialog('create')">
-          创建备份
+          {{ $t('setting.backup.createBackup') }}
         </el-button>
       </div>
     </div>
 
     <div class="restore-status" :class="`is-${statusType}`">
       <div>
-        <span class="restore-status__label">最近恢复状态</span>
+        <span class="restore-status__label">{{ $t('setting.backup.latestRestoreStatus') }}</span>
         <strong>{{ stateNames[status.state] || status.state }}</strong>
         <small v-if="status.message">{{ status.message }}</small>
       </div>
-      <el-tag :type="statusType">{{ restoreRunning ? '任务执行中' : '当前无恢复任务' }}</el-tag>
+      <el-tag :type="statusType">{{ restoreRunning ? $t('setting.backup.taskRunning') : $t('setting.backup.noRestoreTask') }}</el-tag>
     </div>
 
     <div v-if="backups.length" class="backup-list">
@@ -350,28 +356,28 @@ onBeforeUnmount(() => {
           <div class="backup-item__identity">
             <div class="backup-item__name">
               {{ backup.fileName }}
-              <el-tag v-if="backup.imported" size="small" type="info">已导入</el-tag>
-              <el-tag v-if="backup.includesCertificates" size="small" type="success">含证书</el-tag>
+              <el-tag v-if="backup.imported" size="small" type="info">{{ $t('setting.backup.imported') }}</el-tag>
+              <el-tag v-if="backup.includesCertificates" size="small" type="success">{{ $t('setting.backup.includesCertificates') }}</el-tag>
             </div>
             <div class="backup-item__meta">
               Panel {{ backup.panelVersion }} · {{ formatBytes(backup.size) }} ·
-              {{ backup.fileCount }} 个文件 · {{ formatDate(backup.createdAt) }}
+              {{ $t('setting.backup.fileCount', { count: backup.fileCount }) }} · {{ formatDate(backup.createdAt) }}
             </div>
             <div class="backup-item__digest">SHA-256 {{ backup.sha256 }}</div>
           </div>
         </div>
         <div class="backup-item__actions">
-          <el-button link @click="downloadBackup(backup)">下载</el-button>
+          <el-button link @click="downloadBackup(backup)">{{ $t('common.download') }}</el-button>
           <el-button link type="primary" :disabled="restoreRunning" @click="openDialog('restore', backup)">
-            恢复
+            {{ $t('setting.backup.restore') }}
           </el-button>
           <el-button link type="danger" :disabled="restoreRunning" @click="deleteBackup(backup)">
-            删除
+            {{ $t('common.delete') }}
           </el-button>
         </div>
       </article>
     </div>
-    <el-empty v-else description="尚未创建 Panel 备份" :image-size="86" />
+    <el-empty v-else :description="$t('setting.backup.empty')" :image-size="86" />
 
     <custom-drawer
       :visible="dialogVisible"
@@ -385,52 +391,52 @@ onBeforeUnmount(() => {
     >
       <el-alert
         v-if="dialogMode === 'restore'"
-        title="恢复会替换当前配置与数据库，期间 Panel 会短暂离线；健康检查失败时将自动回滚。"
+        :title="$t('setting.backup.restoreRiskTip')"
         type="warning"
         :closable="false"
         show-icon
       />
       <el-alert
         v-else-if="dialogMode === 'create'"
-        title="中风险操作：创建备份会写入加密备份文件；请妥善保存备份密码，密码丢失后无法恢复该备份。"
+        :title="$t('setting.backup.createRiskTip')"
         type="warning"
         :closable="false"
         show-icon
       />
       <el-alert
         v-else
-        title="中风险操作：导入备份会写入备份列表，恢复前请确认来源可信且密码正确。"
+        :title="$t('setting.backup.importRiskTip')"
         type="warning"
         :closable="false"
         show-icon
       />
       <el-form class="backup-form" label-position="top">
-        <el-form-item v-if="dialogMode === 'import'" label="备份文件">
+        <el-form-item v-if="dialogMode === 'import'" :label="$t('setting.backup.backupFile')">
           <input class="file-input" type="file" accept=".onebak" @change="selectImportFile" />
         </el-form-item>
-        <el-form-item label="备份加密密码">
+        <el-form-item :label="$t('setting.backup.backupPassphrase')">
           <el-input
             v-model="form.passphrase"
             type="password"
             show-password
             autocomplete="off"
-            placeholder="12–256 个字节，密码不会写入日志"
+            :placeholder="$t('setting.backup.passphrasePlaceholder')"
           />
         </el-form-item>
-        <el-form-item v-if="dialogMode === 'create'" label="再次输入密码">
+        <el-form-item v-if="dialogMode === 'create'" :label="$t('setting.backup.confirmPassphrase')">
           <el-input
             v-model="form.confirmPassphrase"
             type="password"
             show-password
             autocomplete="off"
-            placeholder="再次输入备份密码"
+            :placeholder="$t('setting.backup.confirmPassphrasePlaceholder')"
           />
         </el-form-item>
         <el-form-item v-if="dialogMode === 'create'">
-          <el-checkbox v-model="form.includeCertificates">同时备份 Panel 证书目录</el-checkbox>
+          <el-checkbox v-model="form.includeCertificates">{{ $t('setting.backup.includeCertificateDirectory') }}</el-checkbox>
         </el-form-item>
-        <el-form-item v-if="dialogMode === 'restore'" label="操作确认">
-          <el-input v-model="form.confirmation" autocomplete="off" placeholder="输入 RESTORE PANEL" />
+        <el-form-item v-if="dialogMode === 'restore'" :label="$t('setting.backup.operationConfirm')">
+          <el-input v-model="form.confirmation" autocomplete="off" :placeholder="$t('setting.backup.operationConfirmPlaceholder')" />
         </el-form-item>
       </el-form>
     </custom-drawer>

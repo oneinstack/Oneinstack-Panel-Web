@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 interface DatabaseLibrary {
   id: number
@@ -43,6 +44,10 @@ const emit = defineEmits<{
 
 const terminalStatuses = new Set(['succeeded', 'failed', 'canceled', 'interrupted'])
 let pollTimer = 0
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 
 const state = reactive({
   activeTab: 'backups',
@@ -90,7 +95,7 @@ const createBackup = async () => {
   state.submitting = true
   try {
     await Api.createDatabaseBackup({ libraryId: props.library.id })
-    ElMessage.success('备份任务已创建')
+    ElMessage.success(t('database.backup.backupTaskCreated', 'Backup task created'))
     state.activeTab = 'tasks'
     await loadData(true)
   } finally {
@@ -102,14 +107,14 @@ const restoreBackup = async (backup: DatabaseBackup) => {
   if (!props.library) return
   try {
     const { value } = await ElMessageBox.prompt(
-      `恢复会覆盖数据库“${props.library.name}”的现有内容。系统会先自动创建安全备份。请输入数据库名确认：`,
-      '恢复数据库',
+      t('database.backup.restoreConfirmMessage', 'Restore will overwrite existing contents of database "{name}". The system creates a safety backup first. Enter the database name to confirm:', { name: props.library.name }),
+      t('database.backup.restoreDatabase', 'Restore database'),
       {
         type: 'warning',
-        confirmButtonText: '创建安全备份并恢复',
-        cancelButtonText: '取消',
+        confirmButtonText: t('database.backup.createSafetyBackupAndRestore', 'Create safety backup and restore'),
+        cancelButtonText: t('common.cancel', 'Cancel'),
         inputPlaceholder: props.library.name,
-        inputValidator: (value: string) => value === props.library?.name || '数据库名不匹配'
+        inputValidator: (value: string) => value === props.library?.name || t('database.backup.databaseNameMismatch', 'Database name does not match')
       }
     )
     await Api.restoreDatabaseBackup({
@@ -117,7 +122,7 @@ const restoreBackup = async (backup: DatabaseBackup) => {
       backupId: backup.id,
       confirmName: value
     })
-    ElMessage.success('恢复任务已创建')
+    ElMessage.success(t('database.backup.restoreTaskCreated', 'Restore task created'))
     state.activeTab = 'tasks'
     await loadData(true)
   } catch (error: any) {
@@ -130,18 +135,18 @@ const deleteBackup = async (backup: DatabaseBackup) => {
   if (!props.library) return
   try {
     const { value } = await ElMessageBox.prompt(
-      `此操作只删除备份文件，不会删除数据库。请输入数据库名“${props.library.name}”确认：`,
-      '删除备份',
+      t('database.backup.deleteConfirmMessage', 'This only deletes the backup file and does not delete the database. Enter database name "{name}" to confirm:', { name: props.library.name }),
+      t('database.backup.deleteBackup', 'Delete backup'),
       {
         type: 'warning',
-        confirmButtonText: '删除备份',
-        cancelButtonText: '取消',
+        confirmButtonText: t('database.backup.deleteBackup', 'Delete backup'),
+        cancelButtonText: t('common.cancel', 'Cancel'),
         inputPlaceholder: props.library.name,
-        inputValidator: (value: string) => value === props.library?.name || '数据库名不匹配'
+        inputValidator: (value: string) => value === props.library?.name || t('database.backup.databaseNameMismatch', 'Database name does not match')
       }
     )
     await Api.deleteDatabaseBackup(backup.id, { confirmName: value })
-    ElMessage.success('备份已删除')
+    ElMessage.success(t('database.backup.backupDeleted', 'Backup deleted'))
     await loadData(true)
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
@@ -151,7 +156,7 @@ const deleteBackup = async (backup: DatabaseBackup) => {
 
 const cancelTask = async (task: DatabaseTask) => {
   await Api.cancelDatabaseTask(task.id)
-  ElMessage.success('已提交取消请求')
+  ElMessage.success(t('database.backup.cancelSubmitted', 'Cancel request submitted'))
   await loadData(true)
 }
 
@@ -164,12 +169,12 @@ const downloadBackup = async (backup: DatabaseBackup) => {
   )
   const response = await fetch(url, { credentials: 'include', headers: { Accept: 'application/gzip' } })
   if (!response.ok) {
-    let message = `下载备份失败（HTTP ${response.status}）`
+    let message = t('database.backup.downloadFailedWithStatus', 'Failed to download backup (HTTP {status})', { status: response.status })
     try {
       const body = await response.json()
       message = body?.message || body?.error?.message || message
     } catch {
-      // 保留 HTTP 状态错误。
+      // Keep the status-based error.
     }
     throw new Error(message)
   }
@@ -195,13 +200,13 @@ const formatBytes = (value: number) => {
 const formatTime = (value: string) => value ? new Date(value).toLocaleString() : '-'
 
 const statusText = (status: string) => ({
-  queued: '排队中',
-  running: '执行中',
-  canceling: '取消中',
-  succeeded: '成功',
-  failed: '失败',
-  canceled: '已取消',
-  interrupted: '已中断'
+  queued: t('database.backup.status.queued', 'Queued'),
+  running: t('database.backup.status.running', 'Running'),
+  canceling: t('database.backup.status.canceling', 'Canceling'),
+  succeeded: t('common.success', 'Success'),
+  failed: t('common.failed', 'Failed'),
+  canceled: t('database.backup.status.canceled', 'Canceled'),
+  interrupted: t('database.backup.status.interrupted', 'Interrupted')
 }[status] || status)
 
 const statusType = (status: string) => {
@@ -226,7 +231,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
 <template>
   <custom-drawer
     :visible="modelValue"
-    :title="library ? `${library.name} · 备份与恢复` : '备份与恢复'"
+    :title="library ? $t('database.backup.titleWithName', { name: library.name }) : $t('database.backup.title')"
     size="820px"
     destroy-on-close
     :show-footer="false"
@@ -236,52 +241,52 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
       type="info"
       :closable="false"
       show-icon
-      title="恢复前会自动创建安全备份；所有备份下载前都会校验 SHA-256 完整性。"
+      :title="$t('database.backup.safetyTip')"
       style="margin-bottom: 16px"
     />
     <div class="backup-toolbar">
       <el-button type="primary" :loading="state.submitting" :disabled="hasActiveTask" @click="createBackup">
-        立即备份
+        {{ $t('database.backup.backupNow') }}
       </el-button>
-      <el-button :loading="state.loading" @click="loadData()">刷新</el-button>
-      <span v-if="hasActiveTask" class="active-hint">当前数据库有任务执行中</span>
+      <el-button :loading="state.loading" @click="loadData()">{{ $t('common.refresh') }}</el-button>
+      <span v-if="hasActiveTask" class="active-hint">{{ $t('database.backup.activeTaskHint') }}</span>
     </div>
 
     <el-tabs v-model="state.activeTab">
-      <el-tab-pane label="备份文件" name="backups">
+      <el-tab-pane :label="$t('database.backup.backupFiles')" name="backups">
         <el-table v-loading="state.loading" :data="state.backups" height="calc(100vh - 260px)">
-          <el-table-column prop="fileName" label="文件" min-width="220" show-overflow-tooltip />
-          <el-table-column label="类型" width="110">
+          <el-table-column prop="fileName" :label="$t('database.backup.file')" min-width="220" show-overflow-tooltip />
+          <el-table-column :label="$t('common.type')" width="110">
             <template #default="{ row }">
               <el-tag :type="row.source === 'pre_restore' ? 'warning' : 'success'">
-                {{ row.source === 'pre_restore' ? '恢复前安全备份' : '手动备份' }}
+                {{ row.source === 'pre_restore' ? $t('database.backup.preRestoreBackup') : $t('database.backup.manualBackup') }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="大小" width="100">
+          <el-table-column :label="$t('common.size')" width="100">
             <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
           </el-table-column>
-          <el-table-column label="创建时间" width="180">
+          <el-table-column :label="$t('database.backup.createdAt')" width="180">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column label="操作" width="190" fixed="right">
+          <el-table-column :label="$t('common.action')" width="190" fixed="right">
             <template #default="{ row }">
-              <el-button type="primary" link @click="downloadBackup(row)">下载</el-button>
-              <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">恢复</el-button>
-              <el-button type="danger" link :disabled="hasActiveTask" @click="deleteBackup(row)">删除</el-button>
+              <el-button type="primary" link @click="downloadBackup(row)">{{ $t('common.download') }}</el-button>
+              <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">{{ $t('database.backup.restore') }}</el-button>
+              <el-button type="danger" link :disabled="hasActiveTask" @click="deleteBackup(row)">{{ $t('common.delete') }}</el-button>
             </template>
           </el-table-column>
-          <template #empty>暂无备份</template>
+          <template #empty>{{ $t('database.backup.noBackups') }}</template>
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane label="任务进度" name="tasks">
+      <el-tab-pane :label="$t('database.backup.taskProgress')" name="tasks">
         <div v-loading="state.loading" class="task-list">
           <div v-for="task in state.tasks" :key="task.id" class="task-card">
             <div class="task-header">
               <div>
                 <el-tag :type="task.operation === 'restore' ? 'warning' : 'primary'">
-                  {{ task.operation === 'restore' ? '恢复' : '备份' }}
+                  {{ task.operation === 'restore' ? $t('database.backup.restore') : $t('database.backup.backup') }}
                 </el-tag>
                 <el-tag :type="statusType(task.status)" style="margin-left: 8px">
                   {{ statusText(task.status) }}
@@ -302,12 +307,12 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
                 link
                 @click="cancelTask(task)"
               >
-                取消任务
+                {{ $t('database.backup.cancelTask') }}
               </el-button>
-              <span v-if="task.safetyBackupId">已创建恢复前安全备份</span>
+              <span v-if="task.safetyBackupId">{{ $t('database.backup.safetyBackupCreated') }}</span>
             </div>
           </div>
-          <el-empty v-if="!state.tasks.length" description="暂无备份或恢复任务" />
+          <el-empty v-if="!state.tasks.length" :description="$t('database.backup.noTasks')" />
         </div>
       </el-tab-pane>
     </el-tabs>

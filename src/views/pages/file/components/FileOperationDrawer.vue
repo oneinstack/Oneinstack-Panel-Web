@@ -2,6 +2,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ArrowLeft, Refresh, Search } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
+import i18n from '@/lang'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: boolean): void }>()
@@ -10,30 +11,37 @@ const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
-
-const actionLabels: Record<string, string> = {
-  'file.create': '创建文件/目录',
-  'file.upload': '上传文件',
-  'file.download': '下载文件',
-  'file.trash': '删除到回收站',
-  'file.restore': '从回收站恢复',
-  'file.delete_permanently': '彻底删除回收站文件',
-  'file.empty_trash': '清空回收站',
-  'file.attributes': '修改权限和所有者',  
-  'file.read': '读取文件内容',
-  'file.save': '保存文件内容',
-  'file.remote_download': '远程下载到文件区',
-  'file.copy': '复制文件/目录',
-  'file.move': '移动文件/目录',
-  'file.rename': '重命名文件/目录',
-  'file.archive': '压缩文件/目录',
-  'file.preview': '预览图片',
-  'file.share.create': '创建文件外链分享',
-  'file.share.revoke': '取消文件外链分享',
-  'file.share.download': '通过外链下载文件',
-  'file.favorite.create': '收藏',
-  'file.favorite.cancel': '取消收藏'
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
+
+const actionKeys = [
+  'file.create',
+  'file.upload',
+  'file.download',
+  'file.trash',
+  'file.restore',
+  'file.delete_permanently',
+  'file.empty_trash',
+  'file.attributes',
+  'file.read',
+  'file.save',
+  'file.remote_download',
+  'file.copy',
+  'file.move',
+  'file.rename',
+  'file.archive',
+  'file.preview',
+  'file.share.create',
+  'file.share.revoke',
+  'file.share.download',
+  'file.favorite.create',
+  'file.favorite.cancel'
+]
+const actionLabels = computed(() =>
+  Object.fromEntries(actionKeys.map((key) => [key, t(`file.operations.actions.${key}`, key)]))
+)
 
 const state = reactive({
   loading: false,
@@ -106,9 +114,9 @@ const displayTime = (value: string) =>
       <div class="drawer-heading">
         <button type="button" class="drawer-back" @click="visible = false">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ t('common.back', 'Back') }}</span>
         </button>
-        <h3>文件操作记录</h3>
+        <h3>{{ t('file.operations.title', 'File operation records') }}</h3>
       </div>
     </template>
 
@@ -117,20 +125,20 @@ const displayTime = (value: string) =>
         <el-input
           v-model="state.filters.q"
           clearable
-          placeholder="搜索路径、账号或来源 IP"
+          :placeholder="t('file.operations.searchPlaceholder', 'Search path, account, or source IP')"
           @keyup.enter="applyFilters"
         >
           <template #prefix><el-icon><Search /></el-icon></template>
         </el-input>
-        <el-select v-model="state.filters.action" clearable placeholder="全部操作">
+        <el-select v-model="state.filters.action" clearable :placeholder="t('file.operations.allActions', 'All actions')">
           <el-option v-for="(label, value) in actionLabels" :key="value" :label="label" :value="value" />
         </el-select>
-        <el-select v-model="state.filters.outcome" clearable placeholder="全部结果">
-          <el-option label="成功" value="success" />
-          <el-option label="失败" value="failure" />
+        <el-select v-model="state.filters.outcome" clearable :placeholder="t('file.operations.allResults', 'All results')">
+          <el-option :label="t('common.success', 'Success')" value="success" />
+          <el-option :label="t('common.failed', 'Failed')" value="failure" />
         </el-select>
-        <el-button type="primary" @click="applyFilters">查询</el-button>
-        <el-button :icon="Refresh" @click="load(true)">刷新</el-button>
+        <el-button type="primary" @click="applyFilters">{{ t('common.query', 'Query') }}</el-button>
+        <el-button :icon="Refresh" @click="load(true)">{{ t('common.refresh', 'Refresh') }}</el-button>
       </div>
 
       <el-table
@@ -140,27 +148,27 @@ const displayTime = (value: string) =>
         height="calc(100vh - 286px)"
         class="operation-table"
       >
-        <el-table-column label="时间" min-width="158">
+        <el-table-column :label="t('common.time', 'Time')" min-width="158">
           <template #default="{ row }">{{ displayTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" min-width="170" class-name="operation-action-column">
+        <el-table-column :label="t('common.action', 'Action')" min-width="170" class-name="operation-action-column">
           <template #default="{ row }">
             <el-tag class="action-tag" effect="plain">{{ actionLabels[row.action] || row.action }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="文件路径" min-width="300" show-overflow-tooltip prop="path" />
-        <el-table-column label="操作人" min-width="96">
-          <template #default="{ row }">{{ row.username || '系统' }}</template>
+        <el-table-column :label="t('file.operations.filePath', 'File path')" min-width="300" show-overflow-tooltip prop="path" />
+        <el-table-column :label="t('file.operations.operator', 'Operator')" min-width="96">
+          <template #default="{ row }">{{ row.username || t('file.operations.system', 'System') }}</template>
         </el-table-column>
-        <el-table-column label="来源 IP" min-width="128" prop="remoteIp" />
-        <el-table-column label="结果" min-width="80">
+        <el-table-column :label="t('file.operations.sourceIp', 'Source IP')" min-width="128" prop="remoteIp" />
+        <el-table-column :label="t('file.operations.result', 'Result')" min-width="80">
           <template #default="{ row }">
             <el-tag class="result-tag" :type="row.outcome === 'success' ? 'success' : 'danger'" effect="light">
-              {{ row.outcome === 'success' ? '成功' : '失败' }}
+              {{ row.outcome === 'success' ? t('common.success', 'Success') : t('common.failed', 'Failed') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="说明" min-width="220" show-overflow-tooltip prop="message" />
+        <el-table-column :label="t('file.operations.message', 'Description')" min-width="220" show-overflow-tooltip prop="message" />
       </el-table>
 
       <div class="pagination">

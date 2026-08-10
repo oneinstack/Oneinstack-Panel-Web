@@ -11,12 +11,12 @@ const conf = reactive({
 <template>
   <login-container :loading="conf.loading" current-active="login">
     <button class="back-btn" type="button" @click="System.router.back()">
-      <span>←</span> 返回账号登录
+      <span>←</span> {{ $t('login.backToAccountLogin') }}
     </button>
     <div class="scan-heading">
-      <div class="eyebrow">MOBILE SIGN IN</div>
-      <h2>扫码登录</h2>
-      <p>使用 OneinStack App 扫描二维码，快速完成身份确认。</p>
+      <div class="eyebrow">{{ $t('login.mobileSignIn') }}</div>
+      <h2>{{ $t('login.scanLogin') }}</h2>
+      <p>{{ $t('login.scanDescription') }}</p>
     </div>
     <div class="code-box">
       <div class="code">
@@ -27,10 +27,10 @@ const conf = reactive({
       </div>
       <div class="code-box-title">
         <i></i>
-        <span>等待 App 扫描</span>
+        <span>{{ $t('login.waitingAppScan') }}</span>
       </div>
     </div>
-    <div class="scan-note">二维码仅用于一次登录，验证完成后会自动失效。</div>
+    <div class="scan-note">{{ $t('login.scanNote') }}</div>
   </login-container>
 </template>
 

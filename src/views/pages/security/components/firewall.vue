@@ -8,6 +8,7 @@ import softwareTaskStore from '@/sstore/softwareTask'
 import InstallTaskDrawer from '../../software/components/InstallTaskDrawer.vue'
 import Addfirewall from './addfirewall.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 interface FirewallStatus {
   install: boolean
@@ -49,6 +50,11 @@ const defaultStatus = (): FirewallStatus => ({
   managedRuleCount: 0
 })
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const status = ref<FirewallStatus>(defaultStatus())
 const tableData = ref<FirewallRule[]>([])
 const statusLoading = ref(false)
@@ -74,16 +80,16 @@ const backendNames: Record<string, string> = {
   ufw: 'UFW',
   firewalld: 'firewalld',
   iptables: 'iptables',
-  none: '未检测到'
+  none: t('security.backendNotDetected', 'Not detected')
 }
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('firewalld'))
 const installButtonText = computed(() =>
   activeInstallTask.value
-    ? '查看任务进度'
+    ? t('security.viewTaskProgress', 'View task progress')
     : status.value.repairRequired
-    ? '修复 firewalld'
-    : '安装 firewalld'
+    ? t('security.repairFirewalld', 'Repair firewalld')
+    : t('security.installFirewalld', 'Install firewalld')
 )
 
 const getFirewallInfo = async () => {
@@ -123,7 +129,7 @@ const handleFirewallChange = async (value: string | number | boolean) => {
   firewallChanging.value = true
   try {
     await submitOperation('firewall.toggle', { enabled })
-    ElMessage.success(enabled ? '防火墙已启用' : '防火墙已关闭')
+    ElMessage.success(enabled ? t('security.firewallEnabled', 'Firewall enabled') : t('security.firewallDisabled', 'Firewall disabled'))
     await Promise.all([getFirewallInfo(), getData()])
   } catch (error) {
     status.value.enabled = previous
@@ -141,7 +147,7 @@ const handlePingChange = async (value: string | number | boolean) => {
   pingChanging.value = true
   try {
     await submitOperation('firewall.rule_change', { action: 'set_ping', blocked })
-    ElMessage.success(blocked ? '已禁止外部 Ping' : '已允许外部 Ping')
+    ElMessage.success(blocked ? t('security.pingBlocked', 'External Ping blocked') : t('security.pingAllowed', 'External Ping allowed'))
     await getFirewallInfo()
   } catch (error) {
     status.value.pingBlocked = previous
@@ -169,7 +175,7 @@ const handleInstallFirewall = async () => {
     softwareTaskStore.acceptCreated(data, { key: 'firewalld', version: '1.0.0' })
     installTaskId.value = data.taskId
     installTaskVisible.value = true
-    ElMessage.success(status.value.repairRequired ? 'firewalld 修复任务已创建' : 'firewalld 安装任务已创建')
+    ElMessage.success(status.value.repairRequired ? t('security.repairTaskCreated', 'firewalld repair task created') : t('security.installTaskCreated', 'firewalld install task created'))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
     return
@@ -193,12 +199,12 @@ const handleSet = (row: FirewallRule) => {
 
 const handleDelete = async (row: FirewallRule) => {
   if (row.protected) {
-    ElMessage.warning('系统保护规则不能删除')
+    ElMessage.warning(t('security.protectedRuleDeleteDenied', 'System protected rules cannot be deleted'))
     return
   }
   try {
     await submitOperation('firewall.rule_change', { action: 'delete', id: row.id })
-    ElMessage.success('规则已删除')
+    ElMessage.success(t('security.ruleDeleted', 'Rule deleted'))
     await Promise.all([getData(), getFirewallInfo()])
   } catch (error) {
     if (!isOperationCancelled(error)) {
@@ -254,7 +260,7 @@ watch(
     <div class="status-card" v-loading="statusLoading">
       <div class="status-switches">
         <div class="switch-item">
-          <span>防火墙</span>
+          <span>{{ t('security.firewall', 'Firewall') }}</span>
           <el-switch
             v-model="status.enabled"
             :loading="firewallChanging"
@@ -264,7 +270,7 @@ watch(
           />
         </div>
         <div class="switch-item">
-          <span>禁止 Ping</span>
+          <span>{{ t('security.blockPing', 'Block Ping') }}</span>
           <el-switch
             v-model="status.pingBlocked"
             :loading="pingChanging"
@@ -278,13 +284,12 @@ watch(
           {{ backendNames[status.backend] || status.backend }}
         </el-tag>
         <el-tag :type="status.persistent ? 'success' : 'warning'">
-          {{ status.persistent ? '规则持久化' : '未持久化' }}
+          {{ status.persistent ? t('security.rulesPersistent', 'Rules persistent') : t('security.notPersistent', 'Not persistent') }}
         </el-tag>
         <el-tag :type="status.panelPortProtected ? 'success' : 'warning'">
-          面板端口 {{ status.panelPort }}
-          {{ status.panelPortProtected ? '已保护' : '待保护' }}
+          {{ status.panelPortProtected ? t('security.panelPortProtected', 'Panel port {port} protected', { port: status.panelPort }) : t('security.panelPortUnprotected', 'Panel port {port} pending protection', { port: status.panelPort }) }}
         </el-tag>
-        <span class="rule-count">面板管理规则 {{ status.managedRuleCount }} 条</span>
+        <span class="rule-count">{{ t('security.managedRuleCount', '{count} panel-managed rules', { count: status.managedRuleCount }) }}</span>
       </div>
     </div>
 
@@ -292,13 +297,13 @@ watch(
       <div class="firewall-install-card__mark">FW</div>
       <div class="firewall-install-card__copy">
         <strong>
-          {{ status.repairRequired ? 'firewalld 需要修复' : '未检测到受支持的防火墙' }}
+          {{ status.repairRequired ? t('security.firewalldRepairRequired', 'firewalld repair required') : t('security.unsupportedFirewall', 'No supported firewall detected') }}
         </strong>
         <span>
           {{
             status.repairRequired
-              ? '检测到系统协议数据库或离线配置不完整。修复过程可实时查看，完成后不会自动开启。'
-              : 'OneinStack Panel 默认使用 firewalld。安装过程可实时查看，安装后不会自动开启。'
+              ? t('security.firewalldRepairDescription', 'The system protocol database or offline configuration is incomplete. Repair progress can be viewed in real time and will not enable the firewall automatically.')
+              : t('security.firewalldInstallDescription', 'OneinStack Panel uses firewalld by default. Installation progress can be viewed in real time and will not enable the firewall automatically.')
           }}
         </span>
       </div>
@@ -323,21 +328,21 @@ watch(
     <div class="tool-bar">
       <el-space class="btn-group">
         <el-button type="primary" :disabled="!status.install || !status.enabled || !status.persistent" @click="handleAdd">
-          添加规则
+          {{ t('security.addRule', 'Add rule') }}
         </el-button>
         <el-button-group>
           <el-button :type="filterDirection === '' ? 'primary' : 'default'" @click="handleDirection('')">
-            所有方向
+            {{ t('security.allDirections', 'All directions') }}
           </el-button>
           <el-button :type="filterDirection === 'in' ? 'primary' : 'default'" @click="handleDirection('in')">
-            入站
+            {{ t('security.inbound', 'Inbound') }}
           </el-button>
           <el-button :type="filterDirection === 'out' ? 'primary' : 'default'" @click="handleDirection('out')">
-            出站
+            {{ t('security.outbound', 'Outbound') }}
           </el-button>
         </el-button-group>
       </el-space>
-      <search-input v-model="searchValue" placeholder="按备注搜索" @search="getData" />
+      <search-input v-model="searchValue" :placeholder="t('security.searchRemark', 'Search remarks')" @search="getData" />
     </div>
 
     <div class="box2">
@@ -346,42 +351,42 @@ watch(
         :data="tableData"
         border
         row-key="id"
-        empty-text="暂无规则"
+        :empty-text="t('security.noRules', 'No rules')"
         :header-cell-style="{ 'text-align': 'center' }"
       >
-        <el-table-column label="方向" width="90" align="center">
-          <template #default="{ row }">{{ row.direction === 'in' ? '入站' : '出站' }}</template>
+        <el-table-column :label="t('security.direction', 'Direction')" width="90" align="center">
+          <template #default="{ row }">{{ row.direction === 'in' ? t('security.inbound', 'Inbound') : t('security.outbound', 'Outbound') }}</template>
         </el-table-column>
-        <el-table-column label="协议" width="90" align="center">
+        <el-table-column :label="t('security.protocol', 'Protocol')" width="90" align="center">
           <template #default="{ row }">{{ row.protocol.toUpperCase() }}</template>
         </el-table-column>
-        <el-table-column label="策略" width="100" align="center">
+        <el-table-column :label="t('security.strategy', 'Policy')" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.strategy === 'allow' ? 'success' : 'danger'">
-              {{ row.strategy === 'allow' ? '放行' : '拒绝' }}
+              {{ row.strategy === 'allow' ? t('security.allow', 'Allow') : t('security.reject', 'Reject') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="ports" label="端口" min-width="120">
-          <template #default="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || '全部') }}</template>
+        <el-table-column prop="ports" :label="t('security.ports', 'Ports')" min-width="120">
+          <template #default="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || t('security.allPorts', 'All')) }}</template>
         </el-table-column>
-        <el-table-column prop="ips" label="来源/目标" min-width="180">
-          <template #default="{ row }">{{ row.ips === '0.0.0.0/0' ? '全部 IPv4' : row.ips }}</template>
+        <el-table-column prop="ips" :label="t('security.sourceTarget', 'Source/Target')" min-width="180">
+          <template #default="{ row }">{{ row.ips === '0.0.0.0/0' ? t('security.allIpv4', 'All IPv4') : row.ips }}</template>
         </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="180">
+        <el-table-column prop="remark" :label="t('security.remark', 'Remark')" min-width="180">
           <template #default="{ row }">
             <span>{{ row.remark || '—' }}</span>
-            <el-tag v-if="row.protected" class="protected-tag" size="small" type="warning">系统保护</el-tag>
+            <el-tag v-if="row.protected" class="protected-tag" size="small" type="warning">{{ t('security.systemProtected', 'System protected') }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="backend" label="后端" width="100" align="center" />
-        <el-table-column label="操作" width="130" fixed="right">
+        <el-table-column prop="backend" :label="t('security.backend', 'Backend')" width="100" align="center" />
+        <el-table-column :label="t('common.action', 'Action')" width="130" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" :disabled="row.protected || !status.enabled" @click="handleSet(row)">
-              编辑
+              {{ t('common.edit', 'Edit') }}
             </el-button>
             <el-button link type="danger" size="small" :disabled="row.protected || !status.enabled" @click="handleDelete(row)">
-              删除
+              {{ t('common.delete', 'Delete') }}
             </el-button>
           </template>
         </el-table-column>

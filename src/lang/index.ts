@@ -2,36 +2,53 @@ import { EKey } from '@/enum/Enum'
 import { createI18n } from 'vue-i18n'
 
 const i18n = createI18n({
-  locale: 'es-CH',
+  locale: 'zh-CN',
   messages: {}
 })
 
-export const langobj: any = {
-  'en-us': 'US', //英语
-  'hi-IN': 'IN', //印地语
-  'th-TH': 'TH', //泰语
-  'id-ID': 'IDN', //印度利西亚语
-  'pt-PT': 'PT', //葡萄牙语
-  'es-ES': 'ES' ,//西班牙语
-  'es-CH': 'CH' //中文
+const supportedLocales = ['zh-CN', 'en-US']
+const defaultLocale = 'zh-CN'
+const languageModules = import.meta.glob('./modules/**/*.ts', { eager: true })
+
+const localeMessages: Record<string, any> = {}
+
+Object.entries(languageModules).forEach(([path, module]) => {
+  const match = path.match(/\/modules\/([^/]+)\/([^/]+)\.ts$/)
+  if (!match) return
+  const [, moduleLocale, moduleName] = match
+  if (!localeMessages[moduleLocale]) localeMessages[moduleLocale] = {}
+  const value = (module as any).default
+  if (moduleName === 'index') {
+    Object.assign(localeMessages[moduleLocale], value)
+    return
+  }
+  localeMessages[moduleLocale][moduleName] = value
+})
+
+const getModuleMessages = (lang: string) => {
+  return localeMessages[lang] || {}
+}
+
+const normalizeLocale = (lang?: string) => {
+  if (lang && supportedLocales.includes(lang)) return lang
+  return defaultLocale
 }
 
 //@ts-ignore
-i18n.setLang = async (lang: string = Cookie.get(EKey.language) || 'es-CH') => {
-  const modules = import.meta.glob('@/lang/**/*.ts')
-  const module: any = await modules[`/src/lang/${lang}.ts`]()
-  i18n.global.setLocaleMessage(lang, module.default)
-  i18n.global.locale = lang
+i18n.setLang = async (lang: string = Cookie.get(EKey.language) || defaultLocale) => {
+  const locale = normalizeLocale(lang)
+  i18n.global.setLocaleMessage(locale, getModuleMessages(locale))
+  i18n.global.locale = locale
   //@ts-ignore
-  i18n.locale = lang
-  Cookie.set(EKey.language, lang)
+  i18n.locale = locale
+  Cookie.set(EKey.language, locale)
 }
 
 //@ts-ignore
 i18n.t = i18n.global.t
 
 //@ts-ignore
-i18n.locale = 'es-CH'
+i18n.locale = defaultLocale
 
 export default i18n as any as {
   [key: string]: any

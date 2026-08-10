@@ -4,6 +4,7 @@ import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import { formatBytes } from '@/utils/fileSize'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -20,6 +21,10 @@ const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const state = reactive({
   loading: false,
@@ -85,13 +90,13 @@ const isTextPreviewable = (detail: any) => {
   return false
 }
 
-const isEditLimitMessage = (message: string) => /过大|超限|无法在线编辑|too large|max/i.test(message)
+const isEditLimitMessage = (message: string) => /\u8fc7\u5927|\u8d85\u9650|\u65e0\u6cd5\u5728\u7ebf\u7f16\u8f91|too large|max/i.test(message)
 
 const resolveReadErrorMessage = (error: any) => {
   const message = String(error?.message || '').trim()
-  if (isEditLimitMessage(message)) return message || '当前文件超过在线编辑限制，无法直接在线编辑。'
-  if (/binary|二进制|文本|text|utf-8|编码/i.test(message)) return message || '当前文件不是可在线编辑的文本文件。'
-  return message || '读取文件失败'
+  if (isEditLimitMessage(message)) return message || t('file.editor.editLimitMessage', 'The current file exceeds the online edit limit and cannot be edited online.')
+  if (/binary|\u4e8c\u8fdb\u5236|\u6587\u672c|text|utf-8|\u7f16\u7801/i.test(message)) return message || t('file.editor.nonTextMessage', 'The current file is not an editable text file.')
+  return message || t('file.editor.readFailed', 'Failed to read file')
 }
 
 const resetEditor = () => {
@@ -106,7 +111,11 @@ const applyFileDetail = async (data: any) => {
   state.content = data?.content ?? ''
   state.original = state.content
   if (!isTextPreviewable(data)) {
-    state.readOnlyReason = `当前文件类型为 ${data?.mimeType || data?.extension || '未知类型'}，不支持在线文本预览或编辑。`
+    state.readOnlyReason = t(
+      'file.editor.unsupportedType',
+      'The current file type is {type}, which cannot be previewed or edited as online text.',
+      { type: data?.mimeType || data?.extension || t('file.editor.unknownType', 'unknown type') }
+    )
   }
   await nextTick()
   if (!state.readOnlyReason) editorRef.value?.focus()
@@ -151,9 +160,9 @@ const save = async () => {
   if (!dirty.value || !canEdit.value) return
   try {
     await ElMessageBox.confirm(
-      `确定保存 ${props.path}？系统配置文件保存错误可能影响服务启动。`,
-      '确认保存文件',
-      { type: 'warning', confirmButtonText: '保存', cancelButtonText: '取消' }
+      t('file.editor.confirmSaveMessage', 'Save {path}? Saving system configuration files incorrectly may affect service startup.', { path: props.path }),
+      t('file.editor.confirmSaveTitle', 'Confirm file save'),
+      { type: 'warning', confirmButtonText: t('common.save', 'Save'), cancelButtonText: t('common.cancel', 'Cancel') }
     )
   } catch {
     return
@@ -167,10 +176,10 @@ const save = async () => {
     })
     state.original = state.content
     if (state.detail) state.detail.revision = data?.revision
-    ElMessage.success('文件已保存')
+    ElMessage.success(t('file.editor.saved', 'File saved'))
     emit('saved')
   } catch (error: any) {
-    const message = String(error?.message || '文件保存失败')
+    const message = String(error?.message || t('file.editor.saveFailed', 'Failed to save file'))
     if (isEditLimitMessage(message)) {
       state.readOnlyReason = message
       state.original = state.content
@@ -185,10 +194,10 @@ const save = async () => {
 
 const confirmDiscard = async () => {
   if (dirty.value) {
-    await ElMessageBox.confirm('当前文件有未保存的修改，确定关闭吗？', '放弃修改', {
+    await ElMessageBox.confirm(t('file.editor.discardMessage', 'The current file has unsaved changes. Close anyway?'), t('file.editor.discardTitle', 'Discard changes'), {
       type: 'warning',
-      confirmButtonText: '放弃修改',
-      cancelButtonText: '继续编辑'
+      confirmButtonText: t('file.editor.discardConfirm', 'Discard changes'),
+      cancelButtonText: t('file.editor.continueEdit', 'Continue editing')
     })
   }
 }
@@ -225,12 +234,12 @@ const beforeClose = async (done: () => void) => {
       <div class="editor-heading">
         <button type="button" class="editor-back" @click="close">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ t('common.back', 'Back') }}</span>
         </button>
         <div class="heading-main">
           <div class="heading-title">
-            <h3>{{ state.detail?.name || '文件编辑器' }}</h3>
-            <el-tag v-if="dirty" type="warning" effect="plain">未保存</el-tag>
+            <h3>{{ state.detail?.name || t('file.editor.title', 'File editor') }}</h3>
+            <el-tag v-if="dirty" type="warning" effect="plain">{{ t('file.editor.unsaved', 'Unsaved') }}</el-tag>
           </div>
           <p>{{ path }}</p>
         </div>
@@ -239,12 +248,12 @@ const beforeClose = async (done: () => void) => {
 
     <div v-loading="state.loading" class="editor-shell">
       <div class="file-meta">
-        <span>大小 {{ formatBytes(state.detail?.size || 0) }}</span>
-        <span>权限 {{ state.detail?.mode || '-' }}</span>
-        <span>所有者 {{ state.detail?.user || '-' }} : {{ state.detail?.group || '-' }}</span>
+        <span>{{ t('file.editor.size', 'Size {size}', { size: formatBytes(state.detail?.size || 0) }) }}</span>
+        <span>{{ t('file.editor.permission', 'Permission {permission}', { permission: state.detail?.mode || '-' }) }}</span>
+        <span>{{ t('file.editor.owner', 'Owner {owner} : {group}', { owner: state.detail?.user || '-', group: state.detail?.group || '-' }) }}</span>
         <span>{{ state.detail?.mimeType || 'text/plain' }}</span>
         <span v-if="state.detail?.extension">{{ state.detail.extension }}</span>
-        <el-button :icon="Refresh" link @click="load">重新读取</el-button>
+        <el-button :icon="Refresh" link @click="load">{{ t('file.editor.reload', 'Reload') }}</el-button>
       </div>
       <el-alert
         v-if="state.loadError"
@@ -267,14 +276,14 @@ const beforeClose = async (done: () => void) => {
         :readonly="!canEdit"
         spellcheck="false"
         autocomplete="off"
-        aria-label="文件内容"
+        :aria-label="t('file.editor.contentAria', 'File content')"
       />
       <div class="editor-footer">
-        <span>在线编辑上限由服务器配置控制，默认 10MB。</span>
+        <span>{{ t('file.editor.editLimitTip', 'The online edit limit is controlled by the server configuration. Default: 10 MB.') }}</span>
         <div>
-          <el-button @click="close">关闭</el-button>
+          <el-button @click="close">{{ t('common.close', 'Close') }}</el-button>
           <el-button type="primary" :icon="Check" :loading="state.saving" :disabled="!dirty || !canEdit" @click="save">
-            保存文件
+            {{ t('file.editor.saveFile', 'Save file') }}
           </el-button>
         </div>
       </div>

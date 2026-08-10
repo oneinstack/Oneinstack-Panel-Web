@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { OperationPreview } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 const props = defineProps<{
   preview: OperationPreview
@@ -13,20 +14,25 @@ const riskType = computed(() => {
   return 'info'
 })
 
-const impactLabels: Array<[keyof NonNullable<OperationPreview['impact']>, string]> = [
-  ['writeFiles', '会写入配置文件'],
-  ['modifyDatabase', '会修改面板记录'],
-  ['restartService', '会重启服务'],
-  ['reloadService', '会重载服务'],
-  ['networkRisk', '可能影响网络连接']
-]
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
+
+const impactLabels = computed<Array<[keyof NonNullable<OperationPreview['impact']>, string]>>(() => [
+  ['writeFiles', t('common.operationPreview.impacts.writeFiles', 'Writes configuration files')],
+  ['modifyDatabase', t('common.operationPreview.impacts.modifyDatabase', 'Modifies panel records')],
+  ['restartService', t('common.operationPreview.impacts.restartService', 'Restarts services')],
+  ['reloadService', t('common.operationPreview.impacts.reloadService', 'Reloads services')],
+  ['networkRisk', t('common.operationPreview.impacts.networkRisk', 'May affect network connectivity')]
+])
 
 const failedPrechecks = computed(() =>
   (props.preview.prechecks || []).filter((item) => item.status === 'failed')
 )
 
 const hasImpact = computed(() =>
-  impactLabels.some(([key]) => props.preview.impact?.[key])
+  impactLabels.value.some(([key]) => props.preview.impact?.[key])
 )
 </script>
 
@@ -41,7 +47,7 @@ const hasImpact = computed(() =>
     />
 
     <section v-if="hasImpact" class="preview-section">
-      <h4>影响范围</h4>
+      <h4>{{ $t('common.operationPreview.impactScope') }}</h4>
       <div class="impact-tags">
         <el-tag
           v-for="[key, label] in impactLabels"
@@ -56,7 +62,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.files?.length" class="preview-section">
-      <h4>将写入的配置文件</h4>
+      <h4>{{ $t('common.operationPreview.filesToWrite') }}</h4>
       <div class="preview-list">
         <div v-for="file in preview.files" :key="`${file.path}-${file.action}`" class="preview-item">
           <strong>{{ file.path }}</strong>
@@ -66,7 +72,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.actions?.length" class="preview-section">
-      <h4>将执行的命令或服务动作</h4>
+      <h4>{{ $t('common.operationPreview.actionsToExecute') }}</h4>
       <div class="preview-list">
         <div v-for="action in preview.actions" :key="`${action.type}-${action.name}-${action.displayCommand}`" class="preview-item">
           <strong>{{ action.name }}</strong>
@@ -77,7 +83,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.prechecks?.length" class="preview-section">
-      <h4>执行前检查</h4>
+      <h4>{{ $t('common.operationPreview.prechecks') }}</h4>
       <div class="preview-list">
         <div v-for="check in preview.prechecks" :key="check.name" class="preview-item">
           <strong>{{ check.name }}</strong>
@@ -87,11 +93,11 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.rollback" class="preview-section">
-      <h4>失败回滚</h4>
-      <p>{{ preview.rollback.summary || (preview.rollback.supported ? '支持失败回滚' : '不支持自动回滚') }}</p>
+      <h4>{{ $t('common.operationPreview.rollback') }}</h4>
+      <p>{{ preview.rollback.summary || (preview.rollback.supported ? $t('common.operationPreview.rollbackSupported') : $t('common.operationPreview.rollbackUnsupported')) }}</p>
       <el-alert
         v-if="preview.rollback.supported === false || preview.rollback.unrecoverable?.length"
-        :title="preview.rollback.unrecoverable?.join('；') || '该操作不支持自动回滚，请确认后继续'"
+        :title="preview.rollback.unrecoverable?.join('；') || $t('common.operationPreview.rollbackConfirmTip')"
         type="error"
         :closable="false"
         show-icon
@@ -100,7 +106,7 @@ const hasImpact = computed(() =>
 
     <el-alert
       v-if="failedPrechecks.length"
-      title="存在未通过的预检项，不能继续执行"
+      :title="$t('common.operationPreview.failedPrechecks')"
       type="error"
       :closable="false"
       show-icon

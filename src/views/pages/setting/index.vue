@@ -12,26 +12,31 @@ const conf = reactive({
   menuList: markRaw([
     {
       name: '全部设置',
+      nameKey: 'setting.tabs.all',
       index: 0,
       component: AllSetting
     },
     // {
     //   name: '面板设置',
+    //   nameKey: 'setting.tabs.panel',
     //   index: 1,
     //   component: PanelSetting
     // },
     // {
     //   name: '安全设置',
+    //   nameKey: 'setting.tabs.security',
     //   index: 2,
     //   component: SecuritySetting
     // },
     // {
     //   name: '告警通知',
+    //   nameKey: 'setting.tabs.alarm',
     //   index: 3,
     //   component: AlarmNotification
     // },
     // {
     //   name: '消息通知',
+    //   nameKey: 'setting.tabs.message',
     //   index: 4,
     //   component: MessageNotification
     // }

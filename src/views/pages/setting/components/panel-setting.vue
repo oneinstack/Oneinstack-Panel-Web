@@ -7,6 +7,7 @@ import { watchEffect } from 'vue'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 
 
@@ -36,6 +37,11 @@ interface PanelEntryState {
   restartRequired: boolean
 }
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const props = withDefaults(defineProps<Props>(), {
   isCard: true,
   allinfo: () => ({})
@@ -63,14 +69,14 @@ const setActionLoading = (prop: string, loading: boolean) => {
   action.disabled = loading
 }
 
-const promptCurrentPassword = async (title: string, message: string, confirmButtonText = '确认修改') => {
+const promptCurrentPassword = async (title: string, message: string, confirmButtonText = t('setting.panel.confirmModify', 'Confirm change')) => {
   const { value } = await ElMessageBox.prompt(message, title, {
     type: 'warning',
     confirmButtonText,
-    cancelButtonText: '取消',
+    cancelButtonText: t('setting.panel.cancel', 'Cancel'),
     inputType: 'password',
-    inputPlaceholder: '当前面板密码',
-    inputValidator: input => Boolean(input) || '请输入当前面板密码'
+    inputPlaceholder: t('setting.panel.currentPassword', 'Current panel password'),
+    inputValidator: input => Boolean(input) || t('setting.panel.inputCurrentPassword', 'Enter the current panel password')
   })
   return value
 }
@@ -78,25 +84,25 @@ const promptCurrentPassword = async (title: string, message: string, confirmButt
 async function savePanelTitle() {
   const title = getSettingValue('title')
   if (!title) {
-    ElMessage.warning('请输入面板别名')
+    ElMessage.warning(t('setting.panel.inputAlias', 'Enter a panel alias'))
     return
   }
   try {
     await ElMessageBox.confirm(
-      `确认将面板别名修改为「${title}」吗？这只影响页面标题和展示名称，不会修改登录账号。`,
-      '修改面板别名',
+      t('setting.panel.aliasConfirm', `Change the panel alias to "${title}"?`, { title }),
+      t('setting.panel.modifyAlias', 'Change panel alias'),
       {
         type: 'warning',
-        confirmButtonText: '确认修改',
-        cancelButtonText: '取消'
+        confirmButtonText: t('setting.panel.confirmModify', 'Confirm change'),
+        cancelButtonText: t('setting.panel.cancel', 'Cancel')
       }
     )
     setActionLoading('title', true)
     await Api.updateSystemTitley({ title })
     document.title = title
-    ElMessage.success('面板别名已修改')
+    ElMessage.success(t('setting.panel.aliasSuccess', 'Panel alias changed'))
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板别名失败'))
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, t('setting.panel.aliasFailed', 'Failed to change panel alias')))
   } finally {
     setActionLoading('title', false)
   }
@@ -105,19 +111,19 @@ async function savePanelTitle() {
 async function savePanelUsername() {
   const username = getSettingValue('username')
   if (!username) {
-    ElMessage.warning('请输入面板账号')
+    ElMessage.warning(t('setting.panel.inputAccount', 'Enter a panel account'))
     return
   }
   try {
     const currentPassword = await promptCurrentPassword(
-      '修改面板账号',
-      `确认将登录账号修改为「${username}」吗？修改后请使用新账号登录；请输入当前面板密码继续。`
+      t('setting.panel.modifyAccount', 'Change panel account'),
+      t('setting.panel.accountConfirm', `Change the login account to "${username}"?`, { username })
     )
     setActionLoading('username', true)
     await Api.updateUpdateuser({ username, currentPassword })
-    ElMessage.success('面板账号已修改')
+    ElMessage.success(t('setting.panel.accountSuccess', 'Panel account changed'))
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板账号失败'))
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, t('setting.panel.accountFailed', 'Failed to change panel account')))
   } finally {
     setActionLoading('username', false)
   }
@@ -126,25 +132,25 @@ async function savePanelUsername() {
 async function savePanelPassword() {
   const password = getSettingValue('password')
   if (!password || password === '******') {
-    ElMessage.warning('请先输入一个新密码')
+    ElMessage.warning(t('setting.panel.inputNewPassword', 'Enter a new password first'))
     return
   }
   try {
     const currentPassword = await promptCurrentPassword(
-      '修改面板密码',
-      '修改密码会让所有设备立即退出登录。请输入当前面板密码确认。',
-      '确认修改密码'
+      t('setting.panel.modifyPassword', 'Change panel password'),
+      t('setting.panel.passwordConfirm', 'Changing the password signs out all devices immediately. Enter the current panel password to confirm.'),
+      t('setting.panel.confirmModifyPassword', 'Confirm password change')
     )
     setActionLoading('password', true)
     await Api.updateResetpassword({
       currentPassword,
       password
     })
-    ElMessage.success('密码修改成功，请重新登录')
+    ElMessage.success(t('setting.panel.passwordSuccess', 'Password changed. Sign in again.'))
     sconfig.logout()
     await System.router.replace('/login')
   } catch (error) {
-    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, '修改面板密码失败'))
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(getErrorMessage(error, t('setting.panel.passwordFailed', 'Failed to change panel password')))
   } finally {
     setActionLoading('password', false)
   }
@@ -171,16 +177,16 @@ const conf = reactive<Config>({
     //   tip: '提供面板API接口访问的支持（<span style="color: var(--el-color-primary)">堡塔APP</span>需要开启该功能），了解详情'
     // },
     {
-      label: '面板别名',
+      label: t('setting.panel.alias', 'Panel alias'),
       prop: 'title',
       value: '',
       type: 'input',
       action: {
         type: 'primary',
-        text: '保存',
+        text: t('setting.panel.save', 'Save'),
         click: savePanelTitle
       },
-      tip: '给面板取个别的名称，用于网页标题'
+      tip: t('setting.panel.aliasTip', 'Set a display name for the panel and page title')
     },
     // {
     //   label: '左侧菜单标题',
@@ -256,30 +262,30 @@ const conf = reactive<Config>({
     //   tip: '同步当前服务器时间'
     // },
     {
-      label: '面板账号',
+      label: t('setting.panel.account', 'Panel account'),
       prop: 'username', 
       value: '',
       type: 'input',
       disabled: false,
       action: {
         type: 'primary',
-        text: '保存',
+        text: t('setting.panel.save', 'Save'),
         click: savePanelUsername
       },
-      tip: '设置面板账号，用于登录面板'
+      tip: t('setting.panel.accountTip', 'Set the account used to sign in to the panel')
     },
     {
-      label: '面板密码',
+      label: t('setting.panel.password', 'Panel password'),
       prop: 'password',
       value: '',
       type: 'password',
       disabled: false,
       action: {
         type: 'primary',
-        text: '保存',
+        text: t('setting.panel.save', 'Save'),
         click: savePanelPassword
       },
-      tip: '设置面板密码，用于登录面板'
+      tip: t('setting.panel.passwordTip', 'Set the password used to sign in to the panel')
     },
     // {
     //   label: '绑定宝塔账号',
@@ -379,7 +385,7 @@ const panelEntry = reactive<PanelEntryState>({
   restartRequired: false
 })
 
-const panelEntryAccessLabel = computed(() => panelEntry.panelEntryEnabled ? '已启用' : '未启用')
+const panelEntryAccessLabel = computed(() => panelEntry.panelEntryEnabled ? t('setting.panel.enabled', 'Enabled') : t('setting.panel.disabled', 'Not enabled'))
 const currentRoutePath = computed(() => System.getRouterPath() || '/setting')
 const currentPanelAccessURL = computed(() => {
   if (!panelEntry.panelEntryEnabled) return ''
@@ -388,10 +394,10 @@ const currentPanelAccessURL = computed(() => {
   const normalizedPath = entryPath.startsWith('/') ? entryPath : `/${entryPath}`
   return `${window.location.origin}${normalizedPath}`
 })
-const panelEntryPathText = computed(() => panelEntry.panelEntryEnabled ? (panelEntry.panelEntryPath || '后端自动生成') : '安全入口未启用')
+const panelEntryPathText = computed(() => panelEntry.panelEntryEnabled ? (panelEntry.panelEntryPath || t('setting.panel.backendAutoGenerated', 'Generated by backend')) : t('setting.panel.entryDisabledPath', 'Secure entry is not enabled'))
 const panelEntryStatusText = computed(() => {
-  if (!panelEntry.panelEntryEnabled) return '当前使用根路径访问'
-  return panelEntry.restartRequired ? '需要重启生效' : '已生效'
+  if (!panelEntry.panelEntryEnabled) return t('setting.panel.rootPathAccess', 'Currently using root path access')
+  return panelEntry.restartRequired ? t('setting.panel.restartRequired', 'Restart required') : t('setting.panel.effective', 'Effective')
 })
 const panelEntryAccessText = computed(() => currentPanelAccessURL.value || window.location.origin)
 
@@ -416,7 +422,7 @@ const loadPanelEntry = async () => {
     const { data } = await Api.getPanelNetwork()
     applyPanelEntry(data)
   } catch {
-    ElMessage.error('获取安全入口配置失败')
+    ElMessage.error(t('setting.panel.loadEntryFailed', 'Failed to load secure entry configuration'))
   } finally {
     panelEntry.loading = false
   }
@@ -434,14 +440,14 @@ const maybeRedirectToPanelEntry = async (accessURL: string, message: string) => 
   const target = buildPanelRouteURL(accessURL)
   if (!target) return
   try {
-    await ElMessageBox.confirm(message, '访问地址已更新', {
+    await ElMessageBox.confirm(message, t('setting.panel.accessAddressUpdated', 'Access address updated'), {
       type: 'warning',
-      confirmButtonText: '立即跳转',
-      cancelButtonText: '稍后处理'
+      confirmButtonText: t('setting.panel.jumpNow', 'Go now'),
+      cancelButtonText: t('setting.panel.later', 'Later')
     })
     window.location.assign(target)
   } catch {
-    ElMessage.info('请记得使用新的访问地址进入面板')
+    ElMessage.info(t('setting.panel.rememberNewAddress', 'Remember to use the new access address to enter the panel'))
   }
 }
 
@@ -470,7 +476,7 @@ const writeClipboardText = async (text: string) => {
 const savePanelEntry = async (rotatePanelEntry = false) => {
   const panelEntryPath = panelEntry.panelEntryPath.trim()
   if (panelEntry.panelEntryEnabled && panelEntryPath && !/^\/[^/?#\s]+$/.test(panelEntryPath)) {
-    ElMessage.warning('安全入口路径格式应为 /<随机串>')
+    ElMessage.warning(t('setting.panel.invalidEntryPath', 'Secure entry path must be /<random-string>'))
     return
   }
   const requestPanelEntryPath = panelEntry.panelEntryEnabled && !rotatePanelEntry ? panelEntryPath : ''
@@ -489,20 +495,20 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
       rotatePanelEntry
     })
     applyPanelEntry(data)
-    ElMessage.success(rotatePanelEntry ? '安全入口已轮换' : '安全入口配置已保存')
+    ElMessage.success(rotatePanelEntry ? t('setting.panel.entryRotated', 'Secure entry rotated') : t('setting.panel.entrySaved', 'Secure entry configuration saved'))
     const panelAccessURL = data?.panelAccessURL || data?.panelAccessUrl || ''
 
     if (rotatePanelEntry) {
-      await maybeRedirectToPanelEntry(panelAccessURL, '新的安全入口已经生效，建议立即跳转到新地址继续操作。')
+      await maybeRedirectToPanelEntry(panelAccessURL, t('setting.panel.rotatedRedirect', 'The new secure entry is effective. Go to the new address to continue.'))
       return
     }
 
     if (panelEntry.panelEntryEnabled) {
-      await maybeRedirectToPanelEntry(panelAccessURL, '安全入口已经启用，建议立即跳转到新的访问地址。')
+      await maybeRedirectToPanelEntry(panelAccessURL, t('setting.panel.enabledRedirect', 'Secure entry is enabled. Go to the new access address.'))
     }
   } catch (error) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(rotatePanelEntry ? '轮换安全入口失败' : '保存安全入口配置失败')
+    ElMessage.error(rotatePanelEntry ? t('setting.panel.rotateFailed', 'Failed to rotate secure entry') : t('setting.panel.saveEntryFailed', 'Failed to save secure entry configuration'))
   } finally {
     panelEntry.saving = false
   }
@@ -511,14 +517,14 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
 const copyPanelAccessURL = async () => {
   const accessURL = currentPanelAccessURL.value
   if (!accessURL) {
-    ElMessage.warning('暂无可复制的访问地址')
+    ElMessage.warning(t('setting.panel.noAccessAddress', 'No access address to copy'))
     return
   }
   try {
     await writeClipboardText(accessURL)
-    ElMessage.success('访问地址已复制')
+    ElMessage.success(t('setting.panel.accessCopied', 'Access address copied'))
   } catch {
-    ElMessage.error('复制失败，请检查浏览器剪贴板权限')
+    ElMessage.error(t('setting.panel.copyFailed', 'Copy failed. Check browser clipboard permission.'))
   }
 }
 
@@ -549,7 +555,7 @@ onMounted(() => {
 <template>
   <div class="basic-card" :class="{ isCard }">
     <div class="basic-card__header">
-      <div class="basic-card__title">面板设置</div>
+      <div class="basic-card__title">{{ t('setting.panel.title', 'Panel settings') }}</div>
     </div>
     <div class="basic-card__body">
       <setting-form :data="conf.settingData" />
@@ -559,10 +565,10 @@ onMounted(() => {
       <div class="panel-entry-card__header">
         <div>
           <div class="panel-entry-card__title">
-            面板安全入口
-            <el-tag class="risk-tag" size="small" type="danger">高风险</el-tag>
+            {{ t('setting.panel.entryTitle', 'Panel secure entry') }}
+            <el-tag class="risk-tag" size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
           </div>
-          <p class="panel-entry-card__desc">启用后面板将通过随机路径访问，可有效降低被扫描和暴力探测的风险。</p>
+          <p class="panel-entry-card__desc">{{ t('setting.panel.entryDescription', 'When enabled, the panel is accessed through a random path to reduce scanning and brute-force probing risk.') }}</p>
         </div>
         <div class="panel-entry-card__status" :class="{ active: panelEntry.panelEntryEnabled }">
           {{ panelEntryAccessLabel }}
@@ -571,15 +577,15 @@ onMounted(() => {
 
       <div class="panel-entry-overview">
         <div class="panel-entry-overview__item">
-          <span>当前入口路径</span>
+          <span>{{ t('setting.panel.entryPath', 'Current entry path') }}</span>
           <strong>{{ panelEntryPathText }}</strong>
         </div>
         <div class="panel-entry-overview__item">
-          <span>生效状态</span>
+          <span>{{ t('setting.panel.effectiveStatus', 'Effective status') }}</span>
           <strong>{{ panelEntryStatusText }}</strong>
         </div>
         <div class="panel-entry-overview__item panel-entry-overview__item--wide">
-          <span>当前访问地址</span>
+          <span>{{ t('setting.panel.currentAccessAddress', 'Current access address') }}</span>
           <strong>{{ panelEntryAccessText }}</strong>
         </div>
       </div>
@@ -587,35 +593,35 @@ onMounted(() => {
       <div class="panel-entry-form">
         <div class="panel-entry-form__row">
           <label>
-            启用安全入口
-            <el-tag class="risk-tag" size="small" type="danger">高风险</el-tag>
+            {{ t('setting.panel.enableEntry', 'Enable secure entry') }}
+            <el-tag class="risk-tag" size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
           </label>
           <div class="panel-entry-form__control panel-entry-form__control--inline">
             <el-switch v-model="panelEntry.panelEntryEnabled" />
-            <span class="panel-entry-form__hint">关闭时保持根路径访问；开启后根路径会返回 404。</span>
+            <span class="panel-entry-form__hint">{{ t('setting.panel.entrySwitchHint', 'When off, root path access remains available; when on, root path returns 404.') }}</span>
           </div>
         </div>
 
         <div class="panel-entry-form__row">
-          <label>自定义入口路径</label>
+          <label>{{ t('setting.panel.customEntryPath', 'Custom entry path') }}</label>
           <div class="panel-entry-form__control">
             <el-input
               v-model="panelEntry.panelEntryPath"
               :disabled="!panelEntry.panelEntryEnabled"
-              placeholder="留空则由后端自动生成，例如 /AbCd123456"
+              :placeholder="t('setting.panel.entryPlaceholder', 'Leave empty for backend generation, e.g. /AbCd123456')"
             />
-            <span class="panel-entry-form__hint">格式固定为 `/&lt;slug&gt;`，留空即可自动生成。轮换入口时会忽略这里的值。</span>
+            <span class="panel-entry-form__hint">{{ t('setting.panel.entryFormatHint', 'Format is `/<slug>`. Leave empty to generate automatically. Rotating the entry ignores this value.') }}</span>
           </div>
         </div>
       </div>
 
       <div class="panel-entry-actions">
         <div class="panel-entry-actions__risk">
-          <el-tag size="small" type="danger">高风险</el-tag>
-          <span>入口路径变更会影响面板访问地址，请保存新地址后再离开页面。</span>
+          <el-tag size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
+          <span>{{ t('setting.panel.entryRiskTip', 'Changing the entry path affects the panel access address. Save the new address before leaving.') }}</span>
         </div>
-        <el-button type="warning" :loading="panelEntry.saving" @click="savePanelEntry(false)">保存配置</el-button>
-        <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">复制访问地址</el-button>
+        <el-button type="warning" :loading="panelEntry.saving" @click="savePanelEntry(false)">{{ t('setting.panel.saveConfig', 'Save configuration') }}</el-button>
+        <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">{{ t('setting.panel.copyAccessAddress', 'Copy access address') }}</el-button>
         <el-button
           type="warning"
           plain
@@ -623,7 +629,7 @@ onMounted(() => {
           :loading="panelEntry.saving"
           @click="savePanelEntry(true)"
         >
-          轮换安全入口
+          {{ t('setting.panel.rotateEntry', 'Rotate secure entry') }}
         </el-button>
       </div>
     </div>

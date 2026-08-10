@@ -4,6 +4,7 @@ import { Delete, Refresh, RefreshLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import { formatBytes } from '@/utils/fileSize'
+import i18n from '@/lang'
 
 interface TrashEntry {
   id: string
@@ -36,6 +37,10 @@ const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const state = reactive({
   loading: false,
@@ -54,34 +59,34 @@ const state = reactive({
     }
   },
   restore: async (row: TrashEntry) => {
-    await ElMessageBox.confirm(`恢复到 ${row.originalPath}？如果原位置已有同名文件，系统会拒绝覆盖。`, '恢复文件', {
+    await ElMessageBox.confirm(t('file.trashDialog.restoreConfirm', 'Restore to {path}? If a file with the same name already exists there, the system will refuse to overwrite it.', { path: row.originalPath }), t('file.trashDialog.restoreTitle', 'Restore file'), {
       type: 'info',
-      confirmButtonText: '恢复',
-      cancelButtonText: '取消'
+      confirmButtonText: t('file.trashDialog.restore', 'Restore'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     })
     await Api.restoreTrash({ id: row.id })
-    ElMessage.success('恢复成功')
+    ElMessage.success(t('file.trashDialog.restoreSuccess', 'Restored successfully'))
     emit('changed')
     await state.load()
   },
   remove: async (row: TrashEntry) => {
-    await ElMessageBox.confirm(`彻底删除“${row.name}”？此操作无法恢复。`, '彻底删除', {
+    await ElMessageBox.confirm(t('file.trashDialog.deleteConfirm', 'Permanently delete "{name}"? This action cannot be undone.', { name: row.name }), t('file.trashDialog.deleteTitle', 'Permanently delete'), {
       type: 'warning',
-      confirmButtonText: '彻底删除',
-      cancelButtonText: '取消'
+      confirmButtonText: t('file.trashDialog.deletePermanently', 'Permanently delete'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     })
     await Api.deleteTrashPermanently({ id: row.id })
-    ElMessage.success('已彻底删除')
+    ElMessage.success(t('file.trashDialog.deleteSuccess', 'Permanently deleted'))
     await state.load()
   },
   empty: async () => {
-    await ElMessageBox.confirm('确定清空回收站？其中的全部文件都将无法恢复。', '清空回收站', {
+    await ElMessageBox.confirm(t('file.trashDialog.emptyConfirm', 'Empty the trash? All files in it will be unrecoverable.'), t('file.trashDialog.emptyTitle', 'Empty trash'), {
       type: 'error',
-      confirmButtonText: '确认清空',
-      cancelButtonText: '取消'
+      confirmButtonText: t('file.trashDialog.emptyConfirmButton', 'Empty trash'),
+      cancelButtonText: t('common.cancel', 'Cancel')
     })
     await Api.emptyTrash()
-    ElMessage.success('回收站已清空')
+    ElMessage.success(t('file.trashDialog.emptySuccess', 'Trash emptied'))
     await state.load()
   }
 })
@@ -102,7 +107,7 @@ watch(
 <template>
   <el-dialog
     v-model="visible"
-    title="文件回收站"
+    :title="t('file.fileTrash', 'File trash')"
     width="min(1080px, 92vw)"
     append-to-body
     destroy-on-close
@@ -110,40 +115,40 @@ watch(
   >
     <div class="trash-summary">
       <div class="summary-item">
-        <span class="summary-label">回收站文件</span>
+        <span class="summary-label">{{ t('file.trashDialog.trashFiles', 'Trash files') }}</span>
         <strong>{{ state.items.length }}</strong>
       </div>
       <div class="summary-item">
-        <span class="summary-label">目录已用</span>
+        <span class="summary-label">{{ t('file.trashDialog.used', 'Directory used') }}</span>
         <strong>{{ formatBytes(state.capacity?.usedBytes) }}</strong>
       </div>
       <div class="summary-item">
-        <span class="summary-label">当前可写</span>
+        <span class="summary-label">{{ t('file.trashDialog.writable', 'Currently writable') }}</span>
         <strong>{{ formatBytes(state.capacity?.writableBytes) }}</strong>
       </div>
       <div class="summary-item">
-        <span class="summary-label">自动保留</span>
-        <strong>{{ state.retentionDays ? `${state.retentionDays} 天` : '-' }}</strong>
+        <span class="summary-label">{{ t('file.trashDialog.retention', 'Auto retention') }}</span>
+        <strong>{{ state.retentionDays ? t('file.trashDialog.days', '{days} days', { days: state.retentionDays }) : '-' }}</strong>
       </div>
     </div>
 
     <div class="trash-toolbar">
       <el-alert
-        :title="`删除的文件默认进入回收站，并在保留期结束后自动清理。目录配额包含回收站占用。`"
+        :title="t('file.trashDialog.tip', 'Deleted files enter the trash by default and are automatically cleaned after the retention period. Directory quota includes trash usage.')"
         type="info"
         show-icon
         :closable="false"
       />
       <div class="toolbar-actions">
-        <el-button :icon="Refresh" :loading="state.loading" @click="state.load">刷新</el-button>
+        <el-button :icon="Refresh" :loading="state.loading" @click="state.load">{{ t('common.refresh', 'Refresh') }}</el-button>
         <el-button type="danger" plain :icon="Delete" :disabled="state.items.length === 0" @click="state.empty">
-          清空回收站
+          {{ t('file.trashDialog.emptyTrash', 'Empty trash') }}
         </el-button>
       </div>
     </div>
 
-    <el-table v-loading="state.loading" :data="state.items" row-key="id" height="480" empty-text="回收站为空">
-      <el-table-column label="名称" min-width="180">
+    <el-table v-loading="state.loading" :data="state.items" row-key="id" height="480" :empty-text="t('file.trashDialog.emptyTable', 'Trash is empty')">
+      <el-table-column :label="t('common.name', 'Name')" min-width="180">
         <template #default="{ row }">
           <div class="file-name">
             <v-s-icon :name="row.isDir ? 'folder' : 'txt'" size="22" />
@@ -151,26 +156,26 @@ watch(
           </div>
         </template>
       </el-table-column>
-      <el-table-column prop="originalPath" label="原路径" min-width="260" show-overflow-tooltip />
-      <el-table-column label="大小" width="110">
+      <el-table-column prop="originalPath" :label="t('file.trashDialog.originalPath', 'Original path')" min-width="260" show-overflow-tooltip />
+      <el-table-column :label="t('common.size', 'Size')" width="110">
         <template #default="{ row }">{{ formatBytes(row.size) }}</template>
       </el-table-column>
-      <el-table-column label="删除时间" width="180">
+      <el-table-column :label="t('file.trashDialog.deletedAt', 'Deleted at')" width="180">
         <template #default="{ row }">{{ formatTime(row.deletedAt) }}</template>
       </el-table-column>
-      <el-table-column prop="deletedBy" label="操作用户" width="120">
+      <el-table-column prop="deletedBy" :label="t('file.trashDialog.deletedBy', 'Deleted by')" width="120">
         <template #default="{ row }">{{ row.deletedBy || '-' }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column :label="t('common.action', 'Action')" width="180" fixed="right">
         <template #default="{ row }">
-          <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">恢复</el-button>
-          <el-button type="danger" link :icon="Delete" @click="state.remove(row)">彻底删除</el-button>
+          <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
+          <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
 
     <template #footer>
-      <el-button @click="visible = false">关闭</el-button>
+      <el-button @click="visible = false">{{ t('common.close', 'Close') }}</el-button>
     </template>
   </el-dialog>
 </template>

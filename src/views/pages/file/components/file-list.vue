@@ -34,6 +34,7 @@ import { formatBytes } from '@/utils/fileSize'
 import FileSearchDialog from './FileSearchDialog.vue'
 import FileOperationDrawer from './FileOperationDrawer.vue'
 import FileEditorDrawer from './FileEditorDrawer.vue'
+import i18n from '@/lang'
 
 interface Emits {
   (e: 'update:path', value: string[]): void
@@ -53,20 +54,15 @@ type FavoriteItem = {
 }
 type FilePermission = 'archive' | 'create' | 'delete' | 'edit' | 'modify' | 'move' | 'read' | 'share'
 
-const filePermissionLabels: Record<FilePermission, string> = {
-  archive: '压缩',
-  create: '创建',
-  delete: '删除',
-  edit: '编辑',
-  modify: '修改',
-  move: '移动',
-  read: '读取',
-  share: '分享'
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
+const filePermissionLabel = (permission: FilePermission) => t(`file.permissionLabels.${permission}`, permission)
 const canFilePermission = (permission: FilePermission) => sconfig.hasScopeAccess('file', permission)
 const requireFilePermission = (permission: FilePermission) => {
   if (canFilePermission(permission)) return true
-  ElMessage.warning(`当前账号暂无文件${filePermissionLabels[permission]}权限`)
+  ElMessage.warning(t('file.noPermission', 'This account does not have file {permission} permission', { permission: filePermissionLabel(permission) }))
   return false
 }
 const imageExtensionPattern = /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/i
@@ -117,7 +113,7 @@ const downloadVirtualFile = async (path: string, fallbackName: string) => {
   })
   const contentType = response.headers.get('content-type') || ''
   if (!response.ok || contentType.includes('application/json')) {
-    let message = `文件下载失败（HTTP ${response.status}）`
+    let message = t('file.downloadFailedWithStatus', 'File download failed (HTTP {status})', { status: response.status })
     try {
       const payload = await response.json()
       message = payload?.message || payload?.error?.message || message
@@ -144,7 +140,7 @@ const loadImagePreviewUrl = async (path: string) => {
   })
   const contentType = response.headers.get('content-type') || ''
   if (!response.ok || contentType.includes('application/json')) {
-    let message = `图片读取失败（HTTP ${response.status}）`
+    let message = t('file.imageReadFailedWithStatus', 'Image read failed (HTTP {status})', { status: response.status })
     try {
       const payload = await response.json()
       message = payload?.message || payload?.error?.message || message
@@ -155,7 +151,7 @@ const loadImagePreviewUrl = async (path: string) => {
   }
   const blob = await response.blob()
   if (!blob.type.startsWith('image/')) {
-    throw new Error('当前文件不是受支持的图片格式')
+    throw new Error(t('file.unsupportedImageFormat', 'The current file is not a supported image format'))
   }
   return URL.createObjectURL(blob)
 }
@@ -199,11 +195,11 @@ const conf = reactive({
     }
   },
   columns: [
-    { prop: 'name', label: '文件名称', minWidth: '250', sortable: true },
-    { prop: 'identity', label: '权限 / 所有者', width: '170' },
-    { prop: 'size', label: '大小', width: '120', sortable: true },
-    { prop: 'modTime', label: '修改时间', width: '180', sortable: true },
-    { prop: 'action', label: '操作', minWidth: '390' }
+    { prop: 'name', label: t('file.columns.name', 'File name'), minWidth: '250', sortable: true },
+    { prop: 'identity', label: t('file.columns.identity', 'Permissions / Owner'), width: '170' },
+    { prop: 'size', label: t('file.columns.size', 'Size'), width: '120', sortable: true },
+    { prop: 'modTime', label: t('file.columns.modTime', 'Modified time'), width: '180', sortable: true },
+    { prop: 'action', label: t('file.columns.action', 'Actions'), minWidth: '390' }
   ],
   fileList: [],
   clipboard: {
@@ -236,7 +232,7 @@ const conf = reactive({
         targetPath: conf.copyDialog.targetPath,
         overwrite: conf.copyDialog.overwrite
       })
-      ElMessage.success('复制完成')
+      ElMessage.success(t('file.copyDone', 'Copied'))
       conf.copyDialog.close()
       conf.refresh()
     }
@@ -321,7 +317,7 @@ const conf = reactive({
     })
   },
   handleInputPathConfirm: () => {
-    if (!sutil.matchFilePath(conf.inputPath) && conf.inputPath !== '/') return ElMessage.error('请输入正确的文件路径')
+    if (!sutil.matchFilePath(conf.inputPath) && conf.inputPath !== '/') return ElMessage.error(t('file.pathPlaceholder', 'Enter a valid file path'))
     conf.isInputPath = false
     conf.path = conf.inputPath === '/' ? ['/'] : conf.inputPath.split('/').map((item) => (item === '' ? '/' : item))
     conf.getFileList()
@@ -342,7 +338,7 @@ const conf = reactive({
   handleFileDownload: async (row: any) => {
     if (!requireFilePermission('read')) return
     await downloadVirtualFile(row.path, row.name)
-    ElMessage.success('下载成功！')
+    ElMessage.success(t('file.downloadSuccess', 'Downloaded successfully'))
   },
   isImage: (row: any) => !row?.isDir && imageExtensionPattern.test(row?.name || ''),
   setClipboard: (mode: Exclude<ClipboardMode, ''>, row: any) => {
@@ -354,8 +350,8 @@ const conf = reactive({
       name: row.name,
       isDir: row.isDir
     }
-    ElMessage.success(mode === 'copy' ? '已复制到文件剪贴板' : '已剪切到文件剪贴板')
-    conf.tipPaste = mode === 'copy' ? '粘贴到当前目录' : '剪切到当前目录'
+    ElMessage.success(mode === 'copy' ? t('file.copiedToClipboard', 'Copied to file clipboard') : t('file.cutToClipboard', 'Cut to file clipboard'))
+    conf.tipPaste = mode === 'copy' ? t('file.pasteToCurrentDir', 'Paste to current directory') : t('file.cutToCurrentDir', 'Cut to current directory')
   },
   clearClipboard: () => {
     conf.clipboard.mode = ''
@@ -375,7 +371,7 @@ const conf = reactive({
       sourcePath: conf.clipboard.source.path,
       targetPath: joinVirtualPath(currentPath(), conf.clipboard.source.name)
     })
-    ElMessage.success('剪切完成')
+    ElMessage.success(t('file.cutDone', 'Cut completed'))
     conf.clearClipboard()
     conf.refresh()
   },
@@ -403,17 +399,17 @@ const conf = reactive({
     const item = conf.favorites.find((favorite) => favorite.path === row.path)
     if (item) {
       await Api.cancelFileFavorite({ path: item.path })
-      ElMessage.success('已取消收藏')
+      ElMessage.success(t('file.favoriteRemoved', 'Removed from favorites'))
     } else {
       await Api.favoriteFile({ path: row.path })
-      ElMessage.success('已添加到收藏夹')
+      ElMessage.success(t('file.favoriteAdded', 'Added to favorites'))
     }
     await conf.loadFavorites()
   },
   openFavorite: (item: FavoriteItem) => {
     if (!requireFilePermission('read')) return
     if (item.isMissing) {
-      ElMessage.warning('该收藏路径已失效')
+      ElMessage.warning(t('file.favoriteMissing', 'This favorite path is no longer available'))
       return
     }
     if (item.isDir) {
@@ -421,7 +417,7 @@ const conf = reactive({
       return
     }
     conf.handleNavigate(parentPath(item.path))
-    ElMessage.success('已打开收藏文件所在目录')
+    ElMessage.success(t('file.openedFavoriteParent', 'Opened the folder containing the favorite file'))
   },
   openInNewWindow: (row: any) => {
     if (!requireFilePermission('read')) return
@@ -439,25 +435,25 @@ const conf = reactive({
     row: {} as any,
     show: false,
     type: 'delete',
-    title: '删除文件',
-    confirmText: '确定',
-    cancelText: '取消',
+    title: t('file.deleteFile', 'Delete file'),
+    confirmText: t('common.confirm', 'Confirm'),
+    cancelText: t('common.cancel', 'Cancel'),
     open: (type: 'delete' | 'upload' | 'linkDownload', row?: any) => {
       if (type === 'delete' && !requireFilePermission('delete')) return
       if ((type === 'upload' || type === 'linkDownload') && !requireFilePermission('create')) return
       switch (type) {
         case 'delete':
           conf.fileDialog.row = row
-          conf.fileDialog.title = '删除文件'
-          conf.fileDialog.confirmText = '确定'
+          conf.fileDialog.title = t('file.deleteFile', 'Delete file')
+          conf.fileDialog.confirmText = t('common.confirm', 'Confirm')
           break
         case 'upload':
           const path = conf.path.join('/').replace(/\/\//g, '/')
           conf.fileDialog.row = {
             path
           }
-          conf.fileDialog.title = `上传文件到[${path}]`
-          conf.fileDialog.confirmText = '开始上传'
+          conf.fileDialog.title = t('file.uploadToPath', 'Upload files to [{path}]', { path })
+          conf.fileDialog.confirmText = t('file.startUpload', 'Start upload')
           break
         case 'linkDownload':
           const downloadPath = conf.path.join('/').replace(/\/\//g, '/')
@@ -466,8 +462,8 @@ const conf = reactive({
             name: '',
             url: ''
           }
-          conf.fileDialog.title = `URL链接下载`
-          conf.fileDialog.confirmText = '确定'
+          conf.fileDialog.title = t('file.urlDownload', 'URL download')
+          conf.fileDialog.confirmText = t('common.confirm', 'Confirm')
           break
       }
       conf.fileDialog.type = type
@@ -486,7 +482,7 @@ const conf = reactive({
         const res = await conf.linkDownload.instance?.validate()
         if (!res) return
         await Api.urlDownloadFile(conf.fileDialog.row)
-        ElMessage.success('下载任务已完成')
+        ElMessage.success(t('file.downloadTaskDone', 'Download task completed'))
         conf.fileDialog.close()
         conf.refresh()
         return
@@ -495,7 +491,7 @@ const conf = reactive({
       await Api.deleteFile({
         path: `${path === '/' ? '' : path}/${conf.fileDialog.row.name}`
       })
-      ElMessage.success('已移入回收站')
+      ElMessage.success(t('file.movedToTrash', 'Moved to trash'))
       conf.fileDialog.close()
       conf.refresh()
     }
@@ -526,15 +522,15 @@ const conf = reactive({
       conf.operationDialog.shareUrl = ''
       conf.operationDialog.show = true
       if (type === 'rename') {
-        conf.operationDialog.title = '重命名'
+        conf.operationDialog.title = t('file.rename', 'Rename')
         conf.operationDialog.value = row.name
       } else if (type === 'archive') {
-        conf.operationDialog.title = '创建压缩包'
+        conf.operationDialog.title = t('file.createArchive', 'Create archive')
         conf.operationDialog.value = `${row.name}.tar.gz`
       } else if (type === 'share') {
-        conf.operationDialog.title = '外链分享'
+        conf.operationDialog.title = t('file.shareLink', 'Share link')
       } else {
-        conf.operationDialog.title = '文件属性'
+        conf.operationDialog.title = t('file.fileProperties', 'File properties')
         conf.operationDialog.loading = true
         try {
           const { data } = await Api.getFileProperties({ path: row.path })
@@ -558,22 +554,22 @@ const conf = reactive({
       }
       if (dialog.type === 'rename') {
         const name = dialog.value.trim()
-        if (!name) return ElMessage.warning('请输入新名称')
+        if (!name) return ElMessage.warning(t('file.newNameRequired', 'Enter a new name'))
         await Api.renameFile({ path: dialog.row.path, newName: name })
-        ElMessage.success('重命名成功')
+        ElMessage.success(t('file.renameSuccess', 'Renamed successfully'))
         dialog.close()
         conf.refresh()
         return
       }
       if (dialog.type === 'archive') {
         const archiveName = dialog.value.trim()
-        if (!archiveName.endsWith('.tar.gz')) return ElMessage.warning('压缩包名称必须以 .tar.gz 结尾')
+        if (!archiveName.endsWith('.tar.gz')) return ElMessage.warning(t('file.archiveNameMustEnd', 'Archive name must end with .tar.gz'))
         await Api.archiveFile({
           path: dialog.row.path,
           targetDir: currentPath(),
           archiveName
         })
-        ElMessage.success('压缩包创建成功')
+        ElMessage.success(t('file.archiveCreateSuccess', 'Archive created successfully'))
         dialog.close()
         conf.refresh()
         return
@@ -585,13 +581,13 @@ const conf = reactive({
         })
         dialog.shareUrl = `${window.location.origin}${data.downloadUrl}`
         await navigator.clipboard?.writeText(dialog.shareUrl)
-        ElMessage.success('外链已创建并复制')
+        ElMessage.success(t('file.shareCreatedCopied', 'Share link created and copied'))
       }
     },
     copyShareUrl: async () => {
       if (!conf.operationDialog.shareUrl) return
       await navigator.clipboard.writeText(conf.operationDialog.shareUrl)
-      ElMessage.success('分享链接已复制')
+      ElMessage.success(t('file.shareUrlCopied', 'Share link copied'))
     }
   },
   upload: {
@@ -604,7 +600,7 @@ const conf = reactive({
       conf.fileDialog.close()
     },
     handleOpenDialog: () => {
-      if (conf.path.length === 1) return ElMessage.error('不能直接上传文件到系统根目录!')
+      if (conf.path.length === 1) return ElMessage.error(t('file.uploadRootDenied', 'Files cannot be uploaded directly to the system root directory.'))
       conf.fileDialog.open('upload')
     }
   },
@@ -628,7 +624,7 @@ const conf = reactive({
       conf.treeDialog.isDir = Boolean(node.isDir)
     },
     confirm: () => {
-      if (!conf.treeDialog.isDir) return ElMessage.warning('请选择目录')
+      if (!conf.treeDialog.isDir) return ElMessage.warning(t('file.selectDirectoryWarning', 'Select a directory'))
       conf.handleNavigate(conf.treeDialog.path || '/')
       conf.treeDialog.show = false
     }
@@ -706,7 +702,7 @@ defineExpose({
               :key="index"
               @click.stop="conf.handleBackLevel(index)"
             >
-              {{ index === 0 ? '根目录' : item }}
+              {{ index === 0 ? t('file.rootDir', 'Root directory') : item }}
             </el-breadcrumb-item>
           </el-breadcrumb>
           <el-input
@@ -719,7 +715,7 @@ defineExpose({
         </div>
       </div>
       <el-space :size="42">
-        <el-link @click.stop="conf.searchVisible = true">搜索文件/目录</el-link>
+        <el-link @click.stop="conf.searchVisible = true">{{ t('file.searchFiles', 'Search files/folders') }}</el-link>
         <div class="flex items-center">
           <el-button class="refresh-btn" type="primary" :icon="Refresh" @click="conf.refresh" />
           <el-button class="search-btn" type="primary" :icon="Search" @click="conf.searchVisible = true" />
@@ -731,25 +727,25 @@ defineExpose({
         <div class="tool-bar__row tool-bar__row--actions">
           <el-dropdown v-if="canFilePermission('create')">
             <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
-              上传/下载
+              {{ t('file.uploadDownload', 'Upload / Download') }}
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="conf.upload.handleOpenDialog">上传文件/文件夹</el-dropdown-item>
-                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">URL链接下载</el-dropdown-item>
+                <el-dropdown-item @click="conf.upload.handleOpenDialog">{{ t('file.uploadFiles', 'Upload files/folders') }}</el-dropdown-item>
+                <el-dropdown-item @click="conf.fileDialog.open('linkDownload')">{{ t('file.urlDownload', 'URL download') }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
           <el-dropdown v-if="canFilePermission('read')">
             <el-button class="tool-bar__button tool-bar__button--soft" plain>
-              收藏夹
+              {{ t('file.favorites', 'Favorites') }}
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu class="favorite-menu">
-                <el-dropdown-item v-if="conf.favoritesLoading" disabled>收藏加载中...</el-dropdown-item>
-                <el-dropdown-item v-else-if="!conf.favorites.length" disabled>暂无收藏</el-dropdown-item>
+                <el-dropdown-item v-if="conf.favoritesLoading" disabled>{{ t('file.favoritesLoading', 'Loading favorites...') }}</el-dropdown-item>
+                <el-dropdown-item v-else-if="!conf.favorites.length" disabled>{{ t('file.noFavorites', 'No favorites') }}</el-dropdown-item>
                 <el-dropdown-item
                   v-for="item in conf.favorites"
                   :key="item.path"
@@ -758,7 +754,7 @@ defineExpose({
                 >
                   <el-icon><Star /></el-icon>
                   <span class="favorite-name">{{ item.name }}</span>
-                  <el-tag v-if="item.isMissing" size="small" type="warning" effect="plain">已失效</el-tag>
+                  <el-tag v-if="item.isMissing" size="small" type="warning" effect="plain">{{ t('file.missing', 'Missing') }}</el-tag>
                   <small>{{ item.path }}</small>
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -766,7 +762,7 @@ defineExpose({
           </el-dropdown>
           <el-dropdown v-if="canFilePermission('create')">
             <el-button class="tool-bar__button tool-bar__button--accent" type="primary">
-              新建
+              {{ t('file.newItem', 'New') }}
               <el-icon class="el-icon--right"><arrow-down /></el-icon>
             </el-button>
             <template #dropdown>
@@ -774,13 +770,13 @@ defineExpose({
                 <el-dropdown-item @click="conf.handleOpenDrawer('create', 'file')">
                   <div class="flex items-center" style="gap: 10px">
                     <v-s-icon name="txt" size="22" />
-                    <span>文件</span>
+                    <span>{{ t('file.file', 'File') }}</span>
                   </div>
                 </el-dropdown-item>
                 <el-dropdown-item @click="conf.handleOpenDrawer('create', 'dir')">
                   <div class="flex items-center" style="gap: 10px">
                     <v-s-icon name="folder" size="22" />
-                    <span>文件夹</span>
+                    <span>{{ t('file.folder', 'Folder') }}</span>
                   </div>
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -799,17 +795,17 @@ defineExpose({
         </div>
         <div class="tool-bar__row tool-bar__row--meta">
           <el-tag v-if="conf.capacity" class="tool-bar__pill tool-bar__pill--capacity" type="info" effect="plain">
-            可写 {{ formatBytes(conf.capacity.writableBytes) }}
+            {{ t('file.writable', 'Writable') }} {{ formatBytes(conf.capacity.writableBytes) }}
           </el-tag>
           <div class="tool-bar__location">
-            <span class="tool-bar__location-label">管理根目录</span>
+            <span class="tool-bar__location-label">{{ t('file.rootPath', 'Managed root') }}</span>
             <span class="tool-bar__location-value">{{ conf.rootPath }}</span>
           </div>
         </div>
       </div>
       <div class="tool-bar__actions">
         <el-button class="tool-bar__button tool-bar__button--ghost" type="primary" plain @click="conf.operationsVisible = true">
-          操作记录
+          {{ t('file.operationRecords', 'Operation records') }}
         </el-button>
         <el-button
           v-if="canFilePermission('delete')"
@@ -818,7 +814,7 @@ defineExpose({
           plain
           @click="emit('open-trash')"
         >
-          <span class="mr-1">回收站</span>
+          <span class="mr-1">{{ t('file.trash', 'Trash') }}</span>
           <el-icon size="16"><Delete /></el-icon>
         </el-button>
       </div>
@@ -863,19 +859,19 @@ defineExpose({
               :loading="conf.editorLoadingPath === row.path"
               @click="conf.handleFileClick(row)"
             >
-              {{ row.isDir ? '打开' : conf.isImage(row) ? '预览' : '编辑' }}
+              {{ row.isDir ? t('file.open', 'Open') : conf.isImage(row) ? t('file.preview', 'Preview') : t('file.edit', 'Edit') }}
             </el-button>
             <el-button v-if="canCopyFile()" type="primary" link :icon="CopyDocument" @click="conf.setClipboard('copy', row)">
-              复制
+              {{ t('file.copy', 'Copy') }}
             </el-button>
             <el-button v-if="canFilePermission('move')" type="primary" link :icon="Scissor" @click="conf.setClipboard('move', row)">
-              剪切
+              {{ t('file.cut', 'Cut') }}
             </el-button>
             <el-button v-if="canFilePermission('modify')" type="primary" link :icon="EditPen" @click="conf.operationDialog.open('rename', row)">
-              重命名
+              {{ t('file.rename', 'Rename') }}
             </el-button>
             <el-button v-if="row.isDir && canFilePermission('read')" type="primary" link :icon="Operation" @click="conf.treeDialog.open(row)">
-              目录树
+              {{ t('file.directoryTree', 'Directory tree') }}
             </el-button>
             <el-button
               v-if="canFilePermission('delete')"
@@ -885,56 +881,56 @@ defineExpose({
               :icon="Delete"
               @click="conf.fileDialog.open('delete', row)"
             >
-              删除
+              {{ t('file.delete', 'Delete') }}
             </el-button>
             <el-dropdown trigger="click">
               <el-button type="primary" link :icon="MoreFilled">
-                更多
+                {{ t('file.more', 'More') }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu class="file-action-menu">
                   <el-dropdown-item v-if="canUsePrimaryAction(row)" @click="conf.handleFileClick(row)">
                     <el-icon><component :is="conf.isImage(row) ? View : FolderOpened" /></el-icon>
-                    {{ row.isDir ? '打开目录' : conf.isImage(row) ? '图片预览' : '编辑文件' }}
+                    {{ row.isDir ? t('file.openDirectory', 'Open directory') : conf.isImage(row) ? t('file.imagePreview', 'Image preview') : t('file.editFile', 'Edit file') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('read')" @click="conf.openInNewWindow(row)">
-                    <el-icon><FolderOpened /></el-icon>在新窗口打开
+                    <el-icon><FolderOpened /></el-icon>{{ t('file.openInNewWindow', 'Open in new window') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="row.isDir && canFilePermission('read')" @click="conf.treeDialog.open(row)">
-                    <el-icon><Operation /></el-icon>目录树
+                    <el-icon><Operation /></el-icon>{{ t('file.directoryTree', 'Directory tree') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="!row.isDir && canFilePermission('read')" @click="conf.handleFileDownload(row)">
-                    <el-icon><Download /></el-icon>下载
+                    <el-icon><Download /></el-icon>{{ t('file.download', 'Download') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('read')" divided @click="conf.toggleFavorite(row)">
                     <el-icon><Star /></el-icon>
-                    {{ conf.isFavorite(row.path) ? '取消收藏' : '添加到收藏夹' }}
+                    {{ conf.isFavorite(row.path) ? t('file.removeFavorite', 'Remove from favorites') : t('file.addFavorite', 'Add to favorites') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="!row.isDir && canFilePermission('share')" @click="conf.operationDialog.open('share', row)">
-                    <el-icon><Share /></el-icon>外链分享
+                    <el-icon><Share /></el-icon>{{ t('file.shareLink', 'Share link') }}
                   </el-dropdown-item>
                   <el-dropdown-item
                     v-if="canFilePermission('modify')"
                     divided
                     @click="conf.handleOpenDrawer('editPER', row.isDir ? 'dir' : 'file', row)"
                   >
-                    <el-icon><Lock /></el-icon>权限
+                    <el-icon><Lock /></el-icon>{{ t('file.permissions', 'Permissions') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canCopyFile()" @click="conf.setClipboard('copy', row)">
-                    <el-icon><CopyDocument /></el-icon>复制
+                    <el-icon><CopyDocument /></el-icon>{{ t('file.copy', 'Copy') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('move')" @click="conf.setClipboard('move', row)">
-                    <el-icon><Scissor /></el-icon>剪切
+                    <el-icon><Scissor /></el-icon>{{ t('file.cut', 'Cut') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('modify')" @click="conf.operationDialog.open('rename', row)">
-                    <el-icon><EditPen /></el-icon>重命名
+                    <el-icon><EditPen /></el-icon>{{ t('file.rename', 'Rename') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('archive')" @click="conf.operationDialog.open('archive', row)">
-                    <el-icon><Files /></el-icon>创建压缩包
+                    <el-icon><Files /></el-icon>{{ t('file.createArchive', 'Create archive') }}
                   </el-dropdown-item>
                   <el-dropdown-item v-if="canFilePermission('read')" @click="conf.operationDialog.open('properties', row)">
-                    <el-icon><InfoFilled /></el-icon>属性
+                    <el-icon><InfoFilled /></el-icon>{{ t('file.properties', 'Properties') }}
                   </el-dropdown-item>
                   <el-dropdown-item
                     v-if="canFilePermission('delete')"
@@ -942,7 +938,7 @@ defineExpose({
                     class="danger-menu-item"
                     @click="conf.fileDialog.open('delete', row)"
                   >
-                    <el-icon><Delete /></el-icon>删除
+                    <el-icon><Delete /></el-icon>{{ t('file.delete', 'Delete') }}
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -954,7 +950,7 @@ defineExpose({
 
     <custom-dialog
       v-model="conf.imagePreview.show"
-      :title="`图片预览 · ${conf.imagePreview.row?.name || ''}`"
+      :title="t('file.imagePreviewTitle', 'Image preview · {name}', { name: conf.imagePreview.row?.name || '' })"
       width="860px"
       :on-close="conf.imagePreview.close"
     >
@@ -979,13 +975,13 @@ defineExpose({
             "
           >
             <template #placeholder>
-              <div class="image-preview__message">正在读取图片…</div>
+              <div class="image-preview__message">{{ t('file.imageLoading', 'Reading image...') }}</div>
             </template>
           </el-image>
           <div v-if="conf.imagePreview.error" class="image-preview__error">
             <el-icon><PictureFilled /></el-icon>
-            <strong>图片预览失败</strong>
-            <span>文件可能不是受支持的图片、超过 30 MB，或者已经被修改。</span>
+            <strong>{{ t('file.imagePreviewFailed', 'Image preview failed') }}</strong>
+            <span>{{ t('file.imagePreviewFailedTip', 'The file may not be a supported image, may exceed 30 MB, or may have been modified.') }}</span>
           </div>
         </div>
         <div class="image-preview__meta">
@@ -993,9 +989,9 @@ defineExpose({
             <strong>{{ conf.imagePreview.row?.name }}</strong>
             <span>{{ conf.imagePreview.row?.path }}</span>
           </div>
-          <el-tag type="info" effect="plain">{{ conf.imagePreview.row?.size || '图片文件' }}</el-tag>
+          <el-tag type="info" effect="plain">{{ conf.imagePreview.row?.size || t('file.imageFile', 'Image file') }}</el-tag>
         </div>
-        <p class="image-preview__hint">点击图片可以进入全屏预览，滚轮可缩放。</p>
+        <p class="image-preview__hint">{{ t('file.imagePreviewHint', 'Click the image to enter fullscreen preview. Use the wheel to zoom.') }}</p>
       </div>
       <template #footer>
         <el-button
@@ -1003,15 +999,15 @@ defineExpose({
           :icon="Download"
           @click="conf.handleFileDownload(conf.imagePreview.row)"
         >
-          下载原图
+          {{ t('file.downloadOriginal', 'Download original') }}
         </el-button>
-        <el-button type="primary" @click="conf.imagePreview.close">关闭</el-button>
+        <el-button type="primary" @click="conf.imagePreview.close">{{ t('common.close', 'Close') }}</el-button>
       </template>
     </custom-dialog>
 
     <custom-dialog v-model="conf.fileDialog.show" :title="conf.fileDialog.title">
       <template v-if="conf.fileDialog.type === 'delete'">
-        <el-alert title="确定将所选文件移入回收站？稍后可以恢复。" type="warning" show-icon :closable="false" />
+        <el-alert :title="t('file.trashConfirmTip', 'Move the selected file to trash? It can be restored later.')" type="warning" show-icon :closable="false" />
         <div class="flex items-center" style="gap: 10px; margin-top: 20px">
           <v-s-icon :name="conf.fileDialog.row?.isDir ? 'folder' : 'txt'" size="22" />
           <span style="color: var(--font-color-gray)">{{ conf.fileDialog.row.name }}</span>
@@ -1020,7 +1016,7 @@ defineExpose({
       <template v-else-if="conf.fileDialog.type === 'upload'">
         <div class="flex column" style="gap: 18px">
           <div class="flex justify-end">
-            <el-button type="info" @click="conf.upload.instance?.clearFiles()">清空列表</el-button>
+            <el-button type="info" @click="conf.upload.instance?.clearFiles()">{{ t('file.clearList', 'Clear list') }}</el-button>
           </div>
           <el-upload
             ref="uploadRef"
@@ -1032,7 +1028,7 @@ defineExpose({
             :action="`${System.env.API}/ftp/upload`"
             :on-change="conf.upload.onChange"
           >
-            <div class="el-upload__text">请将需要上传的文件/文件夹拖到此处</div>
+            <div class="el-upload__text">{{ t('file.uploadDropTip', 'Drag files/folders here to upload') }}</div>
           </el-upload>
         </div>
       </template>
@@ -1041,23 +1037,23 @@ defineExpose({
           ref="formRef"
           :model="conf.fileDialog.row"
           :rules="{
-            name: [{ required: true, message: '请输入文件名', trigger: 'blur' }],
-            url: [{ required: true, message: '请输入url地址', trigger: 'blur' }]
+            name: [{ required: true, message: t('file.fileNameRequired', 'Enter a file name'), trigger: 'blur' }],
+            url: [{ required: true, message: t('file.urlRequired', 'Enter a URL'), trigger: 'blur' }]
           }"
           label-width="100px"
         >
-          <el-form-item label="URL地址" prop="url">
-            <el-input v-model="conf.fileDialog.row.url" placeholder="在此处粘贴或输入url地址" clearable />
+          <el-form-item :label="t('file.urlAddress', 'URL')" prop="url">
+            <el-input v-model="conf.fileDialog.row.url" :placeholder="t('file.urlPlaceholder', 'Paste or enter a URL here')" clearable />
           </el-form-item>
-          <el-form-item label="下载到" prop="path">
-            <el-input v-model="conf.fileDialog.row.path" placeholder="请选择下载路径">
+          <el-form-item :label="t('file.downloadTo', 'Download to')" prop="path">
+            <el-input v-model="conf.fileDialog.row.path" :placeholder="t('file.downloadPathPlaceholder', 'Select download path')">
               <template #append>
                 <v-s-icon class="cursor-pointer" name="folders" @click="conf.selectFolder.open" />
               </template>
             </el-input>
           </el-form-item>
-          <el-form-item label="文件名" prop="name">
-            <el-input v-model="conf.fileDialog.row.name" placeholder="请输入保存文件名" clearable />
+          <el-form-item :label="t('file.fileName', 'File name')" prop="name">
+            <el-input v-model="conf.fileDialog.row.name" :placeholder="t('file.saveFileNamePlaceholder', 'Enter saved file name')" clearable />
           </el-form-item>
         </el-form>
       </template>
@@ -1073,18 +1069,18 @@ defineExpose({
       <div class="operation-dialog">
         <template v-if="conf.operationDialog.type === 'rename'">
           <el-form label-position="top">
-            <el-form-item label="新名称" required>
+            <el-form-item :label="t('file.newName', 'New name')" required>
               <el-input
                 v-model="conf.operationDialog.value"
                 maxlength="255"
                 show-word-limit
-                placeholder="请输入文件或目录的新名称"
+                :placeholder="t('file.newNamePlaceholder', 'Enter a new file or directory name')"
                 @keyup.enter="conf.operationDialog.confirm"
               />
             </el-form-item>
           </el-form>
           <el-alert
-            title="同一目录中存在同名项目时不会覆盖原文件。"
+            :title="t('file.renameNoOverwriteTip', 'Existing items with the same name in this directory will not be overwritten.')"
             type="info"
             show-icon
             :closable="false"
@@ -1092,19 +1088,19 @@ defineExpose({
         </template>
         <template v-else-if="conf.operationDialog.type === 'archive'">
           <el-form label-position="top">
-            <el-form-item label="压缩包名称" required>
+            <el-form-item :label="t('file.archiveName', 'Archive name')" required>
               <el-input
                 v-model="conf.operationDialog.value"
                 maxlength="255"
-                placeholder="例如 website.tar.gz"
+                :placeholder="t('file.archiveNamePlaceholder', 'Example: website.tar.gz')"
               />
             </el-form-item>
-            <el-form-item label="保存位置">
+            <el-form-item :label="t('file.saveLocation', 'Save location')">
               <el-input :model-value="currentPath()" disabled />
             </el-form-item>
           </el-form>
           <el-alert
-            title="使用 tar.gz 格式；符号链接和特殊设备文件不会被跟随或打包。"
+            :title="t('file.archiveTip', 'Uses tar.gz format. Symbolic links and special device files are not followed or packed.')"
             type="info"
             show-icon
             :closable="false"
@@ -1113,33 +1109,33 @@ defineExpose({
         <template v-else-if="conf.operationDialog.type === 'share'">
           <template v-if="!conf.operationDialog.shareUrl">
             <el-alert
-              title="外链仅允许下载当前普通文件，不会暴露服务器真实路径。"
+              :title="t('file.shareTip', 'External links only allow downloading this regular file and do not expose the server path.')"
               type="warning"
               show-icon
               :closable="false"
             />
             <el-form label-position="top" class="share-form">
-              <el-form-item label="分享文件">
+              <el-form-item :label="t('file.shareFile', 'Shared file')">
                 <el-input :model-value="conf.operationDialog.row.path" disabled />
               </el-form-item>
-              <el-form-item label="有效期">
+              <el-form-item :label="t('file.expiresIn', 'Expires in')">
                 <el-input-number
                   v-model="conf.operationDialog.expiryHours"
                   :min="1"
                   :max="168"
                   controls-position="right"
                 />
-                <span class="form-unit">小时（最长 7 天）</span>
+                <span class="form-unit">{{ t('file.hoursMaxDays', 'hours (up to 7 days)') }}</span>
               </el-form-item>
             </el-form>
           </template>
           <div v-else class="share-result">
             <div class="share-result__icon"><el-icon><Share /></el-icon></div>
-            <strong>外链创建成功</strong>
-            <p>链接已经复制，可在有效期内直接下载。</p>
+            <strong>{{ t('file.shareCreateSuccessTitle', 'Share link created') }}</strong>
+            <p>{{ t('file.shareCreateSuccessTip', 'The link has been copied and can be used to download during its validity period.') }}</p>
             <el-input v-model="conf.operationDialog.shareUrl" readonly>
               <template #append>
-                <el-button @click="conf.operationDialog.copyShareUrl">复制</el-button>
+                <el-button @click="conf.operationDialog.copyShareUrl">{{ t('file.copy', 'Copy') }}</el-button>
               </template>
             </el-input>
           </div>
@@ -1152,32 +1148,32 @@ defineExpose({
               border
               label-width="130"
             >
-              <el-descriptions-item label="名称">
+              <el-descriptions-item :label="t('common.name', 'Name')">
                 {{ conf.operationDialog.properties.name }}
               </el-descriptions-item>
-              <el-descriptions-item label="路径">
+              <el-descriptions-item :label="t('file.path', 'Path')">
                 <span class="break-path">{{ conf.operationDialog.properties.path }}</span>
               </el-descriptions-item>
-              <el-descriptions-item label="类型">
+              <el-descriptions-item :label="t('common.type', 'Type')">
                 {{
                   conf.operationDialog.properties.type === 'directory'
-                    ? '目录'
+                    ? t('file.directory', 'Directory')
                     : conf.operationDialog.properties.type === 'symlink'
-                      ? '符号链接'
-                      : '文件'
+                      ? t('file.symlink', 'Symbolic link')
+                      : t('file.file', 'File')
                 }}
               </el-descriptions-item>
-              <el-descriptions-item label="权限 / 所有者">
+              <el-descriptions-item :label="t('file.columns.identity', 'Permissions / Owner')">
                 {{ conf.operationDialog.properties.permissions }} /
                 {{ conf.operationDialog.properties.owner }}
               </el-descriptions-item>
-              <el-descriptions-item label="大小">
+              <el-descriptions-item :label="t('common.size', 'Size')">
                 {{ formatBytes(conf.operationDialog.properties.size) }}
               </el-descriptions-item>
-              <el-descriptions-item label="MIME 类型">
+              <el-descriptions-item :label="t('file.mimeType', 'MIME type')">
                 {{ conf.operationDialog.properties.mimeType || '—' }}
               </el-descriptions-item>
-              <el-descriptions-item label="修改时间">
+              <el-descriptions-item :label="t('file.columns.modTime', 'Modified time')">
                 {{ conf.operationDialog.properties.modTime }}
               </el-descriptions-item>
             </el-descriptions>
@@ -1186,64 +1182,64 @@ defineExpose({
       </div>
       <template #footer>
         <el-button @click="conf.operationDialog.close">
-          {{ conf.operationDialog.type === 'properties' || conf.operationDialog.shareUrl ? '关闭' : '取消' }}
+          {{ conf.operationDialog.type === 'properties' || conf.operationDialog.shareUrl ? t('common.close', 'Close') : t('common.cancel', 'Cancel') }}
         </el-button>
         <el-button
           v-if="conf.operationDialog.type !== 'properties' && !conf.operationDialog.shareUrl"
           type="primary"
           @click="conf.operationDialog.confirm"
         >
-          {{ conf.operationDialog.type === 'share' ? '创建并复制外链' : '确定' }}
+          {{ conf.operationDialog.type === 'share' ? t('file.createAndCopyShare', 'Create and copy share link') : t('common.confirm', 'Confirm') }}
         </el-button>
       </template>
     </custom-dialog>
 
-    <custom-dialog v-model="conf.copyDialog.show" title="复制到当前目录" width="680px">
+    <custom-dialog v-model="conf.copyDialog.show" :title="t('file.copyToCurrentDir', 'Copy to current directory')" width="680px">
       <div class="copy-dialog">
         <el-alert
-          title="目标已存在时，默认由后端拒绝复制；开启覆盖后会替换目标文件。"
+          :title="t('file.copyOverwriteTip', 'If the target already exists, the backend rejects the copy by default. Enabling overwrite replaces the target file.')"
           type="warning"
           show-icon
           :closable="false"
         />
         <el-form label-position="top" class="copy-dialog__form">
-          <el-form-item label="源路径">
+          <el-form-item :label="t('file.sourcePath', 'Source path')">
             <el-input :model-value="conf.clipboard.source?.path" disabled />
           </el-form-item>
-          <el-form-item label="目标路径">
+          <el-form-item :label="t('file.targetPath', 'Target path')">
             <el-input v-model="conf.copyDialog.targetPath" disabled />
           </el-form-item>
-          <el-form-item label="覆盖策略">
+          <el-form-item :label="t('file.overwritePolicy', 'Overwrite policy')">
             <el-switch
               v-model="conf.copyDialog.overwrite"
-              active-text="覆盖已存在文件"
-              inactive-text="不覆盖"
+              :active-text="t('file.overwriteExisting', 'Overwrite existing files')"
+              :inactive-text="t('file.noOverwrite', 'Do not overwrite')"
             />
           </el-form-item>
         </el-form>
       </div>
       <template #footer>
-        <el-button @click="conf.copyDialog.close">取消</el-button>
-        <el-button type="primary" @click="conf.copyDialog.confirm">开始复制</el-button>
+        <el-button @click="conf.copyDialog.close">{{ t('common.cancel', 'Cancel') }}</el-button>
+        <el-button type="primary" @click="conf.copyDialog.confirm">{{ t('file.startCopy', 'Start copy') }}</el-button>
       </template>
     </custom-dialog>
 
-    <custom-dialog v-model="conf.selectFolder.show" title="选择文件夹">
+    <custom-dialog v-model="conf.selectFolder.show" :title="t('file.selectFolder', 'Select folder')">
       <file-panel :path="conf.selectFolder.path || currentPath()" @select-node="conf.selectFolder.select" />
       <template #footer>
-        <el-button type="primary" @click="conf.selectFolder.confirm">确定</el-button>
+        <el-button type="primary" @click="conf.selectFolder.confirm">{{ t('common.confirm', 'Confirm') }}</el-button>
       </template>
     </custom-dialog>
 
-    <custom-dialog v-model="conf.treeDialog.show" title="目录树" width="720px">
+    <custom-dialog v-model="conf.treeDialog.show" :title="t('file.directoryTree', 'Directory tree')" width="720px">
       <file-panel
         :key="conf.treeDialog.key"
         :path="conf.treeDialog.path || currentPath()"
         @select-node="conf.treeDialog.select"
       />
       <template #footer>
-        <el-button @click="conf.treeDialog.show = false">取消</el-button>
-        <el-button type="primary" :disabled="!conf.treeDialog.isDir" @click="conf.treeDialog.confirm">打开目录</el-button>
+        <el-button @click="conf.treeDialog.show = false">{{ t('common.cancel', 'Cancel') }}</el-button>
+        <el-button type="primary" :disabled="!conf.treeDialog.isDir" @click="conf.treeDialog.confirm">{{ t('file.openDirectoryAction', 'Open directory') }}</el-button>
       </template>
     </custom-dialog>
 

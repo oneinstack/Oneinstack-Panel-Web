@@ -3,6 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import { ElMessage } from 'element-plus'
+import i18n from '@/lang'
 
 interface AuditEvent {
   id: number
@@ -42,6 +43,11 @@ interface AuditStats {
   retentionDays: number
   cleanupSchedule: string
   exportMaxRows: number
+}
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
 }
 
 const loading = ref(false)
@@ -132,8 +138,8 @@ const verifyChain = async () => {
   try {
     const { data } = await Api.verifyAuditChain()
     verification.value = data
-    if (data.valid) ElMessage.success(`审计链完整，已校验 ${data.checkedEntries} 条记录`)
-    else ElMessage.error(`审计链校验失败：${data.message}`)
+    if (data.valid) ElMessage.success(t('audit.chainValidMessage', `Audit chain is valid. ${data.checkedEntries} records verified.`, { count: data.checkedEntries }))
+    else ElMessage.error(t('audit.chainInvalidMessage', `Audit chain verification failed: ${data.message}`, { message: data.message }))
     await Promise.all([loadEvents(), loadStats()])
   } finally {
     verifying.value = false
@@ -152,7 +158,7 @@ const exportEvents = async () => {
     })
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}))
-      throw new Error(payload.message || '导出审计日志失败')
+      throw new Error(payload.message || t('audit.exportFailed', 'Failed to export audit logs'))
     }
     const blob = await response.blob()
     const disposition = response.headers.get('Content-Disposition') || ''
@@ -163,10 +169,10 @@ const exportEvents = async () => {
     anchor.download = filename
     anchor.click()
     URL.revokeObjectURL(url)
-    ElMessage.success('审计日志已导出')
+    ElMessage.success(t('audit.exportSuccess', 'Audit logs exported'))
     await Promise.all([loadEvents(), loadStats()])
   } catch (error: any) {
-    ElMessage.error(error?.message || '导出审计日志失败')
+    ElMessage.error(error?.message || t('audit.exportFailed', 'Failed to export audit logs'))
   } finally {
     exporting.value = false
   }
@@ -183,35 +189,35 @@ onMounted(async () => {
   <div class="audit-page">
     <div class="page-heading">
       <div>
-        <h2>审计日志</h2>
-        <p>记录登录、安全操作和失败请求；请求正文、密码、Token 与查询参数不会写入审计库。</p>
+        <h2>{{ $t('audit.title') }}</h2>
+        <p>{{ $t('audit.fullDescription') }}</p>
       </div>
       <div class="heading-actions">
-        <el-button :loading="verifying" @click="verifyChain">校验完整性</el-button>
-        <el-button type="primary" :loading="exporting" @click="exportEvents">导出 CSV</el-button>
+        <el-button :loading="verifying" @click="verifyChain">{{ $t('audit.verifyIntegrity') }}</el-button>
+        <el-button type="primary" :loading="exporting" @click="exportEvents">{{ $t('audit.exportCsv') }}</el-button>
       </div>
     </div>
 
     <div class="stats-grid">
       <div class="stat-card">
-        <span>当前保留</span>
+        <span>{{ $t('audit.currentRetention') }}</span>
         <strong>{{ stats.counts.total }}</strong>
-        <small>最新序号 #{{ stats.counts.latestSequence || 0 }}</small>
+        <small>{{ $t('audit.latestSequence', { sequence: stats.counts.latestSequence || 0 }) }}</small>
       </div>
       <div class="stat-card success">
-        <span>成功操作</span>
+        <span>{{ $t('audit.successfulOperations') }}</span>
         <strong>{{ stats.counts.success }}</strong>
-        <small>最近 24 小时 {{ stats.counts.last24Hours }} 条</small>
+        <small>{{ $t('audit.last24HoursCount', { count: stats.counts.last24Hours }) }}</small>
       </div>
       <div class="stat-card danger">
-        <span>失败请求</span>
+        <span>{{ $t('audit.failedRequests') }}</span>
         <strong>{{ stats.counts.failure }}</strong>
-        <small>用于发现认证和权限异常</small>
+        <small>{{ $t('audit.failedRequestsHint') }}</small>
       </div>
       <div class="stat-card warning">
-        <span>敏感操作</span>
+        <span>{{ $t('audit.sensitiveOperations') }}</span>
         <strong>{{ stats.counts.sensitive }}</strong>
-        <small>保留 {{ stats.retentionDays || '—' }} 天</small>
+        <small>{{ $t('audit.retentionDays', { days: stats.retentionDays || '—' }) }}</small>
       </div>
     </div>
 
@@ -221,73 +227,73 @@ onMounted(async () => {
       :type="verification.valid ? 'success' : 'error'"
       :closable="false"
       show-icon
-      :title="verification.valid ? '审计链完整' : '审计链校验失败'"
-      :description="`${verification.message}；校验 ${verification.checkedEntries} 条，检查点序号 ${verification.checkpointSequence || 0}`"
+      :title="verification.valid ? $t('audit.chainValid') : $t('audit.chainInvalid')"
+      :description="$t('audit.chainDescription', { message: verification.message, count: verification.checkedEntries, sequence: verification.checkpointSequence || 0 })"
     />
 
     <div class="audit-panel">
       <div class="filters">
-        <el-input v-model="filters.q" clearable placeholder="请求 ID、动作、路径或 IP" @keyup.enter="search" />
-        <el-input v-model="filters.username" clearable placeholder="操作用户" @keyup.enter="search" />
-        <el-select v-model="filters.outcome" clearable placeholder="执行结果">
-          <el-option label="成功" value="success" />
-          <el-option label="失败" value="failure" />
+        <el-input v-model="filters.q" clearable :placeholder="$t('audit.requestSearchPlaceholder')" @keyup.enter="search" />
+        <el-input v-model="filters.username" clearable :placeholder="$t('audit.operatorPlaceholder')" @keyup.enter="search" />
+        <el-select v-model="filters.outcome" clearable :placeholder="$t('audit.outcome')">
+          <el-option :label="$t('common.success')" value="success" />
+          <el-option :label="$t('common.failed')" value="failure" />
         </el-select>
-        <el-select v-model="filters.method" clearable placeholder="请求方法">
+        <el-select v-model="filters.method" clearable :placeholder="$t('audit.method')">
           <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE']" :key="method" :label="method" :value="method" />
         </el-select>
-        <el-select v-model="filters.sensitive" clearable placeholder="敏感级别">
-          <el-option label="敏感操作" value="true" />
-          <el-option label="普通操作" value="false" />
+        <el-select v-model="filters.sensitive" clearable :placeholder="$t('audit.sensitiveLevel')">
+          <el-option :label="$t('audit.sensitiveOperations')" value="true" />
+          <el-option :label="$t('audit.normalOperation')" value="false" />
         </el-select>
         <el-date-picker
           v-model="dateRange"
           type="datetimerange"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          range-separator="至"
+          :start-placeholder="$t('audit.startTime')"
+          :end-placeholder="$t('audit.endTime')"
+          :range-separator="$t('audit.rangeSeparator')"
         />
-        <el-button type="primary" @click="search">查询</el-button>
-        <el-button @click="reset">重置</el-button>
+        <el-button type="primary" @click="search">{{ $t('common.query') }}</el-button>
+        <el-button @click="reset">{{ $t('common.reset') }}</el-button>
       </div>
 
       <el-table v-loading="loading" :data="events" border row-key="id" @row-dblclick="showDetail">
-        <el-table-column prop="sequence" label="序号" width="92">
+        <el-table-column prop="sequence" :label="$t('audit.sequence')" width="92">
           <template #default="{ row }">#{{ row.sequence }}</template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="时间" min-width="170">
+        <el-table-column prop="createdAt" :label="$t('common.time')" min-width="170">
           <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column prop="username" label="用户" width="120">
-          <template #default="{ row }">{{ row.username || '未认证' }}</template>
+        <el-table-column prop="username" :label="$t('common.user')" width="120">
+          <template #default="{ row }">{{ row.username || $t('common.unauthenticated') }}</template>
         </el-table-column>
-        <el-table-column prop="action" label="动作" min-width="260" show-overflow-tooltip />
-        <el-table-column prop="remoteIp" label="来源 IP" min-width="135">
+        <el-table-column prop="action" :label="$t('approvalCenter.action')" min-width="260" show-overflow-tooltip />
+        <el-table-column prop="remoteIp" :label="$t('audit.remoteIp')" min-width="135">
           <template #default="{ row }">{{ row.remoteIp || '—' }}</template>
         </el-table-column>
-        <el-table-column label="结果" width="100" align="center">
+        <el-table-column :label="$t('audit.result')" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.outcome === 'success' ? 'success' : 'danger'" size="small">
-              {{ row.status }} {{ row.outcome === 'success' ? '成功' : '失败' }}
+              {{ row.status }} {{ row.outcome === 'success' ? $t('common.success') : $t('common.failed') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="级别" width="90" align="center">
+        <el-table-column :label="$t('audit.level')" width="90" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.sensitive" type="warning" size="small">敏感</el-tag>
-            <span v-else>普通</span>
+            <el-tag v-if="row.sensitive" type="warning" size="small">{{ $t('common.sensitive') }}</el-tag>
+            <span v-else>{{ $t('common.normal') }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="durationMs" label="耗时" width="90" align="right">
+        <el-table-column prop="durationMs" :label="$t('audit.duration')" width="90" align="right">
           <template #default="{ row }">{{ row.durationMs }} ms</template>
         </el-table-column>
-        <el-table-column label="操作" width="82" fixed="right">
+        <el-table-column :label="$t('common.action')" width="82" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="showDetail(row)">详情</el-button>
+            <el-button link type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
           </template>
         </el-table-column>
         <template #empty>
-          <el-empty description="当前筛选条件下没有审计记录" />
+          <el-empty :description="$t('audit.noRecords')" />
         </template>
       </el-table>
 
@@ -304,34 +310,33 @@ onMounted(async () => {
         />
       </div>
       <div class="policy-note">
-        每日按 <code>{{ stats.cleanupSchedule || '—' }}</code> 自动清理，单次最多导出
-        {{ stats.exportMaxRows || '—' }} 条。清理前会校验完整性并写入签名检查点。
+        {{ $t('audit.cleanupPolicy', { schedule: stats.cleanupSchedule || '—', maxRows: stats.exportMaxRows || '—' }) }}
       </div>
     </div>
 
     <custom-drawer
       :visible="detailVisible"
-      title="审计记录详情"
+      :title="$t('audit.detailTitle')"
       size="640px"
       :show-footer="false"
       :on-close="() => { detailVisible = false }"
     >
       <el-descriptions v-if="detail" class="audit-detail-descriptions" :column="2" border>
-        <el-descriptions-item label="序号">#{{ detail.sequence }}</el-descriptions-item>
-        <el-descriptions-item label="时间">{{ formatTime(detail.createdAt) }}</el-descriptions-item>
-        <el-descriptions-item label="用户">{{ detail.username || '未认证' }}（ID {{ detail.userId || 0 }}）</el-descriptions-item>
-        <el-descriptions-item label="认证方式">{{ detail.authMode || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="动作" :span="2">{{ detail.action }}</el-descriptions-item>
-        <el-descriptions-item label="路由" :span="2">{{ detail.route || detail.path }}</el-descriptions-item>
-        <el-descriptions-item label="结果">{{ detail.status }} / {{ detail.outcome }}</el-descriptions-item>
-        <el-descriptions-item label="耗时">{{ detail.durationMs }} ms</el-descriptions-item>
-        <el-descriptions-item label="来源 IP">{{ detail.remoteIp || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="请求大小">{{ detail.contentLength }} bytes</el-descriptions-item>
-        <el-descriptions-item label="请求 ID" :span="2"><code>{{ detail.requestId }}</code></el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.sequence')">#{{ detail.sequence }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('common.time')">{{ formatTime(detail.createdAt) }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('common.user')">{{ detail.username || $t('common.unauthenticated') }}（ID {{ detail.userId || 0 }}）</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.authMode')">{{ detail.authMode || '—' }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('approvalCenter.action')" :span="2">{{ detail.action }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.route')" :span="2">{{ detail.route || detail.path }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.result')">{{ detail.status }} / {{ detail.outcome }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.duration')">{{ detail.durationMs }} ms</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.remoteIp')">{{ detail.remoteIp || '—' }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.requestSize')">{{ detail.contentLength }} bytes</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.requestId')" :span="2"><code>{{ detail.requestId }}</code></el-descriptions-item>
         <el-descriptions-item label="User-Agent" :span="2">{{ detail.userAgent || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="说明" :span="2">{{ detail.message || '—' }}</el-descriptions-item>
-        <el-descriptions-item label="前置摘要" :span="2"><code class="hash">{{ detail.previousHash }}</code></el-descriptions-item>
-        <el-descriptions-item label="记录摘要" :span="2"><code class="hash">{{ detail.entryHash }}</code></el-descriptions-item>
+        <el-descriptions-item :label="$t('common.description')" :span="2">{{ detail.message || '—' }}</el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.previousHash')" :span="2"><code class="hash">{{ detail.previousHash }}</code></el-descriptions-item>
+        <el-descriptions-item :label="$t('audit.entryHash')" :span="2"><code class="hash">{{ detail.entryHash }}</code></el-descriptions-item>
       </el-descriptions>
     </custom-drawer>
   </div>

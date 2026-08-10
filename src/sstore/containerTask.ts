@@ -51,9 +51,9 @@ const taskURL = (path: string) => {
 }
 
 const operationFallbackMessage: Record<string, string> = {
-  pull: '镜像拉取任务已创建',
-  build: '镜像构建任务已创建',
-  create: '容器创建任务已创建'
+  pull: 'Image pull task created',
+  build: 'Image build task created',
+  create: 'Container creation task created'
 }
 
 export const containerTaskStore = reactive({
@@ -106,7 +106,7 @@ export const containerTaskStore = reactive({
       phase: data.phase || data.status || 'queued',
       progress: data.progress ?? 0,
       phaseProgress: data.phaseProgress,
-      message: data.message || operationFallbackMessage[operation] || '任务已创建',
+      message: data.message || operationFallbackMessage[operation] || 'Task created',
       details: data.details || [],
       containerId: data.containerId,
       errorCode: data.errorCode,
@@ -240,7 +240,7 @@ export const containerTaskStore = reactive({
       credentials: 'include',
       headers: { Accept: 'text/plain' }
     })
-    if (!response.ok) throw new Error(`下载日志失败（HTTP ${response.status}）`)
+    if (!response.ok) throw new Error(`Failed to download logs (HTTP ${response.status})`)
     const blob = await response.blob()
     const objectURL = window.URL.createObjectURL(blob)
     const link = document.createElement('a')

@@ -7,15 +7,18 @@ const conf = reactive({
   list: [
     {
       name: '计划任务',
+      nameKey: 'task.scheduled',
       index: 0,
       component: Scheduled
     },
     // ,{
     //   name: '任务编排',
+    //   nameKey: 'task.orchestration',
     //   index: 1
     // },
     // {
     //   name: '脚本库',
+    //   nameKey: 'task.scriptLibrary',
     //   index: 2
     // }
   ],

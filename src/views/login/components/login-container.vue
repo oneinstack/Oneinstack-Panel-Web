@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import LanguageSwitch from '@/views/layout/components/language-switch.vue'
+
 interface Props {
   currentActive?: 'login' | 'register'
   loading?: boolean
@@ -14,50 +16,53 @@ withDefaults(defineProps<Props>(), {
   <div v-loading="loading" class="login-container">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
+    <div class="guest-language-switch">
+      <language-switch />
+    </div>
     <section class="login-hero">
       <div class="hero-brand">
         <div class="hero-logo">1S</div>
         <div>
           <strong>OneinStack Panel</strong>
-          <span>现代化服务器运维控制台</span>
+          <span>{{ $t('login.heroSubtitle') }}</span>
         </div>
       </div>
 
       <div class="hero-copy">
-        <div class="eyebrow"><span></span> SERVER OPERATIONS, SIMPLIFIED</div>
-        <h1>让服务器管理<br />清晰、可靠、更高效</h1>
-        <p>从网站、数据库到运行环境与安全策略，在一个面板中完成日常运维。</p>
+        <div class="eyebrow"><span></span> {{ $t('login.heroEyebrow') }}</div>
+        <h1 v-html="$t('login.heroTitle')"></h1>
+        <p>{{ $t('login.heroDescription') }}</p>
       </div>
 
       <div class="console-preview">
         <div class="console-head">
           <div class="window-dots"><i></i><i></i><i></i></div>
-          <span>server-overview</span>
-          <div class="online"><i></i> Online</div>
+          <span>{{ $t('login.serverOverview') }}</span>
+          <div class="online"><i></i> {{ $t('login.online') }}</div>
         </div>
         <div class="console-body">
           <div class="metric">
-            <span>CPU 负载</span>
+            <span>{{ $t('login.cpuLoad') }}</span>
             <strong>24%</strong>
             <div class="progress"><i style="width: 24%"></i></div>
           </div>
           <div class="metric">
-            <span>内存使用</span>
+            <span>{{ $t('login.memoryUsage') }}</span>
             <strong>6.8 GB</strong>
             <div class="progress memory"><i style="width: 52%"></i></div>
           </div>
           <div class="service-list">
-            <div><span class="service-icon orange">N</span><b>Nginx</b><em>运行中</em></div>
-            <div><span class="service-icon blue">DB</span><b>MySQL 8.0</b><em>运行中</em></div>
-            <div><span class="service-icon red">R</span><b>Redis</b><em>运行中</em></div>
+            <div><span class="service-icon orange">N</span><b>Nginx</b><em>{{ $t('login.running') }}</em></div>
+            <div><span class="service-icon blue">DB</span><b>MySQL 8.0</b><em>{{ $t('login.running') }}</em></div>
+            <div><span class="service-icon red">R</span><b>Redis</b><em>{{ $t('login.running') }}</em></div>
           </div>
         </div>
       </div>
 
       <div class="hero-features">
-        <span><i>✓</i> 本地化部署</span>
-        <span><i>✓</i> 安全可控</span>
-        <span><i>✓</i> 实时监控</span>
+        <span><i>✓</i> {{ $t('login.localDeployment') }}</span>
+        <span><i>✓</i> {{ $t('login.secureControl') }}</span>
+        <span><i>✓</i> {{ $t('login.realtimeMonitor') }}</span>
       </div>
     </section>
 
@@ -71,7 +76,7 @@ withDefaults(defineProps<Props>(), {
           }"
         />
       </div>
-      <div class="panel-footer">OneinStack Panel · Secure Server Console</div>
+      <div class="panel-footer">{{ $t('login.panelFooter') }}</div>
     </main>
   </div>
 </template>
@@ -109,6 +114,13 @@ withDefaults(defineProps<Props>(), {
     height: 760px;
     background: radial-gradient(circle, rgba(59, 130, 246, 0.13), transparent 68%);
   }
+}
+
+.guest-language-switch {
+  position: absolute;
+  top: 28px;
+  right: 34px;
+  z-index: 5;
 }
 
 .login-hero {
@@ -469,6 +481,11 @@ withDefaults(defineProps<Props>(), {
     background:
       radial-gradient(circle at 20% 0, rgba(var(--primary-color), 0.08), transparent 28rem),
       #f8fafc;
+  }
+
+  .guest-language-switch {
+    top: 24px;
+    right: 24px;
   }
 }
 

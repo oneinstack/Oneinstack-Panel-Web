@@ -8,9 +8,16 @@ import {
   normalizeThemeAccent,
   type PageTheme
 } from '@/utils/theme'
+import i18n from '@/lang'
 
 const { theme, accentColor } = toRefs(sapp)
 const customColor = ref(accentColor.value)
+
+const t = (key: string, fallback: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback
+}
+const presetText = (key: string | undefined, fallback: string) => key ? t(key, fallback) : fallback
 
 const isCustomColor = computed(
   () => !THEME_ACCENT_PRESETS.some(item => item.color === accentColor.value)
@@ -36,7 +43,7 @@ const changeCustomAccent = (value: string | null) => {
 const resetAppearance = () => {
   sapp.resetAppearance()
   customColor.value = DEFAULT_THEME_ACCENT
-  ElMessage.success('已恢复默认外观')
+  ElMessage.success(t('setting.appearance.resetSuccess', 'Default appearance restored'))
 }
 </script>
 
@@ -45,20 +52,20 @@ const resetAppearance = () => {
     <header class="appearance-setting__header">
       <div>
         <span class="appearance-setting__eyebrow">APPEARANCE</span>
-        <h2>外观与主题</h2>
-        <p>统一调整整个面板的界面模式和强调色，修改后立即生效并在当前浏览器中保存。</p>
+        <h2>{{ $t('setting.appearance.title') }}</h2>
+        <p>{{ $t('setting.appearance.description') }}</p>
       </div>
-      <el-button plain @click="resetAppearance">恢复默认</el-button>
+      <el-button plain @click="resetAppearance">{{ $t('setting.appearance.resetDefault') }}</el-button>
     </header>
 
     <div class="appearance-setting__content">
       <div class="appearance-option">
         <div class="appearance-option__heading">
           <div>
-            <h3>界面模式</h3>
-            <p>浅色适合明亮环境，深色适合夜间或低亮度屏幕。</p>
+            <h3>{{ $t('setting.appearance.interfaceMode') }}</h3>
+            <p>{{ $t('setting.appearance.interfaceModeDescription') }}</p>
           </div>
-          <span>{{ theme === 'dark' ? '当前：深色' : '当前：浅色' }}</span>
+          <span>{{ theme === 'dark' ? $t('setting.appearance.currentDark') : $t('setting.appearance.currentLight') }}</span>
         </div>
 
         <div class="mode-grid">
@@ -74,8 +81,8 @@ const resetAppearance = () => {
               <em></em>
             </span>
             <span class="mode-card__copy">
-              <strong>浅色模式</strong>
-              <small>清晰明亮</small>
+              <strong>{{ $t('setting.appearance.lightMode') }}</strong>
+              <small>{{ $t('setting.appearance.lightModeDescription') }}</small>
             </span>
             <span v-if="theme === 'light'" class="mode-card__check">✓</span>
           </button>
@@ -92,8 +99,8 @@ const resetAppearance = () => {
               <em></em>
             </span>
             <span class="mode-card__copy">
-              <strong>深色模式</strong>
-              <small>沉浸护眼</small>
+              <strong>{{ $t('setting.appearance.darkMode') }}</strong>
+              <small>{{ $t('setting.appearance.darkModeDescription') }}</small>
             </span>
             <span v-if="theme === 'dark'" class="mode-card__check">✓</span>
           </button>
@@ -103,8 +110,8 @@ const resetAppearance = () => {
       <div class="appearance-option">
         <div class="appearance-option__heading">
           <div>
-            <h3>主题颜色</h3>
-            <p>按钮、导航选中态、链接、分页和表单焦点会同步使用所选颜色。</p>
+            <h3>{{ $t('setting.appearance.themeColor') }}</h3>
+            <p>{{ $t('setting.appearance.themeColorDescription') }}</p>
           </div>
           <span class="current-accent">
             <i :style="{ background: accentColor }"></i>
@@ -125,8 +132,8 @@ const resetAppearance = () => {
               <i v-if="accentColor === item.color">✓</i>
             </span>
             <span>
-              <strong>{{ item.name }}</strong>
-              <small>{{ item.description }}</small>
+              <strong>{{ presetText(item.nameKey, item.name) }}</strong>
+              <small>{{ presetText(item.descriptionKey, item.description) }}</small>
             </span>
           </button>
 
@@ -138,8 +145,8 @@ const resetAppearance = () => {
               @change="changeCustomAccent"
             />
             <span>
-              <strong>自定义颜色</strong>
-              <small>选择任意符合习惯的品牌色</small>
+              <strong>{{ $t('setting.appearance.customColor') }}</strong>
+              <small>{{ $t('setting.appearance.customColorDescription') }}</small>
             </span>
           </div>
         </div>
@@ -147,13 +154,13 @@ const resetAppearance = () => {
 
       <div class="theme-preview">
         <div class="theme-preview__copy">
-          <span>实时预览</span>
+          <span>{{ $t('setting.appearance.realtimePreview') }}</span>
           <strong>OneinStack Panel</strong>
-          <p>主题色会应用到整个管理面板，不会改变成功、警告和错误等状态颜色。</p>
+          <p>{{ $t('setting.appearance.previewDescription') }}</p>
         </div>
         <div class="theme-preview__actions">
-          <button type="button">次要操作</button>
-          <button type="button" class="primary">主要操作</button>
+          <button type="button">{{ $t('setting.appearance.secondaryAction') }}</button>
+          <button type="button" class="primary">{{ $t('setting.appearance.primaryAction') }}</button>
         </div>
       </div>
     </div>

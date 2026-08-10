@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { ArrowLeft, Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 interface ConfigurationField {
   key: string
@@ -80,6 +81,10 @@ const preview = ref<ConfigurationPreview>()
 const history = ref<ConfigurationHistoryEntry[]>([])
 const values = reactive<Record<string, any>>({})
 let hydrating = false
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 
 const visible = computed({
   get: () => props.modelValue,
@@ -87,7 +92,7 @@ const visible = computed({
 })
 
 const title = computed(() =>
-  configuration.value ? `${configuration.value.displayName} 配置` : '组件配置'
+  configuration.value ? t('software.config.componentConfigTitle', '{name} configuration', { name: configuration.value.displayName }) : t('software.config.componentConfig', 'Component configuration')
 )
 
 const revisionLabel = computed(() => {
@@ -96,18 +101,18 @@ const revisionLabel = computed(() => {
 })
 
 const applyModeLabel = computed(() =>
-  configuration.value?.applyMode === 'reload' ? '平滑重载' : '服务重启'
+  configuration.value?.applyMode === 'reload' ? t('layout.operation.reload', 'Reload') : t('layout.operation.restart', 'Restart')
 )
 
 const changeCount = computed(() => preview.value?.changes.length || 0)
 
 const historyStatus = (status: ConfigurationHistoryEntry['status']) => {
   const labels = {
-    pending: '发布中',
-    succeeded: '已发布',
-    failed: '失败',
-    canceled: '已取消',
-    interrupted: '已中断'
+    pending: t('software.config.historyStatus.pending', 'Publishing'),
+    succeeded: t('software.config.historyStatus.succeeded', 'Published'),
+    failed: t('common.failed', 'Failed'),
+    canceled: t('software.task.status.canceled', 'Canceled'),
+    interrupted: t('software.task.status.interrupted', 'Interrupted')
   }
   return labels[status]
 }
@@ -119,7 +124,7 @@ const historyTagType = (status: ConfigurationHistoryEntry['status']) => {
   return 'info'
 }
 
-const formatDate = (value: string) => new Intl.DateTimeFormat('zh-CN', {
+const formatDate = (value: string) => new Intl.DateTimeFormat(i18n.locale || 'zh-CN', {
   month: '2-digit',
   day: '2-digit',
   hour: '2-digit',
@@ -193,7 +198,7 @@ const buildPreview = async () => {
     })
     preview.value = data as ConfigurationPreview
     if (!preview.value.hasChanges) {
-      ElMessage.info('配置没有发生变化')
+      ElMessage.info(t('software.config.noChanges', 'Configuration has no changes'))
     }
   } finally {
     previewing.value = false
@@ -211,7 +216,7 @@ const apply = async () => {
     })
     emit('task-created', data)
     visible.value = false
-    ElMessage.success('配置发布任务已创建，可在后台继续运行')
+    ElMessage.success(t('software.config.publishTaskCreated', 'Configuration publish task created and can continue in the background'))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
   } finally {
@@ -229,7 +234,7 @@ const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
     )
     const restorePreview = data?.preview as ConfigurationPreview
     if (!restorePreview?.hasChanges) {
-      ElMessage.info('当前配置已经与该历史版本一致')
+      ElMessage.info(t('software.config.sameAsHistory', 'Current configuration already matches this history version'))
       return
     }
     const { data: result } = await submitOperation('software.configure', {
@@ -239,7 +244,7 @@ const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
     })
     emit('task-created', result)
     visible.value = false
-    ElMessage.success('配置恢复任务已创建，可在后台查看进度')
+    ElMessage.success(t('software.config.restoreTaskCreated', 'Configuration restore task created. Check progress in the background.'))
   } catch (error: any) {
     if (!isOperationCancelled(error)) throw error
   } finally {
@@ -276,7 +281,7 @@ watch(values, () => {
       <div class="drawer-navigation">
         <button type="button" class="back-button" :disabled="applying" @click="visible = false">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ $t('common.back') }}</span>
         </button>
         <div class="drawer-heading">
           <h2>{{ title }}</h2>
@@ -291,23 +296,23 @@ watch(values, () => {
       <div class="configuration-notice">
         <span class="notice-icon"><el-icon><Lock /></el-icon></span>
         <div class="notice-copy">
-          <strong>安全配置模式</strong>
-          <p>仅调整白名单参数，不会覆盖网站、数据目录、监听地址和密码。</p>
+          <strong>{{ $t('software.config.safeMode') }}</strong>
+          <p>{{ $t('software.config.safeModeDescription') }}</p>
         </div>
-        <span class="notice-check">发布前语法校验</span>
+        <span class="notice-check">{{ $t('software.config.syntaxCheckBeforePublish') }}</span>
       </div>
 
       <div class="configuration-meta">
         <div class="meta-item">
-          <span>配置版本</span>
+          <span>{{ $t('software.config.configRevision') }}</span>
           <strong>{{ revisionLabel }}</strong>
         </div>
         <div class="meta-item">
-          <span>脚本来源</span>
+          <span>{{ $t('software.config.scriptSource') }}</span>
           <strong>{{ configuration.packageSource || '-' }}</strong>
         </div>
         <div class="meta-item">
-          <span>生效方式</span>
+          <span>{{ $t('software.config.applyMode') }}</span>
           <strong>{{ applyModeLabel }}</strong>
         </div>
         <el-button
@@ -318,17 +323,17 @@ watch(values, () => {
           :disabled="applying"
           @click="load"
         >
-          重新读取
+          {{ $t('software.config.reloadConfig') }}
         </el-button>
       </div>
 
       <section class="settings-panel">
         <div class="settings-panel__header">
           <div>
-            <h3>运行参数</h3>
-            <p>仅展示当前组件允许安全调整的配置</p>
+            <h3>{{ $t('software.config.runtimeParameters') }}</h3>
+            <p>{{ $t('software.config.runtimeParametersDescription') }}</p>
           </div>
-          <span>{{ configuration.fields.length }} 项配置</span>
+          <span>{{ $t('software.config.fieldCount', { count: configuration.fields.length }) }}</span>
         </div>
 
         <el-form label-position="top" class="configuration-form">
@@ -370,7 +375,7 @@ watch(values, () => {
                 v-else
                 :id="`config-${field.key}`"
                 v-model="values[field.key]"
-                placeholder="请输入配置值"
+                :placeholder="$t('software.config.inputConfigValue')"
               />
               <p v-if="field.description" class="field-description">
                 {{ field.description }}
@@ -383,8 +388,8 @@ watch(values, () => {
       <section class="history-panel">
         <div class="history-panel__header">
           <div>
-            <h3><el-icon><Clock /></el-icon> 配置历史</h3>
-            <p>保存每次安全发布前后的参数，可以创建恢复任务</p>
+            <h3><el-icon><Clock /></el-icon> {{ $t('software.config.configHistory') }}</h3>
+            <p>{{ $t('software.config.configHistoryDescription') }}</p>
           </div>
           <el-button
             link
@@ -393,7 +398,7 @@ watch(values, () => {
             :disabled="applying || !!restoringId"
             @click="loadHistory"
           >
-            刷新
+            {{ $t('common.refresh') }}
           </el-button>
         </div>
         <div v-loading="historyLoading" class="history-list">
@@ -406,11 +411,11 @@ watch(values, () => {
                   {{ historyStatus(entry.status) }}
                 </el-tag>
                 <el-tag v-if="entry.restoreFromId" size="small" effect="plain">
-                  恢复任务
+                  {{ $t('software.config.restoreTask') }}
                 </el-tag>
               </div>
               <p>
-                {{ entry.softwareVersion }} · {{ historyChangeCount(entry) }} 项变更 ·
+                {{ entry.softwareVersion }} · {{ $t('software.config.changeCount', { count: historyChangeCount(entry) }) }} ·
                 {{ entry.baseRevision.slice(0, 10) }}…
               </p>
             </div>
@@ -422,12 +427,12 @@ watch(values, () => {
               :disabled="entry.status !== 'succeeded' || applying || (!!restoringId && restoringId !== entry.id)"
               @click="restoreHistory(entry)"
             >
-              恢复到发布前
+              {{ $t('software.config.restoreBeforePublish') }}
             </el-button>
           </div>
           <el-empty
             v-if="!historyLoading && !history.length"
-            description="暂无配置发布历史"
+            :description="$t('software.config.noHistory')"
             :image-size="56"
           />
         </div>
@@ -436,51 +441,51 @@ watch(values, () => {
       <section v-if="preview" class="preview-section">
         <div class="preview-title">
           <div>
-            <h3>变更预览</h3>
-            <p>发布前会再次校验配置版本与组件语法</p>
+            <h3>{{ $t('software.config.changePreview') }}</h3>
+            <p>{{ $t('software.config.changePreviewDescription') }}</p>
           </div>
-          <span v-if="preview.hasChanges">{{ changeCount }} 项待发布</span>
+          <span v-if="preview.hasChanges">{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
         </div>
         <el-table v-if="preview.hasChanges" :data="preview.changes" size="small">
-          <el-table-column prop="label" label="配置项" min-width="145" />
-          <el-table-column label="当前值" min-width="130">
+          <el-table-column prop="label" :label="$t('software.config.configItem')" min-width="145" />
+          <el-table-column :label="$t('software.config.currentValue')" min-width="130">
             <template #default="{ row }">
               <span class="value-before">{{ row.before }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="新值" min-width="130">
+          <el-table-column :label="$t('software.config.newValue')" min-width="130">
             <template #default="{ row }">
               <span class="value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
             </template>
           </el-table-column>
         </el-table>
-        <el-empty v-else description="配置没有发生变化" :image-size="64" />
+        <el-empty v-else :description="$t('software.config.noChanges')" :image-size="64" />
       </section>
     </div>
     <el-result
       v-else
       icon="error"
-      title="未能读取组件配置"
-      sub-title="请检查组件状态或重新读取"
+      :title="$t('software.config.readFailedTitle')"
+      :sub-title="$t('software.config.readFailedSubtitle')"
     >
       <template #extra>
-        <el-button type="primary" :icon="RefreshRight" @click="load">重新读取</el-button>
+        <el-button type="primary" :icon="RefreshRight" @click="load">{{ $t('software.config.reloadConfig') }}</el-button>
       </template>
     </el-result>
 
     <template #footer>
       <div class="drawer-footer">
-        <span v-if="preview?.hasChanges">已预览 {{ changeCount }} 项变更</span>
-        <span v-else>修改参数后，请先预览变更</span>
+        <span v-if="preview?.hasChanges">{{ $t('software.config.previewedChangeCount', { count: changeCount }) }}</span>
+        <span v-else>{{ $t('software.config.previewFirstHint') }}</span>
         <div class="drawer-actions">
-          <el-button :disabled="applying" @click="visible = false">取消</el-button>
+          <el-button :disabled="applying" @click="visible = false">{{ $t('common.cancel') }}</el-button>
           <el-button
             :icon="View"
             :loading="previewing"
             :disabled="loading || applying"
             @click="buildPreview"
           >
-            预览变更
+            {{ $t('software.config.previewChanges') }}
           </el-button>
           <el-button
             type="primary"
@@ -488,7 +493,7 @@ watch(values, () => {
             :disabled="!preview?.hasChanges || previewing"
             @click="apply"
           >
-            发布配置
+            {{ $t('software.config.publishConfig') }}
           </el-button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import containerTaskStore from '@/sstore/containerTask'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -19,7 +20,11 @@ const visible = computed({
   set: (value: boolean) => emit('update:modelValue', value)
 })
 const task = computed(() => containerTaskStore.tasks[props.taskId])
-const logs = computed(() => containerTaskStore.logs[props.taskId] || '等待 Docker 输出...')
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
+const logs = computed(() => containerTaskStore.logs[props.taskId] || t('container.task.waitingDockerOutput', 'Waiting for Docker output...'))
 const terminal = computed(() => containerTaskStore.isTerminal(task.value?.status))
 const failed = computed(() => ['failed', 'interrupted'].includes(task.value?.status))
 const cancelable = computed(() => !!task.value && !terminal.value && !task.value.cancelRequested)
@@ -29,28 +34,28 @@ const downloading = ref(false)
 
 const operationLabel = computed(() => {
   const labels: Record<string, string> = {
-    pull: '拉取镜像',
-    build: '构建镜像',
-    create: '创建容器'
+    pull: t('container.pullImage', 'Pull image'),
+    build: t('container.buildImage', 'Build image'),
+    create: t('container.createContainer', 'Create container')
   }
-  return labels[task.value?.operation || ''] || '容器任务'
+  return labels[task.value?.operation || ''] || t('container.task.containerTask', 'Container task')
 })
 
 const statusText = computed(() => {
   const labels: Record<string, string> = {
-    queued: '排队中',
-    resolving: '正在解析参数',
-    pulling: '正在拉取镜像',
-    building: '正在构建镜像',
-    creating: '正在创建容器',
-    verifying: '正在验证结果',
-    canceling: '正在取消',
-    succeeded: `${operationLabel.value}成功`,
-    failed: `${operationLabel.value}失败`,
-    canceled: '已取消',
-    interrupted: '任务已中断'
+    queued: t('container.task.status.queued', 'Queued'),
+    resolving: t('container.task.status.resolving', 'Resolving parameters'),
+    pulling: t('container.task.status.pulling', 'Pulling image'),
+    building: t('container.task.status.building', 'Building image'),
+    creating: t('container.task.status.creating', 'Creating container'),
+    verifying: t('container.task.status.verifying', 'Verifying result'),
+    canceling: t('container.task.status.canceling', 'Canceling'),
+    succeeded: t('container.task.status.succeeded', '{operation} succeeded', { operation: operationLabel.value }),
+    failed: t('container.task.status.failed', '{operation} failed', { operation: operationLabel.value }),
+    canceled: t('container.task.status.canceled', 'Canceled'),
+    interrupted: t('container.task.status.interrupted', 'Task interrupted')
   }
-  return labels[task.value?.status || ''] || task.value?.status || '正在加载'
+  return labels[task.value?.status || ''] || task.value?.status || t('common.loading', 'Loading')
 })
 
 const progressStatus = computed(() => {
@@ -60,34 +65,34 @@ const progressStatus = computed(() => {
 })
 
 const phaseLabel = (phase: string) => ({
-  queued: '任务排队',
-  resolving: '参数检查',
-  pulling: '拉取镜像',
-  building: '构建镜像',
-  creating: '创建容器',
-  verifying: '验证结果'
+  queued: t('container.task.phase.queued', 'Task queued'),
+  resolving: t('container.task.phase.resolving', 'Parameter check'),
+  pulling: t('container.task.phase.pulling', 'Pull image'),
+  building: t('container.task.phase.building', 'Build image'),
+  creating: t('container.task.phase.creating', 'Create container'),
+  verifying: t('container.task.phase.verifying', 'Verify result')
 }[phase] || phase)
 
 const stageDefinitions = computed(() => {
   if (task.value?.operation === 'pull') {
     return [
-      { key: 'resolving', name: '解析镜像参数' },
-      { key: 'pulling', name: '拉取镜像层' },
-      { key: 'verifying', name: '验证镜像结果' }
+      { key: 'resolving', name: t('container.task.stages.resolveImageParams', 'Resolve image parameters') },
+      { key: 'pulling', name: t('container.task.stages.pullImageLayers', 'Pull image layers') },
+      { key: 'verifying', name: t('container.task.stages.verifyImageResult', 'Verify image result') }
     ]
   }
   if (task.value?.operation === 'build') {
     return [
-      { key: 'resolving', name: '检查构建参数' },
-      { key: 'building', name: '执行 Docker 构建' },
-      { key: 'verifying', name: '验证镜像标签' }
+      { key: 'resolving', name: t('container.task.stages.checkBuildParams', 'Check build parameters') },
+      { key: 'building', name: t('container.task.stages.executeDockerBuild', 'Execute Docker build') },
+      { key: 'verifying', name: t('container.task.stages.verifyImageTag', 'Verify image tag') }
     ]
   }
   return [
-    { key: 'resolving', name: '检查容器参数' },
-    { key: 'pulling', name: '准备所需镜像' },
-    { key: 'creating', name: '创建容器实例' },
-    { key: 'verifying', name: '验证容器结果' }
+    { key: 'resolving', name: t('container.task.stages.checkContainerParams', 'Check container parameters') },
+    { key: 'pulling', name: t('container.task.stages.prepareRequiredImage', 'Prepare required image') },
+    { key: 'creating', name: t('container.task.stages.createContainerInstance', 'Create container instance') },
+    { key: 'verifying', name: t('container.task.stages.verifyContainerResult', 'Verify container result') }
   ]
 })
 
@@ -101,11 +106,11 @@ const stages = computed(() => {
 })
 
 const summaryItems = computed(() => [
-  { label: '任务 ID', value: task.value?.id || '-' },
-  { label: '操作类型', value: operationLabel.value },
-  { label: '当前阶段', value: phaseLabel(task.value?.phase || '-') },
-  { label: '目标资源', value: task.value?.resourceName || task.value?.containerId || '-' },
-  { label: '错误码', value: task.value?.errorCode || '-' }
+  { label: t('container.task.summary.taskId', 'Task ID'), value: task.value?.id || '-' },
+  { label: t('container.task.summary.operationType', 'Operation type'), value: operationLabel.value },
+  { label: t('container.task.summary.currentPhase', 'Current phase'), value: phaseLabel(task.value?.phase || '-') },
+  { label: t('container.task.summary.targetResource', 'Target resource'), value: task.value?.resourceName || task.value?.containerId || '-' },
+  { label: t('container.task.summary.errorCode', 'Error code'), value: task.value?.errorCode || '-' }
 ])
 
 watch(
@@ -136,13 +141,13 @@ watch(
 const cancelTask = async () => {
   if (!props.taskId) return
   try {
-    await ElMessageBox.confirm('取消后会尝试停止当前 Docker 操作，任务会保留日志和最终状态。', '取消容器任务', {
+    await ElMessageBox.confirm(t('container.task.cancelConfirmMessage', 'Canceling will try to stop the current Docker operation. Logs and final status will be retained.'), t('container.task.cancelTask', 'Cancel container task'), {
       type: 'warning',
-      confirmButtonText: '确认取消',
-      cancelButtonText: '继续执行'
+      confirmButtonText: t('container.task.confirmCancel', 'Confirm cancel'),
+      cancelButtonText: t('container.task.continueRunning', 'Continue running')
     })
     await containerTaskStore.cancel(props.taskId)
-    ElMessage.success('已提交取消请求')
+    ElMessage.success(t('container.task.cancelSubmitted', 'Cancel request submitted'))
   } catch {
     // Keep task running.
   }
@@ -153,9 +158,9 @@ const downloadLog = async () => {
   downloading.value = true
   try {
     await containerTaskStore.downloadLog(props.taskId)
-    ElMessage.success('完整任务日志已开始下载')
+    ElMessage.success(t('container.task.logDownloadStarted', 'Full task log download started'))
   } catch (error: any) {
-    ElMessage.error(error?.message || '下载任务日志失败')
+    ElMessage.error(error?.message || t('container.task.logDownloadFailed', 'Failed to download task log'))
   } finally {
     downloading.value = false
   }
@@ -179,7 +184,7 @@ onBeforeUnmount(() => {
       <div class="task-header">
         <button type="button" class="task-back" @click="visible = false">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ $t('common.back') }}</span>
         </button>
         <div class="task-heading">
           <div class="task-title">
@@ -197,14 +202,14 @@ onBeforeUnmount(() => {
       <section class="overview">
         <div class="overview-main">
           <div>
-            <span class="overview-label">当前进度 · {{ phaseLabel(task.phase || task.status) }}</span>
+            <span class="overview-label">{{ $t('container.task.currentProgress') }} · {{ phaseLabel(task.phase || task.status) }}</span>
             <h3>{{ statusText }}</h3>
-            <p>{{ task.message || '任务已创建，正在等待 Docker 输出。' }}</p>
+            <p>{{ task.message || $t('container.task.createdWaitingDockerOutput') }}</p>
           </div>
           <div class="progress-card">
-            <small>完成度</small>
+            <small>{{ $t('container.task.completion') }}</small>
             <strong>{{ task.progress || 0 }}%</strong>
-            <span>{{ terminal ? '任务已结束' : '实时刷新中' }}</span>
+            <span>{{ terminal ? $t('container.task.taskEnded') : $t('container.task.realtimeRefreshing') }}</span>
           </div>
         </div>
         <el-progress
@@ -238,25 +243,25 @@ onBeforeUnmount(() => {
         type="error"
         show-icon
         :closable="false"
-        :title="task.errorMessage || task.message || '容器任务执行失败'"
+        :title="task.errorMessage || task.message || $t('container.task.executionFailed')"
       />
 
       <section class="task-grid">
         <section class="log-panel">
           <div class="log-toolbar">
             <div>
-              <strong>实时任务日志</strong>
-              <span>Docker 输出会持续追加到这里。</span>
+              <strong>{{ $t('container.task.realtimeLogs') }}</strong>
+              <span>{{ $t('container.task.dockerOutputHint') }}</span>
             </div>
-            <el-checkbox v-model="autoScroll">自动滚动</el-checkbox>
+            <el-checkbox v-model="autoScroll">{{ $t('container.task.autoScroll') }}</el-checkbox>
           </div>
           <pre ref="logElement" class="task-log">{{ logs }}</pre>
         </section>
         <aside class="summary-panel">
           <div class="summary-card">
-            <small>当前结果</small>
+            <small>{{ $t('container.task.currentResult') }}</small>
             <strong>{{ statusText }}</strong>
-            <p>{{ task.errorMessage || task.message || '暂无附加说明' }}</p>
+            <p>{{ task.errorMessage || task.message || $t('container.task.noAdditionalNotes') }}</p>
           </div>
           <div v-for="item in summaryItems" :key="item.label" class="summary-item">
             <span>{{ item.label }}</span>
@@ -269,11 +274,11 @@ onBeforeUnmount(() => {
 
     <template #footer>
       <div class="task-actions">
-        <el-button :loading="downloading" @click="downloadLog">下载完整日志</el-button>
+        <el-button :loading="downloading" @click="downloadLog">{{ $t('container.task.downloadFullLog') }}</el-button>
         <div>
-          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">取消任务</el-button>
+          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">{{ $t('container.task.cancelTask') }}</el-button>
           <el-button :type="failed && !cancelable ? 'info' : 'primary'" :plain="failed && !cancelable" @click="visible = false">
-            {{ terminal ? '完成' : '后台运行' }}
+            {{ terminal ? $t('common.done') : $t('container.task.runInBackground') }}
           </el-button>
         </div>
       </div>

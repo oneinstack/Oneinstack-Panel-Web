@@ -9,6 +9,7 @@ import softwareTaskStore, { type SoftwareTask } from '@/sstore/softwareTask'
 import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -35,6 +36,11 @@ const props = withDefaults(defineProps<ChildProps>(), {
   list: () => []
 })
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const formRef = ref<FormInstance | null>(null)
 const submitting = ref(false)
 const serviceLoading = ref(false)
@@ -59,7 +65,7 @@ const installForm = reactive<FormProps['data']>({
 
 const drawer = reactive({
   show: false,
-  title: '安装参数',
+  title: t('software.install', 'Install'),
   onClose: () => {
     formRef.value?.clearValidate()
     drawer.show = false
@@ -93,21 +99,21 @@ const activeTask = (item: any) => softwareTaskStore.activeForKey(item.key)
 const taskStatusLabel = (task?: SoftwareTask) => {
   if (!task) return ''
   const labels: Record<string, string> = {
-    queued: '排队中',
-    resolving: '获取安装包',
-    prechecking: '环境预检',
-    installing: '安装中',
-    upgrading: '升级中',
-    uninstalling: '卸载中',
-    starting: '启动中',
-    stopping: '停止中',
-    restarting: '重启中',
-    reloading: '重载中',
-    configuring: '配置中',
-    verifying: '验证中',
-    finalizing: '即将完成',
-    canceling: '取消中',
-    rolling_back: '回滚中'
+    queued: t('software.taskStatuses.queued', 'Queued'),
+    resolving: t('software.taskStatuses.resolving', 'Resolving package'),
+    prechecking: t('software.taskStatuses.prechecking', 'Environment precheck'),
+    installing: t('software.taskStatuses.installing', 'Installing'),
+    upgrading: t('software.taskStatuses.upgrading', 'Upgrading'),
+    uninstalling: t('software.taskStatuses.uninstalling', 'Uninstalling'),
+    starting: t('software.taskStatuses.starting', 'Starting'),
+    stopping: t('software.taskStatuses.stopping', 'Stopping'),
+    restarting: t('software.taskStatuses.restarting', 'Restarting'),
+    reloading: t('software.taskStatuses.reloading', 'Reloading'),
+    configuring: t('software.taskStatuses.configuring', 'Configuring'),
+    verifying: t('software.taskStatuses.verifying', 'Verifying'),
+    finalizing: t('software.taskStatuses.finalizing', 'Finalizing'),
+    canceling: t('software.taskStatuses.canceling', 'Canceling'),
+    rolling_back: t('software.taskStatuses.rollingBack', 'Rolling back')
   }
   return labels[task.status] || task.status
 }
@@ -124,17 +130,17 @@ const hasUpgrade = (item: any) =>
   !!recommendedVersion(item) && recommendedVersion(item) !== item.install_version
 
 const serviceStateLabel = (status?: ComponentServiceStatus) => {
-  if (!status) return '正在读取状态'
+  if (!status) return t('software.statusReading', 'Reading status')
   if (status.probeError) return status.probeError
   const labels: Record<string, string> = {
-    running: '运行中',
-    stopped: '已停止',
-    failed: '运行失败',
-    transitioning: '状态切换中',
-    unknown: '状态未知',
-    not_installed: '未安装'
+    running: t('software.serviceStates.running', 'Running'),
+    stopped: t('software.serviceStates.stopped', 'Stopped'),
+    failed: t('software.serviceStates.failed', 'Failed'),
+    transitioning: t('software.serviceStates.transitioning', 'Changing status'),
+    unknown: t('software.serviceStates.unknown', 'Unknown status'),
+    not_installed: t('software.serviceStates.notInstalled', 'Not installed')
   }
-  return labels[status.state] || '状态未知'
+  return labels[status.state] || t('software.serviceStates.unknown', 'Unknown status')
 }
 
 const serviceStateType = (status?: ComponentServiceStatus) => {
@@ -168,7 +174,7 @@ const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => 
     if (softwareTaskStore.isTerminal(task.status)) return task as SoftwareTask
     await new Promise((resolve) => window.setTimeout(resolve, 800))
   }
-  throw new Error('等待服务操作完成超时，请在右上角任务中心查看结果')
+  throw new Error(t('software.serviceActionTimeout', 'Timed out waiting for service operation. Check the result in the task center at the top right.'))
 }
 
 const handleServiceAction = async (item: any, action: ServiceAction) => {
@@ -179,10 +185,10 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
     return
   }
   const actionLabels: Record<ServiceAction, string> = {
-    start: '启动',
-    stop: '停止',
-    restart: '重启',
-    reload: '平滑重载'
+    start: t('software.actionLabels.start', 'Start'),
+    stop: t('software.actionLabels.stop', 'Stop'),
+    restart: t('software.actionLabels.restart', 'Restart'),
+    reload: t('software.actionLabels.reload', 'Reload')
   }
   submitting.value = true
   try {
@@ -204,16 +210,16 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
     if (action === 'restart') {
       const task = await waitForServiceTask(result.taskId)
       if (task.status === 'succeeded') {
-        ElMessage.success(`${status.displayName} 重启成功`)
+        ElMessage.success(t('software.serviceActionSuccess', '{name} {action} succeeded', { name: status.displayName, action: actionLabels[action] }))
       } else {
-        ElMessage.error(task.errorMessage || task.message || `${status.displayName} 重启失败`)
+        ElMessage.error(task.errorMessage || task.message || t('software.serviceActionFailed', '{name} {action} failed', { name: status.displayName, action: actionLabels[action] }))
       }
       await loadServiceStatuses()
       return
     }
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
-    ElMessage.success(`${actionLabels[action]}任务已创建，可在后台继续运行`)
+    ElMessage.success(t('software.serviceActionTaskCreated', '{action} task created and can continue in the background', { action: actionLabels[action] }))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
   } finally {
@@ -258,7 +264,7 @@ const handleInstallClick = (item: any) => {
     return
   }
   if (item.installable === false) {
-    ElMessage.warning('Center 当前已暂停该软件的安装')
+    ElMessage.warning(t('software.installPaused', 'Center has paused installation for this software'))
     return
   }
   selectedItem.value = item
@@ -288,7 +294,7 @@ const openInstallForm = (item: any) => {
     prop: field.key,
     rules: [{
       required: field.required === true || field.required === 'true',
-      message: `请输入${field.value || field.name || field.key}`,
+      message: t('software.inputField', 'Enter {field}', { field: field.value || field.name || field.key }),
       trigger: 'blur'
     }]
   }))
@@ -296,7 +302,7 @@ const openInstallForm = (item: any) => {
     void handleInstall()
     return
   }
-  drawer.title = `安装 ${item.name} ${installForm.value.version}`
+  drawer.title = t('software.installTitle', 'Install {name} {version}', { name: item.name, version: installForm.value.version })
   drawer.show = true
 }
 
@@ -363,7 +369,7 @@ const handleUninstall = async (item: any) => {
     softwareTaskStore.acceptCreated(result, request)
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
-    ElMessage.success('卸载任务已创建，可在后台继续运行')
+    ElMessage.success(t('software.uninstallTaskCreated', 'Uninstall task created and can continue in the background'))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
   } finally {
@@ -400,7 +406,7 @@ onMounted(() => {
 <template>
   <div>
     <div class="section-header">
-      <div class="title">应用</div>
+      <div class="title">{{ t('software.apps', 'Apps') }}</div>
       <el-popover
         v-if="recentTasks.length"
         placement="bottom-end"
@@ -410,7 +416,7 @@ onMounted(() => {
       >
         <template #reference>
           <el-button plain>
-            软件任务
+            {{ t('software.softwareTasks', 'Software tasks') }}
             <el-badge
               :value="recentTasks.filter((task) => !softwareTaskStore.isTerminal(task.status)).length"
               :hidden="!recentTasks.some((task) => !softwareTaskStore.isTerminal(task.status))"
@@ -420,8 +426,8 @@ onMounted(() => {
         </template>
         <div class="task-center-list">
           <div v-if="softwareTaskStore.stats" class="task-stats">
-            <span>近 30 天 {{ softwareTaskStore.stats.total }} 个任务</span>
-            <strong>成功率 {{ softwareTaskStore.stats.successRate }}%</strong>
+            <span>{{ t('software.recentTaskCount', '{count} tasks in the last 30 days', { count: softwareTaskStore.stats.total }) }}</span>
+            <strong>{{ t('software.successRate', 'Success rate {rate}%', { rate: softwareTaskStore.stats.successRate }) }}</strong>
           </div>
           <div class="task-center-scroll">
             <button
@@ -469,8 +475,8 @@ onMounted(() => {
                   >
                     {{
                       isInstalled(item)
-                        ? item.status === 3 ? '已安装 · 操作失败' : '已安装'
-                        : '安装失败'
+                        ? item.status === 3 ? t('software.installedWithFailure', 'Installed · operation failed') : t('software.installed', 'Installed')
+                        : t('software.installFailed', 'Install failed')
                     }}
                   </span>
                 </div>
@@ -496,7 +502,7 @@ onMounted(() => {
                     {{ serviceStateLabel(serviceStatus(item)) }}
                   </el-tag>
                   <small v-if="serviceStatus(item)?.runtimeVersion">
-                    运行版本 {{ serviceStatus(item)?.runtimeVersion }}
+                    {{ t('software.runtimeVersion', 'Runtime version {version}', { version: serviceStatus(item)?.runtimeVersion }) }}
                   </small>
                   <small v-else-if="serviceStatus(item)?.subState">
                     {{ serviceStatus(item)?.subState }}
@@ -508,7 +514,7 @@ onMounted(() => {
                   :loading="serviceLoading"
                   @click="loadServiceStatuses"
                 >
-                  刷新
+                  {{ t('common.refresh', 'Refresh') }}
                 </el-button>
               </div>
               <div class="service-actions">
@@ -519,7 +525,7 @@ onMounted(() => {
                   :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
                   @click="openServiceConfiguration(item)"
                 >
-                  配置
+                  {{ t('software.configure', 'Configure') }}
                 </el-button>
                 <el-button
                   v-if="serviceStatus(item)?.state !== 'running'"
@@ -527,7 +533,7 @@ onMounted(() => {
                   :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
                   @click="handleServiceAction(item, 'start')"
                 >
-                  启动
+                  {{ t('software.actionLabels.start', 'Start') }}
                 </el-button>
                 <el-button
                   v-if="serviceStatus(item)?.state === 'running'"
@@ -535,14 +541,14 @@ onMounted(() => {
                   :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
                   @click="handleServiceAction(item, 'stop')"
                 >
-                  停止
+                  {{ t('software.actionLabels.stop', 'Stop') }}
                 </el-button>
                 <el-button
                   size="small"
                   :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
                   @click="handleServiceAction(item, 'restart')"
                 >
-                  重启
+                  {{ t('software.actionLabels.restart', 'Restart') }}
                 </el-button>
                 <el-button
                   v-if="serviceActionAllowed(serviceStatus(item), 'reload')"
@@ -554,7 +560,7 @@ onMounted(() => {
                   "
                   @click="handleServiceAction(item, 'reload')"
                 >
-                  平滑重载
+                  {{ t('software.reload', 'Reload') }}
                 </el-button>
               </div>
             </div>
@@ -562,10 +568,10 @@ onMounted(() => {
 
             <div class="below">
               <div class="version-info">
-                <template v-if="!isInstalled(item)">未安装</template>
+                <template v-if="!isInstalled(item)">{{ t('software.notInstalled', 'Not installed') }}</template>
                 <template v-else>
-                  已安装版本：{{ item.install_version || item.versions?.[0] }}
-                  <span v-if="hasUpgrade(item)"> · 可升级至 {{ recommendedVersion(item) }}</span>
+                  {{ t('software.installedVersion', 'Installed version: {version}', { version: item.install_version || item.versions?.[0] }) }}
+                  <span v-if="hasUpgrade(item)"> · {{ t('software.upgradeTo', 'Upgradeable to {version}', { version: recommendedVersion(item) }) }}</span>
                 </template>
               </div>
               <div class="software-card-actions">
@@ -575,7 +581,7 @@ onMounted(() => {
                   class="btn task"
                   @click="showTask(activeTask(item)!.id)"
                 >
-                  查看进度
+                  {{ t('software.viewProgress', 'View progress') }}
                 </button>
                 <template v-else-if="isInstalled(item)">
                   <button
@@ -584,7 +590,7 @@ onMounted(() => {
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
                   >
-                    升级
+                    {{ t('software.upgrade', 'Upgrade') }}
                   </button>
                   <button
                     type="button"
@@ -592,7 +598,7 @@ onMounted(() => {
                     :disabled="submitting"
                     @click="handleUninstall(item)"
                   >
-                    卸载
+                    {{ t('software.uninstall', 'Uninstall') }}
                   </button>
                 </template>
                 <button
@@ -603,7 +609,7 @@ onMounted(() => {
                   :class="{ disabled: item.installable === false }"
                   @click="handleInstallClick(item)"
                 >
-                  {{ item.installable === false ? '已停用' : '安装' }}
+                  {{ item.installable === false ? t('software.disabled', 'Disabled') : t('software.install', 'Install') }}
                 </button>
               </div>
             </div>
@@ -612,7 +618,7 @@ onMounted(() => {
       </template>
       <div v-else class="no-data">
         <img src="/static/images/empty.webp" alt="" />
-        <span>暂无应用</span>
+        <span>{{ t('software.noApps', 'No apps') }}</span>
       </div>
     </div>
 
@@ -627,12 +633,12 @@ onMounted(() => {
 
     <custom-dialog
       v-model:show="versionDialog.show"
-      title="版本选择"
+      :title="t('software.versionSelect', 'Version select')"
       :on-close="versionDialog.onClose"
     >
       <div class="version-select-container">
-        <div class="version-label">版本</div>
-        <el-select v-model="installForm.value.version" placeholder="请选择版本" style="width: 100%">
+        <div class="version-label">{{ t('software.version', 'Version') }}</div>
+        <el-select v-model="installForm.value.version" :placeholder="t('software.selectVersion', 'Select version')" style="width: 100%">
           <el-option
             v-for="version in versionDialog.currentItem?.versions"
             :key="version"
@@ -642,8 +648,8 @@ onMounted(() => {
         </el-select>
       </div>
       <template #footer>
-        <el-button @click="versionDialog.onClose">取消</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm">安装</el-button>
+        <el-button @click="versionDialog.onClose">{{ t('common.cancel', 'Cancel') }}</el-button>
+        <el-button type="primary" @click="versionDialog.onConfirm">{{ t('software.install', 'Install') }}</el-button>
       </template>
     </custom-dialog>
 

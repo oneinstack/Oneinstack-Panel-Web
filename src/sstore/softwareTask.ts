@@ -155,12 +155,12 @@ export const softwareTaskStore = reactive({
     const now = new Date().toISOString()
     const operation = data.operation || 'install'
     const operationMessages: Record<string, string> = {
-      uninstall: '任务已进入卸载队列',
-      start: '任务已进入启动队列',
-      stop: '任务已进入停止队列',
-      restart: '任务已进入重启队列',
-      reload: '任务已进入重载队列',
-      configure: '任务已进入配置队列'
+      uninstall: 'Task entered the uninstall queue',
+      start: 'Task entered the start queue',
+      stop: 'Task entered the stop queue',
+      restart: 'Task entered the restart queue',
+      reload: 'Task entered the reload queue',
+      configure: 'Task entered the configuration queue'
     }
     softwareTaskStore.upsert({
       id: data.taskId,
@@ -171,7 +171,7 @@ export const softwareTaskStore = reactive({
       status: data.status,
       phase: data.status,
       progress: data.progress ?? 0,
-      message: operationMessages[operation] || '任务已进入安装队列',
+      message: operationMessages[operation] || 'Task entered the install queue',
       rollbackStatus: 'not_required',
       cancelRequested: false,
       eventSeq: 0,
@@ -302,7 +302,7 @@ export const softwareTaskStore = reactive({
       headers: { Accept: 'text/plain' }
     })
     if (!response.ok) {
-      let message = `下载日志失败（HTTP ${response.status}）`
+      let message = `Failed to download logs (HTTP ${response.status})`
       try {
         const body = await response.json()
         message = body?.message || body?.error?.message || message

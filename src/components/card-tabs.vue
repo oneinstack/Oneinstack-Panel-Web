@@ -1,6 +1,7 @@
 <script setup lang="ts">
 interface Item {
   name: string
+  nameKey?: string
   index: number
   dot?: boolean
   [key: string]: any
@@ -24,7 +25,7 @@ defineProps<Props>()
       :class="{ active: activeIndex === item.index }"
       @click="clickActive(item)"
     >
-      <el-badge :is-dot="item.dot" >{{ item.name }}</el-badge>
+      <el-badge :is-dot="item.dot" >{{ item.nameKey ? $t(item.nameKey) : item.name }}</el-badge>
     </div>
   </div>
 </template>

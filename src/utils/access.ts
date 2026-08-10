@@ -1,24 +1,25 @@
 import sconfig from '@/sstore/sconfig'
+import i18n from '@/lang'
 
 export const menuKeyLabelMap: Record<string, string> = {
-  dashboard: '首页',
-  website: '网站',
-  database: '数据库',
-  monitoring: '监控告警',
-  bastion: '堡垒机',
-  container: '容器管理',
-  security: '安全',
-  file: '文件',
-  audit: '审计日志',
-  runtimeLog: '运行日志',
-  cron: '计划任务',
-  software: '软件商店',
-  panelSettings: '面板设置',
-  configSnapshots: '配置快照',
-  systemManagement: '系统管理',
-  userManagement: '用户管理',
-  approval: '审批中心',
-  logout: '退出'
+  dashboard: 'Home',
+  website: 'Websites',
+  database: 'Databases',
+  monitoring: 'Monitoring',
+  bastion: 'Bastion',
+  container: 'Containers',
+  security: 'Security',
+  file: 'Files',
+  audit: 'Audit logs',
+  runtimeLog: 'Runtime logs',
+  cron: 'Scheduled tasks',
+  software: 'Software store',
+  panelSettings: 'Panel settings',
+  configSnapshots: 'Config snapshots',
+  systemManagement: 'System management',
+  userManagement: 'User management',
+  approval: 'Approval center',
+  logout: 'Logout'
 }
 
 export const menuPathKeyMap: Array<{ path: string; key: string }> = [
@@ -48,7 +49,9 @@ export const resolveMenuKeyByPath = (path: string) => {
 
 export const resolveMenuLabelByKey = (key?: string) => {
   if (!key) return ''
-  return menuKeyLabelMap[key] || key
+  const i18nKey = `layout.menu.${key}`
+  const label = i18n.t(i18nKey)
+  return label && label !== i18nKey ? label : menuKeyLabelMap[key] || key
 }
 
 const hasConfigSnapshotAccess = () =>

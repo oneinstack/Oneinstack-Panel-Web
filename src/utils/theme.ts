@@ -4,17 +4,19 @@ export interface ThemeAccentPreset {
   name: string
   color: string
   description: string
+  nameKey?: string
+  descriptionKey?: string
 }
 
 export const DEFAULT_THEME_ACCENT = '#F97316'
 
 export const THEME_ACCENT_PRESETS: ThemeAccentPreset[] = [
-  { name: '活力橙', color: '#F97316', description: '默认主题，醒目温暖' },
-  { name: '科技蓝', color: '#2563EB', description: '清晰稳重，适合运维场景' },
-  { name: '翡翠绿', color: '#059669', description: '自然舒适，状态辨识清楚' },
-  { name: '极光紫', color: '#7C3AED', description: '现代鲜明，层次感更强' },
-  { name: '珊瑚红', color: '#E11D48', description: '高对比，强调操作反馈' },
-  { name: '深海青', color: '#0891B2', description: '冷静简约，长时间使用舒适' }
+  { name: 'Vibrant orange', color: '#F97316', description: 'Default theme, warm and prominent', nameKey: 'setting.appearance.presets.orange.name', descriptionKey: 'setting.appearance.presets.orange.description' },
+  { name: 'Tech blue', color: '#2563EB', description: 'Clear and steady, suitable for operations', nameKey: 'setting.appearance.presets.blue.name', descriptionKey: 'setting.appearance.presets.blue.description' },
+  { name: 'Emerald green', color: '#059669', description: 'Natural and comfortable with clear status recognition', nameKey: 'setting.appearance.presets.green.name', descriptionKey: 'setting.appearance.presets.green.description' },
+  { name: 'Aurora purple', color: '#7C3AED', description: 'Modern, vivid, and layered', nameKey: 'setting.appearance.presets.purple.name', descriptionKey: 'setting.appearance.presets.purple.description' },
+  { name: 'Coral red', color: '#E11D48', description: 'High contrast for emphasized feedback', nameKey: 'setting.appearance.presets.red.name', descriptionKey: 'setting.appearance.presets.red.description' },
+  { name: 'Deep cyan', color: '#0891B2', description: 'Calm and minimal for long sessions', nameKey: 'setting.appearance.presets.cyan.name', descriptionKey: 'setting.appearance.presets.cyan.description' }
 ]
 
 export const normalizeThemeAccent = (value?: string | null) => {

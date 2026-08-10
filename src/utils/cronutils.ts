@@ -1,4 +1,10 @@
 // src/utils/cronUtils.ts
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 export default function formatCron(cronStr: string): string {
   if (!cronStr) return '';
@@ -8,7 +14,7 @@ export default function formatCron(cronStr: string): string {
   cronExpressions.forEach((expression) => {
       const parts = expression.split(' ');
       if (parts.length!== 5) {
-          descriptions.push(`无效的 cron 表达式: ${expression}`);
+          descriptions.push(t('task.cron.invalidExpression', `Invalid cron expression: ${expression}`, { value: expression }));
           return;
       }
 
@@ -17,43 +23,45 @@ export default function formatCron(cronStr: string): string {
 
       // 处理月份部分
       if (month === '*') {
-          description += '每月';
+          description += t('task.cron.everyMonth', 'Every month');
       } else if (/^\d+$/.test(month)) {
-          description += `每年 ${month} 月`;
+          description += t('task.cron.everyYearMonth', `Every year in month ${month}`, { month });
       } else {
-          descriptions.push(`无效的月份部分: ${month}`);
+          descriptions.push(t('task.cron.invalidMonth', `Invalid month field: ${month}`, { value: month }));
           return;
       }
 
       // 处理日期部分
       if (dayOfMonth === '*') {
           if (dayOfWeek === '*') {
-              description += '每日';
+              description += ` ${t('task.cron.everyDay', 'Every day')}`;
           }
       } else if (/^\d+$/.test(dayOfMonth)) {
-          description += ` ${dayOfMonth} 日`;
+          description += ` ${t('task.cron.dayOfMonth', `Day ${dayOfMonth}`, { day: dayOfMonth })}`;
       } else {
-          descriptions.push(`无效的日期部分: ${dayOfMonth}`);
+          descriptions.push(t('task.cron.invalidDay', `Invalid day field: ${dayOfMonth}`, { value: dayOfMonth }));
           return;
       }
 
       // 处理星期部分
       if (dayOfWeek!== '*' && /^\d+$/.test(dayOfWeek)) {
-          const dayOfWeekMap = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-          description += ` 每周 ${dayOfWeekMap[parseInt(dayOfWeek)]}`;
+          const dayIndex = parseInt(dayOfWeek);
+          const fallbackWeekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const weekday = t(`task.cron.weekdays.${dayIndex}`, fallbackWeekdays[dayIndex] || dayOfWeek);
+          description += ` ${t('task.cron.everyWeekday', `Every week on ${weekday}`, { day: weekday })}`;
       }
 
       // 处理小时和分钟部分
       if (hour === '*' && minute === '*') {
-          description += ' 整时整分';
+          description += ` ${t('task.cron.everyHourMinute', 'Every hour and minute')}`;
       } else if (hour === '*') {
-          description += ` 每分钟的第 ${minute} 分`;
+          description += ` ${t('task.cron.minuteOfEveryHour', `Minute ${minute} of every hour`, { minute })}`;
       } else if (minute === '*') {
-          description += ` 每小时的第 ${hour} 时`;
+          description += ` ${t('task.cron.hourOfEveryDay', `Hour ${hour} of every day`, { hour })}`;
       } else if (/^\d+$/.test(hour) && /^\d+$/.test(minute)) {
-          description += ` ${hour}:${String(minute).padStart(2, '0')}分`;
+          description += ` ${t('task.cron.fixedTime', `${hour}:${String(minute).padStart(2, '0')}`, { hour, minute: String(minute).padStart(2, '0') })}`;
       } else {
-          descriptions.push(`无效的时间部分: ${hour}:${minute}`);
+          descriptions.push(t('task.cron.invalidTime', `Invalid time field: ${hour}:${minute}`, { value: `${hour}:${minute}` }));
           return;
       }
 

@@ -6,8 +6,13 @@ import { Api } from '@/api/Api'
 import AddTask from './add-task.vue'
 import formatCron from '@/utils/cronutils'
 import System from '@/utils/System'
+import i18n from '@/lang'
 
 const tableRef = ref<InstanceType<typeof import('element-plus')['ElTable']>>()
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 interface RuleForm {
   name: string
@@ -59,10 +64,10 @@ const getData = async () => {
       tableData.value = res.data || []
       pagination.total = res.total || 0
     } else {
-      ElMessage.error(res?.message || '获取数据失败')
+      ElMessage.error(res?.message || t('task.fetchFailed', 'Failed to load data'))
     }
   } catch (error) {
-    ElMessage.error('获取数据失败')
+    ElMessage.error(t('task.fetchFailed', 'Failed to load data'))
     tableData.value = []
     pagination.total = 0
   }
@@ -137,7 +142,12 @@ const formatDate = (dateStr: string) => {
   const hours = String(date.getHours()).padStart(2, '0')
   const minutes = String(date.getMinutes()).padStart(2, '0')
   const seconds = String(date.getSeconds()).padStart(2, '0')
-  return `${year}年${month}月${day}日 ${hours}:${minutes}:${seconds}`
+  return t('task.dateTime', `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`, {
+    year,
+    month,
+    day,
+    time: `${hours}:${minutes}:${seconds}`
+  })
 }
 
 const addTaskVisible = ref(false)
@@ -178,24 +188,24 @@ const handleSelectionChange = (val: any[]) => {
 // 批量删除方法
 const batchDelete = async () => {
   if (multipleSelection.value.length === 0) {
-    ElMessage.warning('请选择要删除的任务')
+    ElMessage.warning(t('task.selectDeleteTasks', 'Select tasks to delete'))
     return
   }
-  ElMessageBox.confirm('确定要删除选中的任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.batchDeleteConfirm', 'Delete the selected tasks?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     const ids = multipleSelection.value.map((item: Task) => item.id)
     try {
       await Api.deletePlanTask({ ids })
-      ElMessage.success('删除成功')
+      ElMessage.success(t('task.deleteSuccess', 'Deleted successfully'))
       getData()
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error(t('task.deleteFailed', 'Delete failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消删除')
+    ElMessage.info(t('task.deleteCanceled', 'Delete canceled'))
   })
 }
 
@@ -203,25 +213,25 @@ const batchDelete = async () => {
 const batchDisable = async () => {
   const validSelection = multipleSelection.value.filter(item => item.enabled === true)
   if (validSelection.length === 0) {
-    ElMessage.warning('请选择运行中的任务进行禁止')
+    ElMessage.warning(t('task.selectRunningTasks', 'Select enabled tasks to disable'))
     return
   }
-  ElMessageBox.confirm('确定要禁止选中的任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.batchDisableConfirm', 'Disable the selected tasks?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     const ids = validSelection.map(item => item.id)
     try {
       await Api.disablePlanTask({ ids })
-      ElMessage.success('禁止成功')
+      ElMessage.success(t('task.disableSuccess', 'Disabled successfully'))
       getData()
       clearTableSelection()
     } catch (error) {
-      ElMessage.error('禁止失败')
+      ElMessage.error(t('task.disableFailed', 'Disable failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消禁止')
+    ElMessage.info(t('task.disableCanceled', 'Disable canceled'))
   })
 }
 
@@ -229,91 +239,91 @@ const batchDisable = async () => {
 const batchEnable = async () => {
   const validSelection = multipleSelection.value.filter(item => item.enabled === false)
   if (validSelection.length === 0) {
-    ElMessage.warning('请选择已停用的任务进行开启')
+    ElMessage.warning(t('task.selectStoppedTasks', 'Select stopped tasks to enable'))
     return
   }
-  ElMessageBox.confirm('确定要开启选中的任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.batchEnableConfirm', 'Enable the selected tasks?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     const ids = validSelection.map(item => item.id)
     try {
       await Api.enablePlanTask({ ids })
-      ElMessage.success('开启成功')
+      ElMessage.success(t('task.enableSuccess', 'Enabled successfully'))
       getData()
       clearTableSelection()
     } catch (error) {
-      ElMessage.error('开启失败')
+      ElMessage.error(t('task.enableFailed', 'Enable failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消开启')
+    ElMessage.info(t('task.enableCanceled', 'Enable canceled'))
   })
 }
 
 // 单条数据删除方法
 const deleteSingleTask = async (row: any) => {
-  ElMessageBox.confirm('确定要删除该任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.singleDeleteConfirm', 'Delete this task?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     try {
       await Api.deletePlanTask({ ids: [row.id] })
-      ElMessage.success('删除成功')
+      ElMessage.success(t('task.deleteSuccess', 'Deleted successfully'))
       getData()
       clearTableSelection()
     } catch (error) {
-      ElMessage.error('删除失败')
+      ElMessage.error(t('task.deleteFailed', 'Delete failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消删除')
+    ElMessage.info(t('task.deleteCanceled', 'Delete canceled'))
   })
 }
 
 // 单条数据禁用方法
 const disableSingleTask = async (row: any) => {
   if (row.enabled === false) {
-    ElMessage.warning('该任务已停用，无需再次禁用')
+    ElMessage.warning(t('task.alreadyDisabled', 'This task is already disabled'))
     return
   }
-  ElMessageBox.confirm('确定要禁用该任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.singleDisableConfirm', 'Disable this task?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     try {
       await Api.disablePlanTask({ ids: [row.id] })
-      ElMessage.success('禁用成功')
+      ElMessage.success(t('task.disableSuccess', 'Disabled successfully'))
       getData()
     } catch (error) {
-      ElMessage.error('禁用失败')
+      ElMessage.error(t('task.disableFailed', 'Disable failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消禁用')
+    ElMessage.info(t('task.disableCanceled', 'Disable canceled'))
   })
 }
 
 // 单条数据开启方法
 const enableSingleTask = async (row: any) => {
   if (row.enabled === true) {
-    ElMessage.warning('该任务正在运行，无需再次开启')
+    ElMessage.warning(t('task.alreadyEnabled', 'This task is already running'))
     return
   }
-  ElMessageBox.confirm('确定要开启该任务吗？', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
+  ElMessageBox.confirm(t('task.singleEnableConfirm', 'Enable this task?'), t('task.confirmTitle', 'Prompt'), {
+    confirmButtonText: t('task.confirm', 'Confirm'),
+    cancelButtonText: t('task.cancel', 'Cancel'),
     type: 'warning'
   }).then(async () => {
     try {
       await Api.enablePlanTask({ ids: [row.id] })
-      ElMessage.success('开启成功')
+      ElMessage.success(t('task.enableSuccess', 'Enabled successfully'))
       getData()
     } catch (error) {
-      ElMessage.error('开启失败')
+      ElMessage.error(t('task.enableFailed', 'Enable failed'))
     }
   }).catch(() => {
-    ElMessage.info('取消开启')
+    ElMessage.info(t('task.enableCanceled', 'Enable canceled'))
   })
 }
 
@@ -346,23 +356,23 @@ const updateSingleTaskLog = async (row: any) => {
 const runSingleTask = async (row: any) => {
   const { data } = await Api.runPlanTask({ id: row.id })
   if (data.status === 'skipped') {
-    ElMessage.warning('上一次执行尚未结束，本次已跳过')
+    ElMessage.warning(t('task.skippedRunning', 'The previous execution is still running. This run was skipped.'))
     return
   }
   runningByTask.value[row.id] = data.id
-  ElMessage.success('任务已开始执行，可在日志中查看进度')
+  ElMessage.success(t('task.runStarted', 'Task started. View progress in logs.'))
 }
 
 const cancelRunningTask = async (row: any) => {
   const executionID = runningByTask.value[row.id]
   if (!executionID) return
-  await ElMessageBox.confirm('确定终止这次正在运行的任务吗？系统会先发送 TERM，必要时再强制结束进程组。', '取消执行', {
-    confirmButtonText: '终止执行',
-    cancelButtonText: '返回',
+  await ElMessageBox.confirm(t('task.cancelRunConfirm', 'Terminate this running task?'), t('task.cancelRunTitle', 'Cancel execution'), {
+    confirmButtonText: t('task.terminate', 'Terminate'),
+    cancelButtonText: t('task.back', 'Back'),
     type: 'warning'
   })
   await Api.cancelPlanTaskExecution(executionID)
-  ElMessage.success('已提交取消请求')
+  ElMessage.success(t('task.cancelSubmitted', 'Cancel request submitted'))
   await getData()
 }
 // 选择过滤函数，控制选择逻辑
@@ -417,11 +427,11 @@ onMounted(() => {
       <el-card>
       <div class="task-toolbar">
         <el-space class="task-toolbar__actions">
-          <el-button class="task-toolbar__button" type="primary" @click="addTask">添加任务</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="addTask">{{ t('task.addTask', 'Add task') }}</el-button>
           <!-- <el-button type="primary">执行任务</el-button> -->
-          <el-button class="task-toolbar__button" type="primary" @click="batchEnable">启动任务</el-button>
-          <el-button class="task-toolbar__button" type="primary" @click="batchDisable">停止任务</el-button>
-          <el-button class="task-toolbar__button" type="primary" @click="batchDelete">删除任务</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchEnable">{{ t('task.startTask', 'Start task') }}</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchDisable">{{ t('task.stopTask', 'Stop task') }}</el-button>
+          <el-button class="task-toolbar__button" type="primary" @click="batchDelete">{{ t('task.deleteTask', 'Delete task') }}</el-button>
         </el-space>
         <div class="task-toolbar__search">
           <!-- <el-dropdown>
@@ -436,7 +446,7 @@ onMounted(() => {
               <el-dropdown-item>分类</el-dropdown-item>
             </el-dropdown-menu>
           </template>
-</el-dropdown> --> <search-input class="task-search-input" placeholder="请输入域名或备注" v-model="searchValue"
+</el-dropdown> --> <search-input class="task-search-input" :placeholder="t('task.searchPlaceholder', 'Enter domain or remark')" v-model="searchValue"
             @search="getData()" />
           <el-button class="task-refresh-button" :icon="Refresh" type="primary" @click="onSubmit" />
           <!-- <el-button :icon="Setting" type="primary" @click="onSubmit" /> -->
@@ -447,15 +457,15 @@ onMounted(() => {
     <div class="box2">
       <el-table ref="tableRef" class="fileTable task-table" :data="tableData" style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
-        :row-key="(row: any) => row.id" empty-text="暂无数据">
+        :row-key="(row: any) => row.id" :empty-text="t('task.noData', 'No data')">
         <el-table-column type="selection" width="48" :reserve-selection="true" :selectable="selectFilter" />
-        <el-table-column prop="name" label="任务名称" min-width="180" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="enabled" label="状态" min-width="130">
+        <el-table-column prop="name" :label="t('task.taskName', 'Task name')" min-width="180" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="enabled" :label="t('task.status', 'Status')" min-width="130">
           <template #default="scope">
             <div class="status-cell">
-              <el-tag v-if="runningByTask[scope.row.id]" class="status-tag" type="warning">正在执行</el-tag>
+              <el-tag v-if="runningByTask[scope.row.id]" class="status-tag" type="warning">{{ t('task.running', 'Running') }}</el-tag>
               <a class="status-link status-link--enabled"
-                v-else-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> 已启用 <el-icon>
+                v-else-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> {{ t('task.enabled', 'Enabled') }} <el-icon>
                   <VideoPlay />
                 </el-icon>
               </a>
@@ -463,7 +473,7 @@ onMounted(() => {
                 @click="enableSingleTask(scope.row)">
                 <el-icon>
                   <VideoPause />
-                </el-icon> 已停用 </a>
+                </el-icon> {{ t('task.disabled', 'Disabled') }} </a>
               <!-- <a style="color: #ff8888; text-decoration: underline"  class="abox" v-else>
                 <el-icon><Warning /></el-icon>
                 运行异常
@@ -471,49 +481,49 @@ onMounted(() => {
             </div>
           </template>
         </el-table-column>
-        <el-table-column label="类型" min-width="150">
+        <el-table-column :label="t('task.type', 'Type')" min-width="150">
           <template #default="{ row }">
             <div class="type-tags">
             <el-tag class="type-tag" :type="(row.task_type || 'shell') === 'template' ? 'success' : 'warning'">
-              {{ (row.task_type || 'shell') === 'template' ? '安全模板' : '高级 Shell' }}
+              {{ (row.task_type || 'shell') === 'template' ? t('task.templateType', 'Safe template') : t('task.shellType', 'Advanced Shell') }}
             </el-tag>
-            <el-tag v-if="row.notify_on_failure" class="type-tag" type="info">失败通知</el-tag>
+            <el-tag v-if="row.notify_on_failure" class="type-tag" type="info">{{ t('task.failureNotify', 'Failure notification') }}</el-tag>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="执行周期" min-width="220">
+        <el-table-column prop="address" :label="t('task.schedule', 'Schedule')" min-width="220">
           <template #default="scope">
             <div class="schedule-cell">
               <span v-html="formatCron(scope.row.schedule)"></span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="last_run_at" label="上次执行时间" min-width="190">
+        <el-table-column prop="last_run_at" :label="t('task.lastRunAt', 'Last run time')" min-width="190">
           <template #default="scope">
             <div class="last-run-cell">
-              <span>{{ scope.row.last_run_at ? formatDate(scope.row.last_run_at) : '尚未执行' }}</span>
+              <span>{{ scope.row.last_run_at ? formatDate(scope.row.last_run_at) : t('task.notExecuted', 'Not executed') }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="address" label="操作" min-width="340" class-name="task-actions-column">
+        <el-table-column prop="address" :label="t('task.action', 'Action')" min-width="340" class-name="task-actions-column">
           <template #default="scope">
             <div class="row-actions">
             <el-button link type="primary" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
-              开启 </el-button>
+              {{ t('task.enable', 'Enable') }} </el-button>
             <el-button link type="primary" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
-              禁用 </el-button>
-            <el-button link type="primary" size="small" @click="deleteSingleTask(scope.row)"> 删除 </el-button>
-            <el-button link type="primary" size="small" @click="updateSingleTask(scope.row)"> 更新 </el-button>
-            <el-button link type="primary" size="small" @click="runSingleTask(scope.row)"> 立即执行 </el-button>
+              {{ t('task.disable', 'Disable') }} </el-button>
+            <el-button link type="primary" size="small" @click="deleteSingleTask(scope.row)"> {{ t('task.delete', 'Delete') }} </el-button>
+            <el-button link type="primary" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
+            <el-button link type="primary" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>
             <el-button
               v-if="runningByTask[scope.row.id]"
               link type="danger" size="small"
               @click="cancelRunningTask(scope.row)"
             >
-              取消执行
+              {{ t('task.cancelRun', 'Cancel run') }}
             </el-button>
             <el-button link type="primary" size="small" @click="updateSingleTaskLog(scope.row)">
-              查看日志
+              {{ t('task.viewLogs', 'View logs') }}
             </el-button>
             </div>
           </template>
@@ -528,12 +538,12 @@ onMounted(() => {
                   <el-option label="20" value="20"></el-option>
                   <el-option label="50" value="50"></el-option>
                 </el-select>
-                <span>条/页</span>
-                <el-button @click="prevPage" :disabled="pagination.currentPage === 1">上一页</el-button>
+                <span>{{ t('task.perPage', '/page') }}</span>
+                <el-button @click="prevPage" :disabled="pagination.currentPage === 1">{{ t('task.prevPage', 'Previous') }}</el-button>
                 <span>{{ pagination.currentPage }} / {{ Math.ceil(pagination.total / pagination.pageSize) }}</span>
                 <el-button @click="nextPage"
-                  :disabled="pagination.currentPage === Math.ceil(pagination.total / pagination.pageSize)">下一页</el-button>
-                <span>共 {{ pagination.total }} 条记录</span>
+                  :disabled="pagination.currentPage === Math.ceil(pagination.total / pagination.pageSize)">{{ t('task.nextPage', 'Next') }}</el-button>
+                <span>{{ t('task.totalRecords', 'Total {total} records', { total: pagination.total }) }}</span>
               </div>
             </td>
           </tr>

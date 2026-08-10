@@ -6,6 +6,7 @@ import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
 import { Api } from '@/api/Api'
 import { ElMessage } from 'element-plus'
+import i18n from '@/lang'
 
 export interface ChildProps {
   list: any[]
@@ -15,20 +16,28 @@ export interface ChildEmits {
   (event: 'refresh'): void
 }
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const conf = reactive({
   dataTypelist: markRaw([
     {
-      name: '全部',
+      name: 'All',
+      nameKey: 'software.tabs.all',
       index: 0,
       component: AllSoft
     },
     {
-      name: '已安装',
+      name: 'Installed',
+      nameKey: 'software.tabs.installed',
       index: 1,
       component: AllSoft
     },
     {
-      name: '可升级',
+      name: 'Upgradeable',
+      nameKey: 'software.tabs.upgradeable',
       index: 2,
       dot: false,
       component: AllSoft
@@ -39,41 +48,57 @@ const conf = reactive({
     selected: 0,
     list: markRaw([
       {
-        name: '全部',
+        name: 'All',
+        nameKey: 'software.category.all',
         index: 0
       },
       {
-        name: '建站',
+        name: 'Sites',
+        nameKey: 'software.category.website',
+        tag: '\u5efa\u7ad9',
         index: 1
       },
       {
-        name: '数据库',
+        name: 'Databases',
+        nameKey: 'software.category.database',
+        tag: '\u6570\u636e\u5e93',
         index: 2
       },
       {
-        name: 'Web服务器',
+        name: 'Web server',
+        nameKey: 'software.category.webServer',
+        tag: 'Web\u670d\u52a1\u5668',
         index: 3
       },
       {
-        name: '运行环境',
+        name: 'Runtime',
+        nameKey: 'software.category.runtime',
+        tag: '\u8fd0\u884c\u73af\u5883',
         index: 4
       },
       {
-        name: '实用工具',
+        name: 'Utilities',
+        nameKey: 'software.category.utility',
+        tag: '\u5b9e\u7528\u5de5\u5177',
         index: 5
       },
       {
-        name: '云存储',
+        name: 'Cloud storage',
+        nameKey: 'software.category.cloudStorage',
+        tag: '\u4e91\u5b58\u50a8',
         index: 6
       },
       {
-        name: 'AI / 大模型',
+        name: 'AI / LLM',
+        nameKey: 'software.category.ai',
+        tag: 'AI / \u5927\u6a21\u578b',
         index: 7
       }
     ]),
     handleClick: async ({ props }: TabsPaneContext) => {
+      const tab = conf.tabs.list.find((item) => item.index === Number(props.name))
       conf.list.params.page = 1
-      conf.list.params.tags = props.label === '全部' ? undefined : props.label
+      conf.list.params.tags = tab?.tag
       conf.list.getData()
     }
   },
@@ -101,7 +126,7 @@ const conf = reactive({
         const { data } = await Api.syncSoftwareCatalog()
         conf.catalog.status = data
         await conf.list.getData()
-        ElMessage.success('软件商城已从 Center 更新')
+        ElMessage.success(t('software.syncSuccess', 'Software store updated from Center'))
       } catch (error) {
         await conf.catalog.getStatus().catch(() => {})
         throw error
@@ -164,21 +189,24 @@ void conf.catalog.getStatus()
 
 const catalogLabel = computed(() => {
   const status = conf.catalog.status
-  if (!status) return '正在读取商城来源'
-  if (status.mode === 'center') return `Center 已同步 · ${status.productCount} 个应用`
-  if (status.mode === 'center-cache') return `Center 暂不可用 · 正在使用可信缓存`
-  if (status.mode === 'center-cache-disabled') return 'Center 同步已关闭 · 正在使用上次缓存'
-  if (status.mode === 'local-fallback') return '尚未取得 Center 目录 · 正在使用本地目录'
-  return '本地内置目录'
+  if (!status) return t('software.catalogReading', 'Reading store source')
+  if (status.mode === 'center') return t('software.catalogCenterSynced', 'Center synced · {count} apps', { count: status.productCount })
+  if (status.mode === 'center-cache') return t('software.catalogCenterCache', 'Center unavailable · using trusted cache')
+  if (status.mode === 'center-cache-disabled') return t('software.catalogCenterCacheDisabled', 'Center sync disabled · using last cache')
+  if (status.mode === 'local-fallback') return t('software.catalogLocalFallback', 'Center catalog unavailable · using local catalog')
+  return t('software.catalogBuiltin', 'Built-in local catalog')
 })
 
 const catalogDetail = computed(() => {
   const status = conf.catalog.status
   if (!status) return ''
   if (status.lastSyncedAt) {
-    return `通道 ${status.channel} · 最近同步 ${new Date(status.lastSyncedAt).toLocaleString()}`
+    return t('software.catalogDetail', 'Channel {channel} · last synced {time}', {
+      channel: status.channel,
+      time: new Date(status.lastSyncedAt).toLocaleString()
+    })
   }
-  return status.enabled ? '等待首次同步' : '可在配置中启用 Script Center'
+  return status.enabled ? t('software.catalogWaitingFirstSync', 'Waiting for first sync') : t('software.catalogEnableHint', 'Enable Script Center in settings')
 })
 </script>
 
@@ -197,7 +225,7 @@ const catalogDetail = computed(() => {
               <strong>{{ catalogLabel }}</strong>
               <small>{{ catalogDetail }}</small>
               <small v-if="conf.catalog.status?.lastError" class="source-error">
-                最近同步失败：{{ conf.catalog.status.lastError }}
+                {{ $t('software.lastSyncFailed', { message: conf.catalog.status.lastError }) }}
               </small>
             </span>
           </div>
@@ -207,15 +235,15 @@ const catalogDetail = computed(() => {
             plain
             @click="conf.catalog.sync"
           >
-            立即同步
+            {{ $t('software.syncNow') }}
           </el-button>
         </div>
         <div class="category flex justify-between items-center" >
           <el-tabs v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
-            <el-tab-pane v-for="item in conf.tabs.list" :label="item.name" :name="item.index" />
+            <el-tab-pane v-for="item in conf.tabs.list" :label="$t(item.nameKey)" :name="item.index" />
           </el-tabs>
           <div class="search-wrap">
-            <search-input v-model="conf.list.params.name" placeholder="请输入搜索关键字" @search="conf.list.onSearch" />
+            <search-input v-model="conf.list.params.name" :placeholder="$t('common.searchKeywordPlaceholder')" @search="conf.list.onSearch" />
           </div>
         </div>
         <component

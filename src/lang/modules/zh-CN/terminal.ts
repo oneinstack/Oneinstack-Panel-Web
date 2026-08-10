@@ -1,0 +1,41 @@
+export default {
+  title: '安全终端',
+  subtitle: '以独立低权限用户运行，命令参数不会写入审计日志。',
+  connectSession: '建立安全会话',
+  disconnectSession: '断开会话',
+  disabledTitle: 'Web 终端当前未启用',
+  runtimeUnavailableTitle: '终端隔离环境不可用',
+  enableInPanelTip: '请在 Panel 配置中启用终端后重新加载。',
+  runtimeIdentity: '运行身份',
+  permissionBoundary: '权限边界',
+  noSudoCapabilities: '无 sudo · 无 capabilities',
+  sessionLimit: '会话限制',
+  sessionLimitValue: '{max} 分钟 · 空闲 {idle} 分钟 · 输出 {output} MB',
+  concurrentSessions: '并发会话',
+  concurrentSessionsValue: '全局 {active} / {max} · 单账号 {perUser}',
+  auditEnabledTitle: '命令级安全审计已开启',
+  auditEnabledDescription: '记录会话、命令提交时间和操作者；命令内容、参数、交互输入和终端输出均不保存。',
+  notConnected: '终端尚未连接',
+  closed: '终端已关闭',
+  passwordRequiredTip: '连接时需要再次输入当前管理员密码。',
+  connection: {
+    authenticating: '正在认证',
+    connected: '会话已连接',
+    ended: '会话已结束',
+    disconnected: '未连接'
+  },
+  statusReadFailed: '读取终端安全状态失败',
+  passwordPromptMessage: '终端以独立低权限用户运行。请输入当前管理员密码完成二次认证。',
+  passwordPromptTitle: '建立安全终端会话',
+  adminPassword: '管理员密码',
+  authenticateAndConnect: '认证并连接',
+  passwordRequired: '请输入密码',
+  sameOriginOnly: '终端只允许同源连接',
+  connectionFailed: '安全终端连接失败',
+  outputDecodeFailed: '无法解析终端输出。',
+  sessionClosedMessage: '终端会话已关闭。',
+  unavailable: '不可用',
+  reasons: {
+    paneRequiresRoot: 'Pane 必须由 root 管理进程启动，终端子进程才可安全降权'
+  }
+}

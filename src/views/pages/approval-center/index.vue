@@ -4,6 +4,7 @@ import SearchInput from '@/components/search-input.vue'
 import { Api } from '@/api/Api'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import i18n from '@/lang'
 
 interface ApprovalRequest {
   id: string
@@ -27,6 +28,11 @@ interface ApprovalRequest {
 
 type TagType = 'success' | 'warning' | 'info' | 'primary' | 'danger'
 
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
+
 const loading = reactive({
   bootstrap: false,
   approvals: false,
@@ -40,8 +46,8 @@ const approvalState = reactive({
   mineTabs: {
     activeIndex: 0,
     list: [
-      { name: '全部', index: 0, value: false },
-      { name: '我的', index: 1, value: true }
+      { name: '全部', nameKey: 'approvalCenter.all', index: 0, value: false },
+      { name: '我的', nameKey: 'approvalCenter.mine', index: 1, value: true }
     ],
     clickActive: (item: { index: number; value: boolean }) => {
       approvalState.mineTabs.activeIndex = item.index
@@ -60,16 +66,16 @@ const approvalState = reactive({
   },
   total: 0,
   list: [] as ApprovalRequest[],
-  columns: [
-    { prop: 'resourceName', label: '资源', minWidth: 260 },
-    { prop: 'action', label: '动作', minWidth: 180 },
-    { prop: 'module', label: '模块', minWidth: 120 },
-    { prop: 'riskLevel', label: '风险', minWidth: 110 },
-    { prop: 'status', label: '状态', minWidth: 120 },
-    { prop: 'requestedByName', label: '申请人', minWidth: 140 },
-    { prop: 'createdAt', label: '申请时间', minWidth: 180 },
-    { prop: 'actionColumn', label: '操作', width: 220 }
-  ] as ColumnItem[]
+  columns: computed<ColumnItem[]>(() => [
+    { prop: 'resourceName', label: t('approvalCenter.resource', '资源'), minWidth: 260 },
+    { prop: 'action', label: t('approvalCenter.action', '动作'), minWidth: 180 },
+    { prop: 'module', label: t('approvalCenter.module', '模块'), minWidth: 120 },
+    { prop: 'riskLevel', label: t('approvalCenter.risk', '风险'), minWidth: 110 },
+    { prop: 'status', label: t('common.status', '状态'), minWidth: 120 },
+    { prop: 'requestedByName', label: t('approvalCenter.applicant', '申请人'), minWidth: 140 },
+    { prop: 'createdAt', label: t('approvalCenter.appliedAt', '申请时间'), minWidth: 180 },
+    { prop: 'actionColumn', label: t('common.action', '操作'), width: 220 }
+  ])
 })
 
 const approvalDialog = reactive({
@@ -86,7 +92,7 @@ const approvalDialog = reactive({
       const response = await Api.getApprovalDetail(row.id)
       approvalDialog.data = response.data
     } catch (error: any) {
-      ElMessage.error(error?.message || '获取审批详情失败')
+      ElMessage.error(error?.message || t('approvalCenter.detailLoadFailed', '获取审批详情失败'))
       approvalDialog.show = false
     } finally {
       loading.approvalDetail = false
@@ -95,12 +101,12 @@ const approvalDialog = reactive({
 })
 
 const approvalDrawerTitle = computed(() => {
-  if (approvalDialog.mode === 'approve') return '审批通过'
-  if (approvalDialog.mode === 'reject') return '审批拒绝'
-  return '审批详情'
+  if (approvalDialog.mode === 'approve') return t('approvalCenter.approveTitle', '审批通过')
+  if (approvalDialog.mode === 'reject') return t('approvalCenter.rejectTitle', '审批拒绝')
+  return t('approvalCenter.detail', '审批详情')
 })
 
-const approvalConfirmText = computed(() => approvalDialog.mode === 'approve' ? '确认通过' : '确认拒绝')
+const approvalConfirmText = computed(() => approvalDialog.mode === 'approve' ? t('approvalCenter.confirmApprove', '确认通过') : t('approvalCenter.confirmReject', '确认拒绝'))
 const approvalConfirmType = computed(() => approvalDialog.mode === 'reject' ? 'danger' : 'primary')
 const closeApprovalDrawer = () => {
   approvalDialog.show = false
@@ -119,13 +125,13 @@ const canReviewApproval = computed(
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const statusLabelMap: Record<string, string> = {
-  pending: '待审批',
-  completed: '已通过',
-  rejected: '已拒绝',
-  executing: '执行中',
-  executed: '已执行',
-  expired: '已过期',
-  canceled: '已取消'
+  pending: 'approvalCenter.pending',
+  completed: 'approvalCenter.completed',
+  rejected: 'approvalCenter.rejected',
+  executing: 'approvalCenter.executing',
+  executed: 'approvalCenter.executed',
+  expired: 'approvalCenter.expired',
+  canceled: 'approvalCenter.canceled'
 }
 const statusTypeMap: Record<string, TagType> = {
   pending: 'warning',
@@ -142,7 +148,10 @@ const riskTypeMap: Record<string, TagType> = {
   high: 'danger',
   critical: 'danger'
 }
-const approvalStatusLabel = (status: string) => statusLabelMap[status] || status || '—'
+const approvalStatusLabel = (status: string) => {
+  const key = statusLabelMap[status]
+  return key ? t(key, status) : status || '—'
+}
 const approvalStatusType = (status: string): TagType => statusTypeMap[status] || 'info'
 const approvalRiskType = (risk?: string): TagType => riskTypeMap[(risk || '').toLowerCase()] || 'info'
 const isPendingApproval = (row: ApprovalRequest) => row.status === 'pending'
@@ -191,15 +200,15 @@ const submitApprovalAction = async () => {
   try {
     if (approvalDialog.mode === 'approve') {
       await Api.approveApproval(approvalDialog.data.id, { comment: approvalDialog.comment.trim() })
-      ElMessage.success('审批已通过')
+      ElMessage.success(t('approvalCenter.approvedSuccess', '审批已通过'))
     } else if (approvalDialog.mode === 'reject') {
       await Api.rejectApproval(approvalDialog.data.id, { comment: approvalDialog.comment.trim() })
-      ElMessage.success('审批已拒绝')
+      ElMessage.success(t('approvalCenter.rejectedSuccess', '审批已拒绝'))
     }
     approvalDialog.show = false
     await loadApprovals()
   } catch (error: any) {
-    ElMessage.error(error?.message || '审批操作失败')
+    ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
   } finally {
     loading.approvalAction = false
   }
@@ -210,7 +219,7 @@ onMounted(async () => {
     await loadBootstrap()
     await loadApprovals()
   } catch (error: any) {
-    ElMessage.error(error?.message || '页面初始化失败')
+    ElMessage.error(error?.message || t('approvalCenter.initFailed', '页面初始化失败'))
   }
 })
 </script>
@@ -220,15 +229,15 @@ onMounted(async () => {
     <section class="panel-card">
       <div class="toolbar">
         <div class="toolbar-left">
-          <search-input v-model:model-value="approvalState.keyword" placeholder="搜索资源、动作或申请人" @search="searchApprovals" />
-          <el-select v-model="approvalState.filters.status" placeholder="审批状态" clearable class="toolbar-select">
-            <el-option label="待审批" value="pending" />
-            <el-option label="已通过" value="completed" />
-            <el-option label="已拒绝" value="rejected" />
-            <el-option label="已执行" value="executed" />
-            <el-option label="已过期" value="expired" />
+          <search-input v-model:model-value="approvalState.keyword" :placeholder="$t('approvalCenter.searchPlaceholder')" @search="searchApprovals" />
+          <el-select v-model="approvalState.filters.status" :placeholder="$t('approvalCenter.approvalStatus')" clearable class="toolbar-select">
+            <el-option :label="$t('approvalCenter.pending')" value="pending" />
+            <el-option :label="$t('approvalCenter.completed')" value="completed" />
+            <el-option :label="$t('approvalCenter.rejected')" value="rejected" />
+            <el-option :label="$t('approvalCenter.executed')" value="executed" />
+            <el-option :label="$t('approvalCenter.expired')" value="expired" />
           </el-select>
-          <el-select v-model="approvalState.filters.module" placeholder="所属模块" clearable class="toolbar-select">
+          <el-select v-model="approvalState.filters.module" :placeholder="$t('approvalCenter.module')" clearable class="toolbar-select">
             <el-option label="website" value="website" />
             <el-option label="database" value="database" />
           </el-select>
@@ -241,13 +250,13 @@ onMounted(async () => {
               :class="{ 'is-active': approvalState.mineTabs.activeIndex === item.index }"
               @click="approvalState.mineTabs.clickActive(item)"
             >
-              {{ item.name }}
+              {{ item.nameKey ? $t(item.nameKey) : item.name }}
             </button>
           </div>
         </div>
         <div class="toolbar-right">
-          <el-button @click="resetApprovals">重置</el-button>
-          <el-button type="primary" @click="searchApprovals">查询</el-button>
+          <el-button @click="resetApprovals">{{ $t('common.reset') }}</el-button>
+          <el-button type="primary" @click="searchApprovals">{{ $t('common.query') }}</el-button>
         </div>
       </div>
 
@@ -261,7 +270,7 @@ onMounted(async () => {
       >
         <template #resourceName="{ row }">
           <div class="resource-cell">
-            <strong>{{ row.resourceName || row.resourceId || '未命名资源' }}</strong>
+            <strong>{{ row.resourceName || row.resourceId || $t('approvalCenter.unnamedResource') }}</strong>
             <small>{{ row.id }}</small>
           </div>
         </template>
@@ -287,7 +296,7 @@ onMounted(async () => {
               :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'approve')"
             >
-              通过
+              {{ $t('approvalCenter.approve') }}
             </el-button>
             <el-button
               v-if="isPendingApproval(row)"
@@ -296,9 +305,9 @@ onMounted(async () => {
               :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'reject')"
             >
-              拒绝
+              {{ $t('approvalCenter.reject') }}
             </el-button>
-            <el-button link type="primary" @click="approvalDialog.open(row, 'detail')">详情</el-button>
+            <el-button link type="primary" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
 
           </div>
         </template>
@@ -309,7 +318,7 @@ onMounted(async () => {
       :visible="approvalDialog.show"
       :title="approvalDrawerTitle"
       size="760px"
-      cancel-text="关闭"
+      :cancel-text="$t('common.close')"
       :confirm-text="approvalConfirmText"
       :confirm-type="approvalConfirmType"
       :show-confirm="approvalDialog.mode !== 'detail'"
@@ -321,8 +330,8 @@ onMounted(async () => {
         <template v-if="approvalDialog.data">
           <div class="approval-detail-head">
             <div class="approval-detail-title">
-              <span class="approval-detail-label">审批资源</span>
-              <h4>{{ approvalDialog.data.resourceName || approvalDialog.data.resourceId || '未命名资源' }}</h4>
+              <span class="approval-detail-label">{{ $t('approvalCenter.resourceLabel') }}</span>
+              <h4>{{ approvalDialog.data.resourceName || approvalDialog.data.resourceId || $t('approvalCenter.unnamedResource') }}</h4>
               <p>{{ approvalDialog.data.action }} · {{ approvalDialog.data.module }}</p>
             </div>
             <el-tag :type="approvalStatusType(approvalDialog.data.status)" effect="light" round>
@@ -332,54 +341,54 @@ onMounted(async () => {
 
           <div class="detail-grid">
             <div class="detail-item">
-              <span>申请人</span>
+              <span>{{ $t('approvalCenter.applicant') }}</span>
               <strong class="detail-value">{{ approvalDialog.data.requestedByName || '—' }}</strong>
             </div>
             <div class="detail-item">
-              <span>审批人</span>
+              <span>{{ $t('approvalCenter.reviewer') }}</span>
               <strong class="detail-value">{{ approvalDialog.data.approvedByName || '—' }}</strong>
             </div>
             <div class="detail-item">
-              <span>风险等级</span>
+              <span>{{ $t('approvalCenter.riskLevel') }}</span>
               <strong class="detail-value detail-value--compact">{{ approvalDialog.data.riskLevel || '—' }}</strong>
             </div>
             <div class="detail-item">
-              <span>绑定任务</span>
+              <span>{{ $t('approvalCenter.boundTask') }}</span>
               <strong class="detail-value detail-value--compact">{{ approvalDialog.data.boundTaskType || '—' }} {{ approvalDialog.data.boundTaskId || '' }}</strong>
             </div>
             <div class="detail-item">
-              <span>申请时间</span>
+              <span>{{ $t('approvalCenter.appliedAt') }}</span>
               <strong class="detail-value detail-value--compact">{{ formatTime(approvalDialog.data.createdAt) }}</strong>
             </div>
             <div class="detail-item">
-              <span>过期时间</span>
+              <span>{{ $t('approvalCenter.expiredAt') }}</span>
               <strong class="detail-value detail-value--compact">{{ formatTime(approvalDialog.data.expiresAt) }}</strong>
             </div>
           </div>
 
           <div class="detail-block">
-            <span>申请原因</span>
+            <span>{{ $t('approvalCenter.reason') }}</span>
             <p>{{ approvalDialog.data.reason || '—' }}</p>
           </div>
           <div class="detail-block">
-            <span>审批意见</span>
+            <span>{{ $t('approvalCenter.reviewComment') }}</span>
             <p>{{ approvalDialog.data.reviewComment || '—' }}</p>
           </div>
           <div class="detail-block" v-if="approvalDialog.data.payloadSnapshot">
-            <span>请求快照</span>
+            <span>{{ $t('approvalCenter.payloadSnapshot') }}</span>
             <pre>{{ JSON.stringify(approvalDialog.data.payloadSnapshot, null, 2) }}</pre>
           </div>
           <div class="detail-block" v-if="approvalDialog.data.result">
-            <span>执行结果</span>
+            <span>{{ $t('approvalCenter.result') }}</span>
             <pre>{{ JSON.stringify(approvalDialog.data.result, null, 2) }}</pre>
           </div>
           <el-form v-if="approvalDialog.mode !== 'detail'" label-position="top">
-            <el-form-item :label="approvalDialog.mode === 'approve' ? '通过意见' : '拒绝原因'">
+            <el-form-item :label="approvalDialog.mode === 'approve' ? $t('approvalCenter.approveComment') : $t('approvalCenter.rejectReason')">
               <el-input
                 v-model="approvalDialog.comment"
                 type="textarea"
                 :rows="4"
-                :placeholder="approvalDialog.mode === 'approve' ? '可填写执行说明' : '请填写拒绝原因'"
+                :placeholder="approvalDialog.mode === 'approve' ? $t('approvalCenter.approvePlaceholder') : $t('approvalCenter.rejectPlaceholder')"
               />
             </el-form-item>
           </el-form>

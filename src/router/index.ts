@@ -9,6 +9,12 @@ import { Api } from '@/api/Api'
 import { ElMessage } from 'element-plus'
 import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
 import { getPanelEntryStatus, isPanelEntryPathAllowed } from '@/utils/panel-entry'
+import i18n from '@/lang'
+
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 
 export const initRouter = () => {
   const _routes = CRouter.init({
@@ -36,9 +42,6 @@ export const initRouter = () => {
   })
 
   console.log('routes', _routes)
-  /**
-   * 路由映射
-   */
   const _routesMap = {} as any
   ObjectUtil.getObjectByChildren(_routes, (obj) => {
     if (obj.component) _routesMap[obj.path] = obj
@@ -79,16 +82,13 @@ export const initRouter = () => {
     }
     const menuKey = resolveMenuKeyByPath(to.path)
     if (authenticated && menuKey && !canAccessPath(to.path)) {
-      ElMessage.warning(`当前账号暂无${resolveMenuLabelByKey(menuKey)}菜单权限`)
+      ElMessage.warning(t('common.noMenuPermission', 'This account does not have permission for the {menu} menu', { menu: resolveMenuLabelByKey(menuKey) }))
       return next(from.path && from.path !== to.path ? from.path : getFirstAccessiblePath())
     }
     next()
   })
 
   router.afterEach((guard) => {
-    /**
-     * 预加载路由
-     */
     const _arr = prefetchRouteData[guard.path]
     if (_arr) {
       _arr.forEach((v: string) => {

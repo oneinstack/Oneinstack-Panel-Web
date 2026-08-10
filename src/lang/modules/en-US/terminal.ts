@@ -1,0 +1,41 @@
+export default {
+  title: 'Secure terminal',
+  subtitle: 'Runs as an isolated low-privilege user. Command arguments are not written to audit logs.',
+  connectSession: 'Start secure session',
+  disconnectSession: 'Disconnect session',
+  disabledTitle: 'Web terminal is currently disabled',
+  runtimeUnavailableTitle: 'Terminal isolation runtime is unavailable',
+  enableInPanelTip: 'Enable terminal in Panel settings and reload.',
+  runtimeIdentity: 'Runtime identity',
+  permissionBoundary: 'Permission boundary',
+  noSudoCapabilities: 'No sudo · no capabilities',
+  sessionLimit: 'Session limit',
+  sessionLimitValue: '{max} min · idle {idle} min · output {output} MB',
+  concurrentSessions: 'Concurrent sessions',
+  concurrentSessionsValue: 'Global {active} / {max} · per account {perUser}',
+  auditEnabledTitle: 'Command-level security audit enabled',
+  auditEnabledDescription: 'Records sessions, command submit time, and operator. Command content, arguments, interactive input, and terminal output are not saved.',
+  notConnected: 'Terminal not connected',
+  closed: 'Terminal closed',
+  passwordRequiredTip: 'Enter the current administrator password again when connecting.',
+  connection: {
+    authenticating: 'Authenticating',
+    connected: 'Session connected',
+    ended: 'Session ended',
+    disconnected: 'Disconnected'
+  },
+  statusReadFailed: 'Failed to read terminal security status',
+  passwordPromptMessage: 'The terminal runs as an isolated low-privilege user. Enter the current administrator password to complete secondary authentication.',
+  passwordPromptTitle: 'Start secure terminal session',
+  adminPassword: 'Administrator password',
+  authenticateAndConnect: 'Authenticate and connect',
+  passwordRequired: 'Enter password',
+  sameOriginOnly: 'Terminal only allows same-origin connections',
+  connectionFailed: 'Secure terminal connection failed',
+  outputDecodeFailed: 'Failed to decode terminal output.',
+  sessionClosedMessage: 'Terminal session closed.',
+  unavailable: 'Unavailable',
+  reasons: {
+    paneRequiresRoot: 'Pane must be started by the root management process so terminal child processes can safely drop privileges'
+  }
+}

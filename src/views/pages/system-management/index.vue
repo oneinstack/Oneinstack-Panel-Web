@@ -6,9 +6,15 @@ import CustomDrawer from '@/components/custom-drawer.vue'
 import { Api, type SystemDiskDevice, type SystemProcessDetail, type SystemProcessItem, type SystemSshConfig } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import { formatBytes } from '@/utils/fileSize'
+import i18n from '@/lang'
 
 type ProcessSort = 'pid' | 'cpu' | 'memory' | 'name'
 type SortOrder = 'asc' | 'desc'
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
 const processLoading = ref(false)
 const processError = ref('')
@@ -42,17 +48,17 @@ const processFilters = reactive({
   pageSize: defaultProcessPageSize
 })
 
-const processSortOptions: Array<{ label: string; value: ProcessSort }> = [
+const processSortOptions = computed<Array<{ label: string; value: ProcessSort }>>(() => [
   { label: 'PID', value: 'pid' },
   { label: 'CPU', value: 'cpu' },
-  { label: '内存', value: 'memory' },
-  { label: '名称', value: 'name' }
-]
+  { label: t('home.memory', '内存'), value: 'memory' },
+  { label: t('common.name', '名称'), value: 'name' }
+])
 
-const orderOptions: Array<{ label: string; value: SortOrder }> = [
-  { label: '降序', value: 'desc' },
-  { label: '升序', value: 'asc' }
-]
+const orderOptions = computed<Array<{ label: string; value: SortOrder }>>(() => [
+  { label: t('systemManagement.desc', '降序'), value: 'desc' },
+  { label: t('systemManagement.asc', '升序'), value: 'asc' }
+])
 
 const canRead = computed(() =>
   sconfig.hasActionAccess('system.settings.read') ||
@@ -64,10 +70,10 @@ const processOffset = computed(() => Math.max((processFilters.page - 1) * proces
 const highCpuCount = computed(() => processes.value.filter((item) => Number(item.cpuPercent) >= 20).length)
 const persistentDiskCount = computed(() => disks.value.filter((item) => item.persistent).length)
 const sshStatusText = computed(() => {
-  if (sshLoading.value) return '读取中'
-  if (sshConfig.value?.supported === false) return '当前系统不支持'
-  if (sshConfig.value?.error) return '探测异常'
-  return sshConfig.value?.service ? '已检测服务' : '未检测到'
+  if (sshLoading.value) return t('systemManagement.reading', '读取中')
+  if (sshConfig.value?.supported === false) return t('systemManagement.unsupported', '当前系统不支持')
+  if (sshConfig.value?.error) return t('systemManagement.probeFailed', '探测异常')
+  return sshConfig.value?.service ? t('systemManagement.serviceDetected', '已检测服务') : t('systemManagement.notDetected', '未检测到')
 })
 const sshStatusType = computed(() => {
   if (sshConfig.value?.supported === false || sshConfig.value?.error) return 'warning'
@@ -100,23 +106,23 @@ const isNotFoundError = (error: any) => {
 const processStatusLabel = (status?: string) => {
   const key = String(status || '').toLowerCase()
   const labels: Record<string, string> = {
-    running: '运行中',
-    run: '运行中',
-    sleep: '休眠',
-    sleeping: '休眠',
-    disk_sleep: '磁盘等待',
-    stopped: '已停止',
-    stop: '已停止',
-    zombie: '僵尸',
-    dead: '异常终止',
-    idle: '空闲',
-    lock: '锁等待',
-    tracing_stop: '跟踪暂停',
-    wake_kill: '唤醒终止',
-    waking: '唤醒中',
-    parked: '挂起'
+    running: t('systemManagement.running', '运行中'),
+    run: t('systemManagement.running', '运行中'),
+    sleep: t('systemManagement.sleeping', '休眠'),
+    sleeping: t('systemManagement.sleeping', '休眠'),
+    disk_sleep: t('systemManagement.diskSleep', '磁盘等待'),
+    stopped: t('systemManagement.stopped', '已停止'),
+    stop: t('systemManagement.stopped', '已停止'),
+    zombie: t('systemManagement.zombie', '僵尸'),
+    dead: t('systemManagement.dead', '异常终止'),
+    idle: t('systemManagement.idle', '空闲'),
+    lock: t('systemManagement.lock', '锁等待'),
+    tracing_stop: t('systemManagement.tracingStop', '跟踪暂停'),
+    wake_kill: t('systemManagement.wakeKill', '唤醒终止'),
+    waking: t('systemManagement.waking', '唤醒中'),
+    parked: t('systemManagement.parked', '挂起')
   }
-  return labels[key] || status || '未知'
+  return labels[key] || status || t('systemManagement.unknown', '未知')
 }
 
 const processStatusType = (status?: string) => {
@@ -168,7 +174,7 @@ const loadProcesses = async () => {
     processes.value = Array.isArray(data?.items) ? data.items : []
     processTotal.value = Number(data?.total || 0)
   } catch (error: any) {
-    processError.value = getErrorMessage(error, '获取进程列表失败')
+    processError.value = getErrorMessage(error, t('systemManagement.processListFailed', '获取进程列表失败'))
   } finally {
     processLoading.value = false
   }
@@ -183,7 +189,7 @@ const loadDisks = async () => {
     disks.value = Array.isArray(data?.devices) ? data.devices : []
     fstabLines.value = Array.isArray(data?.fstab) ? data.fstab : []
   } catch (error: any) {
-    diskError.value = getErrorMessage(error, '获取磁盘信息失败')
+    diskError.value = getErrorMessage(error, t('systemManagement.diskInfoFailed', '获取磁盘信息失败'))
   } finally {
     diskLoading.value = false
   }
@@ -197,7 +203,7 @@ const loadSshConfig = async () => {
     const { data } = await Api.getSystemSshConfig()
     sshConfig.value = data || null
   } catch (error: any) {
-    sshError.value = getErrorMessage(error, '获取 SSH 配置失败')
+    sshError.value = getErrorMessage(error, t('systemManagement.sshConfigFailed', '获取 SSH 配置失败'))
   } finally {
     sshLoading.value = false
   }
@@ -230,7 +236,7 @@ const openProcessDetail = async (row: SystemProcessItem) => {
     processDetail.value = data || null
   } catch (error: any) {
     processDrawerVisible.value = false
-    processError.value = isNotFoundError(error) ? '该进程可能已退出，列表已刷新' : getErrorMessage(error, '读取进程详情失败')
+    processError.value = isNotFoundError(error) ? t('systemManagement.processExited', '该进程可能已退出，列表已刷新') : getErrorMessage(error, t('systemManagement.processDetailFailed', '读取进程详情失败'))
     ElMessage.warning(processError.value)
     await loadProcesses()
   } finally {
@@ -257,42 +263,42 @@ onMounted(() => {
     <template v-if="canRead">
       <section class="system-hero">
         <div>
-          <h1 class="system-hero__title">系统管理</h1>
-          <p class="system-hero__desc">集中查看系统进程、SSH 生效配置与磁盘挂载状态，所有数据以当前接口最新响应为准。</p>
+          <h1 class="system-hero__title">{{ $t('systemManagement.title') }}</h1>
+          <p class="system-hero__desc">{{ $t('systemManagement.description') }}</p>
         </div>
-        <el-button class="hero-refresh" :icon="Refresh" @click="loadPage">刷新全部</el-button>
+        <el-button class="hero-refresh" :icon="Refresh" @click="loadPage">{{ $t('systemManagement.refreshAll') }}</el-button>
       </section>
 
       <section class="summary-grid">
         <article class="summary-card">
-          <span class="summary-card__label">进程总数</span>
+          <span class="summary-card__label">{{ $t('systemManagement.processManagement') }}</span>
           <strong>{{ processTotal }}</strong>
-          <small>当前筛选结果</small>
+          <small>{{ $t('systemManagement.currentFilterResult') }}</small>
         </article>
         <article class="summary-card">
-          <span class="summary-card__label">高 CPU 进程</span>
+          <span class="summary-card__label">{{ $t('systemManagement.highCpuProcesses') }}</span>
           <strong>{{ highCpuCount }}</strong>
-          <small>当前页 CPU ≥ 20%</small>
+          <small>{{ $t('systemManagement.currentPageCpuHint') }}</small>
         </article>
         <article class="summary-card">
-          <span class="summary-card__label">已挂载磁盘</span>
+          <span class="summary-card__label">{{ $t('systemManagement.mountedDisks') }}</span>
           <strong>{{ disks.length }}</strong>
-          <small>{{ persistentDiskCount }} 个已持久化</small>
+          <small>{{ $t('systemManagement.persistedCount', { count: persistentDiskCount }) }}</small>
         </article>
         <article class="summary-card">
-          <span class="summary-card__label">SSH 状态</span>
+          <span class="summary-card__label">{{ $t('systemManagement.sshStatus') }}</span>
           <strong>{{ sshStatusText }}</strong>
-          <small>{{ sshConfig?.configPath || '等待读取配置' }}</small>
+          <small>{{ sshConfig?.configPath || $t('systemManagement.waitingConfig') }}</small>
         </article>
       </section>
 
       <section class="system-card">
         <div class="section-heading">
           <div>
-            <h2>进程管理</h2>
-            <p>支持关键字、排序和分页查询，点击进程行查看详情。</p>
+            <h2>{{ $t('systemManagement.processManagement') }}</h2>
+            <p>{{ $t('systemManagement.processDescription') }}</p>
           </div>
-          <el-button :icon="Refresh" @click="loadProcesses">刷新进程</el-button>
+          <el-button :icon="Refresh" @click="loadProcesses">{{ $t('systemManagement.refreshProcesses') }}</el-button>
         </div>
 
         <el-alert v-if="processError" type="error" :closable="false" show-icon>
@@ -302,7 +308,7 @@ onMounted(() => {
         <div class="process-toolbar">
           <el-input
             v-model="processFilters.keyword"
-            placeholder="请输入进程名、PID 或关键字"
+            :placeholder="$t('systemManagement.processNamePlaceholder')"
             clearable
             @keyup.enter="queryProcesses"
           >
@@ -310,29 +316,29 @@ onMounted(() => {
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
-          <el-select v-model="processFilters.sort" placeholder="请选择排序字段">
+          <el-select v-model="processFilters.sort" :placeholder="$t('systemManagement.sortFieldPlaceholder')">
             <el-option v-for="item in processSortOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-select v-model="processFilters.order" placeholder="请选择排序方式">
+          <el-select v-model="processFilters.order" :placeholder="$t('systemManagement.sortOrderPlaceholder')">
             <el-option v-for="item in orderOptions" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
-          <el-button type="primary" @click="queryProcesses">查询</el-button>
-          <el-button @click="resetProcessFilters">重置</el-button>
+          <el-button type="primary" @click="queryProcesses">{{ $t('common.query') }}</el-button>
+          <el-button @click="resetProcessFilters">{{ $t('common.reset') }}</el-button>
         </div>
 
         <el-table
           v-loading="processLoading"
           :data="processes"
           class="data-table process-table"
-          empty-text="暂无进程数据"
+          :empty-text="$t('systemManagement.noProcessData')"
           @row-click="openProcessDetail"
         >
           <el-table-column prop="pid" label="PID" min-width="86" />
-          <el-table-column prop="name" label="名称" min-width="180" />
-          <el-table-column prop="username" label="用户" min-width="120">
+          <el-table-column prop="name" :label="$t('common.name')" min-width="180" />
+          <el-table-column prop="username" :label="$t('common.user')" min-width="120">
             <template #default="{ row }">{{ row.username || '--' }}</template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" min-width="120">
+          <el-table-column prop="status" :label="$t('common.status')" min-width="120">
             <template #default="{ row }">
               <el-tag :type="processStatusType(row.status)" effect="light">{{ processStatusLabel(row.status) }}</el-tag>
             </template>
@@ -340,21 +346,21 @@ onMounted(() => {
           <el-table-column prop="cpuPercent" label="CPU" min-width="110">
             <template #default="{ row }">{{ formatPercent(row.cpuPercent) }}</template>
           </el-table-column>
-          <el-table-column prop="memoryRss" label="内存" min-width="130">
+          <el-table-column prop="memoryRss" :label="$t('home.memory')" min-width="130">
             <template #default="{ row }">{{ formatBytes(row.memoryRss) }}</template>
           </el-table-column>
-          <el-table-column prop="createTime" label="启动时间" min-width="176">
+          <el-table-column prop="createTime" :label="$t('systemManagement.startTime')" min-width="176">
             <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
           </el-table-column>
-          <el-table-column label="操作" min-width="120" fixed="right">
+          <el-table-column :label="$t('common.action')" min-width="120" fixed="right">
             <template #default="{ row }">
-              <el-button link type="primary" @click.stop="openProcessDetail(row)">查看详情</el-button>
+              <el-button link type="primary" @click.stop="openProcessDetail(row)">{{ $t('common.detail') }}</el-button>
             </template>
           </el-table-column>
         </el-table>
 
         <div class="table-footer">
-          <span>共 {{ processTotal }} 个进程</span>
+          <span>{{ $t('systemManagement.totalProcesses', { count: processTotal }) }}</span>
           <el-pagination
             v-model:current-page="processFilters.page"
             v-model:page-size="processFilters.pageSize"
@@ -371,12 +377,12 @@ onMounted(() => {
         <article class="system-card">
           <div class="section-heading">
             <div>
-              <h2>SSH 快速配置</h2>
-              <p>展示当前 <code>sshd -T</code> 生效配置，配置项只读，写操作接口尚未开放。</p>
+              <h2>{{ $t('systemManagement.sshQuickConfig') }}</h2>
+              <p>{{ $t('systemManagement.sshDescription') }}</p>
             </div>
             <div class="section-actions">
-              <el-button :icon="Refresh" @click="loadSshConfig">刷新 SSH</el-button>
-              <el-button type="primary" plain @click="openSshDrawer">查看配置</el-button>
+              <el-button :icon="Refresh" @click="loadSshConfig">{{ $t('systemManagement.refreshSsh') }}</el-button>
+              <el-button type="primary" plain @click="openSshDrawer">{{ $t('systemManagement.viewConfig') }}</el-button>
             </div>
           </div>
 
@@ -387,36 +393,36 @@ onMounted(() => {
             show-icon
           >
             <template #title>
-              {{ sshError || sshConfig?.error || '当前系统不支持 SSH 配置探测能力' }}
+              {{ sshError || sshConfig?.error || $t('systemManagement.sshUnsupportedProbe') }}
             </template>
           </el-alert>
 
           <div v-loading="sshLoading" class="ssh-overview">
             <div class="ssh-item">
-              <span>服务</span>
+              <span>{{ $t('systemManagement.service') }}</span>
               <strong>{{ sshConfig?.service || '--' }}</strong>
             </div>
             <div class="ssh-item">
-              <span>配置文件</span>
+              <span>{{ $t('systemManagement.configFile') }}</span>
               <strong>{{ sshConfig?.configPath || '--' }}</strong>
             </div>
             <div class="ssh-item">
-              <span>监听端口</span>
+              <span>{{ $t('systemManagement.listenPort') }}</span>
               <strong>{{ sshConfig?.port || '--' }}</strong>
-              <em>风险项</em>
+              <em>{{ $t('systemManagement.riskItem') }}</em>
             </div>
             <div class="ssh-item">
-              <span>密码登录</span>
+              <span>{{ $t('systemManagement.passwordLogin') }}</span>
               <strong>{{ sshConfig?.passwordAuthentication || '--' }}</strong>
-              <em>风险项</em>
+              <em>{{ $t('systemManagement.riskItem') }}</em>
             </div>
             <div class="ssh-item">
-              <span>Root 登录</span>
+              <span>{{ $t('systemManagement.rootLogin') }}</span>
               <strong>{{ sshConfig?.permitRootLogin || '--' }}</strong>
-              <em>风险项</em>
+              <em>{{ $t('systemManagement.riskItem') }}</em>
             </div>
             <div class="ssh-item">
-              <span>监听地址</span>
+              <span>{{ $t('systemManagement.listenAddress') }}</span>
               <strong>{{ sshConfig?.listenAddress || '--' }}</strong>
             </div>
           </div>
@@ -424,11 +430,11 @@ onMounted(() => {
           <div class="risk-list">
             <div class="risk-item">
               <el-icon><InfoFilled /></el-icon>
-              <span>端口、Root 登录和密码认证仅展示当前生效值，暂不允许前端直接修改。</span>
+              <span>{{ $t('systemManagement.sshReadOnlyHint') }}</span>
             </div>
             <div class="risk-item">
               <el-icon><WarningFilled /></el-icon>
-              <span>服务探测失败时保留错误原文，不把空字符串误判为未配置。</span>
+              <span>{{ $t('systemManagement.sshProbeHint') }}</span>
             </div>
           </div>
         </article>
@@ -436,10 +442,10 @@ onMounted(() => {
         <article class="system-card">
           <div class="section-heading">
             <div>
-              <h2>磁盘管理</h2>
-              <p>展示已挂载分区、容量、挂载点与 fstab 持久化状态。</p>
+              <h2>{{ $t('systemManagement.diskManagement') }}</h2>
+              <p>{{ $t('systemManagement.diskDescription') }}</p>
             </div>
-            <el-button :icon="Refresh" @click="loadDisks">刷新磁盘</el-button>
+            <el-button :icon="Refresh" @click="loadDisks">{{ $t('systemManagement.refreshDisks') }}</el-button>
           </div>
 
           <el-alert v-if="diskError" type="error" :closable="false" show-icon>
@@ -447,21 +453,21 @@ onMounted(() => {
           </el-alert>
 
           <div class="disk-protection">
-            <span class="disk-protection__title">保护性挂载点</span>
+            <span class="disk-protection__title">{{ $t('systemManagement.protectedMounts') }}</span>
             <div class="disk-protection__list">
               <el-tag v-for="item in rootMounts" :key="`${item.device}-${item.mountpoint}`" effect="light" type="warning">
                 {{ item.mountpoint }}
               </el-tag>
-              <span v-if="!rootMounts.length">暂无重点挂载点</span>
+              <span v-if="!rootMounts.length">{{ $t('systemManagement.noKeyMounts') }}</span>
             </div>
-            <small>根分区、Panel 数据目录相关挂载点仅展示，不提供危险写操作。</small>
+            <small>{{ $t('systemManagement.protectedMountsHint') }}</small>
           </div>
 
-          <el-table v-loading="diskLoading" :data="disks" class="data-table" empty-text="暂无磁盘数据">
-            <el-table-column prop="device" label="设备" min-width="150" />
-            <el-table-column prop="mountpoint" label="挂载点" min-width="140" />
-            <el-table-column prop="fsType" label="文件系统" min-width="100" />
-            <el-table-column label="容量使用" min-width="220">
+          <el-table v-loading="diskLoading" :data="disks" class="data-table" :empty-text="$t('systemManagement.noDiskData')">
+            <el-table-column prop="device" :label="$t('systemManagement.device')" min-width="150" />
+            <el-table-column prop="mountpoint" :label="$t('systemManagement.mountpoint')" min-width="140" />
+            <el-table-column prop="fsType" :label="$t('systemManagement.fileSystem')" min-width="100" />
+            <el-table-column :label="$t('systemManagement.capacityUsage')" min-width="220">
               <template #default="{ row }">
                 <div class="usage-cell">
                   <el-progress :percentage="usagePercent(row)" :stroke-width="8" />
@@ -469,16 +475,16 @@ onMounted(() => {
                 </div>
               </template>
             </el-table-column>
-            <el-table-column prop="persistent" label="持久化" min-width="100">
+            <el-table-column prop="persistent" :label="$t('systemManagement.persistent')" min-width="100">
               <template #default="{ row }">
                 <el-tag :type="row.persistent ? 'success' : 'info'" effect="light">
-                  {{ row.persistent ? '已写入 fstab' : '未匹配 fstab' }}
+                  {{ row.persistent ? $t('systemManagement.writtenFstab') : $t('systemManagement.unmatchedFstab') }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" min-width="120" fixed="right">
+            <el-table-column :label="$t('common.action')" min-width="120" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" @click="openDiskDetail(row)">查看详情</el-button>
+                <el-button link type="primary" @click="openDiskDetail(row)">{{ $t('common.detail') }}</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -487,7 +493,7 @@ onMounted(() => {
 
       <custom-drawer
         :visible="processDrawerVisible"
-        title="进程详情"
+        :title="$t('systemManagement.processDetail')"
         :loading="processDetailLoading"
         :show-footer="false"
         size="640px"
@@ -500,19 +506,19 @@ onMounted(() => {
               <strong>{{ processDetail.pid }}</strong>
             </div>
             <div class="detail-item">
-              <span>父进程</span>
+              <span>{{ $t('systemManagement.parentProcess') }}</span>
               <strong>{{ processDetail.ppid }}</strong>
             </div>
             <div class="detail-item">
-              <span>名称</span>
+              <span>{{ $t('common.name') }}</span>
               <strong>{{ processDetail.name }}</strong>
             </div>
             <div class="detail-item">
-              <span>用户</span>
+              <span>{{ $t('common.user') }}</span>
               <strong>{{ processDetail.username || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>状态</span>
+              <span>{{ $t('common.status') }}</span>
               <strong>{{ processStatusLabel(processDetail.status) }}</strong>
             </div>
             <div class="detail-item">
@@ -520,32 +526,32 @@ onMounted(() => {
               <strong>{{ formatPercent(processDetail.cpuPercent) }}</strong>
             </div>
             <div class="detail-item">
-              <span>内存</span>
+              <span>{{ $t('home.memory') }}</span>
               <strong>{{ formatBytes(processDetail.memoryRss) }}</strong>
             </div>
             <div class="detail-item">
-              <span>启动时间</span>
+              <span>{{ $t('systemManagement.startTime') }}</span>
               <strong>{{ formatDateTime(processDetail.createTime) }}</strong>
             </div>
           </div>
 
           <div class="detail-block">
-            <label>可执行文件</label>
+            <label>{{ $t('systemManagement.executable') }}</label>
             <pre>{{ processDetail.executable || '--' }}</pre>
           </div>
           <div class="detail-block">
-            <label>工作目录</label>
+            <label>{{ $t('systemManagement.workingDirectory') }}</label>
             <pre>{{ processDetail.cwd || '--' }}</pre>
           </div>
           <div class="detail-block">
-            <label>命令行（脱敏）</label>
+            <label>{{ $t('systemManagement.commandMasked') }}</label>
             <pre>{{ processDetail.command || '--' }}</pre>
           </div>
           <div class="detail-block">
-            <label>直接子进程</label>
+            <label>{{ $t('systemManagement.directChildren') }}</label>
             <div class="children-tags">
               <el-tag v-for="pid in processDetail.children || []" :key="pid" effect="light">{{ pid }}</el-tag>
-              <span v-if="!(processDetail.children || []).length">无直接子进程</span>
+              <span v-if="!(processDetail.children || []).length">{{ $t('systemManagement.noDirectChildren') }}</span>
             </div>
           </div>
         </div>
@@ -553,7 +559,7 @@ onMounted(() => {
 
       <custom-drawer
         :visible="sshDrawerVisible"
-        title="SSH 当前配置"
+        :title="$t('systemManagement.currentSshConfig')"
         :show-footer="false"
         size="620px"
         :on-close="() => { sshDrawerVisible = false }"
@@ -561,45 +567,45 @@ onMounted(() => {
         <div class="detail-drawer">
           <div class="detail-grid">
             <div class="detail-item">
-              <span>支持状态</span>
-              <strong>{{ sshConfig?.supported === false ? '不支持' : '支持' }}</strong>
+              <span>{{ $t('systemManagement.supportStatus') }}</span>
+              <strong>{{ sshConfig?.supported === false ? $t('systemManagement.unsupported') : $t('systemManagement.supported') }}</strong>
             </div>
             <div class="detail-item">
-              <span>服务名</span>
+              <span>{{ $t('systemManagement.serviceName') }}</span>
               <strong>{{ sshConfig?.service || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>配置路径</span>
+              <span>{{ $t('systemManagement.configPath') }}</span>
               <strong>{{ sshConfig?.configPath || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>监听端口</span>
+              <span>{{ $t('systemManagement.listenPort') }}</span>
               <strong>{{ sshConfig?.port || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>密码认证</span>
+              <span>{{ $t('systemManagement.passwordAuthentication') }}</span>
               <strong>{{ sshConfig?.passwordAuthentication || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>Root 登录</span>
+              <span>{{ $t('systemManagement.rootLogin') }}</span>
               <strong>{{ sshConfig?.permitRootLogin || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>公钥认证</span>
+              <span>{{ $t('systemManagement.pubkeyAuthentication') }}</span>
               <strong>{{ sshConfig?.pubkeyAuthentication || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>空密码</span>
+              <span>{{ $t('systemManagement.emptyPassword') }}</span>
               <strong>{{ sshConfig?.permitEmptyPasswords || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>监听地址</span>
+              <span>{{ $t('systemManagement.listenAddress') }}</span>
               <strong>{{ sshConfig?.listenAddress || '--' }}</strong>
             </div>
           </div>
 
           <div class="detail-block" v-if="sshConfig?.error">
-            <label>诊断信息</label>
+            <label>{{ $t('systemManagement.diagnosticInfo') }}</label>
             <pre>{{ sshConfig.error }}</pre>
           </div>
         </div>
@@ -607,7 +613,7 @@ onMounted(() => {
 
       <custom-drawer
         :visible="diskDrawerVisible"
-        :title="activeDisk ? `${activeDisk.mountpoint} 磁盘详情` : '磁盘详情'"
+        :title="activeDisk ? $t('systemManagement.diskDetailTitle', { mountpoint: activeDisk.mountpoint }) : $t('systemManagement.diskDetail')"
         :show-footer="false"
         size="760px"
         :on-close="() => { diskDrawerVisible = false }"
@@ -615,41 +621,41 @@ onMounted(() => {
         <div v-if="activeDisk" class="detail-drawer">
           <div class="detail-grid">
             <div class="detail-item">
-              <span>设备</span>
+              <span>{{ $t('systemManagement.device') }}</span>
               <strong>{{ activeDisk.device }}</strong>
             </div>
             <div class="detail-item">
-              <span>挂载点</span>
+              <span>{{ $t('systemManagement.mountpoint') }}</span>
               <strong>{{ activeDisk.mountpoint }}</strong>
             </div>
             <div class="detail-item">
-              <span>文件系统</span>
+              <span>{{ $t('systemManagement.fileSystem') }}</span>
               <strong>{{ activeDisk.fsType }}</strong>
             </div>
             <div class="detail-item">
-              <span>挂载选项</span>
+              <span>{{ $t('systemManagement.mountOptions') }}</span>
               <strong>{{ activeDisk.options || '--' }}</strong>
             </div>
             <div class="detail-item">
-              <span>总容量</span>
+              <span>{{ $t('systemManagement.totalCapacity') }}</span>
               <strong>{{ formatBytes(activeDisk.totalBytes) }}</strong>
             </div>
             <div class="detail-item">
-              <span>已使用</span>
+              <span>{{ $t('systemManagement.usedCapacity') }}</span>
               <strong>{{ formatBytes(activeDisk.usedBytes) }}</strong>
             </div>
             <div class="detail-item">
-              <span>可用</span>
+              <span>{{ $t('systemManagement.available') }}</span>
               <strong>{{ formatBytes(activeDisk.freeBytes) }}</strong>
             </div>
             <div class="detail-item">
-              <span>持久化</span>
-              <strong>{{ activeDisk.persistent ? '已写入 fstab' : '未匹配 fstab' }}</strong>
+              <span>{{ $t('systemManagement.persistent') }}</span>
+              <strong>{{ activeDisk.persistent ? $t('systemManagement.writtenFstab') : $t('systemManagement.unmatchedFstab') }}</strong>
             </div>
           </div>
 
           <div class="detail-block">
-            <label>容量进度</label>
+            <label>{{ $t('systemManagement.progress') }}</label>
             <div class="disk-progress-card">
               <el-progress :percentage="usagePercent(activeDisk)" :stroke-width="10" />
               <span>{{ formatBytes(activeDisk.usedBytes) }} / {{ formatBytes(activeDisk.totalBytes) }}</span>
@@ -657,14 +663,14 @@ onMounted(() => {
           </div>
 
           <div class="detail-block">
-            <label>/etc/fstab 当前条目</label>
-            <pre>{{ fstabLines.length ? fstabLines.join('\n') : '暂无有效 fstab 配置' }}</pre>
+            <label>{{ $t('systemManagement.fstabEntries') }}</label>
+            <pre>{{ fstabLines.length ? fstabLines.join('\n') : $t('systemManagement.noFstabEntries') }}</pre>
           </div>
         </div>
       </custom-drawer>
     </template>
 
-    <el-empty v-else description="当前账号没有系统管理读取权限" />
+    <el-empty v-else :description="$t('systemManagement.noReadPermission')" />
   </div>
 </template>
 

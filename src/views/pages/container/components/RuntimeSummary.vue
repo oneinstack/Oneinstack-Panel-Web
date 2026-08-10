@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RuntimeInfo } from '../types'
+import i18n from '@/lang'
 
 defineProps<{
   runtime: RuntimeInfo | null
@@ -7,6 +8,11 @@ defineProps<{
   runningContainers: number
   containerCount: number
 }>()
+
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 </script>
 
 <template>
@@ -14,22 +20,22 @@ defineProps<{
     <div class="metric-card">
       <div class="metric-card__label">Docker Client</div>
       <strong>{{ runtime?.dockerVersion || '--' }}</strong>
-      <span>客户端版本</span>
+      <span>{{ t('container.clientVersion', 'Client version') }}</span>
     </div>
     <div class="metric-card">
       <div class="metric-card__label">Docker Server</div>
       <strong>{{ runtime?.serverVersion || '--' }}</strong>
-      <span>服务端版本</span>
+      <span>{{ t('container.serverVersion', 'Server version') }}</span>
     </div>
     <div class="metric-card">
       <div class="metric-card__label">Compose</div>
       <strong>{{ runtime?.composeVersion || '--' }}</strong>
-      <span>编排运行时</span>
+      <span>{{ t('container.composeRuntimeLabel', 'Compose runtime') }}</span>
     </div>
     <div class="metric-card metric-card--accent">
-      <div class="metric-card__label">容器运行中</div>
+      <div class="metric-card__label">{{ t('container.runningContainers', 'Running containers') }}</div>
       <strong>{{ runningContainers }} / {{ containerCount }}</strong>
-      <span>当前容器状态</span>
+      <span>{{ t('container.currentContainerStatus', 'Current container status') }}</span>
     </div>
   </section>
 </template>

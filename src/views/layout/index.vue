@@ -10,6 +10,7 @@ import sconfig from '@/sstore/sconfig'
 import { Api } from '@/api/Api'
 import softwareTaskStore, { type SoftwareTask } from '@/sstore/softwareTask'
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
+import i18n from '@/lang'
 
 
 interface ItemColor {
@@ -41,7 +42,7 @@ const conf = reactive({
   },
   navList: [
     {
-      name: '首页',
+      name: 'Home',
       path: '/home',
       icon: 'home',
       matrixKeys: ['dashboard'],
@@ -51,7 +52,7 @@ const conf = reactive({
       }
     },
     {
-      name: '网站',
+      name: 'Websites',
       path: '/website',
       icon: 'website',
       matrixKeys: ['website'],
@@ -61,7 +62,7 @@ const conf = reactive({
       }
     },
     {
-      name: '数据库',
+      name: 'Databases',
       path: '/database',
       icon: 'database',
       matrixKeys: ['database'],
@@ -71,7 +72,7 @@ const conf = reactive({
       }
     },
     {
-      name: '监控告警',
+      name: 'Monitoring',
       path: '/monitor',
       icon: 'monitor',
       adminOnly: true,
@@ -82,7 +83,7 @@ const conf = reactive({
       }
     },
     {
-      name: '堡垒机',
+      name: 'Bastion',
       path: '/bastion',
       icon: 'security',
       matrixKeys: ['bastion'],
@@ -92,7 +93,7 @@ const conf = reactive({
       }
     },
     {
-      name: '容器管理',
+      name: 'Containers',
       path: '/container',
       icon: 'software',
       matrixKeys: ['container'],
@@ -102,7 +103,7 @@ const conf = reactive({
       }
     },
     {
-      name: '安全',
+      name: 'Security',
       path: '/security',
       icon: 'security',
       matrixKeys: ['security'],
@@ -112,7 +113,7 @@ const conf = reactive({
       }
     },
     {
-      name: '文件',
+      name: 'Files',
       path: '/file',
       icon: 'file',
       matrixKeys: ['file'],
@@ -122,7 +123,7 @@ const conf = reactive({
       }
     },
     {
-      name: '审计日志',
+      name: 'Audit logs',
       path: '/log',
       icon: 'log',
       adminOnly: true,
@@ -133,7 +134,7 @@ const conf = reactive({
       }
     },
     {
-      name: '运行日志',
+      name: 'Runtime logs',
       path: '/runtime-log',
       icon: 'log',
       adminOnly: true,
@@ -144,7 +145,7 @@ const conf = reactive({
       }
     },
     {
-      name: '安全终端',
+      name: 'Secure terminal',
       path: '/terminal',
       icon: 'terminal',
       adminOnly: true,
@@ -154,7 +155,7 @@ const conf = reactive({
       }
     },
     {
-      name: '计划任务',
+      name: 'Scheduled tasks',
       path: '/task',
       icon: 'task',
       matrixKeys: ['cron'],
@@ -164,7 +165,7 @@ const conf = reactive({
       }
     },
     {
-      name: '软件商店',
+      name: 'Software store',
       path: '/software',
       icon: 'software',
       matrixKeys: ['software'],
@@ -174,7 +175,7 @@ const conf = reactive({
       }
     },
     {
-      name: '面板设置',
+      name: 'Panel settings',
       path: '/setting',
       icon: 'setting',
       matrixKeys: ['panelSettings'],
@@ -184,7 +185,7 @@ const conf = reactive({
       }
     },
     {
-      name: '配置快照',
+      name: 'Config snapshots',
       path: '/config-snapshots',
       icon: 'log',
       adminOnly: true,
@@ -196,7 +197,7 @@ const conf = reactive({
       }
     },
     {
-      name: '系统管理',
+      name: 'System management',
       path: '/system-management',
       icon: 'setting',
       actionKeys: ['system.settings.read'],
@@ -206,7 +207,7 @@ const conf = reactive({
       }
     },
     {
-      name: '用户管理',
+      name: 'User management',
       path: '/user-management',
       icon: 'user-management',
       matrixKeys: ['userManagement'],
@@ -216,7 +217,7 @@ const conf = reactive({
       }
     },
     {
-      name: '审批中心',
+      name: 'Approval center',
       path: '/approval-center',
       icon: 'log',
       matrixKeys: ['approval'],
@@ -226,7 +227,7 @@ const conf = reactive({
       }
     },
     {
-      name: '退出',
+      name: 'Logout',
       path: '',
       icon: 'exit',
       matrixKeys: ['logout'],
@@ -268,28 +269,48 @@ const navigateNavItem = (item: NavItem) => {
   }
   item.event?.()
 }
-const pageDescriptions: Record<string, string> = {
-  '/home': '查看服务器资源与服务运行状态',
-  '/user-management': '管理用户账号、权限与角色',
-  '/approval-center': '查看审批记录、处理高风险操作申请',
-  '/website': '管理站点、域名、证书与运行环境',
-  '/database': '管理数据库实例、账号与远程连接',
-  '/monitor': '跟踪资源指标、告警规则与通知事件',
-  '/bastion': '管理远程服务器接入、可达性与资源指标',
-  '/container': '管理容器、镜像、网络、存储卷与 Compose 项目',
-  '/security': '管理防火墙、登录防护与系统安全',
-  '/file': '浏览、上传和维护服务器文件',
-  '/log': '追踪关键操作与安全审计记录',
-  '/runtime-log': '查看面板与服务运行日志',
-  '/task': '编排周期任务与自动化脚本',
-  '/software': '安装、升级和维护服务器软件',
-  '/setting': '配置面板、安全策略与用户账户',
-  '/config-snapshots': '查看配置快照、差异并执行安全回滚',
-  '/system-management': '查看系统进程、SSH 生效配置与磁盘挂载状态'
+const menuPathLocaleKey: Record<string, string> = {
+  '/home': 'dashboard',
+  '/website': 'website',
+  '/database': 'database',
+  '/monitor': 'monitoring',
+  '/bastion': 'bastion',
+  '/container': 'container',
+  '/security': 'security',
+  '/file': 'file',
+  '/log': 'audit',
+  '/runtime-log': 'runtimeLog',
+  '/terminal': 'terminal',
+  '/task': 'cron',
+  '/software': 'software',
+  '/setting': 'panelSettings',
+  '/config-snapshots': 'configSnapshots',
+  '/system-management': 'systemManagement',
+  '/user-management': 'userManagement',
+  '/approval-center': 'approval'
 }
-const pageDescription = computed(() => pageDescriptions[currentNav.value?.path] || 'OneinStack 服务器管理中心')
+const translateWithFallback = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
+const getMenuLocaleKey = (item?: NavItem) => {
+  if (!item) return ''
+  if (!item.path) return item.matrixKeys?.[0] || 'logout'
+  return menuPathLocaleKey[item.path] || item.matrixKeys?.[0] || ''
+}
+const getMenuName = (item?: NavItem) => {
+  const key = getMenuLocaleKey(item)
+  return key ? translateWithFallback(`layout.menu.${key}`, item?.name || key) : item?.name || ''
+}
+const currentNavTitle = computed(() => getMenuName(currentNav.value))
+const pageDescription = computed(() => {
+  const key = getMenuLocaleKey(currentNav.value)
+  return key
+    ? translateWithFallback(`layout.description.${key}`, translateWithFallback('layout.description.fallback', 'OneinStack server control center'))
+    : translateWithFallback('layout.description.fallback', 'OneinStack server control center')
+})
 const displayName = computed(
-  () => sconfig.userInfo?.user?.username || sconfig.userInfo?.username || '管理员'
+  () => sconfig.userInfo?.user?.username || sconfig.userInfo?.username || translateWithFallback('layout.administrator', 'Administrator')
 )
 const displayInitial = computed(() => displayName.value.slice(0, 1).toUpperCase())
 const taskPopoverVisible = ref(false)
@@ -303,35 +324,20 @@ const activeSoftwareTasks = computed(() =>
     .filter((task) => !softwareTaskStore.isTerminal(task.status))
     .sort((left, right) => Date.parse(right.createdAt) - Date.parse(left.createdAt))
 )
-const operationNames: Record<string, string> = {
-  install: '安装',
-  upgrade: '升级',
-  uninstall: '卸载',
-  start: '启动',
-  stop: '停止',
-  restart: '重启',
-  reload: '平滑重载',
-  configure: '配置发布'
+const operationNameFallbacks: Record<string, string> = {
+  install: 'Install',
+  upgrade: 'Upgrade',
+  uninstall: 'Uninstall',
+  start: 'Start',
+  stop: 'Stop',
+  restart: 'Restart',
+  reload: 'Reload',
+  configure: 'Publish configuration'
 }
+const getOperationName = (operation: string) =>
+  translateWithFallback(`layout.operation.${operation}`, operationNameFallbacks[operation] || translateWithFallback('layout.task', 'Task'))
 const taskStatusName = (task: SoftwareTask) => {
-  const labels: Record<string, string> = {
-    queued: '排队中',
-    resolving: '正在获取脚本',
-    prechecking: '正在检查环境',
-    installing: '正在安装',
-    upgrading: '正在升级',
-    uninstalling: '正在卸载',
-    starting: '正在启动',
-    stopping: '正在停止',
-    restarting: '正在重启',
-    reloading: '正在重载',
-    configuring: '正在发布配置',
-    verifying: '正在验证',
-    finalizing: '正在保存状态',
-    canceling: '正在取消',
-    rolling_back: '正在回滚'
-  }
-  return labels[task.status] || task.message || task.status
+  return translateWithFallback(`layout.taskStatus.${task.status}`, task.message || task.status)
 }
 const openGlobalTask = (task: SoftwareTask) => {
   taskPopoverVisible.value = false
@@ -352,12 +358,14 @@ watch(
       ) return
 
       const succeeded = task.status === 'succeeded'
-      const operation = operationNames[task.operation] || '任务'
+      const operation = getOperationName(task.operation)
       ElNotification({
-        title: succeeded ? `${operation}成功` : `${operation}未完成`,
+        title: succeeded
+          ? translateWithFallback('layout.taskSuccess', `${operation} succeeded`, { operation })
+          : translateWithFallback('layout.taskIncomplete', `${operation} did not complete`, { operation }),
         message: succeeded
-          ? `${task.component} 已处理完成，页面状态已自动更新`
-          : `${task.component}：${task.errorMessage || task.message || '请打开任务查看详情'}`,
+          ? translateWithFallback('layout.taskCompleteMessage', `${task.component} has completed. Page state was refreshed automatically.`, { component: task.component })
+          : `${task.component}: ${task.errorMessage || task.message || translateWithFallback('layout.taskDetailHint', 'Open the task for details')}`,
         type: succeeded ? 'success' : 'error',
         duration: succeeded ? 5000 : 0,
         position: 'top-right',
@@ -380,9 +388,9 @@ onMounted(() => {
 })
 
 const Beturn = () => {
-  ElMessageBox.confirm('退出面板登录，是否继续？', '退出登录', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
+  ElMessageBox.confirm(translateWithFallback('layout.logoutConfirm', 'Sign out of the panel?'), translateWithFallback('layout.logoutTitle', 'Sign out'), {
+          confirmButtonText: translateWithFallback('common.confirm', 'Confirm'),
+          cancelButtonText: translateWithFallback('common.cancel', 'Cancel'),
           type: 'warning'
         })
           .then(async (res) => {
@@ -394,7 +402,7 @@ const Beturn = () => {
               }
               ElMessage({
                 type: 'success',
-                message: '退出成功'
+                message: translateWithFallback('layout.logoutSuccess', 'Signed out')
               })
             }
           })
@@ -414,17 +422,22 @@ const BindButton = () => {
         </div>
         <div class="brand-copy">
           <img class="logo-text" :src="`/static/images/logo-text-${sapp.theme}.png`" alt="OneinStack Panel" />
-          <span>SERVER CONTROL</span>
+          <span>{{ $t('layout.brandSubtitle') }}</span>
         </div>
       </div>
-      <button class="sidebar-trigger" type="button" :aria-label="conf.isCollapse ? '展开导航' : '收起导航'" @click="BindButton">
+      <button
+        class="sidebar-trigger"
+        type="button"
+        :aria-label="conf.isCollapse ? $t('layout.expandNavigation') : $t('layout.collapseNavigation')"
+        @click="BindButton"
+      >
         <el-icon :size="18">
           <Expand v-if="conf.isCollapse" />
           <Fold v-else />
         </el-icon>
       </button>
       <div class="page-context">
-        <div class="page-title">{{ currentNav?.name }}</div>
+        <div class="page-title">{{ currentNavTitle }}</div>
         <div class="page-description">{{ pageDescription }}</div>
       </div>
       <div class="layout-container__header-right">
@@ -439,10 +452,10 @@ const BindButton = () => {
             <button
               class="task-center-trigger"
               type="button"
-              :aria-label="`当前运行任务 ${activeSoftwareTasks.length} 个`"
+              :aria-label="$t('layout.runningTaskAria', { count: activeSoftwareTasks.length })"
             >
               <el-icon :size="17"><Bell /></el-icon>
-              <span class="task-center-label">任务</span>
+              <span class="task-center-label">{{ $t('layout.task') }}</span>
               <span class="task-count" :class="{ active: activeSoftwareTasks.length > 0 }">
                 {{ activeSoftwareTasks.length }}
               </span>
@@ -451,16 +464,16 @@ const BindButton = () => {
           <div class="global-task-panel">
             <div class="global-task-panel__header">
               <div>
-                <strong>当前运行任务</strong>
-                <span>安装和维护任务会在后台持续执行</span>
+                <strong>{{ $t('layout.runningTasks') }}</strong>
+                <span>{{ $t('layout.runningTaskHint') }}</span>
               </div>
               <el-tag size="small" :type="activeSoftwareTasks.length ? 'primary' : 'info'">
-                {{ activeSoftwareTasks.length }} 个
+                {{ $t('layout.taskCount', { count: activeSoftwareTasks.length }) }}
               </el-tag>
             </div>
             <div v-if="!activeSoftwareTasks.length" class="global-task-empty">
               <el-icon :size="22"><Bell /></el-icon>
-              <span>当前没有运行中的任务</span>
+              <span>{{ $t('layout.noRunningTasks') }}</span>
             </div>
             <button
               v-for="task in activeSoftwareTasks"
@@ -474,7 +487,7 @@ const BindButton = () => {
                 <span>{{ task.progress }}%</span>
               </div>
               <div class="global-task-item__meta">
-                {{ operationNames[task.operation] || '任务' }} · {{ taskStatusName(task) }}
+                {{ getOperationName(task.operation) }} · {{ taskStatusName(task) }}
               </div>
               <el-progress
                 :percentage="task.progress || 0"
@@ -486,22 +499,22 @@ const BindButton = () => {
         </el-popover>
         <div class="server-status">
           <span class="status-dot"></span>
-          <span>服务正常</span>
+          <span>{{ $t('layout.serverHealthy') }}</span>
         </div>
-        <!-- <language-switch /> -->
+        <language-switch />
         <theme-switch />
         <el-dropdown placement="bottom-end">
           <div class="user-menu">
             <div class="avatar">{{ displayInitial }}</div>
             <div class="user-copy">
               <strong>{{ displayName }}</strong>
-              <span>{{ sconfig.userInfo?.user?.isAdmin ? '超级管理员' : '面板用户' }}</span>
+              <span>{{ sconfig.userInfo?.user?.isAdmin ? $t('layout.superAdmin') : $t('layout.panelUser') }}</span>
             </div>
             <span class="chevron">⌄</span>
           </div>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item @click="Beturn">安全退出</el-dropdown-item>
+              <el-dropdown-item @click="Beturn">{{ $t('layout.safeLogout') }}</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
@@ -509,7 +522,7 @@ const BindButton = () => {
     </el-header>
     <el-container class="layout-container__body">
       <aside class="layout-container__body-left" :class="{ collapsed: conf.isCollapse }">
-        <div class="navigation-label" v-show="!conf.isCollapse">管理中心</div>
+        <div class="navigation-label" v-show="!conf.isCollapse">{{ $t('layout.navigation') }}</div>
         <el-scrollbar class="nav-scrollbar">
           <el-menu :collapse="conf.isCollapse" :default-active="activeMenuIndex">
             <template v-for="item in visibleNavList" :key="item.path || item.name">
@@ -524,7 +537,7 @@ const BindButton = () => {
                     "
                     size="22"
                   />
-                  <span class="menu-item-name">{{ item.name }}</span>
+                  <span class="menu-item-name">{{ getMenuName(item) }}</span>
                 </template>
                 <el-menu-item
                   v-for="child in item.children"
@@ -541,7 +554,7 @@ const BindButton = () => {
                     "
                     size="22"
                   />
-                  <span class="menu-item-name">{{ child.name }}</span>
+                  <span class="menu-item-name">{{ getMenuName(child) }}</span>
                 </el-menu-item>
               </el-sub-menu>
               <el-menu-item v-else :index="item.path || `action:${item.name}`" @click="navigateNavItem(item)">
@@ -554,7 +567,7 @@ const BindButton = () => {
                   "
                   size="22"
                 />
-                <span class="menu-item-name">{{ item.name }}</span>
+                <span class="menu-item-name">{{ getMenuName(item) }}</span>
               </el-menu-item>
             </template>
           </el-menu>

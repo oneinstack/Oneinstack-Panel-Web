@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import sconfig from '@/sstore/sconfig'
+import i18n from '@/lang'
 
 interface MetricSample {
   id: number
@@ -132,36 +133,41 @@ interface NotificationDelivery {
   attemptedAt: string
 }
 
-const metricOptions = [
-  { value: 'cpu', label: 'CPU 使用率', unit: '%' },
-  { value: 'memory', label: '内存使用率', unit: '%' },
-  { value: 'disk', label: '根分区使用率', unit: '%' },
-  { value: 'load1', label: '1 分钟负载', unit: '' },
-  { value: 'network_receive', label: '网络接收速率', unit: 'B/s' },
-  { value: 'network_send', label: '网络发送速率', unit: 'B/s' },
-  { value: 'disk_read', label: '磁盘读取速率', unit: 'B/s' },
-  { value: 'disk_write', label: '磁盘写入速率', unit: 'B/s' }
-]
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback || key
+}
 
-const historyGroups: Array<{
+const metricOptions = computed(() => [
+  { value: 'cpu', label: t('monitor.cpuUsage', 'CPU usage'), unit: '%' },
+  { value: 'memory', label: t('monitor.memoryUsage', 'Memory usage'), unit: '%' },
+  { value: 'disk', label: t('monitor.diskUsage', 'Root partition usage'), unit: '%' },
+  { value: 'load1', label: t('monitor.load1', '1-minute load'), unit: '' },
+  { value: 'network_receive', label: t('monitor.networkReceiveRate', 'Network receive rate'), unit: 'B/s' },
+  { value: 'network_send', label: t('monitor.networkSendRate', 'Network send rate'), unit: 'B/s' },
+  { value: 'disk_read', label: t('monitor.diskReadRate', 'Disk read rate'), unit: 'B/s' },
+  { value: 'disk_write', label: t('monitor.diskWriteRate', 'Disk write rate'), unit: 'B/s' }
+])
+
+const historyGroups = computed<Array<{
   key: MonitorHistoryGroup
   label: string
   description: string
-}> = [
-  { key: 'cpu', label: 'CPU', description: '处理器使用率趋势' },
-  { key: 'memory', label: '内存', description: '内存占用比例趋势' },
-  { key: 'load', label: '负载', description: '1 / 5 / 15 分钟系统负载' },
-  { key: 'network', label: '网络', description: '接收与发送吞吐速率' },
-  { key: 'disk', label: '磁盘', description: '根分区使用率与磁盘读写速率' }
-]
+}>>(() => [
+  { key: 'cpu', label: 'CPU', description: t('monitor.history.cpuDescription', 'Processor usage trend') },
+  { key: 'memory', label: t('monitor.memory', 'Memory'), description: t('monitor.history.memoryDescription', 'Memory usage trend') },
+  { key: 'load', label: t('monitor.load', 'Load'), description: t('monitor.history.loadDescription', '1 / 5 / 15 minute system load') },
+  { key: 'network', label: t('monitor.network', 'Network'), description: t('monitor.history.networkDescription', 'Receive and send throughput') },
+  { key: 'disk', label: t('monitor.disk', 'Disk'), description: t('monitor.history.diskDescription', 'Root partition and disk I/O trend') }
+])
 
-const historyRangePresets = [
-  { label: '1 小时', hours: 1 },
-  { label: '6 小时', hours: 6 },
-  { label: '24 小时', hours: 24 },
-  { label: '7 天', hours: 24 * 7 },
-  { label: '30 天', hours: 24 * 30 }
-]
+const historyRangePresets = computed(() => [
+  { label: t('monitor.timeRanges.1h', '1 hour'), hours: 1 },
+  { label: t('monitor.timeRanges.6h', '6 hours'), hours: 6 },
+  { label: t('monitor.timeRanges.24h', '24 hours'), hours: 24 },
+  { label: t('monitor.timeRanges.7d', '7 days'), hours: 24 * 7 },
+  { label: t('monitor.timeRanges.30d', '30 days'), hours: 24 * 30 }
+])
 
 const summary = ref<MonitorSummary>({
   ruleCount: 0,
@@ -241,7 +247,7 @@ const channelForm = reactive({
 
 const trendOption = computed<EChartsOption>(() => ({
   tooltip: { trigger: 'axis' },
-  legend: { data: ['CPU', '内存', '根分区', '1 分钟负载'] },
+  legend: { data: ['CPU', t('monitor.memory', 'Memory'), t('monitor.rootPartition', 'Root partition'), t('monitor.load1', '1-minute load')] },
   grid: { left: 48, right: 24, top: 48, bottom: 40 },
   xAxis: {
     type: 'category',
@@ -253,19 +259,19 @@ const trendOption = computed<EChartsOption>(() => ({
   },
   yAxis: [
     { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
-    { type: 'value', min: 0, position: 'right', name: '负载' }
+    { type: 'value', min: 0, position: 'right', name: t('monitor.load', 'Load') }
   ],
   series: [
     { name: 'CPU', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.cpuPercent) },
-    { name: '内存', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.memoryPercent) },
-    { name: '根分区', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskPercent) },
-    { name: '1 分钟负载', type: 'line', smooth: true, showSymbol: false, yAxisIndex: 1, data: metrics.value.map((item) => item.load1) }
+    { name: t('monitor.memory', 'Memory'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.memoryPercent) },
+    { name: t('monitor.rootPartition', 'Root partition'), type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.diskPercent) },
+    { name: t('monitor.load1', '1-minute load'), type: 'line', smooth: true, showSymbol: false, yAxisIndex: 1, data: metrics.value.map((item) => item.load1) }
   ]
 }))
 
 const groupedHistorySeries = computed(() => {
   const groups = Object.fromEntries(
-    historyGroups.map((group) => [group.key, [] as MonitorHistorySeries[]])
+    historyGroups.value.map((group) => [group.key, [] as MonitorHistorySeries[]])
   ) as Record<MonitorHistoryGroup, MonitorHistorySeries[]>
   historyData.value.series.forEach((series) => {
     if (groups[series.group]) groups[series.group].push(series)
@@ -280,7 +286,7 @@ const canReadMonitorHistory = computed(() =>
 )
 
 const historyChartOptions = computed<Record<MonitorHistoryGroup, EChartsOption>>(() => {
-  return Object.fromEntries(historyGroups.map((group) => {
+  return Object.fromEntries(historyGroups.value.map((group) => {
     const seriesList = groupedHistorySeries.value[group.key]
     const hasPercent = seriesList.some((series) => series.unit === '%')
     const hasRate = seriesList.some((series) => series.unit === 'B/s')
@@ -344,13 +350,13 @@ const formatRate = (value?: number) => {
   }
   return `${current.toFixed(index === 0 ? 0 : 1)} ${units[index]}`
 }
-const metricMeta = (metric: string) => metricOptions.find((item) => item.value === metric)
+const metricMeta = (metric: string) => metricOptions.value.find((item) => item.value === metric)
 const formatDuration = (seconds?: number) => {
   if (!Number.isFinite(seconds)) return '—'
   const value = Number(seconds)
-  if (value < 60) return `${value} 秒`
-  if (value < 3600) return `${Math.round(value / 60)} 分钟`
-  return `${(value / 3600).toFixed(value % 3600 === 0 ? 0 : 1)} 小时`
+  if (value < 60) return t('monitor.duration.seconds', '{value} seconds', { value })
+  if (value < 3600) return t('monitor.duration.minutes', '{value} minutes', { value: Math.round(value / 60) })
+  return t('monitor.duration.hours', '{value} hours', { value: (value / 3600).toFixed(value % 3600 === 0 ? 0 : 1) })
 }
 const normalizeMonitorHistory = (response: any): MonitorHistoryData => {
   const payload = response?.data?.range
@@ -366,9 +372,9 @@ const normalizeMonitorHistory = (response: any): MonitorHistoryData => {
   }
 }
 const metricLabel = (metric: string) =>
-  metric === 'service_health' ? '组件服务健康' : (metricMeta(metric)?.label || metric)
+  metric === 'service_health' ? t('monitor.serviceHealth', 'Component service health') : (metricMeta(metric)?.label || metric)
 const metricValue = (metric: string, value: number) => {
-  if (metric === 'service_health') return value >= 1 ? '正常' : '异常'
+  if (metric === 'service_health') return value >= 1 ? t('monitor.normalState', 'Normal') : t('monitor.abnormal', 'Abnormal')
   const unit = metricMeta(metric)?.unit
   if (unit === '%') return `${Number(value).toFixed(1)}%`
   if (unit === 'B/s') return formatRate(value)
@@ -386,15 +392,15 @@ const severityType = (severity: string) => ({
   critical: 'danger'
 }[severity] || 'info') as 'info' | 'warning' | 'danger'
 const eventTypeLabel = (type: string) => ({
-  triggered: '触发',
-  reminder: '持续提醒',
-  resolved: '恢复'
+  triggered: t('monitor.eventTypes.triggered', 'Triggered'),
+  reminder: t('monitor.eventTypes.reminder', 'Reminder'),
+  resolved: t('monitor.eventTypes.resolved', 'Resolved')
 }[type] || type)
 const stateLabel = (rule: MonitorRule) => {
-  if (!rule.enabled) return '已停用'
-  if (rule.state === 'firing') return '告警中'
-  if (rule.state === 'pending') return '待确认'
-  return '正常'
+  if (!rule.enabled) return t('monitor.disabledState', 'Disabled')
+  if (rule.state === 'firing') return t('monitor.firing', 'Firing')
+  if (rule.state === 'pending') return t('monitor.pendingConfirm', 'Pending')
+  return t('monitor.normalState', 'Normal')
 }
 const stateType = (rule: MonitorRule) => {
   if (!rule.enabled) return 'info'
@@ -411,11 +417,11 @@ const totalPending = computed(() =>
   summary.value.pendingCount + (summary.value.servicePendingCount || 0)
 )
 const serviceStateLabel = (service: ComponentHealthState) => {
-  if (service.busy) return '操作中'
-  if (service.healthState === 'firing') return '异常'
-  if (service.healthState === 'pending') return '待确认'
-  if (service.serviceState === 'running') return '运行正常'
-  return '状态未知'
+  if (service.busy) return t('monitor.operating', 'Operating')
+  if (service.healthState === 'firing') return t('monitor.abnormal', 'Abnormal')
+  if (service.healthState === 'pending') return t('monitor.pendingConfirm', 'Pending')
+  if (service.serviceState === 'running') return t('monitor.runningNormally', 'Running normally')
+  return t('monitor.unknownState', 'Unknown')
 }
 const serviceStateType = (service: ComponentHealthState) => {
   if (service.busy) return 'info'
@@ -485,7 +491,7 @@ const checkServiceHealth = async () => {
     serviceHealth.value = data || []
     const { data: currentSummary } = await Api.getMonitorSummary()
     summary.value = currentSummary
-    ElMessage.success('组件服务健康检查已完成')
+    ElMessage.success(t('monitor.messages.serviceHealthChecked', 'Component service health check completed'))
   } finally {
     serviceChecking.value = false
   }
@@ -493,7 +499,7 @@ const checkServiceHealth = async () => {
 
 const silenceServiceHealth = async (service: ComponentHealthState, minutes: number) => {
   await Api.silenceMonitorServiceHealth(service.component, minutes)
-  ElMessage.success(minutes ? `${service.displayName} 告警已静默 1 小时` : '组件告警静默已解除')
+  ElMessage.success(minutes ? t('monitor.messages.serviceSilenced', '{name} alerts silenced for 1 hour', { name: service.displayName }) : t('monitor.messages.serviceSilenceCleared', 'Component alert silence cleared'))
   const { data } = await Api.getMonitorServiceHealth()
   serviceHealth.value = data || []
 }
@@ -585,24 +591,24 @@ const openEditRule = (rule: MonitorRule) => {
 
 const saveRule = async () => {
   if (!ruleForm.name.trim()) {
-    ElMessage.warning('请输入规则名称')
+    ElMessage.warning(t('monitor.messages.inputRuleName', 'Enter a rule name'))
     return
   }
   if ((ruleForm.operator === 'gt' || ruleForm.operator === 'gte') &&
     ruleForm.recoveryThreshold >= ruleForm.threshold) {
-    ElMessage.warning('大于类规则的恢复阈值必须低于触发阈值')
+    ElMessage.warning(t('monitor.messages.greaterRecoveryThresholdInvalid', 'Recovery threshold must be lower than trigger threshold for greater-than rules'))
     return
   }
   if ((ruleForm.operator === 'lt' || ruleForm.operator === 'lte') &&
     ruleForm.recoveryThreshold <= ruleForm.threshold) {
-    ElMessage.warning('小于类规则的恢复阈值必须高于触发阈值')
+    ElMessage.warning(t('monitor.messages.lessRecoveryThresholdInvalid', 'Recovery threshold must be higher than trigger threshold for less-than rules'))
     return
   }
   savingRule.value = true
   try {
     if (editingRuleID.value) await Api.updateMonitorRule(editingRuleID.value, { ...ruleForm })
     else await Api.createMonitorRule({ ...ruleForm })
-    ElMessage.success(editingRuleID.value ? '告警规则已更新' : '告警规则已创建')
+    ElMessage.success(editingRuleID.value ? t('monitor.messages.ruleUpdated', 'Alert rule updated') : t('monitor.messages.ruleCreated', 'Alert rule created'))
     ruleDialogVisible.value = false
     await Promise.all([loadRules(), loadDashboard()])
   } finally {
@@ -612,18 +618,18 @@ const saveRule = async () => {
 
 const deleteRule = async (rule: MonitorRule) => {
   await ElMessageBox.confirm(
-    `删除规则“${rule.name}”？历史告警事件会继续保留。`,
-    '删除告警规则',
-    { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    t('monitor.deleteRuleConfirmMessage', 'Delete rule "{name}"? Historical alert events will be retained.', { name: rule.name }),
+    t('monitor.deleteRule', 'Delete alert rule'),
+    { type: 'warning', confirmButtonText: t('common.delete', 'Delete'), cancelButtonText: t('common.cancel', 'Cancel') }
   )
   await Api.deleteMonitorRule(rule.id)
-  ElMessage.success('告警规则已删除')
+  ElMessage.success(t('monitor.messages.ruleDeleted', 'Alert rule deleted'))
   await Promise.all([loadRules(), loadDashboard()])
 }
 
 const silenceRule = async (rule: MonitorRule, minutes: number) => {
   await Api.silenceMonitorRule(rule.id, minutes)
-  ElMessage.success(minutes ? '规则已静默 1 小时' : '规则静默已解除')
+  ElMessage.success(minutes ? t('monitor.messages.ruleSilenced', 'Rule silenced for 1 hour') : t('monitor.messages.ruleSilenceCleared', 'Rule silence cleared'))
   await loadRules()
 }
 
@@ -657,11 +663,11 @@ const openEditChannel = (channel: NotificationChannel) => {
 
 const saveChannel = async () => {
   if (!channelForm.name.trim()) {
-    ElMessage.warning('请输入通道名称')
+    ElMessage.warning(t('monitor.messages.inputChannelName', 'Enter a channel name'))
     return
   }
   if (!editingChannelID.value && !channelForm.webhookUrl.trim()) {
-    ElMessage.warning('新建通道必须填写 Webhook URL')
+    ElMessage.warning(t('monitor.messages.webhookRequired', 'Webhook URL is required for new channels'))
     return
   }
   savingChannel.value = true
@@ -671,7 +677,7 @@ const saveChannel = async () => {
     } else {
       await Api.createMonitorChannel({ ...channelForm })
     }
-    ElMessage.success(editingChannelID.value ? '通知通道已更新' : '通知通道已创建')
+    ElMessage.success(editingChannelID.value ? t('monitor.messages.channelUpdated', 'Notification channel updated') : t('monitor.messages.channelCreated', 'Notification channel created'))
     channelDialogVisible.value = false
     await loadChannels()
   } finally {
@@ -681,17 +687,17 @@ const saveChannel = async () => {
 
 const testChannel = async (channel: NotificationChannel) => {
   await Api.testMonitorChannel(channel.id)
-  ElMessage.success('测试通知已发送')
+  ElMessage.success(t('monitor.messages.testSent', 'Test notification sent'))
 }
 
 const deleteChannel = async (channel: NotificationChannel) => {
   await ElMessageBox.confirm(
-    `删除通知通道“${channel.name}”？`,
-    '删除通知通道',
-    { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' }
+    t('monitor.deleteChannelConfirmMessage', 'Delete notification channel "{name}"?', { name: channel.name }),
+    t('monitor.deleteChannel', 'Delete notification channel'),
+    { type: 'warning', confirmButtonText: t('common.delete', 'Delete'), cancelButtonText: t('common.cancel', 'Cancel') }
   )
   await Api.deleteMonitorChannel(channel.id)
-  ElMessage.success('通知通道已删除')
+  ElMessage.success(t('monitor.messages.channelDeleted', 'Notification channel deleted'))
   await loadChannels()
 }
 
@@ -709,42 +715,42 @@ onUnmounted(() => {
   <div class="monitor-page">
     <div class="page-heading">
       <div>
-        <h2>监控告警</h2>
-        <p>每分钟采集服务器指标，按连续采样和恢复阈值判断告警，并通过加密配置的 Webhook 推送。</p>
+        <h2>{{ $t('monitor.title') }}</h2>
+        <p>{{ $t('monitor.pageDescription') }}</p>
       </div>
-      <el-button type="primary" :loading="dashboardLoading" @click="refreshAll">刷新数据</el-button>
+      <el-button type="primary" :loading="dashboardLoading" @click="refreshAll">{{ $t('monitor.refreshData') }}</el-button>
     </div>
 
     <div class="stats-grid" v-loading="dashboardLoading">
       <div class="stat-card">
-        <span>CPU 使用率</span>
+        <span>{{ $t('monitor.cpuUsage') }}</span>
         <strong>{{ formatPercent(summary.latest?.cpuPercent) }}</strong>
-        <small>1 分钟负载 {{ summary.latest ? summary.latest.load1.toFixed(2) : '—' }}</small>
+        <small>{{ $t('monitor.oneMinuteLoadValue', { value: summary.latest ? summary.latest.load1.toFixed(2) : '—' }) }}</small>
       </div>
       <div class="stat-card">
-        <span>内存使用率</span>
+        <span>{{ $t('monitor.memoryUsage') }}</span>
         <strong>{{ formatPercent(summary.latest?.memoryPercent) }}</strong>
-        <small>采集于 {{ formatTime(summary.latest?.capturedAt) }}</small>
+        <small>{{ $t('monitor.collectedAt', { time: formatTime(summary.latest?.capturedAt) }) }}</small>
       </div>
       <div class="stat-card warning">
-        <span>根分区使用率</span>
+        <span>{{ $t('monitor.diskUsage') }}</span>
         <strong>{{ formatPercent(summary.latest?.diskPercent) }}</strong>
-        <small>写入 {{ formatRate(summary.latest?.diskWriteBps) }}</small>
+        <small>{{ $t('monitor.writeRateValue', { value: formatRate(summary.latest?.diskWriteBps) }) }}</small>
       </div>
       <div class="stat-card danger">
-        <span>当前告警</span>
+        <span>{{ $t('monitor.currentAlerts') }}</span>
         <strong>{{ totalFiring }}</strong>
-        <small>待确认 {{ totalPending }} / 24 小时事件 {{ summary.last24Hours }}</small>
+        <small>{{ $t('monitor.pendingAnd24hEvents', { pending: totalPending, events: summary.last24Hours }) }}</small>
       </div>
     </div>
 
     <div class="service-health-panel">
       <div class="panel-heading">
         <div>
-          <h3>组件服务健康</h3>
-          <span>连续两次异常后告警；安装、升级、配置和服务操作期间暂停判断。</span>
+          <h3>{{ $t('monitor.serviceHealth') }}</h3>
+          <span>{{ $t('monitor.serviceHealthDescription') }}</span>
         </div>
-        <el-button :loading="serviceChecking" @click="checkServiceHealth">立即检查</el-button>
+        <el-button :loading="serviceChecking" @click="checkServiceHealth">{{ $t('monitor.checkNow') }}</el-button>
       </div>
       <div v-if="serviceHealth.length" class="service-health-grid">
         <article
@@ -764,11 +770,11 @@ onUnmounted(() => {
           </div>
           <dl>
             <div>
-              <dt>安装版本</dt>
+              <dt>{{ $t('monitor.installedVersion') }}</dt>
               <dd>{{ service.softwareVersion || '—' }}</dd>
             </div>
             <div>
-              <dt>运行版本</dt>
+              <dt>{{ $t('monitor.runtimeVersion') }}</dt>
               <dd>{{ service.runtimeVersion || '—' }}</dd>
             </div>
             <div>
@@ -776,24 +782,24 @@ onUnmounted(() => {
               <dd>{{ service.activeState || service.serviceState }}</dd>
             </div>
             <div>
-              <dt>最近检查</dt>
+              <dt>{{ $t('monitor.lastChecked') }}</dt>
               <dd>{{ formatTime(service.lastCheckedAt) }}</dd>
             </div>
           </dl>
           <p v-if="service.lastError" class="service-health-error">{{ service.lastError }}</p>
           <div class="service-health-card__footer">
-            <span v-if="serviceSilenced(service)">已静默至 {{ formatTime(service.silencedUntil) }}</span>
+            <span v-if="serviceSilenced(service)">{{ $t('monitor.silencedUntil', { time: formatTime(service.silencedUntil) }) }}</span>
             <span v-else-if="service.healthState === 'pending'">
-              连续异常 {{ service.consecutiveFailures }}/2
+              {{ $t('monitor.consecutiveFailures', { count: service.consecutiveFailures }) }}
             </span>
-            <span v-else>自动检查与恢复通知已启用</span>
+            <span v-else>{{ $t('monitor.autoCheckEnabled') }}</span>
             <el-button
               v-if="!serviceSilenced(service)"
               link
               type="warning"
               @click="silenceServiceHealth(service, 60)"
             >
-              静默 1 小时
+              {{ $t('monitor.silenceOneHour') }}
             </el-button>
             <el-button
               v-else
@@ -801,36 +807,38 @@ onUnmounted(() => {
               type="success"
               @click="silenceServiceHealth(service, 0)"
             >
-              解除静默
+              {{ $t('monitor.unsilence') }}
             </el-button>
           </div>
         </article>
       </div>
-      <el-empty v-else description="暂无已安装的受管组件" :image-size="72" />
+      <el-empty v-else :description="$t('monitor.noManagedComponents')" :image-size="72" />
     </div>
 
     <div class="trend-panel">
       <div class="panel-heading">
         <div>
-          <h3>最近 24 小时趋势</h3>
-          <span>保留原始分钟级样本；CPU、内存、根分区共用百分比坐标。</span>
+          <h3>{{ $t('monitor.last24hTrend') }}</h3>
+          <span>{{ $t('monitor.rawSamplesHint') }}</span>
         </div>
-        <span>网络接收 {{ formatRate(summary.latest?.networkReceiveBps) }} · 发送 {{ formatRate(summary.latest?.networkSendBps) }}</span>
+        <span>{{ $t('monitor.networkRates', { receive: formatRate(summary.latest?.networkReceiveBps), send: formatRate(summary.latest?.networkSendBps) }) }}</span>
       </div>
       <div v-if="metrics.length" class="chart-wrap">
         <BasicChart :option="trendOption" :on-init="initTrend" />
       </div>
-      <el-empty v-else description="正在等待第一条监控样本" />
+      <el-empty v-else :description="$t('monitor.waitingSample')" />
     </div>
 
     <div class="history-panel" v-loading="historyLoading">
       <div class="history-panel__heading">
         <div>
-          <h3>历史样本</h3>
+          <h3>{{ $t('monitor.historySamples') }}</h3>
           <span>
-            聚合粒度 {{ formatDuration(historyData.range.bucketSeconds) }} ·
-            原始样本 {{ historyData.range.sampleCount }} ·
-            趋势点 {{ historyData.range.bucketCount }}
+            {{ $t('monitor.historySummary', {
+              bucket: formatDuration(historyData.range.bucketSeconds),
+              samples: historyData.range.sampleCount,
+              points: historyData.range.bucketCount
+            }) }}
           </span>
         </div>
         <div class="history-controls">
@@ -847,9 +855,9 @@ onUnmounted(() => {
           <el-date-picker
             v-model="historyTimeRange"
             type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
+            :range-separator="$t('monitor.to')"
+            :start-placeholder="$t('monitor.startTime')"
+            :end-placeholder="$t('monitor.endTime')"
             :clearable="false"
             :disabled="historyLoading || !canReadMonitorHistory"
           />
@@ -859,13 +867,13 @@ onUnmounted(() => {
             :disabled="!canReadMonitorHistory"
             @click="loadMonitorHistory"
           >
-            查询
+            {{ $t('common.query') }}
           </el-button>
         </div>
       </div>
       <el-alert
         v-if="!canReadMonitorHistory"
-        title="当前账号暂无 monitoring.read 权限，不能查看监控历史样本"
+        :title="$t('monitor.noReadPermission')"
         type="warning"
         :closable="false"
         show-icon
@@ -882,111 +890,111 @@ onUnmounted(() => {
               <span>{{ group.description }}</span>
             </div>
             <el-tag size="small" effect="light">
-              {{ groupedHistorySeries[group.key].length }} 项
+              {{ $t('monitor.itemCount', { count: groupedHistorySeries[group.key].length }) }}
             </el-tag>
           </div>
           <div v-if="groupedHistorySeries[group.key].length" class="history-chart">
             <BasicChart :option="historyChartOptions[group.key]" />
           </div>
-          <el-empty v-else description="该分组暂无样本" :image-size="58" />
+          <el-empty v-else :description="$t('monitor.noGroupSamples')" :image-size="58" />
         </article>
       </div>
-      <el-empty v-else description="当前时间范围内暂无历史样本" />
+      <el-empty v-else :description="$t('monitor.noHistorySamples')" />
     </div>
 
     <div class="management-panel">
       <el-tabs v-model="activeTab" @tab-change="refreshCurrentTab">
         <el-tab-pane name="rules">
-          <template #label>告警规则（{{ summary.enabledRules }}/{{ summary.ruleCount }}）</template>
+          <template #label>{{ $t('monitor.rulesTabLabel', { enabled: summary.enabledRules, total: summary.ruleCount }) }}</template>
           <div class="toolbar">
-            <span>修改阈值或条件会重置该规则当前状态，防止沿用过期判断。</span>
-            <el-button type="primary" @click="openCreateRule">新建规则</el-button>
+            <span>{{ $t('monitor.ruleResetHint') }}</span>
+            <el-button type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
           </div>
           <el-table v-loading="tableLoading" :data="rules" border row-key="id">
-            <el-table-column prop="name" label="规则" min-width="180" />
-            <el-table-column label="指标与阈值" min-width="190">
+            <el-table-column prop="name" :label="$t('monitor.rule')" min-width="180" />
+            <el-table-column :label="$t('monitor.metricAndThreshold')" min-width="190">
               <template #default="{ row }">
                 {{ metricLabel(row.metric) }} {{ operatorLabel(row.operator) }}
                 {{ metricValue(row.metric, row.threshold) }}
               </template>
             </el-table-column>
-            <el-table-column label="恢复阈值" min-width="120">
+            <el-table-column :label="$t('monitor.recoveryThreshold')" min-width="120">
               <template #default="{ row }">{{ metricValue(row.metric, row.recoveryThreshold) }}</template>
             </el-table-column>
-            <el-table-column label="状态" width="105" align="center">
+            <el-table-column :label="$t('common.status')" width="105" align="center">
               <template #default="{ row }">
                 <el-tag :type="stateType(row)" size="small">{{ stateLabel(row) }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="当前值" min-width="115">
+            <el-table-column :label="$t('monitor.currentValue')" min-width="115">
               <template #default="{ row }">
-                {{ row.lastEvaluatedAt ? metricValue(row.metric, row.lastValue) : '尚未评估' }}
+                {{ row.lastEvaluatedAt ? metricValue(row.metric, row.lastValue) : $t('monitor.notEvaluated') }}
               </template>
             </el-table-column>
-            <el-table-column label="策略" min-width="180">
+            <el-table-column :label="$t('monitor.strategy')" min-width="180">
               <template #default="{ row }">
-                连续 {{ row.consecutiveSamples }} 次 · {{ row.cooldownMinutes }} 分钟提醒
+                {{ $t('monitor.strategyValue', { samples: row.consecutiveSamples, minutes: row.cooldownMinutes }) }}
               </template>
             </el-table-column>
-            <el-table-column label="级别" width="90" align="center">
+            <el-table-column :label="$t('monitor.severity')" width="90" align="center">
               <template #default="{ row }">
                 <el-tag :type="severityType(row.severity)" size="small">{{ row.severity }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="静默" min-width="170">
+            <el-table-column :label="$t('monitor.silence')" min-width="170">
               <template #default="{ row }">
-                <span v-if="isSilenced(row)">至 {{ formatTime(row.silencedUntil) }}</span>
-                <span v-else>未静默</span>
+                <span v-if="isSilenced(row)">{{ $t('monitor.untilTime', { time: formatTime(row.silencedUntil) }) }}</span>
+                <span v-else>{{ $t('monitor.notSilenced') }}</span>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="270" fixed="right">
+            <el-table-column :label="$t('common.action')" width="270" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" @click="openEditRule(row)">编辑</el-button>
-                <el-button v-if="!isSilenced(row)" link type="warning" @click="silenceRule(row, 60)">静默 1 小时</el-button>
-                <el-button v-else link type="success" @click="silenceRule(row, 0)">解除静默</el-button>
-                <el-button link type="danger" @click="deleteRule(row)">删除</el-button>
+                <el-button link type="primary" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
+                <el-button v-if="!isSilenced(row)" link type="warning" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
+                <el-button v-else link type="success" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
+                <el-button link type="danger" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
               </template>
             </el-table-column>
-            <template #empty><el-empty description="还没有告警规则" /></template>
+            <template #empty><el-empty :description="$t('monitor.noRules')" /></template>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane name="events" label="告警事件">
+        <el-tab-pane name="events" :label="$t('monitor.events')">
           <div class="filters">
-            <el-select v-model="eventFilters.eventType" clearable placeholder="事件类型" @change="eventFilters.page = 1; loadEvents()">
-              <el-option label="触发" value="triggered" />
-              <el-option label="持续提醒" value="reminder" />
-              <el-option label="恢复" value="resolved" />
+            <el-select v-model="eventFilters.eventType" clearable :placeholder="$t('monitor.eventType')" @change="eventFilters.page = 1; loadEvents()">
+              <el-option :label="$t('monitor.eventTypes.triggered')" value="triggered" />
+              <el-option :label="$t('monitor.eventTypes.reminder')" value="reminder" />
+              <el-option :label="$t('monitor.eventTypes.resolved')" value="resolved" />
             </el-select>
-            <el-select v-model="eventFilters.severity" clearable placeholder="级别" @change="eventFilters.page = 1; loadEvents()">
-              <el-option label="信息" value="info" />
-              <el-option label="警告" value="warning" />
-              <el-option label="严重" value="critical" />
+            <el-select v-model="eventFilters.severity" clearable :placeholder="$t('monitor.severity')" @change="eventFilters.page = 1; loadEvents()">
+              <el-option :label="$t('monitor.severities.info')" value="info" />
+              <el-option :label="$t('monitor.severities.warning')" value="warning" />
+              <el-option :label="$t('monitor.severities.critical')" value="critical" />
             </el-select>
-            <el-button @click="loadEvents">刷新</el-button>
+            <el-button @click="loadEvents">{{ $t('common.refresh') }}</el-button>
           </div>
           <el-table v-loading="tableLoading" :data="events" border row-key="id">
-            <el-table-column prop="occurredAt" label="发生时间" min-width="170">
+            <el-table-column prop="occurredAt" :label="$t('monitor.occurredAt')" min-width="170">
               <template #default="{ row }">{{ formatTime(row.occurredAt) }}</template>
             </el-table-column>
-            <el-table-column prop="ruleName" label="规则" min-width="180" />
-            <el-table-column label="类型" width="105">
+            <el-table-column prop="ruleName" :label="$t('monitor.rule')" min-width="180" />
+            <el-table-column :label="$t('common.type')" width="105">
               <template #default="{ row }">
                 <el-tag :type="row.eventType === 'resolved' ? 'success' : severityType(row.severity)" size="small">
                   {{ eventTypeLabel(row.eventType) }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="指标" min-width="150">
+            <el-table-column :label="$t('monitor.metric')" min-width="150">
               <template #default="{ row }">{{ metricLabel(row.metric) }}</template>
             </el-table-column>
-            <el-table-column label="值 / 阈值" min-width="160">
+            <el-table-column :label="$t('monitor.valueThreshold')" min-width="160">
               <template #default="{ row }">
                 {{ metricValue(row.metric, row.value) }} / {{ metricValue(row.metric, row.threshold) }}
               </template>
             </el-table-column>
-            <el-table-column prop="message" label="说明" min-width="280" show-overflow-tooltip />
-            <template #empty><el-empty description="没有告警事件" /></template>
+            <el-table-column prop="message" :label="$t('common.description')" min-width="280" show-overflow-tooltip />
+            <template #empty><el-empty :description="$t('monitor.noEvents')" /></template>
           </el-table>
           <div class="pagination">
             <el-pagination
@@ -1002,62 +1010,62 @@ onUnmounted(() => {
           </div>
         </el-tab-pane>
 
-        <el-tab-pane name="channels" label="通知通道">
+        <el-tab-pane name="channels" :label="$t('monitor.channels')">
           <div class="toolbar">
-            <span>仅允许公网 HTTPS Webhook；完整 URL 和签名密钥均加密存储且不会回显。</span>
-            <el-button type="primary" @click="openCreateChannel">新建通道</el-button>
+            <span>{{ $t('monitor.channelSecurityHint') }}</span>
+            <el-button type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
           </div>
           <el-table v-loading="tableLoading" :data="channels" border row-key="id">
-            <el-table-column prop="name" label="名称" min-width="180" />
-            <el-table-column prop="type" label="类型" width="110" />
-            <el-table-column prop="targetHint" label="目标主机" min-width="200" />
-            <el-table-column label="签名密钥" width="110">
-              <template #default="{ row }">{{ row.hasSecret ? '已配置' : '未配置' }}</template>
+            <el-table-column prop="name" :label="$t('common.name')" min-width="180" />
+            <el-table-column prop="type" :label="$t('common.type')" width="110" />
+            <el-table-column prop="targetHint" :label="$t('monitor.targetHost')" min-width="200" />
+            <el-table-column :label="$t('monitor.signingSecret')" width="110">
+              <template #default="{ row }">{{ row.hasSecret ? $t('common.enabled') : $t('common.disabled') }}</template>
             </el-table-column>
-            <el-table-column label="状态" width="90">
+            <el-table-column :label="$t('common.status')" width="90">
               <template #default="{ row }">
-                <el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{ row.enabled ? '启用' : '停用' }}</el-tag>
+                <el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{ row.enabled ? $t('common.enabled') : $t('common.disabled') }}</el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="updatedAt" label="更新时间" min-width="170">
+            <el-table-column prop="updatedAt" :label="$t('monitor.updatedAt')" min-width="170">
               <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
             </el-table-column>
-            <el-table-column label="操作" width="200" fixed="right">
+            <el-table-column :label="$t('common.action')" width="200" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" @click="testChannel(row)">测试</el-button>
-                <el-button link type="primary" @click="openEditChannel(row)">编辑</el-button>
-                <el-button link type="danger" @click="deleteChannel(row)">删除</el-button>
+                <el-button link type="primary" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
+                <el-button link type="primary" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
+                <el-button link type="danger" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
               </template>
             </el-table-column>
-            <template #empty><el-empty description="还没有通知通道" /></template>
+            <template #empty><el-empty :description="$t('monitor.noChannels')" /></template>
           </el-table>
         </el-tab-pane>
 
-        <el-tab-pane name="deliveries" label="投递记录">
+        <el-tab-pane name="deliveries" :label="$t('monitor.deliveries')">
           <div class="filters">
-            <el-select v-model="deliveryFilters.status" clearable placeholder="投递结果" @change="deliveryFilters.page = 1; loadDeliveries()">
-              <el-option label="成功" value="success" />
-              <el-option label="失败" value="failed" />
+            <el-select v-model="deliveryFilters.status" clearable :placeholder="$t('monitor.deliveryResult')" @change="deliveryFilters.page = 1; loadDeliveries()">
+              <el-option :label="$t('common.success')" value="success" />
+              <el-option :label="$t('common.failed')" value="failed" />
             </el-select>
-            <el-button @click="loadDeliveries">刷新</el-button>
+            <el-button @click="loadDeliveries">{{ $t('common.refresh') }}</el-button>
           </div>
           <el-table v-loading="tableLoading" :data="deliveries" border row-key="id">
-            <el-table-column prop="attemptedAt" label="投递时间" min-width="180">
+            <el-table-column prop="attemptedAt" :label="$t('monitor.deliveryTime')" min-width="180">
               <template #default="{ row }">{{ formatTime(row.attemptedAt) }}</template>
             </el-table-column>
-            <el-table-column prop="eventId" label="事件 ID" width="110" />
-            <el-table-column prop="channelName" label="通知通道" min-width="180" />
-            <el-table-column label="结果" width="100">
+            <el-table-column prop="eventId" :label="$t('monitor.eventId')" width="110" />
+            <el-table-column prop="channelName" :label="$t('monitor.channels')" min-width="180" />
+            <el-table-column :label="$t('monitor.result')" width="100">
               <template #default="{ row }">
                 <el-tag :type="row.status === 'success' ? 'success' : 'danger'" size="small">
-                  {{ row.status === 'success' ? '成功' : '失败' }}
+                  {{ row.status === 'success' ? $t('common.success') : $t('common.failed') }}
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column prop="error" label="错误" min-width="300">
+            <el-table-column prop="error" :label="$t('monitor.error')" min-width="300">
               <template #default="{ row }">{{ row.error || '—' }}</template>
             </el-table-column>
-            <template #empty><el-empty description="没有通知投递记录" /></template>
+            <template #empty><el-empty :description="$t('monitor.noDeliveries')" /></template>
           </el-table>
           <div class="pagination">
             <el-pagination
@@ -1077,52 +1085,52 @@ onUnmounted(() => {
 
     <custom-drawer
       :visible="ruleDialogVisible"
-      :title="editingRuleID ? '编辑告警规则' : '新建告警规则'"
+      :title="editingRuleID ? $t('monitor.editRule') : $t('monitor.createRule')"
       size="720px"
-      confirm-text="保存"
+      :confirm-text="$t('common.save')"
       :loading="savingRule"
       destroy-on-close
       :on-close="() => { ruleDialogVisible = false }"
       :on-confirm="saveRule"
     >
       <el-form label-position="top" class="monitor-drawer-form">
-        <el-form-item label="规则名称" required>
-          <el-input v-model="ruleForm.name" maxlength="120" show-word-limit placeholder="例如：CPU 持续过高" />
+        <el-form-item :label="$t('monitor.ruleName')" required>
+          <el-input v-model="ruleForm.name" maxlength="120" show-word-limit :placeholder="$t('monitor.ruleNamePlaceholder')" />
         </el-form-item>
         <div class="form-grid">
-          <el-form-item label="监控指标" required>
+          <el-form-item :label="$t('monitor.metric')" required>
             <el-select v-model="ruleForm.metric">
               <el-option v-for="item in metricOptions" :key="item.value" :label="item.label" :value="item.value" />
             </el-select>
           </el-form-item>
-          <el-form-item label="比较条件" required>
+          <el-form-item :label="$t('monitor.operator')" required>
             <el-select v-model="ruleForm.operator">
-              <el-option label="大于" value="gt" />
-              <el-option label="大于等于" value="gte" />
-              <el-option label="小于" value="lt" />
-              <el-option label="小于等于" value="lte" />
+              <el-option :label="$t('monitor.operators.gt')" value="gt" />
+              <el-option :label="$t('monitor.operators.gte')" value="gte" />
+              <el-option :label="$t('monitor.operators.lt')" value="lt" />
+              <el-option :label="$t('monitor.operators.lte')" value="lte" />
             </el-select>
           </el-form-item>
-          <el-form-item label="触发阈值" required>
+          <el-form-item :label="$t('monitor.triggerThreshold')" required>
             <el-input-number v-model="ruleForm.threshold" :min="0" :precision="2" controls-position="right" />
           </el-form-item>
-          <el-form-item label="恢复阈值" required>
+          <el-form-item :label="$t('monitor.recoveryThreshold')" required>
             <el-input-number v-model="ruleForm.recoveryThreshold" :min="0" :precision="2" controls-position="right" />
           </el-form-item>
-          <el-form-item label="连续采样次数" required>
+          <el-form-item :label="$t('monitor.consecutiveSamples')" required>
             <el-input-number v-model="ruleForm.consecutiveSamples" :min="1" :max="60" controls-position="right" />
           </el-form-item>
-          <el-form-item label="重复提醒间隔（分钟）" required>
+          <el-form-item :label="$t('monitor.cooldownMinutes')" required>
             <el-input-number v-model="ruleForm.cooldownMinutes" :min="1" :max="10080" controls-position="right" />
           </el-form-item>
-          <el-form-item label="告警级别" required>
+          <el-form-item :label="$t('monitor.severity')" required>
             <el-select v-model="ruleForm.severity">
-              <el-option label="信息" value="info" />
-              <el-option label="警告" value="warning" />
-              <el-option label="严重" value="critical" />
+              <el-option :label="$t('monitor.severities.info')" value="info" />
+              <el-option :label="$t('monitor.severities.warning')" value="warning" />
+              <el-option :label="$t('monitor.severities.critical')" value="critical" />
             </el-select>
           </el-form-item>
-          <el-form-item label="启用规则">
+          <el-form-item :label="$t('monitor.enableRule')">
             <el-switch v-model="ruleForm.enabled" />
           </el-form-item>
         </div>
@@ -1131,9 +1139,9 @@ onUnmounted(() => {
 
     <custom-drawer
       :visible="channelDialogVisible"
-      :title="editingChannelID ? '编辑通知通道' : '新建通知通道'"
+      :title="editingChannelID ? $t('monitor.editChannel') : $t('monitor.createChannel')"
       size="720px"
-      confirm-text="保存"
+      :confirm-text="$t('common.save')"
       :loading="savingChannel"
       destroy-on-close
       :on-close="() => { channelDialogVisible = false }"
@@ -1142,24 +1150,24 @@ onUnmounted(() => {
       <el-alert
         type="info"
         :closable="false"
-        title="支持接入自建告警网关；目标必须为公网 HTTPS 地址，重定向和内网地址会被拒绝。"
+        :title="$t('monitor.channelFormTip')"
       />
       <el-form label-position="top" class="channel-form monitor-drawer-form">
-        <el-form-item label="通道名称" required>
+        <el-form-item :label="$t('monitor.channelName')" required>
           <el-input v-model="channelForm.name" maxlength="120" show-word-limit />
         </el-form-item>
         <el-form-item label="Webhook URL" :required="!editingChannelID">
           <el-input v-model="channelForm.webhookUrl" type="password" show-password autocomplete="new-password"
-            :placeholder="editingChannelID ? '留空保留现有 URL' : 'https://alerts.example.com/hooks/...'" />
+            :placeholder="editingChannelID ? $t('monitor.keepCurrentUrl') : 'https://alerts.example.com/hooks/...'" />
         </el-form-item>
-        <el-form-item label="HMAC-SHA256 签名密钥（可选）">
+        <el-form-item :label="$t('monitor.hmacSecretOptional')">
           <el-input v-model="channelForm.secret" type="password" show-password autocomplete="new-password"
-            :placeholder="editingChannelID ? '留空保留现有密钥' : '用于验证 X-Oneinstack-Signature'" />
+            :placeholder="editingChannelID ? $t('monitor.keepCurrentSecret') : $t('monitor.signaturePlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="editingChannelID && editingChannelHasSecret" label="清除现有签名密钥">
+        <el-form-item v-if="editingChannelID && editingChannelHasSecret" :label="$t('monitor.clearExistingSecret')">
           <el-switch v-model="channelForm.clearSecret" :disabled="Boolean(channelForm.secret)" />
         </el-form-item>
-        <el-form-item label="启用通道">
+        <el-form-item :label="$t('monitor.enableChannel')">
           <el-switch v-model="channelForm.enabled" />
         </el-form-item>
       </el-form>

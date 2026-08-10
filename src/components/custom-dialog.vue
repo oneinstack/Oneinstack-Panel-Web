@@ -29,7 +29,7 @@ const show = defineModel<boolean>('show')
     <template #header="{ close, titleId }">
       <div class="custom-dialog__header">
         <h4 :id="titleId">{{ title }}</h4>
-        <button class="close-button" type="button" aria-label="关闭" @click="close">
+        <button class="close-button" type="button" :aria-label="$t('common.close')" @click="close">
           <el-icon size="17"><Close /></el-icon>
         </button>
       </div>
