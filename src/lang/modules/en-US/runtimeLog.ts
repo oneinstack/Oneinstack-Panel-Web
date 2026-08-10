@@ -24,7 +24,7 @@ export default {
   endTime: 'End time',
   rangeSeparator: 'to',
   loadOlder: 'Load older logs',
-  visibleCount: '{count} shown. Browser keeps up to 2000 entries.',
+  visibleCount: '{count} shown. Browser keeps up to {max} entries.',
   autoScroll: 'Auto scroll',
   scrollBottom: 'Scroll to bottom',
   exportVisible: 'Export current view',

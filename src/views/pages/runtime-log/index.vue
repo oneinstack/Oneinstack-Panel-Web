@@ -30,6 +30,8 @@ interface RuntimeLogStats {
   sources: Array<{ source: string; count: number }>
 }
 
+const MAX_VISIBLE_LOGS = 2000
+
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
@@ -62,6 +64,7 @@ let eventSource: EventSource | undefined
 let statsTimer: ReturnType<typeof setInterval> | undefined
 
 const historicalMode = computed(() => Boolean(dateRange.value?.length))
+const canLoadOlder = computed(() => hasOlder.value && Boolean(oldestID.value) && entries.value.length < MAX_VISIBLE_LOGS)
 const streamLabel = computed(() => ({
   connecting: t('runtimeLog.connecting', '正在连接'),
   live: t('runtimeLog.live', '实时连接'),
@@ -97,8 +100,8 @@ const appendEntry = (entry: RuntimeLogEntry) => {
   entries.value.sort((left, right) => left.id - right.id)
   latestID.value = Math.max(latestID.value, entry.id)
   if (!oldestID.value || entry.id < oldestID.value) oldestID.value = entry.id
-  if (entries.value.length > 2000) {
-    entries.value.splice(0, entries.value.length - 2000)
+  if (entries.value.length > MAX_VISIBLE_LOGS) {
+    entries.value.splice(0, entries.value.length - MAX_VISIBLE_LOGS)
     oldestID.value = entries.value[0]?.id || 0
     hasOlder.value = true
   }
@@ -110,9 +113,11 @@ const mergeResult = (result: RuntimeLogResult, prepend = false) => {
   const incoming = (result.items || []).filter((entry) => !known.has(entry.id))
   entries.value = prepend ? [...incoming, ...entries.value] : [...entries.value, ...incoming]
   entries.value.sort((left, right) => left.id - right.id)
+  const exceededLimit = entries.value.length > MAX_VISIBLE_LOGS
+  if (exceededLimit) entries.value.splice(0, entries.value.length - MAX_VISIBLE_LOGS)
   oldestID.value = entries.value[0]?.id || 0
   latestID.value = entries.value[entries.value.length - 1]?.id || latestID.value
-  hasOlder.value = result.hasMore
+  hasOlder.value = result.hasMore || exceededLimit
 }
 
 const loadInitial = async () => {
@@ -121,8 +126,8 @@ const loadInitial = async () => {
   try {
     const { data } = await Api.getRuntimeLogs(queryParams({ limit: 500 }))
     const result = data as RuntimeLogResult
-    entries.value = result.items || []
-    oldestID.value = result.oldestId || entries.value[0]?.id || 0
+    entries.value = (result.items || []).sort((left, right) => left.id - right.id).slice(-MAX_VISIBLE_LOGS)
+    oldestID.value = entries.value[0]?.id || result.oldestId || 0
     latestID.value = result.nextCursor || entries.value[entries.value.length - 1]?.id || 0
     hasOlder.value = result.hasMore
     await nextTick()
@@ -135,12 +140,13 @@ const loadInitial = async () => {
 }
 
 const loadOlder = async () => {
-  if (!oldestID.value || loadingOlder.value) return
+  if (!canLoadOlder.value || loadingOlder.value) return
   loadingOlder.value = true
   try {
+    const remaining = MAX_VISIBLE_LOGS - entries.value.length
     const { data } = await Api.getRuntimeLogs(queryParams({
       beforeId: oldestID.value,
-      limit: 500
+      limit: Math.min(500, remaining)
     }))
     mergeResult(data as RuntimeLogResult, true)
   } finally {
@@ -376,10 +382,10 @@ onUnmounted(() => {
 
       <div class="console-toolbar">
         <div>
-          <el-button :disabled="!hasOlder || !oldestID" :loading="loadingOlder" @click="loadOlder">
+          <el-button :disabled="!canLoadOlder" :loading="loadingOlder" @click="loadOlder">
             {{ $t('runtimeLog.loadOlder') }}
           </el-button>
-          <span>{{ $t('runtimeLog.visibleCount', { count: entries.length }) }}</span>
+          <span>{{ $t('runtimeLog.visibleCount', { count: entries.length, max: MAX_VISIBLE_LOGS }) }}</span>
         </div>
         <div>
           <el-switch v-model="autoScroll" :active-text="$t('runtimeLog.autoScroll')" />

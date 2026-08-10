@@ -24,7 +24,7 @@ export default {
   endTime: '结束时间',
   rangeSeparator: '至',
   loadOlder: '加载更早日志',
-  visibleCount: '当前显示 {count} 条，浏览器最多保留 2000 条',
+  visibleCount: '当前显示 {count} 条，浏览器最多保留 {max} 条',
   autoScroll: '自动滚动',
   scrollBottom: '滚动到底部',
   exportVisible: '导出当前视图',
