@@ -392,7 +392,7 @@ const canPauseContainer = (row: ContainerItem) => isContainerRunning(row)
 const canUnpauseContainer = (row: ContainerItem) => isContainerPaused(row)
 const canDeleteContainer = (row: ContainerItem) =>
   !isContainerRunning(row) && !isContainerPaused(row) && !isContainerRestarting(row) && !isContainerRemoving(row)
-const canOpenContainerTerminal = (row: ContainerItem) => canUseTerminal.value && isContainerRunning(row)
+const canOpenContainerTerminal = (row: ContainerItem) => canUseTerminal.value
 
 const imageReference = (row: ImageItem) => {
   const repo = row.Repository || '<none>'
@@ -1894,7 +1894,7 @@ onBeforeUnmount(() => {
                 link
                 type="primary"
                 :icon="Monitor"
-                :disabled="!runtimeAvailable || !canOpenContainerTerminal(row)"
+                :disabled="!canOpenContainerTerminal(row)"
                 @click="openTerminal(row)"
               >
                 {{ t('container.terminal.entry', 'Terminal') }}

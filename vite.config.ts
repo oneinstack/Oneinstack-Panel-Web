@@ -12,6 +12,7 @@ import { initLog } from './build/env/log'
 initLog()
 export default ({ mode }) => {
   const env = globalVar(mode)
+  //  const proxyTarget ='http://192.168.31.116:8089/'
   const proxyTarget = process.env.ONEINSTACK_DEV_PROXY || 'http://192.168.31.109:8089'
   const proxyOrigin = new URL(proxyTarget).origin
   return defineConfig({
