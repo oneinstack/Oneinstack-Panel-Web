@@ -214,14 +214,14 @@ const conf = reactive({
       conf.imagePreview.row = null
     }
   },
-  columns: [
+  columns: computed(() => [
     { prop: 'name', label: t('file.columns.name', 'File name'), minWidth: '270', sortable: true },
     { prop: 'type', label: t('file.columns.type', 'Type'), width: '110' },
     { prop: 'identity', label: t('file.columns.identity', 'Permissions / Owner'), width: '150' },
     { prop: 'size', label: t('file.columns.size', 'Size'), width: '110', sortable: true },
     { prop: 'modTime', label: t('file.columns.modTime', 'Modified time'), width: '170', sortable: true },
     { prop: 'action', label: t('file.columns.action', 'Actions'), minWidth: '360' }
-  ],
+  ]),
   fileList: [] as any[],
   clipboard: {
     mode: '' as ClipboardMode,

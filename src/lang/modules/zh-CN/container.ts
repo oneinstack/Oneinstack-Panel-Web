@@ -8,7 +8,7 @@ export default {
   networks: '网络',
   volumes: '存储卷',
   templates: '模板',
-  registries: 'Registry',
+  registries: '镜像仓库',
   createContainer: '创建容器',
   pullImage: '拉取镜像',
   buildImage: '构建镜像',
@@ -18,9 +18,9 @@ export default {
     selectImage: '请选择镜像'
   },
   dockerConfig: 'Docker 配置',
-  dockerClient: 'Docker Client',
-  dockerServer: 'Docker Server',
-  composeRuntime: 'Compose',
+  dockerClient: 'Docker 客户端',
+  dockerServer: 'Docker 服务端',
+  composeRuntime: 'Compose 编排',
   clientVersion: '客户端版本',
   serverVersion: '服务端版本',
   composeRuntimeLabel: '编排运行时',
@@ -113,7 +113,8 @@ export default {
     content: '内容',
     address: '地址',
     username: '用户名',
-    auth: '认证'
+    auth: '认证',
+    options: '选项'
   },
   used: '已使用',
   unused: '未使用',

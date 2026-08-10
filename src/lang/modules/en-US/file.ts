@@ -77,6 +77,7 @@ export default {
   favoriteMissing: 'This favorite path is no longer available',
   openedFavoriteParent: 'Opened the folder containing the favorite file',
   deleteFile: 'Delete file',
+  delete: 'Delete',
   uploadToPath: 'Upload files to [{path}]',
   startUpload: 'Start upload',
   downloadTaskDone: 'Download task completed',

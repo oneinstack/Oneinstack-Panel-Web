@@ -113,7 +113,8 @@ export default {
     content: 'Content',
     address: 'Address',
     username: 'Username',
-    auth: 'Auth'
+    auth: 'Auth',
+    options: 'Options'
   },
   used: 'Used',
   unused: 'Unused',

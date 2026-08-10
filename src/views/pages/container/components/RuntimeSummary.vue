@@ -18,17 +18,17 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 <template>
   <section class="runtime-grid" v-loading="runtimeLoading">
     <div class="metric-card">
-      <div class="metric-card__label">Docker Client</div>
+      <div class="metric-card__label">{{ t('container.dockerClient', 'Docker Client') }}</div>
       <strong>{{ runtime?.dockerVersion || '--' }}</strong>
       <span>{{ t('container.clientVersion', 'Client version') }}</span>
     </div>
     <div class="metric-card">
-      <div class="metric-card__label">Docker Server</div>
+      <div class="metric-card__label">{{ t('container.dockerServer', 'Docker Server') }}</div>
       <strong>{{ runtime?.serverVersion || '--' }}</strong>
       <span>{{ t('container.serverVersion', 'Server version') }}</span>
     </div>
     <div class="metric-card">
-      <div class="metric-card__label">Compose</div>
+      <div class="metric-card__label">{{ t('container.composeRuntime', 'Compose') }}</div>
       <strong>{{ runtime?.composeVersion || '--' }}</strong>
       <span>{{ t('container.composeRuntimeLabel', 'Compose runtime') }}</span>
     </div>

@@ -77,6 +77,7 @@ export default {
   favoriteMissing: '该收藏路径已失效',
   openedFavoriteParent: '已打开收藏文件所在目录',
   deleteFile: '删除文件',
+  delete: '删除',
   uploadToPath: '上传文件到[{path}]',
   startUpload: '开始上传',
   downloadTaskDone: '下载任务已完成',

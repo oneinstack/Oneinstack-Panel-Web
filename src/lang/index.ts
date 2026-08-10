@@ -1,15 +1,10 @@
 import { EKey } from '@/enum/Enum'
+import { ref } from 'vue'
 import { createI18n } from 'vue-i18n'
-
-const i18n = createI18n({
-  locale: 'zh-CN',
-  messages: {}
-})
 
 const supportedLocales = ['zh-CN', 'en-US']
 const defaultLocale = 'zh-CN'
 const languageModules = import.meta.glob('./modules/**/*.ts', { eager: true })
-
 const localeMessages: Record<string, any> = {}
 
 Object.entries(languageModules).forEach(([path, module]) => {
@@ -17,17 +12,15 @@ Object.entries(languageModules).forEach(([path, module]) => {
   if (!match) return
   const [, moduleLocale, moduleName] = match
   if (!localeMessages[moduleLocale]) localeMessages[moduleLocale] = {}
-  const value = (module as any).default
-  if (moduleName === 'index') {
-    Object.assign(localeMessages[moduleLocale], value)
-    return
-  }
-  localeMessages[moduleLocale][moduleName] = value
+  localeMessages[moduleLocale][moduleName] = (module as any).default
 })
 
-const getModuleMessages = (lang: string) => {
-  return localeMessages[lang] || {}
-}
+const i18n = createI18n({
+  locale: defaultLocale,
+  fallbackLocale: defaultLocale,
+  messages: localeMessages
+})
+const activeLocale = ref(defaultLocale)
 
 const normalizeLocale = (lang?: string) => {
   if (lang && supportedLocales.includes(lang)) return lang
@@ -37,18 +30,25 @@ const normalizeLocale = (lang?: string) => {
 //@ts-ignore
 i18n.setLang = async (lang: string = Cookie.get(EKey.language) || defaultLocale) => {
   const locale = normalizeLocale(lang)
-  i18n.global.setLocaleMessage(locale, getModuleMessages(locale))
   i18n.global.locale = locale
-  //@ts-ignore
-  i18n.locale = locale
+  activeLocale.value = locale
   Cookie.set(EKey.language, locale)
 }
 
 //@ts-ignore
-i18n.t = i18n.global.t
+i18n.t = (...args: any[]) => {
+  // Local translation helpers call this function directly, so explicitly track
+  // the active locale to keep templates and computed labels reactive.
+  activeLocale.value
+  return (i18n.global.t as any)(...args)
+}
 
-//@ts-ignore
-i18n.locale = defaultLocale
+Object.defineProperty(i18n, 'locale', {
+  get: () => activeLocale.value,
+  set: (locale: string) => {
+    activeLocale.value = normalizeLocale(locale)
+  }
+})
 
 export default i18n as any as {
   [key: string]: any

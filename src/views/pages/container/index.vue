@@ -1502,9 +1502,9 @@ onBeforeUnmount(() => {
           <el-tab-pane :label="t('container.images', 'Images')" name="images" />
           <el-tab-pane :label="t('container.networks', 'Networks')" name="networks" />
           <el-tab-pane :label="t('container.volumes', 'Volumes')" name="volumes" />
-          <el-tab-pane label="Compose" name="compose" />
+          <el-tab-pane :label="t('container.composeRuntime', 'Compose')" name="compose" />
           <el-tab-pane :label="t('container.templates', 'Templates')" name="templates" />
-          <el-tab-pane label="Registry" name="registries" />
+          <el-tab-pane :label="t('container.registries', 'Registries')" name="registries" />
           <el-tab-pane :label="t('container.dockerConfig', 'Docker config')" name="config" />
         </el-tabs>
         <div class="panel-actions">
@@ -1943,7 +1943,7 @@ onBeforeUnmount(() => {
         <el-table-column prop="Driver" :label="t('container.columns.driver', 'Driver')" width="130" />
         <el-table-column prop="Scope" :label="t('container.columns.scope', 'Scope')" width="130" />
         <el-table-column prop="Mountpoint" :label="t('container.columns.mountPoint', 'Mount point')" min-width="260" show-overflow-tooltip />
-        <el-table-column label="Options" min-width="180" show-overflow-tooltip>
+        <el-table-column :label="t('container.columns.options', 'Options')" min-width="180" show-overflow-tooltip>
           <template #default="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
         </el-table-column>
         <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170">
