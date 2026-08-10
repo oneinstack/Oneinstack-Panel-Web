@@ -3,6 +3,7 @@ import { computed, h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'v
 import {
   Delete,
   Document,
+  Monitor,
   Plus,
   Refresh,
   SwitchButton,
@@ -17,6 +18,7 @@ import ContainerCreateDrawer from './components/ContainerCreateDrawer.vue'
 import ContainerResourceDialog from './components/ContainerResourceDialog.vue'
 import ContainerDetailDrawer from './components/ContainerDetailDrawer.vue'
 import ContainerLogsDialog from './components/ContainerLogsDialog.vue'
+import ContainerTerminalDrawer from './components/ContainerTerminalDrawer.vue'
 import ContainerTaskDrawer from './components/ContainerTaskDrawer.vue'
 import containerTaskStore from '@/sstore/containerTask'
 import type {
@@ -91,9 +93,8 @@ const logsLoading = ref(false)
 const logDownloading = ref(false)
 const logTarget = ref<ContainerItem | null>(null)
 const logsText = ref('')
-const logTail = ref(500)
-const logSince = ref('')
-const logUntil = ref('')
+const logTail = ref(100)
+const logTimeFilter = ref('all')
 const logTimestamps = ref(true)
 const dialogTarget = ref<any>(null)
 const importFile = ref<File | null>(null)
@@ -103,6 +104,10 @@ const detailType = ref<DetailType>('container')
 const detailTarget = ref<any>(null)
 const detailData = ref<Record<string, any> | null>(null)
 const detailStats = ref<ContainerStats | null>(null)
+const terminalDrawer = reactive({
+  show: false,
+  target: null as ContainerItem | null
+})
 const taskDrawer = reactive({
   show: false
 })
@@ -193,6 +198,9 @@ const canWrite = computed(() => containerScope.value.write || sconfig.hasScopeAc
 const canDelete = computed(() => containerScope.value.delete || sconfig.hasScopeAccess('container', 'delete'))
 const canForceAction = computed(() => sconfig.hasActionAccess('container.force_action'))
 const canReadLogs = computed(() => containerScope.value.logsRead || sconfig.hasScopeAccess('container', 'logsRead'))
+const canUseTerminal = computed(() =>
+  sconfig.hasActionAccess('container.terminal') || sconfig.hasScopeAccess('container', 'terminal')
+)
 const canCreateContainer = computed(() => canWrite.value || sconfig.hasActionAccess('container.create'))
 const canImageWrite = computed(() => containerScope.value.imageWrite || sconfig.hasScopeAccess('container', 'imageWrite'))
 const canNetworkWrite = computed(() => containerScope.value.networkWrite || sconfig.hasScopeAccess('container', 'networkWrite'))
@@ -378,6 +386,7 @@ const canPauseContainer = (row: ContainerItem) => isContainerRunning(row)
 const canUnpauseContainer = (row: ContainerItem) => isContainerPaused(row)
 const canDeleteContainer = (row: ContainerItem) =>
   !isContainerRunning(row) && !isContainerPaused(row) && !isContainerRestarting(row) && !isContainerRemoving(row)
+const canOpenContainerTerminal = (row: ContainerItem) => canUseTerminal.value && isContainerRunning(row)
 
 const imageReference = (row: ImageItem) => {
   const repo = row.Repository || '<none>'
@@ -1063,14 +1072,31 @@ const openLogs = async (row: ContainerItem) => {
   await loadLogs(row)
 }
 
-const buildContainerLogQuery = () => {
-  const normalizedTail = Math.min(10000, Math.max(1, Number(logTail.value) || 500))
+const openTerminal = (row: ContainerItem) => {
+  terminalDrawer.target = row
+  terminalDrawer.show = true
+}
+
+const normalizeContainerLogTail = () => {
+  const normalizedTail = [100, 200, 500, 1000, 10000].includes(Number(logTail.value)) ? Number(logTail.value) : 100
   logTail.value = normalizedTail
+  return normalizedTail
+}
+
+const buildContainerLogFilters = () => {
+  const normalizedTail = normalizeContainerLogTail()
+  const since = logTimeFilter.value === 'all' ? undefined : logTimeFilter.value
   return {
     tail: normalizedTail,
-    since: logSince.value.trim() || undefined,
-    until: logUntil.value.trim() || undefined,
-    timestamps: logTimestamps.value,
+    since,
+    until: undefined,
+    timestamps: logTimestamps.value
+  }
+}
+
+const buildContainerLogQuery = () => {
+  return {
+    ...buildContainerLogFilters(),
     follow: false
   }
 }
@@ -1090,7 +1116,7 @@ const downloadLogs = async (row = logTarget.value) => {
   if (!row?.ID || logDownloading.value) return
   logDownloading.value = true
   try {
-    const response = await fetch(Api.downloadContainerLogs(row.ID, buildContainerLogQuery()), {
+    const response = await fetch(Api.downloadContainerLogs(row.ID, buildContainerLogFilters()), {
       credentials: 'include',
       headers: { Accept: 'text/plain' }
     })
@@ -1785,7 +1811,7 @@ onBeforeUnmount(() => {
         <el-table-column prop="Ports" :label="t('container.columns.ports', 'Ports')" min-width="190" show-overflow-tooltip />
         <el-table-column prop="Networks" :label="t('container.columns.networks', 'Networks')" min-width="120" show-overflow-tooltip />
         <el-table-column prop="Mounts" :label="t('container.columns.mounts', 'Mounts')" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="420" class-name="table-action-column">
+        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="500" class-name="table-action-column">
           <template #default="{ row }">
             <div class="row-actions table-row-actions">
               <el-button
@@ -1804,6 +1830,15 @@ onBeforeUnmount(() => {
                 @click="openLogs(row)"
               >
                 {{ t('container.logs', 'Logs') }}
+              </el-button>
+              <el-button
+                link
+                type="primary"
+                :icon="Monitor"
+                :disabled="!runtimeAvailable || !canOpenContainerTerminal(row)"
+                @click="openTerminal(row)"
+              >
+                {{ t('container.terminal.entry', 'Terminal') }}
               </el-button>
               <el-button
                 v-if="canStartContainer(row)"
@@ -2205,15 +2240,18 @@ onBeforeUnmount(() => {
       :target="logTarget"
       :logs-text="logsText"
       :tail="logTail"
-      :since="logSince"
-      :until="logUntil"
+      :time-filter="logTimeFilter"
       :timestamps="logTimestamps"
       @update:tail="logTail = $event"
-      @update:since="logSince = $event"
-      @update:until="logUntil = $event"
+      @update:time-filter="logTimeFilter = $event"
       @update:timestamps="logTimestamps = $event"
       @refresh="loadLogs()"
       @download="downloadLogs()"
+    />
+
+    <ContainerTerminalDrawer
+      v-model="terminalDrawer.show"
+      :target="terminalDrawer.target"
     />
 
     <ContainerTaskDrawer

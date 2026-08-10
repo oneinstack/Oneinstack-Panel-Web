@@ -9,16 +9,14 @@ defineProps<{
   target: ContainerItem | null
   logsText: string
   tail: number
-  since: string
-  until: string
+  timeFilter: string
   timestamps: boolean
 }>()
 
 const emit = defineEmits<{
   (event: 'update:visible', value: boolean): void
   (event: 'update:tail', value: number): void
-  (event: 'update:since', value: string): void
-  (event: 'update:until', value: string): void
+  (event: 'update:timeFilter', value: string): void
   (event: 'update:timestamps', value: boolean): void
   (event: 'refresh'): void
   (event: 'download'): void
@@ -36,33 +34,32 @@ const emit = defineEmits<{
   >
     <div class="logs-toolbar">
       <div class="toolbar-field">
-        <span>末尾日志行数</span>
-        <el-input-number
+        <span>过滤</span>
+        <el-select
+          :model-value="timeFilter"
+          placeholder="过滤"
+          @update:model-value="emit('update:timeFilter', String($event || 'all'))"
+        >
+          <el-option label="全部" value="all" />
+          <el-option label="最近一天" value="24h" />
+          <el-option label="最近 4 小时" value="4h" />
+          <el-option label="最近 1 小时" value="1h" />
+          <el-option label="最近 10 分钟" value="10m" />
+        </el-select>
+      </div>
+      <div class="toolbar-field">
+        <span>条数</span>
+        <el-select
           :model-value="tail"
-          :min="1"
-          :max="10000"
-          :step="100"
-          controls-position="right"
-          @update:model-value="emit('update:tail', Number($event || 500))"
-        />
-      </div>
-      <div class="toolbar-field">
-        <span>Since</span>
-        <el-input
-          :model-value="since"
-          clearable
-          placeholder="10m / 4h / RFC3339"
-          @update:model-value="emit('update:since', String($event || ''))"
-        />
-      </div>
-      <div class="toolbar-field">
-        <span>Until</span>
-        <el-input
-          :model-value="until"
-          clearable
-          placeholder="RFC3339"
-          @update:model-value="emit('update:until', String($event || ''))"
-        />
+          placeholder="条数"
+          @update:model-value="emit('update:tail', Number($event || 100))"
+        >
+          <el-option label="所有" :value="10000" />
+          <el-option label="100" :value="100" />
+          <el-option label="200" :value="200" />
+          <el-option label="500" :value="500" />
+          <el-option label="1000" :value="1000" />
+        </el-select>
       </div>
       <el-switch
         :model-value="timestamps"
@@ -101,8 +98,12 @@ const emit = defineEmits<{
   align-items: center;
   gap: 8px;
 
-  :deep(.el-input) {
-    width: 200px;
+  :deep(.el-select) {
+    width: 220px;
+  }
+
+  :deep(.el-select__wrapper) {
+    min-height: 42px;
   }
 }
 
@@ -136,8 +137,7 @@ const emit = defineEmits<{
     align-items: flex-start;
     flex-direction: column;
 
-    :deep(.el-input),
-    :deep(.el-input-number) {
+    :deep(.el-select) {
       width: 100%;
     }
   }
