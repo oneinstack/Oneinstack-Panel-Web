@@ -729,6 +729,19 @@ const handleScriptInput = (event: Event) => {
 
 .task-drawer-form {
   max-width: 680px;
+
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number__decrease) {
+    display: none;
+  }
+
+  :deep(.el-input-number .el-input__wrapper) {
+    padding-right: 11px;
+  }
+
+  :deep(.el-input-number .el-input__inner) {
+    text-align: left;
+  }
 }
 
 .cycle-row {

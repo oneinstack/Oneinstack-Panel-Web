@@ -233,28 +233,29 @@ onMounted(async () => {
 
     <div class="audit-panel">
       <div class="filters">
-        <el-input v-model="filters.q" clearable :placeholder="$t('audit.requestSearchPlaceholder')" @keyup.enter="search" />
-        <el-input v-model="filters.username" clearable :placeholder="$t('audit.operatorPlaceholder')" @keyup.enter="search" />
-        <el-select v-model="filters.outcome" clearable :placeholder="$t('audit.outcome')">
+        <el-input class="filter-query" v-model="filters.q" clearable :placeholder="$t('audit.requestSearchPlaceholder')" @keyup.enter="search" />
+        <el-input class="filter-user" v-model="filters.username" clearable :placeholder="$t('audit.operatorPlaceholder')" @keyup.enter="search" />
+        <el-select class="filter-select" v-model="filters.outcome" clearable :placeholder="$t('audit.outcome')">
           <el-option :label="$t('common.success')" value="success" />
           <el-option :label="$t('common.failed')" value="failure" />
         </el-select>
-        <el-select v-model="filters.method" clearable :placeholder="$t('audit.method')">
+        <el-select class="filter-select" v-model="filters.method" clearable :placeholder="$t('audit.method')">
           <el-option v-for="method in ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'PTY']" :key="method" :label="method" :value="method" />
         </el-select>
-        <el-select v-model="filters.sensitive" clearable :placeholder="$t('audit.sensitiveLevel')">
+        <el-select class="filter-select" v-model="filters.sensitive" clearable :placeholder="$t('audit.sensitiveLevel')">
           <el-option :label="$t('audit.sensitiveOperations')" value="true" />
           <el-option :label="$t('audit.normalOperation')" value="false" />
         </el-select>
         <el-date-picker
+          class="filter-date"
           v-model="dateRange"
           type="datetimerange"
           :start-placeholder="$t('audit.startTime')"
           :end-placeholder="$t('audit.endTime')"
           :range-separator="$t('audit.rangeSeparator')"
         />
-        <el-button type="primary" @click="search">{{ $t('common.query') }}</el-button>
-        <el-button @click="reset">{{ $t('common.reset') }}</el-button>
+        <el-button class="filter-action" type="primary" @click="search">{{ $t('common.query') }}</el-button>
+        <el-button class="filter-action" @click="reset">{{ $t('common.reset') }}</el-button>
       </div>
 
       <el-table v-loading="loading" :data="events" border row-key="id" @row-dblclick="showDetail">
@@ -422,10 +423,54 @@ onMounted(async () => {
 
 .filters {
   display: grid;
-  grid-template-columns: minmax(200px, 1.4fr) minmax(120px, .8fr) 120px 120px 120px minmax(300px, 1.5fr) auto auto;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
   gap: 10px;
   align-items: center;
   margin-bottom: 18px;
+
+  > * {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .filter-query,
+  .filter-user {
+    grid-column: span 2;
+  }
+
+  .filter-select,
+  .filter-action {
+    grid-column: span 1;
+  }
+
+  .filter-date {
+    grid-column: span 3;
+  }
+
+  :deep(.el-date-editor) {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1600px) {
+  .filters {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+
+    .filter-query {
+      grid-column: span 2;
+    }
+
+    .filter-user,
+    .filter-select,
+    .filter-action {
+      grid-column: span 1;
+    }
+
+    .filter-date {
+      grid-column: span 3;
+    }
+  }
 }
 
 .pagination {
@@ -470,6 +515,14 @@ code {
 
   .filters {
     grid-template-columns: repeat(3, minmax(150px, 1fr));
+
+    .filter-query,
+    .filter-user,
+    .filter-select,
+    .filter-date,
+    .filter-action {
+      grid-column: auto;
+    }
   }
 }
 
