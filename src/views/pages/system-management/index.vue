@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
-import { InfoFilled, Refresh, Search, WarningFilled } from '@element-plus/icons-vue'
+import { InfoFilled, Refresh, Search, View, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import { Api, type SystemDiskDevice, type SystemProcessDetail, type SystemProcessItem, type SystemSshConfig } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 type ProcessSort = 'pid' | 'cpu' | 'memory' | 'name'
 type SortOrder = 'asc' | 'desc'
@@ -90,6 +91,24 @@ const isProtectedMount = (mountpoint?: string) => {
   )
 }
 const rootMounts = computed(() => disks.value.filter((item) => isProtectedMount(item.mountpoint)))
+const processColumns = computed<ColumnItem<SystemProcessItem>[]>(() => [
+  { prop: 'pid', label: 'PID', minWidth: 86 },
+  { prop: 'name', label: t('common.name'), minWidth: 180 },
+  { prop: 'username', label: t('common.user'), minWidth: 120, slot: 'username' },
+  { prop: 'status', label: t('common.status'), minWidth: 120, slot: 'status' },
+  { prop: 'cpuPercent', label: 'CPU', minWidth: 110, slot: 'cpuPercent' },
+  { prop: 'memoryRss', label: t('home.memory'), minWidth: 130, slot: 'memoryRss' },
+  { prop: 'createTime', label: t('systemManagement.startTime'), minWidth: 176, slot: 'createTime' },
+  { prop: 'actionColumn', label: t('common.action'), width: 120, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
+const diskColumns = computed<ColumnItem<SystemDiskDevice>[]>(() => [
+  { prop: 'device', label: t('systemManagement.device'), minWidth: 150 },
+  { prop: 'mountpoint', label: t('systemManagement.mountpoint'), minWidth: 140 },
+  { prop: 'fsType', label: t('systemManagement.fileSystem'), minWidth: 100 },
+  { prop: 'capacityUsage', label: t('systemManagement.capacityUsage'), minWidth: 220, slot: 'capacityUsage' },
+  { prop: 'persistent', label: t('systemManagement.persistent'), minWidth: 100, slot: 'persistent' },
+  { prop: 'actionColumn', label: t('common.action'), width: 120, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const getErrorMessage = (error: any, fallback: string) => {
   const data = error?.response?.data || error?.data || error?.xhr?.data || {}
@@ -338,34 +357,23 @@ onMounted(() => {
         <custom-table
           v-loading="processLoading"
           :data="processes"
+          :columns="processColumns"
+          :pagination="false"
+          :auto-pagination="false"
           class="data-table process-table"
           :empty-text="$t('systemManagement.noProcessData')"
           @row-click="openProcessDetail"
         >
-          <el-table-column prop="pid" label="PID" min-width="86" />
-          <el-table-column prop="name" :label="$t('common.name')" min-width="180" />
-          <el-table-column prop="username" :label="$t('common.user')" min-width="120">
-            <template #default="{ row }">{{ row.username || '--' }}</template>
-          </el-table-column>
-          <el-table-column prop="status" :label="$t('common.status')" min-width="120">
-            <template #default="{ row }">
+          <template #username="{ row }">{{ row.username || '--' }}</template>
+          <template #status="{ row }">
               <el-tag :type="processStatusType(row.status)" effect="light">{{ processStatusLabel(row.status) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="cpuPercent" label="CPU" min-width="110">
-            <template #default="{ row }">{{ formatPercent(row.cpuPercent) }}</template>
-          </el-table-column>
-          <el-table-column prop="memoryRss" :label="$t('home.memory')" min-width="130">
-            <template #default="{ row }">{{ formatBytes(row.memoryRss) }}</template>
-          </el-table-column>
-          <el-table-column prop="createTime" :label="$t('systemManagement.startTime')" min-width="176">
-            <template #default="{ row }">{{ formatDateTime(row.createTime) }}</template>
-          </el-table-column>
-          <el-table-column :label="$t('common.action')" min-width="120" fixed="right" class-name="table-action-column">
-            <template #default="{ row }">
-              <el-button link type="primary" @click.stop="openProcessDetail(row)">{{ $t('common.detail') }}</el-button>
-            </template>
-          </el-table-column>
+          </template>
+          <template #cpuPercent="{ row }">{{ formatPercent(row.cpuPercent) }}</template>
+          <template #memoryRss="{ row }">{{ formatBytes(row.memoryRss) }}</template>
+          <template #createTime="{ row }">{{ formatDateTime(row.createTime) }}</template>
+          <template #actionColumn="{ row }">
+              <el-button plain type="primary" :icon="View" @click.stop="openProcessDetail(row)">{{ $t('common.detail') }}</el-button>
+          </template>
         </custom-table>
 
         <div class="table-footer">
@@ -472,30 +480,21 @@ onMounted(() => {
             <small>{{ $t('systemManagement.protectedMountsHint') }}</small>
           </div>
 
-          <custom-table v-loading="diskLoading" :data="disks" class="data-table" :empty-text="$t('systemManagement.noDiskData')">
-            <el-table-column prop="device" :label="$t('systemManagement.device')" min-width="150" />
-            <el-table-column prop="mountpoint" :label="$t('systemManagement.mountpoint')" min-width="140" />
-            <el-table-column prop="fsType" :label="$t('systemManagement.fileSystem')" min-width="100" />
-            <el-table-column :label="$t('systemManagement.capacityUsage')" min-width="220">
-              <template #default="{ row }">
+          <custom-table v-loading="diskLoading" :data="disks" :columns="diskColumns" :pagination="false" class="data-table" :empty-text="$t('systemManagement.noDiskData')">
+            <template #capacityUsage="{ row }">
                 <div class="usage-cell">
                   <el-progress :percentage="usagePercent(row)" :stroke-width="8" />
                   <span>{{ formatBytes(row.usedBytes) }} / {{ formatBytes(row.totalBytes) }}</span>
                 </div>
-              </template>
-            </el-table-column>
-            <el-table-column prop="persistent" :label="$t('systemManagement.persistent')" min-width="100">
-              <template #default="{ row }">
+            </template>
+            <template #persistent="{ row }">
                 <el-tag :type="row.persistent ? 'success' : 'info'" effect="light">
                   {{ row.persistent ? $t('systemManagement.writtenFstab') : $t('systemManagement.unmatchedFstab') }}
                 </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('common.action')" min-width="120" fixed="right" class-name="table-action-column">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="openDiskDetail(row)">{{ $t('common.detail') }}</el-button>
-              </template>
-            </el-table-column>
+            </template>
+            <template #actionColumn="{ row }">
+                <el-button plain type="primary" :icon="View" @click="openDiskDetail(row)">{{ $t('common.detail') }}</el-button>
+            </template>
           </custom-table>
         </article>
       </section>

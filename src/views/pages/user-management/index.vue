@@ -53,7 +53,7 @@ const userState = reactive({
     { prop: 'scope', label: t('userManagement.scope', 'Permission scope'), minWidth: 140 },
     { prop: 'mustChangePassword', label: t('common.status', 'Status'), minWidth: 120 },
     { prop: 'createdAt', label: t('userManagement.createdAt', 'Created at'), minWidth: 180 },
-    { prop: 'action', label: t('common.action', 'Action'), width: 220 }
+    { prop: 'action', label: t('common.action', 'Action'), width: 220, fixed: 'right' }
   ])
 })
 
@@ -416,9 +416,8 @@ onMounted(async () => {
           </template>
           <template #action="{ row }">
             <div class="action-wrap action-wrap--compact table-row-actions">
-              <el-button link type="primary" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
-              <span class="action-divider"></span>
-              <el-button link :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
+              <el-button plain type="primary" :icon="CollectionTag" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
+              <el-button link type="primary" :icon="Key" :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
             </div>
           </template>
         </custom-table>

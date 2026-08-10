@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import { ElMessage } from 'element-plus'
+import { View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface AuditEvent {
   id: number
@@ -74,6 +76,18 @@ const filters = reactive({
   method: '',
   sensitive: ''
 })
+const columns = computed<ColumnItem<AuditEvent>[]>(() => [
+  { prop: 'sequence', label: t('audit.sequence'), width: 92, slot: 'sequence' },
+  { prop: 'createdAt', label: t('common.time'), minWidth: 170, slot: 'createdAt' },
+  { prop: 'username', label: t('common.user'), width: 120, slot: 'username' },
+  { prop: 'action', label: t('approvalCenter.action'), minWidth: 220, showOverflowTooltip: true },
+  { prop: 'message', label: t('audit.messageCommand'), minWidth: 300, showOverflowTooltip: true, slot: 'message' },
+  { prop: 'remoteIp', label: t('audit.remoteIp'), minWidth: 135, slot: 'remoteIp' },
+  { prop: 'result', label: t('audit.result'), width: 100, align: 'center', slot: 'result' },
+  { prop: 'level', label: t('audit.level'), width: 90, align: 'center', slot: 'level' },
+  { prop: 'durationMs', label: t('audit.duration'), width: 90, align: 'right', slot: 'durationMs' },
+  { prop: 'actionColumn', label: t('common.action'), width: 110, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const queryParams = (includePage = true) => {
   const params: Record<string, any> = {
@@ -259,44 +273,25 @@ onMounted(async () => {
         <el-button class="filter-action" @click="reset">{{ $t('common.reset') }}</el-button>
       </div>
 
-      <custom-table v-loading="loading" :data="events" border row-key="id" @row-dblclick="showDetail">
-        <el-table-column prop="sequence" :label="$t('audit.sequence')" width="92">
-          <template #default="{ row }">#{{ row.sequence }}</template>
-        </el-table-column>
-        <el-table-column prop="createdAt" :label="$t('common.time')" min-width="170">
-          <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column prop="username" :label="$t('common.user')" width="120">
-          <template #default="{ row }">{{ row.username || $t('common.unauthenticated') }}</template>
-        </el-table-column>
-        <el-table-column prop="action" :label="$t('approvalCenter.action')" min-width="220" show-overflow-tooltip />
-        <el-table-column prop="message" :label="$t('audit.messageCommand')" min-width="300" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.message || '—' }}</template>
-        </el-table-column>
-        <el-table-column prop="remoteIp" :label="$t('audit.remoteIp')" min-width="135">
-          <template #default="{ row }">{{ row.remoteIp || '—' }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('audit.result')" width="100" align="center">
-          <template #default="{ row }">
+      <custom-table v-loading="loading" :data="events" :columns="columns" :pagination="false" :auto-pagination="false" border row-key="id" @row-dblclick="showDetail">
+        <template #sequence="{ row }">#{{ row.sequence }}</template>
+        <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+        <template #username="{ row }">{{ row.username || $t('common.unauthenticated') }}</template>
+        <template #message="{ row }">{{ row.message || '—' }}</template>
+        <template #remoteIp="{ row }">{{ row.remoteIp || '—' }}</template>
+        <template #result="{ row }">
             <el-tag :type="row.outcome === 'success' ? 'success' : 'danger'" size="small">
               {{ row.status }} {{ row.outcome === 'success' ? $t('common.success') : $t('common.failed') }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('audit.level')" width="90" align="center">
-          <template #default="{ row }">
+        </template>
+        <template #level="{ row }">
             <el-tag v-if="row.sensitive" type="warning" size="small">{{ $t('common.sensitive') }}</el-tag>
             <span v-else>{{ $t('common.normal') }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="durationMs" :label="$t('audit.duration')" width="90" align="right">
-          <template #default="{ row }">{{ row.durationMs }} ms</template>
-        </el-table-column>
-        <el-table-column :label="$t('common.action')" width="82" fixed="right" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
-          </template>
-        </el-table-column>
+        </template>
+        <template #durationMs="{ row }">{{ row.durationMs }} ms</template>
+        <template #actionColumn="{ row }">
+            <el-button plain type="primary" :icon="View" @click="showDetail(row)">{{ $t('common.detail') }}</el-button>
+        </template>
         <template #empty>
           <el-empty :description="$t('audit.noRecords')" />
         </template>

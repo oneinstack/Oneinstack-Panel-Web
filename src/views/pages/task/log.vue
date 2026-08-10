@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue'
-import { Back, Download, Refresh } from '@element-plus/icons-vue'
+import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { Back, CircleClose, Download, Refresh } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const taskID = Number(System.getRouterParams().id || 0)
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -128,6 +129,16 @@ const statusType = (status: string) => {
   return 'danger'
 }
 
+const columns = computed<ColumnItem[]>(() => [
+  { prop: 'status', label: t('task.status', 'Status'), width: 100, slot: 'status' },
+  { prop: 'trigger', label: t('task.log.trigger', 'Trigger'), width: 100, slot: 'trigger' },
+  { prop: 'executionTime', label: t('task.log.executionTime', 'Execution time'), width: 320, slot: 'executionTime' },
+  { prop: 'duration_ms', label: t('task.log.duration', 'Duration'), width: 110, slot: 'duration' },
+  { prop: 'exit_code', label: t('task.log.exitCode', 'Exit code'), width: 80 },
+  { prop: 'output', label: t('task.log.output', 'Output logs'), minWidth: 360, slot: 'output' },
+  { prop: 'actionColumn', label: t('task.action', 'Action'), width: 126, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
+
 onMounted(() => {
   void getData()
   refreshTimer = setInterval(() => {
@@ -172,45 +183,29 @@ onUnmounted(() => {
       <custom-table
         v-loading="loading"
         :data="tableData"
+        :columns="columns"
+        :pagination="false"
+        :auto-pagination="false"
         border
         :empty-text="t('task.log.empty', 'No execution records')"
         :row-key="(row: any) => row.id"
       >
-        <el-table-column :label="t('task.status', 'Status')" width="100">
-          <template #default="{ row }">
-            <el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('task.log.trigger', 'Trigger')" width="100">
-          <template #default="{ row }">{{ row.trigger === 'manual' ? t('task.log.manual', 'Manual') : t('task.log.scheduled', 'Scheduled') }}</template>
-        </el-table-column>
-        <el-table-column :label="t('task.log.executionTime', 'Execution time')" width="320">
-          <template #default="{ row }">
-            {{ formatDate(row.start_time) }} {{ t('task.log.rangeSeparator', 'to') }} {{ row.status === 'running' ? t('task.log.statuses.running', 'Running') : formatDate(row.end_time) }}
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('task.log.duration', 'Duration')" width="110">
-          <template #default="{ row }">{{ formatDuration(row.duration_ms) }}</template>
-        </el-table-column>
-        <el-table-column prop="exit_code" :label="t('task.log.exitCode', 'Exit code')" width="80" />
-        <el-table-column :label="t('task.action', 'Action')" width="100" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button
-              v-if="row.status === 'running'"
-              link type="danger"
-              @click="cancelExecution(row)"
-            >
-              {{ t('task.log.cancel', 'Cancel') }}
-            </el-button>
-            <span v-else>—</span>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('task.log.output', 'Output logs')" min-width="360">
-          <template #default="{ row }">
-            <pre class="execution-output">{{ row.output || (row.status === 'running' ? t('task.log.runningOutput', 'Task running...') : t('task.log.noOutput', 'No output')) }}</pre>
-            <el-tag v-if="row.output_truncated" type="warning" size="small">{{ t('task.log.outputTruncated', 'Output truncated') }}</el-tag>
-          </template>
-        </el-table-column>
+        <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ statusText(row.status) }}</el-tag></template>
+        <template #trigger="{ row }">{{ row.trigger === 'manual' ? t('task.log.manual', 'Manual') : t('task.log.scheduled', 'Scheduled') }}</template>
+        <template #executionTime="{ row }">
+          {{ formatDate(row.start_time) }} {{ t('task.log.rangeSeparator', 'to') }} {{ row.status === 'running' ? t('task.log.statuses.running', 'Running') : formatDate(row.end_time) }}
+        </template>
+        <template #duration="{ row }">{{ formatDuration(row.duration_ms) }}</template>
+        <template #output="{ row }">
+          <pre class="execution-output">{{ row.output || (row.status === 'running' ? t('task.log.runningOutput', 'Task running...') : t('task.log.noOutput', 'No output')) }}</pre>
+          <el-tag v-if="row.output_truncated" type="warning" size="small">{{ t('task.log.outputTruncated', 'Output truncated') }}</el-tag>
+        </template>
+        <template #actionColumn="{ row }">
+          <el-button v-if="row.status === 'running'" link type="danger" :icon="CircleClose" @click="cancelExecution(row)">
+            {{ t('task.log.cancel', 'Cancel') }}
+          </el-button>
+          <span v-else>—</span>
+        </template>
       </custom-table>
       <el-pagination
         v-model:current-page="pagination.page"

@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
+import { CircleClose, Document } from '@element-plus/icons-vue'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -34,6 +36,14 @@ let pollTimer: number | undefined
 const activeStatuses = ['queued', 'running', 'canceling']
 const activeTask = computed(() => tasks.value.find((item) => activeStatuses.includes(item.status)))
 const certificateEnabled = computed(() => certificate.value && certificate.value.status !== 'disabled')
+const taskColumns = computed<ColumnItem[]>(() => [
+  { prop: 'type', label: '类型', width: 75, slot: 'type' },
+  { prop: 'status', label: '状态', width: 90, slot: 'status' },
+  { prop: 'progress', label: '进度', width: 145, slot: 'progress' },
+  { prop: 'message', label: '信息', minWidth: 180, showOverflowTooltip: true },
+  { prop: 'createdAt', label: '时间', width: 170, slot: 'createdAt' },
+  { prop: 'actionColumn', label: '操作', width: 170, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const statusText: Record<string, string> = {
   active: '有效',
@@ -275,37 +285,29 @@ onBeforeUnmount(() => {
       </el-form>
 
       <el-divider content-position="left">最近任务</el-divider>
-      <custom-table :data="tasks" size="small" empty-text="暂无证书任务">
-        <el-table-column label="类型" width="75">
-          <template #default="{ row }">{{ row.operation === 'renew' ? '续签' : '签发' }}</template>
-        </el-table-column>
-        <el-table-column label="状态" width="90">
-          <template #default="{ row }">
+      <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" empty-text="暂无证书任务">
+        <template #type="{ row }">{{ row.operation === 'renew' ? '续签' : '签发' }}</template>
+        <template #status="{ row }">
             <el-tag size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="进度" width="145">
-          <template #default="{ row }">
+        </template>
+        <template #progress="{ row }">
             <el-progress :percentage="row.progress || 0" :stroke-width="8" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="message" label="信息" min-width="180" show-overflow-tooltip />
-        <el-table-column label="时间" width="170">
-          <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="105" fixed="right" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button link type="primary" @click="showLog(row)">日志</el-button>
-            <el-button
-              v-if="activeStatuses.includes(row.status)"
-              link
-              type="danger"
-              @click="cancelTask(row)"
-            >
-              取消
-            </el-button>
-          </template>
-        </el-table-column>
+        </template>
+        <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+        <template #actionColumn="{ row }">
+            <div class="table-row-actions">
+              <el-button plain type="primary" :icon="Document" @click="showLog(row)">日志</el-button>
+              <el-button
+                v-if="activeStatuses.includes(row.status)"
+                link
+                type="danger"
+                :icon="CircleClose"
+                @click="cancelTask(row)"
+              >
+                取消
+              </el-button>
+            </div>
+        </template>
       </custom-table>
     </div>
   </custom-drawer>

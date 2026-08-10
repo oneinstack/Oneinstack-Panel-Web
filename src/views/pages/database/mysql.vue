@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import sapp from '@/sstore/sapp'
 import System from '@/utils/System'
-import { ArrowDown, CircleClose, DataAnalysis, Download, Link, Setting } from '@element-plus/icons-vue'
+import { ArrowDown, CircleClose, DataAnalysis, Delete, Download, Files, FolderAdd, Key, Link, Lock, MoreFilled, Setting } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
 import { Api } from '@/api/Api'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -497,23 +497,23 @@ const handleMoreAction = async (command: string, row: any) => {
             <el-button
               v-if="phpMyAdminInstalled"
               type="primary"
-              link
+              plain
               :icon="Link"
               @click="openPhpMyAdmin(row.name)"
             >{{ t('database.quickManage', '快捷管理') }}</el-button>
-            <el-button type="primary" link @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
-            <el-button type="primary" link @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
+            <el-button :plain="!phpMyAdminInstalled" type="primary" :link="phpMyAdminInstalled" :icon="Key" @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
+            <el-button type="primary" link :icon="Lock" @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
             <el-dropdown trigger="click" popper-class="table-action-popper" @command="(command: string) => handleMoreAction(command, row)">
-              <el-button type="primary" link>
+              <el-button type="primary" link :icon="MoreFilled">
                 {{ t('database.more', '更多') }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu class="table-action-menu">
-                  <el-dropdown-item command="backup">{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
-                  <el-dropdown-item command="backup-manager">{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
+                  <el-dropdown-item command="backup"><el-icon><FolderAdd /></el-icon>{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
+                  <el-dropdown-item command="backup-manager"><el-icon><Files /></el-icon>{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
                   <el-dropdown-item class="table-action-menu__danger" command="delete" divided>
-                    <span class="database-danger-action">{{ t('database.deleteDatabase', '删除数据库') }}</span>
+                    <el-icon><Delete /></el-icon>{{ t('database.deleteDatabase', '删除数据库') }}
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -690,10 +690,6 @@ const handleMoreAction = async (command: string, row: any) => {
       align-items: center;
     }
   }
-}
-
-.database-danger-action {
-  color: var(--el-color-danger);
 }
 
 @media (max-width: 920px) {

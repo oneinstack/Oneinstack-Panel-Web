@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { FolderOpened, Refresh, Setting } from '@element-plus/icons-vue'
+import { Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/Api'
@@ -175,7 +175,7 @@ const conf = reactive({
       { prop: 'traffic', label: t('website.todayTraffic', 'Today traffic'), width: 120 },
       { prop: 'expiration', label: t('website.expiration', 'Expiration'), width: 180 },
       { prop: 'ssl', label: 'SSL', width: 100 },
-      { prop: 'action', label: t('common.action', 'Action'), minWidth: 230 }
+      { prop: 'action', label: t('common.action', 'Action'), width: 320, fixed: 'right' as const }
     ]),
     params: {
       type: 'php',
@@ -543,10 +543,10 @@ webServer.load()
         </template>
         <template #action="{ row }">
           <div class="table-row-actions">
-            <el-button type="success" link @click="certificateDrawer.open(row)">SSL</el-button>
-            <el-button type="primary" link @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
-            <el-button type="primary" link @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
-            <el-button type="danger" link @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
+            <el-button type="primary" plain :icon="Lock" @click="certificateDrawer.open(row)">SSL</el-button>
+            <el-button type="primary" link :icon="FolderAdd" @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
+            <el-button type="primary" link :icon="Setting" @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
+            <el-button type="danger" link :icon="Delete" @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
           </div>
         </template>
         <template #status="{ row }">

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete, Download, RefreshLeft } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import System from '@/utils/System'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface DatabaseLibrary {
   id: number
@@ -60,6 +62,13 @@ const state = reactive({
 const hasActiveTask = computed(() =>
   state.tasks.some((task) => !terminalStatuses.has(task.status))
 )
+const backupColumns = computed<ColumnItem[]>(() => [
+  { prop: 'fileName', label: t('database.backup.file', '文件'), minWidth: 220, showOverflowTooltip: true },
+  { prop: 'source', label: t('common.type', '类型'), width: 110, slot: 'source' },
+  { prop: 'sizeBytes', label: t('common.size', '大小'), width: 100, slot: 'sizeBytes' },
+  { prop: 'createdAt', label: t('database.backup.createdAt', '创建时间'), width: 180, slot: 'createdAt' },
+  { prop: 'actionColumn', label: t('common.action', '操作'), width: 230, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const loadData = async (quiet = false) => {
   if (!props.library) return
@@ -269,28 +278,21 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
 
     <el-tabs v-model="state.activeTab">
       <el-tab-pane :label="t('database.backup.backupFiles', '备份文件')" name="backups">
-        <custom-table v-loading="state.loading" :data="state.backups" height="calc(100vh - 260px)">
-          <el-table-column prop="fileName" :label="t('database.backup.file', '文件')" min-width="220" show-overflow-tooltip />
-          <el-table-column :label="t('common.type', '类型')" width="110">
-            <template #default="{ row }">
+        <custom-table v-loading="state.loading" :data="state.backups" :columns="backupColumns" :pagination="false" height="calc(100vh - 260px)">
+          <template #source="{ row }">
               <el-tag :type="row.source === 'pre_restore' ? 'warning' : 'success'">
                 {{ row.source === 'pre_restore' ? t('database.backup.preRestoreBackup', '恢复前备份') : t('database.backup.manualBackup', '手动备份') }}
               </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column :label="t('common.size', '大小')" width="100">
-            <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
-          </el-table-column>
-          <el-table-column :label="t('database.backup.createdAt', '创建时间')" width="180">
-            <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column :label="t('common.action', '操作')" width="190" fixed="right" class-name="table-action-column">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="downloadBackup(row)">{{ t('common.download', '下载') }}</el-button>
-              <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">{{ t('database.backup.restore', '恢复') }}</el-button>
-              <el-button type="danger" link :disabled="hasActiveTask" @click="deleteBackup(row)">{{ t('common.delete', '删除') }}</el-button>
-            </template>
-          </el-table-column>
+          </template>
+          <template #sizeBytes="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
+          <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+          <template #actionColumn="{ row }">
+              <div class="table-row-actions">
+                <el-button type="primary" plain :icon="Download" @click="downloadBackup(row)">{{ t('common.download', '下载') }}</el-button>
+                <el-button type="primary" link :icon="RefreshLeft" :disabled="hasActiveTask" @click="restoreBackup(row)">{{ t('database.backup.restore', '恢复') }}</el-button>
+                <el-button type="danger" link :icon="Delete" :disabled="hasActiveTask" @click="deleteBackup(row)">{{ t('common.delete', '删除') }}</el-button>
+              </div>
+          </template>
           <template #empty>{{ t('database.backup.noBackups', '暂无备份文件') }}</template>
         </custom-table>
       </el-tab-pane>

@@ -2,10 +2,12 @@
 import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import sconfig from '@/sstore/sconfig'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface MetricSample {
   id: number
@@ -216,6 +218,41 @@ const deliveryFilters = reactive({
   pageSize: 20,
   status: ''
 })
+const ruleColumns = computed<ColumnItem<MonitorRule>[]>(() => [
+  { prop: 'name', label: t('monitor.rule'), minWidth: 180 },
+  { prop: 'metricThreshold', label: t('monitor.metricAndThreshold'), minWidth: 190, slot: 'metricThreshold' },
+  { prop: 'recoveryThreshold', label: t('monitor.recoveryThreshold'), minWidth: 120, slot: 'recoveryThreshold' },
+  { prop: 'state', label: t('common.status'), width: 105, align: 'center', slot: 'state' },
+  { prop: 'lastValue', label: t('monitor.currentValue'), minWidth: 115, slot: 'lastValue' },
+  { prop: 'strategy', label: t('monitor.strategy'), minWidth: 180, slot: 'strategy' },
+  { prop: 'severity', label: t('monitor.severity'), width: 90, align: 'center', slot: 'severity' },
+  { prop: 'silencedUntil', label: t('monitor.silence'), minWidth: 170, slot: 'silencedUntil' },
+  { prop: 'actionColumn', label: t('common.action'), width: 270, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
+const eventColumns = computed<ColumnItem<AlertEvent>[]>(() => [
+  { prop: 'occurredAt', label: t('monitor.occurredAt'), minWidth: 170, slot: 'occurredAt' },
+  { prop: 'ruleName', label: t('monitor.rule'), minWidth: 180 },
+  { prop: 'eventType', label: t('common.type'), width: 105, slot: 'eventType' },
+  { prop: 'metric', label: t('monitor.metric'), minWidth: 150, slot: 'metric' },
+  { prop: 'valueThreshold', label: t('monitor.valueThreshold'), minWidth: 160, slot: 'valueThreshold' },
+  { prop: 'message', label: t('common.description'), minWidth: 280, showOverflowTooltip: true }
+])
+const channelColumns = computed<ColumnItem<NotificationChannel>[]>(() => [
+  { prop: 'name', label: t('common.name'), minWidth: 180 },
+  { prop: 'type', label: t('common.type'), width: 110 },
+  { prop: 'targetHint', label: t('monitor.targetHost'), minWidth: 200 },
+  { prop: 'hasSecret', label: t('monitor.signingSecret'), width: 110, slot: 'hasSecret' },
+  { prop: 'enabled', label: t('common.status'), width: 90, slot: 'enabled' },
+  { prop: 'updatedAt', label: t('monitor.updatedAt'), minWidth: 170, slot: 'updatedAt' },
+  { prop: 'actionColumn', label: t('common.action'), width: 200, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
+const deliveryColumns = computed<ColumnItem<NotificationDelivery>[]>(() => [
+  { prop: 'attemptedAt', label: t('monitor.deliveryTime'), minWidth: 180, slot: 'attemptedAt' },
+  { prop: 'eventId', label: t('monitor.eventId'), width: 110 },
+  { prop: 'channelName', label: t('monitor.channels'), minWidth: 180 },
+  { prop: 'status', label: t('monitor.result'), width: 100, slot: 'status' },
+  { prop: 'error', label: t('monitor.error'), minWidth: 300, slot: 'error' }
+])
 
 const ruleDialogVisible = ref(false)
 const editingRuleID = ref<number | null>(null)
@@ -910,51 +947,36 @@ onUnmounted(() => {
             <span>{{ $t('monitor.ruleResetHint') }}</span>
             <el-button type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
           </div>
-          <custom-table v-loading="tableLoading" :data="rules" border row-key="id">
-            <el-table-column prop="name" :label="$t('monitor.rule')" min-width="180" />
-            <el-table-column :label="$t('monitor.metricAndThreshold')" min-width="190">
-              <template #default="{ row }">
+          <custom-table v-loading="tableLoading" :data="rules" :columns="ruleColumns" :pagination="false" border row-key="id">
+            <template #metricThreshold="{ row }">
                 {{ metricLabel(row.metric) }} {{ operatorLabel(row.operator) }}
                 {{ metricValue(row.metric, row.threshold) }}
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.recoveryThreshold')" min-width="120">
-              <template #default="{ row }">{{ metricValue(row.metric, row.recoveryThreshold) }}</template>
-            </el-table-column>
-            <el-table-column :label="$t('common.status')" width="105" align="center">
-              <template #default="{ row }">
+            </template>
+            <template #recoveryThreshold="{ row }">{{ metricValue(row.metric, row.recoveryThreshold) }}</template>
+            <template #state="{ row }">
                 <el-tag :type="stateType(row)" size="small">{{ stateLabel(row) }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.currentValue')" min-width="115">
-              <template #default="{ row }">
+            </template>
+            <template #lastValue="{ row }">
                 {{ row.lastEvaluatedAt ? metricValue(row.metric, row.lastValue) : $t('monitor.notEvaluated') }}
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.strategy')" min-width="180">
-              <template #default="{ row }">
+            </template>
+            <template #strategy="{ row }">
                 {{ $t('monitor.strategyValue', { samples: row.consecutiveSamples, minutes: row.cooldownMinutes }) }}
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.severity')" width="90" align="center">
-              <template #default="{ row }">
+            </template>
+            <template #severity="{ row }">
                 <el-tag :type="severityType(row.severity)" size="small">{{ row.severity }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.silence')" min-width="170">
-              <template #default="{ row }">
+            </template>
+            <template #silencedUntil="{ row }">
                 <span v-if="isSilenced(row)">{{ $t('monitor.untilTime', { time: formatTime(row.silencedUntil) }) }}</span>
                 <span v-else>{{ $t('monitor.notSilenced') }}</span>
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('common.action')" width="270" fixed="right" class-name="table-action-column">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
-                <el-button v-if="!isSilenced(row)" link type="warning" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
-                <el-button v-else link type="success" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
-                <el-button link type="danger" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
-              </template>
-            </el-table-column>
+            </template>
+            <template #actionColumn="{ row }">
+                <div class="table-row-actions">
+                  <el-button plain type="primary" :icon="EditPen" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
+                  <el-button v-if="!isSilenced(row)" link type="warning" :icon="Bell" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
+                  <el-button v-else link type="success" :icon="Bell" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
+                  <el-button link type="danger" :icon="Delete" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
+                </div>
+            </template>
             <template #empty><el-empty :description="$t('monitor.noRules')" /></template>
           </custom-table>
         </el-tab-pane>
@@ -973,27 +995,17 @@ onUnmounted(() => {
             </el-select>
             <el-button @click="loadEvents">{{ $t('common.refresh') }}</el-button>
           </div>
-          <custom-table v-loading="tableLoading" :data="events" border row-key="id">
-            <el-table-column prop="occurredAt" :label="$t('monitor.occurredAt')" min-width="170">
-              <template #default="{ row }">{{ formatTime(row.occurredAt) }}</template>
-            </el-table-column>
-            <el-table-column prop="ruleName" :label="$t('monitor.rule')" min-width="180" />
-            <el-table-column :label="$t('common.type')" width="105">
-              <template #default="{ row }">
+          <custom-table v-loading="tableLoading" :data="events" :columns="eventColumns" :pagination="false" :auto-pagination="false" border row-key="id">
+            <template #occurredAt="{ row }">{{ formatTime(row.occurredAt) }}</template>
+            <template #eventType="{ row }">
                 <el-tag :type="row.eventType === 'resolved' ? 'success' : severityType(row.severity)" size="small">
                   {{ eventTypeLabel(row.eventType) }}
                 </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.metric')" min-width="150">
-              <template #default="{ row }">{{ metricLabel(row.metric) }}</template>
-            </el-table-column>
-            <el-table-column :label="$t('monitor.valueThreshold')" min-width="160">
-              <template #default="{ row }">
+            </template>
+            <template #metric="{ row }">{{ metricLabel(row.metric) }}</template>
+            <template #valueThreshold="{ row }">
                 {{ metricValue(row.metric, row.value) }} / {{ metricValue(row.metric, row.threshold) }}
-              </template>
-            </el-table-column>
-            <el-table-column prop="message" :label="$t('common.description')" min-width="280" show-overflow-tooltip />
+            </template>
             <template #empty><el-empty :description="$t('monitor.noEvents')" /></template>
           </custom-table>
           <div class="pagination">
@@ -1015,28 +1027,19 @@ onUnmounted(() => {
             <span>{{ $t('monitor.channelSecurityHint') }}</span>
             <el-button type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
           </div>
-          <custom-table v-loading="tableLoading" :data="channels" border row-key="id">
-            <el-table-column prop="name" :label="$t('common.name')" min-width="180" />
-            <el-table-column prop="type" :label="$t('common.type')" width="110" />
-            <el-table-column prop="targetHint" :label="$t('monitor.targetHost')" min-width="200" />
-            <el-table-column :label="$t('monitor.signingSecret')" width="110">
-              <template #default="{ row }">{{ row.hasSecret ? $t('common.enabled') : $t('common.disabled') }}</template>
-            </el-table-column>
-            <el-table-column :label="$t('common.status')" width="90">
-              <template #default="{ row }">
+          <custom-table v-loading="tableLoading" :data="channels" :columns="channelColumns" :pagination="false" border row-key="id">
+            <template #hasSecret="{ row }">{{ row.hasSecret ? $t('common.enabled') : $t('common.disabled') }}</template>
+            <template #enabled="{ row }">
                 <el-tag :type="row.enabled ? 'success' : 'info'" size="small">{{ row.enabled ? $t('common.enabled') : $t('common.disabled') }}</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="updatedAt" :label="$t('monitor.updatedAt')" min-width="170">
-              <template #default="{ row }">{{ formatTime(row.updatedAt) }}</template>
-            </el-table-column>
-            <el-table-column :label="$t('common.action')" width="200" fixed="right" class-name="table-action-column">
-              <template #default="{ row }">
-                <el-button link type="primary" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
-                <el-button link type="primary" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
-                <el-button link type="danger" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
-              </template>
-            </el-table-column>
+            </template>
+            <template #updatedAt="{ row }">{{ formatTime(row.updatedAt) }}</template>
+            <template #actionColumn="{ row }">
+                <div class="table-row-actions">
+                  <el-button plain type="primary" :icon="Bell" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
+                  <el-button link type="primary" :icon="EditPen" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
+                  <el-button link type="danger" :icon="Delete" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
+                </div>
+            </template>
             <template #empty><el-empty :description="$t('monitor.noChannels')" /></template>
           </custom-table>
         </el-tab-pane>
@@ -1049,22 +1052,14 @@ onUnmounted(() => {
             </el-select>
             <el-button @click="loadDeliveries">{{ $t('common.refresh') }}</el-button>
           </div>
-          <custom-table v-loading="tableLoading" :data="deliveries" border row-key="id">
-            <el-table-column prop="attemptedAt" :label="$t('monitor.deliveryTime')" min-width="180">
-              <template #default="{ row }">{{ formatTime(row.attemptedAt) }}</template>
-            </el-table-column>
-            <el-table-column prop="eventId" :label="$t('monitor.eventId')" width="110" />
-            <el-table-column prop="channelName" :label="$t('monitor.channels')" min-width="180" />
-            <el-table-column :label="$t('monitor.result')" width="100">
-              <template #default="{ row }">
+          <custom-table v-loading="tableLoading" :data="deliveries" :columns="deliveryColumns" :pagination="false" :auto-pagination="false" border row-key="id">
+            <template #attemptedAt="{ row }">{{ formatTime(row.attemptedAt) }}</template>
+            <template #status="{ row }">
                 <el-tag :type="row.status === 'success' ? 'success' : 'danger'" size="small">
                   {{ row.status === 'success' ? $t('common.success') : $t('common.failed') }}
                 </el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="error" :label="$t('monitor.error')" min-width="300">
-              <template #default="{ row }">{{ row.error || '—' }}</template>
-            </el-table-column>
+            </template>
+            <template #error="{ row }">{{ row.error || '—' }}</template>
             <template #empty><el-empty :description="$t('monitor.noDeliveries')" /></template>
           </custom-table>
           <div class="pagination">

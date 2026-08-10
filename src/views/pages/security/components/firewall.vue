@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete, EditPen } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/Api'
 import SearchInput from '@/components/search-input.vue'
@@ -10,6 +11,7 @@ import System from '@/utils/System'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import InstallTaskDrawer from '../../software/components/InstallTaskDrawer.vue'
 import Addfirewall from './addfirewall.vue'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 type RuleTab = 'port' | 'ip' | 'forward' | 'region' | 'auto_block'
 
@@ -186,6 +188,35 @@ const isRuleTab = computed(() => activeTab.value !== 'forward')
 const canManageRules = computed(() =>
   status.value.install && status.value.enabled && status.value.persistent
 )
+const ruleColumns = computed<ColumnItem<FirewallRule>[]>(() => [
+  { type: 'selection', width: 48, selectable: (row) => !row.protected },
+  ...(activeTab.value === 'port'
+    ? [
+        { prop: 'direction', label: t('security.direction', '方向'), width: 82, slot: 'direction' },
+        { prop: 'protocol', label: t('security.protocol', '协议'), width: 82, slot: 'protocol' },
+        { prop: 'ports', label: t('security.ports', '端口'), minWidth: 120, slot: 'ports' },
+        { prop: 'ips', label: t('security.sourceTarget', '来源 / 目标'), minWidth: 180, slot: 'sourceTarget' }
+      ]
+    : [
+        { prop: 'ips', label: t('security.ipAddress', 'IP 地址'), minWidth: 190 },
+        { prop: 'location', label: t('security.ipLocation', 'IP 归属地'), minWidth: 130, slot: 'location' }
+      ]),
+  { prop: 'strategy', label: t('security.strategy', '策略'), width: 94, slot: 'strategy' },
+  { prop: 'state', label: t('common.status', '状态'), width: 92, slot: 'state' },
+  { prop: 'remark', label: t('security.remark', '备注'), minWidth: 160, slot: 'remark' },
+  { prop: 'create_time', label: t('security.createdAt', '添加时间'), minWidth: 168, slot: 'createdAt' },
+  { prop: 'expiresAt', label: t('security.expiresAt', '过期时间'), minWidth: 168, slot: 'expiresAt' },
+  { prop: 'actionColumn', label: t('common.action', '操作'), width: 180, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
+const forwardColumns = computed<ColumnItem<PortForward>[]>(() => [
+  { prop: 'protocol', label: t('security.protocol', '协议'), width: 90, slot: 'protocol' },
+  { prop: 'sourcePort', label: t('security.sourcePort', '源端口'), minWidth: 120 },
+  { prop: 'forwardTarget', label: t('security.forwardTarget', '转发目标'), minWidth: 220, slot: 'forwardTarget' },
+  { prop: 'state', label: t('common.status', '状态'), width: 100, slot: 'state' },
+  { prop: 'remark', label: t('security.remark', '备注'), minWidth: 180, slot: 'remark' },
+  { prop: 'create_time', label: t('security.createdAt', '添加时间'), minWidth: 180, slot: 'createdAt' },
+  { prop: 'actionColumn', label: t('common.action', '操作'), width: 180, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const addRuleButtonText = computed(() => {
   if (activeTab.value === 'ip') return t('security.addIpRule', '添加 IP 规则')
@@ -824,105 +855,71 @@ onMounted(() => {
         v-if="activeTab !== 'forward'"
         v-loading="tableLoading"
         :data="ruleRows"
+        :columns="ruleColumns"
+        :pagination="false"
+        :auto-pagination="false"
         row-key="id"
         :empty-text="t('security.noRules', '暂无规则')"
         @selection-change="selectedRows = $event"
       >
-        <el-table-column type="selection" width="48" :selectable="(row: FirewallRule) => !row.protected" />
-
-        <template v-if="activeTab === 'port'">
-          <el-table-column :label="t('security.direction', '方向')" width="82">
-            <template #default="{ row }">{{ directionLabel(row.direction) }}</template>
-          </el-table-column>
-          <el-table-column :label="t('security.protocol', '协议')" width="82">
-            <template #default="{ row }">{{ row.protocol.toUpperCase() }}</template>
-          </el-table-column>
-          <el-table-column :label="t('security.ports', '端口')" prop="ports" min-width="120">
-            <template #default="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || t('security.allPorts', '全部')) }}</template>
-          </el-table-column>
-          <el-table-column :label="t('security.sourceTarget', '来源 / 目标')" prop="ips" min-width="180">
-            <template #default="{ row }">{{ row.ips === '0.0.0.0/0' ? t('security.allIpv4', '全部 IPv4') : row.ips }}</template>
-          </el-table-column>
-        </template>
-
-        <template v-else>
-          <el-table-column :label="t('security.ipAddress', 'IP 地址')" prop="ips" min-width="190" />
-          <el-table-column :label="t('security.ipLocation', 'IP 归属地')" prop="location" min-width="130">
-            <template #default="{ row }">{{ row.location || t('common.unknown', '未知') }}</template>
-          </el-table-column>
-        </template>
-
-        <el-table-column :label="t('security.strategy', '策略')" width="94">
-          <template #default="{ row }">
+        <template #direction="{ row }">{{ directionLabel(row.direction) }}</template>
+        <template #protocol="{ row }">{{ row.protocol.toUpperCase() }}</template>
+        <template #ports="{ row }">{{ row.protocol === 'icmp' ? '—' : (row.ports || t('security.allPorts', '全部')) }}</template>
+        <template #sourceTarget="{ row }">{{ row.ips === '0.0.0.0/0' ? t('security.allIpv4', '全部 IPv4') : row.ips }}</template>
+        <template #location="{ row }">{{ row.location || t('common.unknown', '未知') }}</template>
+        <template #strategy="{ row }">
             <el-tag :type="row.strategy === 'allow' ? 'success' : 'danger'" effect="plain">
               {{ strategyLabel(row.strategy) }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('common.status', '状态')" width="92">
-          <template #default="{ row }">
+        </template>
+        <template #state="{ row }">
             <el-switch
               :model-value="row.state === 1"
               :disabled="row.protected || !canManageRules"
               @change="setRuleState(row, Boolean($event))"
             />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('security.remark', '备注')" prop="remark" min-width="160">
-          <template #default="{ row }">
+        </template>
+        <template #remark="{ row }">
             {{ row.remark || '—' }}
             <el-tag v-if="row.protected" size="small" type="warning" class="protected-tag">{{ t('security.systemProtected', '系统保护') }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('security.createdAt', '添加时间')" min-width="168">
-          <template #default="{ row }">{{ formatTime(row.create_time) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('security.expiresAt', '过期时间')" min-width="168">
-          <template #default="{ row }">{{ formatTime(row.expiresAt) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button link type="primary" :disabled="row.protected || !canManageRules" @click="editRule(row)">{{ t('common.edit', '编辑') }}</el-button>
-            <el-button link type="danger" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">{{ t('common.delete', '删除') }}</el-button>
-          </template>
-        </el-table-column>
+        </template>
+        <template #createdAt="{ row }">{{ formatTime(row.create_time) }}</template>
+        <template #expiresAt="{ row }">{{ formatTime(row.expiresAt) }}</template>
+        <template #actionColumn="{ row }">
+            <div class="table-row-actions">
+              <el-button plain type="primary" :icon="EditPen" :disabled="row.protected || !canManageRules" @click="editRule(row)">{{ t('common.edit', '编辑') }}</el-button>
+              <el-button link type="danger" :icon="Delete" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">{{ t('common.delete', '删除') }}</el-button>
+            </div>
+        </template>
       </custom-table>
 
       <custom-table
         v-else
         v-loading="tableLoading"
         :data="forwardRows"
+        :columns="forwardColumns"
+        :pagination="false"
+        :auto-pagination="false"
         row-key="id"
         :empty-text="t('security.noPortForwards', '暂无端口转发')"
       >
-        <el-table-column :label="t('security.protocol', '协议')" width="90">
-          <template #default="{ row }">{{ row.protocol.toUpperCase() }}</template>
-        </el-table-column>
-        <el-table-column :label="t('security.sourcePort', '源端口')" prop="sourcePort" min-width="120" />
-        <el-table-column :label="t('security.forwardTarget', '转发目标')" min-width="220">
-          <template #default="{ row }">{{ row.destinationIp }}:{{ row.destinationPort }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.status', '状态')" width="100">
-          <template #default="{ row }">
+        <template #protocol="{ row }">{{ row.protocol.toUpperCase() }}</template>
+        <template #forwardTarget="{ row }">{{ row.destinationIp }}:{{ row.destinationPort }}</template>
+        <template #state="{ row }">
             <el-switch
               :model-value="row.state === 1"
               :disabled="!canManageRules || status.backend !== 'firewalld'"
               @change="setForwardState(row, Boolean($event))"
             />
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('security.remark', '备注')" prop="remark" min-width="180">
-          <template #default="{ row }">{{ row.remark || '—' }}</template>
-        </el-table-column>
-        <el-table-column :label="t('security.createdAt', '添加时间')" min-width="180">
-          <template #default="{ row }">{{ formatTime(row.create_time) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.action', '操作')" width="128" fixed="right" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button link type="primary" :disabled="!canManageRules" @click="editForward(row)">{{ t('common.edit', '编辑') }}</el-button>
-            <el-button link type="danger" :disabled="!canManageRules" @click="deleteForward(row)">{{ t('common.delete', '删除') }}</el-button>
-          </template>
-        </el-table-column>
+        </template>
+        <template #remark="{ row }">{{ row.remark || '—' }}</template>
+        <template #createdAt="{ row }">{{ formatTime(row.create_time) }}</template>
+        <template #actionColumn="{ row }">
+            <div class="table-row-actions">
+              <el-button plain type="primary" :icon="EditPen" :disabled="!canManageRules" @click="editForward(row)">{{ t('common.edit', '编辑') }}</el-button>
+              <el-button link type="danger" :icon="Delete" :disabled="!canManageRules" @click="deleteForward(row)">{{ t('common.delete', '删除') }}</el-button>
+            </div>
+        </template>
       </custom-table>
 
       <footer class="table-footer">

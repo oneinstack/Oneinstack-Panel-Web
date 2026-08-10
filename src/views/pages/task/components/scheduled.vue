@@ -1,12 +1,13 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
-import { Refresh, VideoPlay, VideoPause, Warning } from '@element-plus/icons-vue'
+import { CircleClose, Delete, Document, EditPen, Refresh, VideoPlay, VideoPause, Warning } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import AddTask from './add-task.vue'
 import formatCron from '@/utils/cronutils'
 import System from '@/utils/System'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const tableRef = ref<InstanceType<typeof import('element-plus')['ElTable']>>()
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -380,6 +381,16 @@ const selectFilter = (row: any) => {
   return true
 }
 
+const columns = computed<ColumnItem[]>(() => [
+  { type: 'selection', width: 48, reserveSelection: true, selectable: selectFilter },
+  { prop: 'name', label: t('task.taskName', 'Task name'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'enabled', label: t('task.status', 'Status'), minWidth: 130, slot: 'enabled' },
+  { prop: 'taskType', label: t('task.type', 'Type'), minWidth: 150, slot: 'taskType' },
+  { prop: 'schedule', label: t('task.schedule', 'Schedule'), minWidth: 220, slot: 'schedule' },
+  { prop: 'last_run_at', label: t('task.lastRunAt', 'Last run time'), minWidth: 190, slot: 'lastRunAt' },
+  { prop: 'actionColumn', label: t('task.action', 'Action'), width: 480, fixed: 'right', slot: 'actionColumn', className: 'task-actions-column table-action-column' }
+])
+
 // 全选过滤函数，控制全选逻辑
 const selectAllFilter = (rows: any[]) => {
   return rows.filter(row => selectFilter(row))
@@ -455,13 +466,10 @@ onMounted(() => {
     </el-card>
     </div>
     <div class="box2">
-      <custom-table ref="tableRef" class="fileTable task-table" :data="tableData" style="width: 100%"
+      <custom-table ref="tableRef" class="fileTable task-table" :data="tableData" :columns="columns" :pagination="false" :auto-pagination="false" style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
         :row-key="(row: any) => row.id" :empty-text="t('task.noData', 'No data')">
-        <el-table-column type="selection" width="48" :reserve-selection="true" :selectable="selectFilter" />
-        <el-table-column prop="name" :label="t('task.taskName', 'Task name')" min-width="180" show-overflow-tooltip></el-table-column>
-        <el-table-column prop="enabled" :label="t('task.status', 'Status')" min-width="130">
-          <template #default="scope">
+        <template #enabled="scope">
             <div class="status-cell">
               <el-tag v-if="runningByTask[scope.row.id]" class="status-tag" type="warning">{{ t('task.running', 'Running') }}</el-tag>
               <a class="status-link status-link--enabled"
@@ -479,55 +487,46 @@ onMounted(() => {
                 运行异常
               </a> -->
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('task.type', 'Type')" min-width="150">
-          <template #default="{ row }">
+        </template>
+        <template #taskType="{ row }">
             <div class="type-tags">
             <el-tag class="type-tag" :type="(row.task_type || 'shell') === 'template' ? 'success' : 'warning'">
               {{ (row.task_type || 'shell') === 'template' ? t('task.templateType', 'Safe template') : t('task.shellType', 'Advanced Shell') }}
             </el-tag>
             <el-tag v-if="row.notify_on_failure" class="type-tag" type="info">{{ t('task.failureNotify', 'Failure notification') }}</el-tag>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="address" :label="t('task.schedule', 'Schedule')" min-width="220">
-          <template #default="scope">
+        </template>
+        <template #schedule="scope">
             <div class="schedule-cell">
               <span v-html="formatCron(scope.row.schedule)"></span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="last_run_at" :label="t('task.lastRunAt', 'Last run time')" min-width="190">
-          <template #default="scope">
+        </template>
+        <template #lastRunAt="scope">
             <div class="last-run-cell">
               <span>{{ scope.row.last_run_at ? formatDate(scope.row.last_run_at) : t('task.notExecuted', 'Not executed') }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="address" :label="t('task.action', 'Action')" min-width="340" class-name="task-actions-column table-action-column">
-          <template #default="scope">
+        </template>
+        <template #actionColumn="scope">
             <div class="row-actions table-row-actions">
-            <el-button link type="primary" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
+            <el-button plain type="primary" :icon="VideoPlay" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
               {{ t('task.enable', 'Enable') }} </el-button>
-            <el-button link type="primary" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
+            <el-button plain type="primary" :icon="VideoPause" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
               {{ t('task.disable', 'Disable') }} </el-button>
-            <el-button link type="primary" size="small" @click="deleteSingleTask(scope.row)"> {{ t('task.delete', 'Delete') }} </el-button>
-            <el-button link type="primary" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
-            <el-button link type="primary" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>
+            <el-button link type="primary" :icon="EditPen" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
+            <el-button link type="primary" :icon="VideoPlay" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>
             <el-button
               v-if="runningByTask[scope.row.id]"
-              link type="danger" size="small"
+              link type="danger" :icon="CircleClose" size="small"
               @click="cancelRunningTask(scope.row)"
             >
               {{ t('task.cancelRun', 'Cancel run') }}
             </el-button>
-            <el-button link type="primary" size="small" @click="updateSingleTaskLog(scope.row)">
+            <el-button link type="primary" :icon="Document" size="small" @click="updateSingleTaskLog(scope.row)">
               {{ t('task.viewLogs', 'View logs') }}
             </el-button>
+            <el-button link type="danger" :icon="Delete" size="small" @click="deleteSingleTask(scope.row)"> {{ t('task.delete', 'Delete') }} </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
         <!-- 自定义表格底部栏用于分页 -->
         <template #footer>
           <tr>

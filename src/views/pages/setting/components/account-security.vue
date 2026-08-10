@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CircleClose } from '@element-plus/icons-vue'
 import QrcodeVue from 'qrcode.vue'
 import { Api } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface SecurityStatus {
   totpEnabled: boolean
@@ -67,6 +69,13 @@ const totpDescription = computed(() => {
   return t('setting.accountSecurity.totpDisabledDescription', 'Protect sign-in with a standard TOTP authenticator. Recovery codes are generated for emergency sign-in after enabling.')
 })
 const setupButtonText = computed(() => status.totpSetupPending ? t('setting.accountSecurity.continueVerification', 'Continue verification') : t('setting.accountSecurity.enable', 'Enable'))
+const sessionColumns = computed<ColumnItem[]>(() => [
+  { prop: 'remoteIp', label: t('setting.accountSecurity.ipAddress', 'IP address'), minWidth: 150, slot: 'remoteIp' },
+  { prop: 'createdAt', label: t('setting.accountSecurity.loginTime', 'Login time'), minWidth: 160, slot: 'createdAt' },
+  { prop: 'lastSeenAt', label: t('setting.accountSecurity.lastActivity', 'Last activity'), minWidth: 160, slot: 'lastSeenAt' },
+  { prop: 'expiresAt', label: t('setting.accountSecurity.expiresAt', 'Expires at'), minWidth: 160, slot: 'expiresAt' },
+  { prop: 'actionColumn', label: t('common.action', 'Action'), width: 132, align: 'right', fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const load = async (notify = false) => {
   loading.value = true
@@ -244,9 +253,8 @@ onMounted(() => load())
         {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
-    <custom-table :data="sessions" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
-      <el-table-column :label="$t('setting.accountSecurity.ipAddress')" min-width="150">
-        <template #default="{ row }">
+    <custom-table :data="sessions" :columns="sessionColumns" :pagination="false" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
+      <template #remoteIp="{ row }">
           <el-popover
             placement="top-start"
             :width="320"
@@ -264,22 +272,13 @@ onMounted(() => load())
               <div class="session-device__value">{{ row.userAgent || $t('setting.accountSecurity.unknownBrowser') }}</div>
             </div>
           </el-popover>
-        </template>
-      </el-table-column>
-      <el-table-column :label="$t('setting.accountSecurity.loginTime')" min-width="160">
-        <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
-      </el-table-column>
-      <el-table-column :label="$t('setting.accountSecurity.lastActivity')" min-width="160">
-        <template #default="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
-      </el-table-column>
-      <el-table-column :label="$t('setting.accountSecurity.expiresAt')" min-width="160">
-        <template #default="{ row }">{{ formatDate(row.expiresAt) }}</template>
-      </el-table-column>
-      <el-table-column :label="$t('common.action')" width="96" align="right" class-name="table-action-column">
-        <template #default="{ row }">
-          <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
-        </template>
-      </el-table-column>
+      </template>
+      <template #createdAt="{ row }">{{ formatDate(row.createdAt) }}</template>
+      <template #lastSeenAt="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
+      <template #expiresAt="{ row }">{{ formatDate(row.expiresAt) }}</template>
+      <template #actionColumn="{ row }">
+        <el-button v-if="!row.current" plain type="danger" :icon="CircleClose" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
+      </template>
     </custom-table>
   </div>
 

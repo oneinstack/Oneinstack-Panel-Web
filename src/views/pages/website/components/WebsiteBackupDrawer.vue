@@ -2,6 +2,8 @@
 import { computed, onBeforeUnmount, reactive, watch } from 'vue'
 import { Api } from '@/api/Api'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CircleClose, Delete, Document, Download, RefreshLeft } from '@element-plus/icons-vue'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -34,6 +36,24 @@ const title = computed(() =>
     ? `整站备份 · ${props.website?.name || ''}`
     : '整站备份管理'
 )
+
+const backupColumns = computed<ColumnItem[]>(() => [
+  { prop: 'websiteName', label: '网站', minWidth: 150 },
+  { prop: 'source', label: '来源', width: 150, slot: 'source' },
+  { prop: 'databaseName', label: '数据库', minWidth: 130, slot: 'databaseName' },
+  { prop: 'sizeBytes', label: '大小', width: 110, slot: 'sizeBytes' },
+  { prop: 'createdAt', label: '创建时间', width: 180, slot: 'backupCreatedAt' },
+  { prop: 'backupAction', label: '操作', width: 240, fixed: 'right', slot: 'backupAction', className: 'table-action-column' }
+])
+
+const taskColumns = computed<ColumnItem[]>(() => [
+  { prop: 'websiteName', label: '网站', minWidth: 150 },
+  { prop: 'operation', label: '操作', width: 110, slot: 'operation' },
+  { prop: 'status', label: '状态', width: 110, slot: 'status' },
+  { prop: 'progress', label: '进度', minWidth: 180, slot: 'progress' },
+  { prop: 'createdAt', label: '创建时间', width: 180, slot: 'taskCreatedAt' },
+  { prop: 'taskAction', label: '操作', width: 170, fixed: 'right', slot: 'taskAction', className: 'table-action-column' }
+])
 
 const statusLabel = (status: string) => ({
   queued: '排队中',
@@ -246,63 +266,46 @@ onBeforeUnmount(() => {
 
     <el-tabs>
       <el-tab-pane label="备份文件">
-        <custom-table v-loading="state.loading" :data="state.backups" empty-text="暂无整站备份">
-          <el-table-column prop="websiteName" label="网站" min-width="150" />
-          <el-table-column label="来源" width="150">
-            <template #default="{ row }">{{ sourceLabel(row.source) }}</template>
-          </el-table-column>
-          <el-table-column label="数据库" min-width="130">
-            <template #default="{ row }">{{ row.databaseName || '未包含' }}</template>
-          </el-table-column>
-          <el-table-column label="大小" width="110">
-            <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
-          </el-table-column>
-          <el-table-column label="创建时间" width="180">
-            <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="220" fixed="right" class-name="table-action-column">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="downloadBackup(row)">下载</el-button>
-              <el-button type="warning" link @click="restoreBackup(row)">恢复</el-button>
-              <el-button type="danger" link @click="deleteBackup(row)">删除</el-button>
-            </template>
-          </el-table-column>
+        <custom-table v-loading="state.loading" :data="state.backups" :columns="backupColumns" :pagination="false" empty-text="暂无整站备份">
+          <template #source="{ row }">{{ sourceLabel(row.source) }}</template>
+          <template #databaseName="{ row }">{{ row.databaseName || '未包含' }}</template>
+          <template #sizeBytes="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
+          <template #backupCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+          <template #backupAction="{ row }">
+              <div class="table-row-actions">
+                <el-button type="primary" plain :icon="Download" @click="downloadBackup(row)">下载</el-button>
+                <el-button type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">恢复</el-button>
+                <el-button type="danger" link :icon="Delete" @click="deleteBackup(row)">删除</el-button>
+              </div>
+          </template>
         </custom-table>
       </el-tab-pane>
 
       <el-tab-pane label="任务记录">
-        <custom-table v-loading="state.loading" :data="state.tasks" empty-text="暂无网站任务">
-          <el-table-column prop="websiteName" label="网站" min-width="150" />
-          <el-table-column label="操作" width="110">
-            <template #default="{ row }">{{ operationLabel(row.operation) }}</template>
-          </el-table-column>
-          <el-table-column label="状态" width="110">
-            <template #default="{ row }">
+        <custom-table v-loading="state.loading" :data="state.tasks" :columns="taskColumns" :pagination="false" empty-text="暂无网站任务">
+          <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
+          <template #status="{ row }">
               <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="进度" min-width="180">
-            <template #default="{ row }">
+          </template>
+          <template #progress="{ row }">
               <el-progress :percentage="row.progress || 0" :status="row.status === 'failed' ? 'exception' : undefined" />
               <div class="task-message">{{ row.errorMessage || row.message }}</div>
-            </template>
-          </el-table-column>
-          <el-table-column label="创建时间" width="180">
-            <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-          </el-table-column>
-          <el-table-column label="操作" width="150" fixed="right" class-name="table-action-column">
-            <template #default="{ row }">
-              <el-button type="primary" link @click="showLog(row)">日志</el-button>
-              <el-button
-                v-if="activeStatuses.has(row.status)"
-                type="danger"
-                link
-                @click="cancelTask(row)"
-              >
-                取消
-              </el-button>
-            </template>
-          </el-table-column>
+          </template>
+          <template #taskCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+          <template #taskAction="{ row }">
+              <div class="table-row-actions">
+                <el-button type="primary" plain :icon="Document" @click="showLog(row)">日志</el-button>
+                <el-button
+                  v-if="activeStatuses.has(row.status)"
+                  type="danger"
+                  link
+                  :icon="CircleClose"
+                  @click="cancelTask(row)"
+                >
+                  取消
+                </el-button>
+              </div>
+          </template>
         </custom-table>
       </el-tab-pane>
     </el-tabs>

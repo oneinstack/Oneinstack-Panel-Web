@@ -11,6 +11,7 @@ import type {
 } from '@/api/Api'
 import sconfig from '@/sstore/sconfig'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot
@@ -109,6 +110,18 @@ const failedCount = computed(() =>
 )
 const restoreCount = computed(() => snapshots.value.filter((item) => item.operation === 'restore').length)
 const restoreRequiresForce = computed(() => Boolean(restorePreview.value?.hasDrift || restorePreview.value?.requiresForce))
+const columns = computed<ColumnItem<ConfigurationSnapshot>[]>(() => [
+  { prop: 'name', label: t('configSnapshots.snapshot'), minWidth: 240, slot: 'snapshotName' },
+  { prop: 'resourceType', label: t('configSnapshots.resource'), minWidth: 210, slot: 'resource' },
+  { prop: 'version', label: t('configSnapshots.versionBackupAccount'), minWidth: 190, slot: 'versionBackupAccount' },
+  { prop: 'sizeBytes', label: t('common.size'), width: 110, slot: 'sizeBytes' },
+  { prop: 'operation', label: t('configSnapshots.action'), width: 100, slot: 'operation' },
+  { prop: 'status', label: t('common.status'), width: 120, slot: 'status' },
+  { prop: 'revision', label: t('configSnapshots.version'), minWidth: 210, slot: 'revision' },
+  { prop: 'artifactSha256', label: t('configSnapshots.artifactHash'), width: 150, slot: 'artifactSha256' },
+  { prop: 'createdAt', label: t('configSnapshots.createdAt'), minWidth: 170, slot: 'createdAt' },
+  { prop: 'actionColumn', label: t('common.action'), width: 270, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+])
 
 const resourceLabel = (value?: string) => ({
   website: t('configSnapshots.resources.website', 'Website configuration'),
@@ -524,59 +537,40 @@ onMounted(() => {
         <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
-      <custom-table v-loading="loading" :data="snapshots" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
-        <el-table-column :label="$t('configSnapshots.snapshot')" min-width="240">
-          <template #default="{ row }">
+      <custom-table v-loading="loading" :data="snapshots" :columns="columns" :pagination="false" :auto-pagination="false" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
+        <template #snapshotName="{ row }">
             <div class="snapshot-name-cell">
               <strong>{{ localizedSnapshotText(row.name) || row.id }}</strong>
               <span>{{ localizedSnapshotText(row.description) || row.id }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.resource')" min-width="210">
-          <template #default="{ row }">
+        </template>
+        <template #resource="{ row }">
             <div class="resource-cell">
               <strong>{{ resourceLabel(row.resourceType) }}</strong>
               <span>{{ row.resourceId || '—' }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.versionBackupAccount')" min-width="190">
-          <template #default="{ row }">
+        </template>
+        <template #versionBackupAccount="{ row }">
             <div class="snapshot-meta-cell">
               <strong>{{ localizedSnapshotText(row.version) }}</strong>
               <span>{{ localizedSnapshotText(row.backupAccount) }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('common.size')" width="110">
-          <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.action')" width="100">
-          <template #default="{ row }">{{ operationLabel(row.operation) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('common.status')" width="120">
-          <template #default="{ row }">
+        </template>
+        <template #sizeBytes="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
+        <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
+        <template #status="{ row }">
             <el-tag :type="statusType(row.status)" effect="light">{{ statusLabel(row.status) }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.version')" min-width="210">
-          <template #default="{ row }">
+        </template>
+        <template #revision="{ row }">
             <div class="revision-cell">
               <span>{{ $t('configSnapshots.beforeRevision', { hash: shortHash(row.beforeRevision) }) }}</span>
               <span>{{ $t('configSnapshots.afterRevision', { hash: shortHash(row.afterRevision) }) }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.artifactHash')" width="150">
-          <template #default="{ row }">{{ shortHash(row.artifactSha256) }}</template>
-        </el-table-column>
-        <el-table-column :label="$t('configSnapshots.createdAt')" min-width="170">
-          <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column fixed="right" :label="$t('common.action')" width="230" class-name="table-action-column">
-          <template #default="{ row }">
-            <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+        </template>
+        <template #artifactSha256="{ row }">{{ shortHash(row.artifactSha256) }}</template>
+        <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+        <template #actionColumn="{ row }">
+            <el-button plain type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
             <el-button
               link
               type="warning"
@@ -596,8 +590,7 @@ onMounted(() => {
             >
               {{ $t('common.delete') }}
             </el-button>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <div class="pagination-row">

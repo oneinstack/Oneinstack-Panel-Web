@@ -4,6 +4,7 @@ import SearchInput from '@/components/search-input.vue'
 import { Api } from '@/api/Api'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { CircleCheck, CircleClose, View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
 
 interface ApprovalRequest {
@@ -68,13 +69,13 @@ const approvalState = reactive({
   list: [] as ApprovalRequest[],
   columns: computed<ColumnItem[]>(() => [
     { prop: 'resourceName', label: t('approvalCenter.resource', '资源'), minWidth: 260 },
-    { prop: 'action', label: t('approvalCenter.action', '动作'), minWidth: 180 },
+    { prop: 'action', label: t('approvalCenter.action', '动作'), minWidth: 260 },
     { prop: 'module', label: t('approvalCenter.module', '模块'), minWidth: 120 },
     { prop: 'riskLevel', label: t('approvalCenter.risk', '风险'), minWidth: 110 },
     { prop: 'status', label: t('common.status', '状态'), minWidth: 120 },
     { prop: 'requestedByName', label: t('approvalCenter.applicant', '申请人'), minWidth: 140 },
     { prop: 'createdAt', label: t('approvalCenter.appliedAt', '申请时间'), minWidth: 180 },
-    { prop: 'actionColumn', label: t('common.action', '操作'), width: 220 }
+    { prop: 'actionColumn', label: t('common.action', '操作'), width: 220, fixed: 'right' }
   ])
 })
 
@@ -294,8 +295,9 @@ onMounted(async () => {
           <div class="action-wrap table-row-actions">
             <el-button
               v-if="isPendingApproval(row)"
-              link
+              plain
               type="success"
+              :icon="CircleCheck"
               :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'approve')"
             >
@@ -305,13 +307,13 @@ onMounted(async () => {
               v-if="isPendingApproval(row)"
               link
               type="danger"
+              :icon="CircleClose"
               :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'reject')"
             >
               {{ $t('approvalCenter.reject') }}
             </el-button>
-            <el-button link type="primary" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
-
+            <el-button :plain="!isPendingApproval(row)" :link="isPendingApproval(row)" type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
           </div>
         </template>
       </custom-table>

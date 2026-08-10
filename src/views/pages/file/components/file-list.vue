@@ -220,7 +220,7 @@ const conf = reactive({
     { prop: 'identity', label: t('file.columns.identity', 'Permissions / Owner'), width: '150' },
     { prop: 'size', label: t('file.columns.size', 'Size'), width: '110', sortable: true },
     { prop: 'modTime', label: t('file.columns.modTime', 'Modified time'), width: '170', sortable: true },
-    { prop: 'action', label: t('file.columns.action', 'Actions'), minWidth: '360' }
+    { prop: 'action', label: t('file.columns.action', 'Actions'), width: '500', fixed: 'right' as const }
   ]),
   fileList: [] as any[],
   clipboard: {
@@ -1653,7 +1653,12 @@ const capacityUsedPercent = computed(() => {
   }
 }
 
-.file-table-shell,
+.file-table-shell {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface-card);
+}
+
 .file-grid-shell {
   min-width: 0;
   overflow: hidden;

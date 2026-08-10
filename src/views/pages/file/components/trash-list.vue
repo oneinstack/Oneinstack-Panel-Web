@@ -5,6 +5,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/Api'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface TrashEntry {
   id: string
@@ -96,6 +97,15 @@ const formatTime = (value: string) => {
   return new Date(value).toLocaleString('zh-CN', { hour12: false })
 }
 
+const columns = computed<ColumnItem[]>(() => [
+  { prop: 'name', label: t('common.name', 'Name'), minWidth: 180, slot: 'name' },
+  { prop: 'originalPath', label: t('file.trashDialog.originalPath', 'Original path'), minWidth: 260, showOverflowTooltip: true },
+  { prop: 'size', label: t('common.size', 'Size'), width: 110, slot: 'size' },
+  { prop: 'deletedAt', label: t('file.trashDialog.deletedAt', 'Deleted at'), width: 180, slot: 'deletedAt' },
+  { prop: 'deletedBy', label: t('file.trashDialog.deletedBy', 'Deleted by'), width: 120, slot: 'deletedBy' },
+  { prop: 'action', label: t('common.action', 'Action'), width: 230, fixed: 'right', slot: 'action', className: 'table-action-column' }
+])
+
 watch(
   () => props.modelValue,
   (value) => {
@@ -147,31 +157,22 @@ watch(
       </div>
     </div>
 
-    <custom-table v-loading="state.loading" :data="state.items" row-key="id" height="480" :empty-text="t('file.trashDialog.emptyTable', 'Trash is empty')">
-      <el-table-column :label="t('common.name', 'Name')" min-width="180">
-        <template #default="{ row }">
+    <custom-table v-loading="state.loading" :data="state.items" :columns="columns" :pagination="false" row-key="id" height="480" :empty-text="t('file.trashDialog.emptyTable', 'Trash is empty')">
+      <template #name="{ row }">
           <div class="file-name">
             <v-s-icon :name="row.isDir ? 'folder' : 'txt'" size="22" />
             <span class="ellipsis">{{ row.name }}</span>
           </div>
-        </template>
-      </el-table-column>
-      <el-table-column prop="originalPath" :label="t('file.trashDialog.originalPath', 'Original path')" min-width="260" show-overflow-tooltip />
-      <el-table-column :label="t('common.size', 'Size')" width="110">
-        <template #default="{ row }">{{ formatBytes(row.size) }}</template>
-      </el-table-column>
-      <el-table-column :label="t('file.trashDialog.deletedAt', 'Deleted at')" width="180">
-        <template #default="{ row }">{{ formatTime(row.deletedAt) }}</template>
-      </el-table-column>
-      <el-table-column prop="deletedBy" :label="t('file.trashDialog.deletedBy', 'Deleted by')" width="120">
-        <template #default="{ row }">{{ row.deletedBy || '-' }}</template>
-      </el-table-column>
-      <el-table-column :label="t('common.action', 'Action')" width="180" fixed="right" class-name="table-action-column">
-        <template #default="{ row }">
-          <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
+      </template>
+      <template #size="{ row }">{{ formatBytes(row.size) }}</template>
+      <template #deletedAt="{ row }">{{ formatTime(row.deletedAt) }}</template>
+      <template #deletedBy="{ row }">{{ row.deletedBy || '-' }}</template>
+      <template #action="{ row }">
+        <div class="table-row-actions">
+          <el-button type="primary" plain :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
           <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
-        </template>
-      </el-table-column>
+        </div>
+      </template>
     </custom-table>
 
     <template #footer>

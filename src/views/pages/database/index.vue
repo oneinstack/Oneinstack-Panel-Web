@@ -112,7 +112,7 @@ const conf = reactive({
             { prop: 'encoding', label: t('database.encoding', 'Charset'), placeholder: 'utf8mb4' },
             { prop: 'capacity', label: t('database.capacity', 'Capacity'), placeholder: t('database.notConfigured', 'Not configured') },
             { prop: 'p_addr', label: t('database.databaseLocation', 'Database location') },
-            { prop: 'action', label: t('common.action', 'Action'), minWidth: 320 }
+            { prop: 'action', label: t('common.action', 'Action'), width: 420, fixed: 'right' }
           ]
         case 'redis':
           return [

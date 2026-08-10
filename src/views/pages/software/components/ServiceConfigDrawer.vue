@@ -5,6 +5,7 @@ import { ArrowLeft, Clock, Lock, RefreshLeft, RefreshRight, View } from '@elemen
 import { Api } from '@/api/Api'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface ConfigurationField {
   key: string
@@ -105,6 +106,11 @@ const applyModeLabel = computed(() =>
 )
 
 const changeCount = computed(() => preview.value?.changes.length || 0)
+const previewColumns = computed<ColumnItem[]>(() => [
+  { prop: 'label', label: t('software.config.configItem', 'Configuration item'), minWidth: 145 },
+  { prop: 'before', label: t('software.config.currentValue', 'Current value'), minWidth: 130, slot: 'before' },
+  { prop: 'after', label: t('software.config.newValue', 'New value'), minWidth: 130, slot: 'after' }
+])
 
 const historyStatus = (status: ConfigurationHistoryEntry['status']) => {
   const labels = {
@@ -446,18 +452,13 @@ watch(values, () => {
           </div>
           <span v-if="preview.hasChanges">{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
         </div>
-        <custom-table v-if="preview.hasChanges" :data="preview.changes" size="small">
-          <el-table-column prop="label" :label="$t('software.config.configItem')" min-width="145" />
-          <el-table-column :label="$t('software.config.currentValue')" min-width="130">
-            <template #default="{ row }">
+        <custom-table v-if="preview.hasChanges" :data="preview.changes" :columns="previewColumns" :pagination="false" size="small">
+          <template #before="{ row }">
               <span class="value-before">{{ row.before }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column :label="$t('software.config.newValue')" min-width="130">
-            <template #default="{ row }">
+          </template>
+          <template #after="{ row }">
               <span class="value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
-            </template>
-          </el-table-column>
+          </template>
         </custom-table>
         <el-empty v-else :description="$t('software.config.noChanges')" :image-size="64" />
       </section>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
-import { Back } from '@element-plus/icons-vue'
+import { Back, Connection, Delete, EditPen, Refresh } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
@@ -33,7 +33,7 @@ const conf: Record<string, any> = reactive({
       { prop: 'root', label: t('common.username', 'Username') },
       { prop: 'passwordConfigured', label: t('database.remote.passwordStatus', 'Password status') },
       { prop: 'remark', label: t('common.remark', 'Remark') },
-      { prop: 'action', label: t('common.action', 'Action') }
+      { prop: 'action', label: t('common.action', 'Action'), width: 360, fixed: 'right' }
     ]),
     getData: async () => {
       conf.list.loading = true
@@ -202,10 +202,10 @@ conf.list.getData()
           </template>
           <template #action="{ row }">
             <div class="table-row-actions">
-              <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
-              <el-button type="primary" link @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
-              <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
-              <el-button type="danger" link @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
+              <el-button type="primary" plain :icon="EditPen" @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
+              <el-button type="primary" link :icon="Connection" @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
+              <el-button type="primary" link :icon="Refresh" @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
+              <el-button type="danger" link :icon="Delete" @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
             </div>
           </template>
         </custom-table>

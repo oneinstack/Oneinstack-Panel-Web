@@ -21,7 +21,9 @@ const column: ColumnItem[] = [
   },
   {
     label: '操作',
-    prop: ''
+    prop: '',
+    width: 180,
+    fixed: 'right'
   }
 ]
 </script>

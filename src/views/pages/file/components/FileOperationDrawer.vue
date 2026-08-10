@@ -3,6 +3,7 @@ import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ArrowLeft, Refresh, Search } from '@element-plus/icons-vue'
 import { Api } from '@/api/Api'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: boolean): void }>()
@@ -100,6 +101,15 @@ const handlePageChange = () => {
 
 const displayTime = (value: string) =>
   value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
+const columns = computed<ColumnItem[]>(() => [
+  { prop: 'createdAt', label: t('common.time', 'Time'), minWidth: 158, slot: 'createdAt' },
+  { prop: 'action', label: t('common.action', 'Action'), minWidth: 170, slot: 'action', className: 'operation-action-column' },
+  { prop: 'path', label: t('file.operations.filePath', 'File path'), minWidth: 300, showOverflowTooltip: true },
+  { prop: 'username', label: t('file.operations.operator', 'Operator'), minWidth: 96, slot: 'username' },
+  { prop: 'remoteIp', label: t('file.operations.sourceIp', 'Source IP'), minWidth: 128 },
+  { prop: 'outcome', label: t('file.operations.result', 'Result'), minWidth: 80, slot: 'outcome' },
+  { prop: 'message', label: t('file.operations.message', 'Description'), minWidth: 220, showOverflowTooltip: true }
+])
 </script>
 
 <template>
@@ -145,30 +155,20 @@ const displayTime = (value: string) =>
         ref="tableRef"
         v-loading="state.loading"
         :data="state.items"
+        :columns="columns"
+        :pagination="false"
+        :auto-pagination="false"
         height="calc(100vh - 286px)"
         class="operation-table"
       >
-        <el-table-column :label="t('common.time', 'Time')" min-width="158">
-          <template #default="{ row }">{{ displayTime(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column :label="t('common.action', 'Action')" min-width="170" class-name="operation-action-column">
-          <template #default="{ row }">
-            <el-tag class="action-tag" effect="plain">{{ actionLabels[row.action] || row.action }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('file.operations.filePath', 'File path')" min-width="300" show-overflow-tooltip prop="path" />
-        <el-table-column :label="t('file.operations.operator', 'Operator')" min-width="96">
-          <template #default="{ row }">{{ row.username || t('file.operations.system', 'System') }}</template>
-        </el-table-column>
-        <el-table-column :label="t('file.operations.sourceIp', 'Source IP')" min-width="128" prop="remoteIp" />
-        <el-table-column :label="t('file.operations.result', 'Result')" min-width="80">
-          <template #default="{ row }">
-            <el-tag class="result-tag" :type="row.outcome === 'success' ? 'success' : 'danger'" effect="light">
-              {{ row.outcome === 'success' ? t('common.success', 'Success') : t('common.failed', 'Failed') }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column :label="t('file.operations.message', 'Description')" min-width="220" show-overflow-tooltip prop="message" />
+        <template #createdAt="{ row }">{{ displayTime(row.createdAt) }}</template>
+        <template #action="{ row }"><el-tag class="action-tag" effect="plain">{{ actionLabels[row.action] || row.action }}</el-tag></template>
+        <template #username="{ row }">{{ row.username || t('file.operations.system', 'System') }}</template>
+        <template #outcome="{ row }">
+          <el-tag class="result-tag" :type="row.outcome === 'success' ? 'success' : 'danger'" effect="light">
+            {{ row.outcome === 'success' ? t('common.success', 'Success') : t('common.failed', 'Failed') }}
+          </el-tag>
+        </template>
       </custom-table>
 
       <div class="pagination">

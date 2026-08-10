@@ -3,10 +3,15 @@ import { computed, h, onBeforeUnmount, onMounted, reactive, ref, watch } from 'v
 import {
   Delete,
   Document,
+  Download,
+  EditPen,
+  Connection,
+  CollectionTag,
   Monitor,
   Plus,
   Refresh,
   SwitchButton,
+  Upload,
   VideoPause,
   VideoPlay
 } from '@element-plus/icons-vue'
@@ -41,6 +46,7 @@ import type {
   VolumeItem
 } from './types'
 import i18n from '@/lang'
+import type { ColumnItem } from '@/components/custom-table.vue'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -397,6 +403,66 @@ const imageReference = (row: ImageItem) => {
 const registryLabel = (row: RegistryItem) => `${row.protocol}://${row.address}`
 
 const shortId = (id?: string) => String(id || '').replace(/^sha256:/, '').slice(0, 12) || '--'
+
+const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
+  { type: 'selection', width: 44 },
+  { prop: 'Names', label: t('container.columns.name', 'Name'), minWidth: 170, slot: 'containerName' },
+  { prop: 'Image', label: t('container.columns.image', 'Image'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'Status', label: t('container.columns.status', 'Status'), minWidth: 130, slot: 'containerStatus' },
+  { prop: 'Ports', label: t('container.columns.ports', 'Ports'), minWidth: 190, showOverflowTooltip: true },
+  { prop: 'Networks', label: t('container.columns.networks', 'Networks'), minWidth: 120, showOverflowTooltip: true },
+  { prop: 'Mounts', label: t('container.columns.mounts', 'Mounts'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 500, fixed: 'right', slot: 'containerAction', className: 'table-action-column' }
+])
+const imageColumns = computed<ColumnItem<ImageItem>[]>(() => [
+  { prop: 'Repository', label: t('container.columns.image', 'Image'), minWidth: 260, slot: 'imageName' },
+  { prop: 'CreatedSince', label: t('container.columns.createdAt', 'Created at'), minWidth: 150 },
+  { prop: 'Size', label: t('container.columns.size', 'Size'), width: 120 },
+  { prop: 'Containers', label: t('container.columns.linkedContainers', 'Linked containers'), width: 110 },
+  { prop: 'used', label: t('container.columns.status', 'Status'), width: 100, slot: 'imageStatus' },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 310, fixed: 'right', slot: 'imageAction', className: 'table-action-column' }
+])
+const networkColumns = computed<ColumnItem<NetworkItem>[]>(() => [
+  { type: 'selection', width: 44 },
+  { prop: 'Name', label: t('container.columns.name', 'Name'), minWidth: 180 },
+  { prop: 'ID', label: 'ID', minWidth: 140, slot: 'networkId' },
+  { prop: 'Driver', label: t('container.columns.driver', 'Driver'), width: 130 },
+  { prop: 'Scope', label: t('container.columns.scope', 'Scope'), width: 130 },
+  { prop: 'Subnet', label: t('container.columns.ipv4Subnet', 'IPv4 subnet'), minWidth: 160, showOverflowTooltip: true },
+  { prop: 'Gateway', label: t('container.columns.gateway', 'Gateway'), minWidth: 140, showOverflowTooltip: true },
+  { prop: 'EnableIPv6', label: 'IPv6', width: 90, slot: 'ipv6' },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 170, fixed: 'right', slot: 'networkAction', className: 'table-action-column' }
+])
+const volumeColumns = computed<ColumnItem<VolumeItem>[]>(() => [
+  { type: 'selection', width: 44 },
+  { prop: 'Name', label: t('container.columns.name', 'Name'), minWidth: 220 },
+  { prop: 'Driver', label: t('container.columns.driver', 'Driver'), width: 130 },
+  { prop: 'Scope', label: t('container.columns.scope', 'Scope'), width: 130 },
+  { prop: 'Mountpoint', label: t('container.columns.mountPoint', 'Mount point'), minWidth: 260, showOverflowTooltip: true },
+  { prop: 'Options', label: t('container.columns.options', 'Options'), minWidth: 180, showOverflowTooltip: true, slot: 'volumeOptions' },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 170, fixed: 'right', slot: 'volumeAction', className: 'table-action-column' }
+])
+const composeColumns = computed<ColumnItem[]>(() => [
+  { prop: 'Name', label: t('container.columns.project', 'Project'), minWidth: 180 },
+  { prop: 'Status', label: t('container.columns.status', 'Status'), minWidth: 160 },
+  { prop: 'ConfigFiles', label: t('container.columns.configFiles', 'Config files'), minWidth: 260, showOverflowTooltip: true },
+  { prop: 'WorkingDir', label: t('container.columns.workDir', 'Working directory'), minWidth: 260, showOverflowTooltip: true },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 140, fixed: 'right', slot: 'composeAction', className: 'table-action-column' }
+])
+const templateColumns = computed<ColumnItem<TemplateItem>[]>(() => [
+  { prop: 'name', label: t('container.columns.templateName', 'Template name'), minWidth: 180 },
+  { prop: 'description', label: t('container.columns.description', 'Description'), minWidth: 260, showOverflowTooltip: true },
+  { prop: 'content', label: t('container.columns.content', 'Content'), minWidth: 260, showOverflowTooltip: true, slot: 'templateContent' },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 160, fixed: 'right', slot: 'templateAction', className: 'table-action-column' }
+])
+const registryColumns = computed<ColumnItem<RegistryItem>[]>(() => [
+  { prop: 'name', label: t('container.columns.name', 'Name'), minWidth: 160 },
+  { prop: 'address', label: t('container.columns.address', 'Address'), minWidth: 240, slot: 'registryAddress' },
+  { prop: 'username', label: t('container.columns.username', 'Username'), minWidth: 140 },
+  { prop: 'authEnabled', label: t('container.columns.auth', 'Auth'), width: 90, slot: 'registryAuth' },
+  { prop: 'status', label: t('container.columns.status', 'Status'), width: 120 },
+  { prop: 'actionColumn', label: t('container.columns.action', 'Actions'), width: 230, fixed: 'right', slot: 'registryAction', className: 'table-action-column' }
+])
 
 const loadRuntime = async () => {
   runtimeLoading.value = true
@@ -1789,33 +1855,26 @@ onBeforeUnmount(() => {
         v-if="activeTab === 'containers'"
         v-loading="listLoading"
         :data="containers"
+        :columns="containerColumns"
+        :pagination="false"
+        :auto-pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.containers', 'No containers')"
         @selection-change="handleContainerSelectionChange"
       >
-        <el-table-column type="selection" width="44" />
-        <el-table-column :label="t('container.columns.name', 'Name')" min-width="170">
-          <template #default="{ row }">
+        <template #containerName="{ row }">
             <div class="primary-cell">
               <strong>{{ row.Names || shortId(row.ID) }}</strong>
               <span>{{ shortId(row.ID) }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="Image" :label="t('container.columns.image', 'Image')" min-width="180" show-overflow-tooltip />
-        <el-table-column :label="t('container.columns.status', 'Status')" min-width="130">
-          <template #default="{ row }">
+        </template>
+        <template #containerStatus="{ row }">
             <el-tag :type="statusType(row.Status)" effect="light">{{ row.Status || '--' }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="Ports" :label="t('container.columns.ports', 'Ports')" min-width="190" show-overflow-tooltip />
-        <el-table-column prop="Networks" :label="t('container.columns.networks', 'Networks')" min-width="120" show-overflow-tooltip />
-        <el-table-column prop="Mounts" :label="t('container.columns.mounts', 'Mounts')" min-width="180" show-overflow-tooltip />
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="500" class-name="table-action-column">
-          <template #default="{ row }">
+        </template>
+        <template #containerAction="{ row }">
             <div class="row-actions table-row-actions">
               <el-button
-                link
+                plain
                 type="primary"
                 :icon="Document"
                 @click="openDetail('container', row)"
@@ -1907,42 +1966,37 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <custom-table
         v-if="activeTab === 'images'"
         v-loading="listLoading"
         :data="images"
+        :columns="imageColumns"
+        :pagination="false"
+        :auto-pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.images', 'No images')"
       >
-        <el-table-column :label="t('container.columns.image', 'Image')" min-width="260">
-          <template #default="{ row }">
+        <template #imageName="{ row }">
             <div class="primary-cell">
               <strong>{{ imageReference(row) }}</strong>
               <span>{{ shortId(row.ID) }}</span>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="CreatedSince" :label="t('container.columns.createdAt', 'Created at')" min-width="150" />
-        <el-table-column prop="Size" :label="t('container.columns.size', 'Size')" width="120" />
-        <el-table-column prop="Containers" :label="t('container.columns.linkedContainers', 'Linked containers')" width="110" />
-        <el-table-column :label="t('container.columns.status', 'Status')" width="100">
-          <template #default="{ row }">
+        </template>
+        <template #imageStatus="{ row }">
             <el-tag :type="row.used ? 'success' : 'info'" effect="light">{{ row.used ? t('container.used', 'Used') : t('container.unused', 'Unused') }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="310" class-name="table-action-column">
-          <template #default="{ row }">
+        </template>
+        <template #imageAction="{ row }">
             <div class="row-actions table-row-actions">
-              <el-button link type="primary" @click="openDetail('image', row)">{{ t('container.detail', 'Details') }}</el-button>
-              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">{{ t('container.tag', 'Tag') }}</el-button>
-              <el-button link type="primary" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">{{ t('container.push', 'Push') }}</el-button>
+              <el-button plain type="primary" :icon="Document" @click="openDetail('image', row)">{{ t('container.detail', 'Details') }}</el-button>
+              <el-button link type="primary" :icon="CollectionTag" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-tag', row)">{{ t('container.tag', 'Tag') }}</el-button>
+              <el-button link type="primary" :icon="Upload" :disabled="!runtimeAvailable || !canImageWrite" @click="openDialog('image-push', row)">{{ t('container.push', 'Push') }}</el-button>
               <el-button
                 link
                 type="primary"
+                :icon="Download"
                 :loading="actionLoading === `export:${row.ID}`"
                 :disabled="!runtimeAvailable"
                 @click="exportImage(row)"
@@ -1960,36 +2014,27 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <custom-table
         v-if="activeTab === 'networks'"
         v-loading="listLoading"
         :data="networks"
+        :columns="networkColumns"
+        :pagination="false"
+        :auto-pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.networks', 'No networks')"
         @selection-change="handleNetworkSelectionChange"
       >
-        <el-table-column type="selection" width="44" />
-        <el-table-column prop="Name" :label="t('container.columns.name', 'Name')" min-width="180" />
-        <el-table-column label="ID" min-width="140">
-          <template #default="{ row }">{{ shortId(row.ID) }}</template>
-        </el-table-column>
-        <el-table-column prop="Driver" :label="t('container.columns.driver', 'Driver')" width="130" />
-        <el-table-column prop="Scope" :label="t('container.columns.scope', 'Scope')" width="130" />
-        <el-table-column prop="Subnet" :label="t('container.columns.ipv4Subnet', 'IPv4 subnet')" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="Gateway" :label="t('container.columns.gateway', 'Gateway')" min-width="140" show-overflow-tooltip />
-        <el-table-column label="IPv6" width="90">
-          <template #default="{ row }">
+        <template #networkId="{ row }">{{ shortId(row.ID) }}</template>
+        <template #ipv6="{ row }">
             <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{ row.EnableIPv6 ? t('container.enabledShort', 'Enabled') : t('container.closed', 'Off') }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170" class-name="table-action-column">
-          <template #default="{ row }">
+        </template>
+        <template #networkAction="{ row }">
             <div class="row-actions table-row-actions">
-              <el-button link type="primary" @click="openDetail('network', row)">{{ t('container.detail', 'Details') }}</el-button>
+              <el-button plain type="primary" :icon="Document" @click="openDetail('network', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -2001,30 +2046,24 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <custom-table
         v-if="activeTab === 'volumes'"
         v-loading="listLoading"
         :data="volumes"
+        :columns="volumeColumns"
+        :pagination="false"
+        :auto-pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.volumes', 'No volumes')"
         @selection-change="handleVolumeSelectionChange"
       >
-        <el-table-column type="selection" width="44" />
-        <el-table-column prop="Name" :label="t('container.columns.name', 'Name')" min-width="220" />
-        <el-table-column prop="Driver" :label="t('container.columns.driver', 'Driver')" width="130" />
-        <el-table-column prop="Scope" :label="t('container.columns.scope', 'Scope')" width="130" />
-        <el-table-column prop="Mountpoint" :label="t('container.columns.mountPoint', 'Mount point')" min-width="260" show-overflow-tooltip />
-        <el-table-column :label="t('container.columns.options', 'Options')" min-width="180" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
-        </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="170" class-name="table-action-column">
-          <template #default="{ row }">
+        <template #volumeOptions="{ row }">{{ row.Options ? Object.keys(row.Options).join('，') : '--' }}</template>
+        <template #volumeAction="{ row }">
             <div class="row-actions table-row-actions">
-              <el-button link type="primary" @click="openDetail('volume', row)">{{ t('container.detail', 'Details') }}</el-button>
+              <el-button plain type="primary" :icon="Document" @click="openDetail('volume', row)">{{ t('container.detail', 'Details') }}</el-button>
               <el-button
                 link
                 type="danger"
@@ -2036,28 +2075,23 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <custom-table
         v-if="activeTab === 'compose'"
         v-loading="listLoading"
         :data="composeProjects"
+        :columns="composeColumns"
+        :pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.compose', 'No Compose projects')"
       >
-        <el-table-column prop="Name" :label="t('container.columns.project', 'Project')" min-width="180" />
-        <el-table-column prop="Status" :label="t('container.columns.status', 'Status')" min-width="160" />
-        <el-table-column prop="ConfigFiles" :label="t('container.columns.configFiles', 'Config files')" min-width="260" show-overflow-tooltip />
-        <el-table-column prop="WorkingDir" :label="t('container.columns.workDir', 'Working directory')" min-width="260" show-overflow-tooltip />
-        <el-table-column :label="t('container.columns.action', 'Actions')" width="140" class-name="table-action-column">
-          <template #default>
+        <template #composeAction>
             <el-tooltip :content="t('container.composeWriteDisabled', 'Compose write operations are not enabled by the backend')">
               <el-button link type="info" :icon="SwitchButton" disabled>{{ t('container.notEnabled', 'Not enabled') }}</el-button>
             </el-tooltip>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <el-alert
@@ -2073,21 +2107,19 @@ onBeforeUnmount(() => {
         v-if="activeTab === 'templates'"
         v-loading="listLoading"
         :data="templates"
+        :columns="templateColumns"
+        :pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.templates', 'No templates')"
       >
-        <el-table-column prop="name" :label="t('container.columns.templateName', 'Template name')" min-width="180" />
-        <el-table-column prop="description" :label="t('container.columns.description', 'Description')" min-width="260" show-overflow-tooltip />
-        <el-table-column :label="t('container.columns.content', 'Content')" min-width="260" show-overflow-tooltip>
-          <template #default="{ row }">{{ row.content || '--' }}</template>
-        </el-table-column>
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="160" class-name="table-action-column">
-          <template #default="{ row }">
+        <template #templateContent="{ row }">{{ row.content || '--' }}</template>
+        <template #templateAction="{ row }">
             <div class="row-actions table-row-actions">
-              <el-button link type="primary" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">{{ t('container.edit', 'Edit') }}</el-button>
+              <el-button plain type="primary" :icon="EditPen" :disabled="!canComposeWrite || !templatesSupported" @click="openDialog('template', row)">{{ t('container.edit', 'Edit') }}</el-button>
               <el-button
                 link
                 type="danger"
+                :icon="Delete"
                 :loading="actionLoading === `template:${row.id}`"
                 :disabled="!canDelete || !row.id || !templatesSupported"
                 @click="deleteTemplate(row)"
@@ -2095,44 +2127,40 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <custom-table
         v-if="activeTab === 'registries'"
         v-loading="listLoading"
         :data="registries"
+        :columns="registryColumns"
+        :pagination="false"
+        :auto-pagination="false"
         :row-key="getRowKey"
         :empty-text="t('container.empty.registries', 'No registries')"
       >
-        <el-table-column prop="name" :label="t('container.columns.name', 'Name')" min-width="160" />
-        <el-table-column :label="t('container.columns.address', 'Address')" min-width="240">
-          <template #default="{ row }">{{ registryLabel(row) }}</template>
-        </el-table-column>
-        <el-table-column prop="username" :label="t('container.columns.username', 'Username')" min-width="140" />
-        <el-table-column :label="t('container.columns.auth', 'Auth')" width="90">
-          <template #default="{ row }">
+        <template #registryAddress="{ row }">{{ registryLabel(row) }}</template>
+        <template #registryAuth="{ row }">
             <el-tag :type="row.authEnabled ? 'success' : 'info'" effect="light">{{ row.authEnabled ? t('container.enabled', 'Enabled') : t('container.disabled', 'Disabled') }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" :label="t('container.columns.status', 'Status')" width="120" />
-        <el-table-column fixed="right" :label="t('container.columns.action', 'Actions')" width="230" class-name="table-action-column">
-          <template #default="{ row }">
+        </template>
+        <template #registryAction="{ row }">
             <div class="row-actions table-row-actions">
               <el-button
-                link
+                plain
                 type="primary"
+                :icon="Connection"
                 :loading="actionLoading === `registry-test:${row.id}`"
                 :disabled="!runtimeAvailable || !canRegistryWrite"
                 @click="testRegistry(row)"
               >
                 {{ t('container.test', 'Test') }}
               </el-button>
-              <el-button link type="primary" :disabled="!canRegistryWrite" @click="openDialog('registry', row)">{{ t('container.edit', 'Edit') }}</el-button>
+              <el-button link type="primary" :icon="EditPen" :disabled="!canRegistryWrite" @click="openDialog('registry', row)">{{ t('container.edit', 'Edit') }}</el-button>
               <el-button
                 link
                 type="danger"
+                :icon="Delete"
                 :loading="actionLoading === `registry:${row.id}`"
                 :disabled="!canDelete"
                 @click="deleteRegistry(row)"
@@ -2140,8 +2168,7 @@ onBeforeUnmount(() => {
                 {{ t('container.delete', 'Delete') }}
               </el-button>
             </div>
-          </template>
-        </el-table-column>
+        </template>
       </custom-table>
 
       <div v-if="activeTab === 'config'" v-loading="listLoading" class="config-editor">

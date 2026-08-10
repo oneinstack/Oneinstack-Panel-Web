@@ -33,7 +33,7 @@ export default ({ mode }) => {
           secure: false,
           changeOrigin: true,
           ws: true,
-    rewriteWsOrigin: true
+          rewriteWsOrigin: true,
           cookieDomainRewrite: 'localhost',
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq, req) => {

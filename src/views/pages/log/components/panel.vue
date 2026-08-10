@@ -1,6 +1,22 @@
 <script setup lang="ts">
 import SearchInput from '@/components/search-input.vue'
 import { reactive } from 'vue'
+import { Delete, Setting } from '@element-plus/icons-vue'
+import type { ColumnItem } from '@/components/custom-table.vue'
+
+const columns: ColumnItem[] = [
+  { type: 'selection', width: 55 },
+  { prop: 'date', label: '网站名', width: 180 },
+  { prop: 'status', label: '状态', width: 180, slot: 'status' },
+  { prop: 'backup', label: '备份', formatter: (row) => row.address },
+  { prop: 'rootDirectory', label: '根目录', formatter: (row) => row.address },
+  { prop: 'dailyTraffic', label: '日流量', formatter: (row) => row.address },
+  { prop: 'expiresAt', label: '到期时间', formatter: (row) => row.address },
+  { prop: 'remark', label: '备注', formatter: (row) => row.address },
+  { prop: 'php', label: 'PHP', formatter: (row) => row.address },
+  { prop: 'ssl', label: 'SSL证书', formatter: (row) => row.address },
+  { prop: 'actionColumn', label: '操作', width: 180, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+]
 
 const conf = reactive({
   activeName: 0,
@@ -69,30 +85,19 @@ const conf = reactive({
         </div>
       </div>
 
-      <custom-table :data="conf.tableData" border style="width: 100%">
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="date" label="网站名" width="180" />
-        <el-table-column prop="status" label="状态" width="180">
-          <template #default="scope">
+      <custom-table :data="conf.tableData" :columns="columns" :pagination="false" border style="width: 100%">
+        <template #status="scope">
             <div style="display: flex; flex-direction: row; align-items: center; cursor: pointer">
               <a style="color: #64ffc9; text-decoration: underline" v-if="scope.row.status == 1">运行中</a>
               <a style="color: #ff8888; text-decoration: underline" v-if="scope.row.status == 2">已停用</a>
             </div>
-          </template>
-        </el-table-column>
-        <el-table-column prop="address" label="备份" />
-        <el-table-column prop="address" label="根目录" />
-        <el-table-column prop="address" label="日流量" />
-        <el-table-column prop="address" label="到期时间" />
-        <el-table-column prop="address" label="备注" />
-        <el-table-column prop="address" label="PHP" />
-        <el-table-column prop="address" label="SSL证书" />
-        <el-table-column prop="address" label="操作" class-name="table-action-column">
-          <template #default>
-            <el-button link type="primary" size="small">设置</el-button>
-            <el-button link type="primary" size="small">删除</el-button>
-          </template>
-        </el-table-column>
+        </template>
+        <template #actionColumn>
+            <div class="table-row-actions">
+              <el-button plain type="primary" :icon="Setting" size="small">设置</el-button>
+              <el-button link type="danger" :icon="Delete" size="small">删除</el-button>
+            </div>
+        </template>
       </custom-table>
       <div class="pagination">
         <el-pagination background layout="prev, pager, next" :total="1000" />

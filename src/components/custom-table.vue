@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import i18n from '@/lang'
 import type { TableColumnCtx } from 'element-plus'
+import { Box } from '@element-plus/icons-vue'
 import CustomTableColumn from '@/components/custom-table-column.vue'
 
 defineOptions({ inheritAttrs: false })
@@ -127,7 +128,9 @@ defineExpose({
       <template #empty>
         <slot v-if="$slots.empty" name="empty" />
         <div v-else class="table-empty">
-          <div class="table-empty__icon">[]</div>
+          <div class="table-empty__icon" aria-hidden="true">
+            <el-icon><Box /></el-icon>
+          </div>
           <strong>{{ props.emptyText || t('common.noData', 'No data') }}</strong>
           <p>{{ t('common.noDataDescription', 'No records match the current filters. Try adjusting search or filters.') }}</p>
         </div>
@@ -147,7 +150,7 @@ defineExpose({
         </custom-table-column>
       </template>
     </el-table>
-    <div v-if="schemaMode && pagination" class="pagination" :class="{ 'has-summary': Boolean($slots.summary) }">
+    <div v-if="schemaMode && pagination && paginationTotal > 0" class="pagination" :class="{ 'has-summary': Boolean($slots.summary) }">
       <div v-if="$slots.summary" class="pagination__summary">
         <slot name="summary" />
       </div>
@@ -188,36 +191,41 @@ defineExpose({
 }
 
 .table-empty {
-  min-height: 220px;
+  min-height: 180px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   color: var(--text-secondary);
+  line-height: 1.4;
 }
 
 .table-empty__icon {
-  width: 52px;
-  height: 52px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
+  margin-bottom: 4px;
+  border: 1px solid rgba(var(--primary-color), 0.12);
+  border-radius: 12px;
   color: rgb(var(--primary-color));
-  font-size: 16px;
-  font-weight: 700;
-  background: linear-gradient(135deg, rgba(var(--primary-color), 0.12), rgba(var(--primary-color), 0.04));
+  font-size: 25px;
+  background: rgba(var(--primary-color), 0.06);
 }
 
 .table-empty strong {
   color: var(--text-primary);
-  font-size: 16px;
-  font-weight: 680;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
 }
 
 .table-empty p {
   margin: 0;
-  font-size: 13px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 :deep(.smart-table) {
@@ -234,7 +242,7 @@ defineExpose({
 }
 
 :deep(.smart-table th.el-table__cell) {
-  height: 52px;
+  height: 46px;
   padding: 0;
   border-bottom: 1px solid rgba(226, 232, 240, 0.9);
   color: #64748b;
@@ -245,7 +253,7 @@ defineExpose({
 }
 
 :deep(.smart-table td.el-table__cell) {
-  height: 58px;
+  height: 48px;
   padding: 0;
   border-bottom: 1px solid rgba(241, 245, 249, 0.95);
 }
@@ -263,7 +271,7 @@ defineExpose({
 }
 
 :deep(.smart-table .el-table__empty-block) {
-  min-height: 240px;
+  min-height: 190px;
   background: transparent;
 }
 
