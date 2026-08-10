@@ -169,7 +169,7 @@ onUnmounted(() => {
         <el-button type="primary" @click="search">{{ t('task.log.search', 'Search') }}</el-button>
         <el-button @click="reset">{{ t('task.log.reset', 'Reset') }}</el-button>
       </div>
-      <el-table
+      <custom-table
         v-loading="loading"
         :data="tableData"
         border
@@ -211,7 +211,7 @@ onUnmounted(() => {
             <el-tag v-if="row.output_truncated" type="warning" size="small">{{ t('task.log.outputTruncated', 'Output truncated') }}</el-tag>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
       <el-pagination
         v-model:current-page="pagination.page"
         v-model:page-size="pagination.pageSize"

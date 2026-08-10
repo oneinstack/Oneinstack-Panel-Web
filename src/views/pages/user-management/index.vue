@@ -375,12 +375,15 @@ onMounted(async () => {
 
       <div class="table-shell">
         <custom-table
+          v-model:page="userState.filters.page"
+          v-model:page-size="userState.filters.pageSize"
           :loading="loading.users"
           :columns="userState.columns"
           :data="userState.list"
           :total="userState.total"
           :auto-pagination="false"
           @update:page="(page) => { userState.filters.page = page; loadUsers() }"
+          @update:page-size="() => { userState.filters.page = 1; loadUsers() }"
         >
           <template #roles="{ row }">
             <div class="role-cell">

@@ -820,7 +820,7 @@ onMounted(() => {
         />
       </header>
 
-      <el-table
+      <custom-table
         v-if="activeTab !== 'forward'"
         v-loading="tableLoading"
         :data="ruleRows"
@@ -886,9 +886,9 @@ onMounted(() => {
             <el-button link type="danger" :disabled="row.protected || !canManageRules" @click="deleteRule(row)">{{ t('common.delete', '删除') }}</el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-else
         v-loading="tableLoading"
         :data="forwardRows"
@@ -923,7 +923,7 @@ onMounted(() => {
             <el-button link type="danger" :disabled="!canManageRules" @click="deleteForward(row)">{{ t('common.delete', '删除') }}</el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
       <footer class="table-footer">
         <div v-if="isRuleTab" class="batch-bar">

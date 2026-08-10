@@ -148,8 +148,8 @@ const ensureTaskLoaded = async () => {
 }
 
 watch(
-  () => [props.modelValue, props.taskId],
-  async ([isVisible, taskId]) => {
+  () => ({ isVisible: props.modelValue, taskId: props.taskId }),
+  async ({ isVisible, taskId }) => {
     if (!isVisible) return
     if (taskId && taskId !== currentTaskId.value) currentTaskId.value = taskId
     await ensureTaskLoaded()

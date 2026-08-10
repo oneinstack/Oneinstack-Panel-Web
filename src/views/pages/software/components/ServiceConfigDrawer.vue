@@ -446,7 +446,7 @@ watch(values, () => {
           </div>
           <span v-if="preview.hasChanges">{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
         </div>
-        <el-table v-if="preview.hasChanges" :data="preview.changes" size="small">
+        <custom-table v-if="preview.hasChanges" :data="preview.changes" size="small">
           <el-table-column prop="label" :label="$t('software.config.configItem')" min-width="145" />
           <el-table-column :label="$t('software.config.currentValue')" min-width="130">
             <template #default="{ row }">
@@ -458,7 +458,7 @@ watch(values, () => {
               <span class="value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
             </template>
           </el-table-column>
-        </el-table>
+        </custom-table>
         <el-empty v-else :description="$t('software.config.noChanges')" :image-size="64" />
       </section>
     </div>

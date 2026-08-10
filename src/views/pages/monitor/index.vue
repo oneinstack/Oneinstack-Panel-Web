@@ -910,7 +910,7 @@ onUnmounted(() => {
             <span>{{ $t('monitor.ruleResetHint') }}</span>
             <el-button type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
           </div>
-          <el-table v-loading="tableLoading" :data="rules" border row-key="id">
+          <custom-table v-loading="tableLoading" :data="rules" border row-key="id">
             <el-table-column prop="name" :label="$t('monitor.rule')" min-width="180" />
             <el-table-column :label="$t('monitor.metricAndThreshold')" min-width="190">
               <template #default="{ row }">
@@ -956,7 +956,7 @@ onUnmounted(() => {
               </template>
             </el-table-column>
             <template #empty><el-empty :description="$t('monitor.noRules')" /></template>
-          </el-table>
+          </custom-table>
         </el-tab-pane>
 
         <el-tab-pane name="events" :label="$t('monitor.events')">
@@ -973,7 +973,7 @@ onUnmounted(() => {
             </el-select>
             <el-button @click="loadEvents">{{ $t('common.refresh') }}</el-button>
           </div>
-          <el-table v-loading="tableLoading" :data="events" border row-key="id">
+          <custom-table v-loading="tableLoading" :data="events" border row-key="id">
             <el-table-column prop="occurredAt" :label="$t('monitor.occurredAt')" min-width="170">
               <template #default="{ row }">{{ formatTime(row.occurredAt) }}</template>
             </el-table-column>
@@ -995,7 +995,7 @@ onUnmounted(() => {
             </el-table-column>
             <el-table-column prop="message" :label="$t('common.description')" min-width="280" show-overflow-tooltip />
             <template #empty><el-empty :description="$t('monitor.noEvents')" /></template>
-          </el-table>
+          </custom-table>
           <div class="pagination">
             <el-pagination
               v-model:current-page="eventFilters.page"
@@ -1015,7 +1015,7 @@ onUnmounted(() => {
             <span>{{ $t('monitor.channelSecurityHint') }}</span>
             <el-button type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
           </div>
-          <el-table v-loading="tableLoading" :data="channels" border row-key="id">
+          <custom-table v-loading="tableLoading" :data="channels" border row-key="id">
             <el-table-column prop="name" :label="$t('common.name')" min-width="180" />
             <el-table-column prop="type" :label="$t('common.type')" width="110" />
             <el-table-column prop="targetHint" :label="$t('monitor.targetHost')" min-width="200" />
@@ -1038,7 +1038,7 @@ onUnmounted(() => {
               </template>
             </el-table-column>
             <template #empty><el-empty :description="$t('monitor.noChannels')" /></template>
-          </el-table>
+          </custom-table>
         </el-tab-pane>
 
         <el-tab-pane name="deliveries" :label="$t('monitor.deliveries')">
@@ -1049,7 +1049,7 @@ onUnmounted(() => {
             </el-select>
             <el-button @click="loadDeliveries">{{ $t('common.refresh') }}</el-button>
           </div>
-          <el-table v-loading="tableLoading" :data="deliveries" border row-key="id">
+          <custom-table v-loading="tableLoading" :data="deliveries" border row-key="id">
             <el-table-column prop="attemptedAt" :label="$t('monitor.deliveryTime')" min-width="180">
               <template #default="{ row }">{{ formatTime(row.attemptedAt) }}</template>
             </el-table-column>
@@ -1066,7 +1066,7 @@ onUnmounted(() => {
               <template #default="{ row }">{{ row.error || '—' }}</template>
             </el-table-column>
             <template #empty><el-empty :description="$t('monitor.noDeliveries')" /></template>
-          </el-table>
+          </custom-table>
           <div class="pagination">
             <el-pagination
               v-model:current-page="deliveryFilters.page"

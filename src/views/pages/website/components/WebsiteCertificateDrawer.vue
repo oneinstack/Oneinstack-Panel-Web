@@ -275,7 +275,7 @@ onBeforeUnmount(() => {
       </el-form>
 
       <el-divider content-position="left">最近任务</el-divider>
-      <el-table :data="tasks" size="small" empty-text="暂无证书任务">
+      <custom-table :data="tasks" size="small" empty-text="暂无证书任务">
         <el-table-column label="类型" width="75">
           <template #default="{ row }">{{ row.operation === 'renew' ? '续签' : '签发' }}</template>
         </el-table-column>
@@ -306,7 +306,7 @@ onBeforeUnmount(() => {
             </el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
     </div>
   </custom-drawer>
 

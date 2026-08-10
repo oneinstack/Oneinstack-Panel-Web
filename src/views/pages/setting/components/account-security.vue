@@ -244,7 +244,7 @@ onMounted(() => load())
         {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
-    <el-table :data="sessions" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
+    <custom-table :data="sessions" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
       <el-table-column :label="$t('setting.accountSecurity.ipAddress')" min-width="150">
         <template #default="{ row }">
           <el-popover
@@ -280,7 +280,7 @@ onMounted(() => load())
           <el-button v-if="!row.current" link type="danger" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
         </template>
       </el-table-column>
-    </el-table>
+    </custom-table>
   </div>
 
   <el-dialog v-model="setupVisible" :title="$t('setting.accountSecurity.enableTotpAuth')" width="520px">

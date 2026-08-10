@@ -269,7 +269,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
 
     <el-tabs v-model="state.activeTab">
       <el-tab-pane :label="t('database.backup.backupFiles', '备份文件')" name="backups">
-        <el-table v-loading="state.loading" :data="state.backups" height="calc(100vh - 260px)">
+        <custom-table v-loading="state.loading" :data="state.backups" height="calc(100vh - 260px)">
           <el-table-column prop="fileName" :label="t('database.backup.file', '文件')" min-width="220" show-overflow-tooltip />
           <el-table-column :label="t('common.type', '类型')" width="110">
             <template #default="{ row }">
@@ -292,7 +292,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
             </template>
           </el-table-column>
           <template #empty>{{ t('database.backup.noBackups', '暂无备份文件') }}</template>
-        </el-table>
+        </custom-table>
       </el-tab-pane>
 
       <el-tab-pane :label="t('database.backup.taskProgress', '任务进度')" name="tasks">

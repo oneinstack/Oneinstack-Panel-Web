@@ -141,7 +141,7 @@ const displayTime = (value: string) =>
         <el-button class="filter-action" :icon="Refresh" @click="load(true)">{{ t('common.refresh', 'Refresh') }}</el-button>
       </div>
 
-      <el-table
+      <custom-table
         ref="tableRef"
         v-loading="state.loading"
         :data="state.items"
@@ -169,7 +169,7 @@ const displayTime = (value: string) =>
           </template>
         </el-table-column>
         <el-table-column :label="t('file.operations.message', 'Description')" min-width="220" show-overflow-tooltip prop="message" />
-      </el-table>
+      </custom-table>
 
       <div class="pagination">
         <el-pagination

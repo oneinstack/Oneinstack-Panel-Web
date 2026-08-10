@@ -1,39 +1,66 @@
 <script setup lang="ts">
-import sapp from '@/sstore/sapp'
-import { computed, reactive } from 'vue'
+import { computed, ref } from 'vue'
 import i18n from '@/lang'
+import type { TableColumnCtx } from 'element-plus'
+import CustomTableColumn from '@/components/custom-table-column.vue'
 
-export interface ColumnItem {
-  label: string
-  prop: string
+defineOptions({ inheritAttrs: false })
+
+export interface ColumnItem<T = any> {
+  label?: string
+  prop?: string
+  type?: 'selection' | 'index' | 'expand'
   width?: string | number
   minWidth?: string | number
   placeholder?: string
-  formatter?: (row: any) => string
+  align?: 'left' | 'center' | 'right'
+  fixed?: boolean | 'left' | 'right'
+  className?: string
+  showOverflowTooltip?: boolean
   sortable?: boolean
   sortMethod?: (a: any, b: any) => number
+  formatter?: (row: T, column?: TableColumnCtx<T>, cellValue?: any, index?: number) => any
+  slot?: string
+  headerSlot?: string
+  isShow?: boolean
+  tag?: boolean
+  enum?: Array<Record<string, any>>
+  fieldNames?: { label?: string; value?: string }
+  children?: ColumnItem<T>[]
+  _children?: ColumnItem<T>[]
+  selectable?: (row: T, index: number) => boolean
+  reserveSelection?: boolean
+  [key: string]: any
 }
 
 interface Props {
   loading?: boolean
   selection?: boolean
   selectionChange?: (newSelection: any[]) => void
+  page?: number
   pageSize?: number
+  pageSizes?: number[]
+  pagination?: boolean
   autoPagination?: boolean
   total?: number
   emptyText?: string
-  columns: ColumnItem[]
-  data: any[]
+  columns?: ColumnItem[]
+  data?: any[]
 }
 
 interface Emits {
   (e: 'update:page', page: number): void
+  (e: 'update:pageSize', pageSize: number): void
+  (e: 'selection-change', selection: any[]): void
 }
 
 const props = withDefaults(defineProps<Props>(), {
   loading: false,
   selection: false,
+  page: 1,
   pageSize: 10,
+  pageSizes: () => [10, 20, 50, 100],
+  pagination: true,
   total: 0,
   autoPagination: true,
   data: () => [],
@@ -42,33 +69,59 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<Emits>()
 const actionColumnProps = new Set(['action', 'actions', 'actionColumn', 'operation', 'operations'])
+const tableRef = ref<any>()
+const schemaMode = computed(() => props.columns.length > 0)
 
 const t = (key: string, fallback?: string) => {
   const value = (i18n.t as any)(key)
   return value && value !== key ? value : fallback || key
 }
 
-const conf = reactive({
-  total: computed(() => (props.autoPagination ? props.data.length : props.total)),
-  page: 1,
-  pageSize: props.pageSize,
-  visibleData: computed<any>(() => props.data.slice((conf.page - 1) * conf.pageSize, conf.page * conf.pageSize)),
-  handleCurrentChange: (page: number) => {
-    conf.page = page
-    emit('update:page', page)
-  },
-  contentRefs: [] as { [index: number]: HTMLElement }
+const handleSelectionChange = (selection: any[]) => {
+  props.selectionChange?.(selection)
+  emit('selection-change', selection)
+}
+
+const pageModel = computed({
+  get: () => props.page,
+  set: (page: number) => emit('update:page', page)
+})
+const pageSizeModel = computed({
+  get: () => props.pageSize,
+  set: (pageSize: number) => emit('update:pageSize', pageSize)
+})
+const paginationTotal = computed(() => (props.autoPagination ? props.data.length : props.total))
+const visibleData = computed(() => {
+  if (!schemaMode.value || !props.autoPagination) return props.data
+  const start = (pageModel.value - 1) * pageSizeModel.value
+  return props.data.slice(start, start + pageSizeModel.value)
 })
 
+defineExpose({
+  clearSelection: () => tableRef.value?.clearSelection(),
+  getSelectionRows: () => tableRef.value?.getSelectionRows?.() || [],
+  scrollTo: (...args: any[]) => tableRef.value?.scrollTo?.(...args),
+  setCurrentRow: (...args: any[]) => tableRef.value?.setCurrentRow?.(...args),
+  setScrollLeft: (left: number) => tableRef.value?.setScrollLeft?.(left),
+  setScrollTop: (top: number) => tableRef.value?.setScrollTop?.(top),
+  toggleAllSelection: () => tableRef.value?.toggleAllSelection?.(),
+  toggleRowExpansion: (...args: any[]) => tableRef.value?.toggleRowExpansion?.(...args),
+  toggleRowSelection: (...args: any[]) => tableRef.value?.toggleRowSelection?.(...args),
+  get $el() {
+    return tableRef.value?.$el
+  }
+})
 </script>
 
 <template>
   <div v-loading="loading" class="table-content">
     <el-table
-      :data="autoPagination ? conf.visibleData : data"
+      ref="tableRef"
+      v-bind="$attrs"
+      :data="visibleData"
       class="smart-table"
       style="width: 100%"
-      @selection-change="selectionChange"
+      @selection-change="handleSelectionChange"
       :empty-text="props.emptyText || t('common.noData', 'No data')"
     >
       <template #empty>
@@ -79,53 +132,32 @@ const conf = reactive({
           <p>{{ t('common.noDataDescription', 'No records match the current filters. Try adjusting search or filters.') }}</p>
         </div>
       </template>
-      <el-table-column v-if="selection" type="selection" width="55"/>
-      <el-table-column
-        v-for="(item, col) in columns"
-        :key="item.prop"
-        :prop="item.prop"
-        :label="item.label"
-        :width="item.width"
-        :min-width="item.minWidth"
-        :sortable="item.sortable"
-        :sort-method="item.sortMethod"
-        :class-name="actionColumnProps.has(item.prop) ? 'table-action-column' : ''"
-      >
-        <template #default="{ row, $index }">
-          <slot v-if="$slots[item.prop]" :name="item.prop" :row="row" :index="$index" />
-          <el-tooltip
-            v-else
-            :disabled="
-              !(
-                conf.contentRefs[$index * columns.length + col]?.scrollWidth >
-                conf.contentRefs[$index * columns.length + col]?.offsetWidth
-              )
-            "
-            :effect="sapp.theme === 'light' ? 'dark' : 'light'"
-            :content="row[item.prop]?.toString()"
-            placement="bottom"
-          >
-            <div
-              :ref="(el) => (conf.contentRefs[$index * columns.length + col] = el as HTMLElement)"
-              class="ellipsis"
-              :style="{ width: item.width }"
-            >
-              {{ item.formatter ? item.formatter(row) : row[item.prop] ?? item?.placeholder }}
-            </div>
-          </el-tooltip>
-        </template>
-      </el-table-column>
+      <slot v-if="!schemaMode" />
+      <template v-else>
+        <el-table-column v-if="selection" type="selection" width="55" />
+        <custom-table-column
+          v-for="(item, index) in columns"
+          :key="item.prop || item.type || index"
+          :column="item"
+          :action-column-props="actionColumnProps"
+        >
+          <template v-for="(_, slotName) in $slots" #[slotName]="scope">
+            <slot :name="slotName" v-bind="scope" />
+          </template>
+        </custom-table-column>
+      </template>
     </el-table>
-    <div class="pagination" :class="{ 'has-summary': Boolean($slots.summary) }">
+    <div v-if="schemaMode && pagination" class="pagination" :class="{ 'has-summary': Boolean($slots.summary) }">
       <div v-if="$slots.summary" class="pagination__summary">
         <slot name="summary" />
       </div>
       <el-pagination
+        v-model:current-page="pageModel"
+        v-model:page-size="pageSizeModel"
         background
-        layout="prev, pager, next"
-        :total="conf.total"
-        :page-size="conf.pageSize"
-        @current-change="conf.handleCurrentChange"
+        layout="total, sizes, prev, pager, next"
+        :total="paginationTotal"
+        :page-sizes="pageSizes"
       />
     </div>
   </div>
@@ -134,16 +166,6 @@ const conf = reactive({
 <style scoped lang="less">
 .table-content {
   width: 100%;
-}
-
-.ellipsis {
-  max-width: 100%;
-  color: var(--text-secondary);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .pagination {

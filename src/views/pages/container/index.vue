@@ -1759,7 +1759,7 @@ onBeforeUnmount(() => {
         </div>
       </div>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'containers'"
         v-loading="listLoading"
         :data="containers"
@@ -1874,9 +1874,9 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'images'"
         v-loading="listLoading"
         :data="images"
@@ -1927,9 +1927,9 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'networks'"
         v-loading="listLoading"
         :data="networks"
@@ -1968,9 +1968,9 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'volumes'"
         v-loading="listLoading"
         :data="volumes"
@@ -2003,9 +2003,9 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'compose'"
         v-loading="listLoading"
         :data="composeProjects"
@@ -2023,7 +2023,7 @@ onBeforeUnmount(() => {
             </el-tooltip>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
       <el-alert
         v-if="activeTab === 'templates' && !templatesSupported"
@@ -2034,7 +2034,7 @@ onBeforeUnmount(() => {
         :closable="false"
       />
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'templates'"
         v-loading="listLoading"
         :data="templates"
@@ -2062,9 +2062,9 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
-      <el-table
+      <custom-table
         v-if="activeTab === 'registries'"
         v-loading="listLoading"
         :data="registries"
@@ -2107,7 +2107,7 @@ onBeforeUnmount(() => {
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
       <div v-if="activeTab === 'config'" v-loading="listLoading" class="config-editor">
         <div class="config-editor__meta">

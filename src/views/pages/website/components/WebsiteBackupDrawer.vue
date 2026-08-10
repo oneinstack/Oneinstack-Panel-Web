@@ -246,7 +246,7 @@ onBeforeUnmount(() => {
 
     <el-tabs>
       <el-tab-pane label="备份文件">
-        <el-table v-loading="state.loading" :data="state.backups" empty-text="暂无整站备份">
+        <custom-table v-loading="state.loading" :data="state.backups" empty-text="暂无整站备份">
           <el-table-column prop="websiteName" label="网站" min-width="150" />
           <el-table-column label="来源" width="150">
             <template #default="{ row }">{{ sourceLabel(row.source) }}</template>
@@ -267,11 +267,11 @@ onBeforeUnmount(() => {
               <el-button type="danger" link @click="deleteBackup(row)">删除</el-button>
             </template>
           </el-table-column>
-        </el-table>
+        </custom-table>
       </el-tab-pane>
 
       <el-tab-pane label="任务记录">
-        <el-table v-loading="state.loading" :data="state.tasks" empty-text="暂无网站任务">
+        <custom-table v-loading="state.loading" :data="state.tasks" empty-text="暂无网站任务">
           <el-table-column prop="websiteName" label="网站" min-width="150" />
           <el-table-column label="操作" width="110">
             <template #default="{ row }">{{ operationLabel(row.operation) }}</template>
@@ -303,7 +303,7 @@ onBeforeUnmount(() => {
               </el-button>
             </template>
           </el-table-column>
-        </el-table>
+        </custom-table>
       </el-tab-pane>
     </el-tabs>
 

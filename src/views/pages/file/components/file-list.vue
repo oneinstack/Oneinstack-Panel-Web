@@ -35,7 +35,7 @@ import {
   Document
 } from '@element-plus/icons-vue'
 import { ElMessage, FormInstance, UploadFile, UploadInstance } from 'element-plus'
-import { computed, nextTick, onMounted, reactive, useTemplateRef } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import type { DrawerType, DrawerOpenType } from '../index.vue'
 import System from '@/utils/System'
 import { formatBytes } from '@/utils/fileSize'
@@ -714,6 +714,8 @@ const filteredFileList = computed(() => {
   if (!keyword) return conf.fileList
   return conf.fileList.filter((row: any) => String(row?.name || '').toLowerCase().includes(keyword))
 })
+const fileTablePage = ref(1)
+const fileTablePageSize = ref(50)
 
 const fileStats = computed(() => {
   const rows = filteredFileList.value as any[]
@@ -894,11 +896,12 @@ const capacityUsedPercent = computed(() => {
 
     <section v-if="conf.viewMode === 'list'" class="file-table-shell">
       <custom-table
+        v-model:page="fileTablePage"
+        v-model:page-size="fileTablePageSize"
         class="file-data-table"
         :data="filteredFileList"
         :columns="conf.columns"
         :loading="conf.loading"
-        :page-size="50"
       >
         <template #name="{ row }">
           <div class="file-name-cell">

@@ -464,13 +464,14 @@ const handleMoreAction = async (command: string, row: any) => {
     <div class="box2">
       <custom-table
         v-model:page="conf.list.params.page"
+        v-model:page-size="conf.list.params.pageSize"
         :loading="conf.list.loading"
         :data="conf.list.data"
         :auto-pagination="false"
         :total="conf.list.total"
-        :page-size="conf.list.params.pageSize"
         :columns="conf.list.columns"
         @update:page="conf.list.getData"
+        @update:page-size="() => { conf.list.params.page = 1; conf.list.getData() }"
       >
         <template #empty>
           <database-environment-empty

@@ -69,7 +69,7 @@ const conf = reactive({
         </div>
       </div>
 
-      <el-table :data="conf.tableData" border style="width: 100%">
+      <custom-table :data="conf.tableData" border style="width: 100%">
         <el-table-column type="selection" width="55" />
         <el-table-column prop="date" label="网站名" width="180" />
         <el-table-column prop="status" label="状态" width="180">
@@ -93,7 +93,7 @@ const conf = reactive({
             <el-button link type="primary" size="small">删除</el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
       <div class="pagination">
         <el-pagination background layout="prev, pager, next" :total="1000" />
       </div>

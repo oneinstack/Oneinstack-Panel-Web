@@ -455,7 +455,7 @@ onMounted(() => {
     </el-card>
     </div>
     <div class="box2">
-      <el-table ref="tableRef" class="fileTable task-table" :data="tableData" style="width: 100%"
+      <custom-table ref="tableRef" class="fileTable task-table" :data="tableData" style="width: 100%"
         @selection-change="handleSelectionChange" :select-on-indeterminate="false" :row-selectable="selectFilter"
         :row-key="(row: any) => row.id" :empty-text="t('task.noData', 'No data')">
         <el-table-column type="selection" width="48" :reserve-selection="true" :selectable="selectFilter" />
@@ -548,7 +548,7 @@ onMounted(() => {
             </td>
           </tr>
         </template>
-      </el-table>
+      </custom-table>
     </div>
     <AddTask v-model="addTaskVisible" :type="action_type" @taskAdded="handleTaskAdded" :formData="rulesForm" />
   </div>

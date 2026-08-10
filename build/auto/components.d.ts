@@ -13,6 +13,7 @@ declare module 'vue' {
     CustomDrawer: typeof import('./../../src/components/custom-drawer.vue')['default']
     CustomForm: typeof import('./../../src/components/custom-form.vue')['default']
     CustomTable: typeof import('./../../src/components/custom-table.vue')['default']
+    CustomTableColumn: typeof import('./../../src/components/custom-table-column.vue')['default']
     ElAlert: typeof import('element-plus/es')['ElAlert']
     ElBadge: typeof import('element-plus/es')['ElBadge']
     ElBreadcrumb: typeof import('element-plus/es')['ElBreadcrumb']

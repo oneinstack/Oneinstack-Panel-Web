@@ -335,7 +335,7 @@ onMounted(() => {
           <el-button @click="resetProcessFilters">{{ $t('common.reset') }}</el-button>
         </div>
 
-        <el-table
+        <custom-table
           v-loading="processLoading"
           :data="processes"
           class="data-table process-table"
@@ -366,7 +366,7 @@ onMounted(() => {
               <el-button link type="primary" @click.stop="openProcessDetail(row)">{{ $t('common.detail') }}</el-button>
             </template>
           </el-table-column>
-        </el-table>
+        </custom-table>
 
         <div class="table-footer">
           <span>{{ $t('systemManagement.totalProcesses', { count: processTotal }) }}</span>
@@ -472,7 +472,7 @@ onMounted(() => {
             <small>{{ $t('systemManagement.protectedMountsHint') }}</small>
           </div>
 
-          <el-table v-loading="diskLoading" :data="disks" class="data-table" :empty-text="$t('systemManagement.noDiskData')">
+          <custom-table v-loading="diskLoading" :data="disks" class="data-table" :empty-text="$t('systemManagement.noDiskData')">
             <el-table-column prop="device" :label="$t('systemManagement.device')" min-width="150" />
             <el-table-column prop="mountpoint" :label="$t('systemManagement.mountpoint')" min-width="140" />
             <el-table-column prop="fsType" :label="$t('systemManagement.fileSystem')" min-width="100" />
@@ -496,7 +496,7 @@ onMounted(() => {
                 <el-button link type="primary" @click="openDiskDetail(row)">{{ $t('common.detail') }}</el-button>
               </template>
             </el-table-column>
-          </el-table>
+          </custom-table>
         </article>
       </section>
 

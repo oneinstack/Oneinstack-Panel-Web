@@ -261,12 +261,15 @@ onMounted(async () => {
       </div>
 
       <custom-table
+        v-model:page="approvalState.filters.page"
+        v-model:page-size="approvalState.filters.pageSize"
         :loading="loading.approvals"
         :columns="approvalState.columns"
         :data="approvalState.list"
         :total="approvalState.total"
         :auto-pagination="false"
         @update:page="(page) => { approvalState.filters.page = page; loadApprovals() }"
+        @update:page-size="() => { approvalState.filters.page = 1; loadApprovals() }"
       >
         <template #resourceName="{ row }">
           <div class="resource-cell">

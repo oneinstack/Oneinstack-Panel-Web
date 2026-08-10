@@ -259,7 +259,7 @@ onMounted(async () => {
         <el-button class="filter-action" @click="reset">{{ $t('common.reset') }}</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="events" border row-key="id" @row-dblclick="showDetail">
+      <custom-table v-loading="loading" :data="events" border row-key="id" @row-dblclick="showDetail">
         <el-table-column prop="sequence" :label="$t('audit.sequence')" width="92">
           <template #default="{ row }">#{{ row.sequence }}</template>
         </el-table-column>
@@ -300,7 +300,7 @@ onMounted(async () => {
         <template #empty>
           <el-empty :description="$t('audit.noRecords')" />
         </template>
-      </el-table>
+      </custom-table>
 
       <div class="pagination">
         <el-pagination

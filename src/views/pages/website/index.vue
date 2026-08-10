@@ -524,9 +524,9 @@ webServer.load()
       </div>
     </div>
     <div class="box2">
-      <custom-table v-model:page="conf.website.params.page" :loading="conf.website.loading" :empty-text="$t('common.noData')" :data="conf.website.data"
+      <custom-table v-model:page="conf.website.params.page" v-model:page-size="conf.website.params.pageSize" :loading="conf.website.loading" :empty-text="$t('common.noData')" :data="conf.website.data"
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
-        :page-size="conf.website.params.pageSize" @update:page="conf.website.getData">
+        @update:page="conf.website.getData" @update:page-size="() => { conf.website.params.page = 1; conf.website.getData() }">
         <template #root_dir="{ row }">
           <el-link
             v-if="row.root_dir"

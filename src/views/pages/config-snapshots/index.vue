@@ -524,7 +524,7 @@ onMounted(() => {
         <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
-      <el-table v-loading="loading" :data="snapshots" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
+      <custom-table v-loading="loading" :data="snapshots" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
         <el-table-column :label="$t('configSnapshots.snapshot')" min-width="240">
           <template #default="{ row }">
             <div class="snapshot-name-cell">
@@ -598,7 +598,7 @@ onMounted(() => {
             </el-button>
           </template>
         </el-table-column>
-      </el-table>
+      </custom-table>
 
       <div class="pagination-row">
         <el-pagination

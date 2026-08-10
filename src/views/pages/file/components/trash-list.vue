@@ -147,7 +147,7 @@ watch(
       </div>
     </div>
 
-    <el-table v-loading="state.loading" :data="state.items" row-key="id" height="480" :empty-text="t('file.trashDialog.emptyTable', 'Trash is empty')">
+    <custom-table v-loading="state.loading" :data="state.items" row-key="id" height="480" :empty-text="t('file.trashDialog.emptyTable', 'Trash is empty')">
       <el-table-column :label="t('common.name', 'Name')" min-width="180">
         <template #default="{ row }">
           <div class="file-name">
@@ -172,7 +172,7 @@ watch(
           <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
         </template>
       </el-table-column>
-    </el-table>
+    </custom-table>
 
     <template #footer>
       <el-button @click="visible = false">{{ t('common.close', 'Close') }}</el-button>
