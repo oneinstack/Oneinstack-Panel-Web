@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 import { Api } from '@/api/Api'
+import sconfig from '@/sstore/sconfig'
 import System from '@/utils/System'
 
 export interface SoftwareTask {
@@ -81,6 +82,10 @@ export const softwareTaskStore = reactive({
     return !!status && terminalStatuses.has(status)
   },
 
+  canReadTaskList() {
+    return sconfig.hasScopeAccess('software', 'read')
+  },
+
   activeForKey(key: string) {
     return Object.values(softwareTaskStore.tasks)
       .filter((task) => task.softwareKey === key && !softwareTaskStore.isTerminal(task.status))
@@ -95,6 +100,7 @@ export const softwareTaskStore = reactive({
   },
 
   async loadActive() {
+    if (!softwareTaskStore.canReadTaskList()) return
     softwareTaskStore.loading = true
     try {
       const { data: result } = await Api.getSoftwareTasks({ active: true, pageSize: 100 })
@@ -109,6 +115,10 @@ export const softwareTaskStore = reactive({
   },
 
   async loadHistory(page = 1, pageSize = 20) {
+    if (!softwareTaskStore.canReadTaskList()) {
+      softwareTaskStore.historyTotal = 0
+      return { data: [], total: 0 }
+    }
     const { data: result } = await Api.getSoftwareTasks({ page, pageSize })
     const tasks = (result?.data ?? []) as SoftwareTask[]
     softwareTaskStore.historyTotal = result?.total ?? tasks.length

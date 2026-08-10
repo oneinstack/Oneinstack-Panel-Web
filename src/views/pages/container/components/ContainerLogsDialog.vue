@@ -1,19 +1,27 @@
 <script setup lang="ts">
-import { Refresh } from '@element-plus/icons-vue'
+import { Download, Refresh } from '@element-plus/icons-vue'
 import type { ContainerItem } from '../types'
 
 defineProps<{
   visible: boolean
   loading: boolean
+  downloading: boolean
   target: ContainerItem | null
   logsText: string
   tail: number
+  since: string
+  until: string
+  timestamps: boolean
 }>()
 
 const emit = defineEmits<{
   (event: 'update:visible', value: boolean): void
   (event: 'update:tail', value: number): void
+  (event: 'update:since', value: string): void
+  (event: 'update:until', value: string): void
+  (event: 'update:timestamps', value: boolean): void
   (event: 'refresh'): void
+  (event: 'download'): void
 }>()
 </script>
 
@@ -27,16 +35,44 @@ const emit = defineEmits<{
     :on-close="() => emit('update:visible', false)"
   >
     <div class="logs-toolbar">
-      <span>末尾日志行数</span>
-      <el-input-number
-        :model-value="tail"
-        :min="1"
-        :max="10000"
-        :step="100"
-        controls-position="right"
-        @update:model-value="emit('update:tail', Number($event || 500))"
+      <div class="toolbar-field">
+        <span>末尾日志行数</span>
+        <el-input-number
+          :model-value="tail"
+          :min="1"
+          :max="10000"
+          :step="100"
+          controls-position="right"
+          @update:model-value="emit('update:tail', Number($event || 500))"
+        />
+      </div>
+      <div class="toolbar-field">
+        <span>Since</span>
+        <el-input
+          :model-value="since"
+          clearable
+          placeholder="10m / 4h / RFC3339"
+          @update:model-value="emit('update:since', String($event || ''))"
+        />
+      </div>
+      <div class="toolbar-field">
+        <span>Until</span>
+        <el-input
+          :model-value="until"
+          clearable
+          placeholder="RFC3339"
+          @update:model-value="emit('update:until', String($event || ''))"
+        />
+      </div>
+      <el-switch
+        :model-value="timestamps"
+        inline-prompt
+        active-text="时间戳"
+        inactive-text="原始"
+        @update:model-value="emit('update:timestamps', Boolean($event))"
       />
       <el-button :icon="Refresh" :loading="loading" @click="emit('refresh')">刷新日志</el-button>
+      <el-button :icon="Download" :loading="downloading" @click="emit('download')">下载日志</el-button>
     </div>
     <div v-loading="loading" class="logs-box">
       <pre v-if="logsText">{{ logsText }}</pre>
@@ -49,7 +85,7 @@ const emit = defineEmits<{
 .logs-toolbar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   flex-wrap: wrap;
   gap: 12px;
   margin-bottom: 16px;
@@ -57,6 +93,16 @@ const emit = defineEmits<{
 
   span {
     font-size: 13px;
+  }
+}
+
+.toolbar-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  :deep(.el-input) {
+    width: 200px;
   }
 }
 
@@ -83,6 +129,17 @@ const emit = defineEmits<{
 @media (max-width: 768px) {
   .logs-toolbar {
     justify-content: flex-start;
+  }
+
+  .toolbar-field {
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+
+    :deep(.el-input),
+    :deep(.el-input-number) {
+      width: 100%;
+    }
   }
 
   .logs-box {

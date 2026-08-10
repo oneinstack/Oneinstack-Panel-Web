@@ -2,12 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Api } from '@/api/Api'
 import containerTaskStore from '@/sstore/containerTask'
 import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
-  taskId: string
+  taskId?: string
 }>()
 
 const emit = defineEmits<{
@@ -19,18 +20,20 @@ const visible = computed({
   get: () => props.modelValue,
   set: (value: boolean) => emit('update:modelValue', value)
 })
-const task = computed(() => containerTaskStore.tasks[props.taskId])
+const currentTaskId = ref('')
+const task = computed(() => containerTaskStore.tasks[currentTaskId.value])
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
-const logs = computed(() => containerTaskStore.logs[props.taskId] || t('container.task.waitingDockerOutput', 'Waiting for Docker output...'))
+const logs = computed(() => containerTaskStore.logs[currentTaskId.value] || t('container.task.waitingDockerOutput', 'Waiting for Docker output...'))
 const terminal = computed(() => containerTaskStore.isTerminal(task.value?.status))
 const failed = computed(() => ['failed', 'interrupted'].includes(task.value?.status))
 const cancelable = computed(() => !!task.value && !terminal.value && !task.value.cancelRequested)
 const autoScroll = ref(true)
 const logElement = ref<HTMLElement>()
 const downloading = ref(false)
+const bootstrapping = ref(false)
 
 const operationLabel = computed(() => {
   const labels: Record<string, string> = {
@@ -113,12 +116,43 @@ const summaryItems = computed(() => [
   { label: t('container.task.summary.errorCode', 'Error code'), value: task.value?.errorCode || '-' }
 ])
 
+const pickLatestTaskId = (tasks: Array<{ id?: string; status?: string }>) => {
+  const activeTask = tasks.find((item) => item?.id && !containerTaskStore.isTerminal(item.status))
+  if (activeTask?.id) return activeTask.id
+  return tasks.find((item) => item?.id)?.id || ''
+}
+
+const ensureTaskLoaded = async () => {
+  if (!props.modelValue || bootstrapping.value) return
+  bootstrapping.value = true
+  try {
+    let taskId = props.taskId || currentTaskId.value || ''
+    if (!taskId) {
+      const [{ data: activeResult }, { data: latestResult }] = await Promise.all([
+        Api.getContainerTasks({ active: true, page: 1, pageSize: 20 }),
+        Api.getContainerTasks({ page: 1, pageSize: 20 })
+      ])
+      const activeTasks = Array.isArray(activeResult) ? activeResult : Array.isArray(activeResult?.data) ? activeResult.data : activeResult?.items || []
+      const latestTasks = Array.isArray(latestResult) ? latestResult : Array.isArray(latestResult?.data) ? latestResult.data : latestResult?.items || []
+      containerTaskStore.ingest(activeTasks)
+      containerTaskStore.ingest(latestTasks)
+      taskId = pickLatestTaskId(activeTasks) || pickLatestTaskId(latestTasks) || containerTaskStore.order[0] || ''
+    }
+    currentTaskId.value = taskId
+    if (!taskId) return
+    await containerTaskStore.track(taskId).catch(() => undefined)
+    await containerTaskStore.fetchLog(taskId).catch(() => undefined)
+  } finally {
+    bootstrapping.value = false
+  }
+}
+
 watch(
   () => [props.modelValue, props.taskId],
-  async ([isVisible]) => {
-    if (!isVisible || !props.taskId) return
-    await containerTaskStore.track(props.taskId).catch(() => undefined)
-    await containerTaskStore.fetchLog(props.taskId).catch(() => undefined)
+  async ([isVisible, taskId]) => {
+    if (!isVisible) return
+    if (taskId && taskId !== currentTaskId.value) currentTaskId.value = taskId
+    await ensureTaskLoaded()
   },
   { immediate: true }
 )
@@ -139,14 +173,14 @@ watch(
 )
 
 const cancelTask = async () => {
-  if (!props.taskId) return
+  if (!currentTaskId.value) return
   try {
     await ElMessageBox.confirm(t('container.task.cancelConfirmMessage', 'Canceling will try to stop the current Docker operation. Logs and final status will be retained.'), t('container.task.cancelTask', 'Cancel container task'), {
       type: 'warning',
       confirmButtonText: t('container.task.confirmCancel', 'Confirm cancel'),
       cancelButtonText: t('container.task.continueRunning', 'Continue running')
     })
-    await containerTaskStore.cancel(props.taskId)
+    await containerTaskStore.cancel(currentTaskId.value)
     ElMessage.success(t('container.task.cancelSubmitted', 'Cancel request submitted'))
   } catch {
     // Keep task running.
@@ -154,10 +188,10 @@ const cancelTask = async () => {
 }
 
 const downloadLog = async () => {
-  if (!props.taskId || downloading.value) return
+  if (!currentTaskId.value || downloading.value) return
   downloading.value = true
   try {
-    await containerTaskStore.downloadLog(props.taskId)
+    await containerTaskStore.downloadLog(currentTaskId.value)
     ElMessage.success(t('container.task.logDownloadStarted', 'Full task log download started'))
   } catch (error: any) {
     ElMessage.error(error?.message || t('container.task.logDownloadFailed', 'Failed to download task log'))
@@ -167,7 +201,7 @@ const downloadLog = async () => {
 }
 
 onBeforeUnmount(() => {
-  if (props.taskId && terminal.value) containerTaskStore.close(props.taskId)
+  if (currentTaskId.value && terminal.value) containerTaskStore.close(currentTaskId.value)
 })
 </script>
 
@@ -270,7 +304,8 @@ onBeforeUnmount(() => {
         </aside>
       </section>
     </div>
-    <el-skeleton v-else :rows="8" animated />
+    <el-skeleton v-else-if="bootstrapping" :rows="8" animated />
+    <el-empty v-else :description="$t('container.task.noTask', 'No container tasks')" />
 
     <template #footer>
       <div class="task-actions">

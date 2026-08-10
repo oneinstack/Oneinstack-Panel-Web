@@ -110,6 +110,17 @@ const apiUrl = (path: string) => {
   return `${base}${path.startsWith('/') ? path : `/${path}`}`
 }
 
+const toQueryString = (params?: Record<string, any>) => {
+  if (!params) return ''
+  const search = new URLSearchParams()
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') return
+    search.set(key, String(value))
+  })
+  const query = search.toString()
+  return query ? `?${query}` : ''
+}
+
 /**
  * The legacy HTTP transport resolves only status 200. Task creation APIs
  * correctly return 202 Accepted, so bridge their success callback into a
@@ -615,8 +626,12 @@ export const Api = {
     return http.post('/containers/batch/actions', obj)
   },
   /** 获取容器日志 */
-  getContainerLogs: (id: string, obj?: { tail?: number }) => {
+  getContainerLogs: (id: string, obj?: { tail?: number; since?: string; until?: string; timestamps?: boolean; follow?: boolean }) => {
     return http.get(`/containers/${encodeURIComponent(id)}/logs`, obj)
+  },
+  /** 下载容器日志 */
+  downloadContainerLogs: (id: string, obj?: { tail?: number; since?: string; until?: string; timestamps?: boolean }) => {
+    return apiUrl(`/containers/${encodeURIComponent(id)}/logs/download${toQueryString(obj)}`)
   },
   /** 获取镜像列表 */
   getContainerImages: (obj?: { page?: number; pageSize?: number; search?: string }) => {

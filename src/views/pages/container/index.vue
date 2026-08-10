@@ -88,9 +88,13 @@ const selectedNetworks = ref<NetworkItem[]>([])
 const selectedVolumes = ref<VolumeItem[]>([])
 const logsVisible = ref(false)
 const logsLoading = ref(false)
+const logDownloading = ref(false)
 const logTarget = ref<ContainerItem | null>(null)
 const logsText = ref('')
 const logTail = ref(500)
+const logSince = ref('')
+const logUntil = ref('')
+const logTimestamps = ref(true)
 const dialogTarget = ref<any>(null)
 const importFile = ref<File | null>(null)
 const detailVisible = ref(false)
@@ -100,8 +104,7 @@ const detailTarget = ref<any>(null)
 const detailData = ref<Record<string, any> | null>(null)
 const detailStats = ref<ContainerStats | null>(null)
 const taskDrawer = reactive({
-  show: false,
-  taskId: ''
+  show: false
 })
 let statsTimer: ReturnType<typeof setInterval> | undefined
 
@@ -211,7 +214,13 @@ const runtimeStatusText = computed(() => {
 const runningContainers = computed(() =>
   containers.value.filter((item) => String(item.Status || '').toLowerCase().startsWith('up')).length
 )
-const latestTaskId = computed(() => containerTaskStore.order[0] || '')
+const canReadContainerTask = computed(() =>
+  sconfig.hasMenuAccess('task.read')
+  && (
+    sconfig.hasScopeAccess('task', 'readAll')
+    || sconfig.hasScopeAccess('task', 'readSelf')
+  )
+)
 const activeTaskCount = computed(() =>
   containerTaskStore.order.filter((id) => {
     const task = containerTaskStore.tasks[id]
@@ -810,19 +819,12 @@ const openContainerTask = (result: any, request: Record<string, any>, targetTab:
   const taskId = data?.taskId || data?.id
   if (!taskId) throw new Error('后端未返回任务 ID')
   containerTaskStore.acceptCreated(data, request)
-  taskDrawer.taskId = taskId
   taskDrawer.show = true
   dialogVisible.value = false
   activeTab.value = targetTab
 }
 
 const openTaskDrawer = () => {
-  const taskId = latestTaskId.value
-  if (!taskId) {
-    ElMessage.info('暂无容器任务')
-    return
-  }
-  taskDrawer.taskId = taskId
   taskDrawer.show = true
 }
 
@@ -1058,19 +1060,56 @@ const openLogs = async (row: ContainerItem) => {
   logTarget.value = row
   logsText.value = ''
   logsVisible.value = true
-  await loadLogs(row, logTail.value)
+  await loadLogs(row)
 }
 
-const loadLogs = async (row = logTarget.value, tail = logTail.value) => {
+const buildContainerLogQuery = () => {
+  const normalizedTail = Math.min(10000, Math.max(1, Number(logTail.value) || 500))
+  logTail.value = normalizedTail
+  return {
+    tail: normalizedTail,
+    since: logSince.value.trim() || undefined,
+    until: logUntil.value.trim() || undefined,
+    timestamps: logTimestamps.value,
+    follow: false
+  }
+}
+
+const loadLogs = async (row = logTarget.value) => {
   if (!row?.ID) return
   logsLoading.value = true
   try {
-    const normalizedTail = Math.min(10000, Math.max(1, Number(tail) || 500))
-    logTail.value = normalizedTail
-    const { data } = await Api.getContainerLogs(row.ID, { tail: normalizedTail })
+    const { data } = await Api.getContainerLogs(row.ID, buildContainerLogQuery())
     logsText.value = data?.logs || ''
   } finally {
     logsLoading.value = false
+  }
+}
+
+const downloadLogs = async (row = logTarget.value) => {
+  if (!row?.ID || logDownloading.value) return
+  logDownloading.value = true
+  try {
+    const response = await fetch(Api.downloadContainerLogs(row.ID, buildContainerLogQuery()), {
+      credentials: 'include',
+      headers: { Accept: 'text/plain' }
+    })
+    if (!response.ok) throw new Error(`下载日志失败（HTTP ${response.status}）`)
+    const blob = await response.blob()
+    const objectURL = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = objectURL
+    link.download = `${row.Names || row.ID}-container.log`
+    link.style.display = 'none'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(objectURL)
+    ElMessage.success('容器日志下载已开始')
+  } catch (error: any) {
+    ElMessage.error(error?.message || '容器日志下载失败')
+  } finally {
+    logDownloading.value = false
   }
 }
 
@@ -1457,7 +1496,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="hero-actions">
         <el-button :icon="Refresh" :loading="runtimeLoading || listLoading" @click="refreshAll">{{ t('common.refresh', 'Refresh') }}</el-button>
-        <el-button :disabled="!latestTaskId" @click="openTaskDrawer">
+        <el-button v-if="canReadContainerTask" @click="openTaskDrawer">
           {{ t('container.task.containerTask', 'Container task') }}<span v-if="activeTaskCount">（{{ activeTaskCount }}）</span>
         </el-button>
         <el-button
@@ -2161,16 +2200,23 @@ onBeforeUnmount(() => {
     <ContainerLogsDialog
       v-model:visible="logsVisible"
       :loading="logsLoading"
+      :downloading="logDownloading"
       :target="logTarget"
       :logs-text="logsText"
       :tail="logTail"
+      :since="logSince"
+      :until="logUntil"
+      :timestamps="logTimestamps"
       @update:tail="logTail = $event"
+      @update:since="logSince = $event"
+      @update:until="logUntil = $event"
+      @update:timestamps="logTimestamps = $event"
       @refresh="loadLogs()"
+      @download="downloadLogs()"
     />
 
     <ContainerTaskDrawer
       v-model="taskDrawer.show"
-      :task-id="taskDrawer.taskId"
       @finished="refreshTaskAffectedLists"
     />
   </div>

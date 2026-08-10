@@ -1,4 +1,5 @@
 import { EKey } from '@/enum/Enum'
+import i18n from '@/lang'
 import sconfig from '@/sstore/sconfig'
 import { globalType } from '../../build/env/globalVar'
 import System from './System'
@@ -6,6 +7,8 @@ import { HttpCode } from '@/enum/HttpCode'
 import { formatHttpStatusMessage, resolveHttpErrorMessage } from '@/utils/http-error'
 
 export default class HttpConfig {
+  private static fetchPatched = false
+
   static init(env: globalType) {
     //#ifvar-dev
     let apiurl = StrUtil.getParam(location.href).apiurl
@@ -14,6 +17,21 @@ export default class HttpConfig {
       Cookie.set(EKey.apiurl, apiurl)
     }
     //#endvar
+
+    const currentLocale = () => i18n.locale === 'en-US' ? 'en-US' : 'zh-CN'
+
+    if (!HttpConfig.fetchPatched) {
+      const nativeFetch = window.fetch.bind(window)
+      window.fetch = (input: RequestInfo | URL, init?: RequestInit) => {
+        const headers = new Headers(input instanceof Request ? input.headers : init?.headers)
+        headers.set('Accept-Language', currentLocale())
+        if (input instanceof Request) {
+          return nativeFetch(new Request(input, { ...init, headers }))
+        }
+        return nativeFetch(input, { ...init, headers })
+      }
+      HttpConfig.fetchPatched = true
+    }
 
     const funrun = (obj: any, fields: string[], ...data: any) => {
       fields.forEach((field) => {
@@ -74,6 +92,7 @@ export default class HttpConfig {
       withCredentials: true,
       before(config) {
         config.param.headers = config.param.headers || {}
+        config.param.headers['Accept-Language'] = currentLocale()
 
         //#ifvar-dev
         config.param.headers[EKey.apiurl] = apiurl

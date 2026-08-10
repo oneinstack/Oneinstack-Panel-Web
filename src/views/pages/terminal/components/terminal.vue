@@ -835,12 +835,6 @@ onBeforeUnmount(() => {
   text-shadow: 0 0 1px rgb(216 226 240 / 18%);
 }
 
-.terminal-screen :deep(.xterm-rows span) {
-  display: inline-block;
-  height: 100%;
-  vertical-align: top;
-}
-
 .terminal-screen :deep(.xterm-rows span:not(.xterm-bold)) {
   font-weight: 400;
 }
@@ -928,7 +922,12 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.terminal-screen :deep(.xterm-cursor-bar) {
+.terminal-screen :deep(.xterm-cursor-layer .xterm-cursor) {
+  visibility: visible !important;
+}
+
+.terminal-screen :deep(.xterm-cursor-layer .xterm-cursor.xterm-cursor-bar) {
+  background: transparent !important;
   box-shadow: 2px 0 0 rgb(var(--primary-color)) inset !important;
 }
 
