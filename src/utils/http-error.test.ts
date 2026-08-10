@@ -2,17 +2,17 @@ import { describe, expect, it } from 'vitest'
 import { resolveHttpErrorMessage } from './http-error'
 
 describe('resolveHttpErrorMessage', () => {
-  it('prefers the actionable API message over a generic detail', () => {
+  it('prefers detail when present', () => {
     expect(resolveHttpErrorMessage({
-      message: '用户名格式不正确',
+      message: '更新清单校验失败',
       error: {
-        message: '用户名格式不正确',
-        detail: '未提供底层错误详情，请根据 code 和 message 检查请求参数、权限配置及相关服务状态。'
+        message: '更新清单校验失败',
+        detail: '请检查请求字段是否完整，并确认字段类型、格式和取值范围符合接口要求。'
       }
-    })).toBe('用户名格式不正确')
+    })).toBe('请检查请求字段是否完整，并确认字段类型、格式和取值范围符合接口要求。')
   })
 
-  it('keeps concrete details as a fallback for legacy responses', () => {
-    expect(resolveHttpErrorMessage({ error: { detail: '连接数据库失败' } })).toBe('连接数据库失败')
+  it('falls back to message when detail is missing', () => {
+    expect(resolveHttpErrorMessage({ error: { message: '容器终端仅允许通过 HTTPS/WSS 访问' } })).toBe('容器终端仅允许通过 HTTPS/WSS 访问')
   })
 })

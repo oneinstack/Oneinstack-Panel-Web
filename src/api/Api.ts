@@ -633,6 +633,14 @@ export const Api = {
   downloadContainerLogs: (id: string, obj?: { tail?: number; since?: string; until?: string; timestamps?: boolean }) => {
     return apiUrl(`/containers/${encodeURIComponent(id)}/logs/download${toQueryString(obj)}`)
   },
+  /** 获取容器终端状态 */
+  getContainerTerminalStatus: (id: string, obj?: { silentError?: boolean }) => {
+    return http.get(`/containers/${encodeURIComponent(id)}/terminal/status`, obj || {})
+  },
+  /** 创建容器终端一次性票据 */
+  createContainerTerminalTicket: (id: string, obj: { password: string; confirmHighRisk?: boolean; silentError?: boolean }) => {
+    return http.post(`/containers/${encodeURIComponent(id)}/terminal/ticket`, obj)
+  },
   /** 获取镜像列表 */
   getContainerImages: (obj?: { page?: number; pageSize?: number; search?: string }) => {
     return http.get('/containers/images', obj)
@@ -1197,19 +1205,19 @@ export const Api = {
     return http.get('/sys/systeminfo')
   },
   /** 获取当前面板构建版本 */
-  getPanelVersion: () => {
-    return http.get('/sys/version')
+  getPanelVersion: (obj?: { silentError?: boolean }) => {
+    return http.get('/sys/version', obj || {})
   },
   /** 获取最近一次面板更新状态 */
   getPanelUpdateStatus: (obj?: { ignoreUnauthorizedLogout?: boolean; silentError?: boolean }) => {
     return http.get('/sys/update/status', obj || {})
   },
   /** 校验签名清单并检查面板更新 */
-  checkPanelUpdate: () => {
-    return httpPost('/sys/update/check')
+  checkPanelUpdate: (obj?: { silentError?: boolean }) => {
+    return httpPost('/sys/update/check', obj || {})
   },
   /** 交给独立 systemd 单元执行面板更新 */
-  applyPanelUpdate: (obj: { confirm: string }) => {
+  applyPanelUpdate: (obj: { confirm: string; silentError?: boolean }) => {
     return httpPost('/sys/update/apply', obj)
   },
   /** 静默轮询面板更新状态，用于更新期间等待服务重启 */

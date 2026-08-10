@@ -32,6 +32,8 @@ export default ({ mode }) => {
           target: proxyTarget,
           secure: false,
           changeOrigin: true,
+          ws: true,
+    rewriteWsOrigin: true
           cookieDomainRewrite: 'localhost',
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq, req) => {

@@ -114,8 +114,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const loadBaseState = async () => {
   const [versionResponse, statusResponse] = await Promise.all([
-    Api.getPanelVersion(),
-    Api.getPanelUpdateStatus()
+    Api.getPanelVersion({ silentError: true }),
+    Api.getPanelUpdateStatus({ silentError: true })
   ])
   version.value = versionResponse.data
   status.value = statusResponse.data || status.value
@@ -125,7 +125,7 @@ const checkForUpdate = async () => {
   loading.value = true
   errorMessage.value = ''
   try {
-    const { data } = await Api.checkPanelUpdate()
+    const { data } = await Api.checkPanelUpdate({ silentError: true })
     check.value = data
     if (data.updateAvailable) {
       ElMessage.success(
@@ -161,7 +161,7 @@ const applyUpdate = async () => {
     )
     applying.value = true
     errorMessage.value = ''
-    await Api.applyPanelUpdate({ confirm: value })
+    await Api.applyPanelUpdate({ confirm: value, silentError: true })
     ElMessage.success(t('setting.update.taskStarted', 'Update task started. Waiting for the panel to come back online.'))
     beginReconnectPolling()
   } catch (error) {
