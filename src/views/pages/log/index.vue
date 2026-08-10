@@ -444,6 +444,10 @@ onMounted(async () => {
     grid-column: span 1;
   }
 
+  .filter-action {
+    margin-left: 0;
+  }
+
   .filter-date {
     grid-column: span 3;
   }
