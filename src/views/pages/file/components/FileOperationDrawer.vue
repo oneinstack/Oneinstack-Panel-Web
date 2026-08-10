@@ -137,8 +137,8 @@ const displayTime = (value: string) =>
           <el-option :label="t('common.success', 'Success')" value="success" />
           <el-option :label="t('common.failed', 'Failed')" value="failure" />
         </el-select>
-        <el-button type="primary" @click="applyFilters">{{ t('common.query', 'Query') }}</el-button>
-        <el-button :icon="Refresh" @click="load(true)">{{ t('common.refresh', 'Refresh') }}</el-button>
+        <el-button class="filter-action" type="primary" @click="applyFilters">{{ t('common.query', 'Query') }}</el-button>
+        <el-button class="filter-action" :icon="Refresh" @click="load(true)">{{ t('common.refresh', 'Refresh') }}</el-button>
       </div>
 
       <el-table
@@ -279,6 +279,10 @@ const displayTime = (value: string) =>
     border-radius: 11px;
     font-weight: 650;
     white-space: nowrap;
+  }
+
+  .filter-action {
+    margin-left: 0;
   }
 }
 

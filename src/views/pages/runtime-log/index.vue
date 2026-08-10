@@ -366,8 +366,8 @@ onUnmounted(() => {
           :end-placeholder="$t('runtimeLog.endTime')"
           :range-separator="$t('runtimeLog.rangeSeparator')"
         />
-        <el-button type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
-        <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
+        <el-button class="filter-action" type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
+        <el-button class="filter-action" @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
       <div class="console-toolbar">
@@ -475,6 +475,10 @@ onUnmounted(() => {
   grid-template-columns: 140px 180px minmax(220px, 1fr) minmax(320px, 1.3fr) auto auto;
   gap: 10px;
   margin-bottom: 16px;
+
+  .filter-action {
+    margin-left: 0;
+  }
 }
 
 .console-toolbar {
