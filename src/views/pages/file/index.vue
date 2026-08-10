@@ -303,14 +303,14 @@ const conf = reactive({
             style="transform: rotateY(180deg)"
           />
           <span class="path-tab-text">
-            {{ item.path[item.path.length - 1] === '/' ? $t('file.rootDir') : item.path[item.path.length - 1] }}
+            {{ item.path[item.path.length - 1] === '/' ? t('file.rootDir', '根目录') : item.path[item.path.length - 1] }}
           </span>
           <el-icon v-if="index > 0" class="hover-opacity" @click.stop="conf.tab.handleCloseTab(index)">
             <Close />
           </el-icon>
         </div>
         </div>
-        <button class="add-btn" aria-label="打开新文件标签" @click.stop="conf.tab.handleAddTab">+</button>
+        <button class="add-btn" :aria-label="t('file.openNewTab', '打开新文件标签')" @click.stop="conf.tab.handleAddTab">+</button>
       </div>
       <file-list
         v-for="(_, index) in conf.tab.list"

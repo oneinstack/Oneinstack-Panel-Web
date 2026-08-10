@@ -751,7 +751,7 @@ const capacityUsedPercent = computed(() => {
               :key="index"
               @click.stop="conf.handleBackLevel(index)"
             >
-              {{ index === 0 ? t('file.rootDir', 'Root directory') : item }}
+              {{ index === 0 ? t('file.rootDir', '根目录') : item }}
             </el-breadcrumb-item>
           </el-breadcrumb>
           <el-input

@@ -32,6 +32,15 @@ export default {
   backupScheduleTipSuffix: ']添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者 MySQL 命令行创建的数据库需要点击“从服务器获取”才能在计划任务中备份',
   more: '更多',
   quickManage: '快捷管理',
+  environment: {
+    connectionMissingTitle: '未检测到可用的 {name} 连接',
+    notInstalledTitle: '当前未安装 {name} 环境，也没有远程数据库',
+    connectionMissingDescription: '本机服务已安装，但连接尚未就绪。可以添加当前或远程服务器连接。',
+    notInstalledDescription: '安装本机 {name}，或连接一台已有的远程服务器后即可开始管理。',
+    addRemoteDatabase: '添加远程数据库',
+    viewSoftware: '查看 {name}',
+    installSoftware: '安装 {name}'
+  },
   phpMyAdmin: {
     quickTitle: 'phpMyAdmin 快捷管理',
     installed: '已安装',
@@ -119,6 +128,9 @@ export default {
     safetyBackupCreated: '已创建恢复前安全备份',
     noTasks: '暂无备份或恢复任务',
     backupTaskCreated: '备份任务已创建',
+    createConfirmMessage: '确认立即备份数据库“{name}”吗？备份任务创建后会在后台执行。',
+    createConfirmTitle: '备份确认',
+    confirmCreate: '确认备份',
     restoreDatabase: '恢复数据库',
     restoreConfirmMessage: '恢复会覆盖数据库“{name}”的现有内容。系统会先自动创建安全备份。请输入数据库名确认：',
     createSafetyBackupAndRestore: '创建安全备份并恢复',

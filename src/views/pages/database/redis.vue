@@ -5,8 +5,13 @@ import { Api } from '@/api/Api'
 import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
+import i18n from '@/lang'
 
 const { conf: parentConf } = defineProps<ConfProps>()
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 
 const conf = reactive({
   ...parentConf,
@@ -81,18 +86,18 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
   <div class="container">
     <div class="tool-bar">
       <el-space class="btn-group">
-        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">{{ $t('database.remote.remoteServer') }}</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteServer', '远程服务器') }}</el-button>
       </el-space>
       <div class="demo-form-inline flex" style="gap: 16px">
         <span class="flex items-center" style="color: var(--el-color-primary); gap: 8px">
           <el-icon :size="18"><WarningFilled /></el-icon>
-          {{ $t('database.redisPanel.currentServerHint') }}
+          {{ t('database.redisPanel.currentServerHint', '当前远程 Redis 服务器') }}
         </span>
         <el-select
           v-model="conf.list.params.id"
-          :placeholder="$t('database.redisPanel.selectServer')"
+          :placeholder="t('database.redisPanel.selectServer', '请选择服务器')"
           style="width: 200px"
-          :no-data-text="$t('common.noData')"
+          :no-data-text="t('common.noData', '暂无数据')"
           :loading="conf.server.loading"
           @change="conf.server.onChange"
         >
@@ -127,7 +132,7 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
           />
           <div v-else class="no-data">
             <img src="/static/images/empty.webp" alt="" />
-            <span>{{ $t('database.redisPanel.emptyKeys') }}</span>
+            <span>{{ t('database.redisPanel.emptyKeys', '暂无 Redis Key') }}</span>
           </div>
         </template>
       </custom-table>

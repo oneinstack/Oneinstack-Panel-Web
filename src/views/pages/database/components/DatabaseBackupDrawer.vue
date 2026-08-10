@@ -231,7 +231,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
 <template>
   <custom-drawer
     :visible="modelValue"
-    :title="library ? $t('database.backup.titleWithName', { name: library.name }) : $t('database.backup.title')"
+    :title="library ? t('database.backup.titleWithName', '{name} 备份管理', { name: library.name }) : t('database.backup.title', '备份管理')"
     size="820px"
     destroy-on-close
     :show-footer="false"
@@ -241,52 +241,52 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
       type="info"
       :closable="false"
       show-icon
-      :title="$t('database.backup.safetyTip')"
+      :title="t('database.backup.safetyTip', '恢复前会自动创建安全备份，避免误操作导致数据丢失。')"
       style="margin-bottom: 16px"
     />
     <div class="backup-toolbar">
       <el-button type="primary" :loading="state.submitting" :disabled="hasActiveTask" @click="createBackup">
-        {{ $t('database.backup.backupNow') }}
+        {{ t('database.backup.backupNow', '立即备份') }}
       </el-button>
-      <el-button :loading="state.loading" @click="loadData()">{{ $t('common.refresh') }}</el-button>
-      <span v-if="hasActiveTask" class="active-hint">{{ $t('database.backup.activeTaskHint') }}</span>
+      <el-button :loading="state.loading" @click="loadData()">{{ t('common.refresh', '刷新') }}</el-button>
+      <span v-if="hasActiveTask" class="active-hint">{{ t('database.backup.activeTaskHint', '已有备份或恢复任务正在执行') }}</span>
     </div>
 
     <el-tabs v-model="state.activeTab">
-      <el-tab-pane :label="$t('database.backup.backupFiles')" name="backups">
+      <el-tab-pane :label="t('database.backup.backupFiles', '备份文件')" name="backups">
         <el-table v-loading="state.loading" :data="state.backups" height="calc(100vh - 260px)">
-          <el-table-column prop="fileName" :label="$t('database.backup.file')" min-width="220" show-overflow-tooltip />
-          <el-table-column :label="$t('common.type')" width="110">
+          <el-table-column prop="fileName" :label="t('database.backup.file', '文件')" min-width="220" show-overflow-tooltip />
+          <el-table-column :label="t('common.type', '类型')" width="110">
             <template #default="{ row }">
               <el-tag :type="row.source === 'pre_restore' ? 'warning' : 'success'">
-                {{ row.source === 'pre_restore' ? $t('database.backup.preRestoreBackup') : $t('database.backup.manualBackup') }}
+                {{ row.source === 'pre_restore' ? t('database.backup.preRestoreBackup', '恢复前备份') : t('database.backup.manualBackup', '手动备份') }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column :label="$t('common.size')" width="100">
+          <el-table-column :label="t('common.size', '大小')" width="100">
             <template #default="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
           </el-table-column>
-          <el-table-column :label="$t('database.backup.createdAt')" width="180">
+          <el-table-column :label="t('database.backup.createdAt', '创建时间')" width="180">
             <template #default="{ row }">{{ formatTime(row.createdAt) }}</template>
           </el-table-column>
-          <el-table-column :label="$t('common.action')" width="190" fixed="right">
+          <el-table-column :label="t('common.action', '操作')" width="190" fixed="right">
             <template #default="{ row }">
-              <el-button type="primary" link @click="downloadBackup(row)">{{ $t('common.download') }}</el-button>
-              <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">{{ $t('database.backup.restore') }}</el-button>
-              <el-button type="danger" link :disabled="hasActiveTask" @click="deleteBackup(row)">{{ $t('common.delete') }}</el-button>
+              <el-button type="primary" link @click="downloadBackup(row)">{{ t('common.download', '下载') }}</el-button>
+              <el-button type="warning" link :disabled="hasActiveTask" @click="restoreBackup(row)">{{ t('database.backup.restore', '恢复') }}</el-button>
+              <el-button type="danger" link :disabled="hasActiveTask" @click="deleteBackup(row)">{{ t('common.delete', '删除') }}</el-button>
             </template>
           </el-table-column>
-          <template #empty>{{ $t('database.backup.noBackups') }}</template>
+          <template #empty>{{ t('database.backup.noBackups', '暂无备份文件') }}</template>
         </el-table>
       </el-tab-pane>
 
-      <el-tab-pane :label="$t('database.backup.taskProgress')" name="tasks">
+      <el-tab-pane :label="t('database.backup.taskProgress', '任务进度')" name="tasks">
         <div v-loading="state.loading" class="task-list">
           <div v-for="task in state.tasks" :key="task.id" class="task-card">
             <div class="task-header">
               <div>
                 <el-tag :type="task.operation === 'restore' ? 'warning' : 'primary'">
-                  {{ task.operation === 'restore' ? $t('database.backup.restore') : $t('database.backup.backup') }}
+                  {{ task.operation === 'restore' ? t('database.backup.restore', '恢复') : t('database.backup.backup', '备份') }}
                 </el-tag>
                 <el-tag :type="statusType(task.status)" style="margin-left: 8px">
                   {{ statusText(task.status) }}
@@ -307,12 +307,12 @@ onBeforeUnmount(() => window.clearInterval(pollTimer))
                 link
                 @click="cancelTask(task)"
               >
-                {{ $t('database.backup.cancelTask') }}
+                {{ t('database.backup.cancelTask', '取消任务') }}
               </el-button>
-              <span v-if="task.safetyBackupId">{{ $t('database.backup.safetyBackupCreated') }}</span>
+              <span v-if="task.safetyBackupId">{{ t('database.backup.safetyBackupCreated', '已创建安全备份') }}</span>
             </div>
           </div>
-          <el-empty v-if="!state.tasks.length" :description="$t('database.backup.noTasks')" />
+          <el-empty v-if="!state.tasks.length" :description="t('database.backup.noTasks', '暂无任务')" />
         </div>
       </el-tab-pane>
     </el-tabs>

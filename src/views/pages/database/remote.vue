@@ -169,42 +169,42 @@ conf.list.getData()
     <div class="container">
       <div class="tool-bar">
         <div class="btn-group">
-          <el-button type="primary" @click="conf.drawer.open('add')">{{ $t('database.remote.addRemoteServer') }}</el-button>
+          <el-button type="primary" @click="conf.drawer.open('add')">{{ t('database.remote.addRemoteServer', '添加远程服务器') }}</el-button>
         </div>
       </div>
       <div class="box2">
         <div class="drawerHeader">
           <div class="back" @click="System.router.back()">
             <el-icon><Back /></el-icon>
-            <span>{{ $t('common.back') }}</span>
+            <span>{{ t('common.back', '返回') }}</span>
           </div>
-          <span class="title">{{ $t('database.remote.remoteServer') }}</span>
+          <span class="title">{{ t('database.remote.remoteServer', '远程服务器') }}</span>
         </div>
         <custom-table :loading="conf.list.loading" :data="conf.list.data" :columns="conf.list.columns">
           <template #empty>
             <div style="margin-top: 40px">
               <span>
-                {{ $t('database.remote.emptyPrefix') }}
+                {{ t('database.remote.emptyPrefix', '暂无远程数据库连接，您可以') }}
                 <a
                   class="cursor-pointer"
                   style="color: var(--el-color-primary); text-decoration: underline"
                   @click="conf.drawer.open('add')"
                 >
-                  {{ $t('database.remote.emptyAction') }}
+                  {{ t('database.remote.emptyAction', '添加远程服务器') }}
                 </a>
               </span>
             </div>
           </template>
           <template #passwordConfigured="{ row }">
             <el-tag :type="row.passwordConfigured ? 'success' : 'info'">
-              {{ row.passwordConfigured ? $t('database.remote.passwordConfigured') : $t('database.notConfigured') }}
+              {{ row.passwordConfigured ? t('database.remote.passwordConfigured', '已配置') : t('database.notConfigured', '未配置') }}
             </el-tag>
           </template>
           <template #action="{ row }">
-            <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ $t('common.edit') }}</el-button>
-            <el-button type="primary" link @click="conf.list.testData(row)">{{ $t('database.remote.test') }}</el-button>
-            <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ $t('common.sync') }}</el-button>
-            <el-button type="danger" link @click="conf.list.deleteData(row)">{{ $t('common.remove') }}</el-button>
+            <el-button type="primary" link @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
+            <el-button type="primary" link @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
+            <el-button type="primary" link @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
+            <el-button type="danger" link @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
           </template>
         </custom-table>
       </div>

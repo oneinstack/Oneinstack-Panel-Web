@@ -25,6 +25,7 @@ export default {
   rootPath: 'Managed root',
   goParent: 'Go to parent directory',
   refreshCurrentDirectory: 'Refresh current directory',
+  openNewTab: 'Open new file tab',
   writable: 'Writable',
   owner: 'Owner',
   group: 'Group',

@@ -32,6 +32,15 @@ export default {
   backupScheduleTipSuffix: '] to keep data safe. Tip: databases created through third-party tools or the MySQL CLI must be synced from the server before they can be backed up in scheduled tasks.',
   more: 'More',
   quickManage: 'Quick manage',
+  environment: {
+    connectionMissingTitle: 'No available {name} connection detected',
+    notInstalledTitle: '{name} is not installed and no remote database is connected',
+    connectionMissingDescription: 'The local service is installed, but the connection is not ready yet. You can add a local or remote server connection.',
+    notInstalledDescription: 'Install local {name}, or connect an existing remote server to start managing databases.',
+    addRemoteDatabase: 'Add remote database',
+    viewSoftware: 'View {name}',
+    installSoftware: 'Install {name}'
+  },
   phpMyAdmin: {
     quickTitle: 'phpMyAdmin quick management',
     installed: 'Installed',
@@ -119,6 +128,9 @@ export default {
     safetyBackupCreated: 'Pre-restore safety backup created',
     noTasks: 'No backup or restore tasks',
     backupTaskCreated: 'Backup task created',
+    createConfirmMessage: 'Back up database "{name}" now? The backup task will run in the background after it is created.',
+    createConfirmTitle: 'Confirm backup',
+    confirmCreate: 'Confirm backup',
     restoreDatabase: 'Restore database',
     restoreConfirmMessage: 'Restore will overwrite existing contents of database "{name}". The system creates a safety backup first. Enter the database name to confirm:',
     createSafetyBackupAndRestore: 'Create safety backup and restore',

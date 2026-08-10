@@ -25,6 +25,7 @@ export default {
   rootPath: '管理根目录',
   goParent: '返回上一级',
   refreshCurrentDirectory: '刷新当前目录',
+  openNewTab: '打开新文件标签',
   writable: '可写',
   owner: '所有者',
   group: '用户组',

@@ -258,29 +258,29 @@ const copyCredential = async () => {
 
     <custom-dialog
       v-model:show="conf.credential.show"
-      :title="$t('database.databaseAccount')"
+      :title="t('database.databaseAccount', '数据库账号')"
     >
       <el-alert
-        :title="$t('database.credentialTip')"
+        :title="t('database.credentialTip', '该账号只拥有当前数据库权限，请妥善保存密码。')"
         type="success"
         :closable="false"
         show-icon
         style="margin-bottom: 18px"
       />
       <el-form label-width="78px">
-        <el-form-item :label="$t('database.database')">
+        <el-form-item :label="t('database.database', '数据库')">
           <el-input :model-value="conf.credential.database" readonly />
         </el-form-item>
-        <el-form-item :label="$t('common.username')">
+        <el-form-item :label="t('common.username', '用户名')">
           <el-input :model-value="conf.credential.username" readonly />
         </el-form-item>
-        <el-form-item :label="$t('common.password')">
+        <el-form-item :label="t('common.password', '密码')">
           <el-input :model-value="conf.credential.password" readonly show-password />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="conf.credential.show = false">{{ $t('common.close') }}</el-button>
-        <el-button type="primary" @click="copyCredential">{{ $t('database.copyCredential') }}</el-button>
+        <el-button @click="conf.credential.show = false">{{ t('common.close', '关闭') }}</el-button>
+        <el-button type="primary" @click="copyCredential">{{ t('database.copyCredential', '复制账号密码') }}</el-button>
       </template>
     </custom-dialog>
   </div>

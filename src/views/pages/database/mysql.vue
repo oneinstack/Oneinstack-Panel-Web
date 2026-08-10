@@ -222,15 +222,15 @@ const openBackupPanel = (row: any) => {
 }
 
 const createBackup = async (row: any) => {
-  const databaseName = row.name || row.databaseName || row.id || '当前数据库'
+  const databaseName = row.name || row.databaseName || row.id || t('database.database', '数据库')
 
   try {
     await ElMessageBox.confirm(
-      `确认立即备份数据库“${databaseName}”吗？备份任务创建后会在后台执行。`,
-      '备份确认',
+      t('database.backup.createConfirmMessage', '确认立即备份数据库“{name}”吗？备份任务创建后会在后台执行。', { name: databaseName }),
+      t('database.backup.createConfirmTitle', '备份确认'),
       {
-        confirmButtonText: '确认备份',
-        cancelButtonText: '取消',
+        confirmButtonText: t('database.backup.confirmCreate', '确认备份'),
+        cancelButtonText: t('common.cancel', '取消'),
         type: 'warning'
       }
     )
@@ -397,9 +397,9 @@ const handleMoreAction = async (command: string, row: any) => {
     <div class="flex items-center fit-width">
       <v-s-icon name="warning" size="22" :color="conf.themeColor[sapp.theme]" />
       <span class="ellipsis" style="margin-left: 32px; flex: 1;">
-        {{ $t('database.backupScheduleTipPrefix') }}
-        <span style="color: var(--el-color-primary)">{{ $t('layout.menu.cron') }}</span>
-        {{ $t('database.backupScheduleTipSuffix') }}
+        {{ t('database.backupScheduleTipPrefix', '请在添加数据库后，务必到[') }}
+        <span style="color: var(--el-color-primary)">{{ t('layout.menu.cron', '计划任务') }}</span>
+        {{ t('database.backupScheduleTipSuffix', ']添加定时备份任务，以确保您的数据安全。温馨提示：通过第三方或者 MySQL 命令行创建的数据库需要点击“从服务器获取”才能在计划任务中备份') }}
       </span>
     </div>
     <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false" style="margin-left: 24px;"><CircleClose /></el-icon>
@@ -411,10 +411,10 @@ const handleMoreAction = async (command: string, row: any) => {
       </div>
       <div class="phpmyadmin-card__content">
         <div class="phpmyadmin-card__title">
-          <strong>{{ $t('database.phpMyAdmin.quickTitle') }}</strong>
-          <el-tag v-if="phpMyAdminInstalled" type="success" effect="plain">{{ $t('database.phpMyAdmin.installed') }}</el-tag>
-          <el-tag v-else-if="phpMyAdminTask" type="warning" effect="plain">{{ $t('database.phpMyAdmin.installing') }}</el-tag>
-          <el-tag v-else type="info" effect="plain">{{ $t('database.phpMyAdmin.notInstalled') }}</el-tag>
+          <strong>{{ t('database.phpMyAdmin.quickTitle', 'phpMyAdmin 快捷管理') }}</strong>
+          <el-tag v-if="phpMyAdminInstalled" type="success" effect="plain">{{ t('database.phpMyAdmin.installed', '已安装') }}</el-tag>
+          <el-tag v-else-if="phpMyAdminTask" type="warning" effect="plain">{{ t('database.phpMyAdmin.installing', '安装中') }}</el-tag>
+          <el-tag v-else type="info" effect="plain">{{ t('database.phpMyAdmin.notInstalled', '未安装') }}</el-tag>
         </div>
         <span>{{ phpMyAdminDescription }}</span>
       </div>
@@ -425,7 +425,7 @@ const handleMoreAction = async (command: string, row: any) => {
           plain
           @click="showPhpMyAdminTask(phpMyAdminTask.id)"
         >
-          {{ $t('database.phpMyAdmin.viewProgress') }}
+          {{ t('database.phpMyAdmin.viewProgress', '查看安装进度') }}
         </el-button>
         <el-button
           v-else-if="phpMyAdminInstalled"
@@ -433,7 +433,7 @@ const handleMoreAction = async (command: string, row: any) => {
           :icon="Link"
           @click="openPhpMyAdmin()"
         >
-          {{ $t('database.phpMyAdmin.open') }}
+          {{ t('database.phpMyAdmin.open', '打开 phpMyAdmin') }}
         </el-button>
         <el-button
           v-else
@@ -442,20 +442,20 @@ const handleMoreAction = async (command: string, row: any) => {
           :loading="phpMyAdminCatalog.loading || phpMyAdminCatalog.installing"
           @click="installPhpMyAdmin"
         >
-          {{ $t('database.phpMyAdmin.quickInstall') }}
+          {{ t('database.phpMyAdmin.quickInstall', '快捷安装') }}
         </el-button>
-        <el-button @click="System.router.push('/software?component=phpmyadmin')">{{ $t('database.phpMyAdmin.versionDetail') }}</el-button>
+        <el-button @click="System.router.push('/software?component=phpmyadmin')">{{ t('database.phpMyAdmin.versionDetail', '版本与详情') }}</el-button>
       </div>
     </div>
     <div class="tool-bar">
       <el-space class="btn-group" :size="14">
-        <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ $t('database.addDatabase') }}</el-button>
-        <el-button type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ $t('database.remoteDatabase') }}</el-button>
+        <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ t('database.remoteDatabase', '远程数据库') }}</el-button>
       </el-space>
       <div class="demo-form-inline">
         <search-input
           v-model="conf.list.params.name"
-          :placeholder="$t('database.searchDatabasePlaceholder')"
+          :placeholder="t('database.searchDatabasePlaceholder', '请输入数据库名称')"
           style="margin-right: 18px"
           @search="conf.list.getData"
         />
@@ -480,13 +480,13 @@ const handleMoreAction = async (command: string, row: any) => {
           />
           <div v-else style="margin-top: 40px">
             <span>
-              {{ $t('database.emptyListPrefix') }}
+              {{ t('database.emptyListPrefix', '您的数据库列表为空，您可以') }}
               <a
                 class="cursor-pointer"
                 style="color: var(--el-color-primary); text-decoration: underline"
                 @click="conf.drawer.open('add')"
               >
-                {{ $t('database.emptyListAction') }}
+                {{ t('database.emptyListAction', '添加一个数据库') }}
               </a>
             </span>
           </div>
@@ -499,20 +499,20 @@ const handleMoreAction = async (command: string, row: any) => {
               link
               :icon="Link"
               @click="openPhpMyAdmin(row.name)"
-            >{{ $t('database.quickManage') }}</el-button>
-            <el-button type="primary" link @click="viewCredential(row)">{{ $t('database.viewAccount') }}</el-button>
-            <el-button type="primary" link @click="updateCredential(row)">{{ $t('database.modifyPassword') }}</el-button>
+            >{{ t('database.quickManage', '快捷管理') }}</el-button>
+            <el-button type="primary" link @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
+            <el-button type="primary" link @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
             <el-dropdown trigger="click" @command="(command: string) => handleMoreAction(command, row)">
               <el-button type="primary" link>
-                {{ $t('database.more') }}
+                {{ t('database.more', '更多') }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="backup">{{ $t('database.backup.backupNow') }}</el-dropdown-item>
-                  <el-dropdown-item command="backup-manager">{{ $t('database.backup.manageBackups') }}</el-dropdown-item>
+                  <el-dropdown-item command="backup">{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
+                  <el-dropdown-item command="backup-manager">{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
                   <el-dropdown-item command="delete" divided>
-                    <span class="database-danger-action">{{ $t('database.deleteDatabase') }}</span>
+                    <span class="database-danger-action">{{ t('database.deleteDatabase', '删除数据库') }}</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -531,20 +531,20 @@ const handleMoreAction = async (command: string, row: any) => {
     >
       <div class="verify-password-dialog">
         <div class="verify-password-dialog__desc">
-          {{ $t('database.security.verifyPanelPasswordTip') }}
+          {{ t('database.security.verifyPanelPasswordTip', '为保护数据库密码，请输入当前面板登录密码完成二次认证。') }}
         </div>
         <el-input
           v-model="verifyPanelPasswordDialog.password"
           type="password"
           show-password
           autocomplete="current-password"
-          :placeholder="$t('database.security.panelPasswordPlaceholder')"
+          :placeholder="t('database.security.panelPasswordPlaceholder', '请输入当前面板登录密码')"
           @keyup.enter="confirmVerifyPanelPasswordDialog"
         />
       </div>
       <template #footer>
-        <el-button @click="closeVerifyPanelPasswordDialog('cancel')">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="confirmVerifyPanelPasswordDialog">{{ $t('common.confirm') }}</el-button>
+        <el-button @click="closeVerifyPanelPasswordDialog('cancel')">{{ t('common.cancel', '取消') }}</el-button>
+        <el-button type="primary" @click="confirmVerifyPanelPasswordDialog">{{ t('common.confirm', '确定') }}</el-button>
       </template>
     </custom-dialog>
     <custom-dialog
@@ -556,14 +556,14 @@ const handleMoreAction = async (command: string, row: any) => {
     >
       <div class="credential-password-dialog">
         <div class="credential-password-dialog__desc">
-          {{ $t('database.security.newPasswordTip') }}
+          {{ t('database.security.newPasswordTip', '输入 12–128 位新密码；留空则由服务端生成高强度随机密码。') }}
         </div>
         <el-input
           v-model="credentialPasswordDialog.password"
           type="password"
           show-password
           autocomplete="new-password"
-          :placeholder="$t('database.security.newPasswordPlaceholder')"
+          :placeholder="t('database.security.newPasswordPlaceholder', '请输入新密码，留空则自动生成随机密码')"
           @keyup.enter="confirmCredentialPasswordDialog"
         />
         <div
@@ -574,12 +574,12 @@ const handleMoreAction = async (command: string, row: any) => {
           "
           class="credential-password-dialog__error"
         >
-          {{ $t('database.security.passwordLengthWarning') }}
+          {{ t('database.security.passwordLengthWarning', '密码长度必须为 12–128 位') }}
         </div>
       </div>
       <template #footer>
-        <el-button @click="closeCredentialPasswordDialog('cancel')">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="confirmCredentialPasswordDialog">{{ $t('database.modifyPassword') }}</el-button>
+        <el-button @click="closeCredentialPasswordDialog('cancel')">{{ t('common.cancel', '取消') }}</el-button>
+        <el-button type="primary" @click="confirmCredentialPasswordDialog">{{ t('database.modifyPassword', '修改密码') }}</el-button>
       </template>
     </custom-dialog>
     <install-task-drawer

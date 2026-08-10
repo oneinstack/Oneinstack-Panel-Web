@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import i18n from '@/lang'
+
 interface Item {
   name: string
   nameKey?: string
@@ -14,6 +16,11 @@ interface Props {
 }
 
 defineProps<Props>()
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 </script>
 
 <template>
@@ -25,7 +32,7 @@ defineProps<Props>()
       :class="{ active: activeIndex === item.index }"
       @click="clickActive(item)"
     >
-      <el-badge :is-dot="item.dot" >{{ item.nameKey ? $t(item.nameKey) : item.name }}</el-badge>
+      <el-badge :is-dot="item.dot" >{{ item.nameKey ? t(item.nameKey, item.name) : item.name }}</el-badge>
     </div>
   </div>
 </template>

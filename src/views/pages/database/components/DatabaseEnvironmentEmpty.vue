@@ -2,6 +2,7 @@
 import { Connection, Download, WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import { computed } from 'vue'
+import i18n from '@/lang'
 
 const props = defineProps<{
   type: 'mysql' | 'redis'
@@ -9,15 +10,19 @@ const props = defineProps<{
 }>()
 
 const displayName = computed(() => (props.type === 'mysql' ? 'MySQL' : 'Redis'))
+const t = (key: string, fallback: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params)
+  return value && value !== key ? value : fallback
+}
 const title = computed(() =>
   props.installed
-    ? `未检测到可用的 ${displayName.value} 连接`
-    : `当前未安装 ${displayName.value} 环境，也没有远程数据库`
+    ? t('database.environment.connectionMissingTitle', '未检测到可用的 {name} 连接', { name: displayName.value })
+    : t('database.environment.notInstalledTitle', '当前未安装 {name} 环境，也没有远程数据库', { name: displayName.value })
 )
 const description = computed(() =>
   props.installed
-    ? '本机服务已安装，但连接尚未就绪。可以添加当前或远程服务器连接。'
-    : `安装本机 ${displayName.value}，或连接一台已有的远程服务器后即可开始管理。`
+    ? t('database.environment.connectionMissingDescription', '本机服务已安装，但连接尚未就绪。可以添加当前或远程服务器连接。')
+    : t('database.environment.notInstalledDescription', '安装本机 {name}，或连接一台已有的远程服务器后即可开始管理。', { name: displayName.value })
 )
 
 const openRemote = () => System.router.push(`/database/remote?type=${props.type}`)
@@ -34,9 +39,9 @@ const openSoftware = () => System.router.push(`/software?component=${props.type}
       <span>{{ description }}</span>
     </div>
     <div class="environment-actions">
-      <el-button :icon="Connection" @click="openRemote">添加远程数据库</el-button>
+      <el-button :icon="Connection" @click="openRemote">{{ t('database.environment.addRemoteDatabase', '添加远程数据库') }}</el-button>
       <el-button type="primary" :icon="Download" @click="openSoftware">
-        {{ installed ? `查看 ${displayName}` : `安装 ${displayName}` }}
+        {{ installed ? t('database.environment.viewSoftware', '查看 {name}', { name: displayName }) : t('database.environment.installSoftware', '安装 {name}', { name: displayName }) }}
       </el-button>
     </div>
   </div>
