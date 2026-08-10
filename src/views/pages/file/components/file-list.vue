@@ -969,7 +969,7 @@ const capacityUsedPercent = computed(() => {
             >
               {{ t('file.delete', 'Delete') }}
             </el-button>
-            <el-dropdown trigger="click">
+            <el-dropdown trigger="click" popper-class="file-action-popper">
               <el-button type="primary" link :icon="MoreFilled">
                 {{ t('file.more', 'More') }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -2178,15 +2178,59 @@ const capacityUsedPercent = computed(() => {
 }
 
 :global(.file-action-menu) {
-  min-width: 210px;
-  max-height: 220px;
+  min-width: 184px;
+  max-height: 264px;
+  padding: 4px;
 }
 
 :global(.file-action-menu .el-dropdown-menu__item) {
-  gap: 10px;
+  min-height: 32px;
+  gap: 8px;
+  padding: 0 9px;
+  border-radius: 5px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 32px;
+}
+
+:global(.file-action-menu .el-dropdown-menu__item .el-icon) {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+  margin-right: 0;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+:global(.file-action-menu .el-dropdown-menu__item--divided) {
+  margin: 4px 0;
+  border-top-color: var(--border-subtle);
+}
+
+:global(.file-action-menu .el-dropdown-menu__item:not(.is-disabled):hover .el-icon),
+:global(.file-action-menu .el-dropdown-menu__item:not(.is-disabled):focus .el-icon) {
+  color: rgb(var(--primary-color));
+}
+
+:global(.file-action-popper.el-popper) {
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 
 :global(.file-action-menu .danger-menu-item) {
+  color: var(--el-color-danger);
+}
+
+:global(.file-action-menu .danger-menu-item:not(.is-disabled):hover),
+:global(.file-action-menu .danger-menu-item:not(.is-disabled):focus) {
+  color: var(--el-color-danger);
+  background: rgba(245, 108, 108, 0.1);
+}
+
+:global(.file-action-menu .danger-menu-item .el-icon),
+:global(.file-action-menu .danger-menu-item:not(.is-disabled):hover .el-icon),
+:global(.file-action-menu .danger-menu-item:not(.is-disabled):focus .el-icon) {
   color: var(--el-color-danger);
 }
 </style>
