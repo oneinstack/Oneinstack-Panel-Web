@@ -124,7 +124,11 @@
           </button>
         </div>
       </div>
-      <div ref="terminalDiv" class="terminal-screen" />
+      <div
+        ref="terminalDiv"
+        class="terminal-screen"
+        :class="{ 'is-blurred': connectionState !== 'connected' }"
+      />
       <div v-if="connectionState !== 'connected'" class="terminal-placeholder">
         <el-icon><Monitor /></el-icon>
         <strong>{{ status?.enabled ? $t('terminal.notConnected') : $t('terminal.closed') }}</strong>
@@ -397,7 +401,7 @@ const initializeTerminal = async () => {
   await nextTick()
   terminal = new Terminal({
     cursorBlink: true,
-    cursorStyle: 'bar',
+    cursorStyle: 'underline',
     cursorWidth: 2,
     convertEol: false,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
@@ -819,6 +823,12 @@ onBeforeUnmount(() => {
   min-height: 0;
   overflow: hidden;
   padding: 15px 11px 12px;
+  transition: filter 180ms ease, opacity 180ms ease;
+
+  &.is-blurred {
+    filter: blur(3px);
+    opacity: 0.42;
+  }
 }
 
 .terminal-screen :deep(.xterm) {
