@@ -411,9 +411,7 @@ const initializeTerminal = async () => {
     fontSize: 14,
     letterSpacing: 0.15,
     lineHeight: 1.35,
-    // ANSI colors are provided by the compile-time palette below. Keeping the
-    // ratio at 1 prevents xterm from replacing palette classes with CSP-blocked
-    // runtime inline colors.
+    // ANSI 颜色由下方编译期色板提供，避免 xterm 生成的运行时样式被 CSP 拦截。
     minimumContrastRatio: 1,
     scrollback: 5000,
     theme: {
@@ -939,13 +937,18 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.terminal-screen :deep(.xterm-cursor-layer .xterm-cursor) {
+.terminal-screen :deep(.xterm-rows .xterm-cursor) {
   visibility: visible !important;
 }
 
-.terminal-screen :deep(.xterm-cursor-layer .xterm-cursor.xterm-cursor-bar) {
+.terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-bar) {
   background: transparent !important;
   box-shadow: 2px 0 0 rgb(var(--primary-color)) inset !important;
+}
+
+.terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-underline) {
+  height: calc(100% - 2px) !important;
+  border-bottom: 2px solid rgb(var(--primary-color)) !important;
 }
 
 .terminal-screen :deep(.xterm-screen),

@@ -834,6 +834,20 @@ watch(
   height: 100% !important;
 }
 
+.terminal-screen :deep(.xterm-rows .xterm-cursor) {
+  visibility: visible !important;
+}
+
+.terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-bar) {
+  background: transparent !important;
+  box-shadow: 2px 0 0 rgb(var(--primary-color)) inset !important;
+}
+
+.terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-underline) {
+  height: calc(100% - 2px) !important;
+  border-bottom: 2px solid rgb(var(--primary-color)) !important;
+}
+
 .terminal-placeholder {
   position: absolute;
   inset: 55px 0 34px;

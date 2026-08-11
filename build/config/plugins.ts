@@ -1,7 +1,6 @@
 import vue from '@vitejs/plugin-vue'
 import { readFileSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
-import { visualizer } from 'rollup-plugin-visualizer'
 import { UIViteAutoImport } from 'ui-vite/src/autoimport'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -67,11 +66,6 @@ export const getPlugins = (env: globalType) => {
 
   if (isBuild) {
     plugin.push(
-      visualizer({
-        open: env.env.BUILDVIEW,
-        gzipSize: true,
-        brotliSize: true
-      }) as any,
       {
         name: 'end',
         async closeBundle() {
