@@ -652,6 +652,8 @@ onBeforeUnmount(() => {
 
 .terminal-shell {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 1 1 auto;
   min-height: 0;
   max-height: none;
@@ -673,6 +675,7 @@ onBeforeUnmount(() => {
 
   &__bar {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 16px;
     height: 54px;
@@ -684,6 +687,7 @@ onBeforeUnmount(() => {
 
   &__footer {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
@@ -822,7 +826,7 @@ onBeforeUnmount(() => {
 }
 
 .terminal-screen {
-  height: calc(100% - 88px);
+  flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
   padding: 15px 11px 12px;
