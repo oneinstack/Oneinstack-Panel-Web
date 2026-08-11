@@ -49,6 +49,13 @@ const props = withDefaults(defineProps<Props>(), {
   allinfo: () => ({})
 })
 
+const normalizePanelEntryPath = (path?: string | null) => {
+  const trimmed = String(path || '').trim()
+  if (!trimmed || trimmed === '/') return ''
+  const normalized = trimmed.startsWith('/') ? trimmed : `/${trimmed}`
+  return normalized.replace(/\/+$/, '')
+}
+
 const getSettingValue = (prop: string) => String(conf.settingData.find(item => item.prop === prop)?.value || '').trim()
 
 const getErrorMessage = (error: unknown, fallback: string) => {
@@ -388,7 +395,6 @@ const panelEntry = reactive<PanelEntryState>({
 })
 
 const panelEntryAccessLabel = computed(() => panelEntry.panelEntryEnabled ? t('setting.panel.enabled', 'Enabled') : t('setting.panel.disabled', 'Not enabled'))
-const currentRoutePath = computed(() => System.getRouterPath() || '/setting')
 const currentPanelAccessURL = computed(() => {
   if (!panelEntry.panelEntryEnabled) return ''
   const entryPath = panelEntry.panelEntryPath || ''
@@ -434,23 +440,24 @@ const buildPanelRouteURL = (accessURL: string) => {
   const targetAccessURL = accessURL || currentPanelAccessURL.value
   if (!targetAccessURL) return ''
   const normalized = targetAccessURL.replace(/\/$/, '')
-  const routePath = currentRoutePath.value.startsWith('/') ? currentRoutePath.value : `/${currentRoutePath.value}`
-  return `${normalized}/#${routePath}`
+  return `${normalized}#/setting`
 }
 
-const maybeRedirectToPanelEntry = async (accessURL: string, message: string) => {
-  const target = buildPanelRouteURL(accessURL)
-  if (!target) return
-  try {
-    await ElMessageBox.confirm(message, t('setting.panel.accessAddressUpdated', 'Access address updated'), {
-      type: 'warning',
-      confirmButtonText: t('setting.panel.jumpNow', 'Go now'),
-      cancelButtonText: t('setting.panel.later', 'Later')
-    })
-    window.location.assign(target)
-  } catch {
-    ElMessage.info(t('setting.panel.rememberNewAddress', 'Remember to use the new access address to enter the panel'))
+const reloadPanelPage = (enabled: boolean, accessURL: string, entryPath: string) => {
+  if (!enabled) {
+    window.location.assign(`${window.location.origin}/#/setting`)
+    return
   }
+
+  const normalizedPath = normalizePanelEntryPath(entryPath)
+  const resolvedAccessURL = accessURL || (normalizedPath ? `${window.location.origin}${normalizedPath}` : '')
+  const target = buildPanelRouteURL(resolvedAccessURL)
+  if (!target) {
+    window.location.reload()
+    return
+  }
+
+  window.location.assign(target)
 }
 
 const writeClipboardText = async (text: string) => {
@@ -481,6 +488,7 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
     ElMessage.warning(t('setting.panel.invalidEntryPath', 'Secure entry path must be /<random-string>'))
     return
   }
+  const targetEnabled = Boolean(panelEntry.panelEntryEnabled)
   const requestPanelEntryPath = panelEntry.panelEntryEnabled && !rotatePanelEntry ? panelEntryPath : ''
   panelEntry.saving = true
   try {
@@ -498,16 +506,19 @@ const savePanelEntry = async (rotatePanelEntry = false) => {
     })
     applyPanelEntry(data)
     ElMessage.success(rotatePanelEntry ? t('setting.panel.entryRotated', 'Secure entry rotated') : t('setting.panel.entrySaved', 'Secure entry configuration saved'))
-    const panelAccessURL = data?.panelAccessURL || data?.panelAccessUrl || ''
+    const resolvedEntryPath = normalizePanelEntryPath(data?.panelEntryPath || requestPanelEntryPath)
+    const panelAccessURL = data?.panelAccessURL || data?.panelAccessUrl || (targetEnabled && resolvedEntryPath ? `${window.location.origin}${resolvedEntryPath}` : '')
+    sconfig.setPanelEntryAccess({
+      enabled: targetEnabled,
+      path: targetEnabled ? resolvedEntryPath : '',
+    })
 
     if (rotatePanelEntry) {
-      await maybeRedirectToPanelEntry(panelAccessURL, t('setting.panel.rotatedRedirect', 'The new secure entry is effective. Go to the new address to continue.'))
+      reloadPanelPage(targetEnabled, panelAccessURL, resolvedEntryPath)
       return
     }
 
-    if (panelEntry.panelEntryEnabled) {
-      await maybeRedirectToPanelEntry(panelAccessURL, t('setting.panel.enabledRedirect', 'Secure entry is enabled. Go to the new access address.'))
-    }
+    reloadPanelPage(targetEnabled, panelAccessURL, resolvedEntryPath)
   } catch (error) {
     if (isOperationCancelled(error)) return
     ElMessage.error(rotatePanelEntry ? t('setting.panel.rotateFailed', 'Failed to rotate secure entry') : t('setting.panel.saveEntryFailed', 'Failed to save secure entry configuration'))

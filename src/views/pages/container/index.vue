@@ -117,6 +117,7 @@ const logTarget = ref<ContainerItem | null>(null);
 const logsText = ref("");
 const logTail = ref(100);
 const logTimeFilter = ref("all");
+const logCustomRange = ref<[Date, Date] | []>([]);
 const logTimestamps = ref(true);
 const dialogTarget = ref<any>(null);
 const importFile = ref<File | null>(null);
@@ -1580,13 +1581,26 @@ const normalizeContainerLogTail = () => {
   return normalizedTail;
 };
 
+const toContainerLogTimestamp = (value?: Date) => {
+  if (!(value instanceof Date) || Number.isNaN(value.getTime())) return undefined;
+  return value.toISOString();
+};
+
 const buildContainerLogFilters = () => {
   const normalizedTail = normalizeContainerLogTail();
-  const since = logTimeFilter.value === "all" ? undefined : logTimeFilter.value;
+  const isCustomRange = logTimeFilter.value === "custom";
+  const since = isCustomRange
+    ? toContainerLogTimestamp(logCustomRange.value[0])
+    : logTimeFilter.value === "all"
+      ? undefined
+      : logTimeFilter.value;
+  const until = isCustomRange
+    ? toContainerLogTimestamp(logCustomRange.value[1])
+    : undefined;
   return {
     tail: normalizedTail,
     since,
-    until: undefined,
+    until,
     timestamps: logTimestamps.value,
   };
 };
@@ -2488,7 +2502,7 @@ onBeforeUnmount(() => {
         <template #containerAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="Document"
               @click="openDetail('container', row)"
@@ -3015,9 +3029,11 @@ onBeforeUnmount(() => {
       :logs-text="logsText"
       :tail="logTail"
       :time-filter="logTimeFilter"
+      :custom-range="logCustomRange"
       :timestamps="logTimestamps"
       @update:tail="logTail = $event"
       @update:time-filter="logTimeFilter = $event"
+      @update:custom-range="logCustomRange = $event"
       @update:timestamps="logTimestamps = $event"
       @refresh="loadLogs()"
       @download="downloadLogs()"

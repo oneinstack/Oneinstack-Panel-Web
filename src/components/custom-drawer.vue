@@ -128,7 +128,8 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
 }
 
 .drawerBody {
-  min-height: 100%;
+  // min-height: 100%;
+  height: 100%;
   padding: 38px 36px 32px;
   box-sizing: border-box;
   overflow-x: hidden;
