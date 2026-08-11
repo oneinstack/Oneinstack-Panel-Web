@@ -1141,6 +1141,10 @@ const confirmContainerCreate = async (
     ],
     ["重启策略", payload.restart || "默认"],
     [
+      "退出后自动删除",
+      payload.autoRemove ? "已启用，创建完成后立即启动" : "未启用",
+    ],
+    [
       "资源限制",
       `CPU ${payload.cpuLimit ?? "不限制"} / 内存 ${payload.memoryLimitMB ?? "不限制"} MB`,
     ],
@@ -1300,7 +1304,11 @@ const submitDialog = async () => {
       const result = await Api.createContainer(payload);
       openContainerTask(
         result,
-        { ...payload, operation: "create" },
+        {
+          ...payload,
+          operation: "create",
+          startAfterCreate: Boolean(payload.autoRemove),
+        },
         "containers",
       );
       ElMessage.success(t("container.notifications.containerTaskCreated"));

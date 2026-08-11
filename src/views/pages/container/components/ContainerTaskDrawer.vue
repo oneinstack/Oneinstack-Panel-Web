@@ -282,6 +282,20 @@ onBeforeUnmount(() => {
         :title="task.errorMessage || task.message || $t('container.task.executionFailed')"
       />
 
+      <el-alert
+        v-if="task.autoStartStatus"
+        :type="task.autoStartStatus === 'failed' ? 'error' : task.autoStartStatus === 'succeeded' ? 'success' : 'info'"
+        show-icon
+        :closable="false"
+        :title="task.autoStartStatus === 'failed'
+          ? task.autoStartError || $t('container.task.autoStartFailed')
+          : task.autoStartStatus === 'succeeded'
+            ? $t('container.task.autoStartSucceeded')
+            : task.autoStartStatus === 'starting'
+              ? $t('container.task.autoStarting')
+              : $t('container.task.autoStartPending')"
+      />
+
       <section class="task-grid">
         <section class="log-panel">
           <div class="log-toolbar">

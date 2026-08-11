@@ -33,6 +33,13 @@ watch(
   },
 )
 
+watch(
+  () => props.form.autoRemove,
+  (enabled) => {
+    if (enabled) props.form.restart = 'no'
+  }
+)
+
 defineExpose({
   validate: () => formRef.value?.validate(),
   clearValidate: () => formRef.value?.clearValidate()
@@ -247,7 +254,7 @@ defineExpose({
         <div class="field-help">容器入口命令，未填写时提交空数组。</div>
       </el-form-item>
       <el-form-item label="重启策略">
-        <el-radio-group v-model="form.restart" class="restart-options">
+        <el-radio-group v-model="form.restart" class="restart-options" :disabled="form.autoRemove">
           <el-radio value="no">不重启</el-radio>
           <el-radio value="always">一直重启</el-radio>
           <el-radio value="on-failure:5">失败后重启（默认重启 5 次）</el-radio>
@@ -261,7 +268,9 @@ defineExpose({
           <el-checkbox v-model="form.openStdin">保持 stdin</el-checkbox>
           <el-checkbox v-model="form.privileged">特权模式</el-checkbox>
         </div>
-        <div class="field-help">特权模式风险较高，建议仅管理员按需开放。</div>
+        <div class="field-help">
+          {{ form.autoRemove ? '创建完成后将立即启动，容器退出后自动删除；该选项不能与重启策略同时使用。' : '特权模式风险较高，建议仅管理员按需开放。' }}
+        </div>
       </el-form-item>
 
       <el-divider content-position="left">资源限制</el-divider>
