@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { Api } from "@/api/modules";
 import System from "@/utils/System";
+import { piniaPersistConfig } from "@/stores/helper/persist";
 
 export interface ContainerTask {
   id: string;
@@ -21,6 +22,8 @@ export interface ContainerTask {
   startedAt?: string;
   finishedAt?: string;
   resourceName?: string;
+  autoStartStatus?: "pending" | "starting" | "succeeded" | "failed";
+  autoStartError?: string;
 }
 
 interface ContainerTaskEvent {
@@ -37,6 +40,16 @@ interface ContainerTaskEvent {
   createdAt?: string;
 }
 
+interface ContainerTaskState {
+  tasks: Record<string, ContainerTask>;
+  order: string[];
+  logs: Record<string, string>;
+  logCursors: Record<string, number>;
+  loading: boolean;
+  terminalRevision: number;
+  autoStartTaskIds: string[];
+}
+
 const terminalStatuses = new Set([
   "succeeded",
   "failed",
@@ -48,6 +61,7 @@ const reconnectTimers = new Map<string, number>();
 const logPollTimers = new Map<string, number>();
 const snapshotPollTimers = new Map<string, number>();
 const logFetches = new Map<string, Promise<any>>();
+const autoStartInFlight = new Set<string>();
 
 const taskURL = (path: string) => {
   const apiBase = new URL(System.env.API || "/v1", window.location.origin);
@@ -65,13 +79,14 @@ const operationFallbackMessage: Record<string, string> = {
 };
 
 export const useContainerTaskStore = defineStore("containerTask", {
-  state: () => ({
+  state: (): ContainerTaskState => ({
     tasks: {} as Record<string, ContainerTask>,
     order: [] as string[],
     logs: {} as Record<string, string>,
     logCursors: {} as Record<string, number>,
     loading: false,
     terminalRevision: 0,
+    autoStartTaskIds: [] as string[],
   }),
   actions: {
     isTerminal(status?: string) {
@@ -94,6 +109,11 @@ export const useContainerTaskStore = defineStore("containerTask", {
         tasks.forEach((task: ContainerTask) => {
           if (!this.isTerminal(task.status))
             this.connect(task.id);
+        });
+        this.autoStartTaskIds.forEach((taskId) => {
+          const task = this.tasks[taskId];
+          if (task) void this.startCreatedContainer(task);
+          else void this.track(taskId).catch(() => undefined);
         });
       } finally {
         this.loading = false;
@@ -140,7 +160,13 @@ export const useContainerTaskStore = defineStore("containerTask", {
         createdAt: data.createdAt || now,
         updatedAt: data.updatedAt || now,
         resourceName,
+        autoStartStatus: request.startAfterCreate ? "pending" : undefined,
       });
+      if (operation === "create" && request.startAfterCreate) {
+        this.autoStartTaskIds = Array.from(
+          new Set([...this.autoStartTaskIds, id]),
+        );
+      }
       this.connect(id);
       void this.track(id).catch(() => undefined);
     },
@@ -159,6 +185,59 @@ export const useContainerTaskStore = defineStore("containerTask", {
         this.isTerminal(next.status)
       ) {
         this.terminalRevision++;
+      }
+      if (
+        next.operation === "create" &&
+        this.isTerminal(next.status) &&
+        next.status !== "succeeded"
+      ) {
+        this.autoStartTaskIds = this.autoStartTaskIds.filter(
+          (taskId) => taskId !== next.id,
+        );
+      }
+      void this.startCreatedContainer(next);
+    },
+
+    async startCreatedContainer(task: ContainerTask) {
+      if (
+        task.operation !== "create" ||
+        task.status !== "succeeded" ||
+        !task.containerId ||
+        !this.autoStartTaskIds.includes(task.id) ||
+        autoStartInFlight.has(task.id)
+      ) {
+        return;
+      }
+      autoStartInFlight.add(task.id);
+      this.tasks[task.id] = {
+        ...task,
+        autoStartStatus: "starting",
+        autoStartError: undefined,
+      };
+      try {
+        await Api.runContainerAction(task.containerId, {
+          action: "start",
+          confirm: false,
+        });
+        this.autoStartTaskIds = this.autoStartTaskIds.filter(
+          (taskId) => taskId !== task.id,
+        );
+        this.tasks[task.id] = {
+          ...this.tasks[task.id],
+          autoStartStatus: "succeeded",
+        };
+        this.terminalRevision++;
+      } catch (error: any) {
+        this.autoStartTaskIds = this.autoStartTaskIds.filter(
+          (taskId) => taskId !== task.id,
+        );
+        this.tasks[task.id] = {
+          ...this.tasks[task.id],
+          autoStartStatus: "failed",
+          autoStartError: error?.message || "容器创建成功，但自动启动失败",
+        };
+      } finally {
+        autoStartInFlight.delete(task.id);
       }
     },
 
@@ -323,4 +402,9 @@ export const useContainerTaskStore = defineStore("containerTask", {
       );
     },
   },
+  persist: piniaPersistConfig<ContainerTaskState>(
+    "oneinstack_container_tasks",
+    localStorage,
+    ["autoStartTaskIds"],
+  ),
 });
