@@ -942,13 +942,13 @@ onBeforeUnmount(() => {
 }
 
 .terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-bar) {
-  background: transparent !important;
-  box-shadow: 2px 0 0 rgb(var(--primary-color)) inset !important;
+  background: transparent;
+  box-shadow: 2px 0 0 rgb(var(--primary-color)) inset;
 }
 
 .terminal-screen :deep(.xterm-rows .xterm-cursor.xterm-cursor-underline) {
-  height: calc(100% - 2px) !important;
-  border-bottom: 2px solid rgb(var(--primary-color)) !important;
+  height: calc(100% - 2px);
+  border-bottom: 2px solid rgb(var(--primary-color));
 }
 
 .terminal-screen :deep(.xterm-screen),

@@ -1,0 +1,30 @@
+@keyframes xterm-cursor-blink-box-shadow {
+  50% {
+    border-bottom-style: hidden;
+  }
+}
+
+@keyframes xterm-cursor-blink-block {
+  0% {
+    background-color: rgb(var(--primary-color));
+    color: #08111f;
+  }
+
+  50% {
+    background-color: inherit;
+    color: rgb(var(--primary-color));
+  }
+}
+
+.xterm .xterm-rows.xterm-focus .xterm-cursor.xterm-cursor-blink:not(.xterm-cursor-block) {
+  animation: xterm-cursor-blink-box-shadow 1s step-end infinite;
+}
+
+.xterm .xterm-rows.xterm-focus .xterm-cursor.xterm-cursor-blink.xterm-cursor-block {
+  animation: xterm-cursor-blink-block 1s step-end infinite;
+}
+
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-block {
+  background-color: rgb(var(--primary-color));
+  color: #08111f;
+}
