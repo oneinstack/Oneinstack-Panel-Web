@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import i18n from '@/lang'
 

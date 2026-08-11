@@ -1,4 +1,4 @@
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config'
 import i18n from '@/lang'
 
 export const menuKeyLabelMap: Record<string, string> = {
@@ -54,19 +54,24 @@ export const resolveMenuLabelByKey = (key?: string) => {
   return label && label !== i18nKey ? label : menuKeyLabelMap[key] || key
 }
 
-const hasConfigSnapshotAccess = () =>
-  sconfig.hasMenuAccess('configSnapshots') ||
-  sconfig.hasActionAccess('config.snapshot.read') ||
-  Boolean((sconfig.scopeAccess as any)?.config?.snapshot?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['config.snapshot']?.read)
+const hasConfigSnapshotAccess = () => {
+  const sconfig = useConfigStore()
+  return sconfig.hasMenuAccess('configSnapshots') ||
+    sconfig.hasActionAccess('config.snapshot.read') ||
+    Boolean((sconfig.scopeAccess as any)?.config?.snapshot?.read) ||
+    Boolean((sconfig.scopeAccess as any)?.['config.snapshot']?.read)
+}
 
-const hasSystemManagementAccess = () =>
-  sconfig.hasMenuAccess('systemManagement') ||
-  sconfig.hasActionAccess('system.settings.read') ||
-  Boolean((sconfig.scopeAccess as any)?.system?.settings?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
+const hasSystemManagementAccess = () => {
+  const sconfig = useConfigStore()
+  return sconfig.hasMenuAccess('systemManagement') ||
+    sconfig.hasActionAccess('system.settings.read') ||
+    Boolean((sconfig.scopeAccess as any)?.system?.settings?.read) ||
+    Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
+}
 
 export const canAccessPath = (path: string) => {
+  const sconfig = useConfigStore()
   const key = resolveMenuKeyByPath(path)
   if (!key) return true
   if (key === 'configSnapshots') return hasConfigSnapshotAccess()
@@ -75,6 +80,7 @@ export const canAccessPath = (path: string) => {
 }
 
 export const getFirstAccessiblePath = () => {
+  const sconfig = useConfigStore()
   const firstAccessible = menuPathKeyMap.find((item) => sconfig.hasMenuAccess(item.key))
   return firstAccessible?.path || '/home'
 }

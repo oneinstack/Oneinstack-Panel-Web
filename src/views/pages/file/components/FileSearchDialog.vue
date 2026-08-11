@@ -2,7 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 import { Search, FolderOpened, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 

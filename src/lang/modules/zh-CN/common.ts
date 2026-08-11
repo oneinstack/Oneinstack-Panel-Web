@@ -61,6 +61,13 @@ export default {
   deleteSuccess: '删除成功',
   operationSuccess: '操作成功',
   operationFailed: '操作失败',
+  request: {
+    failed: '请求失败',
+    httpStatus: '{message}：{status}',
+    timeout: '请求超时，请稍后再试',
+    networkError: '网络异常，请稍后再试',
+    initialPasswordRequired: '首次登录必须先修改初始密码'
+  },
   noMenuPermission: '当前账号暂无{menu}菜单权限',
   operationPreview: {
     title: '操作预览',

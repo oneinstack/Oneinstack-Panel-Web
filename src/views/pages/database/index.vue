@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
 import { computed, reactive } from 'vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'

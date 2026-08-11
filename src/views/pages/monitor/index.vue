@@ -3,11 +3,13 @@ import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+
+const sconfig = useConfigStore()
 
 interface MetricSample {
   id: number

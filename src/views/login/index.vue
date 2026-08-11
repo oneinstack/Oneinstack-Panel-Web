@@ -2,10 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import LoginContainer from './components/login-container.vue'
 import System from '@/utils/System'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
+
+const sconfig = useConfigStore()
 
 const isDesktop = ref(window.innerWidth > 980)
 const updateViewport = () => {
@@ -50,8 +52,7 @@ const conf = reactive({
         const { data: res } = await Api.login({
           username: conf.form.username,
           password: conf.form.password,
-          totpCode: conf.requiresTwoFactor ? conf.form.totpCode : '',
-          final: () => conf.loading = false
+          totpCode: conf.requiresTwoFactor ? conf.form.totpCode : ''
         })
         if (res.requiresTwoFactor && !res.authenticated) {
           conf.requiresTwoFactor = true
@@ -77,6 +78,8 @@ const conf = reactive({
           goAfterLogin(res.mustChangePassword ? '/first-login' : '/')
         }, 500)
       } catch {
+        // 请求层已经统一展示错误，此处只负责恢复加载状态。
+      } finally {
         conf.loading = false
       }
     })

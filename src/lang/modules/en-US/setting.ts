@@ -1,4 +1,5 @@
 export default {
+  systemInfoLoadFailed: 'Failed to load system information',
   tabs: {
     all: 'All settings',
     panel: 'Panel settings',

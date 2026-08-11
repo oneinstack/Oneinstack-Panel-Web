@@ -2,10 +2,12 @@
 import { computed, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { Api } from '@/api/Api'
-import sconfig from '@/sstore/sconfig'
+import { Api } from '@/api/modules'
+import { useConfigStore } from '@/stores/modules/config';
 import System from '@/utils/System'
 import i18n from '@/lang'
+
+const sconfig = useConfigStore()
 
 const t = (key: string, fallback?: string) => {
   const value = (i18n.t as any)(key)

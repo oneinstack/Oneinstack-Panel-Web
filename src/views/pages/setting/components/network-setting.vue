@@ -1,286 +1,395 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
-import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { Api } from '@/api/Api'
-import i18n from '@/lang'
-import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
+import { ElMessage, type FormInstance, type FormRules } from "element-plus";
+import { Api } from "@/api/modules";
+import i18n from "@/lang";
+import {
+  isOperationCancelled,
+  submitOperation,
+} from "@/utils/operationPreview";
 
 interface CertificateStatus {
-  valid: boolean
-  error?: string
-  notBefore?: string
-  notAfter?: string
-  dnsNames: string[]
-  ipAddresses: string[]
+  valid: boolean;
+  error?: string;
+  notBefore?: string;
+  notAfter?: string;
+  dnsNames: string[];
+  ipAddresses: string[];
 }
 
 interface NetworkSettings {
-  bindAddress: string
-  httpPort: string
-  httpAccessUrl: string
-  httpsEnabled: boolean
-  httpsPort: string
-  httpsAccessUrl: string
-  httpsCertificateFile: string
-  httpsPrivateKeyFile: string
-  trustedProxies: string[]
-  panelEntryEnabled: boolean
-  panelEntryPath: string
-  panelAccessURL?: string
-  panelAccessUrl?: string
-  certificate?: CertificateStatus
-  restartRequired: boolean
-  autoApplySupported: boolean
-  applyTransaction?: NetworkApplyTransaction
+  bindAddress: string;
+  httpPort: string;
+  httpAccessUrl: string;
+  httpsEnabled: boolean;
+  httpsPort: string;
+  httpsAccessUrl: string;
+  httpsCertificateFile: string;
+  httpsPrivateKeyFile: string;
+  trustedProxies: string[];
+  panelEntryEnabled: boolean;
+  panelEntryPath: string;
+  panelAccessURL?: string;
+  panelAccessUrl?: string;
+  certificate?: CertificateStatus;
+  restartRequired: boolean;
+  autoApplySupported: boolean;
+  applyTransaction?: NetworkApplyTransaction;
 }
 
 interface NetworkApplyTransaction {
-  id: string
-  status: 'scheduled' | 'applying' | 'succeeded' | 'rolled_back' | 'failed'
-  error?: string
-  createdAt: string
-  startedAt?: string
-  finishedAt?: string
-  httpUrl: string
-  httpsUrl?: string
-  rolledBack: boolean
-  recoverable: boolean
+  id: string;
+  status: "scheduled" | "applying" | "succeeded" | "rolled_back" | "failed";
+  error?: string;
+  createdAt: string;
+  startedAt?: string;
+  finishedAt?: string;
+  httpUrl: string;
+  httpsUrl?: string;
+  rolledBack: boolean;
+  recoverable: boolean;
 }
 
-const loading = ref(false)
-const saving = ref(false)
-const applyPolling = ref(false)
-const formRef = ref<FormInstance>()
-const current = ref<NetworkSettings>()
-const proxyText = ref('')
+const loading = ref(false);
+const saving = ref(false);
+const applyPolling = ref(false);
+const formRef = ref<FormInstance>();
+const current = ref<NetworkSettings>();
+const proxyText = ref("");
 const form = reactive({
-  bindAddress: '0.0.0.0',
-  httpPort: '8089',
+  bindAddress: "0.0.0.0",
+  httpPort: "8089",
   httpsEnabled: false,
-  httpsPort: '8443',
-  httpsCertificateFile: '',
-  httpsPrivateKeyFile: ''
-})
-let applyPollTimer: number | undefined
+  httpsPort: "8443",
+  httpsCertificateFile: "",
+  httpsPrivateKeyFile: "",
+});
+let applyPollTimer: number | undefined;
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
-  const value = (i18n.t as any)(key, params)
-  return value && value !== key ? value : fallback || key
-}
+  const value = (i18n.t as any)(key, params);
+  return value && value !== key ? value : fallback || key;
+};
 
-const validatePort = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  const port = Number(value)
-  if (!/^\d{1,5}$/.test(value) || !Number.isInteger(port) || port < 1 || port > 65535) {
-    callback(new Error(t('setting.network.portRange', '请输入 1-65535 之间的端口')))
-    return
+const validatePort = (
+  _rule: unknown,
+  value: string,
+  callback: (error?: Error) => void,
+) => {
+  const port = Number(value);
+  if (
+    !/^\d{1,5}$/.test(value) ||
+    !Number.isInteger(port) ||
+    port < 1 ||
+    port > 65535
+  ) {
+    callback(
+      new Error(t("setting.network.portRange", "请输入 1-65535 之间的端口")),
+    );
+    return;
   }
-  callback()
-}
+  callback();
+};
 
 const rules: FormRules = {
-  bindAddress: [{ required: true, message: t('setting.network.bindAddressRequired', '请输入监听 IP'), trigger: 'blur' }],
-  httpPort: [{ validator: validatePort, trigger: 'blur' }],
-  httpsPort: [{ validator: validatePort, trigger: 'blur' }],
-  httpsCertificateFile: [{
-    validator: (_rule, value, callback) => {
-      if (form.httpsEnabled && !String(value || '').trim()) {
-        callback(new Error(t('setting.network.certificateRequired', '启用 HTTPS 时必须填写证书文件')))
-        return
-      }
-      callback()
+  bindAddress: [
+    {
+      required: true,
+      message: t("setting.network.bindAddressRequired", "请输入监听 IP"),
+      trigger: "blur",
     },
-    trigger: 'blur'
-  }],
-  httpsPrivateKeyFile: [{
-    validator: (_rule, value, callback) => {
-      if (form.httpsEnabled && !String(value || '').trim()) {
-        callback(new Error(t('setting.network.privateKeyRequired', '启用 HTTPS 时必须填写私钥文件')))
-        return
-      }
-      callback()
+  ],
+  httpPort: [{ validator: validatePort, trigger: "blur" }],
+  httpsPort: [{ validator: validatePort, trigger: "blur" }],
+  httpsCertificateFile: [
+    {
+      validator: (_rule, value, callback) => {
+        if (form.httpsEnabled && !String(value || "").trim()) {
+          callback(
+            new Error(
+              t(
+                "setting.network.certificateRequired",
+                "启用 HTTPS 时必须填写证书文件",
+              ),
+            ),
+          );
+          return;
+        }
+        callback();
+      },
+      trigger: "blur",
     },
-    trigger: 'blur'
-  }]
-}
+  ],
+  httpsPrivateKeyFile: [
+    {
+      validator: (_rule, value, callback) => {
+        if (form.httpsEnabled && !String(value || "").trim()) {
+          callback(
+            new Error(
+              t(
+                "setting.network.privateKeyRequired",
+                "启用 HTTPS 时必须填写私钥文件",
+              ),
+            ),
+          );
+          return;
+        }
+        callback();
+      },
+      trigger: "blur",
+    },
+  ],
+};
 
 const certificateNames = computed(() => {
-  const certificate = current.value?.certificate
-  if (!certificate?.valid) return ''
-  return [...(certificate.ipAddresses || []), ...(certificate.dnsNames || [])].join('、')
-})
+  const certificate = current.value?.certificate;
+  if (!certificate?.valid) return "";
+  return [
+    ...(certificate.ipAddresses || []),
+    ...(certificate.dnsNames || []),
+  ].join("、");
+});
 
 const applySettings = (settings: NetworkSettings) => {
-  current.value = settings
-  form.bindAddress = settings.bindAddress || '0.0.0.0'
-  form.httpPort = settings.httpPort || '8089'
-  form.httpsEnabled = Boolean(settings.httpsEnabled)
-  form.httpsPort = settings.httpsPort || '8443'
-  form.httpsCertificateFile = settings.httpsCertificateFile || ''
-  form.httpsPrivateKeyFile = settings.httpsPrivateKeyFile || ''
-  proxyText.value = (settings.trustedProxies || []).join('\n')
-}
+  current.value = settings;
+  form.bindAddress = settings.bindAddress || "0.0.0.0";
+  form.httpPort = settings.httpPort || "8089";
+  form.httpsEnabled = Boolean(settings.httpsEnabled);
+  form.httpsPort = settings.httpsPort || "8443";
+  form.httpsCertificateFile = settings.httpsCertificateFile || "";
+  form.httpsPrivateKeyFile = settings.httpsPrivateKeyFile || "";
+  proxyText.value = (settings.trustedProxies || []).join("\n");
+};
 
 const loadSettings = async (notify = false) => {
-  loading.value = true
+  loading.value = true;
   try {
-    const { data } = await Api.getPanelNetwork()
-    applySettings(data)
-    if (notify) ElMessage.success(t('setting.network.refreshSuccess', '面板访问配置已刷新'))
+    const { data } = await Api.getPanelNetwork();
+    applySettings(data);
+    if (notify)
+      ElMessage.success(
+        t("setting.network.refreshSuccess", "面板访问配置已刷新"),
+      );
   } catch (error) {
-    const message = error instanceof Error && error.message ? error.message : t('setting.network.loadFailed', '获取面板访问配置失败')
-    ElMessage.error(message)
+    const message =
+      error instanceof Error && error.message
+        ? error.message
+        : t("setting.network.loadFailed", "获取面板访问配置失败");
+    ElMessage.error(message);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 const applyStatusTitle = computed(() => {
-  const transaction = current.value?.applyTransaction
-  if (!transaction) return ''
+  const transaction = current.value?.applyTransaction;
+  if (!transaction) return "";
   switch (transaction.status) {
-    case 'scheduled':
-      return t('setting.network.applyScheduled', '访问配置已保存，systemd 即将自动重启面板')
-    case 'applying':
-      return t('setting.network.applyApplying', '正在应用新的访问配置并执行就绪检查')
-    case 'succeeded':
-      return t('setting.network.applySucceeded', '新的访问配置已自动应用')
-    case 'rolled_back':
-      return t('setting.network.applyRolledBack', '新配置启动失败，已自动恢复原访问配置')
-    case 'failed':
-      return t('setting.network.applyFailed', '访问配置自动应用失败，需要检查 systemd 状态')
+    case "scheduled":
+      return t(
+        "setting.network.applyScheduled",
+        "访问配置已保存，systemd 即将自动重启面板",
+      );
+    case "applying":
+      return t(
+        "setting.network.applyApplying",
+        "正在应用新的访问配置并执行就绪检查",
+      );
+    case "succeeded":
+      return t("setting.network.applySucceeded", "新的访问配置已自动应用");
+    case "rolled_back":
+      return t(
+        "setting.network.applyRolledBack",
+        "新配置启动失败，已自动恢复原访问配置",
+      );
+    case "failed":
+      return t(
+        "setting.network.applyFailed",
+        "访问配置自动应用失败，需要检查 systemd 状态",
+      );
     default:
-      return ''
+      return "";
   }
-})
+});
 
 const applyStatusType = computed(() => {
-  const status = current.value?.applyTransaction?.status
-  if (status === 'succeeded') return 'success'
-  if (status === 'rolled_back' || status === 'failed') return 'error'
-  return 'warning'
-})
+  const status = current.value?.applyTransaction?.status;
+  if (status === "succeeded") return "success";
+  if (status === "rolled_back" || status === "failed") return "error";
+  return "warning";
+});
 
 const browserHTTPOrigin = (url: string) => {
-  const browserHost = window.location.hostname.includes(':')
-    ? `[${window.location.hostname.replace(/^\[|\]$/g, '')}]`
-    : window.location.hostname
-  return url.replace('服务器IP', browserHost).replace(/\/+$/, '')
-}
+  const browserHost = window.location.hostname.includes(":")
+    ? `[${window.location.hostname.replace(/^\[|\]$/g, "")}]`
+    : window.location.hostname;
+  return url.replace("服务器IP", browserHost).replace(/\/+$/, "");
+};
 
 const stopApplyPolling = () => {
   if (applyPollTimer !== undefined) {
-    window.clearTimeout(applyPollTimer)
-    applyPollTimer = undefined
+    window.clearTimeout(applyPollTimer);
+    applyPollTimer = undefined;
   }
-  applyPolling.value = false
-}
+  applyPolling.value = false;
+};
 
 const followNetworkTransaction = async (
   transaction: NetworkApplyTransaction,
-  attempts = 0
+  attempts = 0,
 ) => {
   if (attempts >= 50) {
-    stopApplyPolling()
-    ElMessage.warning(t('setting.network.restartSlow', '面板重启时间较长，请稍后使用新地址访问并检查 systemd 状态'))
-    return
+    stopApplyPolling();
+    ElMessage.warning(
+      t(
+        "setting.network.restartSlow",
+        "面板重启时间较长，请稍后使用新地址访问并检查 systemd 状态",
+      ),
+    );
+    return;
   }
-  applyPolling.value = true
+  applyPolling.value = true;
   try {
-    const { data } = await Api.getPanelNetworkTransaction(transaction.id)
+    const { data } = await Api.getPanelNetworkTransaction(transaction.id);
     current.value = {
       ...(current.value as NetworkSettings),
-      applyTransaction: data
-    }
-    if (data.status === 'succeeded') {
-      stopApplyPolling()
-      const newOrigin = browserHTTPOrigin(data.httpUrl)
+      applyTransaction: data,
+    };
+    if (data.status === "succeeded") {
+      stopApplyPolling();
+      const newOrigin = browserHTTPOrigin(data.httpUrl);
       if (newOrigin !== window.location.origin) {
-        ElMessage.success(t('setting.network.newAddressReady', '新访问地址已就绪，正在跳转'))
-        window.location.assign(`${newOrigin}${window.location.pathname}${window.location.hash}`)
+        ElMessage.success(
+          t("setting.network.newAddressReady", "新访问地址已就绪，正在跳转"),
+        );
+        window.location.assign(
+          `${newOrigin}${window.location.pathname}${window.location.hash}`,
+        );
       } else {
-        ElMessage.success(t('setting.network.applyAutoSuccess', '访问配置已自动应用'))
-        await loadSettings()
+        ElMessage.success(
+          t("setting.network.applyAutoSuccess", "访问配置已自动应用"),
+        );
+        await loadSettings();
       }
-      return
+      return;
     }
-    if (data.status === 'rolled_back' || data.status === 'failed') {
-      stopApplyPolling()
-      ElMessage.error(data.error || t('setting.network.applyRollbackMessage', '新配置启动失败，已恢复原访问方式'))
-      await loadSettings()
-      return
+    if (data.status === "rolled_back" || data.status === "failed") {
+      stopApplyPolling();
+      ElMessage.error(
+        data.error ||
+          t(
+            "setting.network.applyRollbackMessage",
+            "新配置启动失败，已恢复原访问方式",
+          ),
+      );
+      await loadSettings();
+      return;
     }
   } catch {
-    const newOrigin = browserHTTPOrigin(transaction.httpUrl)
+    const newOrigin = browserHTTPOrigin(transaction.httpUrl);
     try {
       await window.fetch(`${newOrigin}/health/ready`, {
-        method: 'GET',
-        cache: 'no-store',
-        mode: newOrigin === window.location.origin ? 'same-origin' : 'no-cors'
-      })
+        method: "GET",
+        cache: "no-store",
+        mode: newOrigin === window.location.origin ? "same-origin" : "no-cors",
+      });
       if (newOrigin !== window.location.origin) {
-        stopApplyPolling()
-        window.location.assign(`${newOrigin}${window.location.pathname}${window.location.hash}`)
-        return
+        stopApplyPolling();
+        window.location.assign(
+          `${newOrigin}${window.location.pathname}${window.location.hash}`,
+        );
+        return;
       }
     } catch {
-      // Old and new addresses can both be briefly unavailable during restart.
+      // 服务重启期间，新旧地址都可能短暂不可用。
     }
   }
   applyPollTimer = window.setTimeout(
     () => followNetworkTransaction(transaction, attempts + 1),
-    1500
-  )
-}
+    1500,
+  );
+};
 
 const saveSettings = async () => {
-  if (!formRef.value) return
-  const valid = await formRef.value.validate().catch(() => false)
-  if (!valid) return
+  if (!formRef.value) return;
+  const valid = await formRef.value.validate().catch(() => false);
+  if (!valid) return;
   if (form.httpsEnabled && form.httpPort === form.httpsPort) {
-    ElMessage.error(t('setting.network.differentPortsRequired', 'HTTP 与 HTTPS 必须使用不同端口'))
-    return
+    ElMessage.error(
+      t(
+        "setting.network.differentPortsRequired",
+        "HTTP 与 HTTPS 必须使用不同端口",
+      ),
+    );
+    return;
   }
-  saving.value = true
+  saving.value = true;
   try {
     const trustedProxies = proxyText.value
       .split(/[\n,]+/)
-      .map(item => item.trim())
-      .filter(Boolean)
-    const panelEntryEnabled = Boolean(current.value?.panelEntryEnabled)
-    const { data } = await submitOperation('panel.network', {
+      .map((item) => item.trim())
+      .filter(Boolean);
+    const panelEntryEnabled = Boolean(current.value?.panelEntryEnabled);
+    const { data } = await submitOperation("panel.network", {
       ...form,
       trustedProxies,
       panelEntryEnabled,
-      panelEntryPath: panelEntryEnabled ? (current.value?.panelEntryPath || '') : '',
-      rotatePanelEntry: false
-    })
-    applySettings(data)
+      panelEntryPath: panelEntryEnabled
+        ? current.value?.panelEntryPath || ""
+        : "",
+      rotatePanelEntry: false,
+    });
+    applySettings(data);
     if (data.applyTransaction) {
-      ElMessage.success(t('setting.network.savedAutoApply', '配置已保存，将自动重启并验证；失败时会恢复原配置'))
-      void followNetworkTransaction(data.applyTransaction)
+      ElMessage.success(
+        t(
+          "setting.network.savedAutoApply",
+          "配置已保存，将自动重启并验证；失败时会恢复原配置",
+        ),
+      );
+      void followNetworkTransaction(data.applyTransaction);
     } else if (data.restartRequired) {
-      ElMessage.warning(t('setting.network.savedManualRestart', '当前不是受管 systemd 环境，配置已保存，请手动重启面板'))
+      ElMessage.warning(
+        t(
+          "setting.network.savedManualRestart",
+          "当前不是受管 systemd 环境，配置已保存，请手动重启面板",
+        ),
+      );
     } else {
-      ElMessage.success(t('setting.network.validateSuccess', '配置校验通过'))
+      ElMessage.success(t("setting.network.validateSuccess", "配置校验通过"));
     }
   } catch (error) {
-    if (isOperationCancelled(error)) return
-    ElMessage.error(t('setting.network.saveFailed', '访问配置保存失败，请检查端口、证书文件和私钥文件'))
+    if (isOperationCancelled(error)) return;
+    ElMessage.error(
+      t(
+        "setting.network.saveFailed",
+        "访问配置保存失败，请检查端口、证书文件和私钥文件",
+      ),
+    );
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 
-onMounted(() => loadSettings())
-onBeforeUnmount(stopApplyPolling)
+onMounted(() => loadSettings());
+onBeforeUnmount(stopApplyPolling);
 </script>
 
 <template>
   <section class="network-setting" v-loading="loading">
     <div class="network-setting__header">
       <div class="network-setting__heading">
-        <div class="network-setting__title">{{ t('setting.network.title', '面板访问方式') }}</div>
-        <p class="network-setting__subtitle">{{ t('setting.network.description', '配置面板入口、HTTPS 证书和可信代理，保证远程访问稳定且安全。') }}</p>
+        <div class="network-setting__title">
+          {{ t("setting.network.title", "面板访问方式") }}
+        </div>
+        <p class="network-setting__subtitle">
+          {{
+            t(
+              "setting.network.description",
+              "配置面板入口、HTTPS 证书和可信代理，保证远程访问稳定且安全。",
+            )
+          }}
+        </p>
       </div>
       <el-button
         class="network-setting__refresh"
@@ -288,29 +397,50 @@ onBeforeUnmount(stopApplyPolling)
         :disabled="saving || applyPolling"
         @click="loadSettings(true)"
       >
-        {{ t('setting.network.refreshConfig', '刷新访问配置') }}
+        {{ t("setting.network.refreshConfig", "刷新访问配置") }}
       </el-button>
     </div>
 
     <div class="network-overview">
       <div class="network-overview__intro">
-        <div class="network-overview__tag">{{ t('setting.network.httpDefaultKept', 'HTTP 默认保留') }}</div>
+        <div class="network-overview__tag">
+          {{ t("setting.network.httpDefaultKept", "HTTP 默认保留") }}
+        </div>
         <p class="network-overview__text">
-          {{ t('setting.network.overviewText', '面板默认监听服务器网卡，可直接使用服务器 IP 访问。HTTPS 是可选的独立入口；启用后不会关闭 HTTP，也不会自动强制跳转。') }}
+          {{
+            t(
+              "setting.network.overviewText",
+              "面板默认监听服务器网卡，可直接使用服务器 IP 访问。HTTPS 是可选的独立入口；启用后不会关闭 HTTP，也不会自动强制跳转。",
+            )
+          }}
         </p>
       </div>
       <div v-if="current" class="network-overview__cards">
         <div class="summary-card">
-          <span class="summary-card__label">{{ t('setting.network.httpAddress', 'HTTP 地址') }}</span>
-          <strong class="summary-card__value">{{ current.httpAccessUrl }}</strong>
+          <span class="summary-card__label">{{
+            t("setting.network.httpAddress", "HTTP 地址")
+          }}</span>
+          <strong class="summary-card__value">{{
+            current.httpAccessUrl
+          }}</strong>
         </div>
         <div class="summary-card">
-          <span class="summary-card__label">{{ t('setting.network.httpsAddress', 'HTTPS 地址') }}</span>
-          <strong class="summary-card__value">{{ current.httpsEnabled ? current.httpsAccessUrl : t('setting.network.notEnabledOptional', '未启用（可选）') }}</strong>
+          <span class="summary-card__label">{{
+            t("setting.network.httpsAddress", "HTTPS 地址")
+          }}</span>
+          <strong class="summary-card__value">{{
+            current.httpsEnabled
+              ? current.httpsAccessUrl
+              : t("setting.network.notEnabledOptional", "未启用（可选）")
+          }}</strong>
         </div>
         <div class="summary-card">
-          <span class="summary-card__label">{{ t('setting.network.currentListen', '当前监听') }}</span>
-          <strong class="summary-card__value">{{ current.bindAddress }}:{{ current.httpPort }}</strong>
+          <span class="summary-card__label">{{
+            t("setting.network.currentListen", "当前监听")
+          }}</span>
+          <strong class="summary-card__value"
+            >{{ current.bindAddress }}:{{ current.httpPort }}</strong
+          >
         </div>
       </div>
     </div>
@@ -318,9 +448,17 @@ onBeforeUnmount(stopApplyPolling)
     <el-alert
       v-if="current?.restartRequired"
       class="setting-alert"
-      :title="current.autoApplySupported
-        ? t('setting.network.autoApplyingTip', '配置正在由 systemd 自动应用，启动失败会恢复原配置。')
-        : t('setting.network.manualRestartTip', '当前不是受管 systemd 环境；配置已保存，请手动重启面板服务。')"
+      :title="
+        current.autoApplySupported
+          ? t(
+              'setting.network.autoApplyingTip',
+              '配置正在由 systemd 自动应用，启动失败会恢复原配置。',
+            )
+          : t(
+              'setting.network.manualRestartTip',
+              '当前不是受管 systemd 环境；配置已保存，请手动重启面板服务。',
+            )
+      "
       type="warning"
       :closable="false"
       show-icon
@@ -333,29 +471,72 @@ onBeforeUnmount(stopApplyPolling)
       :type="applyStatusType"
       :closable="false"
       show-icon
-      :description="current.applyTransaction.error || (applyPolling ? t('setting.network.pollingTip', '页面会持续检查状态，新地址就绪后自动跳转。') : '')"
+      :description="
+        current.applyTransaction.error ||
+        (applyPolling
+          ? t(
+              'setting.network.pollingTip',
+              '页面会持续检查状态，新地址就绪后自动跳转。',
+            )
+          : '')
+      "
     />
 
-    <el-form ref="formRef" :model="form" :rules="rules" label-position="top" class="network-form">
+    <el-form
+      ref="formRef"
+      :model="form"
+      :rules="rules"
+      label-position="top"
+      class="network-form"
+    >
       <div class="form-section">
         <div class="form-section__header">
           <div>
             <h3>
-              {{ t('setting.network.basicAccess', '基础访问') }}
-              <el-tag class="risk-tag" size="small" type="warning">{{ t('setting.network.mediumRisk', '中风险') }}</el-tag>
+              {{ t("setting.network.basicAccess", "基础访问") }}
+              <el-tag class="risk-tag" size="small" type="warning">{{
+                t("setting.network.mediumRisk", "中风险")
+              }}</el-tag>
             </h3>
-            <p>{{ t('setting.network.basicAccessDesc', '配置监听地址和默认 HTTP 入口，确保面板始终可访问。') }}</p>
+            <p>
+              {{
+                t(
+                  "setting.network.basicAccessDesc",
+                  "配置监听地址和默认 HTTP 入口，确保面板始终可访问。",
+                )
+              }}
+            </p>
           </div>
         </div>
         <div class="form-grid">
-          <el-form-item :label="t('setting.network.bindIp', '监听 IP')" prop="bindAddress">
+          <el-form-item
+            :label="t('setting.network.bindIp', '监听 IP')"
+            prop="bindAddress"
+          >
             <el-input v-model="form.bindAddress" placeholder="0.0.0.0" />
-            <div class="form-tip">{{ t('setting.network.bindIpTip', '默认 0.0.0.0，表示监听服务器所有 IPv4 网卡，用户可使用任一可达服务器 IP。') }}</div>
+            <div class="form-tip">
+              {{
+                t(
+                  "setting.network.bindIpTip",
+                  "默认 0.0.0.0，表示监听服务器所有 IPv4 网卡，用户可使用任一可达服务器 IP。",
+                )
+              }}
+            </div>
           </el-form-item>
 
-          <el-form-item :label="t('setting.network.httpPort', 'HTTP 端口')" prop="httpPort">
+          <el-form-item
+            :label="t('setting.network.httpPort', 'HTTP 端口')"
+            prop="httpPort"
+          >
             <el-input v-model="form.httpPort" placeholder="8089" />
-            <div class="form-tip">{{ t('setting.network.httpPortTip', 'HTTP 始终保留，防止 HTTPS 证书或域名配置问题导致面板失联。') }}</div>
+            <div class="form-tip">
+              {{
+                t(
+                  "setting.network.httpPortTip",
+                  "HTTP 始终保留，防止 HTTPS 证书或域名配置问题导致面板失联。",
+                )
+              }}
+            </div>
           </el-form-item>
         </div>
       </div>
@@ -364,10 +545,17 @@ onBeforeUnmount(stopApplyPolling)
         <div class="https-toggle">
           <div class="https-toggle__content">
             <span class="https-toggle__title">
-              {{ t('setting.network.enableHttps', '启用 HTTPS（可选）') }}
-              <el-tag class="risk-tag" size="small" type="warning">{{ t('setting.network.mediumRisk', '中风险') }}</el-tag>
+              {{ t("setting.network.enableHttps", "启用 HTTPS（可选）") }}
+              <el-tag class="risk-tag" size="small" type="warning">{{
+                t("setting.network.mediumRisk", "中风险")
+              }}</el-tag>
             </span>
-            <span class="https-toggle__desc">{{ t('setting.network.enableHttpsDesc', '开启独立加密入口，但不会替换当前 HTTP 地址。') }}</span>
+            <span class="https-toggle__desc">{{
+              t(
+                "setting.network.enableHttpsDesc",
+                "开启独立加密入口，但不会替换当前 HTTP 地址。",
+              )
+            }}</span>
           </div>
           <el-switch v-model="form.httpsEnabled" />
         </div>
@@ -375,23 +563,47 @@ onBeforeUnmount(stopApplyPolling)
         <template v-if="form.httpsEnabled">
           <div class="form-section__header form-section__header--compact">
             <div>
-              <h3>{{ t('setting.network.httpsConfig', 'HTTPS 配置') }}</h3>
-              <p>{{ t('setting.network.httpsConfigDesc', '保存时会校验证书和私钥是否匹配，以及端口是否可用。') }}</p>
+              <h3>{{ t("setting.network.httpsConfig", "HTTPS 配置") }}</h3>
+              <p>
+                {{
+                  t(
+                    "setting.network.httpsConfigDesc",
+                    "保存时会校验证书和私钥是否匹配，以及端口是否可用。",
+                  )
+                }}
+              </p>
             </div>
           </div>
 
           <div class="form-grid">
-            <el-form-item :label="t('setting.network.httpsPort', 'HTTPS 端口')" prop="httpsPort">
+            <el-form-item
+              :label="t('setting.network.httpsPort', 'HTTPS 端口')"
+              prop="httpsPort"
+            >
               <el-input v-model="form.httpsPort" placeholder="8443" />
             </el-form-item>
 
             <div class="form-grid__spacer" />
 
-            <el-form-item class="form-grid__full" :label="t('setting.network.certificateFile', '证书文件')" prop="httpsCertificateFile">
-              <el-input v-model="form.httpsCertificateFile" placeholder="/usr/local/one/certificates/panel/fullchain.pem" />
+            <el-form-item
+              class="form-grid__full"
+              :label="t('setting.network.certificateFile', '证书文件')"
+              prop="httpsCertificateFile"
+            >
+              <el-input
+                v-model="form.httpsCertificateFile"
+                placeholder="/usr/local/one/certificates/panel/fullchain.pem"
+              />
             </el-form-item>
-            <el-form-item class="form-grid__full" :label="t('setting.network.privateKeyFile', '私钥文件')" prop="httpsPrivateKeyFile">
-              <el-input v-model="form.httpsPrivateKeyFile" placeholder="/usr/local/one/certificates/panel/privkey.pem" />
+            <el-form-item
+              class="form-grid__full"
+              :label="t('setting.network.privateKeyFile', '私钥文件')"
+              prop="httpsPrivateKeyFile"
+            >
+              <el-input
+                v-model="form.httpsPrivateKeyFile"
+                placeholder="/usr/local/one/certificates/panel/privkey.pem"
+              />
             </el-form-item>
           </div>
 
@@ -401,10 +613,26 @@ onBeforeUnmount(stopApplyPolling)
             :type="current.certificate.valid ? 'success' : 'error'"
             :closable="false"
             show-icon
-            :title="current.certificate.valid ? t('setting.network.certificateValid', '证书与私钥匹配且在有效期内') : t('setting.network.certificateInvalid', '证书不可用')"
-            :description="current.certificate.valid
-              ? t('setting.network.certificateNames', '证书名称：{names}', { names: certificateNames || t('setting.network.certificateNoSan', '证书未声明 DNS/IP SAN；使用 IP 访问 HTTPS 时浏览器可能告警') })
-              : current.certificate.error"
+            :title="
+              current.certificate.valid
+                ? t(
+                    'setting.network.certificateValid',
+                    '证书与私钥匹配且在有效期内',
+                  )
+                : t('setting.network.certificateInvalid', '证书不可用')
+            "
+            :description="
+              current.certificate.valid
+                ? t('setting.network.certificateNames', '证书名称：{names}', {
+                    names:
+                      certificateNames ||
+                      t(
+                        'setting.network.certificateNoSan',
+                        '证书未声明 DNS/IP SAN；使用 IP 访问 HTTPS 时浏览器可能告警',
+                      ),
+                  })
+                : current.certificate.error
+            "
           />
         </template>
       </div>
@@ -412,29 +640,65 @@ onBeforeUnmount(stopApplyPolling)
       <div class="form-section">
         <div class="form-section__header form-section__header--compact">
           <div>
-            <h3>{{ t('setting.network.trustedProxy', '可信反向代理') }}</h3>
-            <p>{{ t('setting.network.trustedProxyDesc', '仅在你确认请求会经过自有代理层时填写，避免来源头被伪造。') }}</p>
+            <h3>{{ t("setting.network.trustedProxy", "可信反向代理") }}</h3>
+            <p>
+              {{
+                t(
+                  "setting.network.trustedProxyDesc",
+                  "仅在你确认请求会经过自有代理层时填写，避免来源头被伪造。",
+                )
+              }}
+            </p>
           </div>
         </div>
 
-        <el-form-item :label="t('setting.network.proxyAllowlist', '代理地址白名单')">
+        <el-form-item
+          :label="t('setting.network.proxyAllowlist', '代理地址白名单')"
+        >
           <el-input
             v-model="proxyText"
             type="textarea"
             :rows="4"
-            :placeholder="t('setting.network.proxyPlaceholder', '默认留空；如使用 Nginx/Caddy 反代，一行填写一个代理 IP 或 CIDR')"
+            :placeholder="
+              t(
+                'setting.network.proxyPlaceholder',
+                '默认留空；如使用 Nginx/Caddy 反代，一行填写一个代理 IP 或 CIDR',
+              )
+            "
           />
-          <div class="form-tip">{{ t('setting.network.proxyTip', '留空时不信任任何转发头，直接 IP 访问最安全。只填写实际由你管理的反向代理地址。') }}</div>
+          <div class="form-tip">
+            {{
+              t(
+                "setting.network.proxyTip",
+                "留空时不信任任何转发头，直接 IP 访问最安全。只填写实际由你管理的反向代理地址。",
+              )
+            }}
+          </div>
         </el-form-item>
       </div>
 
       <div class="network-form__footer">
-        <el-button type="warning" :loading="saving || applyPolling" @click="saveSettings">
-          {{ applyPolling ? t('setting.network.applyingConfig', '正在应用配置') : t('setting.network.validateAndSave', '校验并保存') }}
+        <el-button
+          type="warning"
+          :loading="saving || applyPolling"
+          @click="saveSettings"
+        >
+          {{
+            applyPolling
+              ? t("setting.network.applyingConfig", "正在应用配置")
+              : t("setting.network.validateAndSave", "校验并保存")
+          }}
         </el-button>
         <div class="network-form__risk">
-          <el-tag size="small" type="warning">{{ t('setting.network.mediumRisk', '中风险') }}</el-tag>
-          <span>{{ t('setting.network.saveRiskTip', '保存后可能重启面板访问服务，端口或证书配置错误时会影响当前访问。') }}</span>
+          <el-tag size="small" type="warning">{{
+            t("setting.network.mediumRisk", "中风险")
+          }}</el-tag>
+          <span>{{
+            t(
+              "setting.network.saveRiskTip",
+              "保存后可能重启面板访问服务，端口或证书配置错误时会影响当前访问。",
+            )
+          }}</span>
         </div>
       </div>
     </el-form>
@@ -474,7 +738,7 @@ onBeforeUnmount(stopApplyPolling)
     color: var(--text-primary);
 
     &::before {
-      content: '';
+      content: "";
       width: 3px;
       height: 17px;
       margin-right: 9px;
@@ -502,7 +766,11 @@ onBeforeUnmount(stopApplyPolling)
   margin-top: 18px;
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.96),
+    rgba(248, 250, 252, 0.96)
+  );
 
   &__intro {
     display: flex;
@@ -541,7 +809,9 @@ onBeforeUnmount(stopApplyPolling)
   padding: 16px 18px;
   border-radius: 14px;
   background: #fff;
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.04), 0 10px 24px rgba(15, 23, 42, 0.04);
+  box-shadow:
+    0 1px 0 rgba(15, 23, 42, 0.04),
+    0 10px 24px rgba(15, 23, 42, 0.04);
 
   &__label {
     display: block;

@@ -2,7 +2,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowLeft, Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'

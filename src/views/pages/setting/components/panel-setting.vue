@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { watchEffect } from 'vue'
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config';
 import System from '@/utils/System'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
+
+const sconfig = useConfigStore()
 
 
 

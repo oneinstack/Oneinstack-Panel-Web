@@ -61,6 +61,13 @@ export default {
   deleteSuccess: 'Deleted successfully',
   operationSuccess: 'Operation succeeded',
   operationFailed: 'Operation failed',
+  request: {
+    failed: 'Request failed',
+    httpStatus: '{message}: {status}',
+    timeout: 'Request timed out. Please try again later.',
+    networkError: 'Network error. Please try again later.',
+    initialPasswordRequired: 'Change the initial password before continuing.'
+  },
   noMenuPermission: 'This account does not have permission for the {menu} menu',
   operationPreview: {
     title: 'Operation preview',

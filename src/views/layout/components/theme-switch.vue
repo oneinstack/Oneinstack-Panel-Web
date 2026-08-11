@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import { toRefs } from 'vue'
+
+const sapp = useAppStore()
 
 const { theme } = toRefs(sapp)
 sapp.setTheme(theme.value)

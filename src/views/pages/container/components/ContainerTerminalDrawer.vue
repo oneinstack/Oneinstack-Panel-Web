@@ -14,12 +14,14 @@ import {
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import System from '@/utils/System'
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import i18n from '@/lang'
 import { resolveHttpErrorMessage } from '@/utils/http-error'
 import type { ContainerItem } from '../types'
+
+const sapp = useAppStore()
 
 interface ContainerTerminalRisk {
   code?: string
@@ -218,7 +220,7 @@ const handleFullscreenChange = () => {
       fitAddon?.fit()
       sendSize()
     } catch {
-      // Layout may still be changing during fullscreen transitions.
+      // 全屏切换期间布局可能仍在变化，稍后会再次调整终端尺寸。
     }
   }, 80)
 }
@@ -298,11 +300,14 @@ const connectTerminal = async () => {
     if (status.value?.requiresHighRiskConfirmation && !confirmedHighRisk) {
       throw new Error('cancel')
     }
-    const { data } = await Api.createContainerTerminalTicket(props.target.ID, {
-      password,
-      confirmHighRisk: status.value?.requiresHighRiskConfirmation ? true : undefined,
-      silentError: true
-    })
+    const { data } = await Api.createContainerTerminalTicket(
+      props.target.ID,
+      {
+        password,
+        confirmHighRisk: status.value?.requiresHighRiskConfirmation ? true : undefined
+      },
+      { silentError: true }
+    )
     const apiBase = new URL(System.env.API || '/v1', window.location.origin)
     const protocol = apiBase.protocol === 'https:' ? 'wss:' : 'ws:'
     const apiPath = apiBase.pathname.replace(/\/$/, '')
@@ -404,7 +409,7 @@ const initializeTerminal = async () => {
       try {
         fitAddon?.fit()
       } catch {
-        // Drawer transitions may briefly collapse the terminal area.
+        // 抽屉过渡期间终端区域可能短暂收缩，稍后会再次调整尺寸。
       }
     })
     resizeObserver.observe(terminalDiv.value)

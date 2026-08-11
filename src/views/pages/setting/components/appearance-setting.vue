@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, toRefs, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import {
   DEFAULT_THEME_ACCENT,
   THEME_ACCENT_PRESETS,
@@ -9,6 +9,8 @@ import {
   type PageTheme
 } from '@/utils/theme'
 import i18n from '@/lang'
+
+const sapp = useAppStore()
 
 const { theme, accentColor } = toRefs(sapp)
 const customColor = ref(accentColor.value)

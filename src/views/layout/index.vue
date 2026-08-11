@@ -2,15 +2,19 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import LanguageSwitch from './components/language-switch.vue'
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import { Bell, Expand, Fold } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
-import sconfig from '@/sstore/sconfig'
-import { Api } from '@/api/Api'
-import softwareTaskStore, { type SoftwareTask } from '@/sstore/softwareTask'
+import { useConfigStore } from '@/stores/modules/config';
+import { Api } from '@/api/modules'
+import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
+
+const sapp = useAppStore()
+const sconfig = useConfigStore()
+const softwareTaskStore = useSoftwareTaskStore()
 
 
 interface ItemColor {

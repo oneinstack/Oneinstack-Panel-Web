@@ -1,22 +1,25 @@
+import http from "@/api";
+
 export const ApiTest = {
   /** 上传文件 */
   upload: (obj: any) => {
-    return http.post(
-      {
-        url: '/system/upload',
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        onProgress(percent, loaded, total) {
-          if (obj?.onProgress) obj.onProgress(percent, loaded, total)
-        }
+    const { onProgress, ...data } = obj || {};
+    return http.post("/system/upload", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+      onUploadProgress(event) {
+        if (!onProgress) return;
+        const total = event.total || 0;
+        onProgress(
+          total ? Math.round((event.loaded / total) * 100) : 0,
+          event.loaded,
+          total,
+        );
       },
-      obj
-    )
+    });
   },
 
   /** 获取系统时间 */
   getTime: (obj: any) => {
-    return http.get('/system/getTime', obj)
-  }
-}
+    return http.get("/system/getTime", obj);
+  },
+};

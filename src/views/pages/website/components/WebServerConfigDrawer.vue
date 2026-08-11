@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ArrowLeft, Document, Refresh } from '@element-plus/icons-vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import i18n from '@/lang'
 
 type WebServerInfo = {
   available: boolean
@@ -75,7 +76,7 @@ const formatSize = (size: number) => {
 const formatTime = (value: string) => {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return '-'
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(i18n.locale, {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
@@ -134,7 +135,7 @@ const load = async (preserveSelection = false) => {
       state.revision = ''
     }
   } catch (error: any) {
-    ElMessage.error(error?.message || '读取 Web 服务器配置失败')
+    ElMessage.error(error?.message || i18n.t('website.notifications.webServerConfigLoadFailed'))
   } finally {
     state.loading = false
   }
@@ -180,15 +181,15 @@ const save = async () => {
       file.size = data.size
       file.modifiedAt = data.modifiedAt
     }
-    ElMessage.success(data.reloaded ? '配置保存成功，Web 服务已平滑重载' : '配置保存成功，服务当前未运行')
+    ElMessage.success(i18n.t(data.reloaded ? 'website.notifications.webServerConfigSavedReloaded' : 'website.notifications.webServerConfigSavedStopped'))
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) {
       return
     } else if (error?.code === 'CONFLICT') {
-      ElMessage.error('配置已被其他操作修改，请重新读取后再保存')
+      ElMessage.error(i18n.t('website.notifications.webServerConfigConflict'))
     } else {
-      ElMessage.error(error?.message || '配置保存失败，原配置已保留')
+      ElMessage.error(error?.message || i18n.t('website.notifications.webServerConfigSaveFailed'))
     }
   } finally {
     state.saving = false

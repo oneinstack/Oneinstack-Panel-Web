@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, watch } from 'vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleClose, Delete, Document, Download, RefreshLeft } from '@element-plus/icons-vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -137,7 +138,7 @@ const createBackup = async () => {
       websiteId: selectedWebsiteId.value,
       databaseId: state.databaseId || undefined
     })
-    ElMessage.success('整站备份任务已创建')
+    ElMessage.success(i18n.t('website.notifications.backupTaskCreated'))
     await loadData()
   } finally {
     state.submitting = false
@@ -158,7 +159,7 @@ const restoreBackup = async (backup: Record<string, any>) => {
       }
     )
     await Api.restoreWebsiteBackup({ backupId: backup.id, confirmName: value })
-    ElMessage.success('网站恢复任务已创建')
+    ElMessage.success(i18n.t('website.notifications.restoreTaskCreated'))
     await loadData()
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
@@ -180,7 +181,7 @@ const deleteBackup = async (backup: Record<string, any>) => {
       }
     )
     await Api.deleteWebsiteBackup(backup.id, { confirmName: value })
-    ElMessage.success('整站备份已删除')
+    ElMessage.success(i18n.t('website.notifications.backupDeleted'))
     await loadData()
   } catch (error: any) {
     if (error === 'cancel' || error === 'close') return
@@ -194,7 +195,7 @@ const downloadBackup = (backup: Record<string, any>) => {
 
 const cancelTask = async (task: Record<string, any>) => {
   await Api.cancelWebsiteTask(task.id)
-  ElMessage.success('已提交取消请求')
+  ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
   await loadData()
 }
 

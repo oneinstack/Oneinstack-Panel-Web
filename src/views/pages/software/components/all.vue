@@ -4,12 +4,14 @@ import { ElMessage, FormInstance } from 'element-plus'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
-import { Api } from '@/api/Api'
-import softwareTaskStore, { type SoftwareTask } from '@/sstore/softwareTask'
+import { Api } from '@/api/modules'
+import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
+
+const softwareTaskStore = useSoftwareTaskStore()
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 

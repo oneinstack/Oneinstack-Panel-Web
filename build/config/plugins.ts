@@ -54,13 +54,7 @@ export const getPlugins = (env: globalType) => {
     UIViteAutoImport({
       isBuild: true
     }),
-    vue({
-      template: {
-        compilerOptions: {
-          isCustomElement: (tag) => tag.startsWith('lottie-') || tag.startsWith('marquee')
-        }
-      }
-    }),
+    vue(),
     AutoImport({
       dts: './build/auto/auto-imports.d.ts',
       resolvers: [ElementPlusResolver()]

@@ -2,9 +2,11 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
-import containerTaskStore from '@/sstore/containerTask'
+import { Api } from '@/api/modules'
+import { useContainerTaskStore } from '@/stores/modules/containerTask';
 import i18n from '@/lang'
+
+const containerTaskStore = useContainerTaskStore()
 
 const props = defineProps<{
   modelValue: boolean

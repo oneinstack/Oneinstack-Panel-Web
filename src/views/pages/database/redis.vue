@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive } from 'vue'
 import { ConfProps } from './index.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'

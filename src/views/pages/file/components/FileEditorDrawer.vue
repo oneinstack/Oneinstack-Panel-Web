@@ -2,7 +2,7 @@
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import { Back, Connection, Delete, EditPen, Refresh } from '@element-plus/icons-vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'

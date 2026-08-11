@@ -274,11 +274,12 @@
 
 <script setup lang="ts">
 
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { computed, onMounted, ref, reactive, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -361,16 +362,16 @@ const rules = reactive<FormRules>({
   //   { required: true, message: '请选择任务类型', trigger: 'change' }
   // ],
   name: [
-    { required: true, message: '请输入任务名称', trigger: 'blur' }
+    { required: true, message: i18n.t('task.editor.taskNameRequired'), trigger: 'blur' }
   ],
   command: [
     {
       required: true,
-      message: '请输入脚本内容',
+      message: i18n.t('task.editor.commandRequired'),
       trigger: 'blur',
       validator: (rule, value, callback) => {
         if (ruleForm.task_type === 'shell' && !value) {
-          callback(new Error('请输入脚本内容'))
+          callback(new Error(i18n.t('task.editor.commandRequired')))
         } else {
           callback()
         }
@@ -439,23 +440,23 @@ const handleSubmit = async () => {
 
   // 手动验证执行周期
   if (!ruleForm.cycles || ruleForm.cycles.length === 0) {
-    ElMessage.error('请设置执行周期')
+    ElMessage.error(i18n.t('task.editor.cycleRequired'))
     return
   }
   if (ruleForm.task_type === 'template') {
     if (!selectedTemplate.value) {
-      ElMessage.error('请选择安全任务模板')
+      ElMessage.error(i18n.t('task.editor.templateRequired'))
       return
     }
     const missing = selectedTemplateParameters.value.find((parameter) =>
       parameter.required && !String(ruleForm.template_params[parameter.name] || '').trim()
     )
     if (missing) {
-      ElMessage.error(`请填写${missing.label}`)
+      ElMessage.error((i18n.t as any)('task.editor.parameterRequired', { name: missing.label }))
       return
     }
   } else if (!confirmUnsafeShell.value) {
-    ElMessage.error('请确认高级 Shell 的执行风险')
+    ElMessage.error(i18n.t('task.editor.unsafeShellConfirmRequired'))
     return
   }
 
@@ -521,11 +522,11 @@ const handleSubmit = async () => {
         }
         const { data } = await Api[props.type ? 'addPlanTask' :'updataPlanTask'](apidata)
         emit('taskAdded', data) 
-        ElMessage.success(props.type ? '添加成功' : '修改成功')
+        ElMessage.success(i18n.t(props.type ? 'task.editor.addSuccess' : 'task.editor.updateSuccess'))
         emit('success')
         handleClose()
       } catch (error) {
-        ElMessage.error('操作失败')
+        ElMessage.error(i18n.t('task.editor.operationFailed'))
       }
     }
   })

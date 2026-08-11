@@ -10,7 +10,9 @@ import en from 'element-plus/es/locale/lang/en'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import { ERouter } from './enum/Enum'
 import i18n from './lang'
-import sconfig from './sstore/sconfig'
+import { useConfigStore } from './stores/modules/config';
+
+const sconfig = useConfigStore()
 
 defineOptions({
   name: 'App'

@@ -2,7 +2,7 @@
 import { computed, ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { CircleClose, Delete, Document, EditPen, Refresh, VideoPlay, VideoPause, Warning } from '@element-plus/icons-vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import AddTask from './add-task.vue'
 import formatCron from '@/utils/cronutils'
 import System from '@/utils/System'

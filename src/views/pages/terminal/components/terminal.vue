@@ -163,10 +163,12 @@ import {
 import { Terminal } from 'xterm'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import System from '@/utils/System'
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import i18n from '@/lang'
+
+const sapp = useAppStore()
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)

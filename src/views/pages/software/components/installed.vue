@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ChildProps } from '../index.vue'
 import { dayjs } from 'element-plus'
 import i18n from '@/lang'

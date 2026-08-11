@@ -3,7 +3,6 @@ import { globalType } from '../env/globalVar'
 
 const buildArr = [
   'tools-javascript',
-  'tools-websocket',
   'tools-vue3',
   'swiper',
   'element-plus',
@@ -11,7 +10,6 @@ const buildArr = [
   'vue+runtime',
   'vue',
   'qrcode',
-  'lottie',
   'open'
 ]
 function extractPackageName(input: string): string | null {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { Document, FolderOpened, Refresh } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { onMounted, reactive } from 'vue'

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck, CollectionTag, Key, User } from '@element-plus/icons-vue'

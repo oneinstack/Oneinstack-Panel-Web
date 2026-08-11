@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import System from '@/utils/System'
 import { ArrowDown, CircleClose, DataAnalysis, Delete, Download, Files, FolderAdd, Key, Link, Lock, MoreFilled, Setting } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, reactive, watch } from 'vue'
 import DatabaseBackupDrawer from './components/DatabaseBackupDrawer.vue'
 import i18n from '@/lang'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
-import softwareTaskStore from '@/sstore/softwareTask'
+import { useSoftwareTaskStore } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '../software/components/InstallTaskDrawer.vue'
+
+const sapp = useAppStore()
+const softwareTaskStore = useSoftwareTaskStore()
 
 const { conf } = defineProps<ConfProps>()
 const t = (key: string, fallback: string, params?: Record<string, any>) => {

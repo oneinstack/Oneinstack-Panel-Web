@@ -2,16 +2,18 @@
 import { computed, onMounted, reactive, ref } from 'vue'
 import { Delete, Plus, Refresh, RefreshLeft, View } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import type {
   ConfigurationSnapshot,
   SnapshotDiff,
   SnapshotResourceType,
   SnapshotStatus
-} from '@/api/Api'
-import sconfig from '@/sstore/sconfig'
+} from '@/api/modules'
+import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+
+const sconfig = useConfigStore()
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot

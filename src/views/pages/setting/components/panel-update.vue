@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import i18n from '@/lang'
 
 interface VersionInfo {
@@ -161,7 +161,7 @@ const applyUpdate = async () => {
     )
     applying.value = true
     errorMessage.value = ''
-    await Api.applyPanelUpdate({ confirm: value, silentError: true })
+    await Api.applyPanelUpdate({ confirm: value }, { silentError: true })
     ElMessage.success(t('setting.update.taskStarted', 'Update task started. Waiting for the panel to come back online.'))
     beginReconnectPolling()
   } catch (error) {
@@ -194,7 +194,7 @@ const beginReconnectPolling = () => {
         }
       }
     } catch {
-      // Connection failures are expected while the main service switches; keep reconnecting quietly.
+      // 主服务切换期间连接失败属于预期情况，继续静默重连。
     }
     reconnectTimer = window.setTimeout(poll, 2500)
   }

@@ -9,8 +9,6 @@ export const install = (app: App) => {
       [EKey.pageTheme]: '',
       // 页面主题色
       [EKey.pageThemeColor]: '',
-      // 开发接口地址
-      [EKey.apiurl]: '',
       // 语言
       [EKey.language]: ''
     } as any

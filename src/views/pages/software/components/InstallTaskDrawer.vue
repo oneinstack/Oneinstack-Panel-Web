@@ -2,8 +2,10 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft } from '@element-plus/icons-vue'
-import softwareTaskStore from '@/sstore/softwareTask'
+import { useSoftwareTaskStore } from '@/stores/modules/softwareTask';
 import i18n from '@/lang'
+
+const softwareTaskStore = useSoftwareTaskStore()
 
 const props = defineProps<{
   modelValue: boolean

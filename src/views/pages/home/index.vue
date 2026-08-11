@@ -1,18 +1,21 @@
 <script setup lang="ts">
 import memo from './components/memo.vue'
 import { markRaw, onMounted, reactive } from 'vue'
-import sapp from '@/sstore/sapp'
-import { Api } from '@/api/Api'
-import sutil from '@/sstore/sutil'
+import { useAppStore } from '@/stores/modules/app';
+import { Api } from '@/api/modules'
+import sutil from '@/utils/sutil'
 import { Scope } from 'tools-vue3'
 import { EChartsOption } from 'echarts'
 import * as echarts from 'echarts'
 import basicChart from '@/components/echarts/basic-chart.vue'
 import { ElMessage } from 'element-plus'
 import System from '@/utils/System'
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config';
 import { resolveMenuLabelByKey } from '@/utils/access'
 import i18n from '@/lang'
+
+const sapp = useAppStore()
+const sconfig = useConfigStore()
 
 type MonitorType = 'network' | 'disk'
 

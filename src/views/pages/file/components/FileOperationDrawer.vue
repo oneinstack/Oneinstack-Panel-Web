@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { ArrowLeft, Refresh, Search } from '@element-plus/icons-vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 

@@ -10,19 +10,21 @@ import { initLog } from './build/env/log'
 // const config = yaml.load(fs.readFileSync(path.resolve(__dirname, 'config.yaml'), 'utf8')) as any
 
 initLog()
-export default ({ mode }) => {
+export default ({ mode }: { mode: string }) => {
   const env = globalVar(mode)
   //  const proxyTarget ='http://192.168.31.116:8089/'
-  const proxyTarget = process.env.ONEINSTACK_DEV_PROXY || 'http://192.168.31.109:8089'
+  const proxyTarget = process.env.ONEINSTACK_DEV_PROXY || 'http://192.168.31.116:8089'
   const proxyOrigin = new URL(proxyTarget).origin
   return defineConfig({
     base: mode === 'production' ? './' : '/',
     plugins: getPlugins(env),
     css: { postcss: { plugins: [viteVar(env as any)] } },
+    define: {
+      __ONEINSTACK_GLOBAL__: JSON.stringify(env.global)
+    },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
-        '@chat': path.resolve(__dirname, './src/modules/chat')
+        '@': path.resolve(__dirname, './src')
       }
     },
     server: {
@@ -34,7 +36,6 @@ export default ({ mode }) => {
           secure: false,
           changeOrigin: true,
           ws: true,
-          rewriteWsOrigin: true,
           cookieDomainRewrite: 'localhost',
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq, req) => {
@@ -61,6 +62,9 @@ export default ({ mode }) => {
                 forwardedReferer: proxyReq.getHeader('referer') || '',
                 forwardedHost: proxyReq.getHeader('host') || ''
               })
+            })
+            proxy.on('proxyReqWs', (proxyReq) => {
+              proxyReq.setHeader('origin', proxyOrigin)
             })
             proxy.on('proxyRes', (proxyRes, req) => {
               console.log('[proxy:res]', {

@@ -3,11 +3,13 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { InfoFilled, Refresh, Search, View, WarningFilled } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import CustomDrawer from '@/components/custom-drawer.vue'
-import { Api, type SystemDiskDevice, type SystemProcessDetail, type SystemProcessItem, type SystemSshConfig } from '@/api/Api'
-import sconfig from '@/sstore/sconfig'
+import { Api, type SystemDiskDevice, type SystemProcessDetail, type SystemProcessItem, type SystemSshConfig } from '@/api/modules'
+import { useConfigStore } from '@/stores/modules/config';
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+
+const sconfig = useConfigStore()
 
 type ProcessSort = 'pid' | 'cpu' | 'memory' | 'name'
 type SortOrder = 'asc' | 'desc'

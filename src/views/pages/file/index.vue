@@ -3,12 +3,14 @@ import { Close } from '@element-plus/icons-vue'
 import { ElMessage, FormInstance } from 'element-plus'
 import { computed, reactive } from 'vue'
 import FileList from './components/file-list.vue'
-import sapp from '@/sstore/sapp'
+import { useAppStore } from '@/stores/modules/app';
 import CustomDrawer from '@/components/custom-drawer.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import CustomForm from '@/components/custom-form.vue'
 import TrashList from './components/trash-list.vue'
 import i18n from '@/lang'
+
+const sapp = useAppStore()
 
 
 export type DrawerType = 'file' | 'dir'

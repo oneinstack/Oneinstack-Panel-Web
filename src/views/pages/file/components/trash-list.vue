@@ -2,7 +2,7 @@
 import { computed, reactive, watch } from 'vue'
 import { Delete, Refresh, RefreshLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'

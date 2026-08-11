@@ -43,10 +43,6 @@ const manager = {
      */
     pageThemeColor: '',
     /**
-     * 开发接口地址
-     */
-    apiurl: '',
-    /**
      * 语言
      */
     language: ''

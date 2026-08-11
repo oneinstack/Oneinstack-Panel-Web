@@ -67,6 +67,17 @@ export default {
   cancelRunTitle: '取消执行',
   cancelRunConfirm: '确定终止这次正在运行的任务吗？系统会先发送 TERM，必要时再强制结束进程组。',
   cancelSubmitted: '已提交取消请求',
+  editor: {
+    cycleRequired: '请设置执行周期',
+    templateRequired: '请选择安全任务模板',
+    parameterRequired: '请填写{name}',
+    unsafeShellConfirmRequired: '请确认高级 Shell 的执行风险',
+    taskNameRequired: '请输入任务名称',
+    commandRequired: '请输入脚本内容',
+    addSuccess: '添加成功',
+    updateSuccess: '修改成功',
+    operationFailed: '操作失败'
+  },
   dateTime: '{year}年{month}月{day}日 {time}',
   cron: {
     invalidExpression: '无效的 cron 表达式: {value}',

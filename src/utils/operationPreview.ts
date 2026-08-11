@@ -1,6 +1,6 @@
 import { h } from 'vue'
 import { ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import OperationPreviewContent from '@/components/operation-preview-content.vue'
 import i18n from '@/lang'
 

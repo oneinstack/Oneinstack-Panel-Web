@@ -4,7 +4,7 @@ import SearchInput from '@/components/search-input.vue'
 import { Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
 import { ElMessage } from 'element-plus'
@@ -90,7 +90,7 @@ const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) =
   statusLoading.add(row.id)
   try {
     await Api.setWebsiteStatus(row.id, enabled)
-    ElMessage.success(enabled ? '网站已启用' : '网站已停用')
+    ElMessage.success(t(enabled ? 'website.notifications.enabled' : 'website.notifications.disabled'))
     await conf.website.getData()
   } finally {
     statusLoading.delete(row.id)

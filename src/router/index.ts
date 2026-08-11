@@ -4,8 +4,8 @@ import System from '@/utils/System'
 import prefetchRouteData from './prefetch'
 import { CRouter } from 'tools-vue3'
 import routes from './routes'
-import sconfig from '@/sstore/sconfig'
-import { Api } from '@/api/Api'
+import { useConfigStore } from '@/stores/modules/config'
+import { Api } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
 import { getPanelEntryStatus, isPanelEntryPathAllowed } from '@/utils/panel-entry'
@@ -17,6 +17,7 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
 }
 
 export const initRouter = () => {
+  const sconfig = useConfigStore()
   const _routes = CRouter.init({
     modules: import.meta.glob('/src/views/**/*.vue'),
     theme: Cookie.get('pageTheme'),

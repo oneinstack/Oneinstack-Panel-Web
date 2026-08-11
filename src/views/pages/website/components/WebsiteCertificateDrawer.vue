@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { CircleClose, Document } from '@element-plus/icons-vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import i18n from '@/lang'
 
 const props = defineProps<{
   modelValue: boolean
@@ -90,7 +91,7 @@ const loadData = async (quiet = false) => {
     }
     updatePolling()
   } catch (error: any) {
-    if (!quiet) ElMessage.error(error.message || '读取证书信息失败')
+    if (!quiet) ElMessage.error(error.message || i18n.t('website.notifications.certificateLoadFailed'))
   } finally {
     if (!quiet) loading.value = false
   }
@@ -114,7 +115,7 @@ const updatePolling = () => {
 const issue = async () => {
   const email = form.email.trim()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    ElMessage.warning('请输入有效的 ACME 账户邮箱')
+    ElMessage.warning(i18n.t('website.notifications.invalidAcmeEmail'))
     return
   }
   try {
@@ -131,11 +132,11 @@ const issue = async () => {
       renewBeforeDays: form.renewBeforeDays,
       forceHttps: form.forceHttps
     })
-    ElMessage.success('证书任务已创建')
+    ElMessage.success(i18n.t('website.notifications.certificateTaskCreated'))
     await loadData(true)
   } catch (error: any) {
     if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error.message || '创建证书任务失败')
+      ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCreateFailed'))
     }
   } finally {
     submitting.value = false
@@ -146,10 +147,10 @@ const renew = async () => {
   if (!certificate.value?.id) return
   try {
     await Api.renewWebsiteCertificate(certificate.value.id)
-    ElMessage.success('续签任务已创建')
+    ElMessage.success(i18n.t('website.notifications.renewalTaskCreated'))
     await loadData(true)
   } catch (error: any) {
-    ElMessage.error(error.message || '创建续签任务失败')
+    ElMessage.error(error.message || i18n.t('website.notifications.renewalTaskCreateFailed'))
   }
 }
 
@@ -166,12 +167,12 @@ const disable = async () => {
       }
     )
     await Api.disableWebsiteCertificate(certificate.value.id, { confirmDomain: result.value })
-    ElMessage.success('网站 SSL 已关闭')
+    ElMessage.success(i18n.t('website.notifications.sslDisabled'))
     await loadData(true)
     emit('changed')
   } catch (error: any) {
     if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error.message || '关闭网站 SSL 失败')
+      ElMessage.error(error.message || i18n.t('website.notifications.sslDisableFailed'))
     }
   }
 }
@@ -179,10 +180,10 @@ const disable = async () => {
 const cancelTask = async (task: Record<string, any>) => {
   try {
     await Api.cancelCertificateTask(task.id)
-    ElMessage.success('已提交取消请求')
+    ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
     await loadData(true)
   } catch (error: any) {
-    ElMessage.error(error.message || '取消证书任务失败')
+    ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCancelFailed'))
   }
 }
 

@@ -67,6 +67,17 @@ export default {
   cancelRunTitle: 'Cancel execution',
   cancelRunConfirm: 'Terminate this running task? The system sends TERM first and may force-stop the process group if needed.',
   cancelSubmitted: 'Cancel request submitted',
+  editor: {
+    cycleRequired: 'Set an execution schedule',
+    templateRequired: 'Select a safe task template',
+    parameterRequired: 'Enter {name}',
+    unsafeShellConfirmRequired: 'Confirm the execution risk of Advanced Shell',
+    taskNameRequired: 'Enter a task name',
+    commandRequired: 'Enter script content',
+    addSuccess: 'Added successfully',
+    updateSuccess: 'Updated successfully',
+    operationFailed: 'Operation failed'
+  },
   dateTime: '{year}-{month}-{day} {time}',
   cron: {
     invalidExpression: 'Invalid cron expression: {value}',

@@ -5,9 +5,10 @@ import PanelUpdate from './panel-update.vue'
 import PanelBackup from './panel-backup.vue'
 import AccountSecurity from './account-security.vue'
 import AppearanceSetting from './appearance-setting.vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import { onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import i18n from '@/lang'
 
 let allinfo = ref('')
 const getSystemInfo = async () => {
@@ -22,7 +23,7 @@ const getSystemInfo = async () => {
     //   })
     // }
   } catch (error) {
-    ElMessage.error('获取系统信息失败')
+    ElMessage.error(i18n.t('setting.systemInfoLoadFailed'))
   }
 }
 

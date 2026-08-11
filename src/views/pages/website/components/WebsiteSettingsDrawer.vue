@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Close, FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
 import WebsiteCertificateDrawer from './WebsiteCertificateDrawer.vue'
+import i18n from '@/lang'
 
 interface Props {
   modelValue: boolean
@@ -60,7 +61,7 @@ const menus = computed(() => [
 const formatTime = (value?: string | Date | null) => {
   if (!value) return '永久有效'
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString('zh-CN', { hour12: false })
+  return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(i18n.locale, { hour12: false })
 }
 const formatBytes = (value: unknown) => {
   let bytes = Number(value || 0)
@@ -114,7 +115,7 @@ const selectMenu = (key: string) => {
   if (key === 'config' && !state.config.loaded) void loadConfig()
   if (key === 'logs') void loadLog()
 }
-const saveSettings = async (success = '网站设置已发布') => {
+const saveSettings = async (success = i18n.t('website.notifications.settingsPublished')) => {
   const websiteId = Number(currentWebsite.value.id || 0)
   if (!websiteId) return
   state.saving = true
@@ -131,7 +132,7 @@ const saveSettings = async (success = '网站设置已发布') => {
 }
 const saveWebsiteProfile = async (domainOnly = false) => {
   const domains = domainLines.value.split(/[,\n\r]+/).map((item) => item.trim()).filter(Boolean)
-  if (!domains.length) { ElMessage.warning('至少保留一个网站域名'); return }
+  if (!domains.length) { ElMessage.warning(i18n.t('website.notifications.domainRequired')); return }
   state.saving = true
   try {
     await Api.updateWebsite({
@@ -139,7 +140,7 @@ const saveWebsiteProfile = async (domainOnly = false) => {
       domain: domains.join(','),
       expires_at: expiresAt.value ? new Date(expiresAt.value).toISOString() : null
     })
-    ElMessage.success(domainOnly ? '域名配置已更新' : '网站基本设置已更新')
+    ElMessage.success(i18n.t(domainOnly ? 'website.notifications.domainUpdated' : 'website.notifications.profileUpdated'))
     await load()
     emit('changed')
   } finally { state.saving = false }
@@ -155,7 +156,7 @@ const toggleStatus = async (enabled: boolean) => {
   statusLoading.value = true
   try {
     await Api.setWebsiteStatus(Number(currentWebsite.value.id), enabled)
-    ElMessage.success(enabled ? '网站已启用' : '网站已停用')
+    ElMessage.success(i18n.t(enabled ? 'website.notifications.enabled' : 'website.notifications.disabled'))
     await load()
     emit('changed')
   } finally { statusLoading.value = false }
@@ -169,7 +170,7 @@ const loadConfig = async () => {
   } catch (error: any) {
     state.config.loaded = false
     const response = error?.response?.data
-    state.config.error = response?.error?.detail || response?.message || error?.message || '读取网站配置失败'
+    state.config.error = response?.error?.detail || response?.message || error?.message || i18n.t('website.notifications.configLoadFailed')
   } finally { state.config.loading = false }
 }
 const saveConfig = async () => {
@@ -180,7 +181,7 @@ const saveConfig = async () => {
     })
     state.config.content = data.content || state.config.content
     state.config.revision = data.revision || state.config.revision
-    ElMessage.success('配置语法校验通过并已平滑重载')
+    ElMessage.success(i18n.t('website.notifications.configReloaded'))
   } finally { state.config.saving = false }
 }
 const loadLog = async () => {

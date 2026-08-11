@@ -3,11 +3,13 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleClose } from '@element-plus/icons-vue'
 import QrcodeVue from 'qrcode.vue'
-import { Api } from '@/api/Api'
-import sconfig from '@/sstore/sconfig'
+import { Api } from '@/api/modules'
+import { useConfigStore } from '@/stores/modules/config';
 import System from '@/utils/System'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+
+const sconfig = useConfigStore()
 
 interface SecurityStatus {
   totpEnabled: boolean

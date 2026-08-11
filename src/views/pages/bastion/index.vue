@@ -3,10 +3,12 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import type { EChartsOption } from 'echarts'
 import { Delete, Edit, InfoFilled, Plus, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
-import { Api } from '@/api/Api'
+import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
-import sconfig from '@/sstore/sconfig'
+import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
+
+const sconfig = useConfigStore()
 
 type BastionStatus = 'online' | 'offline' | 'error' | 'unknown'
 type AuthMethod = 'password' | 'key'
