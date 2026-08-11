@@ -1,5 +1,6 @@
 import 'tools-css/index.css'
 import 'tools-javascript'
+import 'element-plus/es/components/message-box/style/css'
 import { createApp } from 'vue'
 
 import App from './App.vue'
