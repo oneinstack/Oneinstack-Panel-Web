@@ -893,6 +893,7 @@ onUnmounted(() => {
           </el-button-group>
           <el-date-picker
             v-model="historyTimeRange"
+            class="history-controls__date-range"
             type="datetimerange"
             :range-separator="$t('monitor.to')"
             :start-placeholder="$t('monitor.startTime')"
@@ -1383,8 +1384,8 @@ onUnmounted(() => {
   flex-wrap: wrap;
   gap: 10px;
 
-  :deep(.el-date-editor) {
-    width: 360px;
+  &__date-range {
+    width: min(560px, 100%);
   }
 }
 

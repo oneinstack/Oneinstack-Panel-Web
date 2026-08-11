@@ -500,6 +500,17 @@ const statusType = (status?: string) => {
   return "info";
 };
 
+const splitContainerStatus = (status?: string) => {
+  const text = String(status || "--").trim();
+  const match = text.match(/^(Up|Exited|Restarting|Paused|Created|Removing|Dead)(.*)$/i);
+  if (!match) {
+    return { primary: text, secondary: "" };
+  }
+  const primary = `${match[1]}${match[2]?.startsWith(" (") ? match[2].match(/^\s*\([^)]+\)/)?.[0] || "" : ""}`.trim();
+  const secondary = text.slice(primary.length).trim();
+  return { primary, secondary };
+};
+
 const normalizedContainerStatus = (row: ContainerItem) =>
   String(row.Status || "").toLowerCase();
 const isContainerPaused = (row: ContainerItem) =>
@@ -560,7 +571,7 @@ const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
   {
     prop: "Status",
     label: t("container.columns.status", "Status"),
-    minWidth: 130,
+    minWidth: 280,
     slot: "containerStatus",
   },
   {
@@ -2503,9 +2514,16 @@ onBeforeUnmount(() => {
           </div>
         </template>
         <template #containerStatus="{ row }">
-          <el-tag :type="statusType(row.Status)" effect="light">{{
-            row.Status || "--"
-          }}</el-tag>
+          <div
+            class="status-cell"
+            :class="`is-${statusType(row.Status)}`"
+            :title="row.Status || '--'"
+          >
+            <strong>{{ splitContainerStatus(row.Status).primary }}</strong>
+            <span v-if="splitContainerStatus(row.Status).secondary">
+              {{ splitContainerStatus(row.Status).secondary }}
+            </span>
+          </div>
         </template>
         <template #containerAction="{ row }">
           <div class="row-actions table-row-actions">
@@ -3191,6 +3209,14 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
+.resource-panel :deep(.el-table td.el-table__cell) {
+  height: auto;
+  min-height: 48px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  vertical-align: top;
+}
+
 .resource-panel :deep(.el-table__empty-block) {
   min-height: 104px;
 }
@@ -3204,6 +3230,58 @@ onBeforeUnmount(() => {
     color: var(--text-secondary);
     font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     font-size: 12px;
+  }
+}
+
+.status-cell {
+  min-width: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  line-height: 1.3;
+  vertical-align: middle;
+
+  strong {
+    color: inherit;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  span {
+    color: inherit;
+    opacity: 0.78;
+    font-size: 12px;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  &.is-success {
+    color: #15803d;
+    border-color: rgb(34 197 94 / 18%);
+    background: rgb(34 197 94 / 8%);
+  }
+
+  &.is-warning {
+    color: #b45309;
+    border-color: rgb(245 158 11 / 22%);
+    background: rgb(245 158 11 / 10%);
+  }
+
+  &.is-danger {
+    color: #dc2626;
+    border-color: rgb(239 68 68 / 18%);
+    background: rgb(239 68 68 / 8%);
+  }
+
+  &.is-info {
+    color: #475569;
+    border-color: rgb(148 163 184 / 20%);
+    background: rgb(148 163 184 / 10%);
   }
 }
 

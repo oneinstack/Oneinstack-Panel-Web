@@ -249,13 +249,15 @@ onUnmounted(() => {
             value="skipped"
           />
         </el-select>
-        <el-date-picker
+        <div class="full-width">
+          <el-date-picker
           v-model="dateRange"
           type="datetimerange"
           :start-placeholder="t('task.log.startTime', 'Start time')"
           :end-placeholder="t('task.log.endTime', 'End time')"
           :range-separator="t('task.log.rangeSeparator', 'to')"
-        />
+          />
+        </div>
         <el-button type="primary" @click="search">{{
           t("task.log.search", "Search")
         }}</el-button>
@@ -361,11 +363,23 @@ onUnmounted(() => {
   }
 }
 
+.full-width {
+  width: 30% !important;
+
+  :deep(.el-date-editor) {
+    width: 100%;
+  }
+}
+
 @media (max-width: 760px) {
   .toolbar,
   .filters {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .full-width {
+    width: 100% !important;
   }
 }
 
