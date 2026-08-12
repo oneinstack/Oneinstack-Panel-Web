@@ -10,9 +10,13 @@ export default {
     database: 'Databases',
     webServer: 'Web server',
     runtime: 'Runtime',
+    cache: 'Cache',
     utility: 'Utilities',
+    container: 'Container',
+    security: 'Security',
     cloudStorage: 'Cloud storage',
-    ai: 'AI / LLM'
+    ai: 'AI / LLM',
+    other: 'Other'
   },
   catalogReading: 'Reading store source',
   catalogCenterSynced: 'Center synced · {count} apps',
@@ -58,7 +62,12 @@ export default {
     container: 'Container',
     website: 'Sites',
     webServer: 'Web server',
-    utility: 'Utility'
+    cache: 'Cache',
+    utility: 'Utility',
+    security: 'Security',
+    cloudStorage: 'Cloud storage',
+    ai: 'AI / LLM',
+    other: 'Other'
   },
   componentDescriptions: {
     php: 'OneinStack PHP-FPM runtime',

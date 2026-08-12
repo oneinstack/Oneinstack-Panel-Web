@@ -17,9 +17,30 @@ export interface ChildEmits {
   (event: 'refresh'): void
 }
 
+interface SoftwareCategory {
+  name: string
+  value: string
+  count: number
+}
+
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
+}
+
+const categoryNameKeys: Record<string, string> = {
+  全部: 'software.category.all',
+  建站: 'software.category.website',
+  数据库: 'software.category.database',
+  Web服务器: 'software.category.webServer',
+  运行环境: 'software.category.runtime',
+  缓存: 'software.category.cache',
+  实用工具: 'software.category.utility',
+  容器: 'software.category.container',
+  安全: 'software.category.security',
+  云存储: 'software.category.cloudStorage',
+  'AI / 大模型': 'software.category.ai',
+  其他: 'software.category.other'
 }
 
 const conf = reactive({
@@ -46,61 +67,26 @@ const conf = reactive({
   ]),
   activeIndex: 0,
   tabs: {
-    selected: 0,
-    list: markRaw([
-      {
-        name: 'All',
-        nameKey: 'software.category.all',
-        index: 0
-      },
-      {
-        name: 'Sites',
-        nameKey: 'software.category.website',
-        tag: '\u5efa\u7ad9',
-        index: 1
-      },
-      {
-        name: 'Databases',
-        nameKey: 'software.category.database',
-        tag: '\u6570\u636e\u5e93',
-        index: 2
-      },
-      {
-        name: 'Web server',
-        nameKey: 'software.category.webServer',
-        tag: 'Web\u670d\u52a1\u5668',
-        index: 3
-      },
-      {
-        name: 'Runtime',
-        nameKey: 'software.category.runtime',
-        tag: '\u8fd0\u884c\u73af\u5883',
-        index: 4
-      },
-      {
-        name: 'Utilities',
-        nameKey: 'software.category.utility',
-        tag: '\u5b9e\u7528\u5de5\u5177',
-        index: 5
-      },
-      {
-        name: 'Cloud storage',
-        nameKey: 'software.category.cloudStorage',
-        tag: '\u4e91\u5b58\u50a8',
-        index: 6
-      },
-      {
-        name: 'AI / LLM',
-        nameKey: 'software.category.ai',
-        tag: 'AI / \u5927\u6a21\u578b',
-        index: 7
-      }
-    ]),
+    selected: '',
+    list: [] as SoftwareCategory[],
+    getLabel: (item: SoftwareCategory) => {
+      const key = categoryNameKeys[item.name]
+      const label = key ? t(key, item.name) : item.name
+      return `${label}${typeof item.count === 'number' ? ` (${item.count})` : ''}`
+    },
     handleClick: async ({ props }: TabsPaneContext) => {
-      const tab = conf.tabs.list.find((item) => item.index === Number(props.name))
+      const tab = conf.tabs.list.find((item) => item.value === String(props.name))
       conf.list.params.page = 1
-      conf.list.params.tags = tab?.tag
-      conf.list.getData()
+      conf.list.params.tags = tab?.value || undefined
+      await conf.list.getData()
+    },
+    getData: async () => {
+      const { data } = await Api.getSoftCategories()
+      const categories = Array.isArray(data) ? data : []
+      conf.tabs.list = categories
+      const current = categories.find((item) => item.value === conf.list.params.tags)
+      const fallback = categories[0]
+      conf.tabs.selected = (current || fallback)?.value || ''
     }
   },
   catalog: {
@@ -126,6 +112,7 @@ const conf = reactive({
       try {
         const { data } = await Api.syncSoftwareCatalog()
         conf.catalog.status = data
+        await conf.tabs.getData()
         await conf.list.getData()
         ElMessage.success(t('software.syncSuccess', 'Software store updated from Center'))
       } catch (error) {
@@ -143,6 +130,7 @@ const conf = reactive({
     conf.list.params.page = 1
     conf.list.params.name = undefined
     conf.list.params.tags = undefined
+    conf.tabs.selected = ''
     conf.list.getData()
   },
   list: {
@@ -199,6 +187,7 @@ if (componentSearchNames[requestedComponent]) {
 
 conf.list.getData()
 void conf.catalog.getStatus()
+void conf.tabs.getData()
 
 const catalogLabel = computed(() => {
   const status = conf.catalog.status
@@ -253,7 +242,12 @@ const catalogDetail = computed(() => {
         </div>
         <div class="category flex justify-between items-center" >
           <el-tabs v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
-            <el-tab-pane v-for="item in conf.tabs.list" :label="$t(item.nameKey)" :name="item.index" />
+            <el-tab-pane
+              v-for="item in conf.tabs.list"
+              :key="item.value || item.name"
+              :label="conf.tabs.getLabel(item)"
+              :name="item.value"
+            />
           </el-tabs>
           <div class="search-wrap">
             <search-input v-model="conf.list.params.name" :placeholder="$t('common.searchKeywordPlaceholder')" @search="conf.list.onSearch" />

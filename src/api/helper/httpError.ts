@@ -12,16 +12,23 @@ export class HttpRequestError extends Error {
   code?: string | number;
   status?: number;
   data?: unknown;
+  headers?: Record<string, unknown>;
 
   constructor(
     message: string,
-    options: { code?: string | number; status?: number; data?: unknown } = {},
+    options: {
+      code?: string | number;
+      status?: number;
+      data?: unknown;
+      headers?: Record<string, unknown>;
+    } = {},
   ) {
     super(message);
     this.name = "HttpRequestError";
     this.code = options.code;
     this.status = options.status;
     this.data = options.data;
+    this.headers = options.headers;
   }
 }
 
@@ -101,6 +108,7 @@ export const createHttpError = (
   status?: number,
   statusText?: string,
   cause?: AxiosError,
+  headers?: Record<string, unknown>,
 ) => {
   const payload = data as ErrorPayload | string | undefined;
   return new HttpRequestError(
@@ -117,6 +125,7 @@ export const createHttpError = (
           : undefined,
       status,
       data,
+      headers,
     },
   );
 };

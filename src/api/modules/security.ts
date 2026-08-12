@@ -164,6 +164,18 @@ export const securityApi = {
   ) => {
     return http.get("/security/fail2ban/tasks", params, withLanguage(language));
   },
+  /** 获取单个 Fail2ban 任务状态 */
+  getFail2banTask: (taskId: string, language?: string) => {
+    return http.get(
+      `/security/fail2ban/tasks/${encodeURIComponent(taskId)}`,
+      undefined,
+      withLanguage(language),
+    );
+  },
+  /** 按状态地址获取单个 Fail2ban 任务状态 */
+  getFail2banTaskByStatusUrl: (statusUrl: string, language?: string) => {
+    return http.get(statusUrl, undefined, withLanguage(language));
+  },
   /** 获取 Fail2ban 任务事件 */
   getFail2banTaskEvents: (
     taskId: string,

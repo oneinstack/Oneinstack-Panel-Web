@@ -44,7 +44,13 @@ export const responseInterceptor = async (response: AxiosResponse) => {
       const data = (await parseBlobPayload(response.data)) as ErrorPayload;
       if (isBusinessFailure(data)) {
         throw handleHttpError(
-          createHttpError(data, response.status, response.statusText),
+          createHttpError(
+            data,
+            response.status,
+            response.statusText,
+            undefined,
+            response.headers as Record<string, unknown>,
+          ),
           config,
         );
       }
@@ -56,7 +62,13 @@ export const responseInterceptor = async (response: AxiosResponse) => {
     response.status === 204 ? { success: true, code: 0 } : response.data;
   if (isBusinessFailure(data)) {
     throw handleHttpError(
-      createHttpError(data, response.status, response.statusText),
+      createHttpError(
+        data,
+        response.status,
+        response.statusText,
+        undefined,
+        response.headers as Record<string, unknown>,
+      ),
       config,
     );
   }
@@ -72,7 +84,13 @@ export const responseErrorInterceptor = async (error: AxiosError) => {
   const response = error.response;
   const data = await parseBlobPayload(response?.data);
   throw handleHttpError(
-    createHttpError(data, response?.status, response?.statusText, error),
+    createHttpError(
+      data,
+      response?.status,
+      response?.statusText,
+      error,
+      response?.headers as Record<string, unknown> | undefined,
+    ),
     config,
   );
 };

@@ -49,7 +49,12 @@ const softwareTagKeys: Record<string, string> = {
   容器: 'software.componentTags.container',
   建站: 'software.componentTags.website',
   Web服务器: 'software.componentTags.webServer',
-  实用工具: 'software.componentTags.utility'
+  缓存: 'software.componentTags.cache',
+  实用工具: 'software.componentTags.utility',
+  安全: 'software.componentTags.security',
+  云存储: 'software.componentTags.cloudStorage',
+  'AI / 大模型': 'software.componentTags.ai',
+  其他: 'software.componentTags.other'
 }
 
 const softwareDescriptionKeys: Record<string, string> = {

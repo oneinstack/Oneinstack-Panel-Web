@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { DocumentAdd, Lock, Plus, Refresh, Warning } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
+import { HttpRequestError } from '@/api'
 import i18n from '@/lang'
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import { submitOperation, isOperationCancelled } from '@/utils/operationPreview'
@@ -135,19 +136,6 @@ interface Fail2banStatus {
   warning?: string
 }
 
-interface Fail2banTaskEvent {
-  taskId: string
-  seq: number
-  type: string
-  level: string
-  status: TaskStatus | ''
-  phase: string
-  progress: number
-  code?: string
-  message: string
-  createdAt: string
-}
-
 const props = defineProps<{
   capabilities: Fail2banCapabilities
 }>()
@@ -229,9 +217,17 @@ const manualBanForm = reactive({
 const installTaskVisible = ref(false)
 const installTaskId = ref('')
 const taskSources = new Map<string, EventSource>()
+const taskReconnectTimers = new Map<string, number>()
 const taskLastEventIds = reactive<Record<string, number>>({})
+const taskReconnectAttempts = reactive<Record<string, number>>({})
+const taskStatusUrls = reactive<Record<string, string>>({})
+const taskStreamUrls = reactive<Record<string, string>>({})
 const terminalStatuses = new Set<TaskStatus>(['succeeded', 'failed', 'interrupted'])
+const activeTaskStatuses = new Set<TaskStatus>(['queued', 'running'])
 const softwareTaskStatuses = new Map<string, string>()
+const reconnectDelays = [2000, 4000, 8000, 15000]
+let refreshAfterTaskPromise: Promise<void> | null = null
+let isUnmounted = false
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('fail2ban'))
 const canOperate = computed(() => status.value.installed && status.value.serviceActive)
@@ -352,11 +348,31 @@ const mergeTask = (task: Fail2banTask) => {
   tasks.value.unshift(task)
 }
 
-const closeTaskSource = (taskId: string) => {
+const isTaskTerminal = (status?: TaskStatus | '') => Boolean(status && terminalStatuses.has(status as TaskStatus))
+
+const isTaskActive = (status?: TaskStatus | '') => Boolean(status && activeTaskStatuses.has(status as TaskStatus))
+
+const rememberTaskEndpoints = (taskId: string, options?: { statusUrl?: string; streamUrl?: string }) => {
+  taskStatusUrls[taskId] = options?.statusUrl
+    ? new URL(options.statusUrl, window.location.origin).toString()
+    : fail2banTaskURL(encodeURIComponent(taskId))
+  taskStreamUrls[taskId] = options?.streamUrl
+    ? new URL(options.streamUrl, window.location.origin).toString()
+    : fail2banTaskURL(`${encodeURIComponent(taskId)}/events`)
+}
+
+const clearReconnectTimer = (taskId: string) => {
+  const timer = taskReconnectTimers.get(taskId)
+  if (timer) window.clearTimeout(timer)
+  taskReconnectTimers.delete(taskId)
+}
+
+const stopMonitor = (taskId: string) => {
+  clearReconnectTimer(taskId)
   const source = taskSources.get(taskId)
-  if (!source) return
-  source.close()
+  if (source) source.close()
   taskSources.delete(taskId)
+  delete taskReconnectAttempts[taskId]
 }
 
 const loadStatus = async () => {
@@ -417,15 +433,93 @@ const loadBans = async () => {
 }
 
 const refreshAfterTask = async () => {
-  await Promise.allSettled([loadStatus(), loadPolicies(), loadIncidents(), loadBans(), loadTasks()])
+  if (!refreshAfterTaskPromise) {
+    refreshAfterTaskPromise = Promise.allSettled([loadStatus(), loadPolicies(), loadIncidents(), loadBans(), loadTasks()])
+      .then(() => undefined)
+      .finally(() => {
+        refreshAfterTaskPromise = null
+      })
+  }
+  await refreshAfterTaskPromise
 }
 
-const connectTaskStream = (taskId: string, streamUrl?: string) => {
-  if (taskSources.has(taskId)) return
+const getRetryAfterDelay = (error: unknown) => {
+  if (!(error instanceof HttpRequestError)) return undefined
+  const header = error.headers?.['retry-after']
+  const value = Array.isArray(header) ? header[0] : header
+  const seconds = Number(value)
+  if (Number.isFinite(seconds) && seconds > 0) return seconds * 1000
+  return undefined
+}
+
+const fetchTaskStatus = async (taskId: string) => {
+  const statusUrl = taskStatusUrls[taskId]
+  const response = statusUrl
+    ? await Api.getFail2banTaskByStatusUrl(statusUrl, requestLanguage.value)
+    : await Api.getFail2banTask(taskId, requestLanguage.value)
+  const task = (response?.data || response) as Fail2banTask
+  if (task?.id) mergeTask(task)
+  return task
+}
+
+const scheduleReconnect = (taskId: string, delay: number) => {
+  if (isUnmounted || taskReconnectTimers.has(taskId)) return
+  taskReconnectTimers.set(taskId, window.setTimeout(() => {
+    taskReconnectTimers.delete(taskId)
+    const current = tasks.value.find(item => item.id === taskId)
+    if (!current || !isTaskActive(current.status)) {
+      stopMonitor(taskId)
+      return
+    }
+    void connectTaskStream(taskId)
+  }, delay))
+}
+
+const handleTaskEvent = async (taskId: string, event: MessageEvent<string>) => {
+  try {
+    const payload = JSON.parse(event.data || '{}')
+    const nextTaskId = payload.taskId || taskId
+    taskLastEventIds[nextTaskId] = Number(event.lastEventId || payload.seq || 0)
+    const nextTask = {
+      id: nextTaskId,
+      operation: payload.operation || 'apply_policy',
+      policyId: payload.policyId,
+      incidentId: payload.incidentId,
+      targetIp: payload.targetIp,
+      status: payload.status || 'running',
+      phase: payload.phase || '',
+      progress: Number(payload.progress || 0),
+      message: payload.message || '',
+      errorCode: payload.errorCode,
+      errorMessage: payload.errorMessage,
+      requestedBy: payload.requestedBy || 0,
+      triggeredBy: payload.triggeredBy || 'user',
+      eventSeq: payload.seq || 0,
+      startedAt: payload.startedAt,
+      finishedAt: payload.finishedAt,
+      createdAt: payload.createdAt || new Date().toISOString(),
+      updatedAt: payload.updatedAt || new Date().toISOString()
+    } as Fail2banTask
+    mergeTask(nextTask)
+    if (isTaskTerminal(nextTask.status)) {
+      stopMonitor(nextTaskId)
+      await refreshAfterTask()
+    }
+  } catch {
+    // ignore malformed events
+  }
+}
+
+const connectTaskStream = async (taskId: string) => {
+  const current = tasks.value.find(item => item.id === taskId)
+  if (isUnmounted || taskSources.has(taskId) || !current || !isTaskActive(current.status)) return
+  clearReconnectTimer(taskId)
+  rememberTaskEndpoints(taskId, {
+    statusUrl: taskStatusUrls[taskId],
+    streamUrl: taskStreamUrls[taskId]
+  })
   const url = new URL(
-    streamUrl
-      ? new URL(streamUrl, window.location.origin).toString()
-      : fail2banTaskURL(`${encodeURIComponent(taskId)}/events`),
+    taskStreamUrls[taskId] || fail2banTaskURL(`${encodeURIComponent(taskId)}/events`),
     window.location.origin
   )
   const after = taskLastEventIds[taskId] || 0
@@ -433,72 +527,66 @@ const connectTaskStream = (taskId: string, streamUrl?: string) => {
   const source = new EventSource(url.toString(), { withCredentials: true })
   taskSources.set(taskId, source)
 
-  source.onmessage = async (event) => {
-    try {
-      const payload = JSON.parse(event.data || '{}')
-      taskLastEventIds[taskId] = Number(event.lastEventId || payload.seq || 0)
-      mergeTask({
-        id: payload.taskId || taskId,
-        operation: payload.operation || 'apply_policy',
-        policyId: payload.policyId,
-        incidentId: payload.incidentId,
-        targetIp: payload.targetIp,
-        status: payload.status || 'running',
-        phase: payload.phase || '',
-        progress: Number(payload.progress || 0),
-        message: payload.message || '',
-        errorCode: payload.errorCode,
-        errorMessage: payload.errorMessage,
-        requestedBy: payload.requestedBy || 0,
-        triggeredBy: payload.triggeredBy || 'user',
-        eventSeq: payload.seq || 0,
-        startedAt: payload.startedAt,
-        finishedAt: payload.finishedAt,
-        createdAt: payload.createdAt || new Date().toISOString(),
-        updatedAt: payload.updatedAt || new Date().toISOString()
-      })
-      if (terminalStatuses.has(payload.status)) {
-        closeTaskSource(taskId)
-        await refreshAfterTask()
-      }
-    } catch {
-      // ignore malformed events
-    }
-  }
+  source.onmessage = (event) => { void handleTaskEvent(taskId, event) }
+  source.addEventListener('task', (event) => { void handleTaskEvent(taskId, event as MessageEvent<string>) })
 
   source.onerror = async () => {
-    closeTaskSource(taskId)
+    stopMonitor(taskId)
     try {
-      const response = await Api.getFail2banTaskEvents(
-        taskId,
-        { after: taskLastEventIds[taskId] || 0 },
-        requestLanguage.value
-      )
-      const events = (response?.data || response || []) as Fail2banTaskEvent[]
-      events.forEach((event) => {
-        taskLastEventIds[taskId] = Math.max(taskLastEventIds[taskId] || 0, Number(event.seq || 0))
-      })
-    } catch {
-      // ignore recovery errors
+      const currentTask = await fetchTaskStatus(taskId)
+      if (!currentTask?.id || isTaskTerminal(currentTask.status)) {
+        await refreshAfterTask()
+        return
+      }
+      const nextAttempt = (taskReconnectAttempts[taskId] || 0) + 1
+      taskReconnectAttempts[taskId] = nextAttempt
+      const delay = reconnectDelays[Math.min(nextAttempt - 1, reconnectDelays.length - 1)]
+      scheduleReconnect(taskId, delay)
+    } catch (error) {
+      const current = tasks.value.find(item => item.id === taskId)
+      if (!current || isTaskTerminal(current.status)) {
+        stopMonitor(taskId)
+        return
+      }
+      if (error instanceof HttpRequestError && error.status === 429) {
+        scheduleReconnect(taskId, Math.max(getRetryAfterDelay(error) || 0, 15000))
+        return
+      }
+      const nextAttempt = (taskReconnectAttempts[taskId] || 0) + 1
+      taskReconnectAttempts[taskId] = nextAttempt
+      if (nextAttempt >= reconnectDelays.length) {
+        stopMonitor(taskId)
+        ElMessage.warning(t('security.fail2ban.task.monitorRetryLimit', '任务状态获取失败，可手动刷新'))
+        return
+      }
+      scheduleReconnect(taskId, reconnectDelays[nextAttempt - 1])
     }
-    window.setTimeout(() => {
-      connectTaskStream(taskId, streamUrl)
-    }, 2000)
   }
 }
 
 const loadTasks = async () => {
   loading.tasks = true
   try {
-    const response = await Api.getFail2banTasks({ page: taskPagination.page, pageSize: taskPagination.pageSize }, requestLanguage.value)
+    const [response, activeResponse] = await Promise.all([
+      Api.getFail2banTasks({ page: taskPagination.page, pageSize: taskPagination.pageSize }, requestLanguage.value),
+      Api.getFail2banTasks({ active: true, page: 1, pageSize: 100 }, requestLanguage.value)
+    ])
     tasks.value = (response?.data?.data || []) as Fail2banTask[]
     taskTotal.value = response?.data?.total || tasks.value.length
-
-    const activeResponse = await Api.getFail2banTasks({ active: true, page: 1, pageSize: 100 }, requestLanguage.value)
     const activeTasks = (activeResponse?.data?.data || []) as Fail2banTask[]
+    const activeTaskIds = new Set<string>()
     activeTasks.forEach(task => {
+      rememberTaskEndpoints(task.id)
       mergeTask(task)
-      connectTaskStream(task.id)
+      if (isTaskActive(task.status)) {
+        activeTaskIds.add(task.id)
+        void connectTaskStream(task.id)
+        return
+      }
+      stopMonitor(task.id)
+    })
+    Array.from(taskSources.keys()).forEach(taskId => {
+      if (!activeTaskIds.has(taskId)) stopMonitor(taskId)
     })
   } finally {
     loading.tasks = false
@@ -513,8 +601,22 @@ const submitTaskOperation = async (operation: string, payload: unknown) => {
   const response: any = await submitOperation(operation, payload)
   const result = response?.data || response
   if (result?.taskId) {
+    rememberTaskEndpoints(result.taskId, { statusUrl: result.statusUrl, streamUrl: result.streamUrl })
+    mergeTask({
+      id: result.taskId,
+      operation: result.operation || 'apply_policy',
+      status: result.status || 'queued',
+      phase: result.phase || '',
+      progress: Number(result.progress || 0),
+      message: result.message || '',
+      requestedBy: result.requestedBy || 0,
+      triggeredBy: result.triggeredBy || 'user',
+      eventSeq: Number(result.eventSeq || 0),
+      createdAt: result.createdAt || new Date().toISOString(),
+      updatedAt: result.updatedAt || new Date().toISOString()
+    } as Fail2banTask)
     await loadTasks()
-    connectTaskStream(result.taskId, result.streamUrl)
+    if (isTaskActive(result.status || 'queued')) void connectTaskStream(result.taskId)
   }
   return result
 }
@@ -747,7 +849,9 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
-  Array.from(taskSources.keys()).forEach(closeTaskSource)
+  isUnmounted = true
+  Array.from(taskSources.keys()).forEach(stopMonitor)
+  Array.from(taskReconnectTimers.keys()).forEach(clearReconnectTimer)
 })
 </script>
 

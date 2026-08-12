@@ -10,9 +10,13 @@ export default {
     database: '数据库',
     webServer: 'Web服务器',
     runtime: '运行环境',
+    cache: '缓存',
     utility: '实用工具',
+    container: '容器',
+    security: '安全',
     cloudStorage: '云存储',
-    ai: 'AI / 大模型'
+    ai: 'AI / 大模型',
+    other: '其他'
   },
   catalogReading: '正在读取商城来源',
   catalogCenterSynced: 'Center 已同步 · {count} 个应用',
@@ -58,7 +62,12 @@ export default {
     container: '容器',
     website: '建站',
     webServer: 'Web服务器',
-    utility: '实用工具'
+    cache: '缓存',
+    utility: '实用工具',
+    security: '安全',
+    cloudStorage: '云存储',
+    ai: 'AI / 大模型',
+    other: '其他'
   },
   componentDescriptions: {
     php: 'OneinStack PHP-FPM 运行环境',

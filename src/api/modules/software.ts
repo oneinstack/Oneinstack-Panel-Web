@@ -5,6 +5,10 @@ export const softwareApi = {
   getSoftList: (obj: any) => {
     return http.post("/soft/list", obj);
   },
+  /** 获取软件分类列表 */
+  getSoftCategories: () => {
+    return http.get("/soft/categories");
+  },
   /** 创建系统变更操作预览票据 */
   previewOperation: (obj: { operation: string; payload: unknown }) => {
     return http.post("/operations/preview", obj);
