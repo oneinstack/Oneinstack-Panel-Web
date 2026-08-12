@@ -82,6 +82,15 @@ export default {
     failedPrechecks: '存在未通过的预检项，不能继续执行',
     precheckFailed: '预检未通过',
     confirmExecute: '确认执行',
+    riskLevel: '风险等级',
+    summary: '变更摘要',
+    expiresAt: '预览有效期至',
+    noDetails: '本次预览未返回详细变更项，请确认目标操作无误后再继续。',
+    riskLevels: {
+      low: '低风险',
+      medium: '中风险',
+      high: '高风险'
+    },
     operationTitles: {
       websiteCreate: '创建网站操作预览',
       websiteUpdate: '修改网站操作预览',

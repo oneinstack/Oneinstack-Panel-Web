@@ -218,6 +218,12 @@ const configForm = reactive({
   raw: "",
 });
 
+const dockerConfigPlaceholder = computed(
+  () =>
+    `${t("container.configPlaceholder", "Enter Docker config JSON, for example")}
+${JSON.stringify({ "log-driver": "json-file" }, null, 2)}`,
+);
+
 const containerScope = computed(() => sconfig.scopeAccess?.container || {});
 const canRead = computed(() => sconfig.hasScopeAccess("container", "read"));
 const canWrite = computed(
@@ -847,9 +853,15 @@ const loadActiveTab = async (force = false) => {
       updateListState("registries", data);
     }
     if (activeTab.value === "config") {
-      const { data } = await Api.getContainerConfig();
-      dockerConfig.value = data || null;
-      configForm.raw = data?.raw || "{}";
+      try {
+        const { data } = await Api.getContainerConfig();
+        dockerConfig.value = data || null;
+        configForm.raw = data?.raw || "{}";
+      } catch {
+        dockerConfig.value = null;
+        configForm.raw = "{}";
+        return;
+      }
     }
     loadedTabs[activeTab.value] = true;
   } finally {
@@ -2925,12 +2937,7 @@ onBeforeUnmount(() => {
           v-model="configForm.raw"
           type="textarea"
           :rows="16"
-          :placeholder="
-            t(
-              'container.configPlaceholder',
-              'Enter Docker config JSON, for example {\\n  &quot;log-driver&quot;: &quot;json-file&quot;\\n}',
-            )
-          "
+          :placeholder="dockerConfigPlaceholder"
         />
         <div class="field-help">
           {{

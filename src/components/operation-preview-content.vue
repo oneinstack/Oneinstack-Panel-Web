@@ -34,10 +34,42 @@ const failedPrechecks = computed(() =>
 const hasImpact = computed(() =>
   impactLabels.value.some(([key]) => props.preview.impact?.[key])
 )
+
+const hasDetails = computed(() =>
+  hasImpact.value ||
+  Boolean(props.preview.review?.reason) ||
+  Boolean(props.preview.summary) ||
+  Boolean(props.preview.files?.length) ||
+  Boolean(props.preview.actions?.length) ||
+  Boolean(props.preview.prechecks?.length) ||
+  Boolean(props.preview.rollback)
+)
+
+const riskLabel = computed(() => {
+  const level = props.preview.review?.riskLevel || 'low'
+  return t(`common.operationPreview.riskLevels.${level}`, level)
+})
 </script>
 
 <template>
   <div class="operation-preview">
+    <section class="preview-overview">
+      <div class="overview-item">
+        <span>{{ t('common.operationPreview.riskLevel', 'Risk level') }}</span>
+        <el-tag :type="preview.review?.riskLevel === 'high' ? 'danger' : preview.review?.riskLevel === 'medium' ? 'warning' : 'info'">
+          {{ riskLabel }}
+        </el-tag>
+      </div>
+      <div v-if="preview.summary" class="overview-item overview-item--stacked">
+        <span>{{ t('common.operationPreview.summary', 'Summary') }}</span>
+        <strong>{{ preview.summary }}</strong>
+      </div>
+      <div v-if="preview.expiresAt" class="overview-item">
+        <span>{{ t('common.operationPreview.expiresAt', 'Valid until') }}</span>
+        <strong>{{ preview.expiresAt }}</strong>
+      </div>
+    </section>
+
     <el-alert
       v-if="preview.review?.reason"
       :title="preview.review.reason"
@@ -46,8 +78,16 @@ const hasImpact = computed(() =>
       show-icon
     />
 
+    <el-alert
+      v-if="!hasDetails"
+      :title="t('common.operationPreview.noDetails', 'No detailed changes were returned for this preview. Confirm the target operation before continuing.')"
+      type="info"
+      :closable="false"
+      show-icon
+    />
+
     <section v-if="hasImpact" class="preview-section">
-      <h4>{{ $t('common.operationPreview.impactScope') }}</h4>
+      <h4>{{ t('common.operationPreview.impactScope', 'Impact scope') }}</h4>
       <div class="impact-tags">
         <el-tag
           v-for="[key, label] in impactLabels"
@@ -62,7 +102,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.files?.length" class="preview-section">
-      <h4>{{ $t('common.operationPreview.filesToWrite') }}</h4>
+      <h4>{{ t('common.operationPreview.filesToWrite', 'Files to write') }}</h4>
       <div class="preview-list">
         <div v-for="file in preview.files" :key="`${file.path}-${file.action}`" class="preview-item">
           <strong>{{ file.path }}</strong>
@@ -72,7 +112,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.actions?.length" class="preview-section">
-      <h4>{{ $t('common.operationPreview.actionsToExecute') }}</h4>
+      <h4>{{ t('common.operationPreview.actionsToExecute', 'Actions to execute') }}</h4>
       <div class="preview-list">
         <div v-for="action in preview.actions" :key="`${action.type}-${action.name}-${action.displayCommand}`" class="preview-item">
           <strong>{{ action.name }}</strong>
@@ -83,7 +123,7 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.prechecks?.length" class="preview-section">
-      <h4>{{ $t('common.operationPreview.prechecks') }}</h4>
+      <h4>{{ t('common.operationPreview.prechecks', 'Prechecks') }}</h4>
       <div class="preview-list">
         <div v-for="check in preview.prechecks" :key="check.name" class="preview-item">
           <strong>{{ check.name }}</strong>
@@ -93,11 +133,11 @@ const hasImpact = computed(() =>
     </section>
 
     <section v-if="preview.rollback" class="preview-section">
-      <h4>{{ $t('common.operationPreview.rollback') }}</h4>
-      <p>{{ preview.rollback.summary || (preview.rollback.supported ? $t('common.operationPreview.rollbackSupported') : $t('common.operationPreview.rollbackUnsupported')) }}</p>
+      <h4>{{ t('common.operationPreview.rollback', 'Rollback') }}</h4>
+      <p>{{ preview.rollback.summary || (preview.rollback.supported ? t('common.operationPreview.rollbackSupported', 'Rollback supported') : t('common.operationPreview.rollbackUnsupported', 'Rollback unsupported')) }}</p>
       <el-alert
         v-if="preview.rollback.supported === false || preview.rollback.unrecoverable?.length"
-        :title="preview.rollback.unrecoverable?.join('；') || $t('common.operationPreview.rollbackConfirmTip')"
+        :title="preview.rollback.unrecoverable?.join('；') || t('common.operationPreview.rollbackConfirmTip', 'This operation contains unrecoverable changes')"
         type="error"
         :closable="false"
         show-icon
@@ -106,7 +146,7 @@ const hasImpact = computed(() =>
 
     <el-alert
       v-if="failedPrechecks.length"
-      :title="$t('common.operationPreview.failedPrechecks')"
+      :title="t('common.operationPreview.failedPrechecks', 'Precheck failed')"
       type="error"
       :closable="false"
       show-icon
@@ -122,6 +162,46 @@ const hasImpact = computed(() =>
   overflow: auto;
   gap: 14px;
   text-align: left;
+}
+
+.preview-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+}
+
+.overview-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+
+  > span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+
+  > strong {
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    word-break: break-all;
+  }
+}
+
+.overview-item--stacked {
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 5px;
+
+  > strong {
+    text-align: left;
+  }
 }
 
 .preview-section {

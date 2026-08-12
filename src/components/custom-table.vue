@@ -233,6 +233,7 @@ defineExpose({
   --el-table-row-hover-bg-color: rgba(var(--primary-color), 0.045);
   --el-table-header-bg-color: #f7f9fc;
   --el-table-bg-color: transparent;
+  --el-table-tr-bg-color: var(--surface-card);
   overflow: hidden;
   border-radius: 16px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(251, 252, 255, 0.98));
@@ -256,6 +257,18 @@ defineExpose({
   height: 48px;
   padding: 0;
   border-bottom: 1px solid rgba(241, 245, 249, 0.95);
+}
+
+:deep(.smart-table td.el-table-fixed-column--left),
+:deep(.smart-table td.el-table-fixed-column--right) {
+  background-color: var(--el-table-tr-bg-color);
+}
+
+:deep(.smart-table .el-table__body tr:hover > td.el-table-fixed-column--left),
+:deep(.smart-table .el-table__body tr:hover > td.el-table-fixed-column--right),
+:deep(.smart-table .el-table__body tr.hover-row > td.el-table-fixed-column--left),
+:deep(.smart-table .el-table__body tr.hover-row > td.el-table-fixed-column--right) {
+  background-color: var(--el-table-row-hover-bg-color);
 }
 
 :deep(.smart-table .cell) {

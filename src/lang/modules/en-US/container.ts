@@ -172,7 +172,7 @@ export default {
   configFile: 'Config file: {path}',
   exists: 'Exists',
   notCreated: 'Not created',
-  configPlaceholder: 'Enter Docker config JSON, for example {\n  "log-driver": "json-file"\n}',
+  configPlaceholder: 'Enter Docker config JSON, for example',
   configSaveTip: 'Saving only writes daemon.json and does not restart Docker automatically. To apply changes, click "Restart Docker" and confirm the operation preview.',
   footer: {
     containers: '{total} containers, {running} running on current page',

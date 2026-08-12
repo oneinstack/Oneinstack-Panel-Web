@@ -172,7 +172,7 @@ export default {
   configFile: '配置文件：{path}',
   exists: '已存在',
   notCreated: '未创建',
-  configPlaceholder: '请输入 Docker 配置 JSON，例如 {\n  "log-driver": "json-file"\n}',
+  configPlaceholder: '请输入 Docker 配置 JSON，例如',
   configSaveTip: '保存只写入 daemon.json，不会自动重启 Docker。需要生效时请点击“重启 Docker”并确认操作预览。',
   footer: {
     containers: '共 {total} 个容器，当前页 {running} 个运行中',

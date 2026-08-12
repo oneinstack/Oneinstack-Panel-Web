@@ -7,6 +7,7 @@ import i18n from '@/lang'
 export interface OperationPreview {
   previewId: string
   operation: string
+  summary?: string
   review: {
     required: boolean
     riskLevel: 'low' | 'medium' | 'high' | string
@@ -41,6 +42,47 @@ export interface OperationPreview {
     unrecoverable?: string[]
   }
   expiresAt?: string
+}
+
+const normalizeOperationPreview = (response: any): OperationPreview => {
+  const payload = response?.data ?? response
+  const preview = payload?.preview ?? payload
+  const plan = preview?.plan ?? {}
+  const review = preview?.review ?? {}
+  const impact = preview?.impact ?? plan?.impact ?? {}
+  const rollback = preview?.rollback ?? plan?.rollback
+
+  return {
+    ...preview,
+    previewId: preview?.previewId ?? preview?.preview_id ?? preview?.id ?? '',
+    operation: preview?.operation ?? '',
+    summary: preview?.summary ?? plan?.summary ?? review?.summary,
+    review: {
+      ...review,
+      required: Boolean(review?.required),
+      riskLevel: review?.riskLevel ?? review?.risk_level ?? 'low',
+      reason: review?.reason
+    },
+    files: preview?.files ?? plan?.files ?? [],
+    actions: preview?.actions ?? plan?.actions ?? [],
+    prechecks: preview?.prechecks ?? plan?.prechecks ?? [],
+    impact: {
+      ...impact,
+      writeFiles: impact?.writeFiles ?? impact?.write_files,
+      modifyDatabase: impact?.modifyDatabase ?? impact?.modify_database,
+      restartService: impact?.restartService ?? impact?.restart_service,
+      reloadService: impact?.reloadService ?? impact?.reload_service,
+      networkRisk: impact?.networkRisk ?? impact?.network_risk
+    },
+    rollback: rollback
+      ? {
+          ...rollback,
+          supported: Boolean(rollback?.supported),
+          unrecoverable: rollback?.unrecoverable ?? rollback?.unrecoverable_changes
+        }
+      : undefined,
+    expiresAt: preview?.expiresAt ?? preview?.expires_at
+  }
 }
 
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -104,8 +146,8 @@ const confirmOperationPreview = async (preview: OperationPreview) => {
 }
 
 export const submitOperation = async <T = any>(operation: string, payload: unknown) => {
-  const { data } = await Api.previewOperation({ operation, payload })
-  const preview = data as OperationPreview
+  const response = await Api.previewOperation({ operation, payload })
+  const preview = normalizeOperationPreview(response)
   await confirmOperationPreview(preview)
   return await Api.executeOperation(preview.previewId) as T
 }

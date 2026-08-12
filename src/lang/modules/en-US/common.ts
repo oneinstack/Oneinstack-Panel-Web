@@ -82,6 +82,15 @@ export default {
     failedPrechecks: 'Some prechecks failed. The operation cannot continue.',
     precheckFailed: 'Precheck failed',
     confirmExecute: 'Confirm execution',
+    riskLevel: 'Risk level',
+    summary: 'Change summary',
+    expiresAt: 'Preview valid until',
+    noDetails: 'No detailed changes were returned for this preview. Confirm the target operation before continuing.',
+    riskLevels: {
+      low: 'Low risk',
+      medium: 'Medium risk',
+      high: 'High risk'
+    },
     operationTitles: {
       websiteCreate: 'Create website operation preview',
       websiteUpdate: 'Update website operation preview',
