@@ -173,7 +173,7 @@ const recommendedVersion = (item: any) =>
 
 const hasUpgrade = (item: any) =>
   isInstalled(item) && item.isUpdate === true &&
-  !!recommendedVersion(item) && recommendedVersion(item) !== item.install_version
+  !!recommendedVersion(item) && (recommendedVersion(item) !== item.install_version || item.installedPackageVersion !== item.latestPackageVersion)
 
 const serviceStateLabel = (status?: ComponentServiceStatus) => {
   if (!status) return t('software.statusReading', 'Reading status')
