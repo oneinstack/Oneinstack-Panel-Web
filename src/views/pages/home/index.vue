@@ -46,7 +46,26 @@ interface ChartData {
   descend: { value: number; strValue: string }[]
 }
 
+interface CpuSummary {
+  total?: number
+  used?: number
+  available?: number
+  usedPercent?: number
+  logical_cores?: number
+  physical_cores?: number
+}
+
 const monitorChartMaxPoints = 60
+
+const formatCoreValue = (value?: number, digits = 2) => {
+  if (!Number.isFinite(value)) return '--'
+  return `${Number(value).toFixed(digits)}${t('home.cores', '核')}`
+}
+
+const formatCoreCount = (value?: number) => {
+  if (!Number.isFinite(value)) return '--'
+  return `${Number(value)}${t('home.cores', '核')}`
+}
 
 const conf = reactive({
   themeColor: {
@@ -489,6 +508,10 @@ const conf = reactive({
       usedPercent: 0
     } as { total: string; available: string; used: string; usedPercent: number },
     cpuInfo: '',
+    cpuMeta: {
+      logicalCores: '--',
+      physicalCores: '--'
+    },
     getStatusLabel: (item: Options) => item.labelKey ? t(item.labelKey, item.label) : item.label,
     handleStatusChange: () => conf.statusData.update(),
     update: async () => {
@@ -525,13 +548,24 @@ const conf = reactive({
           break
         case 3:
           {
-            const [usedPercent] = res.cpu_usage
-            const { modelName, cores } = res.cpu_info[0]
-            conf.statusData.usage.total = '--'
-            conf.statusData.usage.used = '--'
-            conf.statusData.usage.available = '--'
-            conf.statusData.usage.usedPercent = usedPercent
-            conf.statusData.cpuInfo = `${modelName} ${cores}${t('home.cores', '核')}`
+            const cpuSummary = (res.cpu_summary || {}) as CpuSummary
+            const fallbackCpuInfo = Array.isArray(res.cpu_info) ? res.cpu_info[0] || {} : {}
+            const usedPercent = Number(
+              cpuSummary.usedPercent ?? res.cpu_usage?.[0] ?? 0
+            )
+            const physicalCores = Number(
+              cpuSummary.physical_cores ?? fallbackCpuInfo.cores ?? 0
+            )
+            const logicalCores = Number(
+              cpuSummary.logical_cores ?? fallbackCpuInfo.coreId ?? physicalCores ?? 0
+            )
+            conf.statusData.usage.total = formatCoreCount(cpuSummary.total)
+            conf.statusData.usage.used = formatCoreValue(cpuSummary.used)
+            conf.statusData.usage.available = formatCoreValue(cpuSummary.available)
+            conf.statusData.usage.usedPercent = Number.isFinite(usedPercent) ? usedPercent : 0
+            conf.statusData.cpuInfo = `${fallbackCpuInfo.modelName || fallbackCpuInfo.model || 'CPU'} ${formatCoreCount(physicalCores)}`
+            conf.statusData.cpuMeta.logicalCores = formatCoreCount(logicalCores)
+            conf.statusData.cpuMeta.physicalCores = formatCoreCount(physicalCores)
           }
           break
       }
@@ -714,8 +748,16 @@ onMounted(() => {
                       </div>
                       <div class="status-menu" style="margin-bottom: 20px">
                         <div class="b1">
-                          {{ $t('home.total') }}：
-                          <span>{{ conf.statusData.usage.total }}</span>
+                          {{
+                            conf.statusData.selected.value === 3
+                              ? $t('home.logicalCores', '逻辑核心')
+                              : $t('home.total')
+                          }}：
+                          <span>{{
+                            conf.statusData.selected.value === 3
+                              ? conf.statusData.cpuMeta.logicalCores
+                              : conf.statusData.usage.total
+                          }}</span>
                         </div>
                         <div class="b2">
                           {{ $t('home.used') }}：
@@ -724,8 +766,16 @@ onMounted(() => {
                       </div>
                       <div class="status-menu">
                         <div class="b1">
-                          {{ $t('home.available') }}：
-                          <span>{{ conf.statusData.usage.available }}</span>
+                          {{
+                            conf.statusData.selected.value === 3
+                              ? $t('home.physicalCores', '物理核心')
+                              : $t('home.available')
+                          }}：
+                          <span>{{
+                            conf.statusData.selected.value === 3
+                              ? conf.statusData.cpuMeta.physicalCores
+                              : conf.statusData.usage.available
+                          }}</span>
                         </div>
                         <div class="b2">
                           {{ $t('home.usage') }}：

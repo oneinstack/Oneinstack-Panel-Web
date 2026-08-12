@@ -7,6 +7,12 @@ import Fail2ban from './components/fail2ban.vue'
 
 interface Fail2banCapabilities {
   showSecurityMenu: boolean
+  canReadSecurity: boolean
+  canWriteSecurity: boolean
+  canChangeFirewallRules: boolean
+  canChangePortForward: boolean
+  canToggleFirewall: boolean
+  canTogglePing: boolean
   showFail2banTab: boolean
   canChangePolicy: boolean
   canBan: boolean
@@ -17,6 +23,12 @@ interface Fail2banCapabilities {
 
 const defaultCapabilities = (): Fail2banCapabilities => ({
   showSecurityMenu: true,
+  canReadSecurity: false,
+  canWriteSecurity: false,
+  canChangeFirewallRules: false,
+  canChangePortForward: false,
+  canToggleFirewall: false,
+  canTogglePing: false,
   showFail2banTab: false,
   canChangePolicy: false,
   canBan: false,
@@ -84,6 +96,12 @@ const loadAccessMatrix = async () => {
     const matrix = response?.data || {}
     conf.fail2banCapabilities = {
       showSecurityMenu: Boolean(matrix?.menu?.security),
+      canReadSecurity: Boolean(matrix?.scopes?.security?.read),
+      canWriteSecurity: Boolean(matrix?.scopes?.security?.write),
+      canChangeFirewallRules: Boolean(matrix?.actions?.['firewall.rule_change']),
+      canChangePortForward: Boolean(matrix?.actions?.['firewall.port_forward']),
+      canToggleFirewall: Boolean(matrix?.actions?.['firewall.toggle']),
+      canTogglePing: Boolean(matrix?.actions?.['firewall.ping']),
       showFail2banTab: Boolean(matrix?.scopes?.security?.read),
       canChangePolicy: Boolean(matrix?.actions?.['fail2ban.policy_change']),
       canBan: Boolean(matrix?.actions?.['fail2ban.ban']),
@@ -104,9 +122,13 @@ onMounted(() => {
 <template>
   <div v-if="conf.fail2banCapabilities.showSecurityMenu" class="security-container">
     <card-tabs :list="conf.list" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
-    <component
-      :is="activeTab?.component"
-      v-bind="activeTab?.index === 5 ? { capabilities: conf.fail2banCapabilities } : {}"
+    <Firewall
+      v-if="activeTab?.index === 0"
+      :capabilities="conf.fail2banCapabilities"
+    />
+    <Fail2ban
+      v-else-if="activeTab?.index === 5"
+      :capabilities="conf.fail2banCapabilities"
     />
   </div>
 </template>

@@ -150,6 +150,29 @@ export default {
   autoBlockEnabled: '自动封禁已启用',
   autoBlockDisabled: '自动封禁已关闭',
   autoBlockRunComplete: '检测完成，本次新增封禁 {count} 个 IP',
+  neverRun: '从未检测',
+  readOnlyReason: '当前账号只有安全配置读取权限',
+  readOnlyHint: '当前账号只有安全配置读取权限，可查看但不能修改安全配置。',
+  firewallDisabledHint: '防火墙已关闭，启用后才能修改规则。',
+  firewallPersistentHint: '当前防火墙规则不可持久化，建议先修复持久化能力后再修改。',
+  firewallUnsupportedReason: '未检测到受支持的防火墙',
+  firewallRepairReason: '防火墙配置需要先修复',
+  firewallEnableRequired: '需先启用防火墙',
+  firewallPersistentRequired: '当前防火墙规则无法持久化',
+  firewallToggleDenied: '当前账号没有防火墙开关权限',
+  firewallToggleUnavailable: '当前防火墙后端不支持切换状态',
+  pingPermissionDenied: '当前账号没有修改 Ping 策略的权限',
+  rulePermissionDenied: '当前账号没有防火墙规则修改权限',
+  forwardPermissionDenied: '当前账号没有端口转发修改权限',
+  forwardRequiresFirewalld: '端口转发仅支持 firewalld',
+  protectedRuleReadonly: '系统保护规则不可修改',
+  autoBlockRunWriteDenied: '当前账号没有安全配置修改权限',
+  autoBlockRunDisabled: '请先启用自动封禁',
+  autoBlockRunning: '正在检测，请稍候',
+  protocolPortsForbidden: 'ICMP 或全协议规则不能指定端口',
+  invalidPortEmptyItem: '端口列表不能包含空项',
+  invalidPortRange: '端口必须在 1-65535 之间',
+  invalidPortOrder: '端口范围起始值不能大于结束值',
   fail2ban: {
     title: '入侵防御',
     description: '基于 Fail2ban 管理登录暴力破解、异常认证与实时封禁任务。',
@@ -261,7 +284,8 @@ export default {
         ban_ip: '封禁 IP',
         unban_ip: '解除封禁'
       }
-    }
+    },
+    retryAfter: '{seconds} 秒后重试'
   },
   ruleTabs: {
     port: '端口规则',

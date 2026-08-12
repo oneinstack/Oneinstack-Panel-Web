@@ -30,6 +30,8 @@ export default {
   disk: '磁盘',
   cpu: 'CPU',
   cores: '核',
+  logicalCores: '逻辑核心',
+  physicalCores: '物理核心',
   total: '总数',
   used: '已用',
   available: '可用',

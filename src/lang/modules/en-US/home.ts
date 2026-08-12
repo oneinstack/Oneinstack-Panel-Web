@@ -30,6 +30,8 @@ export default {
   disk: 'Disk',
   cpu: 'CPU',
   cores: 'cores',
+  logicalCores: 'Logical cores',
+  physicalCores: 'Physical cores',
   total: 'Total',
   used: 'Used',
   available: 'Available',

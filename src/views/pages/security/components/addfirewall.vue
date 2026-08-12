@@ -33,7 +33,7 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
   close: [value: boolean]
-  saved: []
+  saved: [rule?: Record<string, any>]
 }>()
 
 const formRef = ref<FormInstance>()
@@ -94,14 +94,6 @@ const validateIPs = (_rule: unknown, _value: unknown, callback: (error?: Error) 
   callback()
 }
 
-const parsePortRange = (value: string) => {
-  const parts = value.split('-')
-  if (parts.length > 2 || parts.some((part) => !/^\d+$/.test(part))) return false
-  const start = Number(parts[0])
-  const end = parts.length === 2 ? Number(parts[1]) : start
-  return start >= 1 && end <= 65535 && start <= end
-}
-
 const portsContain = (raw: string, port: number) => {
   if (!raw.trim()) return true
   return raw.split(',').some((item) => {
@@ -113,19 +105,42 @@ const portsContain = (raw: string, port: number) => {
 }
 
 const validatePorts = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
-  if (form.protocol === 'icmp') {
+  const raw = String(value || '')
+  const trimmed = raw.trim()
+  if (!trimmed) {
     callback()
     return
   }
-  const values = String(value || '').split(',').map((item) => item.trim()).filter(Boolean)
-  if (values.some((item) => !parsePortRange(item))) {
-    callback(new Error(t('security.invalidPortFormat', '端口格式应为 80,443,8000-8100，范围为 1-65535')))
+  if (form.protocol === 'icmp') {
+    callback(new Error(t('security.protocolPortsForbidden', 'ICMP 或全协议规则不能指定端口')))
     return
+  }
+  const values = raw.split(',').map((item) => item.trim())
+  if (values.some((item) => item === '')) {
+    callback(new Error(t('security.invalidPortEmptyItem', '端口列表不能包含空项')))
+    return
+  }
+  for (const item of values) {
+    const match = item.match(/^(\d+)(?:-(\d+))?$/)
+    if (!match) {
+      callback(new Error(t('security.invalidPortFormat', '端口格式应为 80,443,8000-8100，范围为 1-65535')))
+      return
+    }
+    const start = Number(match[1])
+    const end = match[2] ? Number(match[2]) : start
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start < 1 || end > 65535) {
+      callback(new Error(t('security.invalidPortRange', '端口必须在 1-65535 之间')))
+      return
+    }
+    if (start > end) {
+      callback(new Error(t('security.invalidPortOrder', '端口范围起始值不能大于结束值')))
+      return
+    }
   }
   if (
     form.direction === 'in' &&
     form.strategy === 'deny' &&
-    portsContain(String(value || ''), props.panelPort)
+    portsContain(trimmed, props.panelPort)
   ) {
     callback(new Error(t('security.denyPanelPortBlocked', '不能拒绝面板端口 {port}', { port: props.panelPort })))
     return
@@ -193,8 +208,9 @@ const submit = async () => {
       remark: form.remark.trim(),
       expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : null
     }
+    let result: any
     try {
-      await submitOperation('firewall.rule_change', {
+      result = await submitOperation('firewall.rule_change', {
         action: props.type ? 'create' : 'update',
         rule: payload
       })
@@ -203,7 +219,7 @@ const submit = async () => {
       throw error
     }
     ElMessage.success(props.type ? t('security.ruleAdded', '规则已添加') : t('security.ruleUpdated', '规则已更新'))
-    emit('saved')
+    emit('saved', result?.data || result)
   } finally {
     submitting.value = false
   }

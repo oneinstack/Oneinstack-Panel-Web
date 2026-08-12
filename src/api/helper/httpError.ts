@@ -156,11 +156,17 @@ export const handleHttpError = (
     error.status === HttpCode.LOGIN_EXPIRED ||
     [1100, 1101, 1109].includes(Number(error.code));
   if (loginExpired && !config.ignoreUnauthorizedLogout) {
-    System.er(error.message, { type: "error" });
+    System.er(error.message, {
+      type: "error",
+      groupKey: `${error.status || ""}|${error.code || ""}|${error.message}`,
+    });
     sconfig.logout(true);
     return error;
   }
 
-  System.er(error.message, { type: "error" });
+  System.er(error.message, {
+    type: "error",
+    groupKey: `${error.status || ""}|${error.code || ""}|${error.message}`,
+  });
   return error;
 };

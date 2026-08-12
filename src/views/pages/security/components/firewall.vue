@@ -15,6 +15,19 @@ import InstallTaskDrawer from "../../software/components/InstallTaskDrawer.vue";
 import Addfirewall from "./addfirewall.vue";
 import type { ColumnItem } from "@/components/custom-table.vue";
 
+interface SecurityCapabilities {
+  canReadSecurity: boolean;
+  canWriteSecurity: boolean;
+  canChangeFirewallRules: boolean;
+  canChangePortForward: boolean;
+  canToggleFirewall: boolean;
+  canTogglePing: boolean;
+}
+
+const props = defineProps<{
+  capabilities: SecurityCapabilities;
+}>();
+
 const softwareTaskStore = useSoftwareTaskStore()
 
 type RuleTab = "port" | "ip" | "forward" | "region" | "auto_block";
@@ -32,12 +45,15 @@ interface FirewallStatus {
   enabled: boolean;
   pingBlocked: boolean;
   backend: "ufw" | "firewalld" | "iptables" | "none";
+  runtimeBackend?: string;
+  managedBackend?: string;
   persistent: boolean;
   canToggle: boolean;
   repairRequired: boolean;
   warning?: string;
   panelPort: number;
   panelPortProtected: boolean;
+  managedPanelRule?: boolean;
   managedRuleCount: number;
   counts: FirewallCounts;
 }
@@ -57,6 +73,7 @@ interface FirewallRule {
   backend: string;
   protected: boolean;
   create_time: string;
+  update_time?: string;
 }
 
 interface PortForward {
@@ -72,10 +89,13 @@ interface PortForward {
 }
 
 interface AutoBlockConfig {
+  id?: number;
   enabled: boolean;
   threshold: number;
   windowMinutes: number;
   banMinutes: number;
+  create_time?: string;
+  update_time?: string;
   lastRunAt?: string | null;
 }
 
@@ -221,9 +241,48 @@ const autoConfig = reactive<AutoBlockConfig>({
 });
 
 const isRuleTab = computed(() => activeTab.value !== "forward");
-const canManageRules = computed(
-  () => status.value.install && status.value.enabled && status.value.persistent,
+const canWrite = computed(() => Boolean(props.capabilities?.canWriteSecurity));
+const baseActionDisabledReason = computed(() => {
+  if (!canWrite.value)
+    return t("security.readOnlyReason", "当前账号只有安全配置读取权限");
+  if (!status.value.install)
+    return t("security.firewallUnsupportedReason", "未检测到受支持的防火墙");
+  if (status.value.repairRequired)
+    return t("security.firewallRepairReason", "防火墙配置需要先修复");
+  if (!status.value.enabled)
+    return t("security.firewallEnableRequired", "需先启用防火墙");
+  if (!status.value.persistent)
+    return t("security.firewallPersistentRequired", "当前防火墙规则无法持久化");
+  return "";
+});
+const canManageRules = computed(() => !baseActionDisabledReason.value);
+const firewallDisabledNotice = computed(() => {
+  if (!status.value.install || status.value.repairRequired) return "";
+  if (!canWrite.value)
+    return t("security.readOnlyHint", "当前账号只有安全配置读取权限，可查看但不能修改安全配置。");
+  if (!status.value.enabled)
+    return t("security.firewallDisabledHint", "防火墙已关闭，启用后才能修改规则。");
+  if (!status.value.persistent)
+    return t("security.firewallPersistentHint", "当前防火墙规则不可持久化，建议先修复持久化能力后再修改。");
+  return "";
+});
+const pingDisabledReason = computed(() => {
+  if (!props.capabilities?.canTogglePing)
+    return t("security.pingPermissionDenied", "当前账号没有修改 Ping 策略的权限");
+  return baseActionDisabledReason.value;
+});
+const canRunAutoBlock = computed(
+  () => canWrite.value && autoConfig.enabled === true && !autoRunning.value,
 );
+const autoRunDisabledReason = computed(() => {
+  if (!canWrite.value)
+    return t("security.autoBlockRunWriteDenied", "当前账号没有安全配置修改权限");
+  if (!autoConfig.enabled)
+    return t("security.autoBlockRunDisabled", "请先启用自动封禁");
+  if (autoRunning.value)
+    return t("security.autoBlockRunning", "正在检测，请稍候");
+  return "";
+});
 const ruleColumns = computed<ColumnItem<FirewallRule>[]>(() => [
   { type: "selection", width: 48, selectable: (row) => !row.protected },
   ...(activeTab.value === "port"
@@ -678,14 +737,22 @@ const saveIPRule = async () => {
         ? new Date(ipForm.expiresAt).toISOString()
         : null,
     };
-    if (ipDialogIsAdd.value) await Api.addFirewallRule(payload);
-    else await Api.updateFirewallRule(payload);
+    const response = ipDialogIsAdd.value
+      ? await Api.addFirewallRule(payload)
+      : await Api.updateFirewallRule(payload);
+    const saved = response?.data || response;
     ElMessage.success(
       ipDialogIsAdd.value
         ? t("security.ruleAdded", "规则已添加")
         : t("security.ruleUpdated", "规则已更新"),
     );
     ipDialogVisible.value = false;
+    if (!ipDialogIsAdd.value && saved?.id) {
+      const index = ruleRows.value.findIndex((item) => item.id === saved.id);
+      if (index >= 0) ruleRows.value.splice(index, 1, saved);
+      await getFirewallInfo();
+      return;
+    }
     await refreshAll();
   } finally {
     ipSubmitting.value = false;
@@ -730,14 +797,22 @@ const saveForward = async () => {
       state: forwardForm.enabled ? 1 : 0,
       remark: forwardForm.remark.trim(),
     };
-    if (forwardDialogIsAdd.value) await Api.addFirewallForward(payload);
-    else await Api.updateFirewallForward(payload);
+    const response = forwardDialogIsAdd.value
+      ? await Api.addFirewallForward(payload)
+      : await Api.updateFirewallForward(payload);
+    const saved = response?.data || response;
     ElMessage.success(
       forwardDialogIsAdd.value
         ? t("security.forwardAdded", "端口转发已添加")
         : t("security.forwardUpdated", "端口转发已更新"),
     );
     forwardDialogVisible.value = false;
+    if (!forwardDialogIsAdd.value && saved?.id) {
+      const index = forwardRows.value.findIndex((item) => item.id === saved.id);
+      if (index >= 0) forwardRows.value.splice(index, 1, saved);
+      await getFirewallInfo();
+      return;
+    }
     await refreshAll();
   } finally {
     forwardSubmitting.value = false;
@@ -917,17 +992,47 @@ const runAutoBlock = async () => {
       ),
     );
     await refreshAll();
+  } catch (error: any) {
+    if (Number(error?.code) === 2006 || error?.status === 409) {
+      await loadAutoConfig();
+    }
+    throw error;
   } finally {
     autoRunning.value = false;
   }
 };
 
-const formatTime = (value?: string | null) => {
-  if (!value) return t("common.permanent", "永久");
+const formatTime = (value?: string | null, fallback?: string) => {
+  if (!value) return fallback || "--";
   const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? value
+  if (Number.isNaN(date.getTime()) || date.getUTCFullYear() <= 1) {
+    return fallback || "--";
+  }
+  return date.toLocaleString(i18n.locale || "zh-CN", { hour12: false });
+};
+
+const formatLastRunAt = (value?: string | null) => {
+  if (!value) return t("security.neverRun", "从未检测");
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) || date.getUTCFullYear() <= 1
+    ? "--"
     : date.toLocaleString(i18n.locale || "zh-CN", { hour12: false });
+};
+
+const actionReason = (row?: FirewallRule) => {
+  if (row?.protected)
+    return t("security.protectedRuleReadonly", "系统保护规则不可修改");
+  if (!props.capabilities?.canChangeFirewallRules)
+    return t("security.rulePermissionDenied", "当前账号没有防火墙规则修改权限");
+  return baseActionDisabledReason.value;
+};
+
+const forwardActionReason = () => {
+  if (!props.capabilities?.canChangePortForward)
+    return t("security.forwardPermissionDenied", "当前账号没有端口转发修改权限");
+  if (status.value.backend !== "firewalld")
+    return t("security.forwardRequiresFirewalld", "端口转发仅支持 firewalld");
+  return baseActionDisabledReason.value;
 };
 
 const handleCurrentChange = (page: number) => {
@@ -939,6 +1044,17 @@ const handleSizeChange = (size: number) => {
   pagination.pageSize = size;
   pagination.currentPage = 1;
   getData();
+};
+
+const handleSavedPortRule = (savedRule?: Record<string, any>) => {
+  portDialogVisible.value = false;
+  if (!portDialogIsAdd.value && savedRule?.id) {
+    const index = ruleRows.value.findIndex((item) => item.id === savedRule.id);
+    if (index >= 0) ruleRows.value.splice(index, 1, savedRule as FirewallRule);
+    void getFirewallInfo();
+    return;
+  }
+  void refreshAll();
 };
 
 watch(activeTab, (tab) => {
@@ -963,7 +1079,9 @@ watch(
 );
 
 onMounted(() => {
-  void refreshAll();
+  if (props.capabilities?.canReadSecurity) {
+    void refreshAll();
+  }
   void softwareTaskStore.loadActive().then(() => {
     if (activeInstallTask.value)
       installTaskId.value = activeInstallTask.value.id;
@@ -979,28 +1097,40 @@ onMounted(() => {
           <span class="control-label">{{
             t("security.firewallSwitch", "防火墙开关")
           }}</span>
-          <el-switch
-            v-model="status.enabled"
-            :loading="firewallChanging"
-            :disabled="
-              !status.install ||
-              !status.canToggle ||
-              status.backend === 'iptables'
-            "
-            @change="handleFirewallChange"
-          />
+          <el-tooltip
+            :content="!props.capabilities?.canToggleFirewall ? t('security.firewallToggleDenied', '当前账号没有防火墙开关权限') : !status.install ? t('security.firewallUnsupportedReason', '未检测到受支持的防火墙') : !status.canToggle || status.backend === 'iptables' ? t('security.firewallToggleUnavailable', '当前防火墙后端不支持切换状态') : ''"
+            :disabled="props.capabilities?.canToggleFirewall && status.install && status.canToggle && status.backend !== 'iptables'"
+          >
+            <span class="disabled-action-wrapper">
+              <el-switch
+                v-model="status.enabled"
+                :loading="firewallChanging"
+                :disabled="
+                  !props.capabilities?.canToggleFirewall ||
+                  !status.install ||
+                  !status.canToggle ||
+                  status.backend === 'iptables'
+                "
+                @change="handleFirewallChange"
+              />
+            </span>
+          </el-tooltip>
         </div>
         <span class="divider" />
         <div class="switch-control">
           <span class="control-label">{{
             t("security.blockPing", "禁 Ping")
           }}</span>
-          <el-switch
-            v-model="status.pingBlocked"
-            :loading="pingChanging"
-            :disabled="!status.install || !status.enabled || !status.persistent"
-            @change="handlePingChange"
-          />
+          <el-tooltip :content="pingDisabledReason" :disabled="!pingDisabledReason">
+            <span class="disabled-action-wrapper">
+              <el-switch
+                v-model="status.pingBlocked"
+                :loading="pingChanging"
+                :disabled="Boolean(pingDisabledReason)"
+                @change="handlePingChange"
+              />
+            </span>
+          </el-tooltip>
         </div>
         <span class="divider" />
         <el-button :loading="cleanupLoading" @click="handleCleanup">{{
@@ -1068,6 +1198,15 @@ onMounted(() => {
       show-icon
     />
 
+    <el-alert
+      v-if="firewallDisabledNotice"
+      class="status-warning"
+      :title="firewallDisabledNotice"
+      :type="!canWrite ? 'info' : 'warning'"
+      :closable="false"
+      show-icon
+    />
+
     <nav class="rule-tabs">
       <button
         v-for="tab in tabs"
@@ -1097,6 +1236,7 @@ onMounted(() => {
         </div>
         <el-switch
           v-model="autoConfig.enabled"
+          :disabled="!canWrite"
           :active-text="t('common.enable', '启用')"
           :inactive-text="t('common.disable', '关闭')"
         />
@@ -1123,16 +1263,21 @@ onMounted(() => {
           />
         </label>
         <div class="auto-actions">
-          <el-button
-            :loading="autoRunning"
-            :disabled="!autoConfig.enabled"
-            @click="runAutoBlock"
-          >
-            {{ t("security.runNow", "立即检测") }}
-          </el-button>
+          <el-tooltip :content="autoRunDisabledReason" :disabled="!autoRunDisabledReason">
+            <span class="disabled-action-wrapper">
+              <el-button
+                :loading="autoRunning"
+                :disabled="!canRunAutoBlock"
+                @click="runAutoBlock"
+              >
+                {{ t("security.runNow", "立即检测") }}
+              </el-button>
+            </span>
+          </el-tooltip>
           <el-button
             type="primary"
             :loading="autoSaving"
+            :disabled="!canWrite"
             @click="saveAutoConfig"
             >{{ t("common.saveConfig", "保存配置") }}</el-button
           >
@@ -1141,30 +1286,38 @@ onMounted(() => {
       <p class="last-run">
         {{
           t("security.lastRun", "上次检测：{time}", {
-            time: formatTime(autoConfig.lastRunAt),
+            time: formatLastRunAt(autoConfig.lastRunAt),
           })
         }}
       </p>
     </section>
 
     <section class="rules-card">
-      <header class="toolbar">
-        <div class="toolbar-actions">
-          <el-button
+      <header class="toolbar security-toolbar">
+        <div class="toolbar-actions security-toolbar__actions">
+          <el-tooltip
             v-if="activeTab !== 'auto_block'"
-            type="primary"
-            :disabled="
-              !canManageRules ||
-              (activeTab === 'forward' && status.backend !== 'firewalld')
-            "
-            @click="openAddDialog"
+            :content="activeTab === 'forward' ? forwardActionReason() : actionReason()"
+            :disabled="!(activeTab === 'forward' ? forwardActionReason() : actionReason())"
           >
-            {{ addRuleButtonText }}
-          </el-button>
+            <span class="disabled-action-wrapper">
+              <el-button
+                type="primary"
+                :disabled="Boolean(activeTab === 'forward' ? forwardActionReason() : actionReason())"
+                @click="openAddDialog"
+              >
+                {{ addRuleButtonText }}
+              </el-button>
+            </span>
+          </el-tooltip>
           <template v-if="isRuleTab">
-            <el-button :disabled="!canManageRules" @click="chooseImport">{{
-              t("security.importRules", "导入规则")
-            }}</el-button>
+            <el-tooltip :content="actionReason()" :disabled="!actionReason()">
+              <span class="disabled-action-wrapper">
+                <el-button :disabled="Boolean(actionReason())" @click="chooseImport">{{
+                  t("security.importRules", "导入规则")
+                }}</el-button>
+              </span>
+            </el-tooltip>
             <el-button @click="exportRules">{{
               t("security.exportRules", "导出规则")
             }}</el-button>
@@ -1172,7 +1325,7 @@ onMounted(() => {
         </div>
         <search-input
           v-model="searchValue"
-          class="rule-search"
+          class="rule-search security-toolbar__search"
           :placeholder="searchPlaceholder"
           @search="getData"
         />
@@ -1215,11 +1368,15 @@ onMounted(() => {
           </el-tag>
         </template>
         <template #state="{ row }">
-          <el-switch
-            :model-value="row.state === 1"
-            :disabled="row.protected || !canManageRules"
-            @change="setRuleState(row, Boolean($event))"
-          />
+          <el-tooltip :content="actionReason(row)" :disabled="!actionReason(row)">
+            <span class="disabled-action-wrapper">
+              <el-switch
+                :model-value="row.state === 1"
+                :disabled="Boolean(actionReason(row))"
+                @change="setRuleState(row, Boolean($event))"
+              />
+            </span>
+          </el-tooltip>
         </template>
         <template #remark="{ row }">
           {{ row.remark || "—" }}
@@ -1243,7 +1400,7 @@ onMounted(() => {
               plain
               type="primary"
               :icon="EditPen"
-              :disabled="row.protected || !canManageRules"
+              :disabled="Boolean(actionReason(row))"
               @click="editRule(row)"
               >{{ t("common.edit", "编辑") }}</el-button
             >
@@ -1251,7 +1408,7 @@ onMounted(() => {
               link
               type="danger"
               :icon="Delete"
-              :disabled="row.protected || !canManageRules"
+              :disabled="Boolean(actionReason(row))"
               @click="deleteRule(row)"
               >{{ t("common.delete", "删除") }}</el-button
             >
@@ -1276,11 +1433,15 @@ onMounted(() => {
           >{{ row.destinationIp }}:{{ row.destinationPort }}</template
         >
         <template #state="{ row }">
-          <el-switch
-            :model-value="row.state === 1"
-            :disabled="!canManageRules || status.backend !== 'firewalld'"
-            @change="setForwardState(row, Boolean($event))"
-          />
+          <el-tooltip :content="forwardActionReason()" :disabled="!forwardActionReason()">
+            <span class="disabled-action-wrapper">
+              <el-switch
+                :model-value="row.state === 1"
+                :disabled="Boolean(forwardActionReason())"
+                @change="setForwardState(row, Boolean($event))"
+              />
+            </span>
+          </el-tooltip>
         </template>
         <template #remark="{ row }">{{ row.remark || "—" }}</template>
         <template #createdAt="{ row }">{{
@@ -1292,7 +1453,7 @@ onMounted(() => {
               plain
               type="primary"
               :icon="EditPen"
-              :disabled="!canManageRules"
+              :disabled="Boolean(forwardActionReason())"
               @click="editForward(row)"
               >{{ t("common.edit", "编辑") }}</el-button
             >
@@ -1300,7 +1461,7 @@ onMounted(() => {
               link
               type="danger"
               :icon="Delete"
-              :disabled="!canManageRules"
+              :disabled="Boolean(forwardActionReason())"
               @click="deleteForward(row)"
               >{{ t("common.delete", "删除") }}</el-button
             >
@@ -1328,14 +1489,18 @@ onMounted(() => {
               value="delete"
             />
           </el-select>
-          <el-button
-            type="primary"
-            plain
-            :disabled="!batchAction || !selectedRows.length || !canManageRules"
-            @click="handleBatch"
-          >
-            {{ t("security.batchAction", "批量操作") }}
-          </el-button>
+          <el-tooltip :content="actionReason()" :disabled="!actionReason()">
+            <span class="disabled-action-wrapper">
+              <el-button
+                type="primary"
+                plain
+                :disabled="!batchAction || !selectedRows.length || Boolean(actionReason())"
+                @click="handleBatch"
+              >
+                {{ t("security.batchAction", "批量操作") }}
+              </el-button>
+            </span>
+          </el-tooltip>
           <span v-if="selectedRows.length">{{
             t("security.selectedCount", "已选择 {count} 条", {
               count: selectedRows.length,
@@ -1370,10 +1535,7 @@ onMounted(() => {
       :type="portDialogIsAdd"
       :form-data="currentPortRule"
       :panel-port="status.panelPort"
-      @saved="
-        portDialogVisible = false;
-        refreshAll();
-      "
+      @saved="handleSavedPortRule"
     />
 
     <el-dialog
@@ -1722,6 +1884,10 @@ onMounted(() => {
   gap: 10px;
 }
 
+.disabled-action-wrapper {
+  display: inline-flex;
+}
+
 .rule-search {
   width: min(360px, 38vw);
 }
@@ -1822,6 +1988,19 @@ onMounted(() => {
   display: none;
 }
 
+.security-toolbar {
+  flex-wrap: wrap;
+}
+
+.security-toolbar__actions {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.security-toolbar__search {
+  min-width: 0;
+}
+
 :deep(.el-table th.el-table__cell) {
   height: 50px;
   color: var(--text-secondary);
@@ -1881,6 +2060,23 @@ onMounted(() => {
 
   .batch-bar {
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .security-toolbar,
+  .security-toolbar__actions,
+  .security-toolbar__search {
+    width: 100%;
+  }
+
+  .security-toolbar__search {
+    flex: 1 1 100%;
+  }
+
+  .toolbar-actions :deep(.el-button),
+  .auto-actions :deep(.el-button) {
+    flex: 1 1 auto;
   }
 }
 </style>

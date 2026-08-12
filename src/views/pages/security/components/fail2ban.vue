@@ -222,15 +222,20 @@ const taskLastEventIds = reactive<Record<string, number>>({})
 const taskReconnectAttempts = reactive<Record<string, number>>({})
 const taskStatusUrls = reactive<Record<string, string>>({})
 const taskStreamUrls = reactive<Record<string, string>>({})
+const cooldowns = reactive<Record<string, number>>({})
 const terminalStatuses = new Set<TaskStatus>(['succeeded', 'failed', 'interrupted'])
 const activeTaskStatuses = new Set<TaskStatus>(['queued', 'running'])
 const softwareTaskStatuses = new Map<string, string>()
 const reconnectDelays = [2000, 4000, 8000, 15000]
 let refreshAfterTaskPromise: Promise<void> | null = null
 let isUnmounted = false
+let cooldownTimer: number | null = null
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('fail2ban'))
 const canOperate = computed(() => status.value.installed && status.value.serviceActive)
+
+const cooldownKey = (code: number, operation: string, target: string) =>
+  `${code}|${operation}|${target}`
 
 const formatDateTime = (value?: string) => {
   if (!value) return '—'
@@ -266,12 +271,77 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback
 }
 
+const readRetryAfterSeconds = (error: unknown) => {
+  if (!(error instanceof HttpRequestError)) return 60
+  const raw = error.headers?.['retry-after']
+  const value = Array.isArray(raw) ? raw[0] : raw
+  const seconds = Number(value)
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : 60
+}
+
+const startCooldownTicker = () => {
+  if (cooldownTimer) return
+  cooldownTimer = window.setInterval(() => {
+    let hasActive = false
+    Object.keys(cooldowns).forEach((key) => {
+      if (cooldowns[key] > 1) {
+        cooldowns[key] -= 1
+        hasActive = true
+        return
+      }
+      delete cooldowns[key]
+    })
+    if (!hasActive && Object.keys(cooldowns).length === 0 && cooldownTimer) {
+      window.clearInterval(cooldownTimer)
+      cooldownTimer = null
+    }
+  }, 1000)
+}
+
+const updateCooldownFromError = (error: unknown, operation: string, target: string) => {
+  if (!(error instanceof HttpRequestError) || error.status !== 429 || Number(error.code) !== 1004) return false
+  const key = cooldownKey(1004, operation, target)
+  cooldowns[key] = readRetryAfterSeconds(error)
+  startCooldownTicker()
+  System.er(error.message || t('common.operationTooFrequent', '操作过于频繁，请稍后重试'), {
+    type: 'error',
+    groupKey: key
+  })
+  return true
+}
+
+const cooldownSeconds = (operation: string, target: string) =>
+  cooldowns[cooldownKey(1004, operation, target)] || 0
+
+const actionBusy = (operation: string, target: string) =>
+  cooldownSeconds(operation, target) > 0 || loading.manualBanSubmit
+
 const statusCards = computed(() => [
   { label: t('security.fail2ban.status.version', '版本'), value: status.value.version || '—' },
   { label: t('security.fail2ban.status.managedPolicies', '受管策略'), value: String(status.value.managedPolicies || 0) },
   { label: t('security.fail2ban.status.activeBans', '当前封禁'), value: String(status.value.activeBans || 0) },
   { label: t('security.fail2ban.status.migration', '迁移状态'), value: status.value.migration?.migrationStatus || '—' }
 ])
+
+const banActionLabel = (target: string) => {
+  const seconds = cooldownSeconds('fail2ban.ban', target)
+  return seconds > 0
+    ? t('security.fail2ban.retryAfter', '{seconds} 秒后重试', { seconds })
+    : t('security.fail2ban.ban.fromIncident', '立即封禁')
+}
+
+const unbanActionLabel = (target: string) => {
+  const seconds = cooldownSeconds('fail2ban.unban', target)
+  return seconds > 0
+    ? t('security.fail2ban.retryAfter', '{seconds} 秒后重试', { seconds })
+    : t('security.fail2ban.ban.unban', '解除封禁')
+}
+
+const manualBanDisabled = computed(() => {
+  const target = manualBanForm.ip.trim()
+  if (!target) return false
+  return actionBusy('fail2ban.ban', target)
+})
 
 const policyColumns = computed<ColumnItem<Fail2banPolicy>[]>(() => [
   { prop: 'name', label: t('security.fail2ban.policy.name', '策略名称'), minWidth: 180, showOverflowTooltip: true },
@@ -674,7 +744,6 @@ const submitPolicy = async () => {
   } catch (error) {
     if (!isOperationCancelled(error)) {
       if ([1002, 2006].includes(getErrorCode(error) || 0)) await loadPolicies()
-      ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
     }
   } finally {
     loading.policySubmit = false
@@ -694,9 +763,7 @@ const deletePolicy = async (row: Fail2banPolicy) => {
     })
     ElMessage.success(t('security.fail2ban.policy.deleteQueued', '策略删除任务已进入队列'))
   } catch (error) {
-    if (!isOperationCancelled(error) && error !== 'cancel' && error !== 'close') {
-      ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
-    }
+    if (!isOperationCancelled(error) && error !== 'cancel' && error !== 'close') return
   }
 }
 
@@ -706,7 +773,7 @@ const dismissIncident = async (row: SecurityIncident) => {
     ElMessage.success(t('security.fail2ban.incident.dismissed', '异常事件已标记为误报'))
     await loadIncidents()
   } catch (error) {
-    ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
+    return
   }
 }
 
@@ -728,7 +795,7 @@ const banIncident = async (row: SecurityIncident) => {
     ElMessage.success(t('security.fail2ban.ban.queued', '封禁任务已进入队列'))
   } catch (error) {
     if (!isOperationCancelled(error) && error !== 'cancel' && error !== 'close') {
-      ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
+      updateCooldownFromError(error, 'fail2ban.ban', row.remoteIp)
     }
   }
 }
@@ -751,9 +818,7 @@ const submitManualBan = async () => {
     ElMessage.success(t('security.fail2ban.ban.queued', '封禁任务已进入队列'))
     manualBanVisible.value = false
   } catch (error) {
-    if (!isOperationCancelled(error)) {
-      ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
-    }
+    if (!isOperationCancelled(error)) updateCooldownFromError(error, 'fail2ban.ban', manualBanForm.ip.trim())
   } finally {
     loading.manualBanSubmit = false
   }
@@ -777,7 +842,7 @@ const unban = async (row: ActiveBan) => {
     ElMessage.success(t('security.fail2ban.ban.unbanQueued', '解封任务已进入队列'))
   } catch (error) {
     if (!isOperationCancelled(error) && error !== 'cancel' && error !== 'close') {
-      ElMessage.error(getErrorMessage(error, t('common.operationFailed', '操作失败')))
+      updateCooldownFromError(error, 'fail2ban.unban', row.ip)
     }
   }
 }
@@ -794,7 +859,7 @@ const installFail2ban = async () => {
       ElMessage.success(t('security.fail2ban.install.taskCreated', '安装任务已创建'))
     }
   } catch (error) {
-    ElMessage.error(getErrorMessage(error, t('security.fail2ban.install.failed', '创建安装任务失败')))
+    return
   } finally {
     loading.install = false
   }
@@ -844,12 +909,16 @@ watch(
 onMounted(() => {
   void softwareTaskStore.loadActive().catch(() => undefined)
   void loadAll().catch((error) => {
-    ElMessage.error(getErrorMessage(error, t('security.fail2ban.loadFailed', '入侵防御数据加载失败')))
+    System.er(getErrorMessage(error, t('security.fail2ban.loadFailed', '入侵防御数据加载失败')), {
+      type: 'error',
+      groupKey: 'fail2ban|load'
+    })
   })
 })
 
 onBeforeUnmount(() => {
   isUnmounted = true
+  if (cooldownTimer) window.clearInterval(cooldownTimer)
   Array.from(taskSources.keys()).forEach(stopMonitor)
   Array.from(taskReconnectTimers.keys()).forEach(clearReconnectTimer)
 })
@@ -1080,10 +1149,10 @@ onBeforeUnmount(() => {
               v-if="row.status === 'open' && props.capabilities.canBan"
               link
               type="danger"
-              :disabled="!canOperate"
+              :disabled="!canOperate || actionBusy('fail2ban.ban', row.remoteIp)"
               @click="banIncident(row)"
             >
-              {{ $t('security.fail2ban.ban.fromIncident', '立即封禁') }}
+              {{ banActionLabel(row.remoteIp) }}
             </el-button>
             <el-button
               v-if="row.status === 'open' && props.capabilities.canChangePolicy"
@@ -1123,14 +1192,14 @@ onBeforeUnmount(() => {
           <h3>{{ $t('security.fail2ban.ban.title') }}</h3>
           <p>{{ $t('security.fail2ban.ban.description') }}</p>
         </div>
-        <el-button
-          v-if="props.capabilities.canBan"
-          type="primary"
-          plain
-          :icon="Warning"
-          :disabled="!canOperate || !policies.length"
-          @click="openManualBan"
-        >
+          <el-button
+            v-if="props.capabilities.canBan"
+            type="primary"
+            plain
+            :icon="Warning"
+            :disabled="!canOperate || !policies.length || manualBanDisabled"
+            @click="openManualBan"
+          >
           {{ $t('security.fail2ban.ban.manual') }}
         </el-button>
       </div>
@@ -1149,10 +1218,10 @@ onBeforeUnmount(() => {
           <el-button
             link
             type="primary"
-            :disabled="!props.capabilities.canUnban || !canOperate"
+            :disabled="!props.capabilities.canUnban || !canOperate || actionBusy('fail2ban.unban', row.ip)"
             @click="unban(row)"
           >
-            {{ $t('security.fail2ban.ban.unban') }}
+            {{ unbanActionLabel(row.ip) }}
           </el-button>
         </template>
       </custom-table>
@@ -1273,8 +1342,10 @@ onBeforeUnmount(() => {
       </el-form>
       <template #footer>
         <el-button @click="manualBanVisible = false">{{ $t('common.cancel', '取消') }}</el-button>
-        <el-button type="primary" :loading="loading.manualBanSubmit" @click="submitManualBan">
-          {{ $t('common.confirm', '确认') }}
+        <el-button type="primary" :loading="loading.manualBanSubmit" :disabled="manualBanDisabled" @click="submitManualBan">
+          {{ manualBanForm.ip.trim() && cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) > 0
+            ? t('security.fail2ban.retryAfter', '{seconds} 秒后重试', { seconds: cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) })
+            : $t('common.confirm', '确认') }}
         </el-button>
       </template>
     </el-dialog>

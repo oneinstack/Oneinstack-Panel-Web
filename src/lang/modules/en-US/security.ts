@@ -150,6 +150,29 @@ export default {
   autoBlockEnabled: 'Auto block enabled',
   autoBlockDisabled: 'Auto block disabled',
   autoBlockRunComplete: 'Check complete. Blocked {count} new IPs.',
+  neverRun: 'Never run',
+  readOnlyReason: 'This account only has read access to security settings',
+  readOnlyHint: 'This account only has read access to security settings. You can view data but cannot modify it.',
+  firewallDisabledHint: 'The firewall is disabled. Enable it before modifying rules.',
+  firewallPersistentHint: 'Firewall rules are not persistent right now. Restore persistence before changing rules.',
+  firewallUnsupportedReason: 'No supported firewall detected',
+  firewallRepairReason: 'Repair the firewall configuration first',
+  firewallEnableRequired: 'Enable the firewall first',
+  firewallPersistentRequired: 'Current firewall rules cannot be persisted',
+  firewallToggleDenied: 'This account cannot toggle the firewall',
+  firewallToggleUnavailable: 'The current firewall backend does not support toggling',
+  pingPermissionDenied: 'This account cannot change the Ping policy',
+  rulePermissionDenied: 'This account cannot modify firewall rules',
+  forwardPermissionDenied: 'This account cannot modify port forwards',
+  forwardRequiresFirewalld: 'Port forwarding requires firewalld',
+  protectedRuleReadonly: 'System protected rules cannot be modified',
+  autoBlockRunWriteDenied: 'This account cannot modify security settings',
+  autoBlockRunDisabled: 'Enable auto block first',
+  autoBlockRunning: 'Detection is running. Please wait.',
+  protocolPortsForbidden: 'ICMP or all-protocol rules cannot set ports',
+  invalidPortEmptyItem: 'The port list cannot contain empty items',
+  invalidPortRange: 'Ports must be between 1 and 65535',
+  invalidPortOrder: 'The start of a port range cannot be greater than the end',
   fail2ban: {
     title: 'Intrusion prevention',
     description: 'Manage brute-force protection, suspicious authentication incidents, and real-time bans through Fail2ban.',
@@ -261,7 +284,8 @@ export default {
         ban_ip: 'Ban IP',
         unban_ip: 'Unban IP'
       }
-    }
+    },
+    retryAfter: 'Retry in {seconds}s'
   },
   ruleTabs: {
     port: 'Port rules',

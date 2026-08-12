@@ -7,6 +7,7 @@ import i18n from "@/lang";
 declare const __ONEINSTACK_GLOBAL__: globalType;
 
 export default class System {
+  private static activeMessages = new Map<string, { close?: () => void }>();
   /**
    * 环境变量
    */
@@ -59,7 +60,22 @@ export default class System {
       },
       options,
     );
-    ElMessage(optionObj);
+    const groupKey = optionObj.groupKey || "";
+    delete optionObj.groupKey;
+    if (groupKey) {
+      const active = this.activeMessages.get(groupKey);
+      if (active) return active;
+    }
+    const instance = ElMessage({
+      grouping: true,
+      ...optionObj,
+      onClose: () => {
+        optionObj.onClose?.();
+        if (groupKey) this.activeMessages.delete(groupKey);
+      },
+    });
+    if (groupKey) this.activeMessages.set(groupKey, instance as any);
+    return instance;
   };
 
   /**
@@ -75,7 +91,7 @@ export default class System {
       },
       options,
     );
-    ElMessage(optionObj);
+    return ElMessage({ grouping: true, ...optionObj });
   };
 
   private static loadingObj: {
