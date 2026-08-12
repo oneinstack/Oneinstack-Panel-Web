@@ -440,7 +440,7 @@ const buildPanelRouteURL = (accessURL: string) => {
   const targetAccessURL = accessURL || currentPanelAccessURL.value
   if (!targetAccessURL) return ''
   const normalized = targetAccessURL.replace(/\/$/, '')
-  return `${normalized}#/setting`
+  return `${normalized}/#/setting`
 }
 
 const reloadPanelPage = (enabled: boolean, accessURL: string, entryPath: string) => {

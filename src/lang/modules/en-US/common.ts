@@ -102,6 +102,9 @@ export default {
       firewallRuleChange: 'Firewall rule operation preview',
       firewallPortForward: 'Port forwarding operation preview',
       firewallToggle: 'Firewall toggle operation preview',
+      fail2banPolicyChange: 'Fail2ban policy change preview',
+      fail2banBan: 'Fail2ban ban preview',
+      fail2banUnban: 'Fail2ban unban preview',
       panelNetwork: 'Panel access configuration operation preview',
       panelPortUpdate: 'Panel port operation preview'
     },

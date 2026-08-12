@@ -1,5 +1,11 @@
 import http from "@/api";
 
+const withLanguage = (language = "en-US") => ({
+  headers: {
+    "Accept-Language": language,
+  },
+});
+
 export const securityApi = {
   /** 获取防火墙信息 */
   getFirewallInfo: (obj: any) => {
@@ -90,5 +96,84 @@ export const securityApi = {
   },
   runFirewallAutoBlock: () => {
     return http.post("/safe/auto-block/run", {});
+  },
+  /** 获取 Fail2ban 实时状态 */
+  getFail2banStatus: (language?: string) => {
+    return http.get(
+      "/security/fail2ban/status",
+      undefined,
+      withLanguage(language),
+    );
+  },
+  /** 获取 Fail2ban 策略模板 */
+  getFail2banTemplates: (language?: string) => {
+    return http.get(
+      "/security/fail2ban/templates",
+      undefined,
+      withLanguage(language),
+    );
+  },
+  /** 获取 Fail2ban 策略列表 */
+  getFail2banPolicies: (language?: string) => {
+    return http.get(
+      "/security/fail2ban/policies",
+      undefined,
+      withLanguage(language),
+    );
+  },
+  /** 获取 Fail2ban 当前封禁 */
+  getFail2banBans: (language?: string) => {
+    return http.get(
+      "/security/fail2ban/bans",
+      undefined,
+      withLanguage(language),
+    );
+  },
+  /** 获取 Fail2ban 异常事件 */
+  getFail2banIncidents: (
+    params?: {
+      page?: number;
+      pageSize?: number;
+      status?: string;
+      remoteIp?: string;
+    },
+    language?: string,
+  ) => {
+    return http.get(
+      "/security/fail2ban/incidents",
+      params,
+      withLanguage(language),
+    );
+  },
+  /** 标记异常事件为误报 */
+  dismissFail2banIncident: (id: string, language?: string) => {
+    return http.post(
+      `/security/fail2ban/incidents/${encodeURIComponent(id)}/dismiss`,
+      {},
+      withLanguage(language),
+    );
+  },
+  /** 获取 Fail2ban 任务列表 */
+  getFail2banTasks: (
+    params?: {
+      active?: boolean;
+      page?: number;
+      pageSize?: number;
+    },
+    language?: string,
+  ) => {
+    return http.get("/security/fail2ban/tasks", params, withLanguage(language));
+  },
+  /** 获取 Fail2ban 任务事件 */
+  getFail2banTaskEvents: (
+    taskId: string,
+    params?: { after?: number },
+    language?: string,
+  ) => {
+    return http.get(
+      `/security/fail2ban/tasks/${encodeURIComponent(taskId)}/events`,
+      params,
+      withLanguage(language),
+    );
   },
 };

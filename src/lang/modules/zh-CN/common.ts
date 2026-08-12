@@ -102,6 +102,9 @@ export default {
       firewallRuleChange: '防火墙规则操作预览',
       firewallPortForward: '端口转发操作预览',
       firewallToggle: '防火墙开关操作预览',
+      fail2banPolicyChange: 'Fail2ban 策略操作预览',
+      fail2banBan: 'Fail2ban 封禁操作预览',
+      fail2banUnban: 'Fail2ban 解封操作预览',
       panelNetwork: '面板访问配置操作预览',
       panelPortUpdate: '面板端口操作预览'
     },

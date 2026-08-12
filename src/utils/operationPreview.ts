@@ -101,6 +101,9 @@ const operationTitleKeys: Record<string, string> = {
   'firewall.rule_change': 'common.operationPreview.operationTitles.firewallRuleChange',
   'firewall.port_forward': 'common.operationPreview.operationTitles.firewallPortForward',
   'firewall.toggle': 'common.operationPreview.operationTitles.firewallToggle',
+  'fail2ban.policy_change': 'common.operationPreview.operationTitles.fail2banPolicyChange',
+  'fail2ban.ban': 'common.operationPreview.operationTitles.fail2banBan',
+  'fail2ban.unban': 'common.operationPreview.operationTitles.fail2banUnban',
   'panel.network': 'common.operationPreview.operationTitles.panelNetwork',
   'panel.port_update': 'common.operationPreview.operationTitles.panelPortUpdate'
 }
