@@ -97,7 +97,7 @@ const loadTree = async () => {
     }
     selectPath(queryPath)
   } catch (error: any) {
-    ElMessage.error(error?.message || t('file.treeReadFailed', 'Failed to read directory tree'))
+    // ElMessage.error(error?.message || t('file.treeReadFailed', 'Failed to read directory tree'))
   } finally {
     state.loading = false
   }

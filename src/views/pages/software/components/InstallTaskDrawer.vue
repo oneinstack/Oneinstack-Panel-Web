@@ -235,7 +235,7 @@ const downloadLog = async () => {
     await softwareTaskStore.downloadLog(props.taskId)
     ElMessage.success(t('software.task.logDownloadStarted', 'Full task log download started'))
   } catch (error: any) {
-    ElMessage.error(error?.message || t('software.task.logDownloadFailed', 'Failed to download task log'))
+    // ElMessage.error(error?.message || t('software.task.logDownloadFailed', 'Failed to download task log'))
   } finally {
     downloading.value = false
   }

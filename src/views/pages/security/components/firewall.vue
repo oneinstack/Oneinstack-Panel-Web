@@ -506,6 +506,10 @@ const refreshAll = async () => {
   await Promise.all([getFirewallInfo(), getData()]);
 };
 
+defineExpose({
+  getData,
+});
+
 const handleFirewallChange = async (value: string | number | boolean) => {
   const enabled = Boolean(value);
   const previous = !enabled;

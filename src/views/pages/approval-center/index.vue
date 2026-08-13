@@ -93,7 +93,7 @@ const approvalDialog = reactive({
       const response = await Api.getApprovalDetail(row.id)
       approvalDialog.data = response.data
     } catch (error: any) {
-      ElMessage.error(error?.message || t('approvalCenter.detailLoadFailed', '获取审批详情失败'))
+      // ElMessage.error(error?.message || t('approvalCenter.detailLoadFailed', '获取审批详情失败'))
       approvalDialog.show = false
     } finally {
       loading.approvalDetail = false
@@ -209,7 +209,7 @@ const submitApprovalAction = async () => {
     approvalDialog.show = false
     await loadApprovals()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
+    // ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
   } finally {
     loading.approvalAction = false
   }
@@ -220,7 +220,7 @@ onMounted(async () => {
     await loadBootstrap()
     await loadApprovals()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('approvalCenter.initFailed', '页面初始化失败'))
+    // ElMessage.error(error?.message || t('approvalCenter.initFailed', '页面初始化失败'))
   }
 })
 </script>

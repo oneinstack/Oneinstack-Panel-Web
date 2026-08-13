@@ -251,7 +251,7 @@ const copyCredential = async () => {
     if (!copied) throw new Error(t('database.credentialCopyFailed', 'Copy failed. Check browser clipboard permission.'))
     ElMessage.success(t('database.credentialCopied', 'Account and password copied'))
   } catch (error: any) {
-    ElMessage.error(error?.message || t('database.credentialCopyFailed', 'Copy failed. Check browser clipboard permission.'))
+    // ElMessage.error(error?.message || t('database.credentialCopyFailed', 'Copy failed. Check browser clipboard permission.'))
   }
 }
 </script>

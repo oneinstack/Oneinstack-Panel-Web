@@ -287,7 +287,7 @@ const copyVisible = async () => {
     if (!copied) throw new Error(t('runtimeLog.copyRejected', '浏览器拒绝复制'))
     ElMessage.success(t('runtimeLog.copied', '当前视图已复制'))
   } catch (error: any) {
-    ElMessage.error(error?.message || t('runtimeLog.copyFailed', '复制失败，请检查浏览器剪贴板权限'))
+    // ElMessage.error(error?.message || t('runtimeLog.copyFailed', '复制失败，请检查浏览器剪贴板权限'))
   }
 }
 

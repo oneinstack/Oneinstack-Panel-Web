@@ -171,11 +171,11 @@ const loadSettings = async (notify = false) => {
         t("setting.network.refreshSuccess", "面板访问配置已刷新"),
       );
   } catch (error) {
-    const message =
-      error instanceof Error && error.message
-        ? error.message
-        : t("setting.network.loadFailed", "获取面板访问配置失败");
-    ElMessage.error(message);
+    // const message =
+    //   error instanceof Error && error.message
+    //     ? error.message
+    //     : t("setting.network.loadFailed", "获取面板访问配置失败");
+    // ElMessage.error(message);
   } finally {
     loading.value = false;
   }
@@ -275,13 +275,13 @@ const followNetworkTransaction = async (
     }
     if (data.status === "rolled_back" || data.status === "failed") {
       stopApplyPolling();
-      ElMessage.error(
-        data.error ||
-          t(
-            "setting.network.applyRollbackMessage",
-            "新配置启动失败，已恢复原访问方式",
-          ),
-      );
+      // ElMessage.error(
+      //   data.error ||
+      //     t(
+      //       "setting.network.applyRollbackMessage",
+      //       "新配置启动失败，已恢复原访问方式",
+      //     ),
+      // );
       await loadSettings();
       return;
     }

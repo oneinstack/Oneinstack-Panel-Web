@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, markRaw, onMounted, reactive } from 'vue'
+import { computed, markRaw, nextTick, onMounted, reactive, ref } from 'vue'
 import { Api } from '@/api/modules'
 import Firewall from './components/firewall.vue'
 import Fail2ban from './components/fail2ban.vue'
@@ -36,6 +36,8 @@ const defaultCapabilities = (): Fail2banCapabilities => ({
   canInstall: false,
   canReadAuditEvidence: false
 })
+
+const firewallRef = ref<any>()
 
 const conf = reactive({
   activeIndex: 0,
@@ -114,8 +116,10 @@ const loadAccessMatrix = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   void loadAccessMatrix()
+  await nextTick()
+  void firewallRef.value?.getData?.()
 })
 </script>
 
@@ -125,6 +129,7 @@ onMounted(() => {
     <Firewall
       v-if="activeTab?.index === 0"
       :capabilities="conf.fail2banCapabilities"
+      ref="firewallRef"
     />
     <Fail2ban
       v-else-if="activeTab?.index === 5"

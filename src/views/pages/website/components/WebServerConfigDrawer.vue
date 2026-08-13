@@ -135,7 +135,7 @@ const load = async (preserveSelection = false) => {
       state.revision = ''
     }
   } catch (error: any) {
-    ElMessage.error(error?.message || i18n.t('website.notifications.webServerConfigLoadFailed'))
+    // ElMessage.error(error?.message || i18n.t('website.notifications.webServerConfigLoadFailed'))
   } finally {
     state.loading = false
   }
@@ -165,21 +165,27 @@ const save = async () => {
   if (!state.selectedPath || !dirty.value || state.saving) return
   state.saving = true
   try {
+    const currentContent = state.content
+    const currentPath = state.selectedPath
     const { data } = await submitOperation('website.update', {
       action: 'web_server_config',
       path: state.selectedPath,
       content: state.content,
       revision: state.revision
     })
-    state.content = data.content
-    state.originalContent = data.content
-    state.revision = data.revision
-    state.modifiedAt = data.modifiedAt
-    const file = state.files.find((item) => item.path === data.path)
+    const savedContent = typeof data?.content === 'string' ? data.content : currentContent
+    state.content = savedContent
+    state.originalContent = savedContent
+    state.revision = data?.revision || state.revision
+    state.modifiedAt = data?.modifiedAt || state.modifiedAt
+    const file = state.files.find((item) => item.path === (data?.path || currentPath))
     if (file) {
-      file.revision = data.revision
-      file.size = data.size
-      file.modifiedAt = data.modifiedAt
+      file.revision = data?.revision || file.revision
+      file.size = data?.size || savedContent.length
+      file.modifiedAt = data?.modifiedAt || file.modifiedAt
+    }
+    if (typeof data?.content !== 'string' && currentPath) {
+      await readFile(currentPath, false)
     }
     ElMessage.success(i18n.t(data.reloaded ? 'website.notifications.webServerConfigSavedReloaded' : 'website.notifications.webServerConfigSavedStopped'))
     emit('changed')
@@ -188,8 +194,6 @@ const save = async () => {
       return
     } else if (error?.code === 'CONFLICT') {
       ElMessage.error(i18n.t('website.notifications.webServerConfigConflict'))
-    } else {
-      ElMessage.error(error?.message || i18n.t('website.notifications.webServerConfigSaveFailed'))
     }
   } finally {
     state.saving = false

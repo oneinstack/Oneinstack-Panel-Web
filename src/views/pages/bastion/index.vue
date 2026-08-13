@@ -416,7 +416,7 @@ const testConnection = async (server: BastionServer) => {
     if (data?.reachable) {
       ElMessage.success(t('bastion.connectionReachableWithHost', '连接可达：{host}', { host: data.hostname || server.host }))
     } else {
-      ElMessage.error(data?.error || t('bastion.connectionUnreachable', '连接不可达'))
+      // ElMessage.error(data?.error || t('bastion.connectionUnreachable', '连接不可达'))
     }
   } catch {
     // 用户取消密码输入时不提示错误。
@@ -776,7 +776,7 @@ onMounted(() => {
         <el-form-item :label="$t('bastion.tags')" prop="tags">
           <el-input v-model="form.tags" :placeholder="$t('bastion.tagsPlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="editingId" :label="$t('bastion.enableCollection')" prop="enabled">
+        <el-form-item :label="$t('bastion.enableCollection')" prop="enabled">
           <el-switch v-model="form.enabled" />
         </el-form-item>
         <el-alert

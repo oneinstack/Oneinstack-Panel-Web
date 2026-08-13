@@ -268,9 +268,9 @@ const submitDialog = async () => {
     resetDialog();
     if (dialogMode.value !== "restore") await loadData(true);
   } catch (error: any) {
-    ElMessage.error(
-      error?.message || t("common.operationFailed", "Operation failed"),
-    );
+    // ElMessage.error(
+    //   error?.message || t("common.operationFailed", "Operation failed"),
+    // );
   } finally {
     submitting.value = false;
   }

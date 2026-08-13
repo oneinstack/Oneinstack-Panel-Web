@@ -217,7 +217,7 @@ const submitCreateUser = async () => {
     createUserDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('userManagement.createFailed', 'Failed to create user'))
+    // ElMessage.error(error?.message || t('userManagement.createFailed', 'Failed to create user'))
   } finally {
     loading.createUser = false
   }
@@ -234,7 +234,7 @@ const submitRoleUpdate = async () => {
     roleDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('userManagement.roleUpdateFailed', 'Failed to update roles'))
+    // ElMessage.error(error?.message || t('userManagement.roleUpdateFailed', 'Failed to update roles'))
   } finally {
     loading.updateRoles = false
   }
@@ -264,7 +264,7 @@ const submitPasswordReset = async () => {
     passwordDialog.show = false
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('userManagement.resetPasswordFailed', 'Failed to reset password'))
+    // ElMessage.error(error?.message || t('userManagement.resetPasswordFailed', 'Failed to reset password'))
   } finally {
     loading.resetPassword = false
   }
@@ -275,7 +275,7 @@ onMounted(async () => {
     await loadBootstrap()
     await loadUsers()
   } catch (error: any) {
-    ElMessage.error(error?.message || t('userManagement.initFailed', 'Failed to initialize page'))
+    // ElMessage.error(error?.message || t('userManagement.initFailed', 'Failed to initialize page'))
   }
 })
 </script>

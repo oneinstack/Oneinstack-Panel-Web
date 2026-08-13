@@ -213,13 +213,13 @@ const verifyChain = async () => {
         ),
       );
     else
-      ElMessage.error(
-        t(
-          "audit.chainInvalidMessage",
-          `Audit chain verification failed: ${data.message}`,
-          { message: data.message },
-        ),
-      );
+      // ElMessage.error(
+      //   t(
+      //     "audit.chainInvalidMessage",
+      //     `Audit chain verification failed: ${data.message}`,
+      //     { message: data.message },
+      //   ),
+      // );
     await Promise.all([loadEvents(), loadStats()]);
   } finally {
     verifying.value = false;
@@ -236,9 +236,9 @@ const exportEvents = async () => {
     ElMessage.success(t("audit.exportSuccess", "Audit logs exported"));
     await Promise.all([loadEvents(), loadStats()]);
   } catch (error: any) {
-    ElMessage.error(
-      error?.message || t("audit.exportFailed", "Failed to export audit logs"),
-    );
+    // ElMessage.error(
+    //   error?.message || t("audit.exportFailed", "Failed to export audit logs"),
+    // );
   } finally {
     exporting.value = false;
   }

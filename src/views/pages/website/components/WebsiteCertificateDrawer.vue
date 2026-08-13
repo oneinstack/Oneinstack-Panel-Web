@@ -91,7 +91,7 @@ const loadData = async (quiet = false) => {
     }
     updatePolling()
   } catch (error: any) {
-    if (!quiet) ElMessage.error(error.message || i18n.t('website.notifications.certificateLoadFailed'))
+    // if (!quiet) ElMessage.error(error.message || i18n.t('website.notifications.certificateLoadFailed'))
   } finally {
     if (!quiet) loading.value = false
   }
@@ -136,7 +136,7 @@ const issue = async () => {
     await loadData(true)
   } catch (error: any) {
     if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCreateFailed'))
+      // ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCreateFailed'))
     }
   } finally {
     submitting.value = false
@@ -150,7 +150,7 @@ const renew = async () => {
     ElMessage.success(i18n.t('website.notifications.renewalTaskCreated'))
     await loadData(true)
   } catch (error: any) {
-    ElMessage.error(error.message || i18n.t('website.notifications.renewalTaskCreateFailed'))
+    // ElMessage.error(error.message || i18n.t('website.notifications.renewalTaskCreateFailed'))
   }
 }
 
@@ -172,7 +172,7 @@ const disable = async () => {
     emit('changed')
   } catch (error: any) {
     if (error !== 'cancel' && error !== 'close') {
-      ElMessage.error(error.message || i18n.t('website.notifications.sslDisableFailed'))
+      // ElMessage.error(error.message || i18n.t('website.notifications.sslDisableFailed'))
     }
   }
 }
@@ -183,7 +183,7 @@ const cancelTask = async (task: Record<string, any>) => {
     ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
     await loadData(true)
   } catch (error: any) {
-    ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCancelFailed'))
+    // ElMessage.error(error.message || i18n.t('website.notifications.certificateTaskCancelFailed'))
   }
 }
 

@@ -1318,9 +1318,9 @@ const submitDialog = async () => {
       try {
         payload = buildContainerPayload();
       } catch (error: any) {
-        ElMessage.error(
-          error?.message || t("container.notifications.invalidCreateParams"),
-        );
+        // ElMessage.error(
+        //   error?.message || t("container.notifications.invalidCreateParams"),
+        // );
         return;
       }
       await confirmContainerCreate(payload);
@@ -1445,14 +1445,14 @@ const submitDialog = async () => {
     loadedTabs[activeTab.value] = false;
     await loadActiveTab(true);
   } catch (error: any) {
-    const isCancel =
-      error === "cancel" ||
-      error?.message === "cancel" ||
-      error?.name === "CanceledError";
-    if (!isCancel)
-      ElMessage.error(
-        error?.message || t("container.notifications.operationFailed"),
-      );
+    // const isCancel =
+    //   error === "cancel" ||
+    //   error?.message === "cancel" ||
+    //   error?.name === "CanceledError";
+    // if (!isCancel)
+    //   ElMessage.error(
+    //     error?.message || t("container.notifications.operationFailed"),
+    //   );
   } finally {
     saving.value = false;
   }
@@ -1668,9 +1668,9 @@ const downloadLogs = async (row = logTarget.value) => {
     );
     ElMessage.success(t("container.notifications.logDownloadStarted"));
   } catch (error: any) {
-    ElMessage.error(
-      error?.message || t("container.notifications.logDownloadFailed"),
-    );
+    // ElMessage.error(
+    //   error?.message || t("container.notifications.logDownloadFailed"),
+    // );
   } finally {
     logDownloading.value = false;
   }

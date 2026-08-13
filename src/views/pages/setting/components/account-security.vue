@@ -91,7 +91,7 @@ const load = async (notify = false) => {
     if (notify) ElMessage.success(t('setting.accountSecurity.statusRefreshed', 'Account and session status refreshed'))
   } catch (error) {
     const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.statusLoadFailed', 'Failed to load account and session status')
-    ElMessage.error(message)
+    // ElMessage.error(message)
   } finally {
     loading.value = false
   }
@@ -111,7 +111,7 @@ const openSetup = async () => {
     setupVisible.value = true
   } catch (error) {
     const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.setupCreateFailed', 'Failed to create TOTP configuration')
-    ElMessage.error(message)
+    // ElMessage.error(message)
   } finally {
     setupLoading.value = false
   }
@@ -135,7 +135,7 @@ const confirmSetup = async () => {
     await load()
   } catch (error) {
     const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.totpVerifyFailed', 'TOTP verification failed')
-    ElMessage.error(message)
+    // ElMessage.error(message)
   } finally {
     setupLoading.value = false
   }

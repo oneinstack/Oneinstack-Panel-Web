@@ -260,7 +260,7 @@ const loadStatus = async (quiet = false) => {
       terminalIdentity.value = `${data.containerName}@${data.shell || '/bin/sh'}`
     }
   } catch (error: any) {
-    if (!quiet) ElMessage.error(getApiErrorMessage(error, t('container.terminal.statusReadFailed', 'Failed to read container terminal status')))
+    // if (!quiet) ElMessage.error(getApiErrorMessage(error, t('container.terminal.statusReadFailed', 'Failed to read container terminal status')))
   } finally {
     loadingStatus.value = false
   }
@@ -351,7 +351,7 @@ const connectTerminal = async () => {
     connecting.value = false
     connectionState.value = 'disconnected'
     if (!['cancel', 'close'].includes(error) && error?.message !== 'cancel') {
-      ElMessage.error(getApiErrorMessage(error, t('container.terminal.ticketFailed', 'Failed to create container terminal ticket')))
+      // ElMessage.error(getApiErrorMessage(error, t('container.terminal.ticketFailed', 'Failed to create container terminal ticket')))
       await loadStatus(true).catch(() => undefined)
     }
   }

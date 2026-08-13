@@ -65,7 +65,7 @@ const getData = async () => {
       tableData.value = res.data || []
       pagination.total = res.total || 0
     } else {
-      ElMessage.error(res?.message || t('task.fetchFailed', 'Failed to load data'))
+      // ElMessage.error(res?.message || t('task.fetchFailed', 'Failed to load data'))
     }
   } catch (error) {
     ElMessage.error(t('task.fetchFailed', 'Failed to load data'))

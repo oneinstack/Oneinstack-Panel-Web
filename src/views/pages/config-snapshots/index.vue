@@ -291,7 +291,7 @@ const loadCreateResourceOptions = async (type = createForm.resourceType) => {
         .filter(Boolean) as SnapshotResourceOption[]
     }
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.resourceListReadFailed', 'Failed to read resource list')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.resourceListReadFailed', 'Failed to read resource list')))
   } finally {
     createResourceLoading.value = false
   }
@@ -315,7 +315,7 @@ const loadSnapshots = async () => {
     filters.page = data?.page || filters.page
     filters.pageSize = data?.pageSize || filters.pageSize
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.snapshotListReadFailed', 'Failed to read configuration snapshots')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.snapshotListReadFailed', 'Failed to read configuration snapshots')))
   } finally {
     loading.value = false
   }
@@ -377,7 +377,7 @@ const submitCreateSnapshot = async () => {
     filters.page = 1
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.createFailed', 'Failed to create configuration snapshot')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.createFailed', 'Failed to create configuration snapshot')))
   } finally {
     createLoading.value = false
   }
@@ -398,7 +398,7 @@ const openDetail = async (row: ConfigurationSnapshot) => {
       diff: detailResponse.data?.diff || diffResponse.data?.diff || diffResponse.data
     }
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.detailReadFailed', 'Failed to read snapshot details')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.detailReadFailed', 'Failed to read snapshot details')))
   } finally {
     detailLoading.value = false
   }
@@ -414,7 +414,7 @@ const openRestore = async (row: ConfigurationSnapshot) => {
     const { data } = await Api.previewConfigurationSnapshotRestore(row.id)
     restorePreview.value = data || {}
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restorePreviewReadFailed', 'Failed to read rollback preview')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restorePreviewReadFailed', 'Failed to read rollback preview')))
   } finally {
     restoreLoading.value = false
   }
@@ -442,7 +442,7 @@ const executeRestore = async () => {
     forceRestoreConfirmed.value = false
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restoreFailed', 'Failed to execute rollback')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restoreFailed', 'Failed to execute rollback')))
   } finally {
     restoreLoading.value = false
   }
@@ -460,7 +460,7 @@ const deleteSnapshot = async (row: ConfigurationSnapshot) => {
     ElMessage.success(t('configSnapshots.messages.snapshotDeleted', 'Snapshot deleted'))
     await loadSnapshots()
   } catch (error: any) {
-    ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.deleteFailed', 'Failed to delete configuration snapshot')))
+    // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.deleteFailed', 'Failed to delete configuration snapshot')))
   } finally {
     deletingId.value = ''
   }
