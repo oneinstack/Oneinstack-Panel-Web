@@ -679,7 +679,7 @@ onBeforeUnmount(stopApplyPolling);
 
       <div class="network-form__footer">
         <el-button
-          type="warning"
+          type="primary"
           :loading="saving || applyPolling"
           @click="saveSettings"
         >
@@ -707,7 +707,7 @@ onBeforeUnmount(stopApplyPolling);
 
 <style scoped lang="less">
 .network-setting {
-  padding: 28px 0 34px;
+  // padding: 28px 0 34px;
 
   &__header {
     display: flex;
@@ -978,7 +978,7 @@ onBeforeUnmount(stopApplyPolling);
 
 @media (max-width: 700px) {
   .network-setting {
-    padding: 24px 0 28px;
+    // padding: 24px 0 28px;
 
     &__header {
       flex-direction: column;

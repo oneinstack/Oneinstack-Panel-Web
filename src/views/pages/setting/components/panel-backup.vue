@@ -374,14 +374,14 @@ onBeforeUnmount(() => {
           $t("setting.backup.mediumRisk")
         }}</el-tag>
         <el-button
-          type="warning"
+          type="primary"
           plain
           :disabled="restoreRunning"
           @click="openDialog('import')"
           >{{ $t("setting.backup.importBackup") }}</el-button
         >
         <el-button
-          type="warning"
+          type="primary"
           :disabled="restoreRunning"
           @click="openDialog('create')"
         >
@@ -391,7 +391,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="restore-status" :class="`is-${statusType}`">
-      <div>
+      <div class="restore-status__content">
         <span class="restore-status__label">{{
           $t("setting.backup.latestRestoreStatus")
         }}</span>
@@ -547,9 +547,9 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .backup-card {
-  padding-top: 28px;
-  margin-top: 28px;
-  border-top: 1px solid var(--border-subtle);
+  // padding-top: 28px;
+  // margin-top: 28px;
+  // border-top: 1px solid var(--border-subtle);
 }
 
 .backup-card__header,
@@ -579,9 +579,20 @@ onBeforeUnmount(() => {
 }
 
 .backup-card__title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
   color: var(--text-primary);
   font-size: 16px;
-  font-weight: 650;
+  font-weight: 700;
+  &::before {
+    content: "";
+    width: 3px;
+    height: 17px;
+    margin-right: 9px;
+    border-radius: 99px;
+    background: rgb(var(--primary-color));
+  }
 }
 
 .backup-card__subtitle {
@@ -598,12 +609,6 @@ onBeforeUnmount(() => {
   border-radius: 12px;
   background: var(--surface-subtle);
 
-  span,
-  strong,
-  small {
-    display: block;
-  }
-
   strong {
     margin-top: 4px;
     color: var(--text-primary);
@@ -613,6 +618,16 @@ onBeforeUnmount(() => {
   small {
     margin-top: 4px;
     color: var(--text-tertiary);
+  }
+}
+
+.restore-status__content {
+  min-width: 0;
+
+  span,
+  strong,
+  small {
+    display: block;
   }
 }
 

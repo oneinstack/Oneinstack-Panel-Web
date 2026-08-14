@@ -1017,7 +1017,7 @@ onUnmounted(() => {
               v-model:page-size="eventFilters.pageSize"
               background
               layout="total, sizes, prev, pager, next"
-              :page-sizes="[20, 50, 100]"
+              :page-sizes="[10, 20, 50, 100]"
               :total="eventTotal"
               @current-change="loadEvents"
               @size-change="eventFilters.page = 1; loadEvents()"
@@ -1071,7 +1071,7 @@ onUnmounted(() => {
               v-model:page-size="deliveryFilters.pageSize"
               background
               layout="total, sizes, prev, pager, next"
-              :page-sizes="[20, 50, 100]"
+              :page-sizes="[10, 20, 50, 100]"
               :total="deliveryTotal"
               @current-change="loadDeliveries"
               @size-change="deliveryFilters.page = 1; loadDeliveries()"

@@ -71,8 +71,10 @@ export const initRouter = () => {
     if (authenticated && mustChangePassword && to.path !== '/first-login')
       return next('/first-login')
     if (authenticated && !mustChangePassword && to.path === '/first-login')
-      return next('/')
-    if (authenticated && whiteList.includes(to.path)) return next('/')
+      return next(getFirstAccessiblePath())
+    if (authenticated && !mustChangePassword && to.path === '/')
+      return next(getFirstAccessiblePath())
+    if (authenticated && whiteList.includes(to.path)) return next(getFirstAccessiblePath())
     if (authenticated && !mustChangePassword && Object.keys(sconfig.menuAccess || {}).length === 0) {
       try {
         const matrixResponse = await Api.getAccessMatrix()

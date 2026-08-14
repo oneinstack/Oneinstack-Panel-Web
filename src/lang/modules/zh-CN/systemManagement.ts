@@ -1,4 +1,9 @@
 export default {
+  tabs: {
+    processes: '进程管理',
+    ssh: 'SSH 配置',
+    disks: '磁盘管理'
+  },
   title: '系统管理',
   description: '集中查看系统进程、SSH 生效配置与磁盘挂载状态，所有数据以当前接口最新响应为准。',
   refreshAll: '刷新全部',

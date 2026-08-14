@@ -176,7 +176,7 @@ const columns = computed<ColumnItem[]>(() => [
           v-model:current-page="state.page"
           v-model:page-size="state.pageSize"
           :total="state.total"
-          :page-sizes="[20, 50, 100]"
+          :page-sizes="[10, 20, 50, 100]"
           layout="total, sizes, prev, pager, next"
           @current-change="handlePageChange"
           @size-change="applyFilters"

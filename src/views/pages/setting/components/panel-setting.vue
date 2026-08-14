@@ -633,10 +633,10 @@ onMounted(() => {
           <el-tag size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
           <span>{{ t('setting.panel.entryRiskTip', 'Changing the entry path affects the panel access address. Save the new address before leaving.') }}</span>
         </div>
-        <el-button type="warning" :loading="panelEntry.saving" @click="savePanelEntry(false)">{{ t('setting.panel.saveConfig', 'Save configuration') }}</el-button>
+        <el-button type="primary" :loading="panelEntry.saving" @click="savePanelEntry(false)">{{ t('setting.panel.saveConfig', 'Save configuration') }}</el-button>
         <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">{{ t('setting.panel.copyAccessAddress', 'Copy access address') }}</el-button>
         <el-button
-          type="warning"
+          type="primary"
           plain
           :disabled="!panelEntry.panelEntryEnabled"
           :loading="panelEntry.saving"
@@ -684,7 +684,7 @@ onMounted(() => {
   }
 
   &__header {
-    padding: 8px 0 18px;
+    padding: 0px 0 18px;
     display: flex;
     align-items: center;
     justify-content: space-between;

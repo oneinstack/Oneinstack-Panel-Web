@@ -37,5 +37,6 @@ export default {
   available: 'Available',
   usage: 'Usage',
   saveSuccess: 'Saved successfully',
-  memoPlaceholder: 'Enter memo content'
+  memoPlaceholder: 'Enter memo content',
+  memoShortcutHint: 'Hint: Ctrl+S to save'
 }

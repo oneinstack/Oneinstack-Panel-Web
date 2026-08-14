@@ -11,6 +11,7 @@ import { Api } from '@/api/modules'
 import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
+import { hasTerminalAccess } from '@/utils/access'
 
 const sapp = useAppStore()
 const sconfig = useConfigStore()
@@ -152,7 +153,8 @@ const conf = reactive({
       name: 'Secure terminal',
       path: '/terminal',
       icon: 'terminal',
-      adminOnly: true,
+      matrixKeys: ['terminal'],
+      actionKeys: ['terminal.access'],
       activeColor: {
         light: ['#8B8B8B', '#eab170'],
         dark: ['#ffffff', '#eab170']
@@ -250,6 +252,7 @@ const isPrivilegedUser = computed(() =>
 )
 const hasMenuPermission = (item: NavItem) => {
   if (isPrivilegedUser.value) return true
+  if (item.path === '/terminal') return hasTerminalAccess()
   if (item.matrixKeys?.some((key) => sconfig.hasMenuAccess(key))) return true
   if (item.actionKeys?.some((key) => sconfig.hasActionAccess(key))) return true
   return !item.matrixKeys?.length && !item.actionKeys?.length

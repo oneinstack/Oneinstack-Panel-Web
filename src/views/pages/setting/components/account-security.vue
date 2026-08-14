@@ -251,7 +251,7 @@ onMounted(() => load())
         </div>
         <div class="row-description">{{ $t('setting.accountSecurity.sessionDescription') }}</div>
       </div>
-      <el-button type="warning" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
+      <el-button type="primary" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
         {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
@@ -347,8 +347,8 @@ onMounted(() => load())
 
 <style scoped lang="less">
 .account-security {
-  padding: 30px 0 10px;
-  border-top: 1px solid var(--border-subtle);
+  // padding: 30px 0 10px;
+  // border-top: 1px solid var(--border-subtle);
 }
 .section-header,
 .security-row,

@@ -57,6 +57,8 @@ export default {
   confirmWebsiteName: '请输入网站名 {name} 确认',
   websiteNameMismatch: '网站名不匹配',
   deleteTaskCreated: '安全删除任务已创建，完整快照验证成功后才会删除网站',
+  deleteTaskMissing: '后端未返回删除任务，网站未确认进入删除流程',
+  databaseListUnavailable: '当前角色无法读取数据库列表，将按“不关联数据库”继续删除',
   createSnapshotAndDelete: '创建快照并删除',
   notifications: {
     domainRequired: '至少保留一个网站域名',

@@ -1,4 +1,9 @@
 export default {
+  tabs: {
+    processes: 'Processes',
+    ssh: 'SSH config',
+    disks: 'Disk management'
+  },
   title: 'System management',
   description: 'View processes, effective SSH configuration, and mounted disks. All data reflects the latest API response.',
   refreshAll: 'Refresh all',

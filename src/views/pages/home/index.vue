@@ -621,7 +621,7 @@ onMounted(() => {
           <div class="absolute fit-height fit-width flex column no-wrap" style="gap: 24px">
             <div class="dashboard-intro">
               <div>
-                <div class="intro-eyebrow">{{ $t('home.overviewEyebrow') }}</div>
+                <!-- <div class="intro-eyebrow">{{ $t('home.overviewEyebrow') }}</div> -->
                 <h2>{{ $t('home.overviewTitle') }}</h2>
                 <p>{{ $t('home.overviewDescription') }}</p>
               </div>

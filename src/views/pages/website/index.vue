@@ -15,10 +15,30 @@ import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
 import System from '@/utils/System'
+import { useConfigStore } from '@/stores/modules/config'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
+}
+const sconfig = useConfigStore()
+const canReadDatabase = () =>
+  sconfig.hasMenuAccess('database') ||
+  sconfig.hasActionAccess('database.read') ||
+  Boolean((sconfig.scopeAccess as any)?.database?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['database.read'])
+
+const extractWebsiteTaskId = (payload: any): string => {
+  const candidates = [
+    payload?.taskId,
+    payload?.id,
+    payload?.data?.taskId,
+    payload?.data?.id,
+    payload?.data?.task?.id,
+    payload?.task?.id
+  ]
+  const matched = candidates.find((item) => typeof item === 'string' || typeof item === 'number')
+  return matched ? String(matched) : ''
 }
 
 const openWebsiteRoot = (rootDir: unknown) => {
@@ -382,9 +402,16 @@ const conf = reactive({
           break
       }
       conf.dialog.show = true
-      Api.getDatabaseList({ type: 'mysql', page: 1, pageSize: 100 }).then(({ data }) => {
-        conf.dialog.databases = data?.data || []
-      })
+      conf.dialog.databases = []
+      if (!canReadDatabase()) return
+      Api.getDatabaseList({ type: 'mysql', page: 1, pageSize: 100 })
+        .then(({ data }) => {
+          conf.dialog.databases = data?.data || []
+        })
+        .catch(() => {
+          conf.dialog.databases = []
+          ElMessage.warning(t('website.databaseListUnavailable', '当前角色无法读取数据库列表，将按“不关联数据库”继续删除'))
+        })
     },
     close: () => {
       conf.dialog.show = false
@@ -396,12 +423,17 @@ const conf = reactive({
       }
       conf.dialog.loading = true
       try {
-        await Api.delWebsite({
+        const { data } = await Api.delWebsite({
           id: conf.dialog.row.id,
           confirmName: conf.dialog.confirmName,
-          databaseId: conf.dialog.databaseId || 0,
+          databaseId: conf.dialog.databaseId || undefined,
           deleteFiles: conf.dialog.deleteFiles
         })
+        const taskId = extractWebsiteTaskId(data)
+        if (!taskId) {
+          ElMessage.error(t('website.deleteTaskMissing', '后端未返回删除任务，网站未确认进入删除流程'))
+          return
+        }
         ElMessage.success(t('website.deleteTaskCreated', '安全删除任务已创建，完整快照验证成功后才会删除网站'))
         backupDrawer.open(conf.dialog.row)
         conf.dialog.show = false

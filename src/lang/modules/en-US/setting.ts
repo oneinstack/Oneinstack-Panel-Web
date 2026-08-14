@@ -3,6 +3,11 @@ export default {
   tabs: {
     all: 'All settings',
     panel: 'Panel settings',
+    network: 'Access settings',
+    appearance: 'Appearance',
+    accountSecurity: 'Security',
+    backup: 'Backup and restore',
+    update: 'Panel update',
     security: 'Security settings',
     alarm: 'Alarm notifications',
     message: 'Message notifications'

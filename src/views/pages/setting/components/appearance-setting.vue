@@ -52,10 +52,9 @@ const resetAppearance = () => {
 <template>
   <section class="appearance-setting">
     <header class="appearance-setting__header">
-      <div>
-        <span class="appearance-setting__eyebrow">APPEARANCE</span>
-        <h2>{{ $t('setting.appearance.title') }}</h2>
-        <p>{{ $t('setting.appearance.description') }}</p>
+      <div class="appearance-setting__heading">
+        <div class="appearance-setting__title">{{ $t('setting.appearance.title') }}</div>
+        <p class="appearance-setting__subtitle">{{ $t('setting.appearance.description') }}</p>
       </div>
       <el-button plain @click="resetAppearance">{{ $t('setting.appearance.resetDefault') }}</el-button>
     </header>
@@ -180,41 +179,45 @@ const resetAppearance = () => {
 }
 
 .appearance-setting__header {
-  padding: 24px 26px;
+  padding: 28px 26px 20px;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 24px;
-  border-bottom: 1px solid var(--border-subtle);
-  background:
-    radial-gradient(circle at 100% 0, rgba(var(--primary-color), 0.09), transparent 280px),
-    var(--surface-card);
+  gap: 20px;
+}
 
-  h2 {
-    margin: 4px 0 0;
-    color: var(--text-primary);
-    font-size: 21px;
-    font-weight: 720;
-    letter-spacing: -0.02em;
-  }
+.appearance-setting__heading {
+  min-width: 0;
+}
 
-  p {
-    margin-top: 8px;
-    color: var(--text-tertiary);
-    font-size: 13px;
-    line-height: 1.7;
+.appearance-setting__title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 700;
+
+  &::before {
+    content: "";
+    width: 3px;
+    height: 17px;
+    margin-right: 9px;
+    border-radius: 99px;
+    background: rgb(var(--primary-color));
   }
 }
 
-.appearance-setting__eyebrow {
-  color: rgb(var(--primary-color));
-  font-size: 10px;
-  font-weight: 760;
-  letter-spacing: 0.16em;
+.appearance-setting__subtitle {
+  max-width: 720px;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+  line-height: 1.75;
 }
 
 .appearance-setting__content {
-  padding: 26px;
+  padding: 12px 26px 26px;
   display: grid;
   gap: 28px;
 }

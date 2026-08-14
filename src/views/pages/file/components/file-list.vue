@@ -55,6 +55,7 @@ import FileSearchDialog from "./FileSearchDialog.vue";
 import FileOperationDrawer from "./FileOperationDrawer.vue";
 import FileEditorDrawer from "./FileEditorDrawer.vue";
 import i18n from "@/lang";
+import { hasTerminalAccess } from "@/utils/access";
 
 const sconfig = useConfigStore()
 
@@ -966,7 +967,7 @@ const capacityUsedPercent = computed(() => {
           {{ t("file.directoryTree", "Directory tree") }}
         </el-button>
         <el-button
-          v-if="sconfig.hasMenuAccess('terminal')"
+          v-if="hasTerminalAccess()"
           class="command-button"
           :icon="Monitor"
           @click="conf.openTerminal"

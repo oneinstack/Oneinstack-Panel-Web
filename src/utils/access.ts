@@ -15,6 +15,7 @@ export const menuKeyLabelMap: Record<string, string> = {
   cron: 'Scheduled tasks',
   software: 'Software store',
   panelSettings: 'Panel settings',
+  terminal: 'Secure terminal',
   configSnapshots: 'Config snapshots',
   systemManagement: 'System management',
   userManagement: 'User management',
@@ -33,6 +34,7 @@ export const menuPathKeyMap: Array<{ path: string; key: string }> = [
   { path: '/file', key: 'file' },
   { path: '/log', key: 'audit' },
   { path: '/runtime-log', key: 'runtimeLog' },
+  { path: '/terminal', key: 'terminal' },
   { path: '/task', key: 'cron' },
   { path: '/software', key: 'software' },
   { path: '/setting', key: 'panelSettings' },
@@ -70,17 +72,25 @@ const hasSystemManagementAccess = () => {
     Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
 }
 
+export const hasTerminalAccess = () => {
+  const sconfig = useConfigStore()
+  return sconfig.hasMenuAccess('terminal') ||
+    sconfig.hasActionAccess('terminal.access') ||
+    Boolean((sconfig.scopeAccess as any)?.terminal?.access) ||
+    Boolean((sconfig.scopeAccess as any)?.['terminal.access'])
+}
+
 export const canAccessPath = (path: string) => {
   const sconfig = useConfigStore()
   const key = resolveMenuKeyByPath(path)
   if (!key) return true
+  if (key === 'terminal') return hasTerminalAccess()
   if (key === 'configSnapshots') return hasConfigSnapshotAccess()
   if (key === 'systemManagement') return hasSystemManagementAccess()
   return sconfig.hasMenuAccess(key)
 }
 
 export const getFirstAccessiblePath = () => {
-  const sconfig = useConfigStore()
-  const firstAccessible = menuPathKeyMap.find((item) => sconfig.hasMenuAccess(item.key))
+  const firstAccessible = menuPathKeyMap.find((item) => canAccessPath(item.path))
   return firstAccessible?.path || '/home'
 }

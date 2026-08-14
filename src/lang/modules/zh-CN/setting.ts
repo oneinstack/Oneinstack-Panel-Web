@@ -3,6 +3,11 @@ export default {
   tabs: {
     all: '全部设置',
     panel: '面板设置',
+    network: '访问方式',
+    appearance: '界面设置',
+    accountSecurity: '安全设置',
+    backup: '备份还原',
+    update: '面板更新',
     security: '安全设置',
     alarm: '告警通知',
     message: '消息通知'

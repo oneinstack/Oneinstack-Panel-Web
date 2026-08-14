@@ -869,6 +869,32 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 14px 18px;
+
+  :deep(.el-checkbox) {
+    min-width: 0;
+    margin-right: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(218, 225, 236, 0.9);
+    border-radius: 14px;
+    background: rgba(248, 250, 252, 0.7);
+    cursor: pointer;
+    user-select: none;
+  }
+
+  :deep(.el-checkbox__input),
+  :deep(.el-checkbox__label) {
+    pointer-events: auto;
+  }
+
+  :deep(.el-checkbox__label) {
+    min-width: 0;
+    padding-left: 0;
+    line-height: 1.45;
+    white-space: normal;
+  }
 }
 
 .role-select-panel {

@@ -183,7 +183,7 @@ const taskTotal = ref(0)
 
 const incidentFilters = reactive({
   page: 1,
-  pageSize: 10,
+  pageSize: 20,
   status: '',
   remoteIp: ''
 })
@@ -1179,7 +1179,7 @@ onBeforeUnmount(() => {
           background
           layout="total, sizes, prev, pager, next"
           :total="incidentTotal"
-          :page-sizes="[10, 20, 50]"
+          :page-sizes="[10, 20, 50, 100]"
           @current-change="loadIncidents"
           @size-change="incidentFilters.page = 1; loadIncidents()"
         />
@@ -1264,7 +1264,7 @@ onBeforeUnmount(() => {
           background
           layout="total, sizes, prev, pager, next"
           :total="taskTotal"
-          :page-sizes="[20, 50, 100]"
+          :page-sizes="[10, 20, 50, 100]"
           @current-change="loadTasks"
           @size-change="taskPagination.page = 1; loadTasks()"
         />

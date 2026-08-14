@@ -37,5 +37,6 @@ export default {
   available: '可用',
   usage: '使用率',
   saveSuccess: '保存成功',
-  memoPlaceholder: '请输入备忘录内容'
+  memoPlaceholder: '请输入备忘录内容',
+  memoShortcutHint: '提示：Ctrl+S 保存'
 }

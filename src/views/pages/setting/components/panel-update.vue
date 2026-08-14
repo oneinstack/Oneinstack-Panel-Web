@@ -300,9 +300,9 @@ onBeforeUnmount(() => {
 
 <style scoped lang="less">
 .update-card {
-  padding-top: 28px;
-  margin-top: 20px;
-  border-top: 1px solid var(--border-subtle);
+  // padding-top: 28px;
+  // margin-top: 20px;
+  // border-top: 1px solid var(--border-subtle);
 }
 
 .update-card__header,

@@ -6,6 +6,7 @@ import { Api } from '@/api/modules'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
+import { getFirstAccessiblePath } from '@/utils/access'
 
 const sconfig = useConfigStore()
 
@@ -75,7 +76,7 @@ const conf = reactive({
 
         ElMessage.success(i18n.t('login.loginSuccess'))
         setTimeout(() => {
-          goAfterLogin(res.mustChangePassword ? '/first-login' : '/')
+          goAfterLogin(res.mustChangePassword ? '/first-login' : getFirstAccessiblePath())
         }, 500)
       } catch {
         // 请求层已经统一展示错误，此处只负责恢复加载状态。
