@@ -131,7 +131,6 @@ const confirmOperationPreview = async (preview: OperationPreview) => {
         ? t(operationTitleKeys[preview.operation], 'Operation preview')
         : t('common.operationPreview.title', 'Operation preview'),
       {
-        type: preview.review.riskLevel === 'high' ? 'warning' : 'info',
         confirmButtonText: hasFailedPrecheck(preview)
           ? t('common.operationPreview.precheckFailed', 'Precheck failed')
           : t('common.operationPreview.confirmExecute', 'Confirm execution'),
