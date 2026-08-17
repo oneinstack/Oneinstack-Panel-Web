@@ -416,7 +416,7 @@ onMounted(async () => {
           </template>
           <template #action="{ row }">
             <div class="action-wrap action-wrap--compact table-row-actions">
-              <el-button plain type="primary" :icon="CollectionTag" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
+              <el-button link type="primary" :icon="CollectionTag" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
               <el-button link type="primary" :icon="Key" :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
             </div>
           </template>
@@ -884,12 +884,15 @@ onMounted(async () => {
     user-select: none;
   }
 
-  :deep(.el-checkbox__input),
-  :deep(.el-checkbox__label) {
-    pointer-events: auto;
+  :deep(.el-checkbox__input) {
+    flex: 0 0 auto;
+    margin: 0;
   }
 
   :deep(.el-checkbox__label) {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
     min-width: 0;
     padding-left: 0;
     line-height: 1.45;

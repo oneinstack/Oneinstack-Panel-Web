@@ -1128,7 +1128,7 @@ const capacityUsedPercent = computed(() => {
               v-if="canUsePrimaryAction(row)"
               class="action-main"
               type="primary"
-              plain
+              link
               :icon="conf.isImage(row) ? View : FolderOpened"
               :loading="conf.editorLoadingPath === row.path"
               @click="conf.handleFileClick(row)"

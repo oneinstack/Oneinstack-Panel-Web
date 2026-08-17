@@ -40,6 +40,7 @@ export default {
   rejectPlaceholder: 'Enter reject reason',
   approvedSuccess: 'Approved',
   rejectedSuccess: 'Rejected',
+  selfApprovalForbidden: 'Applicants cannot approve their own requests',
   detailLoadFailed: 'Failed to load approval details',
   actionFailed: 'Approval operation failed',
   initFailed: 'Failed to initialize page'

@@ -2661,7 +2661,7 @@ onBeforeUnmount(() => {
         <template #imageAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="Document"
               @click="openDetail('image', row)"
@@ -2729,7 +2729,7 @@ onBeforeUnmount(() => {
         <template #networkAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="Document"
               @click="openDetail('network', row)"
@@ -2766,7 +2766,7 @@ onBeforeUnmount(() => {
         <template #volumeAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="Document"
               @click="openDetail('volume', row)"
@@ -2838,7 +2838,7 @@ onBeforeUnmount(() => {
         <template #templateAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="EditPen"
               :disabled="!canComposeWrite || !templatesSupported"
@@ -2880,7 +2880,7 @@ onBeforeUnmount(() => {
         <template #registryAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="Connection"
               :loading="actionLoading === `registry-test:${row.id}`"

@@ -508,9 +508,9 @@ onMounted(() => {
         </template>
         <template #actionColumn="scope">
             <div class="row-actions table-row-actions">
-            <el-button plain type="primary" :icon="VideoPlay" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
+            <el-button link type="primary" :icon="VideoPlay" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
               {{ t('task.enable', 'Enable') }} </el-button>
-            <el-button plain type="primary" :icon="VideoPause" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
+            <el-button link type="primary" :icon="VideoPause" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
               {{ t('task.disable', 'Disable') }} </el-button>
             <el-button link type="primary" :icon="EditPen" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
             <el-button link type="primary" :icon="VideoPlay" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>

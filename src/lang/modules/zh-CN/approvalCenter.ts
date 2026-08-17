@@ -40,6 +40,7 @@ export default {
   rejectPlaceholder: '请填写拒绝原因',
   approvedSuccess: '审批已通过',
   rejectedSuccess: '审批已拒绝',
+  selfApprovalForbidden: '申请人不能审批自己的申请',
   detailLoadFailed: '获取审批详情失败',
   actionFailed: '审批操作失败',
   initFailed: '页面初始化失败'

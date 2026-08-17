@@ -378,7 +378,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
             <div class="table-row-actions">
               <el-button
                 type="primary"
-                plain
+                link
                 :icon="Download"
                 @click="downloadBackup(row)"
                 >{{ t("common.download", "下载") }}</el-button

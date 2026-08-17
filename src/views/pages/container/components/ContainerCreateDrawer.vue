@@ -418,22 +418,29 @@ defineExpose({
   &__toggle {
     width: fit-content;
     margin: 0;
+  }
 
-    :deep(.el-checkbox) {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 12px;
-      border: 1px solid rgba(218, 225, 236, 0.9);
-      border-radius: 12px;
-      background: rgba(248, 250, 252, 0.82);
-      cursor: pointer;
-      user-select: none;
-    }
+  :deep(.image-field__toggle.el-checkbox) {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 1px solid rgba(218, 225, 236, 0.9);
+    border-radius: 12px;
+    background: rgba(248, 250, 252, 0.82);
+    cursor: pointer;
+    user-select: none;
+  }
 
-    :deep(.el-checkbox__label) {
-      padding-left: 0;
-    }
+  :deep(.image-field__toggle .el-checkbox__input) {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
+  :deep(.image-field__toggle .el-checkbox__label) {
+    display: inline-flex;
+    align-items: center;
+    padding-left: 0;
   }
 }
 
@@ -469,7 +476,15 @@ defineExpose({
     user-select: none;
   }
 
+  :deep(.el-checkbox__input) {
+    flex: 0 0 auto;
+    margin: 0;
+  }
+
   :deep(.el-checkbox__label) {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
     min-width: 0;
     padding-left: 0;
     white-space: normal;

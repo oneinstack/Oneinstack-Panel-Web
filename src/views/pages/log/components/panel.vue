@@ -94,7 +94,7 @@ const conf = reactive({
         </template>
         <template #actionColumn>
             <div class="table-row-actions">
-              <el-button plain type="primary" :icon="Setting" size="small">设置</el-button>
+              <el-button link type="primary" :icon="Setting" size="small">设置</el-button>
               <el-button link type="danger" :icon="Delete" size="small">删除</el-button>
             </div>
         </template>

@@ -169,7 +169,7 @@ watch(
       <template #deletedBy="{ row }">{{ row.deletedBy || '-' }}</template>
       <template #action="{ row }">
         <div class="table-row-actions">
-          <el-button type="primary" plain :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
+          <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
           <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
         </div>
       </template>

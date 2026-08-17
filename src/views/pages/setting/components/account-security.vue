@@ -279,7 +279,7 @@ onMounted(() => load())
       <template #lastSeenAt="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
       <template #expiresAt="{ row }">{{ formatDate(row.expiresAt) }}</template>
       <template #actionColumn="{ row }">
-        <el-button v-if="!row.current" plain type="danger" :icon="CircleClose" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
+        <el-button v-if="!row.current" link type="danger" :icon="CircleClose" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
       </template>
     </custom-table>
   </div>

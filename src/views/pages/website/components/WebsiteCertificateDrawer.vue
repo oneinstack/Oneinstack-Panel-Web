@@ -297,7 +297,7 @@ onBeforeUnmount(() => {
         <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
         <template #actionColumn="{ row }">
             <div class="table-row-actions">
-              <el-button plain type="primary" :icon="Document" @click="showLog(row)">日志</el-button>
+              <el-button link type="primary" :icon="Document" @click="showLog(row)">日志</el-button>
               <el-button
                 v-if="activeStatuses.includes(row.status)"
                 link

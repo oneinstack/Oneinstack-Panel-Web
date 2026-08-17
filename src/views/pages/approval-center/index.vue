@@ -16,7 +16,9 @@ interface ApprovalRequest {
   riskLevel?: string
   status: string
   reason?: string
+  requestedBy?: string | number
   requestedByName?: string
+  approvedBy?: string | number
   approvedByName?: string
   reviewComment?: string
   boundTaskType?: string
@@ -91,7 +93,10 @@ const approvalDialog = reactive({
     loading.approvalDetail = true
     try {
       const response = await Api.getApprovalDetail(row.id)
-      approvalDialog.data = response.data
+      approvalDialog.data = {
+        ...row,
+        ...(response.data || {})
+      }
     } catch (error: any) {
       // ElMessage.error(error?.message || t('approvalCenter.detailLoadFailed', '获取审批详情失败'))
       approvalDialog.show = false
@@ -123,6 +128,39 @@ const canReviewApproval = computed(
       currentUser.value?.scopes?.approval?.execute
     )
 )
+
+const normalizeAccountName = (value: unknown) => typeof value === 'string' ? value.trim().toLowerCase() : ''
+
+const isSelfApproval = (row?: ApprovalRequest | null) => {
+  if (!row) return false
+  const requesterId = String(row.requestedBy ?? '').trim()
+  const currentIdCandidates = [
+    currentUser.value?.id,
+    currentUser.value?.userId,
+    currentUser.value?.user?.id,
+    currentUser.value?.user?.userId
+  ]
+    .map((item) => String(item ?? '').trim())
+    .filter(Boolean)
+
+  if (requesterId && currentIdCandidates.includes(requesterId)) {
+    return true
+  }
+
+  const requester = normalizeAccountName(row.requestedByName)
+  const currentCandidates = [
+    currentUser.value?.username,
+    currentUser.value?.name,
+    currentUser.value?.displayName,
+    currentUser.value?.user?.username,
+    currentUser.value?.user?.name,
+    currentUser.value?.user?.displayName
+  ]
+    .map(normalizeAccountName)
+    .filter(Boolean)
+
+  return Boolean(requester && currentCandidates.includes(requester))
+}
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const statusLabelMap: Record<string, string> = {
@@ -197,6 +235,10 @@ const resetApprovals = () => {
 
 const submitApprovalAction = async () => {
   if (!approvalDialog.data) return
+  if (isSelfApproval(approvalDialog.data)) {
+    ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
+    return
+  }
   loading.approvalAction = true
   try {
     if (approvalDialog.mode === 'approve') {
@@ -209,7 +251,11 @@ const submitApprovalAction = async () => {
     approvalDialog.show = false
     await loadApprovals()
   } catch (error: any) {
-    // ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
+    if (isSelfApproval(approvalDialog.data)) {
+      ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
+      return
+    }
+    ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
   } finally {
     loading.approvalAction = false
   }
@@ -295,7 +341,7 @@ onMounted(async () => {
           <div class="action-wrap table-row-actions">
             <el-button
               v-if="isPendingApproval(row)"
-              plain
+              link
               type="success"
               :icon="CircleCheck"
               :disabled="!canReviewApproval"

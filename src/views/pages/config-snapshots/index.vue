@@ -493,7 +493,7 @@ onMounted(() => {
       :closable="false"
     />
 
-    <section class="summary-grid">
+    <!-- <section class="summary-grid">
       <div class="summary-card">
         <small>{{ $t('configSnapshots.currentPageSnapshots') }}</small>
         <strong>{{ snapshots.length }}</strong>
@@ -514,7 +514,7 @@ onMounted(() => {
         <small>{{ $t('configSnapshots.failedRecords') }}</small>
         <strong>{{ failedCount }}</strong>
       </div>
-    </section>
+    </section> -->
 
     <section class="snapshot-panel">
       <div class="filter-bar">
@@ -572,7 +572,7 @@ onMounted(() => {
         <template #artifactSha256="{ row }">{{ shortHash(row.artifactSha256) }}</template>
         <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
         <template #actionColumn="{ row }">
-            <el-button plain type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+            <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
             <el-button
               link
               type="warning"

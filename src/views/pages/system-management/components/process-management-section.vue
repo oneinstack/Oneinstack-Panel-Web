@@ -95,7 +95,7 @@ defineProps<Props>()
       <template #memoryRss="{ row }">{{ formatBytes(row.memoryRss) }}</template>
       <template #createTime="{ row }">{{ formatDateTime(row.createTime) }}</template>
       <template #actionColumn="{ row }">
-        <el-button plain type="primary" :icon="View" @click.stop="onOpenDetail(row)">{{ $t('common.detail') }}</el-button>
+        <el-button link type="primary" :icon="View" @click.stop="onOpenDetail(row)">{{ $t('common.detail') }}</el-button>
       </template>
     </custom-table>
 

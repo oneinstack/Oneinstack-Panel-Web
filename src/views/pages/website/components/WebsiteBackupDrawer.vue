@@ -274,7 +274,7 @@ onBeforeUnmount(() => {
           <template #backupCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #backupAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" plain :icon="Download" @click="downloadBackup(row)">下载</el-button>
+                <el-button type="primary" link :icon="Download" @click="downloadBackup(row)">下载</el-button>
                 <el-button type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">恢复</el-button>
                 <el-button type="danger" link :icon="Delete" @click="deleteBackup(row)">删除</el-button>
               </div>
@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
           <template #taskCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #taskAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" plain :icon="Document" @click="showLog(row)">日志</el-button>
+                <el-button type="primary" link :icon="Document" @click="showLog(row)">日志</el-button>
                 <el-button
                   v-if="activeStatuses.has(row.status)"
                   type="danger"
