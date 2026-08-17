@@ -28,8 +28,8 @@ const canReadDatabase = () =>
   Boolean((sconfig.scopeAccess as any)?.database?.read) ||
   Boolean((sconfig.scopeAccess as any)?.['database.read'])
 
-const extractWebsiteTaskId = (payload: any): string => {
-  const candidates = [
+const extractWebsiteOperationMeta = (payload: any) => {
+  const taskCandidates = [
     payload?.taskId,
     payload?.id,
     payload?.data?.taskId,
@@ -37,8 +37,39 @@ const extractWebsiteTaskId = (payload: any): string => {
     payload?.data?.task?.id,
     payload?.task?.id
   ]
-  const matched = candidates.find((item) => typeof item === 'string' || typeof item === 'number')
-  return matched ? String(matched) : ''
+  const approvalCandidates = [
+    payload?.approvalId,
+    payload?.requestId,
+    payload?.data?.approvalId,
+    payload?.data?.requestId,
+    payload?.data?.approval?.id,
+    payload?.approval?.id
+  ]
+  const statusCandidates = [
+    payload?.status,
+    payload?.data?.status,
+    payload?.approvalStatus,
+    payload?.data?.approvalStatus,
+    payload?.approval?.status,
+    payload?.data?.approval?.status
+  ]
+  const taskId = taskCandidates.find((item) => typeof item === 'string' || typeof item === 'number')
+  const approvalId = approvalCandidates.find((item) => typeof item === 'string' || typeof item === 'number')
+  const status = statusCandidates.find((item) => typeof item === 'string')
+
+  return {
+    taskId: taskId ? String(taskId) : '',
+    approvalId: approvalId ? String(approvalId) : '',
+    status: typeof status === 'string' ? status.toLowerCase() : ''
+  }
+}
+
+const extractWebsiteTaskId = (payload: any): string => {
+  return extractWebsiteOperationMeta(payload).taskId
+}
+
+const extractWebsiteApprovalId = (payload: any): string => {
+  return extractWebsiteOperationMeta(payload).approvalId
 }
 
 const openWebsiteRoot = (rootDir: unknown) => {
@@ -429,15 +460,26 @@ const conf = reactive({
           databaseId: conf.dialog.databaseId || undefined,
           deleteFiles: conf.dialog.deleteFiles
         })
-        const taskId = extractWebsiteTaskId(data)
-        if (!taskId) {
+        const { taskId, approvalId, status } = extractWebsiteOperationMeta(data)
+        if (taskId) {
+          ElMessage.success(t('website.deleteTaskCreated', '安全删除任务已创建，完整快照验证成功后才会删除网站'))
+          backupDrawer.open(conf.dialog.row)
+          conf.dialog.show = false
+          conf.website.getData()
+          return
+        }
+
+        if (approvalId || ['pending', 'waiting_approval', 'awaiting_approval', 'approval_pending'].includes(status)) {
+          ElMessage.success(t('website.deleteApprovalCreated', '已提交删除审批申请，等待审批通过后会自动生成删除任务'))
+          conf.dialog.show = false
+          conf.website.getData()
+          return
+        }
+
+        if (!extractWebsiteTaskId(data) && !extractWebsiteApprovalId(data)) {
           ElMessage.error(t('website.deleteTaskMissing', '后端未返回删除任务，网站未确认进入删除流程'))
           return
         }
-        ElMessage.success(t('website.deleteTaskCreated', '安全删除任务已创建，完整快照验证成功后才会删除网站'))
-        backupDrawer.open(conf.dialog.row)
-        conf.dialog.show = false
-        conf.website.getData()
       } finally {
         conf.dialog.loading = false
       }

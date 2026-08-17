@@ -57,6 +57,7 @@ export default {
   confirmWebsiteName: 'Enter website name {name} to confirm',
   websiteNameMismatch: 'Website name does not match',
   deleteTaskCreated: 'Safe deletion task created. The website will be removed only after the full snapshot is verified.',
+  deleteApprovalCreated: 'Deletion approval request submitted. A deletion task will be created automatically after approval.',
   deleteTaskMissing: 'The backend did not return a deletion task. The website has not been confirmed as queued for deletion.',
   databaseListUnavailable: 'This role cannot read the database list. Deletion will continue without linking a database.',
   createSnapshotAndDelete: 'Create snapshot and delete',

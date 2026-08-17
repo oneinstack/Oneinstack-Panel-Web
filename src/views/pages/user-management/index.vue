@@ -884,12 +884,12 @@ onMounted(async () => {
     user-select: none;
   }
 
-  :deep(.el-checkbox__input),
-  :deep(.el-checkbox__label) {
-    pointer-events: auto;
+  :deep(.el-checkbox__input) {
+    flex: 0 0 auto;
   }
 
   :deep(.el-checkbox__label) {
+    flex: 1;
     min-width: 0;
     padding-left: 0;
     line-height: 1.45;
