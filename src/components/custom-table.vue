@@ -230,7 +230,7 @@ defineExpose({
 
 :deep(.smart-table) {
   --el-table-border-color: transparent;
-  --el-table-row-hover-bg-color: rgba(var(--primary-color), 0.045);
+  // --el-table-row-hover-bg-color: rgba(var(--primary-color), 0.045);
   --el-table-header-bg-color: #f7f9fc;
   --el-table-bg-color: transparent;
   --el-table-tr-bg-color: var(--surface-card);

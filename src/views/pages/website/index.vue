@@ -29,29 +29,65 @@ const canReadDatabase = () =>
   Boolean((sconfig.scopeAccess as any)?.['database.read'])
 
 const extractWebsiteOperationMeta = (payload: any) => {
+  const root = payload?.data ?? payload ?? {}
+  const result = root?.result || root?.data?.result || {}
+  const meta = root?.meta || root?.data?.meta || {}
   const taskCandidates = [
-    payload?.taskId,
-    payload?.id,
-    payload?.data?.taskId,
-    payload?.data?.id,
-    payload?.data?.task?.id,
-    payload?.task?.id
+    root?.taskId,
+    root?.task_id,
+    root?.id,
+    root?.boundTaskId,
+    root?.bound_task_id,
+    root?.task?.id,
+    root?.task?.taskId,
+    root?.task?.task_id,
+    result?.taskId,
+    result?.task_id,
+    result?.id,
+    result?.boundTaskId,
+    result?.task?.id,
+    meta?.taskId,
+    meta?.task_id,
+    meta?.boundTaskId
   ]
   const approvalCandidates = [
-    payload?.approvalId,
-    payload?.requestId,
-    payload?.data?.approvalId,
-    payload?.data?.requestId,
-    payload?.data?.approval?.id,
-    payload?.approval?.id
+    root?.approvalId,
+    root?.approval_id,
+    root?.approvalRequestId,
+    root?.approval_request_id,
+    root?.requestId,
+    root?.request_id,
+    root?.approval?.id,
+    root?.approvalRequest?.id,
+    result?.approvalId,
+    result?.approval_id,
+    result?.approvalRequestId,
+    result?.approval_request_id,
+    result?.requestId,
+    result?.request_id,
+    result?.approval?.id,
+    result?.approvalRequest?.id,
+    meta?.approvalId,
+    meta?.approval_id,
+    meta?.approvalRequestId,
+    meta?.approval_request_id
   ]
   const statusCandidates = [
-    payload?.status,
-    payload?.data?.status,
-    payload?.approvalStatus,
-    payload?.data?.approvalStatus,
-    payload?.approval?.status,
-    payload?.data?.approval?.status
+    root?.status,
+    root?.state,
+    root?.phase,
+    root?.approvalStatus,
+    root?.approval_status,
+    root?.approval?.status,
+    result?.status,
+    result?.state,
+    result?.phase,
+    result?.approvalStatus,
+    result?.approval_status,
+    result?.approval?.status,
+    meta?.status,
+    meta?.state,
+    meta?.phase
   ]
   const taskId = taskCandidates.find((item) => typeof item === 'string' || typeof item === 'number')
   const approvalId = approvalCandidates.find((item) => typeof item === 'string' || typeof item === 'number')
@@ -454,13 +490,19 @@ const conf = reactive({
       }
       conf.dialog.loading = true
       try {
-        const { data } = await Api.delWebsite({
+        const response = await Api.delWebsite({
           id: conf.dialog.row.id,
           confirmName: conf.dialog.confirmName,
           databaseId: conf.dialog.databaseId || undefined,
           deleteFiles: conf.dialog.deleteFiles
         })
-        const { taskId, approvalId, status } = extractWebsiteOperationMeta(data)
+        const { taskId, approvalId, status } = extractWebsiteOperationMeta(response)
+        const responseMessage = [
+          response?.message,
+          response?.detail,
+          response?.data?.message,
+          response?.data?.detail
+        ].find((item) => typeof item === 'string' && item.trim())
         if (taskId) {
           ElMessage.success(t('website.deleteTaskCreated', '安全删除任务已创建，完整快照验证成功后才会删除网站'))
           backupDrawer.open(conf.dialog.row)
@@ -469,14 +511,18 @@ const conf = reactive({
           return
         }
 
-        if (approvalId || ['pending', 'waiting_approval', 'awaiting_approval', 'approval_pending'].includes(status)) {
+        if (
+          approvalId ||
+          ['pending', 'waiting_approval', 'awaiting_approval', 'approval_pending'].includes(status) ||
+          /审批|approval/i.test(String(responseMessage || ''))
+        ) {
           ElMessage.success(t('website.deleteApprovalCreated', '已提交删除审批申请，等待审批通过后会自动生成删除任务'))
           conf.dialog.show = false
           conf.website.getData()
           return
         }
 
-        if (!extractWebsiteTaskId(data) && !extractWebsiteApprovalId(data)) {
+        if (!extractWebsiteTaskId(response) && !extractWebsiteApprovalId(response)) {
           ElMessage.error(t('website.deleteTaskMissing', '后端未返回删除任务，网站未确认进入删除流程'))
           return
         }
@@ -617,7 +663,7 @@ webServer.load()
         </template>
         <template #action="{ row }">
           <div class="table-row-actions">
-            <el-button type="primary" plain :icon="Lock" @click="certificateDrawer.open(row)">SSL</el-button>
+            <el-button type="primary" link :icon="Lock" @click="certificateDrawer.open(row)">SSL</el-button>
             <el-button type="primary" link :icon="FolderAdd" @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
             <el-button type="primary" link :icon="Setting" @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
             <el-button type="danger" link :icon="Delete" @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>

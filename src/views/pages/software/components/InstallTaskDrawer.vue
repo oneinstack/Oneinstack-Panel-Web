@@ -319,7 +319,7 @@ onBeforeUnmount(() => {
             :duration="3"
           />
         </div>
-        <div class="overview-foot">
+        <!-- <div class="overview-foot">
           <div
             v-for="item in metaCards"
             :key="item.label"
@@ -341,10 +341,10 @@ onBeforeUnmount(() => {
             <small>{{ $t('software.task.summary.logStatus') }}</small>
             <strong>{{ autoScroll ? $t('software.task.autoScrollEnabled') : $t('software.task.manualViewing') }}</strong>
           </div>
-        </div>
+        </div> -->
       </section>
 
-      <section class="stage-section">
+      <!-- <section class="stage-section">
         <div class="section-heading">
           <div>
             <span class="section-heading__eyebrow">EXECUTION FLOW</span>
@@ -366,7 +366,7 @@ onBeforeUnmount(() => {
             </div>
           </div>
         </div>
-      </section>
+      </section> -->
 
       <el-alert
         v-if="failed"
@@ -404,7 +404,7 @@ onBeforeUnmount(() => {
           <pre ref="logElement" class="task-log">{{ logs }}</pre>
         </section>
 
-        <aside class="summary-panel">
+        <!-- <aside class="summary-panel">
           <div class="section-heading section-heading--aside">
             <div>
               <span class="section-heading__eyebrow">DIAGNOSTICS</span>
@@ -422,7 +422,7 @@ onBeforeUnmount(() => {
               <strong>{{ item.value }}</strong>
             </div>
           </div>
-        </aside>
+        </aside> -->
       </section>
     </div>
     <el-skeleton v-else :rows="8" animated />
@@ -860,9 +860,9 @@ onBeforeUnmount(() => {
 
 .diagnostic-grid {
   min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
-  gap: 16px;
+  // display: grid;
+  // grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.8fr);
+  // gap: 16px;
 }
 
 .log-section {

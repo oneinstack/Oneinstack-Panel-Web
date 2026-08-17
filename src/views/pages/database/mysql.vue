@@ -500,7 +500,7 @@ const handleMoreAction = async (command: string, row: any) => {
             <el-button
               v-if="phpMyAdminInstalled"
               type="primary"
-              plain
+              link
               :icon="Link"
               @click="openPhpMyAdmin(row.name)"
             >{{ t('database.quickManage', '快捷管理') }}</el-button>

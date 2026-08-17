@@ -1401,7 +1401,7 @@ onMounted(() => {
         <template #actionColumn="{ row }">
           <div class="table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="EditPen"
               :disabled="Boolean(actionReason(row))"
@@ -1454,7 +1454,7 @@ onMounted(() => {
         <template #actionColumn="{ row }">
           <div class="table-row-actions">
             <el-button
-              plain
+              link
               type="primary"
               :icon="EditPen"
               :disabled="Boolean(forwardActionReason())"

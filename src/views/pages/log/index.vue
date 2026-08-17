@@ -423,7 +423,7 @@ onMounted(async () => {
         <template #durationMs="{ row }">{{ row.durationMs }} ms</template>
         <template #actionColumn="{ row }">
           <el-button
-            plain
+            link
             type="primary"
             :icon="View"
             @click="showDetail(row)"

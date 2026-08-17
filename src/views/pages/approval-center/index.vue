@@ -16,7 +16,9 @@ interface ApprovalRequest {
   riskLevel?: string
   status: string
   reason?: string
+  requestedBy?: string | number
   requestedByName?: string
+  approvedBy?: string | number
   approvedByName?: string
   reviewComment?: string
   boundTaskType?: string
@@ -91,7 +93,10 @@ const approvalDialog = reactive({
     loading.approvalDetail = true
     try {
       const response = await Api.getApprovalDetail(row.id)
-      approvalDialog.data = response.data
+      approvalDialog.data = {
+        ...row,
+        ...(response.data || {})
+      }
     } catch (error: any) {
       // ElMessage.error(error?.message || t('approvalCenter.detailLoadFailed', '获取审批详情失败'))
       approvalDialog.show = false
@@ -128,6 +133,20 @@ const normalizeAccountName = (value: unknown) => typeof value === 'string' ? val
 
 const isSelfApproval = (row?: ApprovalRequest | null) => {
   if (!row) return false
+  const requesterId = String(row.requestedBy ?? '').trim()
+  const currentIdCandidates = [
+    currentUser.value?.id,
+    currentUser.value?.userId,
+    currentUser.value?.user?.id,
+    currentUser.value?.user?.userId
+  ]
+    .map((item) => String(item ?? '').trim())
+    .filter(Boolean)
+
+  if (requesterId && currentIdCandidates.includes(requesterId)) {
+    return true
+  }
+
   const requester = normalizeAccountName(row.requestedByName)
   const currentCandidates = [
     currentUser.value?.username,
@@ -232,6 +251,10 @@ const submitApprovalAction = async () => {
     approvalDialog.show = false
     await loadApprovals()
   } catch (error: any) {
+    if (isSelfApproval(approvalDialog.data)) {
+      ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
+      return
+    }
     ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
   } finally {
     loading.approvalAction = false
@@ -318,7 +341,7 @@ onMounted(async () => {
           <div class="action-wrap table-row-actions">
             <el-button
               v-if="isPendingApproval(row)"
-              plain
+              link
               type="success"
               :icon="CircleCheck"
               :disabled="!canReviewApproval"

@@ -434,9 +434,12 @@ defineExpose({
 
   :deep(.image-field__toggle .el-checkbox__input) {
     flex: 0 0 auto;
+    margin: 0;
   }
 
   :deep(.image-field__toggle .el-checkbox__label) {
+    display: inline-flex;
+    align-items: center;
     padding-left: 0;
   }
 }
@@ -475,10 +478,13 @@ defineExpose({
 
   :deep(.el-checkbox__input) {
     flex: 0 0 auto;
+    margin: 0;
   }
 
   :deep(.el-checkbox__label) {
     flex: 1;
+    display: inline-flex;
+    align-items: center;
     min-width: 0;
     padding-left: 0;
     white-space: normal;

@@ -466,7 +466,7 @@ const serviceStateType = (service: ComponentHealthState) => {
   if (service.busy) return 'info'
   if (service.healthState === 'firing') return 'danger'
   if (service.healthState === 'pending') return 'warning'
-  return service.serviceState === 'running' ? 'success' : 'info'
+  return 'success'
 }
 const serviceSilenced = (service: ComponentHealthState) =>
   Boolean(service.silencedUntil && new Date(service.silencedUntil).getTime() > Date.now())
@@ -757,7 +757,7 @@ onUnmounted(() => {
         <h2>{{ $t('monitor.title') }}</h2>
         <p>{{ $t('monitor.pageDescription') }}</p>
       </div>
-      <el-button type="primary" :loading="dashboardLoading" @click="refreshAll">{{ $t('monitor.refreshData') }}</el-button>
+      <el-button class="page-heading__action" type="primary" :loading="dashboardLoading" @click="refreshAll">{{ $t('monitor.refreshData') }}</el-button>
     </div>
 
     <div class="stats-grid" v-loading="dashboardLoading">
@@ -803,7 +803,7 @@ onUnmounted(() => {
               <strong>{{ service.displayName }}</strong>
               <span>{{ service.serviceName }}</span>
             </div>
-            <el-tag :type="serviceStateType(service)" effect="light" size="small">
+            <el-tag class="service-status-tag" :type="serviceStateType(service)" effect="light" size="small">
               {{ serviceStateLabel(service) }}
             </el-tag>
           </div>
@@ -929,7 +929,7 @@ onUnmounted(() => {
               <h4>{{ group.label }}</h4>
               <span>{{ group.description }}</span>
             </div>
-            <el-tag size="small" effect="light">
+            <el-tag class="history-count-tag" size="small" effect="light">
               {{ $t('monitor.itemCount', { count: groupedHistorySeries[group.key].length }) }}
             </el-tag>
           </div>
@@ -974,7 +974,7 @@ onUnmounted(() => {
             </template>
             <template #actionColumn="{ row }">
                 <div class="table-row-actions">
-                  <el-button plain type="primary" :icon="EditPen" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
+                  <el-button link type="primary" :icon="EditPen" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
                   <el-button v-if="!isSilenced(row)" link type="warning" :icon="Bell" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
                   <el-button v-else link type="success" :icon="Bell" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
                   <el-button link type="danger" :icon="Delete" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
@@ -1038,7 +1038,7 @@ onUnmounted(() => {
             <template #updatedAt="{ row }">{{ formatTime(row.updatedAt) }}</template>
             <template #actionColumn="{ row }">
                 <div class="table-row-actions">
-                  <el-button plain type="primary" :icon="Bell" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
+                  <el-button link type="primary" :icon="Bell" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
                   <el-button link type="primary" :icon="EditPen" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
                   <el-button link type="danger" :icon="Delete" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
                 </div>
@@ -1175,6 +1175,7 @@ onUnmounted(() => {
 
 <style scoped lang="less">
 .monitor-page {
+  min-height: 100%;
   padding-bottom: 28px;
 }
 
@@ -1182,57 +1183,81 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 16px;
 }
 
 .page-heading {
   margin-bottom: 18px;
 
   h2 {
-    margin: 0 0 6px;
-    font-size: 24px;
-    font-weight: 700;
-    letter-spacing: -0.035em;
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 720;
   }
 
   p {
-    margin: 0;
+    margin-top: 6px;
     color: var(--text-tertiary);
+    font-size: 13px;
     line-height: 1.6;
+  }
+
+  &__action {
+    min-width: 108px;
+    height: 40px;
+    padding-inline: 18px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 650;
   }
 }
 
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 18px;
 }
 
 .stat-card {
-  min-height: 102px;
-  padding: 18px 20px;
+  min-height: 92px;
+  padding: 16px;
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border-radius: 12px;
   background: var(--surface-card);
   box-shadow: var(--shadow-xs);
   display: flex;
   flex-direction: column;
 
-  span, small { color: var(--text-tertiary); }
-
-  strong {
-    margin: 6px 0;
-    font-size: 28px;
-    line-height: 1;
+  span, small {
+    color: var(--text-tertiary);
   }
 
-  &.warning strong { color: #d89532; }
-  &.danger strong { color: #e25d5d; }
+  span {
+    font-size: 12px;
+  }
+
+  strong {
+    display: block;
+    margin: 10px 0 0;
+    color: var(--text-primary);
+    font-size: 26px;
+    font-weight: 760;
+  }
+
+  small {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  &.warning strong { color: var(--el-color-warning); }
+  &.danger strong { color: var(--el-color-danger); }
 }
 
 .service-health-panel, .trend-panel, .history-panel, .management-panel {
-  padding: 20px;
+  padding: 18px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   background: var(--surface-card);
@@ -1240,30 +1265,46 @@ onUnmounted(() => {
 }
 
 .service-health-panel, .trend-panel, .history-panel {
-  margin-bottom: 14px;
+  margin-bottom: 18px;
 }
 
 .service-health-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 16px;
   margin-top: 16px;
 }
 
 .service-health-card {
-  padding: 16px;
+  min-height: 244px;
+  padding: 16px 18px 14px;
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  background: var(--surface-subtle);
+  border-radius: 14px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+
+  &:hover {
+    border-color: color-mix(in srgb, rgb(var(--primary-color)) 24%, var(--border-subtle));
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+  }
+
+  &.is-normal {
+    border-color: color-mix(in srgb, var(--el-color-success) 18%, var(--border-subtle));
+  }
 
   &.is-firing {
     border-color: color-mix(in srgb, var(--el-color-danger) 32%, var(--border-subtle));
-    background: color-mix(in srgb, var(--el-color-danger) 5%, var(--surface-card));
+    background: color-mix(in srgb, var(--el-color-danger) 4%, var(--surface-card));
   }
 
   &.is-pending {
     border-color: color-mix(in srgb, var(--el-color-warning) 32%, var(--border-subtle));
-    background: color-mix(in srgb, var(--el-color-warning) 5%, var(--surface-card));
+    background: color-mix(in srgb, var(--el-color-warning) 4%, var(--surface-card));
   }
 }
 
@@ -1284,68 +1325,132 @@ onUnmounted(() => {
     display: block;
     color: var(--text-primary);
     font-size: 15px;
+    font-weight: 680;
   }
 
   span {
     display: block;
-    margin-top: 3px;
+    margin-top: 4px;
     color: var(--text-tertiary);
-    font-size: 11px;
+    font-size: 12px;
+  }
+
+  :deep(.service-status-tag) {
+    min-width: 52px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1;
+  }
+
+  :deep(.service-status-tag.el-tag--success) {
+    // color: rgb(var(--success-color));
+    color: var(--el-color-success) !important;
+  }
+
+  :deep(.service-status-tag.el-tag--warning) {
+    color: var(--el-color-warning);
+  }
+
+  :deep(.service-status-tag.el-tag--danger) {
+    color: var(--el-color-danger);
+  }
+
+  :deep(.service-status-tag.el-tag--info) {
+    color: var(--text-tertiary);
   }
 }
 
 .service-health-card dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px 16px;
-  margin: 16px 0 0;
+  gap: 12px;
+  margin: 17px 0 0;
 
   div {
     min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--surface-subtle);
   }
 
   dt {
     color: var(--text-placeholder);
-    font-size: 10px;
+    font-size: 11px;
   }
 
   dd {
     overflow: hidden;
-    margin: 4px 0 0;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 600;
+    margin: 7px 0 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
 .service-health-error {
-  margin: 14px 0 0;
-  padding: 9px 10px;
-  border-radius: 8px;
+  min-height: 36px;
+  margin-top: 16px;
+  padding: 9px 12px;
+  overflow: hidden;
+  border-radius: 9px;
   color: var(--el-color-danger);
   background: color-mix(in srgb, var(--el-color-danger) 7%, var(--surface-card));
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .service-health-card__footer {
-  min-height: 30px;
-  margin-top: 13px;
-  padding-top: 12px;
+  min-height: 50px;
+  margin-top: 14px;
+  padding: 9px 0 0;
   border-top: 1px solid var(--border-subtle);
+  align-items: center;
   color: var(--text-placeholder);
-  font-size: 10px;
+  font-size: 11px;
+  justify-content: space-between;
+  background: transparent;
+
+  :deep(.el-button.is-link) {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 7px;
+    font-weight: 600;
+  }
 }
 
 .panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   color: var(--text-tertiary);
 
   h3 {
     margin: 0 0 4px;
     color: var(--text-primary);
-    font-size: 17px;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  span {
+    font-size: 12px;
+  }
+
+  :deep(.el-button) {
+    height: 40px;
+    border-radius: 12px;
+    font-weight: 650;
   }
 }
 
@@ -1369,6 +1474,7 @@ onUnmounted(() => {
     margin: 0 0 4px;
     color: var(--text-primary);
     font-size: 17px;
+    font-weight: 700;
   }
 
   span {
@@ -1417,6 +1523,14 @@ onUnmounted(() => {
     color: var(--text-tertiary);
     font-size: 11px;
   }
+
+  :deep(.history-count-tag) {
+    height: 24px;
+    padding: 0 8px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 650;
+  }
 }
 
 .history-chart {
@@ -1426,6 +1540,14 @@ onUnmounted(() => {
 .toolbar {
   margin-bottom: 16px;
   color: var(--text-tertiary);
+  font-size: 12px;
+
+  :deep(.el-button) {
+    min-width: 104px;
+    height: 40px;
+    border-radius: 12px;
+    font-weight: 650;
+  }
 }
 
 .filters {
