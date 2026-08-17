@@ -36,6 +36,7 @@ import {
 } from "@element-plus/icons-vue";
 import {
   ElMessage,
+  ElMessageBox,
   FormInstance,
   UploadFile,
   UploadInstance,
@@ -125,6 +126,72 @@ const parentPath = (path: string) => {
   const clean = path.replace(/\/+$/, "");
   const index = clean.lastIndexOf("/");
   return index <= 0 ? "/" : clean.slice(0, index);
+};
+const normalizeVirtualPath = (path: string) => {
+  const normalized = `/${String(path || "")
+    .replace(/\\/g, "/")
+    .replace(/^\/+/, "")
+    .replace(/\/+/g, "/")}`;
+  return normalized.length > 1 ? normalized.replace(/\/+$/, "") : "/";
+};
+const protectedSystemRoots = ["/boot", "/dev", "/etc", "/proc", "/sys", "/usr"];
+const isProtectedSystemPath = (path?: string) => {
+  const normalized = normalizeVirtualPath(path || "/");
+  return protectedSystemRoots.some(
+    (root) => normalized === root || normalized.startsWith(`${root}/`),
+  );
+};
+const isRootLevelPath = (path?: string) =>
+  parentPath(normalizeVirtualPath(path || "/")) === "/";
+const isHighRiskRootPath = (path?: string) =>
+  isRootLevelPath(path) && !isProtectedSystemPath(path);
+const protectedActionLabel = (action: "delete" | "rename" | "move") =>
+  action === "delete"
+    ? t("file.delete", "Delete")
+    : action === "rename"
+      ? t("file.rename", "Rename")
+      : t("file.cut", "Cut");
+const ensurePathMutationAllowed = async (
+  row: any,
+  action: "delete" | "rename" | "move",
+) => {
+  const path = normalizeVirtualPath(row?.path || "");
+  if (!path || path === "/") return false;
+  if (isHighRiskRootPath(path)) {
+    const message =
+      action === "delete"
+        ? t(
+            "file.highRiskDeleteConfirm",
+            "Deleting root-level item {path} is high risk and may directly affect running services or data. Confirm you have created a snapshot or backup before continuing.",
+            { path },
+          )
+        : action === "rename"
+          ? t(
+              "file.highRiskRenameConfirm",
+              "Renaming root-level item {path} is high risk and may break service paths or startup configuration. Confirm you have created a snapshot or backup before continuing.",
+              { path },
+            )
+          : t(
+              "file.highRiskCutConfirm",
+              "Cutting or moving root-level item {path} is high risk and may directly affect running services or mounted data. Confirm you have created a snapshot or backup before continuing.",
+              { path },
+            );
+    try {
+      await ElMessageBox.confirm(
+        message,
+        t("file.highRiskActionTitle", "High-risk root directory operation"),
+        {
+          type: "warning",
+          confirmButtonText: t("file.confirmHighRiskContinue", "Continue"),
+          cancelButtonText: t("common.cancel", "Cancel"),
+        },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
+  return true;
 };
 const releasePreviewUrl = () => {
   if (!conf.imagePreview.url?.startsWith("blob:")) return;
@@ -396,12 +463,14 @@ const conf = reactive({
   },
   isImage: (row: any) =>
     !row?.isDir && imageExtensionPattern.test(row?.name || ""),
-  setClipboard: (mode: Exclude<ClipboardMode, "">, row: any) => {
+  setClipboard: async (mode: Exclude<ClipboardMode, "">, row: any) => {
     if (mode === "copy" && !canCopyFile())
       return requireFilePermission(
         canFilePermission("read") ? "create" : "read",
       );
     if (mode === "move" && !requireFilePermission("move")) return;
+    if (mode === "move" && !(await ensurePathMutationAllowed(row, "move")))
+      return;
     conf.clipboard.mode = mode;
     conf.clipboard.source = {
       path: row.path,
@@ -432,6 +501,7 @@ const conf = reactive({
       conf.copyDialog.open();
       return;
     }
+    if (!(await ensurePathMutationAllowed(conf.clipboard.source, "move"))) return;
     await Api.moveFile({
       sourcePath: conf.clipboard.source.path,
       targetPath: joinVirtualPath(currentPath(), conf.clipboard.source.name),
@@ -511,11 +581,17 @@ const conf = reactive({
     title: t("file.deleteFile", "Delete file"),
     confirmText: t("common.confirm", "Confirm"),
     cancelText: t("common.cancel", "Cancel"),
-    open: (type: "delete" | "upload" | "linkDownload", row?: any) => {
+    open: async (type: "delete" | "upload" | "linkDownload", row?: any) => {
       if (type === "delete" && !requireFilePermission("delete")) return;
       if (
         (type === "upload" || type === "linkDownload") &&
         !requireFilePermission("create")
+      )
+        return;
+      if (
+        type === "delete" &&
+        row &&
+        !(await ensurePathMutationAllowed(row, "delete"))
       )
         return;
       switch (type) {
@@ -571,6 +647,7 @@ const conf = reactive({
         conf.refresh();
         return;
       }
+      if (!(await ensurePathMutationAllowed(conf.fileDialog.row, "delete"))) return;
       const path = conf.path.join("/").replace(/\/\//g, "/");
       await Api.deleteFile({
         path: `${path === "/" ? "" : path}/${conf.fileDialog.row.name}`,
@@ -601,6 +678,8 @@ const conf = reactive({
         share: "share",
       };
       if (!requireFilePermission(permissionMap[type])) return;
+      if (type === "rename" && !(await ensurePathMutationAllowed(row, "rename")))
+        return;
       conf.operationDialog.type = type;
       conf.operationDialog.row = row;
       conf.operationDialog.value = "";
@@ -648,6 +727,7 @@ const conf = reactive({
           return ElMessage.warning(
             t("file.newNameRequired", "Enter a new name"),
           );
+        if (!(await ensurePathMutationAllowed(dialog.row, "rename"))) return;
         await Api.renameFile({ path: dialog.row.path, newName: name });
         ElMessage.success(t("file.renameSuccess", "Renamed successfully"));
         dialog.close();
@@ -757,6 +837,12 @@ const conf = reactive({
 
 const canCopyFile = () =>
   canFilePermission("read") && canFilePermission("create");
+const canCutRow = (row: any) =>
+  canFilePermission("move") && !isProtectedSystemPath(row?.path);
+const canRenameRow = (row: any) =>
+  canFilePermission("modify") && !isProtectedSystemPath(row?.path);
+const canDeleteRow = (row: any) =>
+  canFilePermission("delete") && normalizeBool(row?.canDelete);
 const canPasteClipboard = () => {
   if (conf.clipboard.mode === "copy") return canCopyFile();
   if (conf.clipboard.mode === "move") return canFilePermission("move");
@@ -1151,7 +1237,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.copy", "Copy") }}
             </el-button>
             <el-button
-              v-if="canFilePermission('move')"
+              v-if="canCutRow(row)"
               type="primary"
               link
               :icon="Scissor"
@@ -1160,7 +1246,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.cut", "Cut") }}
             </el-button>
             <el-button
-              v-if="canFilePermission('modify')"
+              v-if="canRenameRow(row)"
               type="primary"
               link
               :icon="EditPen"
@@ -1178,7 +1264,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.directoryTree", "Directory tree") }}
             </el-button>
             <el-button
-              v-if="canFilePermission('delete')"
+              v-if="canDeleteRow(row)"
               class="row-action-danger"
               type="primary"
               link
@@ -1216,13 +1302,13 @@ const capacityUsedPercent = computed(() => {
                     <el-icon><FolderOpened /></el-icon
                     >{{ t("file.openInNewWindow", "Open in new window") }}
                   </el-dropdown-item>
-                  <el-dropdown-item
+                  <!-- <el-dropdown-item
                     v-if="row.isDir && canFilePermission('read')"
                     @click="conf.treeDialog.open(row)"
                   >
                     <el-icon><Operation /></el-icon
                     >{{ t("file.directoryTree", "Directory tree") }}
-                  </el-dropdown-item>
+                  </el-dropdown-item> -->
                   <el-dropdown-item
                     v-if="!row.isDir && canFilePermission('read')"
                     @click="conf.handleFileDownload(row)"
@@ -1263,26 +1349,26 @@ const capacityUsedPercent = computed(() => {
                     <el-icon><Lock /></el-icon
                     >{{ t("file.permissions", "Permissions") }}
                   </el-dropdown-item>
-                  <el-dropdown-item
+                  <!-- <el-dropdown-item
                     v-if="canCopyFile()"
                     @click="conf.setClipboard('copy', row)"
                   >
                     <el-icon><CopyDocument /></el-icon
                     >{{ t("file.copy", "Copy") }}
-                  </el-dropdown-item>
-                  <el-dropdown-item
+                  </el-dropdown-item> -->
+                  <!-- <el-dropdown-item
                     v-if="canFilePermission('move')"
                     @click="conf.setClipboard('move', row)"
                   >
                     <el-icon><Scissor /></el-icon>{{ t("file.cut", "Cut") }}
-                  </el-dropdown-item>
-                  <el-dropdown-item
+                  </el-dropdown-item> -->
+                  <!-- <el-dropdown-item
                     v-if="canFilePermission('modify')"
                     @click="conf.operationDialog.open('rename', row)"
                   >
                     <el-icon><EditPen /></el-icon
                     >{{ t("file.rename", "Rename") }}
-                  </el-dropdown-item>
+                  </el-dropdown-item> -->
                   <el-dropdown-item
                     v-if="canFilePermission('archive')"
                     @click="conf.operationDialog.open('archive', row)"
@@ -1297,7 +1383,7 @@ const capacityUsedPercent = computed(() => {
                     <el-icon><InfoFilled /></el-icon
                     >{{ t("file.properties", "Properties") }}
                   </el-dropdown-item>
-                  <el-dropdown-item
+                  <!-- <el-dropdown-item
                     v-if="canFilePermission('delete')"
                     divided
                     class="table-action-menu__danger"
@@ -1305,7 +1391,7 @@ const capacityUsedPercent = computed(() => {
                   >
                     <el-icon><Delete /></el-icon
                     >{{ t("file.delete", "Delete") }}
-                  </el-dropdown-item>
+                  </el-dropdown-item> -->
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -1419,7 +1505,7 @@ const capacityUsedPercent = computed(() => {
                   >{{ t("file.properties", "属性") }}
                 </el-dropdown-item>
                 <el-dropdown-item
-                  v-if="canFilePermission('delete')"
+                  v-if="canDeleteRow(row)"
                   divided
                   class="table-action-menu__danger"
                   @click="conf.fileDialog.open('delete', row)"

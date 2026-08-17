@@ -255,7 +255,7 @@ const submitApprovalAction = async () => {
       ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
       return
     }
-    ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
+    // ElMessage.error(error?.message || t('approvalCenter.actionFailed', '审批操作失败'))
   } finally {
     loading.approvalAction = false
   }

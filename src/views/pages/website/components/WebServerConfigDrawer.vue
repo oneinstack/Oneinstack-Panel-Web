@@ -234,7 +234,7 @@ watch(
     size="980px"
     :before-close="close"
     :show-close="false"
-    :close-on-click-modal="false"
+    :close-on-click-modal="true"
     :destroy-on-close="false"
   >
     <template #header>

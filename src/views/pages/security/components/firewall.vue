@@ -58,6 +58,11 @@ interface FirewallStatus {
   counts: FirewallCounts;
 }
 
+interface FirewallListResponse<T> {
+  data?: T[];
+  total?: number;
+}
+
 interface FirewallRule {
   id: number;
   ruleType: Exclude<RuleTab, "forward">;
@@ -170,6 +175,105 @@ const backendNames: Record<string, string> = {
   iptables: "iptables",
 };
 
+const normalizeBackend = (backend?: string | null): FirewallStatus["backend"] => {
+  if (backend === "ufw" || backend === "firewalld" || backend === "iptables") {
+    return backend;
+  }
+  return "none";
+};
+
+const parseListResponse = <T,>(payload: any): FirewallListResponse<T> => ({
+  data: Array.isArray(payload?.data) ? payload.data : [],
+  total: Number(payload?.total || 0),
+});
+
+const portContainsPanelPort = (ports: string, panelPort: number) => {
+  const normalized = String(ports || "").trim();
+  if (!normalized) return true;
+  return normalized.split(",").some((segment) => {
+    const token = segment.trim();
+    if (!token) return false;
+    if (/^\d+$/.test(token)) return Number(token) === panelPort;
+    const range = token.match(/^(\d+)\s*-\s*(\d+)$/);
+    if (!range) return false;
+    const start = Number(range[1]);
+    const end = Number(range[2]);
+    return start <= panelPort && panelPort <= end;
+  });
+};
+
+const buildUnifiedStatus = (
+  rawStatus: Partial<FirewallStatus>,
+  portSummary: FirewallListResponse<FirewallRule>,
+  ipSummary: FirewallListResponse<FirewallRule>,
+  regionSummary: FirewallListResponse<FirewallRule>,
+  forwardSummary: FirewallListResponse<PortForward>,
+) => {
+  const panelPort = Number(rawStatus.panelPort || 8089);
+  const portRows = portSummary.data || [];
+  const ipRows = ipSummary.data || [];
+  const regionRows = regionSummary.data || [];
+  const allRules = [...portRows, ...ipRows, ...regionRows];
+  const allBackends: FirewallStatus["backend"][] = [
+    rawStatus.backend,
+    rawStatus.runtimeBackend,
+    rawStatus.managedBackend,
+    ...allRules.map((row) => row.backend),
+    ...(forwardSummary.data || []).map((row) => row.backend),
+  ]
+    .map((item) => normalizeBackend(item));
+  const detectedBackend =
+    allBackends.find((item) => item !== "none") || "none";
+  const panelPortRules = portRows.filter(
+    (row) =>
+      row.direction === "in" &&
+      row.strategy === "allow" &&
+      row.state === 1 &&
+      portContainsPanelPort(row.ports, panelPort),
+  );
+  const protectedRules = allRules.filter((row) => row.protected);
+  const managedPanelRule = panelPortRules.some((row) => row.protected);
+  const hasSupportedRules =
+    detectedBackend !== "none" ||
+    allRules.length > 0 ||
+    (forwardSummary.total || 0) > 0 ||
+    protectedRules.length > 0;
+
+  return {
+    ...defaultStatus(),
+    ...rawStatus,
+    backend: normalizeBackend(rawStatus.backend) !== "none"
+      ? normalizeBackend(rawStatus.backend)
+      : detectedBackend,
+    runtimeBackend:
+      normalizeBackend(rawStatus.runtimeBackend) !== "none"
+        ? rawStatus.runtimeBackend
+        : detectedBackend !== "none"
+          ? detectedBackend
+          : rawStatus.runtimeBackend,
+    managedBackend:
+      normalizeBackend(rawStatus.managedBackend) !== "none"
+        ? rawStatus.managedBackend
+        : managedPanelRule && detectedBackend !== "none"
+          ? detectedBackend
+          : rawStatus.managedBackend,
+    install: Boolean(rawStatus.install || hasSupportedRules),
+    panelPort,
+    panelPortProtected: panelPortRules.length > 0,
+    managedPanelRule,
+    managedRuleCount: protectedRules.length,
+    counts: {
+      ...emptyCounts(),
+      ...(rawStatus.counts || {}),
+      portRules: portSummary.total || portRows.length,
+      ipRules: ipSummary.total || ipRows.length,
+      portForwards: forwardSummary.total || (forwardSummary.data || []).length,
+      regionRules: regionSummary.total || regionRows.length,
+      autoBlockRules: rawStatus.counts?.autoBlockRules || 0,
+    },
+  } satisfies FirewallStatus;
+};
+
 const status = ref<FirewallStatus>(defaultStatus());
 const activeTab = ref<RuleTab>("port");
 const ruleRows = ref<FirewallRule[]>([]);
@@ -197,6 +301,9 @@ const installButtonText = computed(() =>
     : status.value.repairRequired
       ? t("security.repairFirewalld", "修复 firewalld")
       : t("security.installFirewalld", "安装 firewalld"),
+);
+const showInstallCard = computed(
+  () => status.value.repairRequired || !status.value.install || status.value.backend === "none",
 );
 
 const portDialogVisible = ref(false);
@@ -471,6 +578,22 @@ const getFirewallInfo = async () => {
   }
 };
 
+const loadFirewallSummary = async () => {
+  const [portRes, ipRes, regionRes, forwardRes] = await Promise.allSettled([
+    Api.getFirewallRule({ page: 1, pageSize: 500, ruleType: "port", q: "" }),
+    Api.getFirewallRule({ page: 1, pageSize: 500, ruleType: "ip", q: "" }),
+    Api.getFirewallRule({ page: 1, pageSize: 500, ruleType: "region", q: "" }),
+    Api.getFirewallForwards({ page: 1, pageSize: 500, q: "" }),
+  ]);
+  status.value = buildUnifiedStatus(
+    status.value,
+    parseListResponse<FirewallRule>(portRes.status === "fulfilled" ? portRes.value?.data : undefined),
+    parseListResponse<FirewallRule>(ipRes.status === "fulfilled" ? ipRes.value?.data : undefined),
+    parseListResponse<FirewallRule>(regionRes.status === "fulfilled" ? regionRes.value?.data : undefined),
+    parseListResponse<PortForward>(forwardRes.status === "fulfilled" ? forwardRes.value?.data : undefined),
+  );
+};
+
 const getData = async () => {
   tableLoading.value = true;
   selectedRows.value = [];
@@ -503,7 +626,8 @@ const getData = async () => {
 };
 
 const refreshAll = async () => {
-  await Promise.all([getFirewallInfo(), getData()]);
+  await getFirewallInfo();
+  await Promise.all([loadFirewallSummary(), getData()]);
 };
 
 defineExpose({
@@ -1144,6 +1268,12 @@ onMounted(() => {
           <el-tag :type="status.install ? 'success' : 'danger'">
             {{ backendLabel(status.backend) }}
           </el-tag>
+          <el-tag :type="status.install ? 'success' : 'info'">
+            {{ status.install ? t('security.installed', '已安装') : t('security.notInstalled', '未安装') }}
+          </el-tag>
+          <el-tag :type="status.enabled ? 'success' : 'info'">
+            {{ status.enabled ? t('security.serviceActive', '运行中') : t('security.serviceInactive', '未运行') }}
+          </el-tag>
           <el-tag :type="status.panelPortProtected ? 'success' : 'warning'">
             {{
               status.panelPortProtected
@@ -1160,7 +1290,7 @@ onMounted(() => {
     </section>
 
     <section
-      v-if="!status.install || status.repairRequired"
+      v-if="showInstallCard"
       class="install-card"
     >
       <div class="install-mark">FW</div>
