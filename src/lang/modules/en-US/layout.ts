@@ -23,6 +23,9 @@ export default {
   taskDetailHint: 'Open the task to view details',
   menu: {
     dashboard: 'Home',
+    operations: 'Operations',
+    securityAudit: 'Security & audit',
+    systemPanel: 'System settings',
     website: 'Websites',
     database: 'Databases',
     monitoring: 'Monitoring',

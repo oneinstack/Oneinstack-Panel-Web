@@ -23,6 +23,9 @@ export default {
   taskDetailHint: '请打开任务查看详情',
   menu: {
     dashboard: '首页',
+    operations: '运维工具',
+    securityAudit: '安全与审计',
+    systemPanel: '系统设置',
     website: '网站',
     database: '数据库',
     monitoring: '监控告警',

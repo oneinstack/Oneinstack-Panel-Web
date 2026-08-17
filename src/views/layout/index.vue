@@ -28,6 +28,7 @@ interface NavItem {
   path: string
   icon: string
   activeColor: ItemColor
+  localeKey?: string
   children?: NavItem[]
   event?: () => void
   adminOnly?: boolean
@@ -37,6 +38,11 @@ interface NavItem {
 
 const route = useRoute()
 const router = useRouter()
+
+const navActiveColor: ItemColor = {
+  light: ['#eab170', '#8B8B8B'],
+  dark: ['#eab170', '#ffffff']
+}
 
 const conf = reactive({
   isCollapse: false,
@@ -49,201 +55,67 @@ const conf = reactive({
     {
       name: 'Home',
       path: '/home',
-      icon: 'home',
+      icon: 'menu-home',
       matrixKeys: ['dashboard'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      activeColor: navActiveColor
     },
     {
-      name: 'Websites',
-      path: '/website',
-      icon: 'website',
-      matrixKeys: ['website'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+      name: 'Websites', path: '/website', icon: 'menu-website', matrixKeys: ['website'], activeColor: navActiveColor
     },
     {
-      name: 'Databases',
-      path: '/database',
-      icon: 'database',
-      matrixKeys: ['database'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Databases', path: '/database', icon: 'menu-database', matrixKeys: ['database'], activeColor: navActiveColor
     },
     {
-      name: 'Monitoring',
-      path: '/monitor',
-      icon: 'monitor',
-      adminOnly: true,
-      matrixKeys: ['monitoring'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Software store', path: '/software', icon: 'menu-software', matrixKeys: ['software'], activeColor: navActiveColor
     },
     {
-      name: 'Bastion',
-      path: '/bastion',
-      icon: 'security',
-      matrixKeys: ['bastion'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Containers', path: '/container', icon: 'menu-container', matrixKeys: ['container'], activeColor: navActiveColor
     },
     {
-      name: 'Containers',
-      path: '/container',
-      icon: 'software',
-      matrixKeys: ['container'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+      name: 'Files', path: '/file', icon: 'menu-file', matrixKeys: ['file'], activeColor: navActiveColor
     },
     {
-      name: 'Security',
-      path: '/security',
-      icon: 'security',
-      matrixKeys: ['security'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Secure terminal', path: '/terminal', icon: 'menu-terminal', matrixKeys: ['terminal'], actionKeys: ['terminal.access'], activeColor: navActiveColor
     },
     {
-      name: 'Files',
-      path: '/file',
-      icon: 'file',
-      matrixKeys: ['file'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Scheduled tasks', path: '/task', icon: 'menu-task', matrixKeys: ['cron'], activeColor: navActiveColor
     },
     {
-      name: 'Audit logs',
-      path: '/log',
-      icon: 'log',
-      adminOnly: true,
-      matrixKeys: ['audit'],
-      activeColor: {
-        light: ['#eab170', '#8B8B8B'],
-        dark: ['#eab170', '#ffffff']
-      }
+      name: 'Operations',
+      path: 'group:operations',
+      icon: 'menu-operations',
+      localeKey: 'operations',
+      activeColor: navActiveColor,
+      children: [
+        { name: 'Monitoring', path: '/monitor', icon: 'menu-monitoring', adminOnly: true, matrixKeys: ['monitoring'], activeColor: navActiveColor },
+        { name: 'Bastion', path: '/bastion', icon: 'menu-bastion', matrixKeys: ['bastion'], activeColor: navActiveColor },
+        { name: 'Runtime logs', path: '/runtime-log', icon: 'menu-runtime-log', adminOnly: true, matrixKeys: ['runtimeLog'], activeColor: navActiveColor }
+      ]
     },
     {
-      name: 'Runtime logs',
-      path: '/runtime-log',
-      icon: 'log',
-      adminOnly: true,
-      matrixKeys: ['runtimeLog'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
+      name: 'Security and audit',
+      path: 'group:security',
+      icon: 'menu-security-center',
+      localeKey: 'securityAudit',
+      activeColor: navActiveColor,
+      children: [
+        { name: 'Security', path: '/security', icon: 'menu-security', matrixKeys: ['security'], activeColor: navActiveColor },
+        { name: 'Approval center', path: '/approval-center', icon: 'menu-approval', matrixKeys: ['approval'], activeColor: navActiveColor },
+        { name: 'Audit logs', path: '/log', icon: 'menu-audit', adminOnly: true, matrixKeys: ['audit'], activeColor: navActiveColor },
+        { name: 'Config snapshots', path: '/config-snapshots', icon: 'menu-snapshot', adminOnly: true, matrixKeys: ['configSnapshots'], actionKeys: ['config.snapshot.read'], activeColor: navActiveColor }
+      ]
     },
     {
-      name: 'Secure terminal',
-      path: '/terminal',
-      icon: 'terminal',
-      matrixKeys: ['terminal'],
-      actionKeys: ['terminal.access'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Scheduled tasks',
-      path: '/task',
-      icon: 'task',
-      matrixKeys: ['cron'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Software store',
-      path: '/software',
-      icon: 'software',
-      matrixKeys: ['software'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Panel settings',
-      path: '/setting',
-      icon: 'setting',
-      matrixKeys: ['panelSettings'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Config snapshots',
-      path: '/config-snapshots',
-      icon: 'log',
-      adminOnly: true,
-      matrixKeys: ['configSnapshots'],
-      actionKeys: ['config.snapshot.read'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'System management',
-      path: '/system-management',
-      icon: 'setting',
-      actionKeys: ['system.settings.read'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'User management',
-      path: '/user-management',
-      icon: 'user-management',
-      matrixKeys: ['userManagement'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Approval center',
-      path: '/approval-center',
-      icon: 'log',
-      matrixKeys: ['approval'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      }
-    },
-    {
-      name: 'Logout',
-      path: '',
-      icon: 'exit',
-      matrixKeys: ['logout'],
-      activeColor: {
-        light: ['#8B8B8B', '#eab170'],
-        dark: ['#ffffff', '#eab170']
-      },
-      event: async () => {
-        Beturn()
-      }
+      name: 'System settings',
+      path: 'group:system',
+      icon: 'menu-system',
+      localeKey: 'systemPanel',
+      activeColor: navActiveColor,
+      children: [
+        { name: 'System management', path: '/system-management', icon: 'menu-system-management', actionKeys: ['system.settings.read'], activeColor: navActiveColor },
+        { name: 'User management', path: '/user-management', icon: 'menu-user-management', matrixKeys: ['userManagement'], activeColor: navActiveColor },
+        { name: 'Panel settings', path: '/setting', icon: 'menu-panel-settings', matrixKeys: ['panelSettings'], activeColor: navActiveColor }
+      ]
     }
   ] as NavItem[]
 })
@@ -257,19 +129,30 @@ const hasMenuPermission = (item: NavItem) => {
   if (item.actionKeys?.some((key) => sconfig.hasActionAccess(key))) return true
   return !item.matrixKeys?.length && !item.actionKeys?.length
 }
-const visibleNavList = computed(() =>
-  conf.navList.filter((item) => {
-    if (item.adminOnly && !item.matrixKeys?.length && !isPrivilegedUser.value) {
-      return false
-    }
-    return hasMenuPermission(item)
-  })
+const filterVisibleNavItems = (items: NavItem[]): NavItem[] => items.flatMap((item) => {
+  if (item.children?.length) {
+    const children = filterVisibleNavItems(item.children)
+    return children.length ? [{ ...item, children }] : []
+  }
+  if (item.adminOnly && !item.matrixKeys?.length && !isPrivilegedUser.value) return []
+  return hasMenuPermission(item) ? [item] : []
+})
+const visibleNavList = computed(() => filterVisibleNavItems(conf.navList))
+const navigableNavItems = computed(() =>
+  visibleNavList.value.flatMap((item) => item.children?.length ? item.children : [item])
 )
 const currentNav = computed(() => {
-  const matched = visibleNavList.value.find(item => item.path && route.path.startsWith(item.path))
-  return matched ?? visibleNavList.value[0]
+  const matched = navigableNavItems.value
+    .filter((item) => item.path.startsWith('/') && route.path.startsWith(item.path))
+    .sort((left, right) => right.path.length - left.path.length)[0]
+  return matched ?? navigableNavItems.value[0]
 })
 const activeMenuIndex = computed(() => currentNav.value?.path || '')
+const isNavItemActive = (item: NavItem): boolean =>
+  item.children?.some(isNavItemActive) || (item.path.startsWith('/') && route.path.startsWith(item.path))
+const activeGroupIndexes = computed(() =>
+  visibleNavList.value.filter((item) => item.children?.length && isNavItemActive(item)).map((item) => item.path)
+)
 const navigateNavItem = (item: NavItem) => {
   if (item.path && route.path !== item.path) {
     router.push(item.path)
@@ -302,6 +185,7 @@ const translateWithFallback = (key: string, fallback: string, params?: Record<st
 }
 const getMenuLocaleKey = (item?: NavItem) => {
   if (!item) return ''
+  if (item.localeKey) return item.localeKey
   if (!item.path) return item.matrixKeys?.[0] || 'logout'
   return menuPathLocaleKey[item.path] || item.matrixKeys?.[0] || ''
 }
@@ -531,20 +415,26 @@ const BindButton = () => {
       <aside class="layout-container__body-left" :class="{ collapsed: conf.isCollapse }">
         <div class="navigation-label" v-show="!conf.isCollapse">{{ $t('layout.navigation') }}</div>
         <el-scrollbar class="nav-scrollbar">
-          <el-menu :collapse="conf.isCollapse" :default-active="activeMenuIndex">
+          <el-menu
+            :collapse="conf.isCollapse"
+            :default-active="activeMenuIndex"
+            :default-openeds="activeGroupIndexes"
+            :unique-opened="true"
+          >
             <template v-for="item in visibleNavList" :key="item.path || item.name">
-              <el-sub-menu v-if="item.children" :index="item.path" :popper-offset="-110">
+              <el-sub-menu v-if="item.children?.length" :index="item.path" :popper-offset="-110">
                 <template #title>
                   <v-s-icon
                     :name="item.icon"
                     :color="
-                      item.path && route.path.includes(item.path)
+                      isNavItemActive(item)
                         ? item.activeColor[sapp.theme]
                         : conf.defaultColor[sapp.theme]
                     "
                     size="22"
                   />
                   <span class="menu-item-name">{{ getMenuName(item) }}</span>
+                  <span class="menu-expand-arrow" aria-hidden="true"></span>
                 </template>
                 <el-menu-item
                   v-for="child in item.children"
@@ -555,7 +445,7 @@ const BindButton = () => {
                   <v-s-icon
                     :name="child.icon"
                     :color="
-                      child.path && route.path.includes(child.path)
+                      isNavItemActive(child)
                         ? child.activeColor[sapp.theme]
                         : conf.defaultColor[sapp.theme]
                     "
@@ -568,7 +458,7 @@ const BindButton = () => {
                 <v-s-icon
                   :name="item.icon"
                   :color="
-                    item.path && route.path.includes(item.path)
+                    isNavItemActive(item)
                       ? item.activeColor[sapp.theme]
                       : conf.defaultColor[sapp.theme]
                   "
@@ -928,6 +818,53 @@ const BindButton = () => {
           font-weight: 650;
         }
       }
+    }
+
+    :deep(.el-sub-menu__title) {
+      padding-right: 42px !important;
+
+      .menu-item-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .el-sub-menu__icon-arrow {
+        display: none !important;
+      }
+    }
+
+    .menu-expand-arrow {
+      position: absolute;
+      top: 50%;
+      right: 15px;
+      width: 7px;
+      height: 7px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      pointer-events: none;
+      transform: translateY(-70%) rotate(45deg);
+      transition: transform 0.2s ease;
+    }
+
+    :deep(.el-sub-menu.is-opened > .el-sub-menu__title) .menu-expand-arrow {
+      transform: translateY(-30%) rotate(225deg);
+    }
+
+    :deep(.el-sub-menu > .el-menu) {
+      width: calc(100% - 18px);
+      margin: 2px 0 8px 18px;
+      padding: 4px 0 3px 10px;
+      border-left: 1px solid var(--border-subtle);
+    }
+
+    :deep(.el-sub-menu > .el-menu > .el-menu-item) {
+      width: calc(100% - 4px);
+      height: 42px;
+      margin-bottom: 2px;
+      padding: 0 10px !important;
+      border-radius: 9px;
     }
 
     &.el-menu--collapse {
