@@ -3,6 +3,9 @@ import { reactive, ref } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
 import { watchEffect } from 'vue'
 import PortDialog from './port-dialog.vue'
+import i18n from '@/lang'
+
+const t = i18n.t as any
 
 interface Props {
   isCard?: boolean
@@ -217,7 +220,7 @@ watchEffect(() => {
 <template>
   <div class="basic-card" :class="{ isCard }">
     <div class="basic-card__header">
-      <div class="basic-card__title">安全设置</div>
+      <div class="basic-card__title">{{ t('setting.tabs.security') }}</div>
     </div>
     <div class="basic-card__body">
       <setting-form :data="conf.settingData" />

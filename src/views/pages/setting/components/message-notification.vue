@@ -1,30 +1,34 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import { Refresh } from '@element-plus/icons-vue'
+import i18n from '@/lang'
+import { computed } from 'vue'
 
-const column: ColumnItem[] = [
+const t = i18n.t as any
+
+const column = computed<ColumnItem[]>(() => [
   {
-    label: '标题内容',
+    label: t('setting.messagePage.title'),
     prop: '',
     width: 200
   },
   {
-    label: '提交时间',
+    label: t('setting.messagePage.submittedAt'),
     prop: ''
   },
   {
-    label: '类型',
+    label: t('setting.messagePage.type'),
     prop: ''
   }
-]
+])
 </script>
 
 <template>
   <div>
     <div class="flex justify-between">
       <div class="flex">
-        <div class="btnItem mr-2">全部已读</div>
-        <div class="btnItem mr-2">全部删除</div>
+        <div class="btnItem mr-2">{{ t('setting.messagePage.markAllRead') }}</div>
+        <div class="btnItem mr-2">{{ t('setting.messagePage.deleteAll') }}</div>
       </div>
       <div>
         <el-button :icon="Refresh" />
@@ -35,7 +39,7 @@ const column: ColumnItem[] = [
         <template #empty>
           <div class="flex column justify-between items-center" style="margin-top: 26px">
             <img src="/static/images/empty.webp" alt="" />
-            <span style="color: var(--font-color-gray-light)">暂无任务，点击添加任务开始操作吧</span>
+            <span style="color: var(--font-color-gray-light)">{{ t('setting.messagePage.empty') }}</span>
           </div>
         </template>
       </custom-table>

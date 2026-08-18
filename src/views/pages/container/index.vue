@@ -803,7 +803,7 @@ const loadRuntime = async () => {
     const { data } = await Api.getContainerRuntime();
     runtime.value = data || {
       available: false,
-      message: "未获取到 Docker 运行时信息",
+      message: t("container.runtimeInfoUnavailable"),
     };
   } finally {
     runtimeLoading.value = false;
@@ -975,7 +975,9 @@ const parseStringList = (value: string, fieldLabel: string) => {
     } catch {
       // fall through to validation error below
     }
-    throw new Error(`${fieldLabel} 请输入 JSON 字符串数组，或每行一个参数`);
+    throw new Error(
+      t("container.validation.stringList", undefined, { field: fieldLabel }),
+    );
   }
   return splitTokens(value);
 };
@@ -997,13 +999,22 @@ const parseKeyValueMap = (value: string, fieldLabel: string) => {
     } catch {
       // fall through to validation error below
     }
-    throw new Error(`${fieldLabel} 请输入 JSON 对象，或每行一个 key=value`);
+    throw new Error(
+      t("container.validation.keyValueObject", undefined, {
+        field: fieldLabel,
+      }),
+    );
   }
 
   const result: Record<string, string> = {};
   splitTokens(value).forEach((line) => {
     const equalIndex = line.indexOf("=");
-    if (equalIndex <= 0) throw new Error(`${fieldLabel} 格式应为 key=value`);
+    if (equalIndex <= 0)
+      throw new Error(
+        t("container.validation.keyValueFormat", undefined, {
+          field: fieldLabel,
+        }),
+      );
     result[line.slice(0, equalIndex).trim()] = line
       .slice(equalIndex + 1)
       .trim();
@@ -1015,12 +1026,16 @@ const expandPortRange = (value: string, fieldLabel: string) => {
   const text = value.trim();
   if (!text) return [];
   if (!/^\d+(-\d+)?$/.test(text))
-    throw new Error(`${fieldLabel} 端口格式应为 80 或 80-88`);
+    throw new Error(
+      t("container.validation.portFormat", undefined, { field: fieldLabel }),
+    );
   const [startText, endText] = text.split("-");
   const start = Number(startText);
   const end = endText ? Number(endText) : start;
   if (start < 1 || end > 65535 || start > end)
-    throw new Error(`${fieldLabel} 端口范围应在 1-65535 之间`);
+    throw new Error(
+      t("container.validation.portRange", undefined, { field: fieldLabel }),
+    );
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
 };
 
@@ -1033,10 +1048,16 @@ const parseHostPortInput = (value: string) => {
     const hostIp = text.slice(0, colonIndex).trim();
     const portText = text.slice(colonIndex + 1).trim();
     if (!hostIp || !portText)
-      throw new Error("服务器端口格式应为 80、80-88、IP:80 或 IP:80-88");
-    return { hostIp, ports: expandPortRange(portText, "服务器") };
+      throw new Error(t("container.validation.hostPortFormat"));
+    return {
+      hostIp,
+      ports: expandPortRange(portText, t("container.validation.server")),
+    };
   }
-  return { hostIp: undefined, ports: expandPortRange(text, "服务器") };
+  return {
+    hostIp: undefined,
+    ports: expandPortRange(text, t("container.validation.server")),
+  };
 };
 
 const buildPorts = () => {
@@ -1047,11 +1068,14 @@ const buildPorts = () => {
   if (!rows.length) return undefined;
   return rows.flatMap((item) => {
     if (!item.host.trim() || !item.container.trim())
-      throw new Error("端口映射请同时填写服务器端口和容器端口");
+      throw new Error(t("container.validation.portPairRequired"));
     const { hostIp, ports: hostPorts } = parseHostPortInput(item.host);
-    const containerPorts = expandPortRange(item.container, "容器");
+    const containerPorts = expandPortRange(
+      item.container,
+      t("container.validation.container"),
+    );
     if (hostPorts.length !== containerPorts.length)
-      throw new Error("服务器端口范围和容器端口范围数量需要一致");
+      throw new Error(t("container.validation.portRangeMismatch"));
     return hostPorts.map((hostPort, index) => ({
       hostPort,
       containerPort: containerPorts[index],
@@ -1071,7 +1095,7 @@ const buildMounts = () => {
     .filter((item) => item.source || item.target);
   rows.forEach((item) => {
     if (!item.source || !item.target)
-      throw new Error("挂载请同时填写来源和容器目录");
+      throw new Error(t("container.validation.mountPairRequired"));
   });
   if (!rows.length) return undefined;
   return rows.map((item) => ({
@@ -1114,7 +1138,10 @@ const buildContainerPayload = () => {
     ipv4: form.ipv4.trim() || undefined,
     ipv6: form.ipv6.trim() || undefined,
     mounts: buildMounts(),
-    command: parseStringList(form.commandText, "命令"),
+    command: parseStringList(
+      form.commandText,
+      t("container.validation.command"),
+    ),
     entrypoint: parseStringList(form.entrypointText, "EntryPoint") || [],
     autoRemove: form.autoRemove,
     privileged: form.privileged,
@@ -1125,7 +1152,10 @@ const buildContainerPayload = () => {
     cpuLimit: form.cpuLimit,
     memoryLimitMB: form.memoryLimitMB,
     labels: parseKeyValueMap(form.labelsText, "Labels"),
-    environment: parseKeyValueMap(form.environmentText, "环境变量"),
+    environment: parseKeyValueMap(
+      form.environmentText,
+      t("container.validation.environment"),
+    ),
   };
   return Object.fromEntries(
     Object.entries(payload).filter(([, value]) => {
@@ -1138,46 +1168,62 @@ const buildContainerPayload = () => {
 const confirmContainerCreate = async (
   payload: Parameters<typeof Api.createContainer>[0],
 ) => {
+  const noneLabel = t("container.confirmations.none");
+  const highRiskLabel = t("container.confirmations.highRiskOptions");
   const previewRows = [
-    ["容器名称", payload.name],
-    ["镜像", payload.image],
+    [t("container.confirmations.containerName"), payload.name],
+    [t("container.columns.image"), payload.image],
     [
-      "端口映射",
+      t("container.confirmations.portMapping"),
       form.portPublishMode === "all"
-        ? "暴露所有"
+        ? t("container.confirmations.exposeAll")
         : payload.ports
             ?.map(
               (item) =>
                 `${item.hostIp ? `${item.hostIp}:` : ""}${item.hostPort}:${item.containerPort}/${item.protocol || "tcp"}`,
             )
-            .join("，") || "无",
+            .join(", ") || noneLabel,
     ],
-    ["网络", payload.networks?.join("，") || "默认 Docker 网络"],
     [
-      "挂载",
+      t("container.columns.networks"),
+      payload.networks?.join(", ") ||
+        t("container.confirmations.defaultNetwork"),
+    ],
+    [
+      t("container.columns.mounts"),
       payload.mounts
         ?.map(
           (item) =>
             `${item.source}:${item.target}${item.readOnly ? ":ro" : ""}`,
         )
-        .join("，") || "无",
-    ],
-    ["重启策略", payload.restart || "默认"],
-    [
-      "退出后自动删除",
-      payload.autoRemove ? "已启用，创建完成后立即启动" : "未启用",
+        .join(", ") || noneLabel,
     ],
     [
-      "资源限制",
-      `CPU ${payload.cpuLimit ?? "不限制"} / 内存 ${payload.memoryLimitMB ?? "不限制"} MB`,
+      t("container.confirmations.restartPolicy"),
+      payload.restart || t("container.confirmations.defaultValue"),
     ],
-    ["高风险选项", payload.privileged ? "特权模式" : "无"],
+    [
+      t("container.confirmations.autoRemove"),
+      payload.autoRemove
+        ? t("container.confirmations.autoRemoveEnabled")
+        : t("container.disabled"),
+    ],
+    [
+      t("container.confirmations.resourceLimits"),
+      `CPU ${payload.cpuLimit ?? t("container.confirmations.unlimited")} / ${t("container.resourceDetail.memory")} ${payload.memoryLimitMB ?? t("container.confirmations.unlimited")} MB`,
+    ],
+    [
+      highRiskLabel,
+      payload.privileged
+        ? t("container.confirmations.privileged")
+        : noneLabel,
+    ],
   ];
   const message = h("div", { class: "container-create-preview" }, [
     h(
       "div",
       { class: "container-create-preview__notice" },
-      "该操作会创建 Docker 容器，可能拉取镜像并占用网络和磁盘空间。",
+      t("container.confirmations.createNotice"),
     ),
     h(
       "div",
@@ -1190,7 +1236,7 @@ const confirmContainerCreate = async (
             {
               class: [
                 "container-create-preview__value",
-                label === "高风险选项" && value !== "无" ? "is-danger" : "",
+                label === highRiskLabel && value !== noneLabel ? "is-danger" : "",
               ],
             },
             value,
@@ -1199,31 +1245,36 @@ const confirmContainerCreate = async (
       ),
     ),
   ]);
-  await ElMessageBox.confirm(message, "创建容器操作预览", {
+  await ElMessageBox.confirm(
+    message,
+    t("container.confirmations.containerCreateTitle"),
+    {
     type: payload.privileged ? "warning" : "info",
-    confirmButtonText: "确认创建",
-    cancelButtonText: "取消",
-  });
+      confirmButtonText: t("container.confirmations.confirmCreate"),
+      cancelButtonText: t("common.cancel"),
+    },
+  );
 };
 
 const buildImagePullPayload = () => {
   if (imageActionForm.pullMode === "registry") {
     if (!imageActionForm.registryId || !imageActionForm.imageName.trim()) {
-      throw new Error("请选择 Registry 并填写仓库内镜像名");
+      throw new Error(t("container.validation.registryImageRequired"));
     }
     return {
       registryId: Number(imageActionForm.registryId),
       imageName: imageActionForm.imageName.trim(),
     };
   }
-  if (!imageActionForm.reference.trim()) throw new Error("请输入完整镜像引用");
+  if (!imageActionForm.reference.trim())
+    throw new Error(t("container.validation.imageReferenceRequired"));
   return { reference: imageActionForm.reference.trim() };
 };
 
 const buildImagePushPayload = () => {
   if (imageActionForm.pushMode === "registry") {
     if (!imageActionForm.registryId || !imageActionForm.pushImageName.trim()) {
-      throw new Error("请选择 Registry 并填写仓库内镜像名");
+      throw new Error(t("container.validation.registryImageRequired"));
     }
     return {
       registryId: Number(imageActionForm.registryId),
@@ -1231,16 +1282,16 @@ const buildImagePushPayload = () => {
     };
   }
   if (!imageActionForm.pushReference.trim())
-    throw new Error("请输入完整镜像引用");
+    throw new Error(t("container.validation.imageReferenceRequired"));
   return { reference: imageActionForm.pushReference.trim() };
 };
 
 const buildImageBuildPayload = () => {
   if (!imageActionForm.buildName.trim())
-    throw new Error("请输入目标镜像名称和 Tag");
+    throw new Error(t("container.validation.buildNameRequired"));
   if (imageActionForm.buildMode === "path") {
     if (!imageActionForm.contextPath.trim())
-      throw new Error("请输入构建上下文目录");
+      throw new Error(t("container.validation.contextPathRequired"));
     return {
       name: imageActionForm.buildName.trim(),
       contextPath: imageActionForm.contextPath.trim(),
@@ -1249,7 +1300,7 @@ const buildImageBuildPayload = () => {
     };
   }
   if (!imageActionForm.dockerfile.trim())
-    throw new Error("请输入 Dockerfile 内容");
+    throw new Error(t("container.validation.dockerfileRequired"));
   return {
     name: imageActionForm.buildName.trim(),
     dockerfile: imageActionForm.dockerfile,
@@ -1266,7 +1317,7 @@ const buildNetworkPayload = () => ({
   ipv4IpRange: form.networkIpv4IpRange.trim() || undefined,
   ipv4AuxAddresses: parseKeyValueMap(
     form.networkIpv4AuxAddressesText,
-    "IPv4 保留地址",
+    t("container.validation.ipv4Reserved"),
   ),
   ipv6: form.networkIpv6 || undefined,
   ipv6Subnet: form.networkIpv6Subnet.trim() || undefined,
@@ -1274,7 +1325,7 @@ const buildNetworkPayload = () => ({
   ipv6IpRange: form.networkIpv6IpRange.trim() || undefined,
   ipv6AuxAddresses: parseKeyValueMap(
     form.networkIpv6AuxAddressesText,
-    "IPv6 保留地址",
+    t("container.validation.ipv6Reserved"),
   ),
   optionsText: form.optionsText.trim() || undefined,
   labelsText: form.labelsText.trim() || undefined,
@@ -1297,7 +1348,7 @@ const openContainerTask = (
 ) => {
   const data = extractTaskResult(result);
   const taskId = data?.taskId || data?.id;
-  if (!taskId) throw new Error("后端未返回任务 ID");
+  if (!taskId) throw new Error(t("container.validation.taskIdMissing"));
   containerTaskStore.acceptCreated(data, request);
   taskDrawer.show = true;
   dialogVisible.value = false;
@@ -1343,19 +1394,20 @@ const submitDialog = async () => {
       ElMessage.success(t("container.notifications.imagePullTaskCreated"));
     }
     if (dialogType.value === "image-import") {
-      if (!importFile.value) throw new Error("请选择 tar 镜像文件");
+      if (!importFile.value)
+        throw new Error(t("container.validation.tarFileRequired"));
       await Api.importContainerImage(importFile.value);
       ElMessage.success(t("container.notifications.imageImportSuccess"));
       activeTab.value = "images";
     }
     if (dialogType.value === "image-build") {
       await ElMessageBox.confirm(
-        "构建镜像会读取构建上下文并占用 CPU、磁盘空间；失败后不会修改现有镜像标签。",
-        "构建镜像操作预览",
+        t("container.confirmations.buildNotice"),
+        t("container.confirmations.buildTitle"),
         {
           type: "warning",
-          confirmButtonText: "确认构建",
-          cancelButtonText: "取消",
+          confirmButtonText: t("container.confirmations.confirmBuild"),
+          cancelButtonText: t("common.cancel"),
         },
       );
       const payload = buildImageBuildPayload();
@@ -1368,8 +1420,10 @@ const submitDialog = async () => {
       ElMessage.success(t("container.notifications.imageBuildTaskCreated"));
     }
     if (dialogType.value === "image-tag") {
-      if (!dialogTarget.value?.ID) throw new Error("未选择镜像");
-      if (!imageActionForm.tagReference.trim()) throw new Error("请输入新标签");
+      if (!dialogTarget.value?.ID)
+        throw new Error(t("container.validation.imageRequired"));
+      if (!imageActionForm.tagReference.trim())
+        throw new Error(t("container.validation.newTagRequired"));
       await Api.tagContainerImage(dialogTarget.value.ID, {
         reference: imageActionForm.tagReference.trim(),
         removeOther: imageActionForm.removeOther,
@@ -1380,12 +1434,12 @@ const submitDialog = async () => {
     }
     if (dialogType.value === "image-push") {
       await ElMessageBox.confirm(
-        "推送镜像会向远端 Registry 上传镜像层，请确认 Registry 与镜像名正确。",
-        "推送镜像操作预览",
+        t("container.confirmations.pushNotice"),
+        t("container.confirmations.pushTitle"),
         {
           type: "info",
-          confirmButtonText: "确认推送",
-          cancelButtonText: "取消",
+          confirmButtonText: t("container.confirmations.confirmPush"),
+          cancelButtonText: t("common.cancel"),
         },
       );
       await Api.pushContainerImage(buildImagePushPayload());
@@ -1404,7 +1458,7 @@ const submitDialog = async () => {
     }
     if (dialogType.value === "registry") {
       if (!registryForm.name.trim() || !registryForm.address.trim())
-        throw new Error("请填写 Registry 名称和地址");
+        throw new Error(t("container.validation.registryRequired"));
       const payload = {
         name: registryForm.name.trim(),
         address: registryForm.address.trim(),
@@ -1426,7 +1480,7 @@ const submitDialog = async () => {
     }
     if (dialogType.value === "template") {
       if (!templateForm.name.trim() || !templateForm.content.trim())
-        throw new Error("请填写模板名称和 YAML 内容");
+        throw new Error(t("container.validation.templateRequired"));
       const payload = {
         name: templateForm.name.trim(),
         description: templateForm.description.trim() || undefined,
@@ -1473,12 +1527,20 @@ const runContainerAction = async (
   };
   const dangerous = ["kill", "rm"].includes(action);
   await ElMessageBox.confirm(
-    `${actionLabels[action]}容器 ${row.Names || shortId(row.ID)}？${dangerous ? "该操作会改变容器运行状态，请确认后继续。" : ""}`,
-    `${actionLabels[action]}容器`,
+    t("container.confirmations.containerActionMessage", undefined, {
+      action: actionLabels[action],
+      name: row.Names || shortId(row.ID),
+      warning: dangerous
+        ? t("container.confirmations.containerActionWarning")
+        : "",
+    }),
+    t("container.confirmations.containerActionTitle", undefined, {
+      action: actionLabels[action],
+    }),
     {
       type: dangerous ? "warning" : "info",
       confirmButtonText: actionLabels[action],
-      cancelButtonText: "取消",
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = `${row.ID}:${action}`;
@@ -1510,7 +1572,10 @@ const showBatchResult = async (data: any, fallbackMessage: string) => {
   const message = h("div", { class: "batch-result" }, [
     h(
       "p",
-      `完成 ${items.length - failed.length} 项，失败 ${failed.length} 项。`,
+      t("container.confirmations.batchSummary", undefined, {
+        success: items.length - failed.length,
+        failed: failed.length,
+      }),
     ),
     h(
       "pre",
@@ -1521,36 +1586,50 @@ const showBatchResult = async (data: any, fallbackMessage: string) => {
             item.error?.detail ||
             item.error?.message ||
             item.message ||
-            "操作失败";
+            t("common.operationFailed");
           return `${id}: ${error}`;
         })
         .join("\n"),
     ),
   ]);
-  await ElMessageBox.alert(message, "批量操作结果", {
-    confirmButtonText: "知道了",
-  });
+  await ElMessageBox.alert(
+    message,
+    t("container.confirmations.batchResultTitle"),
+    {
+    confirmButtonText: t("container.confirmations.understood"),
+    },
+  );
 };
 
 const runBatchContainerAction = async (action: ContainerAction) => {
   if (!selectedContainers.value.length) return;
   const actionLabels: Record<ContainerAction, string> = {
-    start: "启动",
-    stop: "停止",
-    restart: "重启",
-    pause: "暂停",
-    unpause: "恢复",
-    kill: "强制停止",
-    rm: "删除",
+    start: t("container.start"),
+    stop: t("container.stop"),
+    restart: t("container.restart"),
+    pause: t("container.pause"),
+    unpause: t("container.resume"),
+    kill: t("container.forceStop"),
+    rm: t("container.delete"),
   };
   const dangerous = ["kill", "rm"].includes(action);
   await ElMessageBox.confirm(
-    `${actionLabels[action]}选中的 ${selectedContainers.value.length} 个容器？${dangerous ? "该操作风险较高，请确认后继续。" : ""}`,
-    `批量${actionLabels[action]}`,
+    t("container.confirmations.batchActionMessage", undefined, {
+      action: actionLabels[action],
+      count: selectedContainers.value.length,
+      warning: dangerous ? t("container.confirmations.batchRiskWarning") : "",
+    }),
+    t("container.confirmations.batchActionTitle", undefined, {
+      action: actionLabels[action],
+    }),
     {
       type: dangerous ? "warning" : "info",
-      confirmButtonText: `批量${actionLabels[action]}`,
-      cancelButtonText: "取消",
+      confirmButtonText: t(
+        "container.confirmations.batchActionTitle",
+        undefined,
+        { action: actionLabels[action] },
+      ),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = `batch:${action}`;
@@ -1561,7 +1640,12 @@ const runBatchContainerAction = async (action: ContainerAction) => {
       confirm: dangerous,
       force: action === "kill" || (action === "rm" && canForceAction.value),
     });
-    await showBatchResult(data, `批量${actionLabels[action]}完成`);
+    await showBatchResult(
+      data,
+      t("container.confirmations.batchActionCompleted", undefined, {
+        action: actionLabels[action],
+      }),
+    );
     loadedTabs.containers = false;
     await loadActiveTab(true);
   } finally {
@@ -1571,12 +1655,12 @@ const runBatchContainerAction = async (action: ContainerAction) => {
 
 const cleanupStoppedContainers = async () => {
   await ElMessageBox.confirm(
-    "清理已停止容器会删除退出状态的容器实例，但不会删除镜像和存储卷。",
-    "清理已停止容器",
+    t("container.confirmations.cleanupStoppedNotice"),
+    t("container.cleanupStopped"),
     {
       type: "warning",
-      confirmButtonText: "确认清理",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.confirmations.confirmCleanup"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "cleanup:containers";
@@ -1733,12 +1817,14 @@ const handleDetailClose = () => {
 
 const deleteImage = async (row: ImageItem) => {
   await ElMessageBox.confirm(
-    `删除镜像 ${imageReference(row)}？该操作不可撤销。`,
-    "删除镜像",
+    t("container.confirmations.deleteImageMessage", undefined, {
+      name: imageReference(row),
+    }),
+    t("container.confirmations.deleteImageTitle"),
     {
       type: "warning",
-      confirmButtonText: "删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("common.delete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = row.ID;
@@ -1754,12 +1840,14 @@ const deleteImage = async (row: ImageItem) => {
 
 const deleteNetwork = async (row: NetworkItem) => {
   await ElMessageBox.confirm(
-    `删除网络 ${row.Name}？正在使用中的网络会被后端拦截。`,
-    "删除网络",
+    t("container.confirmations.deleteNetworkMessage", undefined, {
+      name: row.Name,
+    }),
+    t("container.confirmations.deleteNetworkTitle"),
     {
       type: "warning",
-      confirmButtonText: "删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("common.delete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = row.ID;
@@ -1775,12 +1863,14 @@ const deleteNetwork = async (row: NetworkItem) => {
 
 const deleteVolume = async (row: VolumeItem) => {
   await ElMessageBox.confirm(
-    `删除存储卷 ${row.Name}？卷数据删除后无法恢复。`,
-    "删除存储卷",
+    t("container.confirmations.deleteVolumeMessage", undefined, {
+      name: row.Name,
+    }),
+    t("container.confirmations.deleteVolumeTitle"),
     {
       type: "warning",
-      confirmButtonText: "删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("common.delete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = row.Name;
@@ -1797,12 +1887,14 @@ const deleteVolume = async (row: VolumeItem) => {
 const batchDeleteNetworks = async () => {
   if (!selectedNetworks.value.length) return;
   await ElMessageBox.confirm(
-    `删除选中的 ${selectedNetworks.value.length} 个网络？系统网络或使用中的网络会被后端拦截。`,
-    "批量删除网络",
+    t("container.confirmations.batchDeleteNetworkMessage", undefined, {
+      count: selectedNetworks.value.length,
+    }),
+    t("container.confirmations.batchDeleteNetworkTitle"),
     {
       type: "warning",
-      confirmButtonText: "批量删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.batchDelete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "batch:networks";
@@ -1810,7 +1902,10 @@ const batchDeleteNetworks = async () => {
     const { data } = await Api.batchDeleteContainerNetworks(
       selectedNetworks.value.map((item) => item.ID || item.Name),
     );
-    await showBatchResult(data, "网络批量删除完成");
+    await showBatchResult(
+      data,
+      t("container.confirmations.networkBatchDeleted"),
+    );
     loadedTabs.networks = false;
     await loadActiveTab(true);
   } finally {
@@ -1821,12 +1916,14 @@ const batchDeleteNetworks = async () => {
 const batchDeleteVolumes = async () => {
   if (!selectedVolumes.value.length) return;
   await ElMessageBox.confirm(
-    `删除选中的 ${selectedVolumes.value.length} 个存储卷？卷数据删除后无法恢复。`,
-    "批量删除存储卷",
+    t("container.confirmations.batchDeleteVolumeMessage", undefined, {
+      count: selectedVolumes.value.length,
+    }),
+    t("container.confirmations.batchDeleteVolumeTitle"),
     {
       type: "warning",
-      confirmButtonText: "批量删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.batchDelete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "batch:volumes";
@@ -1834,7 +1931,10 @@ const batchDeleteVolumes = async () => {
     const { data } = await Api.batchDeleteContainerVolumes(
       selectedVolumes.value.map((item) => item.Name),
     );
-    await showBatchResult(data, "存储卷批量删除完成");
+    await showBatchResult(
+      data,
+      t("container.confirmations.volumeBatchDeleted"),
+    );
     loadedTabs.volumes = false;
     await loadActiveTab(true);
   } finally {
@@ -1844,12 +1944,12 @@ const batchDeleteVolumes = async () => {
 
 const pruneNetworks = async () => {
   await ElMessageBox.confirm(
-    "清理无用网络会删除未被容器使用的自定义网络，系统网络会被后端保留。",
-    "清理无用网络",
+    t("container.confirmations.cleanupNetworkNotice"),
+    t("container.cleanupUnusedNetworks"),
     {
       type: "warning",
-      confirmButtonText: "确认清理",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.confirmations.confirmCleanup"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "prune:networks";
@@ -1865,12 +1965,12 @@ const pruneNetworks = async () => {
 
 const pruneVolumes = async () => {
   await ElMessageBox.confirm(
-    "清理无用存储卷会删除未被容器使用的卷数据，该操作不可恢复。",
-    "清理无用存储卷",
+    t("container.confirmations.cleanupVolumeNotice"),
+    t("container.cleanupUnusedVolumes"),
     {
       type: "warning",
-      confirmButtonText: "确认清理",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.confirmations.confirmCleanup"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "prune:volumes";
@@ -1919,12 +2019,12 @@ const pruneImages = async (type: "images" | "build-cache") => {
       ? t("container.cleanupImages")
       : t("container.cleanupBuildCache");
   await ElMessageBox.confirm(
-    `${label} 会释放 Docker 磁盘空间，但可能影响后续构建或镜像复用；失败时不会删除已使用资源。`,
-    `${label}操作预览`,
+    t("container.confirmations.pruneNotice", undefined, { action: label }),
+    t("container.confirmations.previewTitle", undefined, { action: label }),
     {
       type: "warning",
       confirmButtonText: label,
-      cancelButtonText: "取消",
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = `prune:${type}`;
@@ -1945,12 +2045,14 @@ const pruneImages = async (type: "images" | "build-cache") => {
 
 const deleteRegistry = async (row: RegistryItem) => {
   await ElMessageBox.confirm(
-    `删除 Registry ${row.name}？已保存的密码凭据也会移除。`,
-    "删除 Registry",
+    t("container.confirmations.deleteRegistryMessage", undefined, {
+      name: row.name,
+    }),
+    t("container.confirmations.deleteRegistryTitle"),
     {
       type: "warning",
-      confirmButtonText: "删除",
-      cancelButtonText: "取消",
+      confirmButtonText: t("common.delete"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = `registry:${row.id}`;
@@ -1978,11 +2080,17 @@ const testRegistry = async (row: RegistryItem) => {
 
 const deleteTemplate = async (row: TemplateItem) => {
   if (!row.id) return;
-  await ElMessageBox.confirm(`删除编排模板 ${row.name}？`, "删除模板", {
+  await ElMessageBox.confirm(
+    t("container.confirmations.deleteTemplateMessage", undefined, {
+      name: row.name,
+    }),
+    t("container.confirmations.deleteTemplateTitle"),
+    {
     type: "warning",
-    confirmButtonText: "删除",
-    cancelButtonText: "取消",
-  });
+      confirmButtonText: t("common.delete"),
+      cancelButtonText: t("common.cancel"),
+    },
+  );
   actionLoading.value = `template:${row.id}`;
   try {
     await Api.deleteContainerTemplate(row.id);
@@ -2007,12 +2115,14 @@ const saveDockerConfig = async () => {
     return;
   }
   await ElMessageBox.confirm(
-    `将写入 Docker daemon 配置文件 ${dockerConfig.value?.configPath || "daemon.json"}。该操作不会自动重启 Docker；如需生效请再手动重启服务。失败时后端会保留原配置。`,
-    "保存 Docker 配置操作预览",
+    t("container.confirmations.saveConfigNotice", undefined, {
+      path: dockerConfig.value?.configPath || "daemon.json",
+    }),
+    t("container.confirmations.saveConfigTitle"),
     {
       type: "warning",
-      confirmButtonText: "确认保存",
-      cancelButtonText: "取消",
+      confirmButtonText: t("container.confirmations.confirmSave"),
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = "config:save";
@@ -2027,14 +2137,19 @@ const saveDockerConfig = async () => {
 };
 
 const runRuntimeAction = async (action: "stop" | "restart") => {
-  const label = action === "restart" ? "重启 Docker 服务" : "停止 Docker 服务";
+  const label =
+    action === "restart"
+      ? t("container.confirmations.restartService")
+      : t("container.confirmations.stopService");
   await ElMessageBox.confirm(
-    `${label} 会影响当前所有容器和 Docker API 连接。执行前不会写配置文件；失败时请通过系统服务管理工具检查 Docker 状态。`,
-    `${label}操作预览`,
+    t("container.confirmations.runtimeActionNotice", undefined, {
+      action: label,
+    }),
+    t("container.confirmations.previewTitle", undefined, { action: label }),
     {
       type: "warning",
       confirmButtonText: label,
-      cancelButtonText: "取消",
+      cancelButtonText: t("common.cancel"),
     },
   );
   actionLoading.value = `runtime:${action}`;

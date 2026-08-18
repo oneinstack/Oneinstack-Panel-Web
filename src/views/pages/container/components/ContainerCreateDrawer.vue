@@ -2,6 +2,9 @@
 import { ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { ImageItem, NetworkItem, VolumeItem } from '../types'
+import i18n from '@/lang'
+
+const t = i18n.t
 
 const props = defineProps<{
   visible: boolean
@@ -49,29 +52,29 @@ defineExpose({
 <template>
   <custom-drawer
     :visible="visible"
-    title="创建容器"
+    :title="t('container.create.title')"
     size="760px"
     :loading="saving"
     :on-close="() => emit('update:visible', false)"
     :on-confirm="() => emit('confirm')"
   >
     <el-form ref="formRef" class="container-create-form" :model="form" :rules="rules" label-width="96px">
-      <el-form-item label="名称" prop="name">
-        <el-input v-model.trim="form.name" placeholder="请输入容器名称，例如 demo-nginx" />
-        <div class="field-help">容器名称，不能包含空格、斜杠和换行。</div>
+      <el-form-item :label="t('container.create.name')" prop="name">
+        <el-input v-model.trim="form.name" :placeholder="t('container.create.namePlaceholder')" />
+        <div class="field-help">{{ t('container.create.nameHelp') }}</div>
       </el-form-item>
-      <el-form-item label="镜像" prop="image" required>
+      <el-form-item :label="t('container.create.image')" prop="image" required>
         <div class="image-field">
-          <el-checkbox v-model="form.manualImage" class="image-field__toggle">手动输入</el-checkbox>
+          <el-checkbox v-model="form.manualImage" class="image-field__toggle">{{ t('container.create.manualInput') }}</el-checkbox>
           <el-input
             v-if="form.manualImage"
             v-model.trim="form.image"
-            placeholder="请输入镜像引用，例如 nginx:1.27"
+            :placeholder="t('container.create.imagePlaceholder')"
           />
           <el-select
             v-else
             v-model="form.image"
-            placeholder="请选择镜像"
+            :placeholder="t('container.create.selectImage')"
             filterable
             clearable
             :disabled="!images.length"
@@ -89,50 +92,50 @@ defineExpose({
             type="warning"
             :closable="false"
             show-icon
-            title="当前无本地镜像，请手动输入镜像或先配置可用 Registry/镜像加速器"
+            :title="t('container.create.noLocalImage')"
           />
         </div>
-        <div class="field-help">可直接选择现有镜像，也可切换为手动输入镜像引用。</div>
+        <div class="field-help">{{ t('container.create.imageHelp') }}</div>
       </el-form-item>
 
-      <el-divider content-position="left">网络与挂载</el-divider>
-      <el-form-item label="端口映射">
+      <el-divider content-position="left">{{ t('container.create.networkMounts') }}</el-divider>
+      <el-form-item :label="t('container.create.portMapping')">
         <div class="port-publish">
           <el-radio-group v-model="form.portPublishMode" class="port-mode-options">
-            <el-radio value="ports">暴露端口</el-radio>
-            <el-radio value="all">暴露所有</el-radio>
+            <el-radio value="ports">{{ t('container.create.exposePorts') }}</el-radio>
+            <el-radio value="all">{{ t('container.create.exposeAll') }}</el-radio>
           </el-radio-group>
           <div v-if="form.portPublishMode === 'ports'" class="port-card">
             <div class="port-card__head">
-              <span>服务器</span>
-              <span>容器</span>
-              <span>协议</span>
+              <span>{{ t('container.create.host') }}</span>
+              <span>{{ t('container.create.container') }}</span>
+              <span>{{ t('container.create.protocol') }}</span>
               <span></span>
             </div>
             <div v-for="(port, index) in form.ports" :key="index" class="port-card__row">
               <div class="port-field">
-                <el-input v-model.trim="port.host" placeholder="请输入服务器端口，例如 80、80-88 或 ip:80" />
-                <small>支持 80、80-88、ip:80 或 ip:80-88</small>
+                <el-input v-model.trim="port.host" :placeholder="t('container.create.hostPortPlaceholder')" />
+                <small>{{ t('container.create.hostPortHelp') }}</small>
               </div>
               <div class="port-field">
-                <el-input v-model.trim="port.container" placeholder="请输入容器端口，例如 80 或 80-88" />
-                <small>与服务器端口数量保持一致</small>
+                <el-input v-model.trim="port.container" :placeholder="t('container.create.containerPortPlaceholder')" />
+                <small>{{ t('container.create.containerPortHelp') }}</small>
               </div>
               <el-select v-model="port.protocol">
                 <el-option label="tcp" value="tcp" />
                 <el-option label="udp" value="udp" />
                 <el-option label="sctp" value="sctp" />
               </el-select>
-              <el-button link type="primary" @click="emit('remove-port', index)">删除</el-button>
+              <el-button link type="primary" @click="emit('remove-port', index)">{{ t('common.delete') }}</el-button>
             </div>
-            <el-button class="port-add-button" @click="emit('add-port')">添加</el-button>
+            <el-button class="port-add-button" @click="emit('add-port')">{{ t('common.add') }}</el-button>
           </div>
           <div v-else class="port-all-fields">
             <label>
-              <span>网络</span>
+              <span>{{ t('container.create.network') }}</span>
               <el-select
                 v-model="form.networksText"
-                placeholder="请选择网络"
+                :placeholder="t('container.create.selectNetwork')"
                 filterable
                 clearable
               >
@@ -146,19 +149,19 @@ defineExpose({
             </label>
             <label>
               <span>IPv4</span>
-              <el-input v-model.trim="form.ipv4" placeholder="请输入 IPv4 地址" />
+              <el-input v-model.trim="form.ipv4" :placeholder="t('container.create.ipv4Placeholder')" />
             </label>
             <label>
               <span>IPv6</span>
-              <el-input v-model.trim="form.ipv6" placeholder="请输入 IPv6 地址" />
+              <el-input v-model.trim="form.ipv6" :placeholder="t('container.create.ipv6Placeholder')" />
             </label>
           </div>
         </div>
       </el-form-item>
-      <el-form-item v-if="form.portPublishMode === 'ports'" label="网络">
+      <el-form-item v-if="form.portPublishMode === 'ports'" :label="t('container.create.network')">
         <el-select
           v-model="form.networksText"
-          placeholder="请选择网络"
+          :placeholder="t('container.create.selectNetwork')"
           filterable
           clearable
         >
@@ -169,35 +172,35 @@ defineExpose({
             :value="network.Name"
           />
         </el-select>
-        <div class="field-help">要加入的 Docker 网络名称；固定 IP 需要配合对应网络。</div>
+        <div class="field-help">{{ t('container.create.networkHelp') }}</div>
       </el-form-item>
-      <el-form-item v-if="form.portPublishMode === 'ports'" label="固定 IP">
+      <el-form-item v-if="form.portPublishMode === 'ports'" :label="t('container.create.fixedIp')">
         <div class="form-inline-grid">
-          <el-input v-model.trim="form.ipv4" placeholder="请输入 IPv4 地址，可选" />
-          <el-input v-model.trim="form.ipv6" placeholder="请输入 IPv6 地址，可选" />
+          <el-input v-model.trim="form.ipv4" :placeholder="t('container.create.optionalIpv4')" />
+          <el-input v-model.trim="form.ipv6" :placeholder="t('container.create.optionalIpv6')" />
         </div>
-        <div class="field-help">容器 IPv4/IPv6 地址，可选，需配合自定义网络。</div>
+        <div class="field-help">{{ t('container.create.fixedIpHelp') }}</div>
       </el-form-item>
-      <el-form-item label="挂载">
+      <el-form-item :label="t('container.create.mounts')">
         <div class="mount-list">
           <div v-for="(mount, index) in form.mounts" :key="index" class="mount-card">
             <div class="mount-card__top">
               <el-segmented
                 v-model="mount.mode"
                 :options="[
-                  { label: '挂载卷', value: 'volume' },
-                  { label: '本机目录', value: 'bind' }
+                  { label: t('container.create.volumeMount'), value: 'volume' },
+                  { label: t('container.create.bindMount'), value: 'bind' }
                 ]"
               />
-              <el-button link type="primary" @click="emit('remove-mount', index)">删除</el-button>
+              <el-button link type="primary" @click="emit('remove-mount', index)">{{ t('common.delete') }}</el-button>
             </div>
             <div class="mount-card__grid">
               <label>
-                <span>{{ mount.mode === 'volume' ? '挂载卷' : '本机目录' }}</span>
+                <span>{{ mount.mode === 'volume' ? t('container.create.volumeMount') : t('container.create.bindMount') }}</span>
                 <el-select
                   v-if="mount.mode === 'volume'"
                   v-model="mount.source"
-                  placeholder="请选择存储卷"
+                  :placeholder="t('container.create.selectVolume')"
                   filterable
                   clearable
                 >
@@ -211,81 +214,81 @@ defineExpose({
                 <el-input
                   v-else
                   v-model.trim="mount.source"
-                  placeholder="请输入本机目录，例如 /tmp/nginx-html"
+                  :placeholder="t('container.create.bindPlaceholder')"
                 />
               </label>
               <label>
-                <span>权限</span>
+                <span>{{ t('container.create.permission') }}</span>
                 <el-select v-model="mount.permission">
-                  <el-option label="读写" value="rw" />
-                  <el-option label="只读" value="ro" />
+                  <el-option :label="t('container.create.readWrite')" value="rw" />
+                  <el-option :label="t('container.create.readOnly')" value="ro" />
                 </el-select>
               </label>
               <label>
-                <span>容器目录</span>
-                <el-input v-model.trim="mount.target" placeholder="请输入容器目录，例如 /usr/share/nginx/html" />
+                <span>{{ t('container.create.containerPath') }}</span>
+                <el-input v-model.trim="mount.target" :placeholder="t('container.create.containerPathPlaceholder')" />
               </label>
             </div>
           </div>
-          <el-button class="mount-add-button" @click="emit('add-mount')">添加</el-button>
+          <el-button class="mount-add-button" @click="emit('add-mount')">{{ t('common.add') }}</el-button>
         </div>
         <div class="field-help">
-          挂载卷模式会读取“存储卷”列表供选择；读写提交 `readOnly=false`，只读提交 `readOnly=true`。
+          {{ t('container.create.mountHelp') }}
         </div>
       </el-form-item>
 
-      <el-divider content-position="left">启动参数</el-divider>
-      <el-form-item label="命令">
+      <el-divider content-position="left">{{ t('container.create.startupParameters') }}</el-divider>
+      <el-form-item :label="t('container.create.command')">
         <el-input
           v-model="form.commandText"
           type="textarea"
           :rows="2"
-          placeholder="请输入命令参数，每行一个参数，或 JSON 数组，例如 [&quot;nginx&quot;,&quot;-g&quot;,&quot;daemon off;&quot;]"
+          :placeholder="t('container.create.commandPlaceholder')"
         />
-        <div class="field-help">容器默认命令参数，提交为 string[]。</div>
+        <div class="field-help">{{ t('container.create.commandHelp') }}</div>
       </el-form-item>
       <el-form-item label="EntryPoint">
         <el-input
           v-model="form.entrypointText"
           type="textarea"
           :rows="2"
-          placeholder="请输入入口命令参数，每行一个参数，或 JSON 字符串数组"
+          :placeholder="t('container.create.entrypointPlaceholder')"
         />
-        <div class="field-help">容器入口命令，未填写时提交空数组。</div>
+        <div class="field-help">{{ t('container.create.entrypointHelp') }}</div>
       </el-form-item>
-      <el-form-item label="重启策略">
+      <el-form-item :label="t('container.create.restartPolicy')">
         <el-radio-group v-model="form.restart" class="restart-options" :disabled="form.autoRemove">
-          <el-radio value="no">不重启</el-radio>
-          <el-radio value="always">一直重启</el-radio>
-          <el-radio value="on-failure:5">失败后重启（默认重启 5 次）</el-radio>
-          <el-radio value="unless-stopped">未手动停止则重启</el-radio>
+          <el-radio value="no">{{ t('container.create.restartNever') }}</el-radio>
+          <el-radio value="always">{{ t('container.create.restartAlways') }}</el-radio>
+          <el-radio value="on-failure:5">{{ t('container.create.restartOnFailure') }}</el-radio>
+          <el-radio value="unless-stopped">{{ t('container.create.restartUnlessStopped') }}</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="运行选项">
+      <el-form-item :label="t('container.create.runtimeOptions')">
         <div class="form-switches">
-          <el-checkbox v-model="form.autoRemove">退出后自动删除</el-checkbox>
+          <el-checkbox v-model="form.autoRemove">{{ t('container.create.autoRemove') }}</el-checkbox>
           <el-checkbox v-model="form.tty">TTY</el-checkbox>
-          <el-checkbox v-model="form.openStdin">保持 stdin</el-checkbox>
-          <el-checkbox v-model="form.privileged">特权模式</el-checkbox>
+          <el-checkbox v-model="form.openStdin">{{ t('container.create.keepStdin') }}</el-checkbox>
+          <el-checkbox v-model="form.privileged">{{ t('container.create.privileged') }}</el-checkbox>
         </div>
         <div class="field-help">
-          {{ form.autoRemove ? '创建完成后将立即启动，容器退出后自动删除；该选项不能与重启策略同时使用。' : '特权模式风险较高，建议仅管理员按需开放。' }}
+          {{ form.autoRemove ? t('container.create.autoRemoveHelp') : t('container.create.privilegedHelp') }}
         </div>
       </el-form-item>
 
-      <el-divider content-position="left">资源限制</el-divider>
-      <el-form-item label="CPU 权重">
+      <el-divider content-position="left">{{ t('container.resourceLimits') }}</el-divider>
+      <el-form-item :label="t('container.create.cpuWeight')">
         <el-input-number
           v-model="form.cpuWeight"
           :min="10"
           :max="1000"
           :step="10"
           controls-position="right"
-          placeholder="请输入 CPU 权重，默认 1000"
+          :placeholder="t('container.create.cpuWeightPlaceholder')"
         />
-        <div class="resource-help">CPU 权重范围为 10-1000，增大可使当前容器获得更多的 CPU 时间。</div>
+        <div class="resource-help">{{ t('container.create.cpuWeightHelp') }}</div>
       </el-form-item>
-      <el-form-item label="CPU 限制">
+      <el-form-item :label="t('container.create.cpuLimit')">
         <el-input-number
           v-model="form.cpuLimit"
           class="resource-limit-input"
@@ -293,42 +296,42 @@ defineExpose({
           :max="256"
           :step="0.5"
           controls-position="right"
-          placeholder="请输入 CPU 限制，0 表示不限制"
+          :placeholder="t('container.create.cpuLimitPlaceholder')"
         />
-        <span class="field-unit">核</span>
-        <div class="resource-help">限制为 0 则关闭限制，最大可用值由宿主机 CPU 核数决定。</div>
+        <span class="field-unit">{{ t('container.create.cpuUnit') }}</span>
+        <div class="resource-help">{{ t('container.create.cpuLimitHelp') }}</div>
       </el-form-item>
-      <el-form-item label="内存限制">
+      <el-form-item :label="t('container.create.memoryLimit')">
         <el-input-number
           v-model="form.memoryLimitMB"
           class="resource-limit-input"
           :min="0"
           :step="128"
           controls-position="right"
-          placeholder="请输入内存限制，0 表示不限制"
+          :placeholder="t('container.create.memoryLimitPlaceholder')"
         />
         <span class="field-unit">MB</span>
-        <div class="resource-help">限制为 0 则关闭限制，单位为 MB。</div>
+        <div class="resource-help">{{ t('container.create.memoryLimitHelp') }}</div>
       </el-form-item>
 
-      <el-divider content-position="left">Labels 与环境变量</el-divider>
+      <el-divider content-position="left">{{ t('container.create.labelsEnvironment') }}</el-divider>
       <el-form-item label="Labels">
         <el-input
           v-model="form.labelsText"
           type="textarea"
           :rows="2"
-          placeholder="请输入 Labels，每行一个 key=value，或 JSON 对象"
+          :placeholder="t('container.create.labelsPlaceholder')"
         />
-        <div class="field-help">Docker Labels 键值对，提交为 object。</div>
+        <div class="field-help">{{ t('container.create.labelsHelp') }}</div>
       </el-form-item>
-      <el-form-item label="环境变量">
+      <el-form-item :label="t('container.create.environment')">
         <el-input
           v-model="form.environmentText"
           type="textarea"
           :rows="2"
-          placeholder="请输入环境变量，每行一个 KEY=value；敏感值不会在列表中回显"
+          :placeholder="t('container.create.environmentPlaceholder')"
         />
-        <div class="field-help">环境变量键值对，前端不会在普通列表中回显敏感值。</div>
+        <div class="field-help">{{ t('container.create.environmentHelp') }}</div>
       </el-form-item>
     </el-form>
   </custom-drawer>

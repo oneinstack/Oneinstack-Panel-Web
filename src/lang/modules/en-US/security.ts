@@ -270,6 +270,7 @@ export default {
       unbanQueued: 'Unban task queued'
     },
     task: {
+      monitorRetryLimit: 'Failed to retrieve task status. Refresh manually.',
       title: 'Security tasks',
       description: 'Track policy apply, ban, and unban tasks in real time.',
       empty: 'No tasks',

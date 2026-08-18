@@ -38,6 +38,7 @@ export default {
   auditEnabledTitle: 'Command-level security audit enabled',
   auditEnabledDescription: 'Records sessions, command submit time, and operator. Command content, arguments, interactive input, and terminal output are not saved.',
   notConnected: 'Terminal not connected',
+  waitingAuthenticationBanner: 'Waiting for authentication',
   closed: 'Terminal closed',
   passwordRequiredTip: 'Enter the current administrator password again when connecting.',
   connection: {

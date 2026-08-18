@@ -59,13 +59,14 @@ const state = reactive({
   revision: '',
   modifiedAt: ''
 })
+const t = i18n.t as any
 
 const dirty = computed(() => state.content !== state.originalContent)
 const selectedFile = computed(() =>
   state.files.find((file) => file.path === state.selectedPath)
 )
 const serverStateText = computed(() =>
-  state.server.running ? '运行中' : '服务已停止'
+  t(state.server.running ? 'website.webConfigDrawer.running' : 'website.webConfigDrawer.stopped')
 )
 
 const formatSize = (size: number) => {
@@ -91,12 +92,12 @@ const readFile = async (path: string, confirmDiscard = true) => {
   if (confirmDiscard && dirty.value) {
     try {
       await ElMessageBox.confirm(
-        '当前配置还有未保存的修改，切换文件会丢失这些内容。',
-        '放弃未保存修改？',
+        t('website.webConfigDrawer.discardMessage'),
+        t('website.webConfigDrawer.discardTitle'),
         {
           type: 'warning',
-          confirmButtonText: '放弃并切换',
-          cancelButtonText: '继续编辑'
+          confirmButtonText: t('website.webConfigDrawer.discardSwitch'),
+          cancelButtonText: t('website.webConfigDrawer.continueEditing')
         }
       )
     } catch {
@@ -146,12 +147,12 @@ const reloadCurrent = async () => {
   if (dirty.value) {
     try {
       await ElMessageBox.confirm(
-        '重新读取会覆盖当前未保存内容。',
-        '重新读取配置？',
+        t('website.webConfigDrawer.rereadMessage'),
+        t('website.webConfigDrawer.rereadTitle'),
         {
           type: 'warning',
-          confirmButtonText: '重新读取',
-          cancelButtonText: '取消'
+          confirmButtonText: t('website.webConfigDrawer.reread'),
+          cancelButtonText: t('website.webConfigDrawer.cancel')
         }
       )
     } catch {
@@ -204,12 +205,12 @@ const close = async () => {
   if (dirty.value) {
     try {
       await ElMessageBox.confirm(
-        '关闭后将丢失当前未保存的配置内容。',
-        '关闭配置编辑器？',
+        t('website.webConfigDrawer.closeMessage'),
+        t('website.webConfigDrawer.closeTitle'),
         {
           type: 'warning',
-          confirmButtonText: '放弃并关闭',
-          cancelButtonText: '继续编辑'
+          confirmButtonText: t('website.webConfigDrawer.discardClose'),
+          cancelButtonText: t('website.webConfigDrawer.continueEditing')
         }
       )
     } catch {
@@ -241,9 +242,9 @@ watch(
       <div class="web-drawer-header">
         <button type="button" class="web-drawer-back" @click="close">
           <el-icon><ArrowLeft /></el-icon>
-          <span>返回</span>
+          <span>{{ t('website.webConfigDrawer.back') }}</span>
         </button>
-        <h3>{{ state.server.name || 'Web 服务器' }} 配置管理</h3>
+        <h3>{{ t('website.webConfigDrawer.title', { name: state.server.name || t('website.webConfigDrawer.webServer') }) }}</h3>
       </div>
     </template>
 
@@ -253,23 +254,23 @@ watch(
           <div class="server-logo">{{ state.server.component === 'openresty' ? 'O' : 'N' }}</div>
           <div>
             <div class="server-summary__title">
-              <strong>{{ state.server.name || '未识别' }}</strong>
+              <strong>{{ state.server.name || t('website.webConfigDrawer.unknown') }}</strong>
               <el-tag :type="state.server.running ? 'success' : 'info'" effect="plain" round>
                 {{ serverStateText }}
               </el-tag>
             </div>
-            <p>{{ state.server.version || '版本未知' }} · {{ state.server.binaryPath || '-' }}</p>
+            <p>{{ state.server.version || t('website.webConfigDrawer.versionUnknown') }} · {{ state.server.binaryPath || '-' }}</p>
           </div>
         </div>
-        <el-button :icon="Refresh" @click="load(true)">刷新文件</el-button>
+        <el-button :icon="Refresh" @click="load(true)">{{ t('website.webConfigDrawer.refreshFiles') }}</el-button>
       </section>
 
       <section class="config-workspace">
         <aside class="config-sidebar">
           <div class="config-sidebar__heading">
             <div>
-              <strong>配置文件</strong>
-              <span>共 {{ state.files.length }} 个</span>
+              <strong>{{ t('website.webConfigDrawer.configFiles') }}</strong>
+              <span>{{ t('website.webConfigDrawer.fileCount', { count: state.files.length }) }}</span>
             </div>
           </div>
           <div class="config-files">
@@ -285,24 +286,24 @@ watch(
               <span>
                 <strong>{{ file.name }}</strong>
                 <small>{{ file.path }}</small>
-                <em>{{ formatSize(file.size) }} · {{ file.main ? '主配置' : file.site ? '站点配置' : '扩展配置' }}</em>
+                <em>{{ formatSize(file.size) }} · {{ file.main ? t('website.webConfigDrawer.mainConfig') : file.site ? t('website.webConfigDrawer.siteConfig') : t('website.webConfigDrawer.extensionConfig') }}</em>
               </span>
             </button>
-            <el-empty v-if="!state.files.length && !state.loading" description="没有可管理的 .conf 文件" />
+            <el-empty v-if="!state.files.length && !state.loading" :description="t('website.webConfigDrawer.noFiles')" />
           </div>
         </aside>
 
         <main class="config-editor">
           <div class="config-editor__toolbar">
             <div>
-              <strong>{{ state.selectedPath || '请选择配置文件' }}</strong>
+              <strong>{{ state.selectedPath || t('website.webConfigDrawer.selectFile') }}</strong>
               <span v-if="state.selectedPath">
-                最近修改 {{ formatTime(state.modifiedAt) }}
-                <i v-if="dirty">未保存</i>
+                {{ t('website.webConfigDrawer.lastModified', { time: formatTime(state.modifiedAt) }) }}
+                <i v-if="dirty">{{ t('website.webConfigDrawer.unsaved') }}</i>
               </span>
             </div>
             <el-button :icon="Refresh" :disabled="!state.selectedPath" @click="reloadCurrent">
-              重新读取
+              {{ t('website.webConfigDrawer.reread') }}
             </el-button>
           </div>
           <el-input
@@ -313,22 +314,22 @@ watch(
             resize="none"
             spellcheck="false"
             :disabled="!state.selectedPath"
-            placeholder="请选择左侧配置文件"
+            :placeholder="t('website.webConfigDrawer.selectLeftFile')"
           />
           <div class="config-editor__footer">
             <div class="safe-note">
               <span></span>
-              修改不会直接生效：后端会先备份并执行全量语法检查，失败时自动恢复。
+              {{ t('website.webConfigDrawer.safeNote') }}
             </div>
             <div class="config-editor__actions">
-              <el-button @click="close">关闭</el-button>
+              <el-button @click="close">{{ t('website.webConfigDrawer.close') }}</el-button>
               <el-button
                 type="primary"
                 :loading="state.saving"
                 :disabled="!state.selectedPath || !dirty"
                 @click="save"
               >
-                保存并应用
+                {{ t('website.webConfigDrawer.saveApply') }}
               </el-button>
             </div>
           </div>

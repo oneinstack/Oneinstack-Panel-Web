@@ -493,7 +493,7 @@ watch(
     :title="drawerTitle"
     class="container-terminal-drawer"
     size="1080px"
-    cancel-text="关闭"
+    :cancel-text="t('common.close')"
     :show-confirm="false"
     :destroy-on-close="false"
     :on-close="handleClose"

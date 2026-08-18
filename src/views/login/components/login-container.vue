@@ -30,7 +30,7 @@ withDefaults(defineProps<Props>(), {
 
       <div class="hero-copy">
         <div class="eyebrow"><span></span> {{ $t('login.heroEyebrow') }}</div>
-        <h1 v-html="$t('login.heroTitle')"></h1>
+        <h1>{{ $t('login.heroTitleLine1') }}<br />{{ $t('login.heroTitleLine2') }}</h1>
         <p>{{ $t('login.heroDescription') }}</p>
       </div>
 

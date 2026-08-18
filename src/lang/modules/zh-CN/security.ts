@@ -270,6 +270,7 @@ export default {
       unbanQueued: '解封任务已进入队列'
     },
     task: {
+      monitorRetryLimit: '任务状态获取失败，可手动刷新',
       title: '安全任务',
       description: '展示策略应用、封禁和解封任务的实时状态。',
       empty: '暂无任务',

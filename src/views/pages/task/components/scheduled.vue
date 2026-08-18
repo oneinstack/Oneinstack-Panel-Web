@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleClose, Delete, Document, EditPen, Refresh, VideoPlay, VideoPause, Warning } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import AddTask from './add-task.vue'
@@ -13,13 +13,6 @@ const tableRef = ref<InstanceType<typeof import('element-plus')['ElTable']>>()
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
-}
-
-interface RuleForm {
-  name: string
-  region: string
-  count: string
-  desc: string
 }
 
 interface Task {
@@ -74,14 +67,6 @@ const getData = async () => {
   }
 }
 
-const category = ref(['传统项目', 'swoole异步项目', 'thinkphp异步项目', '异步项目', '一键部署', '批量创建'])
-
-const formInline = reactive({
-  user: '',
-  region: '',
-  date: ''
-})
-
 const onSubmit = () => {
   console.log('submit!')
   pagination.pageSize = 10
@@ -90,33 +75,6 @@ const onSubmit = () => {
   getData()
 }
 
-const enabledClick = () => {
-  ElMessageBox.confirm('停用后将不再触发新的调度，已经开始的执行不会被中断。确定继续吗？', '设置计划任务状态', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  })
-    .then(() => {
-      ElMessage({
-        type: 'success',
-        message: '退出成功'
-      })
-    })
-    .catch(() => {
-      ElMessage({
-        type: 'info',
-        message: '取消退出'
-      })
-    })
-}
-
-const ruleFormRef = ref<FormInstance>()
-const ruleForm = reactive<RuleForm>({
-  name: 'Hello',
-  region: '',
-  count: '',
-  desc: ''
-})
 let action_type = ref(true)
 let rulesForm = ref({
   name: '',
@@ -172,8 +130,7 @@ const addTask = () => {
 }
 
 const handleTaskAdded = (data: any) => {
-  console.log('接收到子组件传递的数据:', data)
-  // addTaskVisible.value = false
+  void data
   getData()
 }
 const handleCurrentChange = (val: number) => {

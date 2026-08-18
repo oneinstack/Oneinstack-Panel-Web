@@ -27,6 +27,7 @@ const state = reactive({
   logTitle: '',
   logContent: ''
 })
+const t = i18n.t as any
 
 let timer: number | undefined
 
@@ -34,37 +35,29 @@ const activeStatuses = new Set(['queued', 'running', 'canceling'])
 const selectedWebsiteId = computed(() => Number(props.website?.id || 0))
 const title = computed(() =>
   selectedWebsiteId.value
-    ? `整站备份 · ${props.website?.name || ''}`
-    : '整站备份管理'
+    ? t('website.backupDrawer.title', { name: props.website?.name || '' })
+    : t('website.backupDrawer.manager')
 )
 
 const backupColumns = computed<ColumnItem[]>(() => [
-  { prop: 'websiteName', label: '网站', minWidth: 150 },
-  { prop: 'source', label: '来源', width: 150, slot: 'source' },
-  { prop: 'databaseName', label: '数据库', minWidth: 130, slot: 'databaseName' },
-  { prop: 'sizeBytes', label: '大小', width: 110, slot: 'sizeBytes' },
-  { prop: 'createdAt', label: '创建时间', width: 180, slot: 'backupCreatedAt' },
-  { prop: 'backupAction', label: '操作', width: 240, fixed: 'right', slot: 'backupAction', className: 'table-action-column' }
+  { prop: 'websiteName', label: t('website.backupDrawer.website'), minWidth: 150 },
+  { prop: 'source', label: t('website.backupDrawer.source'), width: 150, slot: 'source' },
+  { prop: 'databaseName', label: t('website.backupDrawer.database'), minWidth: 130, slot: 'databaseName' },
+  { prop: 'sizeBytes', label: t('website.backupDrawer.size'), width: 110, slot: 'sizeBytes' },
+  { prop: 'createdAt', label: t('website.backupDrawer.createdAt'), width: 180, slot: 'backupCreatedAt' },
+  { prop: 'backupAction', label: t('website.backupDrawer.action'), width: 240, fixed: 'right', slot: 'backupAction', className: 'table-action-column' }
 ])
 
 const taskColumns = computed<ColumnItem[]>(() => [
-  { prop: 'websiteName', label: '网站', minWidth: 150 },
-  { prop: 'operation', label: '操作', width: 110, slot: 'operation' },
-  { prop: 'status', label: '状态', width: 110, slot: 'status' },
-  { prop: 'progress', label: '进度', minWidth: 180, slot: 'progress' },
-  { prop: 'createdAt', label: '创建时间', width: 180, slot: 'taskCreatedAt' },
-  { prop: 'taskAction', label: '操作', width: 170, fixed: 'right', slot: 'taskAction', className: 'table-action-column' }
+  { prop: 'websiteName', label: t('website.backupDrawer.website'), minWidth: 150 },
+  { prop: 'operation', label: t('website.backupDrawer.action'), width: 110, slot: 'operation' },
+  { prop: 'status', label: t('website.backupDrawer.status'), width: 110, slot: 'status' },
+  { prop: 'progress', label: t('website.backupDrawer.progress'), minWidth: 180, slot: 'progress' },
+  { prop: 'createdAt', label: t('website.backupDrawer.createdAt'), width: 180, slot: 'taskCreatedAt' },
+  { prop: 'taskAction', label: t('website.backupDrawer.action'), width: 170, fixed: 'right', slot: 'taskAction', className: 'table-action-column' }
 ])
 
-const statusLabel = (status: string) => ({
-  queued: '排队中',
-  running: '执行中',
-  canceling: '取消中',
-  succeeded: '成功',
-  failed: '失败',
-  canceled: '已取消',
-  interrupted: '已中断'
-}[status] || status)
+const statusLabel = (status: string) => t(`website.backupDrawer.statuses.${status}`) || status
 
 const statusType = (status: string) => {
   if (status === 'succeeded') return 'success'
@@ -73,17 +66,9 @@ const statusType = (status: string) => {
   return 'warning'
 }
 
-const operationLabel = (operation: string) => ({
-  backup: '备份',
-  restore: '恢复',
-  delete: '安全删除'
-}[operation] || operation)
+const operationLabel = (operation: string) => t(`website.backupDrawer.operations.${operation}`) || operation
 
-const sourceLabel = (source: string) => ({
-  manual: '手动备份',
-  pre_restore: '恢复前安全快照',
-  pre_delete: '删除前强制快照'
-}[source] || source)
+const sourceLabel = (source: string) => t(`website.backupDrawer.sources.${source}`) || source
 
 const formatBytes = (value: number) => {
   if (!value) return '0 B'
@@ -148,14 +133,14 @@ const createBackup = async () => {
 const restoreBackup = async (backup: Record<string, any>) => {
   try {
     const { value } = await ElMessageBox.prompt(
-      `恢复会先创建当前站点的安全快照，再替换网站文件、重新生成 Nginx 配置${backup.databaseId ? '并恢复关联数据库' : ''}。证书私钥不在备份包内。请输入网站名 ${backup.websiteName} 确认：`,
-      '恢复整站备份',
+      t('website.backupDrawer.restorePrompt', { database: backup.databaseId ? t('website.backupDrawer.restoreDatabase') : '', name: backup.websiteName }),
+      t('website.backupDrawer.restoreTitle'),
       {
         type: 'warning',
-        confirmButtonText: '开始恢复',
-        cancelButtonText: '取消',
+        confirmButtonText: t('website.backupDrawer.startRestore'),
+        cancelButtonText: t('website.backupDrawer.cancel'),
         inputPlaceholder: backup.websiteName,
-        inputValidator: (value: string) => value === backup.websiteName || '网站名不匹配'
+        inputValidator: (value: string) => value === backup.websiteName || t('website.backupDrawer.nameMismatch')
       }
     )
     await Api.restoreWebsiteBackup({ backupId: backup.id, confirmName: value })
@@ -170,14 +155,14 @@ const restoreBackup = async (backup: Record<string, any>) => {
 const deleteBackup = async (backup: Record<string, any>) => {
   try {
     const { value } = await ElMessageBox.prompt(
-      `永久删除备份 ${backup.fileName}。请输入网站名 ${backup.websiteName} 确认：`,
-      '删除整站备份',
+      t('website.backupDrawer.deletePrompt', { file: backup.fileName, name: backup.websiteName }),
+      t('website.backupDrawer.deleteTitle'),
       {
         type: 'warning',
-        confirmButtonText: '永久删除',
-        cancelButtonText: '取消',
+        confirmButtonText: t('website.backupDrawer.permanentDelete'),
+        cancelButtonText: t('website.backupDrawer.cancel'),
         inputPlaceholder: backup.websiteName,
-        inputValidator: (value: string) => value === backup.websiteName || '网站名不匹配'
+        inputValidator: (value: string) => value === backup.websiteName || t('website.backupDrawer.nameMismatch')
       }
     )
     await Api.deleteWebsiteBackup(backup.id, { confirmName: value })
@@ -201,8 +186,8 @@ const cancelTask = async (task: Record<string, any>) => {
 
 const showLog = async (task: Record<string, any>) => {
   const { data } = await Api.getWebsiteTaskLog(task.id, { cursor: 0, limit: 65536 })
-  state.logTitle = `${task.websiteName} · ${operationLabel(task.operation)}日志`
-  state.logContent = data?.content || '暂无日志'
+  state.logTitle = `${task.websiteName} · ${operationLabel(task.operation)}${t('website.backupDrawer.logSuffix')}`
+  state.logContent = data?.content || t('website.backupDrawer.noLog')
   state.logVisible = true
 }
 
@@ -239,7 +224,7 @@ onBeforeUnmount(() => {
     :on-close="() => emit('update:modelValue', false)"
   >
     <el-alert
-      title="备份包使用逐文件摘要和整包 SHA-256 校验，包含网站文件、网站元数据、Nginx 配置快照及一个可选 MySQL 数据库；证书私钥不会写入备份。"
+      :title="t('website.backupDrawer.tip')"
       type="info"
       show-icon
       :closable="false"
@@ -248,8 +233,8 @@ onBeforeUnmount(() => {
 
     <div class="toolbar">
       <template v-if="selectedWebsiteId">
-        <el-select v-model="state.databaseId" style="width: 260px" placeholder="可选：关联一个 MySQL 数据库">
-          <el-option label="不包含数据库" :value="0" />
+        <el-select v-model="state.databaseId" style="width: 260px" :placeholder="t('website.backupDrawer.databasePlaceholder')">
+          <el-option :label="t('website.backupDrawer.excludeDatabase')" :value="0" />
           <el-option
             v-for="database in state.databases"
             :key="database.id"
@@ -258,32 +243,32 @@ onBeforeUnmount(() => {
           />
         </el-select>
         <el-button type="primary" :loading="state.submitting" @click="createBackup">
-          立即备份
+          {{ t('website.backupDrawer.backupNow') }}
         </el-button>
       </template>
-      <span v-else class="toolbar-note">这里保留已删除网站的强制快照，可直接重新恢复站点。</span>
-      <el-button @click="loadData()">刷新</el-button>
+      <span v-else class="toolbar-note">{{ t('website.backupDrawer.deletedSiteTip') }}</span>
+      <el-button @click="loadData()">{{ t('website.backupDrawer.refresh') }}</el-button>
     </div>
 
     <el-tabs>
-      <el-tab-pane label="备份文件">
-        <custom-table v-loading="state.loading" :data="state.backups" :columns="backupColumns" :pagination="false" empty-text="暂无整站备份">
+      <el-tab-pane :label="t('website.backupDrawer.backupFiles')">
+        <custom-table v-loading="state.loading" :data="state.backups" :columns="backupColumns" :pagination="false" :empty-text="t('website.backupDrawer.noBackups')">
           <template #source="{ row }">{{ sourceLabel(row.source) }}</template>
-          <template #databaseName="{ row }">{{ row.databaseName || '未包含' }}</template>
+          <template #databaseName="{ row }">{{ row.databaseName || t('website.backupDrawer.notIncluded') }}</template>
           <template #sizeBytes="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
           <template #backupCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #backupAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" link :icon="Download" @click="downloadBackup(row)">下载</el-button>
-                <el-button type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">恢复</el-button>
-                <el-button type="danger" link :icon="Delete" @click="deleteBackup(row)">删除</el-button>
+                <el-button type="primary" link :icon="Download" @click="downloadBackup(row)">{{ t('website.backupDrawer.download') }}</el-button>
+                <el-button type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">{{ t('website.backupDrawer.restore') }}</el-button>
+                <el-button type="danger" link :icon="Delete" @click="deleteBackup(row)">{{ t('website.backupDrawer.delete') }}</el-button>
               </div>
           </template>
         </custom-table>
       </el-tab-pane>
 
-      <el-tab-pane label="任务记录">
-        <custom-table v-loading="state.loading" :data="state.tasks" :columns="taskColumns" :pagination="false" empty-text="暂无网站任务">
+      <el-tab-pane :label="t('website.backupDrawer.taskRecords')">
+        <custom-table v-loading="state.loading" :data="state.tasks" :columns="taskColumns" :pagination="false" :empty-text="t('website.backupDrawer.noTasks')">
           <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
           <template #status="{ row }">
               <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
@@ -295,7 +280,7 @@ onBeforeUnmount(() => {
           <template #taskCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #taskAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" link :icon="Document" @click="showLog(row)">日志</el-button>
+                <el-button type="primary" link :icon="Document" @click="showLog(row)">{{ t('website.backupDrawer.log') }}</el-button>
                 <el-button
                   v-if="activeStatuses.has(row.status)"
                   type="danger"
@@ -303,7 +288,7 @@ onBeforeUnmount(() => {
                   :icon="CircleClose"
                   @click="cancelTask(row)"
                 >
-                  取消
+                  {{ t('website.backupDrawer.cancel') }}
                 </el-button>
               </div>
           </template>

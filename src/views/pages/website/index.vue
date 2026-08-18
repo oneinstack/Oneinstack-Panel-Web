@@ -253,9 +253,9 @@ const formatWebsiteTraffic = (value: unknown) => {
 }
 
 const formatWebsiteExpiration = (value?: string | null) => {
-  if (!value) return '永久'
+  if (!value) return t('website.settingsDrawer.permanent')
   const date = new Date(value)
-  return Number.isNaN(date.getTime()) ? value : date.toLocaleString('zh-CN', { hour12: false })
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString(i18n.locale, { hour12: false })
 }
 
 const conf = reactive({
@@ -340,7 +340,7 @@ const conf = reactive({
   },
   drawer: {
     show: false,
-    title: '创建网站',
+    title: t('website.createWebsite'),
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
@@ -462,7 +462,7 @@ const conf = reactive({
                 prop: 'remark'
               },
               {
-                label: '到期时间',
+                label: t('website.expiration'),
                 type: 'custom',
                 prop: 'expires_at'
               }
@@ -500,7 +500,7 @@ const conf = reactive({
                 prop: 'remark'
               },
               {
-                label: '到期时间',
+                label: t('website.expiration'),
                 type: 'custom',
                 prop: 'expires_at'
               }
@@ -748,7 +748,7 @@ webServer.load()
         <template #traffic="{ row }">
           <div class="website-traffic">
             <strong>{{ formatWebsiteTraffic(row.today_traffic_bytes) }}</strong>
-            <span>{{ Number(row.today_requests || 0).toLocaleString() }} 次请求</span>
+            <span>{{ t('website.requestCount', '', { count: Number(row.today_requests || 0).toLocaleString() }) }}</span>
           </div>
         </template>
         <template #expiration="{ row }">
@@ -785,7 +785,7 @@ webServer.load()
           <el-date-picker
             v-model="conf.form.data.value.expires_at"
             type="datetime"
-            placeholder="不设置表示永久有效"
+            :placeholder="t('website.settingsDrawer.expirationPlaceholder')"
             clearable
             style="width: 100%"
           />

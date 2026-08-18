@@ -12,6 +12,12 @@ export default {
     alarm: '告警通知',
     message: '消息通知'
   },
+  alarmPage: {
+    list: '告警列表', settings: '告警设置', logs: '告警日志', title: '标题', status: '状态', method: '告警方式', condition: '告警条件', action: '操作', taskType: '任务类型', certificateExpiry: '网站证书 (SSL) 到期', website: '网站', allWebsites: '所有网站', remainingDays: '剩余天数', days: '天', sendCount: '发送次数', times: '次', email: '邮箱', dingtalk: '钉钉', feishu: '飞书', addTask: '添加任务', start: '启动', stop: '停止', empty: '暂无任务，点击添加任务开始操作'
+  },
+  messagePage: {
+    title: '标题内容', submittedAt: '提交时间', type: '类型', markAllRead: '全部已读', deleteAll: '全部删除', empty: '暂无消息'
+  },
   port: {
     modifyPanelPort: '修改面板端口',
     panelPort: '面板端口',

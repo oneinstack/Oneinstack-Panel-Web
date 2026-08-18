@@ -1270,10 +1270,10 @@ onMounted(() => {
             {{ backendLabel(status.backend) }}
           </el-tag>
           <el-tag :type="status.install ? 'success' : 'info'">
-            {{ status.install ? t('security.installed', '已安装') : t('security.notInstalled', '未安装') }}
+            {{ status.install ? t('security.fail2ban.status.installed', '已安装') : t('security.fail2ban.status.notInstalled', '未安装') }}
           </el-tag>
           <el-tag :type="status.enabled ? 'success' : 'info'">
-            {{ status.enabled ? t('security.serviceActive', '运行中') : t('security.serviceInactive', '未运行') }}
+            {{ status.enabled ? t('security.fail2ban.status.serviceActive', '运行中') : t('security.fail2ban.status.serviceInactive', '未运行') }}
           </el-tag>
           <el-tag :type="status.panelPortProtected ? 'success' : 'warning'">
             {{

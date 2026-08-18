@@ -18,11 +18,12 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const submitting = ref(false)
+const t = i18n.t as any
 const certificate = ref<Record<string, any> | null>(null)
 const tasks = ref<Record<string, any>[]>([])
 const logDialog = reactive({
   show: false,
-  title: '证书任务日志',
+  title: t('website.certificateDrawer.taskLog'),
   content: '',
   loading: false
 })
@@ -38,28 +39,18 @@ const activeStatuses = ['queued', 'running', 'canceling']
 const activeTask = computed(() => tasks.value.find((item) => activeStatuses.includes(item.status)))
 const certificateEnabled = computed(() => certificate.value && certificate.value.status !== 'disabled')
 const taskColumns = computed<ColumnItem[]>(() => [
-  { prop: 'type', label: '类型', width: 75, slot: 'type' },
-  { prop: 'status', label: '状态', width: 90, slot: 'status' },
-  { prop: 'progress', label: '进度', width: 145, slot: 'progress' },
-  { prop: 'message', label: '信息', minWidth: 180, showOverflowTooltip: true },
-  { prop: 'createdAt', label: '时间', width: 170, slot: 'createdAt' },
-  { prop: 'actionColumn', label: '操作', width: 170, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+  { prop: 'type', label: t('website.certificateDrawer.type'), width: 75, slot: 'type' },
+  { prop: 'status', label: t('website.status'), width: 90, slot: 'status' },
+  { prop: 'progress', label: t('website.certificateDrawer.progress'), width: 145, slot: 'progress' },
+  { prop: 'message', label: t('website.certificateDrawer.info'), minWidth: 180, showOverflowTooltip: true },
+  { prop: 'createdAt', label: t('website.certificateDrawer.time'), width: 170, slot: 'createdAt' },
+  { prop: 'actionColumn', label: t('website.certificateDrawer.action'), width: 170, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
 ])
 
-const statusText: Record<string, string> = {
-  active: '有效',
-  expiring: '即将到期',
-  expired: '已过期',
-  disabled: '已关闭',
-  error: '异常',
-  queued: '排队中',
-  running: '执行中',
-  canceling: '取消中',
-  succeeded: '成功',
-  failed: '失败',
-  canceled: '已取消',
-  interrupted: '已中断'
-}
+const statusText = computed<Record<string, string>>(() => Object.fromEntries(
+  ['active', 'expiring', 'expired', 'disabled', 'error', 'queued', 'running', 'canceling', 'succeeded', 'failed', 'canceled', 'interrupted']
+    .map((status) => [status, t(`website.certificateDrawer.statuses.${status}`)])
+))
 
 const statusType = (status: string) => {
   if (status === 'active' || status === 'succeeded') return 'success'
@@ -120,9 +111,9 @@ const issue = async () => {
   }
   try {
     await ElMessageBox.confirm(
-      `将为 ${props.website.domain} 发起 HTTP-01 验证，请确认所有域名均已解析到本服务器且公网 80 端口可访问。`,
-      certificate.value ? '重新签发证书' : '申请证书',
-      { type: 'warning', confirmButtonText: '开始签发' }
+      t('website.certificateDrawer.issueConfirm', { domain: props.website.domain }),
+      t(certificate.value ? 'website.certificateDrawer.reissueTitle' : 'website.certificateDrawer.issueTitle'),
+      { type: 'warning', confirmButtonText: t('website.certificateDrawer.startIssue') }
     )
     submitting.value = true
     await Api.issueWebsiteCertificate({
@@ -158,12 +149,12 @@ const disable = async () => {
   if (!certificate.value?.id) return
   try {
     const result = await ElMessageBox.prompt(
-      `关闭后将移除 Nginx HTTPS 监听，但保留证书文件。请输入主域名 ${props.website.name} 确认。`,
-      '关闭网站 SSL',
+      t('website.certificateDrawer.disableConfirm', { domain: props.website.name }),
+      t('website.certificateDrawer.disableTitle'),
       {
         type: 'warning',
         inputPlaceholder: props.website.name,
-        inputValidator: (value) => value === props.website.name || '主域名不匹配'
+        inputValidator: (value) => value === props.website.name || t('website.certificateDrawer.domainMismatch')
       }
     )
     await Api.disableWebsiteCertificate(certificate.value.id, { confirmDomain: result.value })
@@ -189,13 +180,13 @@ const cancelTask = async (task: Record<string, any>) => {
 
 const showLog = async (task: Record<string, any>) => {
   logDialog.show = true
-  logDialog.title = `${task.websiteName} · ${task.operation === 'renew' ? '续签' : '签发'}日志`
+  logDialog.title = `${task.websiteName} · ${t(`website.certificateDrawer.${task.operation === 'renew' ? 'renew' : 'issue'}`)}${t('website.certificateDrawer.logSuffix')}`
   logDialog.loading = true
   try {
     const response = await Api.getCertificateTaskLog(task.id)
-    logDialog.content = response.data?.content || '暂无日志'
+    logDialog.content = response.data?.content || t('website.certificateDrawer.noLog')
   } catch (error: any) {
-    logDialog.content = error.message || '读取日志失败'
+    logDialog.content = error.message || t('website.certificateDrawer.logReadFailed')
   } finally {
     logDialog.loading = false
   }
@@ -228,7 +219,7 @@ onBeforeUnmount(() => {
 <template>
   <custom-drawer
     :visible="modelValue"
-    :title="`SSL 证书 · ${website.name || ''}`"
+    :title="t('website.certificateDrawer.title', { name: website.name || '' })"
     size="720px"
     destroy-on-close
     :show-footer="false"
@@ -236,7 +227,7 @@ onBeforeUnmount(() => {
   >
     <div v-loading="loading">
       <el-alert
-        title="ACME 使用 HTTP-01 验证：域名必须解析到本机，且公网 80 端口需要能够访问。私钥只保存在服务器，不会通过 API 返回。"
+        :title="t('website.certificateDrawer.acmeTip')"
         type="info"
         show-icon
         :closable="false"
@@ -244,50 +235,50 @@ onBeforeUnmount(() => {
       />
 
       <el-descriptions v-if="certificate" :column="2" border style="margin-bottom: 18px">
-        <el-descriptions-item label="状态">
+        <el-descriptions-item :label="t('website.status')">
           <el-tag :type="statusType(certificate.status)">
             {{ statusText[certificate.status] || certificate.status }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="颁发机构">{{ certificate.issuer || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="覆盖域名" :span="2">{{ certificate.domains }}</el-descriptions-item>
-        <el-descriptions-item label="生效时间">{{ formatTime(certificate.notBefore) }}</el-descriptions-item>
-        <el-descriptions-item label="到期时间">{{ formatTime(certificate.notAfter) }}</el-descriptions-item>
-        <el-descriptions-item label="自动续签">{{ certificate.autoRenew ? '已开启' : '已关闭' }}</el-descriptions-item>
-        <el-descriptions-item label="强制 HTTPS">{{ certificate.forceHttps ? '已开启' : '已关闭' }}</el-descriptions-item>
-        <el-descriptions-item v-if="certificate.lastError" label="最近错误" :span="2">
+        <el-descriptions-item :label="t('website.certificateDrawer.issuer')">{{ certificate.issuer || '-' }}</el-descriptions-item>
+        <el-descriptions-item :label="t('website.certificateDrawer.domains')" :span="2">{{ certificate.domains }}</el-descriptions-item>
+        <el-descriptions-item :label="t('website.certificateDrawer.validFrom')">{{ formatTime(certificate.notBefore) }}</el-descriptions-item>
+        <el-descriptions-item :label="t('website.certificateDrawer.validUntil')">{{ formatTime(certificate.notAfter) }}</el-descriptions-item>
+        <el-descriptions-item :label="t('website.certificateDrawer.autoRenew')">{{ certificate.autoRenew ? t('website.certificateDrawer.on') : t('website.certificateDrawer.off') }}</el-descriptions-item>
+        <el-descriptions-item :label="t('website.certificateDrawer.forceHttps')">{{ certificate.forceHttps ? t('website.certificateDrawer.on') : t('website.certificateDrawer.off') }}</el-descriptions-item>
+        <el-descriptions-item v-if="certificate.lastError" :label="t('website.certificateDrawer.lastError')" :span="2">
           <span class="error-text">{{ certificate.lastError }}</span>
         </el-descriptions-item>
       </el-descriptions>
 
       <el-form label-width="110px" style="max-width: 620px">
-        <el-form-item label="账户邮箱" required>
+        <el-form-item :label="t('website.certificateDrawer.accountEmail')" required>
           <el-input v-model="form.email" placeholder="admin@example.com" :disabled="!!activeTask" />
         </el-form-item>
-        <el-form-item label="自动续签">
+        <el-form-item :label="t('website.certificateDrawer.autoRenew')">
           <el-switch v-model="form.autoRenew" :disabled="!!activeTask" />
         </el-form-item>
-        <el-form-item label="提前续签">
+        <el-form-item :label="t('website.certificateDrawer.renewEarly')">
           <el-input-number v-model="form.renewBeforeDays" :min="1" :max="90" :disabled="!!activeTask" />
-          <span class="form-tip">天</span>
+          <span class="form-tip">{{ t('website.certificateDrawer.days') }}</span>
         </el-form-item>
-        <el-form-item label="强制 HTTPS">
+        <el-form-item :label="t('website.certificateDrawer.forceHttps')">
           <el-switch v-model="form.forceHttps" :disabled="!!activeTask" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="submitting" :disabled="!!activeTask" @click="issue">
-            {{ certificateEnabled ? '重新签发并应用设置' : '申请并部署证书' }}
+            {{ certificateEnabled ? t('website.certificateDrawer.reissueApply') : t('website.certificateDrawer.issueDeploy') }}
           </el-button>
-          <el-button v-if="certificateEnabled" :disabled="!!activeTask" @click="renew">立即续签</el-button>
+          <el-button v-if="certificateEnabled" :disabled="!!activeTask" @click="renew">{{ t('website.certificateDrawer.renewNow') }}</el-button>
           <el-button v-if="certificateEnabled" type="danger" plain :disabled="!!activeTask" @click="disable">
-            关闭 SSL
+            {{ t('website.certificateDrawer.disableSsl') }}
           </el-button>
         </el-form-item>
       </el-form>
 
-      <el-divider content-position="left">最近任务</el-divider>
-      <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" empty-text="暂无证书任务">
-        <template #type="{ row }">{{ row.operation === 'renew' ? '续签' : '签发' }}</template>
+      <el-divider content-position="left">{{ t('website.certificateDrawer.recentTasks') }}</el-divider>
+      <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" :empty-text="t('website.certificateDrawer.noTasks')">
+        <template #type="{ row }">{{ t(`website.certificateDrawer.${row.operation === 'renew' ? 'renew' : 'issue'}`) }}</template>
         <template #status="{ row }">
             <el-tag size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
         </template>
@@ -297,7 +288,7 @@ onBeforeUnmount(() => {
         <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
         <template #actionColumn="{ row }">
             <div class="table-row-actions">
-              <el-button link type="primary" :icon="Document" @click="showLog(row)">日志</el-button>
+              <el-button link type="primary" :icon="Document" @click="showLog(row)">{{ t('website.certificateDrawer.log') }}</el-button>
               <el-button
                 v-if="activeStatuses.includes(row.status)"
                 link
@@ -305,7 +296,7 @@ onBeforeUnmount(() => {
                 :icon="CircleClose"
                 @click="cancelTask(row)"
               >
-                取消
+                {{ t('website.certificateDrawer.cancel') }}
               </el-button>
             </div>
         </template>

@@ -12,6 +12,12 @@ export default {
     alarm: 'Alarm notifications',
     message: 'Message notifications'
   },
+  alarmPage: {
+    list: 'Alarm list', settings: 'Alarm settings', logs: 'Alarm logs', title: 'Title', status: 'Status', method: 'Notification method', condition: 'Alarm condition', action: 'Actions', taskType: 'Task type', certificateExpiry: 'Website certificate (SSL) expiry', website: 'Website', allWebsites: 'All websites', remainingDays: 'Days remaining', days: 'days', sendCount: 'Send count', times: 'times', email: 'Email', dingtalk: 'DingTalk', feishu: 'Feishu', addTask: 'Add task', start: 'Start', stop: 'Stop', empty: 'No tasks. Add a task to get started.'
+  },
+  messagePage: {
+    title: 'Title', submittedAt: 'Submitted at', type: 'Type', markAllRead: 'Mark all read', deleteAll: 'Delete all', empty: 'No messages'
+  },
   port: {
     modifyPanelPort: 'Modify panel port',
     panelPort: 'Panel port',

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Download, Refresh } from '@element-plus/icons-vue'
 import type { ContainerItem } from '../types'
+import i18n from '@/lang'
+
+const t = i18n.t as any
 
 defineProps<{
   visible: boolean
@@ -28,48 +31,48 @@ const emit = defineEmits<{
 <template>
   <custom-drawer
     :visible="visible"
-    :title="`${target?.Names || '容器'} 日志`"
+    :title="t('container.logViewer.title', { name: target?.Names || t('container.logViewer.containerFallback') })"
     size="880px"
-    cancel-text="关闭"
+    :cancel-text="t('container.logViewer.close')"
     :show-confirm="false"
     :on-close="() => emit('update:visible', false)"
   >
     <div class="logs-drawer-body">
       <div class="logs-toolbar">
         <div class="toolbar-field">
-          <span>过滤</span>
+          <span>{{ t('container.logViewer.filter') }}</span>
           <el-select
             :model-value="timeFilter"
-            placeholder="过滤"
+            :placeholder="t('container.logViewer.filter')"
             @update:model-value="emit('update:timeFilter', String($event || 'all'))"
           >
-            <el-option label="全部" value="all" />
-            <el-option label="最近一天" value="24h" />
-            <el-option label="最近 4 小时" value="4h" />
-            <el-option label="最近 1 小时" value="1h" />
-            <el-option label="最近 10 分钟" value="10m" />
-            <el-option label="自定义时间" value="custom" />
+            <el-option :label="t('container.logViewer.all')" value="all" />
+            <el-option :label="t('container.logViewer.lastDay')" value="24h" />
+            <el-option :label="t('container.logViewer.last4Hours')" value="4h" />
+            <el-option :label="t('container.logViewer.lastHour')" value="1h" />
+            <el-option :label="t('container.logViewer.last10Minutes')" value="10m" />
+            <el-option :label="t('container.logViewer.customTime')" value="custom" />
           </el-select>
         </div>
         <div v-if="timeFilter === 'custom'" class="toolbar-field toolbar-field--range">
-          <span>时间</span>
+          <span>{{ t('container.logViewer.time') }}</span>
           <el-date-picker
             :model-value="customRange"
             type="datetimerange"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            range-separator="至"
+            :start-placeholder="t('container.logViewer.startTime')"
+            :end-placeholder="t('container.logViewer.endTime')"
+            :range-separator="t('container.logViewer.rangeSeparator')"
             @update:model-value="emit('update:customRange', ($event || []) as [Date, Date] | [])"
           />
         </div>
         <div class="toolbar-field">
-          <span>条数</span>
+          <span>{{ t('container.logViewer.count') }}</span>
           <el-select
             :model-value="tail"
-            placeholder="条数"
+            :placeholder="t('container.logViewer.count')"
             @update:model-value="emit('update:tail', Number($event || 100))"
           >
-            <el-option label="所有" :value="10000" />
+            <el-option :label="t('container.logViewer.allCount')" :value="10000" />
             <el-option label="100" :value="100" />
             <el-option label="200" :value="200" />
             <el-option label="500" :value="500" />
@@ -79,16 +82,16 @@ const emit = defineEmits<{
         <el-switch
           :model-value="timestamps"
           inline-prompt
-          active-text="时间戳"
-          inactive-text="原始"
+          :active-text="t('container.logViewer.timestamp')"
+          :inactive-text="t('container.logViewer.raw')"
           @update:model-value="emit('update:timestamps', Boolean($event))"
         />
-        <el-button :icon="Refresh" :loading="loading" @click="emit('refresh')">刷新日志</el-button>
-        <el-button :icon="Download" :loading="downloading" @click="emit('download')">下载日志</el-button>
+        <el-button :icon="Refresh" :loading="loading" @click="emit('refresh')">{{ t('container.logViewer.refresh') }}</el-button>
+        <el-button :icon="Download" :loading="downloading" @click="emit('download')">{{ t('container.logViewer.download') }}</el-button>
       </div>
       <div v-loading="loading" class="logs-box">
         <pre v-if="logsText">{{ logsText }}</pre>
-        <el-empty v-else description="暂无日志" />
+        <el-empty v-else :description="t('container.logViewer.empty')" />
       </div>
     </div>
   </custom-drawer>

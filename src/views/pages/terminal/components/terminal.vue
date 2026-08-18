@@ -461,7 +461,7 @@ const initializeTerminal = async () => {
   terminal.loadAddon(fitAddon)
   terminal.open(terminalDiv.value)
   fitAddon.fit()
-  terminal.write('\x1b[1;38;5;45mOneinStack Root Console\x1b[0m \x1b[38;5;245m· 等待身份认证\x1b[0m\r\n')
+  terminal.write(`\x1b[1;38;5;45mOneinStack Root Console\x1b[0m \x1b[38;5;245m· ${t('terminal.waitingAuthenticationBanner')}\x1b[0m\r\n`)
   terminal.onTitleChange(syncTerminalTitle)
   terminal.onData(data => {
     if (socket?.readyState === WebSocket.OPEN) socket.send(encodeInput(data))

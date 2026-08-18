@@ -2,6 +2,9 @@
 import { computed, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import type { DialogType, ImageItem, RegistryItem } from '../types'
+import i18n from '@/lang'
+
+const t = i18n.t as any
 
 const props = defineProps<{
   visible: boolean
@@ -35,24 +38,15 @@ const networkModeOptions = [
 
 const title = computed<string>(() => {
   switch (props.dialogType) {
-    case 'image':
-      return '拉取镜像'
-    case 'image-import':
-      return '导入镜像'
-    case 'image-build':
-      return '构建镜像'
-    case 'image-tag':
-      return '修改镜像标签'
-    case 'image-push':
-      return '推送镜像'
-    case 'network':
-      return '创建网络'
-    case 'volume':
-      return '创建存储卷'
-    case 'registry':
-      return props.dialogTarget ? '编辑 Registry' : '新增 Registry'
-    case 'template':
-      return props.dialogTarget ? '编辑编排模板' : '创建编排模板'
+    case 'image': return t('container.resourceDialog.titles.image')
+    case 'image-import': return t('container.resourceDialog.titles.imageImport')
+    case 'image-build': return t('container.resourceDialog.titles.imageBuild')
+    case 'image-tag': return t('container.resourceDialog.titles.imageTag')
+    case 'image-push': return t('container.resourceDialog.titles.imagePush')
+    case 'network': return t('container.resourceDialog.titles.network')
+    case 'volume': return t('container.resourceDialog.titles.volume')
+    case 'registry': return t(props.dialogTarget ? 'container.resourceDialog.titles.registryEdit' : 'container.resourceDialog.titles.registryCreate')
+    case 'template': return t(props.dialogTarget ? 'container.resourceDialog.titles.templateEdit' : 'container.resourceDialog.titles.templateCreate')
     default:
       return ''
   }
@@ -70,105 +64,105 @@ defineExpose({
     :visible="visible"
     :title="title"
     size="720px"
-    confirm-text="确认"
+    :confirm-text="t('container.resourceDialog.confirm')"
     :loading="saving"
     :on-close="() => emit('update:visible', false)"
     :on-confirm="() => emit('confirm')"
   >
     <el-form ref="formRef" :model="form" :rules="rules" label-width="112px" class="resource-dialog-form">
       <template v-if="dialogType === 'image'">
-        <el-form-item label="拉取方式">
+        <el-form-item :label="t('container.resourceDialog.pullMode')">
           <el-radio-group v-model="imageActionForm.pullMode">
-            <el-radio value="reference">完整镜像引用</el-radio>
-            <el-radio value="registry">选择 Registry</el-radio>
+            <el-radio value="reference">{{ t('container.resourceDialog.fullReference') }}</el-radio>
+            <el-radio value="registry">{{ t('container.resourceDialog.selectRegistry') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="imageActionForm.pullMode === 'reference'" label="镜像引用">
-          <el-input v-model.trim="imageActionForm.reference" placeholder="请输入镜像引用，例如 nginx:1.27" />
+        <el-form-item v-if="imageActionForm.pullMode === 'reference'" :label="t('container.resourceDialog.imageReference')">
+          <el-input v-model.trim="imageActionForm.reference" :placeholder="t('container.resourceDialog.imageReferencePlaceholder')" />
         </el-form-item>
         <template v-else>
           <el-form-item label="Registry">
-            <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
+            <el-select v-model="imageActionForm.registryId" :placeholder="t('container.resourceDialog.registryPlaceholder')" filterable>
               <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="镜像名">
-            <el-input v-model.trim="imageActionForm.imageName" placeholder="请输入镜像名，例如 library/nginx:1.27" />
+          <el-form-item :label="t('container.resourceDialog.imageName')">
+            <el-input v-model.trim="imageActionForm.imageName" :placeholder="t('container.resourceDialog.imageNamePlaceholder')" />
           </el-form-item>
         </template>
       </template>
 
-      <el-form-item v-if="dialogType === 'image-import'" label="tar 文件">
+      <el-form-item v-if="dialogType === 'image-import'" :label="t('container.resourceDialog.tarFile')">
         <input class="file-picker" type="file" accept=".tar,.gz,.tgz,.xz,.zst" @change="emit('import-file-change', $event)" />
-        <div class="field-help">请选择 Docker save 导出的 tar 镜像文件，字段名会按文档提交为 `file`。</div>
+        <div class="field-help">{{ t('container.resourceDialog.tarHelp') }}</div>
       </el-form-item>
 
       <template v-if="dialogType === 'image-build'">
-        <el-form-item label="目标镜像">
-          <el-input v-model.trim="imageActionForm.buildName" placeholder="请输入目标镜像，例如 demo/web:latest" />
+        <el-form-item :label="t('container.resourceDialog.targetImage')">
+          <el-input v-model.trim="imageActionForm.buildName" :placeholder="t('container.resourceDialog.targetImagePlaceholder')" />
         </el-form-item>
-        <el-form-item label="构建方式">
+        <el-form-item :label="t('container.resourceDialog.buildMode')">
           <el-radio-group v-model="imageActionForm.buildMode">
-            <el-radio value="dockerfile">编辑 Dockerfile</el-radio>
-            <el-radio value="path">服务器路径</el-radio>
+            <el-radio value="dockerfile">{{ t('container.resourceDialog.editDockerfile') }}</el-radio>
+            <el-radio value="path">{{ t('container.resourceDialog.serverPath') }}</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item v-if="imageActionForm.buildMode === 'dockerfile'" label="Dockerfile">
           <el-input v-model="imageActionForm.dockerfile" type="textarea" :rows="8" />
         </el-form-item>
         <template v-else>
-          <el-form-item label="上下文目录">
-            <el-input v-model.trim="imageActionForm.contextPath" placeholder="请输入构建上下文目录，例如 /usr/local/one/docker-build/demo" />
+          <el-form-item :label="t('container.resourceDialog.contextPath')">
+            <el-input v-model.trim="imageActionForm.contextPath" :placeholder="t('container.resourceDialog.contextPathPlaceholder')" />
           </el-form-item>
           <el-form-item label="Dockerfile">
-            <el-input v-model.trim="imageActionForm.dockerfilePath" placeholder="请输入 Dockerfile 路径，留空则使用 contextPath/Dockerfile" />
+            <el-input v-model.trim="imageActionForm.dockerfilePath" :placeholder="t('container.resourceDialog.dockerfilePathPlaceholder')" />
           </el-form-item>
         </template>
         <el-form-item label="Labels">
-          <el-input v-model="imageActionForm.labelsText" type="textarea" :rows="2" placeholder="请输入 Labels，每行一个 key=value，可选" />
+          <el-input v-model="imageActionForm.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'image-tag'">
-        <el-form-item label="当前镜像">
+        <el-form-item :label="t('container.resourceDialog.currentImage')">
           <el-input :model-value="dialogTarget ? imageReference(dialogTarget) : ''" disabled />
         </el-form-item>
-        <el-form-item label="新标签">
-          <el-input v-model.trim="imageActionForm.tagReference" placeholder="请输入新标签，例如 demo/web:stable" />
+        <el-form-item :label="t('container.resourceDialog.newTag')">
+          <el-input v-model.trim="imageActionForm.tagReference" :placeholder="t('container.resourceDialog.newTagPlaceholder')" />
         </el-form-item>
-        <el-form-item label="移除旧标签">
+        <el-form-item :label="t('container.resourceDialog.removeOldTag')">
           <el-switch v-model="imageActionForm.removeOther" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'image-push'">
-        <el-form-item label="推送方式">
+        <el-form-item :label="t('container.resourceDialog.pushMode')">
           <el-radio-group v-model="imageActionForm.pushMode">
-            <el-radio value="reference">完整镜像引用</el-radio>
-            <el-radio value="registry">选择 Registry</el-radio>
+            <el-radio value="reference">{{ t('container.resourceDialog.fullReference') }}</el-radio>
+            <el-radio value="registry">{{ t('container.resourceDialog.selectRegistry') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="imageActionForm.pushMode === 'reference'" label="镜像引用">
-          <el-input v-model.trim="imageActionForm.pushReference" placeholder="请输入镜像引用，例如 docker.io/team/demo:latest" />
+        <el-form-item v-if="imageActionForm.pushMode === 'reference'" :label="t('container.resourceDialog.imageReference')">
+          <el-input v-model.trim="imageActionForm.pushReference" :placeholder="t('container.resourceDialog.pushReferencePlaceholder')" />
         </el-form-item>
         <template v-else>
           <el-form-item label="Registry">
-            <el-select v-model="imageActionForm.registryId" placeholder="请选择 Registry" filterable>
+            <el-select v-model="imageActionForm.registryId" :placeholder="t('container.resourceDialog.registryPlaceholder')" filterable>
               <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="镜像名">
-            <el-input v-model.trim="imageActionForm.pushImageName" placeholder="请输入镜像名，例如 team/demo:latest" />
+          <el-form-item :label="t('container.resourceDialog.imageName')">
+            <el-input v-model.trim="imageActionForm.pushImageName" :placeholder="t('container.resourceDialog.pushImageNamePlaceholder')" />
           </el-form-item>
         </template>
       </template>
 
       <template v-if="dialogType === 'network' || dialogType === 'volume'">
-        <el-form-item label="名称" prop="name">
-          <el-input v-model.trim="form.name" placeholder="请输入名称，例如 app-network" />
+        <el-form-item :label="t('container.resourceDialog.name')" prop="name">
+          <el-input v-model.trim="form.name" :placeholder="t('container.resourceDialog.namePlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="dialogType === 'network'" label="模式">
-          <el-select v-model="form.driver" placeholder="请选择模式">
+        <el-form-item v-if="dialogType === 'network'" :label="t('container.resourceDialog.mode')">
+          <el-select v-model="form.driver" :placeholder="t('container.resourceDialog.selectMode')">
             <el-option
               v-for="item in networkModeOptions"
               :key="item.value"
@@ -177,106 +171,106 @@ defineExpose({
             />
           </el-select>
         </el-form-item>
-        <el-form-item v-else label="模式·">
-          <el-input v-model.trim="form.driver" placeholder="请输入模式，例如 local" />
+        <el-form-item v-else :label="t('container.resourceDialog.mode')">
+          <el-input v-model.trim="form.driver" :placeholder="t('container.resourceDialog.modePlaceholder')" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'network'">
-        <el-divider content-position="left">IPAM 与扩展参数</el-divider>
+        <el-divider content-position="left">{{ t('container.resourceDialog.ipam') }}</el-divider>
         <el-form-item label="IPv4">
           <el-switch v-model="form.networkIpv4" />
         </el-form-item>
         <template v-if="form.networkIpv4">
-          <el-form-item label="IPv4 子网">
-            <el-input v-model.trim="form.networkIpv4Subnet" placeholder="请输入 IPv4 子网，例如 172.16.10.0/24" />
+          <el-form-item :label="t('container.resourceDialog.subnet', { version: 'IPv4' })">
+            <el-input v-model.trim="form.networkIpv4Subnet" :placeholder="t('container.resourceDialog.subnetPlaceholder', { version: 'IPv4', example: '172.16.10.0/24' })" />
           </el-form-item>
-          <el-form-item label="IPv4 网关">
-            <el-input v-model.trim="form.networkIpv4Gateway" placeholder="请输入 IPv4 网关，例如 172.16.10.1" />
+          <el-form-item :label="t('container.resourceDialog.gateway', { version: 'IPv4' })">
+            <el-input v-model.trim="form.networkIpv4Gateway" :placeholder="t('container.resourceDialog.gatewayPlaceholder', { version: 'IPv4', example: '172.16.10.1' })" />
           </el-form-item>
-          <el-form-item label="IPv4 范围">
-            <el-input v-model.trim="form.networkIpv4IpRange" placeholder="请输入 IPv4 范围，例如 172.16.10.0/25，可选" />
+          <el-form-item :label="t('container.resourceDialog.range', { version: 'IPv4' })">
+            <el-input v-model.trim="form.networkIpv4IpRange" :placeholder="t('container.resourceDialog.rangePlaceholder', { version: 'IPv4', example: '172.16.10.0/25' })" />
           </el-form-item>
-          <el-form-item label="IPv4 保留">
-            <el-input v-model="form.networkIpv4AuxAddressesText" type="textarea" :rows="2" placeholder="请输入 IPv4 保留地址，例如 host1=172.16.10.10" />
+          <el-form-item :label="t('container.resourceDialog.reserved', { version: 'IPv4' })">
+            <el-input v-model="form.networkIpv4AuxAddressesText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.reservedPlaceholder', { version: 'IPv4', example: 'host1=172.16.10.10' })" />
           </el-form-item>
         </template>
         <el-form-item label="IPv6">
           <el-switch v-model="form.networkIpv6" />
         </el-form-item>
         <template v-if="form.networkIpv6">
-          <el-form-item label="IPv6 子网">
-            <el-input v-model.trim="form.networkIpv6Subnet" placeholder="请输入 IPv6 子网，例如 2408:400e::/48" />
+          <el-form-item :label="t('container.resourceDialog.subnet', { version: 'IPv6' })">
+            <el-input v-model.trim="form.networkIpv6Subnet" :placeholder="t('container.resourceDialog.subnetPlaceholder', { version: 'IPv6', example: '2408:400e::/48' })" />
           </el-form-item>
-          <el-form-item label="IPv6 网关">
-            <el-input v-model.trim="form.networkIpv6Gateway" placeholder="请输入 IPv6 网关，例如 2408:400e::1" />
+          <el-form-item :label="t('container.resourceDialog.gateway', { version: 'IPv6' })">
+            <el-input v-model.trim="form.networkIpv6Gateway" :placeholder="t('container.resourceDialog.gatewayPlaceholder', { version: 'IPv6', example: '2408:400e::1' })" />
           </el-form-item>
-          <el-form-item label="IPv6 范围">
-            <el-input v-model.trim="form.networkIpv6IpRange" placeholder="请输入 IPv6 范围，例如 2408:400e::/64，可选" />
+          <el-form-item :label="t('container.resourceDialog.range', { version: 'IPv6' })">
+            <el-input v-model.trim="form.networkIpv6IpRange" :placeholder="t('container.resourceDialog.rangePlaceholder', { version: 'IPv6', example: '2408:400e::/64' })" />
           </el-form-item>
-          <el-form-item label="IPv6 保留">
-            <el-input v-model="form.networkIpv6AuxAddressesText" type="textarea" :rows="2" placeholder="请输入 IPv6 保留地址，例如 host1=2408:400e::10" />
+          <el-form-item :label="t('container.resourceDialog.reserved', { version: 'IPv6' })">
+            <el-input v-model="form.networkIpv6AuxAddressesText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.reservedPlaceholder', { version: 'IPv6', example: 'host1=2408:400e::10' })" />
           </el-form-item>
         </template>
         <el-form-item label="Options">
-          <el-input v-model="form.optionsText" type="textarea" :rows="2" placeholder="请输入 Options，每行一个 key=value，可选" />
+          <el-input v-model="form.optionsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionsPlaceholder')" />
         </el-form-item>
         <el-form-item label="Labels">
-          <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="请输入 Labels，每行一个 key=value，可选" />
+          <el-input v-model="form.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'volume'">
-        <el-divider content-position="left">存储参数</el-divider>
+        <el-divider content-position="left">{{ t('container.resourceDialog.storageParameters') }}</el-divider>
         <el-form-item label="NFS">
           <el-switch v-model="form.volumeNfs" />
-          <div class="field-help">开启后按 NFS 存储卷创建，Options 可填写 type/device/o。</div>
+          <div class="field-help">{{ t('container.resourceDialog.nfsHelp') }}</div>
         </el-form-item>
         <el-form-item label="Options">
           <el-input
             v-model="form.optionsText"
             type="textarea"
             :rows="3"
-            placeholder="请输入 Options，例如 type=nfs&#10;device=:/export/data&#10;o=addr=192.168.1.10,rw"
+            :placeholder="t('container.resourceDialog.nfsOptionsPlaceholder')"
           />
         </el-form-item>
         <el-form-item label="Labels">
-          <el-input v-model="form.labelsText" type="textarea" :rows="2" placeholder="请输入 Labels，每行一个 key=value，可选" />
+          <el-input v-model="form.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'registry'">
-        <el-form-item label="名称">
-          <el-input v-model.trim="registryForm.name" placeholder="请输入 Registry 名称，例如 Docker Hub" />
+        <el-form-item :label="t('container.resourceDialog.name')">
+          <el-input v-model.trim="registryForm.name" :placeholder="t('container.resourceDialog.registryNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="地址">
-          <el-input v-model.trim="registryForm.address" placeholder="请输入 Registry 地址，例如 docker.io 或 registry.example.com:5000" />
+        <el-form-item :label="t('container.resourceDialog.address')">
+          <el-input v-model.trim="registryForm.address" :placeholder="t('container.resourceDialog.registryAddressPlaceholder')" />
         </el-form-item>
-        <el-form-item label="协议">
+        <el-form-item :label="t('container.resourceDialog.protocol')">
           <el-select v-model="registryForm.protocol">
             <el-option label="https" value="https" />
             <el-option label="http" value="http" />
           </el-select>
         </el-form-item>
-        <el-form-item label="认证">
+        <el-form-item :label="t('container.resourceDialog.auth')">
           <el-switch v-model="registryForm.authEnabled" />
         </el-form-item>
         <template v-if="registryForm.authEnabled">
-          <el-form-item label="用户名">
-            <el-input v-model.trim="registryForm.username" placeholder="请输入用户名" />
+          <el-form-item :label="t('container.resourceDialog.username')">
+            <el-input v-model.trim="registryForm.username" :placeholder="t('container.resourceDialog.usernamePlaceholder')" />
           </el-form-item>
-          <el-form-item label="密码">
-            <el-input v-model="registryForm.password" type="password" show-password placeholder="请输入密码，编辑时留空表示不替换密码" />
+          <el-form-item :label="t('container.resourceDialog.password')">
+            <el-input v-model="registryForm.password" type="password" show-password :placeholder="t('container.resourceDialog.passwordPlaceholder')" />
           </el-form-item>
         </template>
       </template>
 
       <template v-if="dialogType === 'template'">
-        <el-form-item label="名称">
-          <el-input v-model.trim="templateForm.name" placeholder="请输入模板名称，例如 nginx-compose" />
+        <el-form-item :label="t('container.resourceDialog.name')">
+          <el-input v-model.trim="templateForm.name" :placeholder="t('container.resourceDialog.templateNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="说明">
-          <el-input v-model.trim="templateForm.description" placeholder="请输入模板说明，可选" />
+        <el-form-item :label="t('container.resourceDialog.description')">
+          <el-input v-model.trim="templateForm.description" :placeholder="t('container.resourceDialog.templateDescriptionPlaceholder')" />
         </el-form-item>
         <el-form-item label="YAML">
           <el-input v-model="templateForm.content" type="textarea" :rows="10" />

@@ -61,6 +61,7 @@ export default {
   deleteSuccess: 'Deleted successfully',
   operationSuccess: 'Operation succeeded',
   operationFailed: 'Operation failed',
+  operationTooFrequent: 'Too many operations. Please try again later.',
   request: {
     failed: 'Request failed',
     httpStatus: '{message}: {status}',

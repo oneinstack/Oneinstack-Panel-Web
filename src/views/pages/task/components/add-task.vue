@@ -1,9 +1,9 @@
 <template>
   <custom-drawer
     :visible="drawer"
-    :title="type ? '添加计划任务' : '修改计划任务'"
+    :title="i18n.t(type ? 'task.editor.addTitle' : 'task.editor.editTitle')"
     size="760px"
-    confirm-text="确定"
+    :confirm-text="i18n.t('task.editor.confirm')"
     :on-close="handleClose"
     :on-confirm="handleSubmit"
   >
@@ -20,14 +20,14 @@
         </el-select>
       </el-form-item> -->
 
-      <el-form-item label="任务名称" prop="name" required>
-        <el-input v-model="ruleForm.name" placeholder="请输入任务名称" />
+      <el-form-item :label="i18n.t('task.editor.taskName')" prop="name" required>
+        <el-input v-model="ruleForm.name" :placeholder="i18n.t('task.editor.taskNamePlaceholder')" />
       </el-form-item>
 
-      <el-form-item label="任务类型" required>
+      <el-form-item :label="i18n.t('task.editor.taskType')" required>
         <el-radio-group v-model="ruleForm.task_type">
-          <el-radio-button value="template">安全模板</el-radio-button>
-          <el-radio-button value="shell">高级 Shell</el-radio-button>
+          <el-radio-button value="template">{{ i18n.t('task.editor.templateType') }}</el-radio-button>
+          <el-radio-button value="shell">{{ i18n.t('task.editor.shellType') }}</el-radio-button>
         </el-radio-group>
       </el-form-item>
 
@@ -36,11 +36,11 @@
           type="success"
           :closable="false"
           show-icon
-          title="安全模板使用固定可执行文件和结构化参数，不经过 Shell 解析。"
+          :title="i18n.t('task.editor.templateSafetyTip')"
           style="margin-bottom: 18px"
         />
-        <el-form-item label="任务模板" required>
-          <el-select v-model="ruleForm.template_id" style="width: 100%" placeholder="请选择模板">
+        <el-form-item :label="i18n.t('task.editor.taskTemplate')" required>
+          <el-select v-model="ruleForm.template_id" style="width: 100%" :placeholder="i18n.t('task.editor.templatePlaceholder')">
             <el-option
               v-for="template in templates"
               :key="template.id"
@@ -65,14 +65,14 @@
             v-if="parameter.type === 'select'"
             v-model="ruleForm.template_params[parameter.name]"
             style="width: 100%"
-            :placeholder="parameter.placeholder || `请选择${parameter.label}`"
+            :placeholder="parameter.placeholder || (i18n.t as any)('task.editor.selectParameter', { name: parameter.label })"
           >
             <el-option v-for="option in parameter.options" :key="option" :label="option" :value="option" />
           </el-select>
           <el-input
             v-else
             v-model="ruleForm.template_params[parameter.name]"
-            :placeholder="parameter.placeholder || `请输入${parameter.label}`"
+            :placeholder="parameter.placeholder || (i18n.t as any)('task.editor.inputParameter', { name: parameter.label })"
           />
           <span v-if="parameter.description" class="tip-text">{{ parameter.description }}</span>
         </el-form-item>
@@ -83,10 +83,10 @@
           type="warning"
           :closable="false"
           show-icon
-          title="高级 Shell 将以面板进程权限执行。请优先使用安全模板，仅在确认脚本来源和影响范围后启用。"
+          :title="i18n.t('task.editor.shellRiskTip')"
           style="margin-bottom: 18px"
         />
-      <el-form-item label="脚本内容" prop="command" >
+      <el-form-item :label="i18n.t('task.editor.scriptContent')" prop="command" >
         <div class="code-editor-wrapper">
           <pre
             class="code-editor"
@@ -99,41 +99,41 @@
       </el-form-item>
         <el-form-item>
           <el-checkbox v-model="confirmUnsafeShell">
-            我确认该脚本可信，并理解其将以面板权限执行
+            {{ i18n.t('task.editor.shellRiskConfirm') }}
           </el-checkbox>
         </el-form-item>
       </template>
 
-      <el-form-item label="超时时间">
+      <el-form-item :label="i18n.t('task.editor.timeout')">
         <el-input-number
           v-model="ruleForm.timeout_seconds"
           :min="1"
           :max="86400"
           controls-position="right"
         />
-        <span class="tip-text">秒；超时后终止整个命令进程组</span>
+        <span class="tip-text">{{ i18n.t('task.editor.timeoutTip') }}</span>
       </el-form-item>
 
-      <el-form-item label="并发策略">
+      <el-form-item :label="i18n.t('task.editor.concurrencyPolicy')">
         <el-select v-model="ruleForm.concurrency_policy" style="width: 240px">
-          <el-option label="禁止重叠（推荐）" value="forbid" />
+          <el-option :label="i18n.t('task.editor.forbidOverlap')" value="forbid" />
         </el-select>
-        <span class="tip-text">前一次未结束时，新调度会记录为“已跳过”</span>
+        <span class="tip-text">{{ i18n.t('task.editor.concurrencyTip') }}</span>
       </el-form-item>
 
-      <el-form-item label="失败通知">
+      <el-form-item :label="i18n.t('task.editor.failureNotify')">
         <el-switch v-model="ruleForm.notify_on_failure" />
-        <span class="tip-text">失败或超时后使用“监控告警”中已启用的通知通道发送告警</span>
+        <span class="tip-text">{{ i18n.t('task.editor.failureNotifyTip') }}</span>
       </el-form-item>
 
-      <el-form-item label="执行周期" required>
+      <el-form-item :label="i18n.t('task.editor.schedule')" required>
         <div v-for="(cycle, index) in ruleForm.cycles" :key="index" class="cycle-row">
-          <el-select v-model="cycle.type" @change="(val:string) => handleCycleChange(val, index)" placeholder="请选择执行周期" style="width: 100px;">
-            <el-option label="每分钟" value="minute" />
-            <el-option label="每小时" value="hour" />
-            <el-option label="每天" value="day" />
-            <el-option label="每周" value="week" />
-            <el-option label="每月" value="month" />
+          <el-select v-model="cycle.type" @change="(val:string) => handleCycleChange(val, index)" :placeholder="i18n.t('task.editor.schedulePlaceholder')" style="width: 120px;">
+            <el-option :label="i18n.t('task.editor.everyMinute')" value="minute" />
+            <el-option :label="i18n.t('task.editor.everyHour')" value="hour" />
+            <el-option :label="i18n.t('task.editor.everyDay')" value="day" />
+            <el-option :label="i18n.t('task.editor.everyWeek')" value="week" />
+            <el-option :label="i18n.t('task.editor.everyMonth')" value="month" />
             <!-- <el-option label="每N分钟" value="n_minute" /> -->
           </el-select>
 
@@ -146,10 +146,10 @@
                     v-model="monthTime.day" 
                     :min="1" 
                     :max="31" 
-                    placeholder="请输入"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
                     style="width: 120px"
                   >
-                    <template #suffix><span>日</span></template>
+                    <template #suffix><span>{{ i18n.t('task.editor.dayUnit') }}</span></template>
                   </el-input-number>
                 </div>
                 <div class="time-input-group">
@@ -158,10 +158,10 @@
                     v-model="monthTime.hour" 
                     :min="0" 
                     :max="23" 
-                    placeholder="请输入"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
                     style="width: 120px"
                   >
-                    <template #suffix><span>时</span></template>
+                    <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
                   </el-input-number>
                 </div>
                 <div class="time-input-group">
@@ -170,10 +170,10 @@
                     v-model="monthTime.minute" 
                     :min="0" 
                     :max="59" 
-                    placeholder="请输入"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
                     style="width: 120px"
                   >
-                    <template #suffix><span>分</span></template>
+                    <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
                   </el-input-number>
                 </div>
                 
@@ -182,28 +182,28 @@
 
             <template v-if="cycle.type === 'week'">
               <div v-for="(weekTime, wIndex) in cycle.weekTimes" :key="wIndex" class="time-row">
-                <el-select v-model="weekTime.day" placeholder="请输入">
-                  <el-option v-for="i in weekDays" :key="i.value" :label="`周${i.day}`" :value="i.value" />
+                <el-select v-model="weekTime.day" :placeholder="i18n.t('task.editor.inputPlaceholder')">
+                  <el-option v-for="i in weekDays" :key="i.value" :label="i.day" :value="i.value" />
                 </el-select>
                 <el-input-number 
                   controls-position="right"
                   v-model="weekTime.hour" 
                   :min="0" 
                   :max="23" 
-                  placeholder="请输入"
+                  :placeholder="i18n.t('task.editor.inputPlaceholder')"
                   style="width: 120px"
                 >
-                  <template #suffix><span>时</span></template>
+                  <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
                 </el-input-number>
                 <el-input-number 
                   controls-position="right"
                   v-model="weekTime.minute" 
                   :min="0" 
                   :max="59" 
-                  placeholder="请输入"
+                  :placeholder="i18n.t('task.editor.inputPlaceholder')"
                   style="width: 120px"
                 >
-                  <template #suffix><span>分</span></template>
+                  <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
                 </el-input-number>
               </div>
             </template>
@@ -214,20 +214,20 @@
                 v-model="cycle.dayHour" 
                 :min="0" 
                 :max="23" 
-                placeholder="请输入"
+                :placeholder="i18n.t('task.editor.inputPlaceholder')"
                 style="width: 120px"
               >
-                <template #suffix><span>时</span></template>
+                <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
               </el-input-number>
               <el-input-number 
                 controls-position="right"
                 v-model="cycle.dayMinute" 
                 :min="0" 
                 :max="59" 
-                placeholder="请输入"
+                :placeholder="i18n.t('task.editor.inputPlaceholder')"
                 style="width: 120px"
               >
-                <template #suffix><span>分</span></template>
+                <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
               </el-input-number>
             </template>
 
@@ -237,10 +237,10 @@
                 v-model="cycle.hourMinute" 
                 :min="0" 
                 :max="59" 
-                placeholder="请输入"
+                :placeholder="i18n.t('task.editor.inputPlaceholder')"
                 style="width: 120px"
               >
-                <template #suffix><span>分</span></template>
+                <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
               </el-input-number>
             </template>
 
@@ -249,7 +249,7 @@
                 controls-position="right"
                 v-model="cycle.n_minute" 
                 :min="1" 
-                placeholder="请输入N值"
+                :placeholder="i18n.t('task.editor.nValuePlaceholder')"
                 style="width: 120px"
               />
             </template>
@@ -263,7 +263,7 @@
         </div>
         <div class="cycle-actions" style="width: 100%;">
           <el-button type="primary"  @click="addCycle" >
-            <el-icon><Plus />添加</el-icon>
+            <el-icon><Plus /></el-icon>{{ i18n.t('task.editor.addSchedule') }}
           </el-button>
         </div>
         
@@ -312,15 +312,10 @@ interface TaskTemplate {
 }
 
 const templates = ref<TaskTemplate[]>([])
-const weekDays = [
-  { day: '一', value: 1 },
-  { day: '二', value: 2 },
-  { day: '三', value: 3 },
-  { day: '四', value: 4 },
-  { day: '五', value: 5 },
-  { day: '六', value: 6 },
-  { day: '日', value: 0 }
-]
+const weekDays = computed(() => {
+  const labels = i18n.t('task.cron.weekdays') as unknown as string[]
+  return [1, 2, 3, 4, 5, 6, 0].map((value) => ({ day: labels[value], value }))
+})
 
 const ruleForm = reactive({
   name: '',

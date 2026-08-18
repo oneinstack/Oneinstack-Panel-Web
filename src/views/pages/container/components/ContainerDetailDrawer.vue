@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ContainerStats, DetailType } from '../types'
+import i18n from '@/lang'
 
 defineProps<{
   visible: boolean
@@ -36,7 +37,7 @@ const handleClose = () => {
     :title="title"
     size="560px"
     class="container-detail-drawer"
-    cancel-text="关闭"
+    :cancel-text="i18n.t('container.resourceDetail.close')"
     :show-confirm="false"
     :on-close="handleClose"
   >
@@ -47,16 +48,16 @@ const handleClose = () => {
           <strong>{{ detailStats?.cpuPercent || '--' }}</strong>
         </div>
         <div class="stat-card">
-          <span>内存</span>
+          <span>{{ i18n.t('container.resourceDetail.memory') }}</span>
           <strong>{{ detailStats?.memoryPercent || '--' }}</strong>
           <small>{{ detailStats?.memoryUsage || '--' }}</small>
         </div>
         <div class="stat-card">
-          <span>网络 IO</span>
+          <span>{{ i18n.t('container.resourceDetail.networkIo') }}</span>
           <strong>{{ detailStats?.networkIO || '--' }}</strong>
         </div>
         <div class="stat-card">
-          <span>块设备 IO</span>
+          <span>{{ i18n.t('container.resourceDetail.blockIo') }}</span>
           <strong>{{ detailStats?.blockIO || '--' }}</strong>
         </div>
         <div class="stat-card">
@@ -67,8 +68,8 @@ const handleClose = () => {
 
       <div class="detail-json">
         <div class="detail-json__head">
-          <strong>{{ detailType === 'container' ? 'Inspect 安全集' : '资源详情' }}</strong>
-          <span v-if="detailType === 'container'">每 5 秒刷新资源快照</span>
+          <strong>{{ i18n.t(detailType === 'container' ? 'container.resourceDetail.inspect' : 'container.resourceDetail.details') }}</strong>
+          <span v-if="detailType === 'container'">{{ i18n.t('container.resourceDetail.refreshTip') }}</span>
         </div>
         <pre>{{ formatJson(detailData) }}</pre>
       </div>

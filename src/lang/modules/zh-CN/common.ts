@@ -61,6 +61,7 @@ export default {
   deleteSuccess: '删除成功',
   operationSuccess: '操作成功',
   operationFailed: '操作失败',
+  operationTooFrequent: '操作过于频繁，请稍后重试',
   request: {
     failed: '请求失败',
     httpStatus: '{message}：{status}',

@@ -1,83 +1,87 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
+import i18n from '@/lang'
+import { computed } from 'vue'
 
-const column: ColumnItem[] = [
+const t = i18n.t as any
+
+const column = computed<ColumnItem[]>(() => [
   {
-    label: '标题',
+    label: t('setting.alarmPage.title'),
     prop: '',
     width: 200
   },
   {
-    label: '状态',
+    label: t('setting.alarmPage.status'),
     prop: ''
   },
   {
-    label: '告警方式',
+    label: t('setting.alarmPage.method'),
     prop: ''
   },
   {
-    label: '告警条件',
+    label: t('setting.alarmPage.condition'),
     prop: ''
   },
   {
-    label: '操作',
+    label: t('setting.alarmPage.action'),
     prop: '',
     width: 180,
     fixed: 'right'
   }
-]
+])
 </script>
 
 <template>
   <div>
     <div class="flex">
-      <div class="btnItem mr-2">告警列表</div>
-      <div class="btnItem mr-2">告警设置</div>
-      <div class="btnItem">告警日志</div>
+      <div class="btnItem mr-2">{{ t('setting.alarmPage.list') }}</div>
+      <div class="btnItem mr-2">{{ t('setting.alarmPage.settings') }}</div>
+      <div class="btnItem">{{ t('setting.alarmPage.logs') }}</div>
     </div>
     <div class="box2" style="padding: 24px 30px">
       <el-form label-width="auto">
-        <el-form-item label="任务类型">
-          <el-select placeholder="网站证书(SSL)到期"></el-select>
+        <el-form-item :label="t('setting.alarmPage.taskType')">
+          <el-select :placeholder="t('setting.alarmPage.certificateExpiry')"></el-select>
         </el-form-item>
-        <el-form-item label="网站">
-          <el-select placeholder="所有网站"></el-select>
+        <el-form-item :label="t('setting.alarmPage.website')">
+          <el-select :placeholder="t('setting.alarmPage.allWebsites')"></el-select>
         </el-form-item>
-        <el-form-item label="剩余天数">
+        <el-form-item :label="t('setting.alarmPage.remainingDays')">
           <el-input>
             <template #append>
-              <span>天</span>
+              <span>{{ t('setting.alarmPage.days') }}</span>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="发送次数">
+        <el-form-item :label="t('setting.alarmPage.sendCount')">
           <el-input>
             <template #append>
-              <span>次</span>
+              <span>{{ t('setting.alarmPage.times') }}</span>
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="告警方式">
+        <el-form-item :label="t('setting.alarmPage.method')">
           <el-checkbox-group>
-            <el-checkbox>邮箱</el-checkbox>
-            <el-checkbox>钉钉</el-checkbox>
-            <el-checkbox>飞书</el-checkbox>
+            <el-checkbox>{{ t('setting.alarmPage.email') }}</el-checkbox>
+            <el-checkbox>{{ t('setting.alarmPage.dingtalk') }}</el-checkbox>
+            <el-checkbox>{{ t('setting.alarmPage.feishu') }}</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
       </el-form>
       <div class="flex justify-between" style="margin: 36px 0 20px">
-        <el-button type="primary">添加任务</el-button>
+        <el-button type="primary">{{ t('setting.alarmPage.addTask') }}</el-button>
         <div>
-          <el-button>启动</el-button>
-          <el-button>停止</el-button>
-          <el-button>停止</el-button>
+          <el-button>{{ t('setting.alarmPage.start') }}</el-button>
+          <el-button>{{ t('setting.alarmPage.stop') }}</el-button>
+          <el-button>{{ t('setting.alarmPage.stop') }}</el-button>
         </div>
       </div>
       <custom-table :data="[]" :columns="column" selection>
         <template #empty>
           <div class="flex column justify-between items-center" style="margin-top: 26px">
             <img src="/static/images/empty.webp" alt="" />
-            <span style="color: var(--font-color-gray-light)">暂无任务，点击添加任务开始操作吧</span>
+            <span style="color: var(--font-color-gray-light)">{{ t('setting.alarmPage.empty') }}</span>
           </div>
         </template>
       </custom-table>

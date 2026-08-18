@@ -36,30 +36,31 @@ const expiresAt = ref<Date | string | undefined>()
 const statusLoading = ref(false)
 const currentWebsite = computed(() => state.document?.website || props.website || {})
 const certificate = reactive({ show: false, website: {} as Record<string, any> })
+const t = i18n.t as any
 
 const menus = computed(() => [
-  { key: 'domain', label: '域名管理' },
-  { key: 'binding', label: '子目录绑定', hidden: currentWebsite.value.type === 'proxy' },
-  { key: 'directory', label: '网站目录', hidden: currentWebsite.value.type === 'proxy' },
-  { key: 'access', label: '访问限制' },
-  { key: 'traffic', label: '流量限制' },
-  { key: 'rewrite', label: '伪静态', hidden: currentWebsite.value.type === 'proxy' },
-  { key: 'documents', label: '默认文档', hidden: currentWebsite.value.type === 'proxy' },
-  { key: 'config', label: '配置文件' },
-  { key: 'ssl', label: 'SSL' },
-  { key: 'php', label: 'PHP', hidden: currentWebsite.value.type !== 'php' },
-  { key: 'redirect', label: '重定向' },
-  { key: 'proxy', label: '反向代理' },
-  { key: 'hotlink', label: '防盗链' },
-  { key: 'tamper', label: '防篡改' },
-  { key: 'security', label: '网站安全' },
-  { key: 'logs', label: '网站日志' },
-  { key: 'alerts', label: '网站告警' },
-  { key: 'other', label: '其他设置' }
+  { key: 'domain', label: t('website.settingsDrawer.menus.domain') },
+  { key: 'binding', label: t('website.settingsDrawer.menus.binding'), hidden: currentWebsite.value.type === 'proxy' },
+  { key: 'directory', label: t('website.settingsDrawer.menus.directory'), hidden: currentWebsite.value.type === 'proxy' },
+  { key: 'access', label: t('website.settingsDrawer.menus.access') },
+  { key: 'traffic', label: t('website.settingsDrawer.menus.traffic') },
+  { key: 'rewrite', label: t('website.settingsDrawer.menus.rewrite'), hidden: currentWebsite.value.type === 'proxy' },
+  { key: 'documents', label: t('website.settingsDrawer.menus.documents'), hidden: currentWebsite.value.type === 'proxy' },
+  { key: 'config', label: t('website.settingsDrawer.menus.config') },
+  { key: 'ssl', label: t('website.settingsDrawer.menus.ssl') },
+  { key: 'php', label: t('website.settingsDrawer.menus.php'), hidden: currentWebsite.value.type !== 'php' },
+  { key: 'redirect', label: t('website.settingsDrawer.menus.redirect') },
+  { key: 'proxy', label: t('website.settingsDrawer.menus.proxy') },
+  { key: 'hotlink', label: t('website.settingsDrawer.menus.hotlink') },
+  { key: 'tamper', label: t('website.settingsDrawer.menus.tamper') },
+  { key: 'security', label: t('website.settingsDrawer.menus.security') },
+  { key: 'logs', label: t('website.settingsDrawer.menus.logs') },
+  { key: 'alerts', label: t('website.settingsDrawer.menus.alerts') },
+  { key: 'other', label: t('website.settingsDrawer.menus.other') }
 ].filter((item) => !item.hidden))
 
 const formatTime = (value?: string | Date | null) => {
-  if (!value) return '永久有效'
+  if (!value) return t('website.settingsDrawer.permanent')
   const date = new Date(value)
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString(i18n.locale, { hour12: false })
 }
@@ -148,8 +149,8 @@ const saveWebsiteProfile = async (domainOnly = false) => {
 const toggleStatus = async (enabled: boolean) => {
   if (!enabled) {
     try {
-      await ElMessageBox.confirm(`停用后将无法访问 ${currentWebsite.value.name}，网站文件和数据不会被删除。`, '停用网站', {
-        type: 'warning', confirmButtonText: '确认停用', cancelButtonText: '取消'
+      await ElMessageBox.confirm(t('website.disableConfirmMessage', { name: currentWebsite.value.name }), t('website.disableConfirmTitle'), {
+        type: 'warning', confirmButtonText: t('website.disableConfirmAction'), cancelButtonText: t('common.cancel')
       })
     } catch { return }
   }
@@ -220,12 +221,12 @@ const openCertificate = () => {
       <header class="settings-header">
         <div class="settings-header__title">
           <div class="settings-header__mark">W</div>
-          <div><span>SITE CONFIGURATION</span><h2>{{ currentWebsite.name || '网站设置' }}</h2><p>添加时间 {{ formatTime(currentWebsite.create_time) }}</p></div>
+          <div><span>SITE CONFIGURATION</span><h2>{{ currentWebsite.name || t('website.settingsDrawer.title') }}</h2><p>{{ t('website.settingsDrawer.addedAt', { time: formatTime(currentWebsite.create_time) }) }}</p></div>
         </div>
         <div class="settings-header__summary">
-          <div><span>今日流量</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div>
-          <div><span>到期时间</span><strong :class="{ expired: isExpired }">{{ formatTime(currentWebsite.expires_at) }}</strong></div>
-          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" inline-prompt active-text="运行" inactive-text="停用" @change="toggleStatus(Boolean($event))" />
+          <div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div>
+          <div><span>{{ t('website.expiration') }}</span><strong :class="{ expired: isExpired }">{{ formatTime(currentWebsite.expires_at) }}</strong></div>
+          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
           <el-button class="settings-close" text :icon="Close" @click="visible = false" />
         </div>
       </header>
@@ -235,123 +236,123 @@ const openCertificate = () => {
         </aside>
         <main class="settings-content">
           <section v-if="activeMenu === 'domain'" class="setting-panel">
-            <div class="panel-heading"><div><h3>域名管理</h3><p>一行一个域名，可使用域名:端口；首行作为网站主域名。</p></div></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.domain') }}</h3><p>{{ t('website.settingsDrawer.domainDescription') }}</p></div></div>
             <el-input v-model="domainLines" type="textarea" :rows="7" placeholder="example.com&#10;www.example.com" />
             <div class="domain-preview"><span v-for="domain in domainLines.split(/[,\n\r]+/).filter(Boolean)" :key="domain">{{ domain.trim() }}</span></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(true)">保存域名</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(true)">{{ t('website.settingsDrawer.saveDomain') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'binding'" class="setting-panel">
-            <div class="panel-heading"><div><h3>子目录绑定</h3><p>把 URL 路径安全映射到网站根目录下的子目录。</p></div><el-button type="primary" plain @click="addBinding">添加绑定</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.binding') }}</h3><p>{{ t('website.settingsDrawer.bindingDescription') }}</p></div><el-button type="primary" plain @click="addBinding">{{ t('website.settingsDrawer.addBinding') }}</el-button></div>
             <div v-for="(item, index) in state.settings.bindings" :key="index" class="rule-row rule-row--binding">
-              <el-switch v-model="item.enabled" /><el-input v-model="item.path" placeholder="访问路径，如 /assets" /><el-input v-model="item.directory" placeholder="子目录，如 /public/assets" /><el-button type="danger" link @click="removeAt(state.settings.bindings, index)">删除</el-button>
+              <el-switch v-model="item.enabled" /><el-input v-model="item.path" :placeholder="t('website.settingsDrawer.bindingPath')" /><el-input v-model="item.directory" :placeholder="t('website.settingsDrawer.bindingDirectory')" /><el-button type="danger" link @click="removeAt(state.settings.bindings, index)">{{ t('website.settingsDrawer.delete') }}</el-button>
             </div>
-            <el-empty v-if="!state.settings.bindings?.length" description="暂无子目录绑定" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('子目录绑定已发布')">保存并发布</el-button></div>
+            <el-empty v-if="!state.settings.bindings?.length" :description="t('website.settingsDrawer.noBindings')" :image-size="72" />
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.binding'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'directory'" class="setting-panel">
-            <div class="panel-heading"><div><h3>网站目录</h3><p>运行目录必须位于网站根目录内，避免访问其他系统目录。</p></div></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.directory') }}</h3><p>{{ t('website.settingsDrawer.directoryDescription') }}</p></div></div>
             <el-form label-position="top" class="settings-form">
-              <el-form-item label="网站根目录"><el-input :model-value="currentWebsite.root_dir" readonly><template #append><el-button :icon="FolderOpened" @click="openRoot">文件管理</el-button></template></el-input></el-form-item>
-              <el-form-item label="运行目录（相对网站根目录）"><el-input v-model="state.settings.running_directory" placeholder="留空使用网站根目录，如 /public" /></el-form-item>
-              <el-form-item label="目录列表"><el-switch v-model="state.settings.directory_listing" active-text="允许列出目录" inactive-text="禁止列出目录" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.websiteRoot')"><el-input :model-value="currentWebsite.root_dir" readonly><template #append><el-button :icon="FolderOpened" @click="openRoot">{{ t('website.settingsDrawer.fileManager') }}</el-button></template></el-input></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.runningDirectory')"><el-input v-model="state.settings.running_directory" :placeholder="t('website.settingsDrawer.runningDirectoryPlaceholder')" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.directoryListing')"><el-switch v-model="state.settings.directory_listing" :active-text="t('website.settingsDrawer.allowDirectoryListing')" :inactive-text="t('website.settingsDrawer.denyDirectoryListing')" /></el-form-item>
             </el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('网站目录设置已发布')">保存并发布</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.directory'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'access'" class="setting-panel">
-            <div class="panel-heading"><div><h3>访问限制</h3><p>支持 IPv4、IPv6 和 CIDR；存在白名单时，其余地址默认拒绝。</p></div></div>
-            <div class="form-grid"><el-form-item label="IP 白名单"><el-input v-model="state.settings.allowed_ips" type="textarea" :rows="10" placeholder="192.168.1.0/24&#10;2001:db8::/32" /></el-form-item><el-form-item label="IP 黑名单"><el-input v-model="state.settings.denied_ips" type="textarea" :rows="10" placeholder="203.0.113.8" /></el-form-item></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('访问限制已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.access') }}</h3><p>{{ t('website.settingsDrawer.accessDescription') }}</p></div></div>
+            <div class="form-grid"><el-form-item :label="t('website.settingsDrawer.allowlist')"><el-input v-model="state.settings.allowed_ips" type="textarea" :rows="10" placeholder="192.168.1.0/24&#10;2001:db8::/32" /></el-form-item><el-form-item :label="t('website.settingsDrawer.denylist')"><el-input v-model="state.settings.denied_ips" type="textarea" :rows="10" placeholder="203.0.113.8" /></el-form-item></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.access'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'traffic'" class="setting-panel">
-            <div class="metric-strip"><div><span>今日响应流量</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div><div><span>今日请求</span><strong>{{ Number(props.website?.today_requests || 0).toLocaleString() }}</strong></div><div><span>统计来源</span><strong>站点访问日志</strong></div></div>
-            <el-form label-position="top" class="settings-form form-grid"><el-form-item label="单请求限速（KB/s）"><el-input-number v-model="state.settings.rate_limit_kb" :min="0" :max="10485760" controls-position="right" /><small>0 表示不限速。</small></el-form-item><el-form-item label="传输多少 KB 后开始限速"><el-input-number v-model="state.settings.rate_limit_after_kb" :min="0" :max="10485760" controls-position="right" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('流量限制已发布')">保存并发布</el-button></div>
+            <div class="metric-strip"><div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div><div><span>{{ t('website.settingsDrawer.todayRequests') }}</span><strong>{{ Number(props.website?.today_requests || 0).toLocaleString() }}</strong></div><div><span>{{ t('website.settingsDrawer.metricSource') }}</span><strong>{{ t('website.settingsDrawer.accessLog') }}</strong></div></div>
+            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.requestRate')"><el-input-number v-model="state.settings.rate_limit_kb" :min="0" :max="10485760" controls-position="right" /><small>{{ t('website.settingsDrawer.unlimitedTip') }}</small></el-form-item><el-form-item :label="t('website.settingsDrawer.rateAfter')"><el-input-number v-model="state.settings.rate_limit_after_kb" :min="0" :max="10485760" controls-position="right" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.traffic'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'rewrite'" class="setting-panel">
-            <div class="panel-heading"><div><h3>伪静态</h3><p>每行一条 rewrite 指令；发布前执行语法检查。</p></div></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.rewrite') }}</h3><p>{{ t('website.settingsDrawer.rewriteDescription') }}</p></div></div>
             <el-input v-model="state.settings.rewrite_rules" type="textarea" :rows="16" class="code-input" placeholder="rewrite ^/article/(\d+)$ /index.php?id=$1 last;" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('伪静态规则已发布')">保存并发布</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.rewrite'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'documents'" class="setting-panel">
-            <div class="panel-heading"><div><h3>默认文档</h3><p>按从左到右的优先级查找首页文件。</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item label="默认文档"><el-input v-model="state.settings.default_documents" placeholder="index.php index.html index.htm" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('默认文档已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.documents') }}</h3><p>{{ t('website.settingsDrawer.documentsDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.defaultDocuments')"><el-input v-model="state.settings.default_documents" placeholder="index.php index.html index.htm" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.documents'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'config'" v-loading="state.config.loading" class="setting-panel setting-panel--fill">
-            <div class="panel-heading"><div><h3>配置文件</h3><p>{{ state.config.path || '当前网站实际运行配置' }}。保存时自动备份、校验并平滑重载。</p></div><el-button :icon="Refresh" @click="loadConfig">重新读取</el-button></div>
-            <el-alert v-if="state.config.error" :title="state.config.error" type="error" show-icon :closable="false"><template #default><el-button type="primary" link @click="loadConfig">再次读取</el-button></template></el-alert>
-            <el-alert title="结构化设置再次保存时会重新生成此配置；高级自定义内容请在修改后立即验证网站。" type="warning" show-icon :closable="false" />
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.config') }}</h3><p>{{ state.config.path || t('website.settingsDrawer.configDescription') }}</p></div><el-button :icon="Refresh" @click="loadConfig">{{ t('website.settingsDrawer.reread') }}</el-button></div>
+            <el-alert v-if="state.config.error" :title="state.config.error" type="error" show-icon :closable="false"><template #default><el-button type="primary" link @click="loadConfig">{{ t('website.settingsDrawer.readAgain') }}</el-button></template></el-alert>
+            <el-alert :title="t('website.settingsDrawer.configWarning')" type="warning" show-icon :closable="false" />
             <el-input v-if="state.config.loaded" v-model="state.config.content" type="textarea" class="code-input config-editor" />
-            <el-empty v-else-if="!state.config.loading && !state.config.error" description="尚未读取运行配置" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!currentWebsite.enabled || !state.config.loaded" @click="saveConfig">校验并发布</el-button></div>
+            <el-empty v-else-if="!state.config.loading && !state.config.error" :description="t('website.settingsDrawer.configUnread')" :image-size="72" />
+            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'ssl'" class="setting-panel">
-            <div class="panel-heading"><div><h3>SSL 证书</h3><p>申请 ACME 证书、续签、强制 HTTPS 或停用证书。</p></div></div>
-            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? 'SSL 已启用' : 'SSL 未启用' }}</strong><p>{{ currentWebsite.certificate_expires_at ? `证书到期：${formatTime(currentWebsite.certificate_expires_at)}` : '可以申请或配置网站证书' }}</p></div><el-button type="primary" @click="openCertificate">管理 SSL</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.ssl') }}</h3><p>{{ t('website.settingsDrawer.sslDescription') }}</p></div></div>
+            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? t('website.settingsDrawer.sslEnabled') : t('website.settingsDrawer.sslDisabled') }}</strong><p>{{ currentWebsite.certificate_expires_at ? t('website.settingsDrawer.certificateExpires', { time: formatTime(currentWebsite.certificate_expires_at) }) : t('website.settingsDrawer.certificateAvailable') }}</p></div><el-button type="primary" @click="openCertificate">{{ t('website.settingsDrawer.manageSsl') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'php'" class="setting-panel">
-            <div class="panel-heading"><div><h3>PHP 运行环境</h3><p>指定本机 Unix Socket 或回环地址 FastCGI 端口。</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item label="FastCGI 后端"><el-input v-model="state.settings.php_backend" placeholder="unix:/dev/shm/php-cgi.sock" /></el-form-item></el-form>
-            <el-alert title="切换前请确认对应 PHP-FPM 服务已运行；只允许本机 Socket 或回环地址。" type="info" :closable="false" show-icon />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('PHP 运行环境已切换')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.php') }}</h3><p>{{ t('website.settingsDrawer.phpDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.fastcgiBackend')"><el-input v-model="state.settings.php_backend" placeholder="unix:/dev/shm/php-cgi.sock" /></el-form-item></el-form>
+            <el-alert :title="t('website.settingsDrawer.phpWarning')" type="info" :closable="false" show-icon />
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.php'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'redirect'" class="setting-panel">
-            <div class="panel-heading"><div><h3>重定向</h3><p>为指定站内路径配置 301、302、307 或 308 跳转。</p></div><el-button type="primary" plain @click="addRedirect">添加重定向</el-button></div>
-            <div v-for="(item, index) in state.settings.redirects" :key="index" class="rule-row rule-row--redirect"><el-switch v-model="item.enabled" /><el-input v-model="item.source" placeholder="来源 /old" /><el-select v-model="item.status"><el-option v-for="status in [301,302,307,308]" :key="status" :value="status" :label="status" /></el-select><el-input v-model="item.target" placeholder="目标 /new 或 https://..." /><el-button type="danger" link @click="removeAt(state.settings.redirects, index)">删除</el-button></div>
-            <el-empty v-if="!state.settings.redirects?.length" description="暂无重定向" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('重定向规则已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.redirect') }}</h3><p>{{ t('website.settingsDrawer.redirectDescription') }}</p></div><el-button type="primary" plain @click="addRedirect">{{ t('website.settingsDrawer.addRedirect') }}</el-button></div>
+            <div v-for="(item, index) in state.settings.redirects" :key="index" class="rule-row rule-row--redirect"><el-switch v-model="item.enabled" /><el-input v-model="item.source" :placeholder="t('website.settingsDrawer.redirectSource')" /><el-select v-model="item.status"><el-option v-for="status in [301,302,307,308]" :key="status" :value="status" :label="status" /></el-select><el-input v-model="item.target" :placeholder="t('website.settingsDrawer.redirectTarget')" /><el-button type="danger" link @click="removeAt(state.settings.redirects, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
+            <el-empty v-if="!state.settings.redirects?.length" :description="t('website.settingsDrawer.noRedirects')" :image-size="72" />
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.redirect'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'proxy'" class="setting-panel">
-            <div class="panel-heading"><div><h3>反向代理</h3><p>可为子路径单独代理到 HTTP/HTTPS 上游。</p></div><el-button type="primary" plain @click="addProxy">添加代理</el-button></div>
-            <div v-for="(item, index) in state.settings.proxy_rules" :key="index" class="rule-row rule-row--proxy"><el-switch v-model="item.enabled" /><el-input v-model="item.path" placeholder="路径 /api" /><el-input v-model="item.target" placeholder="http://127.0.0.1:9000" /><el-input v-model="item.host" placeholder="$host" /><el-button type="danger" link @click="removeAt(state.settings.proxy_rules, index)">删除</el-button></div>
-            <el-empty v-if="!state.settings.proxy_rules?.length" description="暂无附加反向代理" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('反向代理规则已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.proxy') }}</h3><p>{{ t('website.settingsDrawer.proxyDescription') }}</p></div><el-button type="primary" plain @click="addProxy">{{ t('website.settingsDrawer.addProxy') }}</el-button></div>
+            <div v-for="(item, index) in state.settings.proxy_rules" :key="index" class="rule-row rule-row--proxy"><el-switch v-model="item.enabled" /><el-input v-model="item.path" :placeholder="t('website.settingsDrawer.proxyPath')" /><el-input v-model="item.target" placeholder="http://127.0.0.1:9000" /><el-input v-model="item.host" placeholder="$host" /><el-button type="danger" link @click="removeAt(state.settings.proxy_rules, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
+            <el-empty v-if="!state.settings.proxy_rules?.length" :description="t('website.settingsDrawer.noProxies')" :image-size="72" />
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.proxy'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'hotlink'" class="setting-panel">
-            <div class="panel-heading"><div><h3>防盗链</h3><p>根据 Referer 拒绝其他站点直接引用本站静态资源。</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item label="启用防盗链"><el-switch v-model="state.settings.hotlink_enabled" /></el-form-item><el-form-item label="允许空 Referer"><el-switch v-model="state.settings.hotlink_allow_empty" /></el-form-item><el-form-item label="允许的来源域名"><el-input v-model="state.settings.hotlink_domains" type="textarea" :rows="5" placeholder="cdn.example.com&#10;*.example.com" /></el-form-item><el-form-item label="保护的扩展名"><el-input v-model="state.settings.hotlink_extensions" placeholder="jpg jpeg png gif webp svg css js mp4 mp3" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('防盗链设置已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.hotlink') }}</h3><p>{{ t('website.settingsDrawer.hotlinkDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.enableHotlink')"><el-switch v-model="state.settings.hotlink_enabled" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowEmptyReferer')"><el-switch v-model="state.settings.hotlink_allow_empty" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowedDomains')"><el-input v-model="state.settings.hotlink_domains" type="textarea" :rows="5" placeholder="cdn.example.com&#10;*.example.com" /></el-form-item><el-form-item :label="t('website.settingsDrawer.protectedExtensions')"><el-input v-model="state.settings.hotlink_extensions" placeholder="jpg jpeg png gif webp svg css js mp4 mp3" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.hotlink'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'tamper'" class="setting-panel">
-            <div class="panel-heading"><div><h3>站点配置防篡改</h3><p>比较可信配置与实际站点文件，发现外部修改后自动恢复。</p></div></div>
-            <div class="feature-card"><el-icon><SwitchButton /></el-icon><div><strong>受管配置保护</strong><p>不会锁定网站业务文件，也不会影响正常发布。</p></div><el-switch v-model="state.settings.tamper_protection" /></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('防篡改设置已更新')">保存设置</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.tamperTitle') }}</h3><p>{{ t('website.settingsDrawer.tamperDescription') }}</p></div></div>
+            <div class="feature-card"><el-icon><SwitchButton /></el-icon><div><strong>{{ t('website.settingsDrawer.managedProtection') }}</strong><p>{{ t('website.settingsDrawer.managedProtectionTip') }}</p></div><el-switch v-model="state.settings.tamper_protection" /></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.tamper'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'security'" class="setting-panel">
-            <div class="panel-heading"><div><h3>网站安全</h3><p>启用基础安全响应头，并拒绝访问敏感目录或文件路径。</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item label="安全响应头"><el-switch v-model="state.settings.security_headers" active-text="启用" /></el-form-item><el-form-item label="禁止访问路径"><el-input v-model="state.settings.denied_paths" type="textarea" :rows="9" placeholder="/.git&#10;/.env&#10;/backup" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('网站安全设置已发布')">保存并发布</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.security') }}</h3><p>{{ t('website.settingsDrawer.securityDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.securityHeaders')"><el-switch v-model="state.settings.security_headers" :active-text="t('website.settingsDrawer.enable')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.deniedPaths')"><el-input v-model="state.settings.denied_paths" type="textarea" :rows="9" placeholder="/.git&#10;/.env&#10;/backup" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.security'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'logs'" class="setting-panel setting-panel--fill">
-            <div class="panel-heading"><div><h3>网站日志</h3><p>{{ state.logs.path || '查看站点最近日志' }}</p></div><div class="heading-actions"><el-select v-model="state.logs.type" @change="loadLog"><el-option label="访问日志" value="access" /><el-option label="错误日志" value="error" /></el-select><el-select v-model="state.logs.lines" @change="loadLog"><el-option :value="100" label="100 行" /><el-option :value="300" label="300 行" /><el-option :value="1000" label="1000 行" /></el-select><el-button :icon="Refresh" :loading="state.logs.loading" @click="loadLog">刷新</el-button></div></div>
-            <pre class="log-viewer">{{ state.logs.content || '当前暂无日志' }}</pre>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.logs') }}</h3><p>{{ state.logs.path || t('website.settingsDrawer.logDescription') }}</p></div><div class="heading-actions"><el-select v-model="state.logs.type" @change="loadLog"><el-option :label="t('website.settingsDrawer.accessLogOption')" value="access" /><el-option :label="t('website.settingsDrawer.errorLogOption')" value="error" /></el-select><el-select v-model="state.logs.lines" @change="loadLog"><el-option v-for="count in [100, 300, 1000]" :key="count" :value="count" :label="t('website.settingsDrawer.lines', { count })" /></el-select><el-button :icon="Refresh" :loading="state.logs.loading" @click="loadLog">{{ t('common.refresh') }}</el-button></div></div>
+            <pre class="log-viewer">{{ state.logs.content || t('website.settingsDrawer.noLogs') }}</pre>
           </section>
 
           <section v-else-if="activeMenu === 'alerts'" class="setting-panel">
-            <div class="panel-heading"><div><h3>网站告警</h3><p>今日响应流量达到阈值时，在面板运行日志中产生站点告警。</p></div></div>
-            <el-form label-position="top" class="settings-form form-grid"><el-form-item label="启用流量告警"><el-switch v-model="state.settings.traffic_alert" /></el-form-item><el-form-item label="告警阈值（字节）"><el-input-number v-model="state.settings.traffic_alert_bytes" :min="0" :step="1073741824" controls-position="right" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings('网站告警设置已更新')">保存设置</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.alerts') }}</h3><p>{{ t('website.settingsDrawer.alertsDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.enableTrafficAlert')"><el-switch v-model="state.settings.traffic_alert" /></el-form-item><el-form-item :label="t('website.settingsDrawer.alertThreshold')"><el-input-number v-model="state.settings.traffic_alert_bytes" :min="0" :step="1073741824" controls-position="right" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.alerts'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'other'" class="setting-panel">
-            <div class="panel-heading"><div><h3>其他设置</h3><p>管理网站有效期、备注与日志开关。</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item label="到期时间"><el-date-picker v-model="expiresAt" type="datetime" placeholder="不设置表示永久有效" clearable /></el-form-item><el-form-item label="网站备注"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" /></el-form-item><el-form-item label="访问日志"><el-switch v-model="state.settings.access_log_enabled" active-text="记录访问日志" /></el-form-item><el-form-item label="错误日志"><el-switch v-model="state.settings.error_log_enabled" active-text="记录错误日志" /></el-form-item></el-form>
-            <div class="panel-actions panel-actions--split"><el-button :loading="state.saving" @click="saveSettings('日志设置已发布')">保存日志设置</el-button><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(false)">保存基本设置</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.other') }}</h3><p>{{ t('website.settingsDrawer.otherDescription') }}</p></div></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.expiration')"><el-date-picker v-model="expiresAt" type="datetime" :placeholder="t('website.settingsDrawer.expirationPlaceholder')" clearable /></el-form-item><el-form-item :label="t('website.settingsDrawer.remark')"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" /></el-form-item><el-form-item :label="t('website.settingsDrawer.accessLogLabel')"><el-switch v-model="state.settings.access_log_enabled" :active-text="t('website.settingsDrawer.recordAccessLog')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.errorLogLabel')"><el-switch v-model="state.settings.error_log_enabled" :active-text="t('website.settingsDrawer.recordErrorLog')" /></el-form-item></el-form>
+            <div class="panel-actions panel-actions--split"><el-button :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.logs'))">{{ t('website.settingsDrawer.saveLogs') }}</el-button><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(false)">{{ t('website.settingsDrawer.saveProfile') }}</el-button></div>
           </section>
         </main>
       </div>
