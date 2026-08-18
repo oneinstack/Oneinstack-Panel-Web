@@ -29,8 +29,12 @@ export const initRouter = () => {
         redirect: '/home'
       },
       {
+        path: '/config-snapshot',
+        redirect: '/not-found'
+      },
+      {
         path: '/:matchOthers(.*)*',
-        redirect: '/'
+        redirect: '/not-found'
       }
     ],
     alias: {
@@ -54,6 +58,7 @@ export const initRouter = () => {
   })
 
   const whiteList = ['/login', '/login/scan', '/not-found']
+  const authRedirectWhiteList = ['/login', '/login/scan']
   router.beforeEach(async (to, from, next) => {
     let _name = (to.meta.name as any) || ''
     let _title = System.env.title
@@ -74,7 +79,7 @@ export const initRouter = () => {
       return next(getFirstAccessiblePath())
     if (authenticated && !mustChangePassword && to.path === '/')
       return next(getFirstAccessiblePath())
-    if (authenticated && whiteList.includes(to.path)) return next(getFirstAccessiblePath())
+    if (authenticated && authRedirectWhiteList.includes(to.path)) return next(getFirstAccessiblePath())
     if (authenticated && !mustChangePassword && Object.keys(sconfig.menuAccess || {}).length === 0) {
       try {
         const matrixResponse = await Api.getAccessMatrix()
