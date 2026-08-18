@@ -7,7 +7,7 @@ import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/modules'
 import type { FormItem } from '@/components/custom-form.vue'
 import { FormInstance } from 'element-plus'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import WebsiteCertificateDrawer from './components/WebsiteCertificateDrawer.vue'
 import WebsiteBackupDrawer from './components/WebsiteBackupDrawer.vue'
 import WebServerConfigDrawer from './components/WebServerConfigDrawer.vue'
@@ -205,6 +205,31 @@ const settingsDrawer = reactive({
 
 const statusLoading = reactive(new Set<number>())
 const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
+  const websiteName = row?.name || '-'
+  const confirmTitle = enabled
+    ? t('website.enableConfirmTitle', '启用网站')
+    : t('website.disableConfirmTitle', '停用网站')
+  const confirmMessage = enabled
+    ? t('website.enableConfirmMessage', `启用后将恢复 ${websiteName} 的访问，网站文件和数据不会被修改。`, { name: websiteName })
+    : t('website.disableConfirmMessage', `停用后将无法访问 ${websiteName}，网站文件和数据不会被删除。`, { name: websiteName })
+  const confirmButtonText = enabled
+    ? t('website.enableConfirmAction', '确认启用')
+    : t('website.disableConfirmAction', '确认停用')
+
+  try {
+    await ElMessageBox.confirm(
+      confirmMessage,
+      confirmTitle,
+      {
+        type: enabled ? 'info' : 'warning',
+        confirmButtonText,
+        cancelButtonText: t('common.cancel', '取消')
+      }
+    )
+  } catch {
+    return
+  }
+
   statusLoading.add(row.id)
   try {
     await Api.setWebsiteStatus(row.id, enabled)
