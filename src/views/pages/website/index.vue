@@ -28,6 +28,37 @@ const canReadDatabase = () =>
   Boolean((sconfig.scopeAccess as any)?.database?.read) ||
   Boolean((sconfig.scopeAccess as any)?.['database.read'])
 
+const websiteRootDirPattern = /^(?!\.)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9][A-Za-z0-9._/-]*$/
+const rootDirForbiddenCharacters = /[\0\r\n\t ;{}"'$]/
+
+const normalizeWebsiteRootDirInput = (value: unknown) =>
+  typeof value === 'string' ? value.trim() : ''
+
+const validateManagedWebsiteRootDir = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+  const rootDir = normalizeWebsiteRootDirInput(value)
+  if (!rootDir) {
+    callback(new Error(t('website.rootDirRequired', '请选择根目录')))
+    return
+  }
+  if (rootDir.startsWith('/')) {
+    callback(new Error(t('website.rootDirMustBeRelative', '网站根目录必须填写受管目录下的相对路径')))
+    return
+  }
+  if (rootDir.includes('\\')) {
+    callback(new Error(t('website.rootDirBackslashNotAllowed', '网站根目录不能包含反斜杠')))
+    return
+  }
+  if (rootDirForbiddenCharacters.test(rootDir)) {
+    callback(new Error(t('website.rootDirUnsafeCharacters', '网站根目录包含不安全字符')))
+    return
+  }
+  if (!websiteRootDirPattern.test(rootDir) || rootDir.split('/').some((segment) => segment === '.' || segment === '..' || !segment)) {
+    callback(new Error(t('website.rootDirTraversalNotAllowed', '网站根目录不能包含越界路径')))
+    return
+  }
+  callback()
+}
+
 const extractWebsiteOperationMeta = (payload: any) => {
   const root = payload?.data ?? payload ?? {}
   const result = root?.result || root?.data?.result || {}
@@ -304,6 +335,13 @@ const conf = reactive({
     onConfirm: () => {
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
+        conf.form.data.value.hostDomain = typeof conf.form.data.value.hostDomain === 'string'
+          ? conf.form.data.value.hostDomain.trim()
+          : conf.form.data.value.hostDomain
+        conf.form.data.value.otherDomain = typeof conf.form.data.value.otherDomain === 'string'
+          ? conf.form.data.value.otherDomain.trim()
+          : conf.form.data.value.otherDomain
+        conf.form.data.value.root_dir = normalizeWebsiteRootDirInput(conf.form.data.value.root_dir)
         let otherDomain = ''
         if (conf.form.data.value.otherDomain) {
           otherDomain = conf.form.data.value.otherDomain?.split('\n')
@@ -369,11 +407,11 @@ const conf = reactive({
                 ],
                 change: (value) => {
                   // 当域名改变时，自动设置目录
-                  const domainPattern = /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/;
+                  const domainPattern = /^(([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}|((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?))(:\d{1,5})?$/
                   if (value && !conf.form.data.value.root_dir && domainPattern.test(value)) {
                     // 如果有端口号，去掉端口号
-                    const domainWithoutPort = value.split(':')[0];
-                    conf.form.data.value.root_dir = `/${domainWithoutPort}`;
+                    const domainWithoutPort = value.split(':')[0]
+                    conf.form.data.value.root_dir = domainWithoutPort
                   }
                 }
               },
@@ -386,10 +424,11 @@ const conf = reactive({
               {
                 label: t('website.rootDir', '根目录'),
                 type: 'input',
+                placeholder: t('website.rootDirPlaceholder', '相对于受管网站根目录的目录，例如 example.com'),
                 prop: 'root_dir',
                 rules: [
                   { required: true, message: t('website.rootDirRequired', '请选择根目录'), trigger: 'blur' },
-                  { pattern: /^\/(?:[^/]+\/)*[^/]+$/, message: t('website.pathFormatError', '路径格式错误') }
+                  { validator: validateManagedWebsiteRootDir, trigger: ['blur', 'change'] }
                 ]
               },
               {
