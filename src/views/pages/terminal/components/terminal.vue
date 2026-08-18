@@ -215,6 +215,11 @@ let socket: WebSocket | undefined
 let resizeObserver: ResizeObserver | undefined
 let statusTimer: number | undefined
 
+const resetTerminalState = () => {
+  terminalIdentity.value = 'root@panel'
+  currentPath.value = '/root'
+}
+
 const terminalAvailable = computed(() =>
   Boolean(status.value?.available ?? status.value?.isolationAvailable)
 )
@@ -338,6 +343,16 @@ const syncTerminalTitle = (title: string) => {
   currentPath.value = title.slice(separator + 1) || '/'
 }
 
+const destroyTerminal = () => {
+  resizeObserver?.disconnect()
+  resizeObserver = undefined
+  terminal?.dispose()
+  terminal = undefined
+  fitAddon = undefined
+  if (terminalDiv.value) terminalDiv.value.innerHTML = ''
+  resetTerminalState()
+}
+
 const connectTerminal = async () => {
   if (connecting.value || connectionState.value === 'connected') return
   connecting.value = true
@@ -359,6 +374,7 @@ const connectTerminal = async () => {
     if (apiBase.origin !== window.location.origin) {
       throw new Error(t('terminal.sameOriginOnly', 'Terminal only allows same-origin connections'))
     }
+    await initializeTerminal()
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const apiPath = apiBase.pathname.replace(/\/$/, '')
     const url = `${protocol}//${window.location.host}${apiPath}/ssh/open?ticket=${encodeURIComponent(data.ticket)}`
@@ -387,12 +403,13 @@ const connectTerminal = async () => {
       connectionState.value = 'closed'
       connecting.value = false
       socket = undefined
-      terminal?.write(`\r\n\x1b[33m${t('terminal.sessionClosedMessage', 'Terminal session closed.')}\x1b[0m\r\n`)
+      destroyTerminal()
       void loadStatus()
     }
   } catch {
     connecting.value = false
     connectionState.value = 'disconnected'
+    destroyTerminal()
   }
 }
 
@@ -401,7 +418,9 @@ const disconnectTerminal = () => {
 }
 
 const initializeTerminal = async () => {
+  if (terminal) return
   await nextTick()
+  if (!terminalDiv.value) return
   terminal = new Terminal({
     cursorBlink: true,
     cursorStyle: 'underline',
@@ -440,7 +459,7 @@ const initializeTerminal = async () => {
   })
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
-  if (terminalDiv.value) terminal.open(terminalDiv.value)
+  terminal.open(terminalDiv.value)
   fitAddon.fit()
   terminal.write('\x1b[1;38;5;45mOneinStack Root Console\x1b[0m \x1b[38;5;245m· 等待身份认证\x1b[0m\r\n')
   terminal.onTitleChange(syncTerminalTitle)
@@ -474,7 +493,7 @@ watch(
 onMounted(async () => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
   await loadStatus()
-  await initializeTerminal()
+  resetTerminalState()
   statusTimer = window.setInterval(() => {
     void loadStatus(true)
   }, 15000)
@@ -483,9 +502,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
   if (statusTimer !== undefined) window.clearInterval(statusTimer)
-  resizeObserver?.disconnect()
   socket?.close(1000, 'terminal page closed')
-  terminal?.dispose()
+  destroyTerminal()
 })
 </script>
 

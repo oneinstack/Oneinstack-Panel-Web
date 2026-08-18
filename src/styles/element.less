@@ -98,6 +98,41 @@
   align-items: center;
 }
 
+.el-checkbox__input {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  width: var(--el-checkbox-input-width);
+  height: var(--el-checkbox-input-height);
+  flex: 0 0 var(--el-checkbox-input-width);
+  cursor: pointer;
+  outline: none;
+  white-space: nowrap;
+}
+
+.el-checkbox__original {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  z-index: 2;
+  cursor: pointer;
+}
+
+.el-checkbox__inner {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.el-checkbox__inner::before,
+.el-checkbox__inner::after {
+  pointer-events: none;
+}
+
 .el-link {
   --el-link-text-color: var(--font-color-black);
 }

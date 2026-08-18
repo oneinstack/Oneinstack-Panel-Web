@@ -86,6 +86,11 @@ let socket: WebSocket | undefined
 let resizeObserver: ResizeObserver | undefined
 let statusTimer: number | undefined
 
+const resetTerminalState = () => {
+  terminalIdentity.value = 'container@shell'
+  currentPath.value = '/'
+}
+
 const canConnect = computed(() =>
   Boolean(status.value?.enabled && status.value?.available && status.value?.running)
 )
@@ -241,6 +246,16 @@ const handleClose = () => {
   visible.value = false
 }
 
+const destroyTerminal = () => {
+  resizeObserver?.disconnect()
+  resizeObserver = undefined
+  terminal?.dispose()
+  terminal = undefined
+  fitAddon = undefined
+  if (terminalDiv.value) terminalDiv.value.innerHTML = ''
+  resetTerminalState()
+}
+
 const resetTerminalIntro = () => {
   if (!terminal) return
   terminal.clear()
@@ -309,6 +324,7 @@ const connectTerminal = async () => {
       { silentError: true }
     )
     const apiBase = new URL(System.env.API || '/v1', window.location.origin)
+    await initializeTerminal()
     const protocol = apiBase.protocol === 'https:' ? 'wss:' : 'ws:'
     const apiPath = apiBase.pathname.replace(/\/$/, '')
     const url = `${protocol}//${apiBase.host}${apiPath}/containers/${encodeURIComponent(props.target.ID)}/terminal/open?ticket=${encodeURIComponent(data.ticket)}`
@@ -344,12 +360,13 @@ const connectTerminal = async () => {
       connectionState.value = 'closed'
       connecting.value = false
       socket = undefined
-      terminal?.write(`\r\n\x1b[33m${t('container.terminal.sessionClosedMessage', 'Container terminal session closed.')}\x1b[0m\r\n`)
+      destroyTerminal()
       void loadStatus(true)
     }
   } catch (error: any) {
     connecting.value = false
     connectionState.value = 'disconnected'
+    destroyTerminal()
     if (!['cancel', 'close'].includes(error) && error?.message !== 'cancel') {
       // ElMessage.error(getApiErrorMessage(error, t('container.terminal.ticketFailed', 'Failed to create container terminal ticket')))
       await loadStatus(true).catch(() => undefined)
@@ -360,6 +377,7 @@ const connectTerminal = async () => {
 const initializeTerminal = async () => {
   if (terminal) return
   await nextTick()
+  if (!terminalDiv.value) return
   terminal = new Terminal({
     cursorBlink: true,
     cursorStyle: 'underline',
@@ -397,7 +415,7 @@ const initializeTerminal = async () => {
   })
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
-  if (terminalDiv.value) terminal.open(terminalDiv.value)
+  terminal.open(terminalDiv.value)
   fitAddon.fit()
   terminal.onTitleChange(syncTerminalTitle)
   terminal.onData((data) => {
@@ -433,10 +451,10 @@ watch(
   async ([isVisible]) => {
     if (!isVisible) {
       disconnectTerminal()
+      destroyTerminal()
       return
     }
-    await initializeTerminal()
-    resetTerminalIntro()
+    resetTerminalState()
     await loadStatus()
     if (statusTimer !== undefined) window.clearInterval(statusTimer)
     statusTimer = window.setInterval(() => {
@@ -449,9 +467,8 @@ watch(
 onBeforeUnmount(() => {
   if (statusTimer !== undefined) window.clearInterval(statusTimer)
   document.removeEventListener('fullscreenchange', handleFullscreenChange)
-  resizeObserver?.disconnect()
   socket?.close(1000, 'container terminal drawer closed')
-  terminal?.dispose()
+  destroyTerminal()
 })
 
 watch(
