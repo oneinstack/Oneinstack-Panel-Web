@@ -100,6 +100,7 @@ const conf = reactive({
       activeColor: navActiveColor,
       children: [
         { name: 'Security', path: '/security', icon: 'menu-security', matrixKeys: ['security'], activeColor: navActiveColor },
+        { name: 'Certificates', path: '/certificate', icon: 'menu-certificate', matrixKeys: ['certificate'], actionKeys: ['certificate.read'], activeColor: navActiveColor },
         { name: 'Approval center', path: '/approval-center', icon: 'menu-approval', matrixKeys: ['approval'], activeColor: navActiveColor },
         { name: 'Audit logs', path: '/log', icon: 'menu-audit', adminOnly: true, matrixKeys: ['audit'], activeColor: navActiveColor },
         { name: 'Config snapshots', path: '/config-snapshots', icon: 'menu-snapshot', adminOnly: true, matrixKeys: ['configSnapshots'], actionKeys: ['config.snapshot.read'], activeColor: navActiveColor }
@@ -167,6 +168,7 @@ const menuPathLocaleKey: Record<string, string> = {
   '/bastion': 'bastion',
   '/container': 'container',
   '/security': 'security',
+  '/certificate': 'certificate',
   '/file': 'file',
   '/log': 'audit',
   '/runtime-log': 'runtimeLog',

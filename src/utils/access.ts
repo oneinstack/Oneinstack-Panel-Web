@@ -20,6 +20,7 @@ export const menuKeyLabelMap: Record<string, string> = {
   systemManagement: 'System management',
   userManagement: 'User management',
   approval: 'Approval center',
+  certificate: 'Certificates',
   logout: 'Logout'
 }
 
@@ -41,7 +42,8 @@ export const menuPathKeyMap: Array<{ path: string; key: string }> = [
   { path: '/config-snapshots', key: 'configSnapshots' },
   { path: '/system-management', key: 'systemManagement' },
   { path: '/user-management', key: 'userManagement' },
-  { path: '/approval-center', key: 'approval' }
+  { path: '/approval-center', key: 'approval' },
+  { path: '/certificate', key: 'certificate' }
 ]
 
 export const resolveMenuKeyByPath = (path: string) => {
@@ -72,6 +74,13 @@ const hasSystemManagementAccess = () => {
     Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
 }
 
+const hasCertificateAccess = () => {
+  const sconfig = useConfigStore()
+  return sconfig.hasMenuAccess('certificate') ||
+    sconfig.hasActionAccess('certificate.read') ||
+    sconfig.hasScopeAccess('certificate', 'read')
+}
+
 export const hasTerminalAccess = () => {
   const sconfig = useConfigStore()
   return sconfig.hasMenuAccess('terminal') ||
@@ -87,6 +96,7 @@ export const canAccessPath = (path: string) => {
   if (key === 'terminal') return hasTerminalAccess()
   if (key === 'configSnapshots') return hasConfigSnapshotAccess()
   if (key === 'systemManagement') return hasSystemManagementAccess()
+  if (key === 'certificate') return hasCertificateAccess()
   return sconfig.hasMenuAccess(key)
 }
 

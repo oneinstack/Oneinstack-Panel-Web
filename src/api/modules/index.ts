@@ -14,6 +14,7 @@ import { accessApi } from "./access";
 import { auditApi } from "./audit";
 import { monitorApi } from "./monitor";
 import { runtimeLogApi } from "./runtimeLog";
+import { certificateApi } from "./certificate";
 
 export * from "../types";
 
@@ -34,4 +35,5 @@ export const Api = {
   ...auditApi,
   ...monitorApi,
   ...runtimeLogApi,
+  ...certificateApi,
 };

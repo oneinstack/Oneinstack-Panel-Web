@@ -111,3 +111,104 @@ export interface SystemSshConfig {
   listenAddress?: string;
   error?: string;
 }
+
+export type CertificateProvider = "uploaded" | "self-signed" | "acme";
+export type CertificateStatus =
+  | "active"
+  | "expiring"
+  | "expired"
+  | "disabled"
+  | "error";
+export type CertificateTaskStatus =
+  | "queued"
+  | "running"
+  | "canceling"
+  | "succeeded"
+  | "failed"
+  | "canceled"
+  | "interrupted";
+export type CertificateTaskOperation =
+  | "issue"
+  | "renew"
+  | "upload"
+  | "self_signed"
+  | "bind";
+
+export interface CertificateAlgorithm {
+  value: string;
+  label: string;
+  keyType: "ec" | "rsa";
+  bits: number;
+}
+
+export interface DnsProviderOption {
+  value: string;
+  label: string;
+}
+
+export interface ManagedCertificate {
+  id: string;
+  provider: CertificateProvider;
+  domains: string;
+  serialNumber?: string;
+  issuer?: string;
+  algorithm?: string;
+  status: CertificateStatus;
+  autoRenew: boolean;
+  renewBeforeDays: number;
+  notBefore?: string;
+  notAfter?: string;
+  remark?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CertificateBinding {
+  id: string;
+  certificateId: string;
+  websiteId: number;
+  status: "active" | "disabled" | "error";
+  forceHttps: boolean;
+  lastError?: string;
+  deployedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CertificateTask {
+  id: string;
+  operation: CertificateTaskOperation;
+  websiteId?: number;
+  websiteName?: string;
+  certificateId?: string;
+  managedId?: string;
+  email?: string;
+  domains?: string;
+  autoRenew?: boolean;
+  renewBeforeDays?: number;
+  forceHttps?: boolean;
+  algorithm?: string;
+  validityYears?: number;
+  remark?: string;
+  status: CertificateTaskStatus;
+  progress: number;
+  message?: string;
+  errorCode?: string;
+  errorMessage?: string;
+  requestedBy?: number;
+  cancelRequested?: boolean;
+  startedAt?: string;
+  finishedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DnsAccount {
+  id: string;
+  name: string;
+  provider: string;
+  credentialConfigured: boolean;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
