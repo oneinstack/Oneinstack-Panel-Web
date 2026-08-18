@@ -12,50 +12,50 @@ import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwa
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
 import { hasTerminalAccess } from '@/utils/access'
-import approvalCenterIcon from '../../../public/static/menu/approval-center.svg'
-import approvalCenterActiveIcon from '../../../public/static/menu/approval-center-active.svg'
-import auditLogIcon from '../../../public/static/menu/audit-log.svg'
-import auditLogActiveIcon from '../../../public/static/menu/audit-log-active.svg'
-import bastionIcon from '../../../public/static/menu/bastion.svg'
-import bastionActiveIcon from '../../../public/static/menu/bastion-active.svg'
-import certificateIcon from '../../../public/static/menu/certificate.svg'
-import certificateActiveIcon from '../../../public/static/menu/certificate-active.svg'
-import configSnapshotsIcon from '../../../public/static/menu/config-snapshots.svg'
-import configSnapshotsActiveIcon from '../../../public/static/menu/config-snapshots-active.svg'
-import containerManagementIcon from '../../../public/static/menu/container-management.svg'
-import containerManagementActiveIcon from '../../../public/static/menu/container-management-active.svg'
-import dashboardIcon from '../../../public/static/menu/dashboard.svg'
-import dashboardActiveIcon from '../../../public/static/menu/dashboard-active.svg'
-import databaseIcon from '../../../public/static/menu/database.svg'
-import databaseActiveIcon from '../../../public/static/menu/database-active.svg'
-import fileIcon from '../../../public/static/menu/file.svg'
-import fileActiveIcon from '../../../public/static/menu/file-active.svg'
-import monitoringIcon from '../../../public/static/menu/monitoring.svg'
-import monitoringActiveIcon from '../../../public/static/menu/monitoring-active.svg'
-import operationsIcon from '../../../public/static/menu/operations.svg'
-import operationsActiveIcon from '../../../public/static/menu/operations-active.svg'
-import panelSettingsIcon from '../../../public/static/menu/panel-settings.svg'
-import panelSettingsActiveIcon from '../../../public/static/menu/panel-settings-active.svg'
-import runtimeLogIcon from '../../../public/static/menu/runtime-log.svg'
-import runtimeLogActiveIcon from '../../../public/static/menu/runtime-log-active.svg'
-import scheduledTasksIcon from '../../../public/static/menu/scheduled-tasks.svg'
-import scheduledTasksActiveIcon from '../../../public/static/menu/scheduled-tasks-active.svg'
-import securityIcon from '../../../public/static/menu/security.svg'
-import securityActiveIcon from '../../../public/static/menu/security-active.svg'
-import securityAuditIcon from '../../../public/static/menu/security-audit.svg'
-import securityAuditActiveIcon from '../../../public/static/menu/security-audit-active.svg'
-import softwareStoreIcon from '../../../public/static/menu/software-store.svg'
-import softwareStoreActiveIcon from '../../../public/static/menu/software-store-active.svg'
-import systemManagementIcon from '../../../public/static/menu/system-management.svg'
-import systemManagementActiveIcon from '../../../public/static/menu/system-management-active.svg'
-import systemSettingsIcon from '../../../public/static/menu/system-settings.svg'
-import systemSettingsActiveIcon from '../../../public/static/menu/system-settings-active.svg'
-import terminalIcon from '../../../public/static/menu/terminal.svg'
-import terminalActiveIcon from '../../../public/static/menu/terminal-active.svg'
-import userManagementIcon from '../../../public/static/menu/user-management.svg'
-import userManagementActiveIcon from '../../../public/static/menu/user-management-active.svg'
-import websiteIcon from '../../../public/static/menu/website.svg'
-import websiteActiveIcon from '../../../public/static/menu/website-active.svg'
+import approvalCenterIcon from '../../../public/static/menu/approval-center.svg?raw'
+import approvalCenterActiveIcon from '../../../public/static/menu/approval-center-active.svg?raw'
+import auditLogIcon from '../../../public/static/menu/audit-log.svg?raw'
+import auditLogActiveIcon from '../../../public/static/menu/audit-log-active.svg?raw'
+import bastionIcon from '../../../public/static/menu/bastion.svg?raw'
+import bastionActiveIcon from '../../../public/static/menu/bastion-active.svg?raw'
+import certificateIcon from '../../../public/static/menu/certificate.svg?raw'
+import certificateActiveIcon from '../../../public/static/menu/certificate-active.svg?raw'
+import configSnapshotsIcon from '../../../public/static/menu/config-snapshots.svg?raw'
+import configSnapshotsActiveIcon from '../../../public/static/menu/config-snapshots-active.svg?raw'
+import containerManagementIcon from '../../../public/static/menu/container-management.svg?raw'
+import containerManagementActiveIcon from '../../../public/static/menu/container-management-active.svg?raw'
+import dashboardIcon from '../../../public/static/menu/dashboard.svg?raw'
+import dashboardActiveIcon from '../../../public/static/menu/dashboard-active.svg?raw'
+import databaseIcon from '../../../public/static/menu/database.svg?raw'
+import databaseActiveIcon from '../../../public/static/menu/database-active.svg?raw'
+import fileIcon from '../../../public/static/menu/file.svg?raw'
+import fileActiveIcon from '../../../public/static/menu/file-active.svg?raw'
+import monitoringIcon from '../../../public/static/menu/monitoring.svg?raw'
+import monitoringActiveIcon from '../../../public/static/menu/monitoring-active.svg?raw'
+import operationsIcon from '../../../public/static/menu/operations.svg?raw'
+import operationsActiveIcon from '../../../public/static/menu/operations-active.svg?raw'
+import panelSettingsIcon from '../../../public/static/menu/panel-settings.svg?raw'
+import panelSettingsActiveIcon from '../../../public/static/menu/panel-settings-active.svg?raw'
+import runtimeLogIcon from '../../../public/static/menu/runtime-log.svg?raw'
+import runtimeLogActiveIcon from '../../../public/static/menu/runtime-log-active.svg?raw'
+import scheduledTasksIcon from '../../../public/static/menu/scheduled-tasks.svg?raw'
+import scheduledTasksActiveIcon from '../../../public/static/menu/scheduled-tasks-active.svg?raw'
+import securityIcon from '../../../public/static/menu/security.svg?raw'
+import securityActiveIcon from '../../../public/static/menu/security-active.svg?raw'
+import securityAuditIcon from '../../../public/static/menu/security-audit.svg?raw'
+import securityAuditActiveIcon from '../../../public/static/menu/security-audit-active.svg?raw'
+import softwareStoreIcon from '../../../public/static/menu/software-store.svg?raw'
+import softwareStoreActiveIcon from '../../../public/static/menu/software-store-active.svg?raw'
+import systemManagementIcon from '../../../public/static/menu/system-management.svg?raw'
+import systemManagementActiveIcon from '../../../public/static/menu/system-management-active.svg?raw'
+import systemSettingsIcon from '../../../public/static/menu/system-settings.svg?raw'
+import systemSettingsActiveIcon from '../../../public/static/menu/system-settings-active.svg?raw'
+import terminalIcon from '../../../public/static/menu/terminal.svg?raw'
+import terminalActiveIcon from '../../../public/static/menu/terminal-active.svg?raw'
+import userManagementIcon from '../../../public/static/menu/user-management.svg?raw'
+import userManagementActiveIcon from '../../../public/static/menu/user-management-active.svg?raw'
+import websiteIcon from '../../../public/static/menu/website.svg?raw'
+import websiteActiveIcon from '../../../public/static/menu/website-active.svg?raw'
 
 const sapp = useAppStore()
 const sconfig = useConfigStore()
@@ -206,8 +206,19 @@ const isMenuItemHovered = (item: NavItem) => hoveredMenuKey.value === getMenuIte
 const setHoveredMenuItem = (item?: NavItem) => {
   hoveredMenuKey.value = item ? getMenuItemKey(item) : ''
 }
+const activeMenuIconColor = 'rgb(var(--primary-color))'
+const withThemeAccent = (svg: string) => svg
+  .replace(/#F7911C/ig, activeMenuIconColor)
+  .replace(/#f59d0c/ig, activeMenuIconColor)
+  .replace(/#f97316/ig, activeMenuIconColor)
+  .replace(/#fb923c/ig, activeMenuIconColor)
+  .replace(/#eab170/ig, activeMenuIconColor)
+  .replace(/#121212/ig, sapp.theme === 'dark' ? '#ffffff' : '#111111')
+  .replace(/#111111/ig, sapp.theme === 'dark' ? '#ffffff' : '#111111')
 const getMenuItemIcon = (item: NavItem) =>
-  isNavItemActive(item) || isMenuItemHovered(item) ? item.activeIcon : item.icon
+  isNavItemActive(item) || isMenuItemHovered(item)
+    ? withThemeAccent(item.activeIcon)
+    : item.icon
 const activeGroupIndexes = computed(() =>
   visibleNavList.value.filter((item) => item.children?.length && isNavItemActive(item)).map((item) => item.path)
 )
@@ -489,7 +500,7 @@ const BindButton = () => {
                 @mouseleave="setHoveredMenuItem()"
               >
                 <template #title>
-                  <img class="menu-icon" :src="getMenuItemIcon(item)" :alt="getMenuName(item)" />
+                  <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
                   <span class="menu-item-name">{{ getMenuName(item) }}</span>
                   <span class="menu-expand-arrow" aria-hidden="true"></span>
                 </template>
@@ -501,7 +512,7 @@ const BindButton = () => {
                   @mouseleave="setHoveredMenuItem(item)"
                   @click="navigateNavItem(child)"
                 >
-                  <img class="menu-icon" :src="getMenuItemIcon(child)" :alt="getMenuName(child)" />
+                  <span class="menu-icon" :aria-label="getMenuName(child)" v-html="getMenuItemIcon(child)"></span>
                   <span class="menu-item-name">{{ getMenuName(child) }}</span>
                 </el-menu-item>
               </el-sub-menu>
@@ -512,7 +523,7 @@ const BindButton = () => {
                 @mouseleave="setHoveredMenuItem()"
                 @click="navigateNavItem(item)"
               >
-                <img class="menu-icon" :src="getMenuItemIcon(item)" :alt="getMenuName(item)" />
+                <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
                 <span class="menu-item-name">{{ getMenuName(item) }}</span>
               </el-menu-item>
             </template>
@@ -838,7 +849,15 @@ const BindButton = () => {
       width: 22px;
       height: 22px;
       flex: 0 0 22px;
-      object-fit: contain;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-icon :deep(svg) {
+      width: 22px;
+      height: 22px;
+      display: block;
     }
 
     .menu-item-name {
