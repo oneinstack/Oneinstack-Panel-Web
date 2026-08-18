@@ -3,6 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Api } from '@/api/modules'
 import type { DnsAccount, DnsProviderOption } from '@/api/modules'
+import { certificateDnsProviderLabel } from '../utils'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -103,7 +104,7 @@ watch(() => [props.visible, props.account, props.providers] as const, ([visible]
       </el-form-item>
       <el-form-item prop="provider" :label="$t('certificate.form.dnsProvider')" required>
         <el-select v-model="form.provider" style="width: 100%">
-          <el-option v-for="item in providers" :key="item.value" :label="item.label" :value="item.value" />
+          <el-option v-for="item in providers" :key="item.value" :label="certificateDnsProviderLabel(item.value, item.label)" :value="item.value" />
         </el-select>
       </el-form-item>
       <el-alert

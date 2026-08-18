@@ -4,6 +4,12 @@ import { CircleClose, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
 import type { CertificateTask } from '@/api/modules'
+import {
+  certificateOperationLabel,
+  certificateStatusLabel,
+  certificateTaskTarget,
+  certificateTime
+} from '../utils'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -36,9 +42,6 @@ const statusType = (status?: string) => {
   if (status === 'canceled' || status === 'interrupted') return 'info'
   return 'danger'
 }
-const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
-const label = (group: 'status' | 'operations', value?: string) => value ? t(`certificate.${group}.${value}`, value) : '—'
-
 const clearPolling = () => {
   if (!pollTimer) return
   window.clearInterval(pollTimer)
@@ -133,11 +136,11 @@ onBeforeUnmount(clearPolling)
       <template v-if="task">
         <div class="task-heading">
           <div>
-            <span>{{ label('operations', task.operation) }}</span>
-            <strong>{{ task.domains || task.websiteName || task.id }}</strong>
+            <span>{{ certificateOperationLabel(task.operation) }}</span>
+            <strong>{{ certificateTaskTarget(task.domains, task.websiteName, task.id) }}</strong>
           </div>
           <div class="task-heading__actions">
-            <el-tag :type="statusType(task.status)">{{ label('status', task.status) }}</el-tag>
+            <el-tag :type="statusType(task.status)">{{ certificateStatusLabel(task.status) }}</el-tag>
             <el-button :icon="Refresh" @click="loadTask()">{{ $t('common.refresh') }}</el-button>
             <el-button
               v-if="isActive && canWrite"
@@ -162,9 +165,9 @@ onBeforeUnmount(clearPolling)
           <div><dt>{{ $t('certificate.columns.message') }}</dt><dd>{{ task.message || '—' }}</dd></div>
           <div><dt>{{ $t('certificate.task.managedId') }}</dt><dd>{{ task.managedId || task.certificateId || '—' }}</dd></div>
           <div><dt>{{ $t('certificate.task.websiteId') }}</dt><dd>{{ task.websiteId || '—' }}</dd></div>
-          <div><dt>{{ $t('certificate.columns.createdAt') }}</dt><dd>{{ formatTime(task.createdAt) }}</dd></div>
-          <div><dt>{{ $t('certificate.task.startedAt') }}</dt><dd>{{ formatTime(task.startedAt) }}</dd></div>
-          <div><dt>{{ $t('certificate.task.finishedAt') }}</dt><dd>{{ formatTime(task.finishedAt) }}</dd></div>
+          <div><dt>{{ $t('certificate.columns.createdAt') }}</dt><dd>{{ certificateTime(task.createdAt) }}</dd></div>
+          <div><dt>{{ $t('certificate.task.startedAt') }}</dt><dd>{{ certificateTime(task.startedAt) }}</dd></div>
+          <div><dt>{{ $t('certificate.task.finishedAt') }}</dt><dd>{{ certificateTime(task.finishedAt) }}</dd></div>
           <div v-if="task.errorCode"><dt>{{ $t('certificate.task.errorCode') }}</dt><dd class="error-text">{{ task.errorCode }}</dd></div>
           <div v-if="task.errorMessage"><dt>{{ $t('certificate.task.errorMessage') }}</dt><dd class="error-text">{{ task.errorMessage }}</dd></div>
         </dl>

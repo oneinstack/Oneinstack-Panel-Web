@@ -6,6 +6,11 @@ import { Api } from '@/api/modules'
 import type { CertificateBinding, CertificateTask, ManagedCertificate } from '@/api/modules'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import CertificateBindDrawer from './CertificateBindDrawer.vue'
+import {
+  certificateProviderLabel,
+  certificateStatusLabel,
+  certificateTime
+} from '../utils'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -32,12 +37,6 @@ const bindVisible = ref(false)
 const t = (key: string, fallback?: string) => {
   const value = (i18n.t as any)(key)
   return value && value !== key ? value : fallback || key
-}
-const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
-const label = (group: 'status' | 'providers', value?: string) => value ? t(`certificate.${group}.${value.replace('-', '')}`, value) : '—'
-const providerLabel = (value?: string) => {
-  if (value === 'self-signed') return t('certificate.providers.selfSigned')
-  return value ? t(`certificate.providers.${value}`, value) : '—'
 }
 const statusType = (status?: string) => {
   if (status === 'active') return 'success'
@@ -180,24 +179,24 @@ watch(
     <div v-loading="loading" class="certificate-detail">
       <div v-if="certificate" class="detail-heading">
         <div>
-          <span>{{ providerLabel(certificate.provider) }}</span>
+          <span>{{ certificateProviderLabel(certificate.provider) }}</span>
           <strong>{{ certificate.domains }}</strong>
           <small>{{ certificate.remark || certificate.issuer || '—' }}</small>
         </div>
-        <el-tag :type="statusType(certificate.status)">{{ label('status', certificate.status) }}</el-tag>
+        <el-tag :type="statusType(certificate.status)">{{ certificateStatusLabel(certificate.status) }}</el-tag>
       </div>
 
       <el-tabs v-model="activeTab" class="detail-tabs" @tab-change="onTabChange">
         <el-tab-pane :label="$t('certificate.detail.info')" name="info">
           <template v-if="certificate">
             <dl class="detail-list">
-              <div><dt>{{ $t('certificate.columns.provider') }}</dt><dd>{{ providerLabel(certificate.provider) }}</dd></div>
+              <div><dt>{{ $t('certificate.columns.provider') }}</dt><dd>{{ certificateProviderLabel(certificate.provider) }}</dd></div>
               <div><dt>{{ $t('certificate.columns.algorithm') }}</dt><dd>{{ certificate.algorithm || '—' }}</dd></div>
               <div><dt>{{ $t('certificate.detail.serialNumber') }}</dt><dd>{{ certificate.serialNumber || '—' }}</dd></div>
               <div><dt>{{ $t('certificate.columns.issuer') }}</dt><dd>{{ certificate.issuer || '—' }}</dd></div>
-              <div><dt>{{ $t('certificate.detail.effectiveAt') }}</dt><dd>{{ formatTime(certificate.notBefore) }}</dd></div>
-              <div><dt>{{ $t('certificate.detail.expiresAt') }}</dt><dd>{{ formatTime(certificate.notAfter) }}</dd></div>
-              <div><dt>{{ $t('certificate.detail.renewPolicy') }}</dt><dd>{{ certificate.autoRenew ? $t('common.enabled') : $t('common.disabled') }} · {{ certificate.renewBeforeDays }}d</dd></div>
+              <div><dt>{{ $t('certificate.detail.effectiveAt') }}</dt><dd>{{ certificateTime(certificate.notBefore) }}</dd></div>
+              <div><dt>{{ $t('certificate.detail.expiresAt') }}</dt><dd>{{ certificateTime(certificate.notAfter) }}</dd></div>
+              <div><dt>{{ $t('certificate.detail.renewPolicy') }}</dt><dd>{{ certificate.autoRenew ? $t('common.enabled') : $t('common.disabled') }} · {{ $t('certificate.task.renewBeforeExpiry', { count: certificate.renewBeforeDays }) }}</dd></div>
               <div><dt>{{ $t('common.remark') }}</dt><dd>{{ certificate.remark || '—' }}</dd></div>
             </dl>
 
@@ -220,10 +219,10 @@ watch(
               >
                 <template #website="{ row }">#{{ row.websiteId }}</template>
                 <template #status="{ row }">
-                  <el-tag size="small" :type="statusType(row.status)">{{ label('status', row.status) }}</el-tag>
+                  <el-tag size="small" :type="statusType(row.status)">{{ certificateStatusLabel(row.status) }}</el-tag>
                 </template>
                 <template #forceHttps="{ row }">{{ row.forceHttps ? $t('common.enabled') : $t('common.disabled') }}</template>
-                <template #deployedAt="{ row }">{{ formatTime(row.deployedAt) }}</template>
+                <template #deployedAt="{ row }">{{ certificateTime(row.deployedAt) }}</template>
                 <template #actionColumn="{ row }">
                   <div class="table-row-actions">
                     <el-button v-if="canWrite && row.status === 'active'" link type="danger" :icon="Connection" @click="unbind(row)">

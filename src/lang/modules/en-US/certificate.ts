@@ -63,6 +63,11 @@ export default {
     selfSigned: 'Self-signed',
     bind: 'Deploy and bind'
   },
+  dnsProviders: {
+    cloudflare: 'Cloudflare',
+    aliyun: 'Alibaba Cloud',
+    tencentcloud: 'Tencent Cloud'
+  },
   form: {
     domains: 'Domains',
     domainsPlaceholder: 'One domain or IP per line; optional for upload auto-detection',
@@ -110,8 +115,10 @@ export default {
     errorMessage: 'Error message',
     managedId: 'Certificate resource ID',
     websiteId: 'Website ID',
+    resource: 'Certificate resource',
     startedAt: 'Started at',
-    finishedAt: 'Finished at'
+    finishedAt: 'Finished at',
+    renewBeforeExpiry: 'Renew {count} days before expiry'
   },
   dns: {
     configured: 'Configured',

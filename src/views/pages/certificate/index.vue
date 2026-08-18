@@ -28,6 +28,14 @@ import CertificateFormDrawer from './components/CertificateFormDrawer.vue'
 import CertificateBindDrawer from './components/CertificateBindDrawer.vue'
 import CertificateTaskDrawer from './components/CertificateTaskDrawer.vue'
 import DnsAccountDrawer from './components/DnsAccountDrawer.vue'
+import {
+  certificateDnsProviderLabel,
+  certificateOperationLabel,
+  certificateProviderLabel,
+  certificateStatusLabel,
+  certificateTaskTarget,
+  certificateTime
+} from './utils'
 import i18n from '@/lang'
 
 const sconfig = useConfigStore()
@@ -65,19 +73,12 @@ const canWrite = computed(() =>
 const activeStatuses = new Set(['queued', 'running', 'canceling'])
 const hasActiveTasks = computed(() => tasks.value.some((item) => activeStatuses.has(item.status)))
 
-const providerLabel = (value?: string) => {
-  if (value === 'self-signed') return t('certificate.providers.selfSigned', value)
-  return value ? t(`certificate.providers.${value}`, value) : '—'
-}
-const statusLabel = (value?: string) => value ? t(`certificate.status.${value}`, value) : '—'
-const operationLabel = (value?: string) => value ? t(`certificate.operations.${value}`, value) : '—'
 const statusType = (status?: string) => {
   if (status === 'active' || status === 'succeeded') return 'success'
   if (status === 'expiring' || status === 'queued' || status === 'running' || status === 'canceling') return 'warning'
   if (status === 'disabled' || status === 'canceled' || status === 'interrupted') return 'info'
   return 'danger'
 }
-const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const firstDomain = (domains?: string) => domains?.split(',').map((item) => item.trim()).find(Boolean) || '—'
 
 const certificateColumns = computed<ColumnItem<ManagedCertificate>[]>(() => [
@@ -324,9 +325,9 @@ onBeforeUnmount(() => {
                 <span>{{ row.domains }}</span>
               </div>
             </template>
-            <template #provider="{ row }"><el-tag effect="plain">{{ providerLabel(row.provider) }}</el-tag></template>
-            <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag></template>
-            <template #notAfter="{ row }">{{ formatTime(row.notAfter) }}</template>
+            <template #provider="{ row }"><el-tag effect="plain">{{ certificateProviderLabel(row.provider) }}</el-tag></template>
+            <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ certificateStatusLabel(row.status) }}</el-tag></template>
+            <template #notAfter="{ row }">{{ certificateTime(row.notAfter) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
                 <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
@@ -341,7 +342,7 @@ onBeforeUnmount(() => {
         <el-tab-pane :label="$t('certificate.tabs.tasks')" name="tasks">
           <div class="tab-tools">
             <el-select v-model="taskQuery.status" clearable style="width: 180px" :placeholder="$t('certificate.status.all')" @change="taskQuery.page = 1; loadTasks()">
-              <el-option v-for="status in ['queued', 'running', 'canceling', 'succeeded', 'failed', 'canceled', 'interrupted']" :key="status" :label="statusLabel(status)" :value="status" />
+              <el-option v-for="status in ['queued', 'running', 'canceling', 'succeeded', 'failed', 'canceled', 'interrupted']" :key="status" :label="certificateStatusLabel(status)" :value="status" />
             </el-select>
           </div>
           <custom-table
@@ -357,14 +358,14 @@ onBeforeUnmount(() => {
             @update:page="onTaskPage"
             @update:page-size="onTaskPageSize"
           >
-            <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
+            <template #operation="{ row }">{{ certificateOperationLabel(row.operation) }}</template>
             <template #taskTarget="{ row }">
-              <div class="primary-cell"><strong>{{ row.domains || row.websiteName || '—' }}</strong><span>{{ row.managedId || row.certificateId || row.id }}</span></div>
+              <div class="primary-cell"><strong>{{ certificateTaskTarget(row.domains, row.websiteName, row.id) }}</strong><span>{{ row.managedId || row.certificateId || row.id }}</span></div>
             </template>
-            <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag></template>
+            <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ certificateStatusLabel(row.status) }}</el-tag></template>
             <template #progress="{ row }"><el-progress :percentage="row.progress || 0" :stroke-width="7" /></template>
             <template #message="{ row }"><span class="message-cell">{{ row.errorMessage || row.message || '—' }}</span></template>
-            <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+            <template #createdAt="{ row }">{{ certificateTime(row.createdAt) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
                 <el-button link type="primary" :icon="Document" @click="openTask(row)">{{ $t('common.detail') }}</el-button>
@@ -391,10 +392,10 @@ onBeforeUnmount(() => {
             :empty-text="$t('certificate.empty.dnsAccounts')"
             row-key="id"
           >
-            <template #provider="{ row }">{{ dnsProviders.find((item) => item.value === row.provider)?.label || row.provider }}</template>
+            <template #provider="{ row }">{{ certificateDnsProviderLabel(row.provider, dnsProviders.find((item) => item.value === row.provider)?.label) }}</template>
             <template #credentials="{ row }"><el-tag :type="row.credentialConfigured ? 'success' : 'info'">{{ row.credentialConfigured ? $t('certificate.dns.configured') : $t('certificate.dns.notConfigured') }}</el-tag></template>
             <template #enabled="{ row }"><el-tag :type="row.enabled ? 'success' : 'info'">{{ row.enabled ? $t('certificate.dns.enabled') : $t('certificate.dns.disabled') }}</el-tag></template>
-            <template #updatedAt="{ row }">{{ formatTime(row.updatedAt) }}</template>
+            <template #updatedAt="{ row }">{{ certificateTime(row.updatedAt) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
                 <el-button v-if="canWrite" link type="primary" :icon="EditPen" @click="editDnsAccount(row)">{{ $t('common.edit') }}</el-button>

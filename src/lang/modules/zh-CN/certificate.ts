@@ -63,6 +63,11 @@ export default {
     selfSigned: '自签',
     bind: '部署绑定'
   },
+  dnsProviders: {
+    cloudflare: 'Cloudflare',
+    aliyun: '阿里云',
+    tencentcloud: '腾讯云'
+  },
   form: {
     domains: '域名',
     domainsPlaceholder: '每行一个域名或 IP，上传时可留空自动识别',
@@ -110,8 +115,10 @@ export default {
     errorMessage: '错误信息',
     managedId: '证书资源 ID',
     websiteId: '网站 ID',
+    resource: '证书资源',
     startedAt: '开始时间',
-    finishedAt: '完成时间'
+    finishedAt: '完成时间',
+    renewBeforeExpiry: '提前 {count} 天续签'
   },
   dns: {
     configured: '已配置',
