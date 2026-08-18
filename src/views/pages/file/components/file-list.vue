@@ -154,6 +154,8 @@ const isRootLevelPath = (path?: string) =>
   parentPath(normalizeVirtualPath(path || "/")) === "/";
 const isHighRiskRootPath = (path?: string) =>
   isRootLevelPath(path) && !isProtectedSystemPath(path);
+const isProtectedMutationPath = (path?: string) =>
+  isProtectedSystemPath(path);
 const protectedActionLabel = (action: "delete" | "rename" | "move") =>
   action === "delete"
     ? t("file.delete", "Delete")
@@ -166,6 +168,40 @@ const ensurePathMutationAllowed = async (
 ) => {
   const path = normalizeVirtualPath(row?.path || "");
   if (!path || path === "/") return false;
+  if (isProtectedMutationPath(path)) {
+    const message =
+      action === "delete"
+        ? t(
+            "file.protectedDeleteConfirm",
+            "Deleting item {path} inside a protected system directory may break boot, device, service, or package management behavior. Confirm you have created a snapshot or backup before continuing.",
+            { path },
+          )
+        : action === "rename"
+          ? t(
+              "file.protectedRenameConfirm",
+              "Renaming item {path} inside a protected system directory may break boot, device, service, or package management behavior. Confirm you have created a snapshot or backup before continuing.",
+              { path },
+            )
+          : t(
+              "file.protectedCutConfirm",
+              "Cutting or moving item {path} inside a protected system directory may break boot, device, service, or package management behavior. Confirm you have created a snapshot or backup before continuing.",
+              { path },
+            );
+    try {
+      await ElMessageBox.confirm(
+        message,
+        t("file.protectedActionTitle", "Protected system directory operation"),
+        {
+          type: "warning",
+          confirmButtonText: t("file.confirmHighRiskContinue", "Continue"),
+          cancelButtonText: t("common.cancel", "Cancel"),
+        },
+      );
+      return true;
+    } catch {
+      return false;
+    }
+  }
   if (isHighRiskRootPath(path)) {
     const message =
       action === "delete"
@@ -1155,10 +1191,8 @@ const conf = reactive({
 
 const canCopyFile = () =>
   canFilePermission("read") && canFilePermission("create");
-const canCutRow = (row: any) =>
-  canFilePermission("move") && !isProtectedSystemPath(row?.path);
-const canRenameRow = (row: any) =>
-  canFilePermission("modify") && !isProtectedSystemPath(row?.path);
+const canCutRow = (_row: any) => canFilePermission("move");
+const canRenameRow = (_row: any) => canFilePermission("modify");
 const canDeleteRow = (row: any) =>
   canFilePermission("delete") && normalizeBool(row?.canDelete);
 const canPasteClipboard = () => {
