@@ -87,8 +87,27 @@ export const fileApi = {
     path: string;
     targetDir: string;
     archiveName: string;
-  }) => {
-    return http.post("/ftp/archive", obj);
+  }, options: Record<string, any> = {}) => {
+    return http.post("/ftp/archive", obj, options);
+  },
+  /** 获取当前用户归档任务列表 */
+  getArchiveTasks: (
+    obj?: {
+      page?: number;
+      pageSize?: number;
+      status?: "queued" | "running" | "succeeded" | "failed";
+    },
+    options: Record<string, any> = {},
+  ) => {
+    return http.get("/ftp/archive/tasks", obj, options);
+  },
+  /** 获取单个归档任务详情 */
+  getArchiveTask: (taskId: string, options: Record<string, any> = {}) => {
+    return http.get(
+      `/ftp/archive/tasks/${encodeURIComponent(taskId)}`,
+      undefined,
+      options,
+    );
   },
   /** 获取文件属性 */
   getFileProperties: (obj: { path: string }) => {

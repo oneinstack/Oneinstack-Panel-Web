@@ -632,6 +632,7 @@ const refreshAll = async () => {
 
 defineExpose({
   getData,
+  refreshAll,
 });
 
 const handleFirewallChange = async (value: string | number | boolean) => {

@@ -33,6 +33,7 @@ import {
   Tickets,
   Folder,
   Document,
+  Bell,
 } from "@element-plus/icons-vue";
 import {
   ElMessage,
@@ -45,6 +46,7 @@ import {
   computed,
   nextTick,
   onMounted,
+  onUnmounted,
   reactive,
   ref,
   useTemplateRef,
@@ -57,6 +59,7 @@ import FileOperationDrawer from "./FileOperationDrawer.vue";
 import FileEditorDrawer from "./FileEditorDrawer.vue";
 import i18n from "@/lang";
 import { hasTerminalAccess } from "@/utils/access";
+import { HttpRequestError } from "@/api";
 
 const sconfig = useConfigStore()
 
@@ -74,6 +77,12 @@ interface Emits {
 const emit = defineEmits<Emits>();
 
 type ClipboardMode = "" | "copy" | "move";
+type RowInlineActionKey =
+  | "open"
+  | "copy"
+  | "cut"
+  | "rename"
+  | "tree";
 type FavoriteItem = {
   id?: number;
   path: string;
@@ -234,6 +243,105 @@ const fileTypeLabel = (row: any) => {
     : t("file.file", "文件");
 };
 
+type ArchiveTaskStatus = "queued" | "running" | "succeeded" | "failed";
+
+interface ArchiveTask {
+  id: string;
+  sourcePath: string;
+  targetDir: string;
+  archiveName: string;
+  resultPath?: string;
+  status: ArchiveTaskStatus;
+  message: string;
+  totalBytes: number;
+  processedBytes: number;
+  progress: number;
+  currentPath?: string;
+  entries?: number;
+  bytes?: number;
+  createdAt: string;
+  startedAt?: string;
+  finishedAt?: string;
+  statusUrl?: string;
+}
+
+const archiveTaskPollTimers = new Map<string, number>();
+const archiveTaskRetryDelays = new Map<string, number>();
+const archiveTaskNotified = new Set<string>();
+const archiveTaskTerminalStatuses = new Set<ArchiveTaskStatus>([
+  "succeeded",
+  "failed",
+]);
+const archiveTaskStatusTagType: Record<
+  ArchiveTaskStatus,
+  "info" | "warning" | "success" | "danger"
+> = {
+  queued: "info",
+  running: "warning",
+  succeeded: "success",
+  failed: "danger",
+};
+
+const archiveTaskStatusLabel = (status: ArchiveTaskStatus) =>
+  status === "queued"
+    ? t("file.archiveTaskStatusQueued", "Queued")
+    : status === "running"
+      ? t("file.archiveTaskStatusRunning", "Compressing")
+      : status === "succeeded"
+        ? t("file.archiveTaskStatusSucceeded", "Succeeded")
+        : t("file.archiveTaskStatusFailed", "Failed");
+const archiveTaskProgressText = (task: ArchiveTask) => {
+  if (task.status === "queued")
+    return t(
+      "file.archiveTaskQueuedHint",
+      "Waiting for another archive task to finish",
+    );
+  if (task.status === "running" && task.totalBytes <= 0)
+    return t("file.archiveTaskPackingHint", "Preparing archive contents");
+  if (task.status === "failed")
+    return t("file.archiveTaskFailedAt", "Failed at {progress}%", {
+      progress: Math.max(0, Math.min(100, Math.round(task.progress || 0))),
+    });
+  return `${Math.max(0, Math.min(100, Math.round(task.progress || 0)))}%`;
+};
+const formatArchiveTaskTime = (value?: string) => {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat(i18n.locale === "en-US" ? "en-US" : "zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(date);
+};
+const archiveTaskFileName = (path?: string) =>
+  String(path || "")
+    .split("/")
+    .filter(Boolean)
+    .pop() || "";
+const normalizeArchiveTask = (raw: any): ArchiveTask => ({
+  id: String(raw?.id || raw?.taskId || ""),
+  sourcePath: String(raw?.sourcePath || raw?.path || ""),
+  targetDir: String(raw?.targetDir || "/"),
+  archiveName: String(raw?.archiveName || ""),
+  resultPath: raw?.resultPath ? String(raw.resultPath) : undefined,
+  status: (raw?.status || "queued") as ArchiveTaskStatus,
+  message: String(raw?.message || ""),
+  totalBytes: Number(raw?.totalBytes || 0),
+  processedBytes: Number(raw?.processedBytes || 0),
+  progress: Number(raw?.progress || 0),
+  currentPath: raw?.currentPath ? String(raw.currentPath) : undefined,
+  entries: raw?.entries === undefined ? undefined : Number(raw.entries),
+  bytes: raw?.bytes === undefined ? undefined : Number(raw.bytes),
+  createdAt: String(raw?.createdAt || new Date().toISOString()),
+  startedAt: raw?.startedAt ? String(raw.startedAt) : undefined,
+  finishedAt: raw?.finishedAt ? String(raw.finishedAt) : undefined,
+  statusUrl: raw?.statusUrl ? String(raw.statusUrl) : undefined,
+});
+
 const conf = reactive({
   tipPaste: "",
   path: ["/"],
@@ -245,6 +353,10 @@ const conf = reactive({
   editorPath: "",
   editorDetail: null as any,
   editorLoadingPath: "",
+  archiveTasksVisible: false,
+  archiveTasksLoading: false,
+  archiveTasks: {} as Record<string, ArchiveTask>,
+  archiveTaskOrder: [] as string[],
   imagePreview: {
     show: false,
     row: null as any,
@@ -302,7 +414,7 @@ const conf = reactive({
     {
       prop: "action",
       label: t("file.columns.action", "Actions"),
-      width: "500",
+      width: "400",
       fixed: "right" as const,
     },
   ]),
@@ -373,6 +485,184 @@ const conf = reactive({
   refresh: () => {
     conf.getFileList(true);
     conf.getCapacity();
+  },
+  upsertArchiveTask: (task: ArchiveTask) => {
+    if (!task.id) return;
+    const current = conf.archiveTasks[task.id];
+    conf.archiveTasks[task.id] = current ? { ...current, ...task } : task;
+    conf.archiveTaskOrder = [
+      task.id,
+      ...conf.archiveTaskOrder.filter((id) => id !== task.id),
+    ];
+  },
+  removeArchiveTask: (taskId: string) => {
+    delete conf.archiveTasks[taskId];
+    conf.archiveTaskOrder = conf.archiveTaskOrder.filter((id) => id !== taskId);
+    const timer = archiveTaskPollTimers.get(taskId);
+    if (timer) window.clearTimeout(timer);
+    archiveTaskPollTimers.delete(taskId);
+    archiveTaskRetryDelays.delete(taskId);
+    archiveTaskNotified.delete(taskId);
+  },
+  scheduleArchiveTaskPoll: (taskId: string, delay: number) => {
+    const currentTimer = archiveTaskPollTimers.get(taskId);
+    if (currentTimer) window.clearTimeout(currentTimer);
+    archiveTaskPollTimers.set(
+      taskId,
+      window.setTimeout(() => {
+        archiveTaskPollTimers.delete(taskId);
+        void conf.pollArchiveTask(taskId);
+      }, delay),
+    );
+  },
+  locateArchiveResult: (task: ArchiveTask) => {
+    const targetDir = normalizeVirtualPath(task.targetDir || "/");
+    const resultName =
+      archiveTaskFileName(task.resultPath) || task.archiveName || "";
+    conf.quickFilter = resultName;
+    if (currentPath() === targetDir) {
+      conf.refresh();
+      return;
+    }
+    conf.handleNavigate(targetDir);
+  },
+  retryArchiveTask: async (task: ArchiveTask) => {
+    if (!task.sourcePath || !task.targetDir || !task.archiveName) return;
+    const { data } = await Api.archiveFile(
+      {
+        path: task.sourcePath,
+        targetDir: task.targetDir,
+        archiveName: task.archiveName,
+      },
+      { timeout: 10000 },
+    );
+    const created = normalizeArchiveTask({
+      ...task,
+      ...data,
+      id: data?.taskId || data?.id,
+      status: data?.status || "queued",
+      statusUrl: data?.statusUrl,
+      progress: 0,
+      processedBytes: 0,
+      totalBytes: 0,
+      resultPath: undefined,
+      currentPath: undefined,
+      message: t("file.archiveTaskSubmitted", "Archive task submitted"),
+      createdAt: new Date().toISOString(),
+      startedAt: undefined,
+      finishedAt: undefined,
+      entries: undefined,
+      bytes: undefined,
+    });
+    conf.upsertArchiveTask(created);
+    conf.archiveTasksVisible = true;
+    archiveTaskNotified.delete(created.id);
+    ElMessage.success(
+      t("file.archiveTaskSubmitted", "Archive task submitted"),
+    );
+    conf.scheduleArchiveTaskPoll(created.id, 1200);
+  },
+  handleArchiveTaskUpdate: (task: ArchiveTask, previous?: ArchiveTask) => {
+    conf.upsertArchiveTask(task);
+    const wasTerminal = previous
+      ? archiveTaskTerminalStatuses.has(previous.status)
+      : false;
+    if (
+      task.status === "succeeded" &&
+      !wasTerminal &&
+      !archiveTaskNotified.has(task.id)
+    ) {
+      archiveTaskNotified.add(task.id);
+      ElMessage.success(
+        t("file.archiveTaskFinished", "Archive {name} is ready", {
+          name: task.archiveName,
+        }),
+      );
+      if (currentPath() === normalizeVirtualPath(task.targetDir)) conf.refresh();
+      return;
+    }
+    if (
+      task.status === "failed" &&
+      !wasTerminal &&
+      !archiveTaskNotified.has(task.id)
+    ) {
+      archiveTaskNotified.add(task.id);
+      ElMessage.error(
+        task.message ||
+          t("file.archiveTaskFailed", "Failed to create archive"),
+      );
+    }
+  },
+  pollArchiveTask: async (taskId: string) => {
+    const localTask = conf.archiveTasks[taskId];
+    if (!localTask || archiveTaskTerminalStatuses.has(localTask.status)) return;
+    try {
+      const { data } = await Api.getArchiveTask(taskId, { silentError: true });
+      const next = normalizeArchiveTask({
+        ...localTask,
+        ...data,
+        statusUrl: localTask.statusUrl || data?.statusUrl,
+      });
+      conf.handleArchiveTaskUpdate(next, localTask);
+      archiveTaskRetryDelays.delete(taskId);
+      if (archiveTaskTerminalStatuses.has(next.status)) {
+        const timer = archiveTaskPollTimers.get(taskId);
+        if (timer) window.clearTimeout(timer);
+        archiveTaskPollTimers.delete(taskId);
+        return;
+      }
+      conf.scheduleArchiveTaskPoll(
+        taskId,
+        next.status === "running" ? 1000 : 2000,
+      );
+    } catch (error) {
+      if (error instanceof HttpRequestError) {
+        if (error.status === 403 || error.status === 404) {
+          conf.removeArchiveTask(taskId);
+          ElMessage.warning(
+            error.status === 403
+              ? t(
+                  "file.archiveTaskNoPermission",
+                  "You no longer have permission to view this archive task",
+                )
+              : t("file.archiveTaskMissing", "Archive task no longer exists"),
+          );
+          return;
+        }
+        if (error.status === 401) return;
+      }
+      const nextDelay = Math.min(
+        archiveTaskRetryDelays.get(taskId) || 1000,
+        10000,
+      );
+      archiveTaskRetryDelays.set(taskId, Math.min(nextDelay * 2, 10000));
+      conf.scheduleArchiveTaskPoll(taskId, nextDelay);
+    }
+  },
+  loadArchiveTasks: async () => {
+    if (!canFilePermission("archive")) return;
+    conf.archiveTasksLoading = true;
+    try {
+      const { data } = await Api.getArchiveTasks(
+        { page: 1, pageSize: 20 },
+        { silentError: true },
+      );
+      const tasks = Array.isArray(data?.data) ? data.data : [];
+      tasks.forEach((item: any) => {
+        const task = normalizeArchiveTask(item);
+        conf.upsertArchiveTask(task);
+        if (!archiveTaskTerminalStatuses.has(task.status)) {
+          conf.scheduleArchiveTaskPoll(
+            task.id,
+            task.status === "running" ? 500 : 1000,
+          );
+        }
+      });
+    } catch {
+      // 归档任务入口允许静默失败，避免影响文件列表主流程。
+    } finally {
+      conf.archiveTasksLoading = false;
+    }
   },
   openTerminal: () => System.router.push("/terminal"),
   handleFileClick: (row: any) => {
@@ -663,6 +953,7 @@ const conf = reactive({
     title: "",
     row: {} as any,
     value: "",
+    submitting: false,
     properties: null as any,
     expiryHours: 24,
     shareUrl: "",
@@ -714,6 +1005,7 @@ const conf = reactive({
       conf.operationDialog.row = {};
       conf.operationDialog.properties = null;
       conf.operationDialog.shareUrl = "";
+      conf.operationDialog.submitting = false;
     },
     confirm: async () => {
       const dialog = conf.operationDialog;
@@ -740,16 +1032,42 @@ const conf = reactive({
           return ElMessage.warning(
             t("file.archiveNameMustEnd", "Archive name must end with .tar.gz"),
           );
-        await Api.archiveFile({
-          path: dialog.row.path,
-          targetDir: currentPath(),
-          archiveName,
-        });
-        ElMessage.success(
-          t("file.archiveCreateSuccess", "Archive created successfully"),
-        );
-        dialog.close();
-        conf.refresh();
+        dialog.submitting = true;
+        try {
+          const { data } = await Api.archiveFile(
+            {
+              path: dialog.row.path,
+              targetDir: currentPath(),
+              archiveName,
+            },
+            { timeout: 10000 },
+          );
+          const created = normalizeArchiveTask({
+            ...dialog.row,
+            ...data,
+            id: data?.taskId || data?.id,
+            sourcePath: dialog.row.path,
+            targetDir: currentPath(),
+            archiveName,
+            status: data?.status || "queued",
+            statusUrl: data?.statusUrl,
+            message: t("file.archiveTaskSubmitted", "Archive task submitted"),
+            progress: 0,
+            processedBytes: 0,
+            totalBytes: 0,
+            createdAt: new Date().toISOString(),
+          });
+          conf.upsertArchiveTask(created);
+          archiveTaskNotified.delete(created.id);
+          dialog.close();
+          conf.archiveTasksVisible = true;
+          ElMessage.success(
+            t("file.archiveTaskSubmitted", "Archive task submitted"),
+          );
+          conf.scheduleArchiveTaskPoll(created.id, 1200);
+        } finally {
+          dialog.submitting = false;
+        }
         return;
       }
       if (dialog.type === "share") {
@@ -852,9 +1170,35 @@ const canUsePrimaryAction = (row: any) => {
   if (row?.isDir || conf.isImage(row)) return canFilePermission("read");
   return canFilePermission("edit");
 };
+const rowInlineActionLimit = 3;
+const rowInlineActionKeys = (row: any): RowInlineActionKey[] => {
+  const keys: RowInlineActionKey[] = [];
+  if (canUsePrimaryAction(row)) keys.push("open");
+  if (canCopyFile()) keys.push("copy");
+  if (canCutRow(row)) keys.push("cut");
+  if (canRenameRow(row)) keys.push("rename");
+  if (row?.isDir && canFilePermission("read")) keys.push("tree");
+  return keys;
+};
+const rowVisibleInlineActionKeys = (row: any) =>
+  rowInlineActionKeys(row).slice(0, rowInlineActionLimit);
+const showRowInlineAction = (row: any, key: RowInlineActionKey) =>
+  rowVisibleInlineActionKeys(row).includes(key);
+const showRowMoreAction = (row: any, key: RowInlineActionKey) =>
+  rowInlineActionKeys(row).includes(key) &&
+  !rowVisibleInlineActionKeys(row).includes(key);
+const hasRowMoreMenu = (row: any) =>
+  rowInlineActionKeys(row).length > rowInlineActionLimit ||
+  (!row?.isDir && canFilePermission("read")) ||
+  canFilePermission("read") ||
+  (!row?.isDir && canFilePermission("share")) ||
+  canFilePermission("modify") ||
+  canFilePermission("archive") ||
+  canFilePermission("read");
 
 onMounted(() => {
   conf.loadFavorites();
+  void conf.loadArchiveTasks();
   const queryText = window.location.hash.split("?")[1] || "";
   const routeQuery = new URLSearchParams(queryText);
   const initialPath = routeQuery.get("path");
@@ -877,6 +1221,12 @@ onMounted(() => {
     }
   }
   conf.getCapacity();
+});
+
+onUnmounted(() => {
+  archiveTaskPollTimers.forEach((timer) => window.clearTimeout(timer));
+  archiveTaskPollTimers.clear();
+  archiveTaskRetryDelays.clear();
 });
 
 defineExpose({
@@ -915,6 +1265,33 @@ const capacityUsedPercent = computed(() => {
     Math.min(100, Math.round(((total - available) / total) * 100)),
   );
 });
+const archiveTaskList = computed(() =>
+  conf.archiveTaskOrder
+    .map((id) => conf.archiveTasks[id])
+    .filter(Boolean)
+    .sort(
+      (left, right) =>
+        Date.parse(String(right.createdAt || "")) -
+        Date.parse(String(left.createdAt || "")),
+    ),
+);
+const archiveTaskActiveList = computed(() =>
+  archiveTaskList.value.filter(
+    (task) => task.status === "queued" || task.status === "running",
+  ),
+);
+const archiveTaskRecentList = computed(() =>
+  archiveTaskList.value.filter(
+    (task) => task.status === "succeeded" || task.status === "failed",
+  ),
+);
+const archiveTaskActiveCount = computed(() => archiveTaskActiveList.value.length);
+const archiveTaskQueuedCount = computed(
+  () => archiveTaskList.value.filter((task) => task.status === "queued").length,
+);
+const archiveTaskRunningCount = computed(
+  () => archiveTaskList.value.filter((task) => task.status === "running").length,
+);
 </script>
 
 <template>
@@ -1076,6 +1453,23 @@ const capacityUsedPercent = computed(() => {
           </div>
         </div>
         <el-tooltip
+          v-if="canFilePermission('archive')"
+          :content="t('file.archiveTasks', 'Archive tasks')"
+          placement="bottom"
+        >
+          <el-badge
+            :value="archiveTaskActiveCount"
+            :hidden="archiveTaskActiveCount === 0"
+          >
+            <el-button
+              class="icon-command"
+              :icon="Bell"
+              :aria-label="t('file.archiveTasks', 'Archive tasks')"
+              @click="conf.archiveTasksVisible = true"
+            />
+          </el-badge>
+        </el-tooltip>
+        <el-tooltip
           :content="t('file.operationRecords', 'Operation records')"
           placement="bottom"
         >
@@ -1211,7 +1605,7 @@ const capacityUsedPercent = computed(() => {
         <template #action="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
-              v-if="canUsePrimaryAction(row)"
+              v-if="showRowInlineAction(row, 'open')"
               class="action-main"
               type="primary"
               link
@@ -1228,7 +1622,7 @@ const capacityUsedPercent = computed(() => {
               }}
             </el-button>
             <el-button
-              v-if="canCopyFile()"
+              v-if="showRowInlineAction(row, 'copy')"
               type="primary"
               link
               :icon="CopyDocument"
@@ -1237,7 +1631,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.copy", "Copy") }}
             </el-button>
             <el-button
-              v-if="canCutRow(row)"
+              v-if="showRowInlineAction(row, 'cut')"
               type="primary"
               link
               :icon="Scissor"
@@ -1246,7 +1640,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.cut", "Cut") }}
             </el-button>
             <el-button
-              v-if="canRenameRow(row)"
+              v-if="showRowInlineAction(row, 'rename')"
               type="primary"
               link
               :icon="EditPen"
@@ -1255,7 +1649,7 @@ const capacityUsedPercent = computed(() => {
               {{ t("file.rename", "Rename") }}
             </el-button>
             <el-button
-              v-if="row.isDir && canFilePermission('read')"
+              v-if="showRowInlineAction(row, 'tree')"
               type="primary"
               link
               :icon="Operation"
@@ -1263,17 +1657,12 @@ const capacityUsedPercent = computed(() => {
             >
               {{ t("file.directoryTree", "Directory tree") }}
             </el-button>
-            <el-button
-              v-if="canDeleteRow(row)"
-              class="row-action-danger"
-              type="primary"
-              link
-              :icon="Delete"
-              @click="conf.fileDialog.open('delete', row)"
+            <el-dropdown
+              v-if="hasRowMoreMenu(row)"
+              class="row-action-more"
+              trigger="click"
+              popper-class="table-action-popper"
             >
-              {{ t("file.delete", "Delete") }}
-            </el-button>
-            <el-dropdown trigger="click" popper-class="table-action-popper">
               <el-button type="primary" link :icon="MoreFilled">
                 {{ t("file.more", "More") }}
                 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
@@ -1281,7 +1670,7 @@ const capacityUsedPercent = computed(() => {
               <template #dropdown>
                 <el-dropdown-menu class="table-action-menu file-action-menu">
                   <el-dropdown-item
-                    v-if="canUsePrimaryAction(row)"
+                    v-if="showRowMoreAction(row, 'open')"
                     @click="conf.handleFileClick(row)"
                   >
                     <el-icon
@@ -1296,25 +1685,38 @@ const capacityUsedPercent = computed(() => {
                     }}
                   </el-dropdown-item>
                   <el-dropdown-item
-                    v-if="canFilePermission('read')"
-                    @click="conf.openInNewWindow(row)"
-                  >
-                    <el-icon><FolderOpened /></el-icon
-                    >{{ t("file.openInNewWindow", "Open in new window") }}
-                  </el-dropdown-item>
-                  <!-- <el-dropdown-item
-                    v-if="row.isDir && canFilePermission('read')"
+                    v-if="showRowMoreAction(row, 'tree')"
                     @click="conf.treeDialog.open(row)"
                   >
                     <el-icon><Operation /></el-icon
                     >{{ t("file.directoryTree", "Directory tree") }}
-                  </el-dropdown-item> -->
+                  </el-dropdown-item>
                   <el-dropdown-item
                     v-if="!row.isDir && canFilePermission('read')"
                     @click="conf.handleFileDownload(row)"
                   >
                     <el-icon><Download /></el-icon
                     >{{ t("file.download", "Download") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="showRowMoreAction(row, 'copy')"
+                    @click="conf.setClipboard('copy', row)"
+                  >
+                    <el-icon><CopyDocument /></el-icon
+                    >{{ t("file.copy", "Copy") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="showRowMoreAction(row, 'cut')"
+                    @click="conf.setClipboard('move', row)"
+                  >
+                    <el-icon><Scissor /></el-icon>{{ t("file.cut", "Cut") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="showRowMoreAction(row, 'rename')"
+                    @click="conf.operationDialog.open('rename', row)"
+                  >
+                    <el-icon><EditPen /></el-icon
+                    >{{ t("file.rename", "Rename") }}
                   </el-dropdown-item>
                   <el-dropdown-item
                     v-if="canFilePermission('read')"
@@ -1349,26 +1751,6 @@ const capacityUsedPercent = computed(() => {
                     <el-icon><Lock /></el-icon
                     >{{ t("file.permissions", "Permissions") }}
                   </el-dropdown-item>
-                  <!-- <el-dropdown-item
-                    v-if="canCopyFile()"
-                    @click="conf.setClipboard('copy', row)"
-                  >
-                    <el-icon><CopyDocument /></el-icon
-                    >{{ t("file.copy", "Copy") }}
-                  </el-dropdown-item> -->
-                  <!-- <el-dropdown-item
-                    v-if="canFilePermission('move')"
-                    @click="conf.setClipboard('move', row)"
-                  >
-                    <el-icon><Scissor /></el-icon>{{ t("file.cut", "Cut") }}
-                  </el-dropdown-item> -->
-                  <!-- <el-dropdown-item
-                    v-if="canFilePermission('modify')"
-                    @click="conf.operationDialog.open('rename', row)"
-                  >
-                    <el-icon><EditPen /></el-icon
-                    >{{ t("file.rename", "Rename") }}
-                  </el-dropdown-item> -->
                   <el-dropdown-item
                     v-if="canFilePermission('archive')"
                     @click="conf.operationDialog.open('archive', row)"
@@ -1383,15 +1765,15 @@ const capacityUsedPercent = computed(() => {
                     <el-icon><InfoFilled /></el-icon
                     >{{ t("file.properties", "Properties") }}
                   </el-dropdown-item>
-                  <!-- <el-dropdown-item
-                    v-if="canFilePermission('delete')"
+                  <el-dropdown-item
+                    v-if="canDeleteRow(row)"
                     divided
                     class="table-action-menu__danger"
                     @click="conf.fileDialog.open('delete', row)"
                   >
                     <el-icon><Delete /></el-icon
                     >{{ t("file.delete", "Delete") }}
-                  </el-dropdown-item> -->
+                  </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -1465,7 +1847,7 @@ const capacityUsedPercent = computed(() => {
               @click.stop
             />
             <template #dropdown>
-              <el-dropdown-menu class="table-action-menu">
+              <el-dropdown-menu class="table-action-menu file-action-menu">
                 <el-dropdown-item
                   v-if="canUsePrimaryAction(row)"
                   @click="conf.handleFileClick(row)"
@@ -1480,11 +1862,38 @@ const capacityUsedPercent = computed(() => {
                   }}
                 </el-dropdown-item>
                 <el-dropdown-item
+                  v-if="row.isDir && canFilePermission('read')"
+                  @click="conf.treeDialog.open(row)"
+                >
+                  <el-icon><Operation /></el-icon
+                  >{{ t("file.directoryTree", "目录树") }}
+                </el-dropdown-item>
+                <el-dropdown-item
                   v-if="!row.isDir && canFilePermission('read')"
                   @click="conf.handleFileDownload(row)"
                 >
                   <el-icon><Download /></el-icon
                   >{{ t("file.download", "下载") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canCopyFile()"
+                  @click="conf.setClipboard('copy', row)"
+                >
+                  <el-icon><CopyDocument /></el-icon
+                  >{{ t("file.copy", "复制") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canCutRow(row)"
+                  @click="conf.setClipboard('move', row)"
+                >
+                  <el-icon><Scissor /></el-icon>{{ t("file.cut", "剪切") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canRenameRow(row)"
+                  @click="conf.operationDialog.open('rename', row)"
+                >
+                  <el-icon><EditPen /></el-icon
+                  >{{ t("file.rename", "重命名") }}
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-if="canFilePermission('read')"
@@ -1496,6 +1905,34 @@ const capacityUsedPercent = computed(() => {
                       ? t("file.removeFavorite", "取消收藏")
                       : t("file.addFavorite", "收藏")
                   }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="!row.isDir && canFilePermission('share')"
+                  @click="conf.operationDialog.open('share', row)"
+                >
+                  <el-icon><Share /></el-icon
+                  >{{ t("file.shareLink", "外链分享") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canFilePermission('modify')"
+                  divided
+                  @click="
+                    conf.handleOpenDrawer(
+                      'editPER',
+                      row.isDir ? 'dir' : 'file',
+                      row,
+                    )
+                  "
+                >
+                  <el-icon><Lock /></el-icon
+                  >{{ t("file.permissions", "权限") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="canFilePermission('archive')"
+                  @click="conf.operationDialog.open('archive', row)"
+                >
+                  <el-icon><Files /></el-icon
+                  >{{ t("file.createArchive", "创建压缩包") }}
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-if="canFilePermission('read')"
@@ -1936,6 +2373,7 @@ const capacityUsedPercent = computed(() => {
             !conf.operationDialog.shareUrl
           "
           type="primary"
+          :loading="conf.operationDialog.submitting"
           @click="conf.operationDialog.confirm"
         >
           {{
@@ -2029,6 +2467,161 @@ const capacityUsedPercent = computed(() => {
         >
       </template>
     </custom-dialog>
+
+    <el-drawer
+      v-model="conf.archiveTasksVisible"
+      :title="t('file.archiveTasks', 'Archive tasks')"
+      size="460px"
+      append-to-body
+    >
+      <div class="archive-task-drawer">
+        <div class="archive-task-overview">
+          <div class="archive-task-overview__card">
+            <strong>{{ archiveTaskRunningCount }}</strong>
+            <span>{{ t("file.archiveTaskStatusRunning", "Compressing") }}</span>
+          </div>
+          <div class="archive-task-overview__card">
+            <strong>{{ archiveTaskQueuedCount }}</strong>
+            <span>{{ t("file.archiveTaskStatusQueued", "Queued") }}</span>
+          </div>
+          <div class="archive-task-overview__card">
+            <strong>{{ archiveTaskList.length }}</strong>
+            <span>{{ t("file.archiveTaskRecent", "Recent") }}</span>
+          </div>
+        </div>
+
+        <div v-loading="conf.archiveTasksLoading" class="archive-task-sections">
+          <div v-if="archiveTaskActiveList.length" class="archive-task-section">
+            <div class="archive-task-section__title">
+              {{ t("file.archiveTaskActive", "In progress") }}
+            </div>
+            <article
+              v-for="task in archiveTaskActiveList"
+              :key="task.id"
+              class="archive-task-card"
+            >
+              <div class="archive-task-card__header">
+                <div>
+                  <strong>{{ task.archiveName }}</strong>
+                  <small>{{ formatArchiveTaskTime(task.createdAt) }}</small>
+                </div>
+                <el-tag
+                  size="small"
+                  effect="plain"
+                  :type="archiveTaskStatusTagType[task.status]"
+                >
+                  {{ archiveTaskStatusLabel(task.status) }}
+                </el-tag>
+              </div>
+              <p class="archive-task-card__message">
+                {{
+                  task.message ||
+                  (task.status === "queued"
+                    ? t(
+                        "file.archiveTaskQueuedHint",
+                        "Waiting for another archive task to finish",
+                      )
+                    : t("file.archiveTaskPacking", "Creating archive"))
+                }}
+              </p>
+              <div
+                class="archive-task-progress"
+                :class="{
+                  'is-indeterminate':
+                    task.status === 'queued' ||
+                    (task.status === 'running' && task.totalBytes <= 0),
+                }"
+              >
+                <span
+                  :style="{
+                    width: `${
+                      task.status === 'succeeded'
+                        ? 100
+                        : Math.max(0, Math.min(99, Math.round(task.progress || 0)))
+                    }%`,
+                  }"
+                />
+              </div>
+              <div class="archive-task-card__meta">
+                <span>{{ archiveTaskProgressText(task) }}</span>
+                <span v-if="task.totalBytes > 0">
+                  {{ formatBytes(task.processedBytes) }} /
+                  {{ formatBytes(task.totalBytes) }}
+                </span>
+              </div>
+              <div v-if="task.currentPath" class="archive-task-card__path">
+                {{ t("file.archiveTaskCurrentFile", "Current file") }}:
+                {{ task.currentPath }}
+              </div>
+            </article>
+          </div>
+
+          <div v-if="archiveTaskRecentList.length" class="archive-task-section">
+            <div class="archive-task-section__title">
+              {{ t("file.archiveTaskRecent", "Recent") }}
+            </div>
+            <article
+              v-for="task in archiveTaskRecentList"
+              :key="task.id"
+              class="archive-task-card"
+            >
+              <div class="archive-task-card__header">
+                <div>
+                  <strong>{{ task.archiveName }}</strong>
+                  <small>{{ formatArchiveTaskTime(task.finishedAt || task.createdAt) }}</small>
+                </div>
+                <el-tag
+                  size="small"
+                  effect="plain"
+                  :type="archiveTaskStatusTagType[task.status]"
+                >
+                  {{ archiveTaskStatusLabel(task.status) }}
+                </el-tag>
+              </div>
+              <p class="archive-task-card__message">
+                {{
+                  task.message ||
+                  (task.status === "succeeded"
+                    ? t("file.archiveTaskFinishedSimple", "Archive ready")
+                    : t("file.archiveTaskFailed", "Failed to create archive"))
+                }}
+              </p>
+              <div class="archive-task-card__meta">
+                <span>{{ archiveTaskProgressText(task) }}</span>
+                <span v-if="task.status === 'succeeded' && task.resultPath">
+                  {{ task.resultPath }}
+                </span>
+              </div>
+              <div class="archive-task-card__actions">
+                <el-button
+                  v-if="task.status === 'succeeded'"
+                  link
+                  type="primary"
+                  @click="conf.locateArchiveResult(task)"
+                >
+                  {{ t("file.archiveTaskLocateFile", "Locate file") }}
+                </el-button>
+                <el-button
+                  v-if="task.status === 'failed'"
+                  link
+                  type="primary"
+                  @click="conf.retryArchiveTask(task)"
+                >
+                  {{ t("file.archiveTaskRetry", "Retry") }}
+                </el-button>
+              </div>
+            </article>
+          </div>
+
+          <el-empty
+            v-if="!archiveTaskList.length && !conf.archiveTasksLoading"
+            :description="
+              t('file.archiveTaskEmpty', 'No archive tasks yet')
+            "
+          />
+        </div>
+      </div>
+    </el-drawer>
 
     <file-search-dialog
       v-model="conf.searchVisible"
@@ -2422,10 +3015,13 @@ const capacityUsedPercent = computed(() => {
 }
 
 .row-actions {
-  display: inline-flex;
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, 96px) 88px;
   align-items: center;
-  flex-wrap: nowrap;
-  gap: 0;
+  justify-content: end;
+  justify-items: stretch;
+  column-gap: 4px;
   padding: 0;
   border: 0;
   border-radius: 7px;
@@ -2434,14 +3030,16 @@ const capacityUsedPercent = computed(() => {
   pointer-events: auto;
   transform: none;
 
-  :deep(.el-button + .el-button) {
-    margin-left: 0;
+  > * {
+    min-width: 0;
   }
 
   :deep(.el-button) {
+    width: 100%;
     min-height: 28px;
     padding: 5px 7px;
     border-radius: 6px;
+    justify-content: center;
   }
 
   :deep(.el-button.is-link) {
@@ -2464,10 +3062,11 @@ const capacityUsedPercent = computed(() => {
   }
 
   :deep(.action-main) {
-    margin-right: 2px;
-    border-color: rgba(var(--primary-color), 0.22);
     font-size: 12px;
-    background: rgba(var(--primary-color), 0.07);
+  }
+
+  .row-action-more {
+    grid-column: 4;
   }
 }
 
@@ -2827,5 +3426,169 @@ const capacityUsedPercent = computed(() => {
 
 :global(.file-action-menu) {
   max-height: 264px;
+}
+
+.archive-task-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.archive-task-overview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.archive-task-overview__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  background: var(--surface-card);
+
+  strong {
+    color: var(--text-primary);
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.archive-task-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.archive-task-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.archive-task-section__title {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.archive-task-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  background: var(--surface-card);
+}
+
+.archive-task-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+
+  > div {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.archive-task-card__message {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.archive-task-progress {
+  position: relative;
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-subtle);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(
+      90deg,
+      rgba(var(--primary-color), 0.75),
+      rgba(var(--primary-color), 1)
+    );
+    transition: width 0.3s ease;
+  }
+
+  &.is-indeterminate span {
+    width: 42% !important;
+    animation: archive-progress-indeterminate 1.3s ease-in-out infinite;
+  }
+}
+
+.archive-task-card__meta,
+.archive-task-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.archive-task-card__actions {
+  justify-content: flex-end;
+}
+
+.archive-task-card__path {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes archive-progress-indeterminate {
+  0% {
+    transform: translateX(-120%);
+  }
+
+  100% {
+    transform: translateX(260%);
+  }
+}
+
+@media (max-width: 768px) {
+  .archive-task-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .archive-task-card__header,
+  .archive-task-card__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

@@ -117,9 +117,9 @@ const loadAccessMatrix = async () => {
 }
 
 onMounted(async () => {
-  void loadAccessMatrix()
+  await loadAccessMatrix()
   await nextTick()
-  void firewallRef.value?.getData?.()
+  void firewallRef.value?.refreshAll?.()
 })
 </script>
 
