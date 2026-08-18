@@ -614,6 +614,8 @@ watch(
 .terminal-card {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  min-height: 0;
   gap: 14px;
 }
 
@@ -675,8 +677,11 @@ watch(
 
 .terminal-shell {
   position: relative;
+  display: flex;
+  flex-direction: column;
   flex: 0 0 auto;
-  height: clamp(520px, calc(100vh - 340px), 680px);
+  min-height: 0;
+  height: clamp(520px, calc(100vh - 356px), 680px);
   overflow: hidden;
   border: 1px solid #25344a;
   border-radius: 17px;
@@ -695,6 +700,7 @@ watch(
 
   &__bar {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     gap: 16px;
     height: 54px;
@@ -706,6 +712,7 @@ watch(
 
   &__footer {
     display: flex;
+    flex-shrink: 0;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
@@ -818,8 +825,10 @@ watch(
 
 .terminal-screen {
   position: relative;
-  height: calc(100% - 88px);
-  padding: 14px 16px;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 15px 11px 14px;
+  overflow: hidden;
   transition: filter 180ms ease, opacity 180ms ease;
 
   &.is-blurred {
@@ -828,10 +837,32 @@ watch(
   }
 }
 
-.terminal-screen :deep(.xterm),
+.terminal-screen :deep(.xterm) {
+  height: 100%;
+  color: #d8e2f0;
+}
+
 .terminal-screen :deep(.xterm-screen),
 .terminal-screen :deep(.xterm-viewport) {
-  height: 100% !important;
+  max-height: 100%;
+}
+
+.terminal-screen :deep(.xterm-viewport) {
+  overflow-y: auto !important;
+
+  &::-webkit-scrollbar {
+    width: 7px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    border: 2px solid #08111f;
+    border-radius: 8px;
+    background: #30415a;
+  }
 }
 
 .terminal-screen :deep(.xterm-rows .xterm-cursor) {
@@ -889,6 +920,10 @@ watch(
 
   &.connected { background: #22c77a; }
   &.connecting { background: #f59e0b; }
+}
+
+:global(.container-terminal-drawer .custom-drawer-shell .el-drawer__body) {
+  overflow: hidden;
 }
 
 @media (max-width: 960px) {

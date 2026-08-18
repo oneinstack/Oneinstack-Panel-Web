@@ -121,13 +121,13 @@ const applyFileDetail = async (data: any) => {
   if (!state.readOnlyReason) editorRef.value?.focus()
 }
 
-const load = async () => {
+const load = async ({ preferInitial = false }: { preferInitial?: boolean } = {}) => {
   if (!props.path) return
   state.loading = true
   resetEditor()
   try {
     const data =
-      props.initialDetail?.path === props.path
+      preferInitial && props.initialDetail?.path === props.path
         ? props.initialDetail
         : (await Api.getFileContent({ path: props.path })).data
     await applyFileDetail(data)
@@ -149,10 +149,12 @@ const load = async () => {
   }
 }
 
+const reload = () => load()
+
 watch(
   () => [props.modelValue, props.path] as const,
   ([opened]) => {
-    if (opened) load()
+    if (opened) load({ preferInitial: true })
   }
 )
 
@@ -174,8 +176,11 @@ const save = async () => {
       content: state.content,
       revision: state.detail?.revision
     })
-    state.original = state.content
-    if (state.detail) state.detail.revision = data?.revision
+    const refreshedDetail = (await Api.getFileContent({ path: props.path })).data
+    await applyFileDetail({
+      ...refreshedDetail,
+      revision: refreshedDetail?.revision ?? data?.revision ?? state.detail?.revision
+    })
     ElMessage.success(t('file.editor.saved', 'File saved'))
     emit('saved')
   } catch (error: any) {
@@ -253,7 +258,7 @@ const beforeClose = async (done: () => void) => {
         <span>{{ t('file.editor.owner', 'Owner {owner} : {group}', { owner: state.detail?.user || '-', group: state.detail?.group || '-' }) }}</span>
         <span>{{ state.detail?.mimeType || 'text/plain' }}</span>
         <span v-if="state.detail?.extension">{{ state.detail.extension }}</span>
-        <el-button :icon="Refresh" link @click="load">{{ t('file.editor.reload', 'Reload') }}</el-button>
+        <el-button :icon="Refresh" link @click="reload">{{ t('file.editor.reload', 'Reload') }}</el-button>
       </div>
       <el-alert
         v-if="state.loadError"

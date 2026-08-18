@@ -187,7 +187,7 @@ const save = async () => {
     if (typeof data?.content !== 'string' && currentPath) {
       await readFile(currentPath, false)
     }
-    ElMessage.success(i18n.t(data.reloaded ? 'website.notifications.webServerConfigSavedReloaded' : 'website.notifications.webServerConfigSavedStopped'))
+    ElMessage.success(i18n.t((data?.config?.reloaded || data?.reloaded) ? 'website.notifications.webServerConfigSavedReloaded' : 'website.notifications.webServerConfigSavedStopped'))
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) {
