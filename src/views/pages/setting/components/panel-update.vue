@@ -77,6 +77,16 @@ const stateNames = computed<Record<string, string>>(() => ({
 
 const activeStates = ['checking', 'downloading', 'preflight', 'switching', 'health_checking']
 const isRunning = computed(() => activeStates.includes(status.value.state) || applying.value)
+const currentVersionText = computed(
+  () => version.value?.version || check.value?.currentVersion || status.value.currentVersion || ''
+)
+const latestVersionText = computed(() => check.value?.latestVersion || status.value.targetVersion || '')
+const hasSameVersionTarget = computed(() => {
+  return Boolean(latestVersionText.value) && latestVersionText.value === currentVersionText.value
+})
+const canApplyUpdate = computed(() => {
+  return Boolean(check.value?.updateAvailable && check.value?.compatible && !hasSameVersionTarget.value)
+})
 const statusType = computed(() => {
   if (status.value.state === 'succeeded') return 'success'
   if (status.value.state === 'rolled_back') return 'warning'
@@ -127,7 +137,7 @@ const checkForUpdate = async () => {
   try {
     const { data } = await Api.checkPanelUpdate({ silentError: true })
     check.value = data
-    if (data.updateAvailable) {
+    if (data.updateAvailable && data.latestVersion !== data.currentVersion) {
       ElMessage.success(
         data.source === 'center'
           ? t('setting.update.centerAssignedVersion', 'Center assigned version {version} to this instance', { version: data.latestVersion })
@@ -146,10 +156,11 @@ const checkForUpdate = async () => {
 }
 
 const applyUpdate = async () => {
-  if (!check.value?.updateAvailable || applying.value) return
+  if (!canApplyUpdate.value || applying.value) return
   try {
+    const targetVersion = latestVersionText.value || t('setting.update.newVersion', 'new version')
     const { value } = await ElMessageBox.prompt(
-      t('setting.update.applyConfirmMessage', 'The panel will update to {version}. It will be briefly offline during update and automatically restore the old version if it fails. Enter UPDATE PANEL to continue.', { version: check.value.latestVersion }),
+      t('setting.update.applyConfirmMessage', 'The panel will update to {version}. It will be briefly offline during update and automatically restore the old version if it fails. Enter UPDATE PANEL to continue.', { version: targetVersion }),
       t('setting.update.updatePanel', 'Update panel'),
       {
         type: 'warning',
@@ -287,9 +298,10 @@ onBeforeUnmount(() => {
     <div class="update-actions">
       <el-button :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
       <el-button
+        v-if="!check || canApplyUpdate"
         type="primary"
         :loading="applying"
-        :disabled="!check?.updateAvailable || !check?.compatible || isRunning"
+        :disabled="!canApplyUpdate || isRunning"
         @click="applyUpdate"
       >
         {{ $t('setting.update.updateTo', { version: check?.latestVersion || $t('setting.update.newVersion') }) }}

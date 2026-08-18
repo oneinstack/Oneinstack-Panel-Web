@@ -10,8 +10,10 @@ import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
+import { useConfigStore } from '@/stores/modules/config'
 
 const softwareTaskStore = useSoftwareTaskStore()
+const sconfig = useConfigStore()
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -20,6 +22,7 @@ interface ComponentServiceStatus {
   softwareKey: string
   displayName: string
   serviceName: string
+  manageScopes?: string[]
   installed: boolean
   recordedVersion?: string
   runtimeVersion?: string
@@ -139,6 +142,57 @@ const versionDialog = reactive({
 })
 
 const recentTasks = computed(() => softwareTaskStore.recentTasks())
+const canReadSoftware = computed(() =>
+  sconfig.hasActionAccess('software.read') ||
+  sconfig.hasScopeAccess('software', 'read') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.read'])
+)
+const canWriteSoftware = computed(() =>
+  sconfig.hasActionAccess('software.write') ||
+  sconfig.hasScopeAccess('software', 'write') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.write) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.write'])
+)
+const canReadSoftwareService = computed(() =>
+  sconfig.hasActionAccess('software.service.read') ||
+  sconfig.hasScopeAccess('software.service', 'read') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.service?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service.read']) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service']?.read)
+)
+const canWriteSoftwareService = computed(() =>
+  sconfig.hasActionAccess('software.service.write') ||
+  sconfig.hasScopeAccess('software.service', 'write') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.service?.write) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service.write']) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service']?.write)
+)
+const canReadWebsite = computed(() =>
+  sconfig.hasMenuAccess('website') ||
+  sconfig.hasActionAccess('website.read') ||
+  Boolean((sconfig.scopeAccess as any)?.website?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['website.read'])
+)
+const canReadDatabase = computed(() =>
+  sconfig.hasMenuAccess('database') ||
+  sconfig.hasActionAccess('database.read') ||
+  Boolean((sconfig.scopeAccess as any)?.database?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['database.read'])
+)
+const allowedManageScopes = computed(() => {
+  if (canWriteSoftware.value) return new Set<string>(['*'])
+  const scopes = new Set<string>()
+  if (canReadWebsite.value) {
+    scopes.add('web_service')
+    scopes.add('runtime')
+  }
+  if (canReadDatabase.value) {
+    scopes.add('database')
+    scopes.add('cache')
+  }
+  return scopes
+})
 
 const activeTask = (item: any) => softwareTaskStore.activeForKey(item.key)
 
@@ -196,7 +250,26 @@ const serviceStateType = (status?: ComponentServiceStatus) => {
   return 'info'
 }
 
+const getManageScopes = (item: any, status?: ComponentServiceStatus) => {
+  const scopes = status?.manageScopes ?? item?.manageScopes
+  return Array.isArray(scopes)
+    ? scopes.map((scope) => String(scope || '').trim()).filter(Boolean)
+    : []
+}
+
+const canManageService = (item: any, status?: ComponentServiceStatus) => {
+  if (!canReadSoftwareService.value || !canWriteSoftwareService.value) return false
+  if (allowedManageScopes.value.has('*')) return true
+  const scopes = getManageScopes(item, status)
+  if (!scopes.length) return false
+  return scopes.some((scope) => allowedManageScopes.value.has(scope))
+}
+
 const loadServiceStatuses = async () => {
+  if (!canReadSoftwareService.value) {
+    serviceStatuses.value = {}
+    return
+  }
   serviceLoading.value = true
   try {
     const { data } = await Api.getComponentServices()
@@ -225,7 +298,7 @@ const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => 
 
 const handleServiceAction = async (item: any, action: ServiceAction) => {
   const status = serviceStatus(item)
-  if (!status || !serviceActionAllowed(status, action) || submitting.value) return
+  if (!status || !canManageService(item, status) || !serviceActionAllowed(status, action) || submitting.value) return
   if (status.activeTaskId) {
     showTask(status.activeTaskId)
     return
@@ -275,7 +348,7 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
 
 const openServiceConfiguration = (item: any) => {
   const status = serviceStatus(item)
-  if (!status) return
+  if (!status || !canManageService(item, status)) return
   const task = activeTask(item)
   if (task || status.activeTaskId) {
     showTask(task?.id || status.activeTaskId!)
@@ -305,6 +378,7 @@ const handleConfigurationTaskCreated = (result: any) => {
 }
 
 const handleInstallClick = (item: any) => {
+  if (!canWriteSoftware.value) return
   if (activeTask(item)) {
     showTask(activeTask(item)!.id)
     return
@@ -363,7 +437,7 @@ const parseParams = (params: any): any[] => {
 }
 
 const handleInstall = async () => {
-  if (submitting.value) return
+  if (submitting.value || !canWriteSoftware.value) return
   submitting.value = true
   const request = { ...installForm.value }
   try {
@@ -406,7 +480,7 @@ const retryTask = (taskId: string) => {
 }
 
 const handleUninstall = async (item: any) => {
-  if (submitting.value) return
+  if (submitting.value || !canWriteSoftware.value) return
   const version = item.install_version || item.versions?.[0] || ''
   submitting.value = true
   try {
@@ -424,6 +498,7 @@ const handleUninstall = async (item: any) => {
 }
 
 const handleUpgrade = (item: any) => {
+  if (!canWriteSoftware.value) return
   const task = activeTask(item)
   if (task) {
     showTask(task.id)
@@ -439,13 +514,17 @@ watch(
   () => softwareTaskStore.terminalRevision,
   () => {
     emit('refresh')
-    void loadServiceStatuses().catch(() => undefined)
+    if (canReadSoftwareService.value) {
+      void loadServiceStatuses().catch(() => undefined)
+    }
   }
 )
 
 onMounted(() => {
   void softwareTaskStore.loadAll()
-  void loadServiceStatuses().catch(() => undefined)
+  if (canReadSoftwareService.value) {
+    void loadServiceStatuses().catch(() => undefined)
+  }
 })
 </script>
 
@@ -537,7 +616,10 @@ onMounted(() => {
               :stroke-width="6"
               :show-text="false"
             />
-            <div v-if="isInstalled(item) && serviceStatus(item)" class="service-control">
+            <div
+              v-if="isInstalled(item) && serviceStatus(item) && canReadSoftwareService"
+              class="service-control"
+            >
               <div class="service-overview">
                 <span>
                   <el-tag
@@ -563,7 +645,7 @@ onMounted(() => {
                   {{ t('common.refresh', 'Refresh') }}
                 </el-button>
               </div>
-              <div class="service-actions">
+              <div v-if="canManageService(item, serviceStatus(item))" class="service-actions">
                 <el-button
                   size="small"
                   type="primary"
@@ -631,7 +713,7 @@ onMounted(() => {
                 </button>
                 <template v-else-if="isInstalled(item)">
                   <button
-                    v-if="hasUpgrade(item)"
+                    v-if="hasUpgrade(item) && canWriteSoftware"
                     type="button"
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
@@ -639,6 +721,7 @@ onMounted(() => {
                     {{ t('software.upgrade', 'Upgrade') }}
                   </button>
                   <button
+                    v-if="canWriteSoftware"
                     type="button"
                     class="btn uninstall"
                     :disabled="submitting"
@@ -650,6 +733,7 @@ onMounted(() => {
                 <button
                   v-else
                   type="button"
+                  v-if="canWriteSoftware"
                   class="btn"
                   :disabled="item.installable === false"
                   :class="{ disabled: item.installable === false }"

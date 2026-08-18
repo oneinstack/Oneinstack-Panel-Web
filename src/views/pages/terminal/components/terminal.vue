@@ -837,7 +837,7 @@ onBeforeUnmount(() => {
 }
 
 .terminal-screen :deep(.xterm) {
-  height: 100%;
+  height: calc(100% - 54px - 34px);
   color: #d8e2f0;
 }
 

@@ -838,7 +838,9 @@ watch(
 }
 
 .terminal-screen :deep(.xterm) {
-  height: 100%;
+  box-sizing: border-box;
+  height: calc(100% - 8px);
+  padding-bottom: 8px;
   color: #d8e2f0;
 }
 
