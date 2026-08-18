@@ -12,6 +12,50 @@ import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwa
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
 import { hasTerminalAccess } from '@/utils/access'
+import approvalCenterIcon from '../../../public/static/menu/approval-center.svg?raw'
+import approvalCenterActiveIcon from '../../../public/static/menu/approval-center-active.svg?raw'
+import auditLogIcon from '../../../public/static/menu/audit-log.svg?raw'
+import auditLogActiveIcon from '../../../public/static/menu/audit-log-active.svg?raw'
+import bastionIcon from '../../../public/static/menu/bastion.svg?raw'
+import bastionActiveIcon from '../../../public/static/menu/bastion-active.svg?raw'
+import certificateIcon from '../../../public/static/menu/certificate.svg?raw'
+import certificateActiveIcon from '../../../public/static/menu/certificate-active.svg?raw'
+import configSnapshotsIcon from '../../../public/static/menu/config-snapshots.svg?raw'
+import configSnapshotsActiveIcon from '../../../public/static/menu/config-snapshots-active.svg?raw'
+import containerManagementIcon from '../../../public/static/menu/container-management.svg?raw'
+import containerManagementActiveIcon from '../../../public/static/menu/container-management-active.svg?raw'
+import dashboardIcon from '../../../public/static/menu/dashboard.svg?raw'
+import dashboardActiveIcon from '../../../public/static/menu/dashboard-active.svg?raw'
+import databaseIcon from '../../../public/static/menu/database.svg?raw'
+import databaseActiveIcon from '../../../public/static/menu/database-active.svg?raw'
+import fileIcon from '../../../public/static/menu/file.svg?raw'
+import fileActiveIcon from '../../../public/static/menu/file-active.svg?raw'
+import monitoringIcon from '../../../public/static/menu/monitoring.svg?raw'
+import monitoringActiveIcon from '../../../public/static/menu/monitoring-active.svg?raw'
+import operationsIcon from '../../../public/static/menu/operations.svg?raw'
+import operationsActiveIcon from '../../../public/static/menu/operations-active.svg?raw'
+import panelSettingsIcon from '../../../public/static/menu/panel-settings.svg?raw'
+import panelSettingsActiveIcon from '../../../public/static/menu/panel-settings-active.svg?raw'
+import runtimeLogIcon from '../../../public/static/menu/runtime-log.svg?raw'
+import runtimeLogActiveIcon from '../../../public/static/menu/runtime-log-active.svg?raw'
+import scheduledTasksIcon from '../../../public/static/menu/scheduled-tasks.svg?raw'
+import scheduledTasksActiveIcon from '../../../public/static/menu/scheduled-tasks-active.svg?raw'
+import securityIcon from '../../../public/static/menu/security.svg?raw'
+import securityActiveIcon from '../../../public/static/menu/security-active.svg?raw'
+import securityAuditIcon from '../../../public/static/menu/security-audit.svg?raw'
+import securityAuditActiveIcon from '../../../public/static/menu/security-audit-active.svg?raw'
+import softwareStoreIcon from '../../../public/static/menu/software-store.svg?raw'
+import softwareStoreActiveIcon from '../../../public/static/menu/software-store-active.svg?raw'
+import systemManagementIcon from '../../../public/static/menu/system-management.svg?raw'
+import systemManagementActiveIcon from '../../../public/static/menu/system-management-active.svg?raw'
+import systemSettingsIcon from '../../../public/static/menu/system-settings.svg?raw'
+import systemSettingsActiveIcon from '../../../public/static/menu/system-settings-active.svg?raw'
+import terminalIcon from '../../../public/static/menu/terminal.svg?raw'
+import terminalActiveIcon from '../../../public/static/menu/terminal-active.svg?raw'
+import userManagementIcon from '../../../public/static/menu/user-management.svg?raw'
+import userManagementActiveIcon from '../../../public/static/menu/user-management-active.svg?raw'
+import websiteIcon from '../../../public/static/menu/website.svg?raw'
+import websiteActiveIcon from '../../../public/static/menu/website-active.svg?raw'
 
 const sapp = useAppStore()
 const sconfig = useConfigStore()
@@ -27,6 +71,7 @@ interface NavItem {
   name: string
   path: string
   icon: string
+  activeIcon: string
   activeColor: ItemColor
   localeKey?: string
   children?: NavItem[]
@@ -55,67 +100,71 @@ const conf = reactive({
     {
       name: 'Home',
       path: '/home',
-      icon: 'menu-home',
+      icon: dashboardIcon,
+      activeIcon: dashboardActiveIcon,
       matrixKeys: ['dashboard'],
       activeColor: navActiveColor
     },
     {
-      name: 'Websites', path: '/website', icon: 'menu-website', matrixKeys: ['website'], activeColor: navActiveColor
+      name: 'Websites', path: '/website', icon: websiteIcon, activeIcon: websiteActiveIcon, matrixKeys: ['website'], activeColor: navActiveColor
     },
     {
-      name: 'Databases', path: '/database', icon: 'menu-database', matrixKeys: ['database'], activeColor: navActiveColor
+      name: 'Databases', path: '/database', icon: databaseIcon, activeIcon: databaseActiveIcon, matrixKeys: ['database'], activeColor: navActiveColor
     },
     {
-      name: 'Software store', path: '/software', icon: 'menu-software', matrixKeys: ['software'], activeColor: navActiveColor
+      name: 'Software store', path: '/software', icon: softwareStoreIcon, activeIcon: softwareStoreActiveIcon, matrixKeys: ['software'], activeColor: navActiveColor
     },
     {
-      name: 'Containers', path: '/container', icon: 'menu-container', matrixKeys: ['container'], activeColor: navActiveColor
+      name: 'Containers', path: '/container', icon: containerManagementIcon, activeIcon: containerManagementActiveIcon, matrixKeys: ['container'], activeColor: navActiveColor
     },
     {
-      name: 'Files', path: '/file', icon: 'menu-file', matrixKeys: ['file'], activeColor: navActiveColor
+      name: 'Files', path: '/file', icon: fileIcon, activeIcon: fileActiveIcon, matrixKeys: ['file'], activeColor: navActiveColor
     },
     {
-      name: 'Secure terminal', path: '/terminal', icon: 'menu-terminal', matrixKeys: ['terminal'], actionKeys: ['terminal.access'], activeColor: navActiveColor
+      name: 'Secure terminal', path: '/terminal', icon: terminalIcon, activeIcon: terminalActiveIcon, matrixKeys: ['terminal'], actionKeys: ['terminal.access'], activeColor: navActiveColor
     },
     {
-      name: 'Scheduled tasks', path: '/task', icon: 'menu-task', matrixKeys: ['cron'], activeColor: navActiveColor
+      name: 'Scheduled tasks', path: '/task', icon: scheduledTasksIcon, activeIcon: scheduledTasksActiveIcon, matrixKeys: ['cron'], activeColor: navActiveColor
     },
     {
       name: 'Operations',
       path: 'group:operations',
-      icon: 'menu-operations',
+      icon: operationsIcon,
+      activeIcon: operationsActiveIcon,
       localeKey: 'operations',
       activeColor: navActiveColor,
       children: [
-        { name: 'Monitoring', path: '/monitor', icon: 'menu-monitoring', adminOnly: true, matrixKeys: ['monitoring'], activeColor: navActiveColor },
-        { name: 'Bastion', path: '/bastion', icon: 'menu-bastion', matrixKeys: ['bastion'], activeColor: navActiveColor },
-        { name: 'Runtime logs', path: '/runtime-log', icon: 'menu-runtime-log', adminOnly: true, matrixKeys: ['runtimeLog'], activeColor: navActiveColor }
+        { name: 'Monitoring', path: '/monitor', icon: monitoringIcon, activeIcon: monitoringActiveIcon, adminOnly: true, matrixKeys: ['monitoring'], activeColor: navActiveColor },
+        { name: 'Bastion', path: '/bastion', icon: bastionIcon, activeIcon: bastionActiveIcon, matrixKeys: ['bastion'], activeColor: navActiveColor },
+        { name: 'Runtime logs', path: '/runtime-log', icon: runtimeLogIcon, activeIcon: runtimeLogActiveIcon, adminOnly: true, matrixKeys: ['runtimeLog'], activeColor: navActiveColor }
       ]
     },
     {
       name: 'Security and audit',
       path: 'group:security',
-      icon: 'menu-security-center',
+      icon: securityAuditIcon,
+      activeIcon: securityAuditActiveIcon,
       localeKey: 'securityAudit',
       activeColor: navActiveColor,
       children: [
-        { name: 'Security', path: '/security', icon: 'menu-security', matrixKeys: ['security'], activeColor: navActiveColor },
-        { name: 'Certificates', path: '/certificate', icon: 'menu-certificate', matrixKeys: ['certificate'], actionKeys: ['certificate.read'], activeColor: navActiveColor },
-        { name: 'Approval center', path: '/approval-center', icon: 'menu-approval', matrixKeys: ['approval'], activeColor: navActiveColor },
-        { name: 'Audit logs', path: '/log', icon: 'menu-audit', adminOnly: true, matrixKeys: ['audit'], activeColor: navActiveColor },
-        { name: 'Config snapshots', path: '/config-snapshots', icon: 'menu-snapshot', adminOnly: true, matrixKeys: ['configSnapshots'], actionKeys: ['config.snapshot.read'], activeColor: navActiveColor }
+        { name: 'Security', path: '/security', icon: securityIcon, activeIcon: securityActiveIcon, matrixKeys: ['security'], activeColor: navActiveColor },
+        { name: 'Certificates', path: '/certificate', icon: certificateIcon, activeIcon: certificateActiveIcon, matrixKeys: ['certificate'], actionKeys: ['certificate.read'], activeColor: navActiveColor },
+        { name: 'Approval center', path: '/approval-center', icon: approvalCenterIcon, activeIcon: approvalCenterActiveIcon, matrixKeys: ['approval'], activeColor: navActiveColor },
+        { name: 'Audit logs', path: '/log', icon: auditLogIcon, activeIcon: auditLogActiveIcon, adminOnly: true, matrixKeys: ['audit'], activeColor: navActiveColor },
+        { name: 'Config snapshots', path: '/config-snapshots', icon: configSnapshotsIcon, activeIcon: configSnapshotsActiveIcon, adminOnly: true, matrixKeys: ['configSnapshots'], actionKeys: ['config.snapshot.read'], activeColor: navActiveColor }
       ]
     },
     {
       name: 'System settings',
       path: 'group:system',
-      icon: 'menu-system',
+      icon: systemSettingsIcon,
+      activeIcon: systemSettingsActiveIcon,
       localeKey: 'systemPanel',
       activeColor: navActiveColor,
       children: [
-        { name: 'System management', path: '/system-management', icon: 'menu-system-management', actionKeys: ['system.settings.read'], activeColor: navActiveColor },
-        { name: 'User management', path: '/user-management', icon: 'menu-user-management', matrixKeys: ['userManagement'], activeColor: navActiveColor },
-        { name: 'Panel settings', path: '/setting', icon: 'menu-panel-settings', matrixKeys: ['panelSettings'], activeColor: navActiveColor }
+        { name: 'System management', path: '/system-management', icon: systemManagementIcon, activeIcon: systemManagementActiveIcon, actionKeys: ['system.settings.read'], activeColor: navActiveColor },
+        { name: 'User management', path: '/user-management', icon: userManagementIcon, activeIcon: userManagementActiveIcon, matrixKeys: ['userManagement'], activeColor: navActiveColor },
+        { name: 'Panel settings', path: '/setting', icon: panelSettingsIcon, activeIcon: panelSettingsActiveIcon, matrixKeys: ['panelSettings'], activeColor: navActiveColor }
       ]
     }
   ] as NavItem[]
@@ -151,6 +200,25 @@ const currentNav = computed(() => {
 const activeMenuIndex = computed(() => currentNav.value?.path || '')
 const isNavItemActive = (item: NavItem): boolean =>
   item.children?.some(isNavItemActive) || (item.path.startsWith('/') && route.path.startsWith(item.path))
+const hoveredMenuKey = ref('')
+const getMenuItemKey = (item: NavItem) => item.path || item.name
+const isMenuItemHovered = (item: NavItem) => hoveredMenuKey.value === getMenuItemKey(item)
+const setHoveredMenuItem = (item?: NavItem) => {
+  hoveredMenuKey.value = item ? getMenuItemKey(item) : ''
+}
+const activeMenuIconColor = 'rgb(var(--primary-color))'
+const withThemeAccent = (svg: string) => svg
+  .replace(/#F7911C/ig, activeMenuIconColor)
+  .replace(/#f59d0c/ig, activeMenuIconColor)
+  .replace(/#f97316/ig, activeMenuIconColor)
+  .replace(/#fb923c/ig, activeMenuIconColor)
+  .replace(/#eab170/ig, activeMenuIconColor)
+  .replace(/#121212/ig, sapp.theme === 'dark' ? '#ffffff' : '#111111')
+  .replace(/#111111/ig, sapp.theme === 'dark' ? '#ffffff' : '#111111')
+const getMenuItemIcon = (item: NavItem) =>
+  isNavItemActive(item) || isMenuItemHovered(item)
+    ? withThemeAccent(item.activeIcon)
+    : item.icon
 const activeGroupIndexes = computed(() =>
   visibleNavList.value.filter((item) => item.children?.length && isNavItemActive(item)).map((item) => item.path)
 )
@@ -424,17 +492,15 @@ const BindButton = () => {
             :unique-opened="true"
           >
             <template v-for="item in visibleNavList" :key="item.path || item.name">
-              <el-sub-menu v-if="item.children?.length" :index="item.path" :popper-offset="-110">
+              <el-sub-menu
+                v-if="item.children?.length"
+                :index="item.path"
+                :popper-offset="-110"
+                @mouseenter="setHoveredMenuItem(item)"
+                @mouseleave="setHoveredMenuItem()"
+              >
                 <template #title>
-                  <v-s-icon
-                    :name="item.icon"
-                    :color="
-                      isNavItemActive(item)
-                        ? item.activeColor[sapp.theme]
-                        : conf.defaultColor[sapp.theme]
-                    "
-                    size="22"
-                  />
+                  <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
                   <span class="menu-item-name">{{ getMenuName(item) }}</span>
                   <span class="menu-expand-arrow" aria-hidden="true"></span>
                 </template>
@@ -442,30 +508,22 @@ const BindButton = () => {
                   v-for="child in item.children"
                   :key="child.path"
                   :index="child.path"
+                  @mouseenter="setHoveredMenuItem(child)"
+                  @mouseleave="setHoveredMenuItem(item)"
                   @click="navigateNavItem(child)"
                 >
-                  <v-s-icon
-                    :name="child.icon"
-                    :color="
-                      isNavItemActive(child)
-                        ? child.activeColor[sapp.theme]
-                        : conf.defaultColor[sapp.theme]
-                    "
-                    size="22"
-                  />
+                  <span class="menu-icon" :aria-label="getMenuName(child)" v-html="getMenuItemIcon(child)"></span>
                   <span class="menu-item-name">{{ getMenuName(child) }}</span>
                 </el-menu-item>
               </el-sub-menu>
-              <el-menu-item v-else :index="item.path || `action:${item.name}`" @click="navigateNavItem(item)">
-                <v-s-icon
-                  :name="item.icon"
-                  :color="
-                    isNavItemActive(item)
-                      ? item.activeColor[sapp.theme]
-                      : conf.defaultColor[sapp.theme]
-                  "
-                  size="22"
-                />
+              <el-menu-item
+                v-else
+                :index="item.path || `action:${item.name}`"
+                @mouseenter="setHoveredMenuItem(item)"
+                @mouseleave="setHoveredMenuItem()"
+                @click="navigateNavItem(item)"
+              >
+                <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
                 <span class="menu-item-name">{{ getMenuName(item) }}</span>
               </el-menu-item>
             </template>
@@ -786,6 +844,21 @@ const BindButton = () => {
     width: 100%;
     border-right: 0;
     background: transparent;
+
+    .menu-icon {
+      width: 22px;
+      height: 22px;
+      flex: 0 0 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-icon :deep(svg) {
+      width: 22px;
+      height: 22px;
+      display: block;
+    }
 
     .menu-item-name {
       margin-left: 12px;

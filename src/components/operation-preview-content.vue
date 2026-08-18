@@ -82,6 +82,10 @@ const changeCount = computed(
   () => (props.preview.files?.length || 0) + (props.preview.actions?.length || 0)
 )
 
+const fileCount = computed(() => props.preview.files?.length || 0)
+
+const actionCount = computed(() => props.preview.actions?.length || 0)
+
 const formattedExpiresAt = computed(() => {
   if (!props.preview.expiresAt) return ''
   const date = new Date(props.preview.expiresAt)
@@ -149,6 +153,7 @@ const rollbackSummary = computed(() => {
             <span class="preview-item__type">{{ t('common.operationPreview.fileChange', 'File') }}</span>
             <strong>{{ file.path }}</strong>
             <small>{{ file.changeSummary || file.action }}</small>
+            <pre v-if="file.diff" class="preview-diff">{{ file.diff }}</pre>
           </div>
         </div>
 
@@ -163,7 +168,24 @@ const rollbackSummary = computed(() => {
             <strong>{{ action.name }}</strong>
             <code v-if="action.displayCommand">{{ action.displayCommand }}</code>
             <small v-else>{{ action.type }}</small>
+            <small v-if="action.service">{{ t('common.operationPreview.service', 'Service') }}: {{ action.service }}</small>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="fileCount || actionCount" class="preview-section">
+      <div class="preview-section__title">
+        <h4>{{ t('common.operationPreview.summaryDetails', 'Execution details') }}</h4>
+      </div>
+      <div class="preview-metrics">
+        <div class="preview-metric">
+          <span>{{ t('common.operationPreview.affectedFiles', 'Affected files') }}</span>
+          <strong>{{ fileCount }}</strong>
+        </div>
+        <div class="preview-metric">
+          <span>{{ t('common.operationPreview.executionActions', 'Execution actions') }}</span>
+          <strong>{{ actionCount }}</strong>
         </div>
       </div>
     </section>
@@ -182,6 +204,18 @@ const rollbackSummary = computed(() => {
         <div>
           <strong>{{ t('common.operationPreview.prechecks', 'Prechecks') }}</strong>
           <span>{{ precheckSummary }}</span>
+        </div>
+      </div>
+
+      <div v-if="preview.prechecks?.length" class="preview-checklist">
+        <div
+          v-for="check in preview.prechecks"
+          :key="`${check.name}-${check.status}`"
+          class="preview-check"
+          :class="`is-${check.status}`"
+        >
+          <strong>{{ check.name }}</strong>
+          <span>{{ check.message || check.status }}</span>
         </div>
       </div>
 
@@ -369,11 +403,87 @@ const rollbackSummary = computed(() => {
   white-space: nowrap;
 }
 
+.preview-diff {
+  grid-column: 1 / -1;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  overflow: auto;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
+  font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.preview-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.preview-metric {
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-card);
+
+  span {
+    display: block;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+
+  strong {
+    display: block;
+    margin-top: 5px;
+    color: var(--text-primary);
+    font-size: 18px;
+  }
+}
+
 .preview-safety {
   display: flex;
   flex-direction: column;
   gap: 7px;
   padding-top: 1px;
+}
+
+.preview-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-check {
+  padding: 9px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-card);
+
+  &.is-failed {
+    border-color: color-mix(in srgb, var(--el-color-danger) 32%, var(--border-subtle));
+    background: color-mix(in srgb, var(--el-color-danger-light-9) 70%, var(--surface-card));
+  }
+
+  &.is-passed {
+    border-color: color-mix(in srgb, var(--el-color-success) 24%, var(--border-subtle));
+  }
+
+  strong {
+    display: block;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  span {
+    display: block;
+    margin-top: 4px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.55;
+  }
 }
 
 .safety-item {
@@ -454,6 +564,10 @@ const rollbackSummary = computed(() => {
   .preview-impact {
     flex-direction: column;
     gap: 6px;
+  }
+
+  .preview-metrics {
+    grid-template-columns: 1fr;
   }
 
   .safety-item > div {

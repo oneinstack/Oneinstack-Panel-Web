@@ -34,6 +34,22 @@ const rootDirForbiddenCharacters = /[\0\r\n\t ;{}"'$]/
 const normalizeWebsiteRootDirInput = (value: unknown) =>
   typeof value === 'string' ? value.trim() : ''
 
+const buildWebsitePayload = (source: Record<string, any>) => ({
+  id: source.id,
+  name: source.name,
+  domain: source.domain,
+  root_dir: source.root_dir,
+  dir: source.dir,
+  remark: source.remark,
+  type: source.type,
+  class: source.class,
+  pact: source.pact,
+  tar_url: source.tar_url,
+  send_url: source.send_url,
+  enabled: source.enabled,
+  expires_at: source.expires_at
+})
+
 const validateManagedWebsiteRootDir = (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
   const rootDir = normalizeWebsiteRootDirInput(value)
   if (!rootDir) {
@@ -205,36 +221,17 @@ const settingsDrawer = reactive({
 
 const statusLoading = reactive(new Set<number>())
 const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
-  const websiteName = row?.name || '-'
-  const confirmTitle = enabled
-    ? t('website.enableConfirmTitle', '启用网站')
-    : t('website.disableConfirmTitle', '停用网站')
-  const confirmMessage = enabled
-    ? t('website.enableConfirmMessage', `启用后将恢复 ${websiteName} 的访问，网站文件和数据不会被修改。`, { name: websiteName })
-    : t('website.disableConfirmMessage', `停用后将无法访问 ${websiteName}，网站文件和数据不会被删除。`, { name: websiteName })
-  const confirmButtonText = enabled
-    ? t('website.enableConfirmAction', '确认启用')
-    : t('website.disableConfirmAction', '确认停用')
-
-  try {
-    await ElMessageBox.confirm(
-      confirmMessage,
-      confirmTitle,
-      {
-        type: enabled ? 'info' : 'warning',
-        confirmButtonText,
-        cancelButtonText: t('common.cancel', '取消')
-      }
-    )
-  } catch {
-    return
-  }
-
   statusLoading.add(row.id)
   try {
-    await Api.setWebsiteStatus(row.id, enabled)
+    await submitOperation('website.toggle', {
+      id: row.id,
+      enabled
+    })
     ElMessage.success(t(enabled ? 'website.notifications.enabled' : 'website.notifications.disabled'))
     await conf.website.getData()
+  } catch (error: any) {
+    if (isOperationCancelled(error)) return
+    ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
   } finally {
     statusLoading.delete(row.id)
   }
@@ -382,7 +379,7 @@ const conf = reactive({
         try {
           conf.drawer.loading = true
           const operation = conf.drawer.type === 'add' ? 'website.create' : 'website.update'
-          await submitOperation(operation, structuredClone(toRaw(conf.form.data.value)))
+          await submitOperation(operation, buildWebsitePayload(structuredClone(toRaw(conf.form.data.value))))
           ElMessage({
             type: 'success',
             message: conf.drawer.type === 'add' ? t('website.createSuccess', '创建网站成功') : t('website.updateSuccess', '更新网站成功')

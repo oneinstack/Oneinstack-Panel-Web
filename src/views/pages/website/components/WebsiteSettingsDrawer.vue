@@ -2,9 +2,10 @@
 import { computed, reactive, ref, watch } from 'vue'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Close, FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
 import WebsiteCertificateDrawer from './WebsiteCertificateDrawer.vue'
+import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 
 interface Props {
@@ -74,6 +75,23 @@ const formatBytes = (value: unknown) => {
 }
 const isExpired = computed(() => Boolean(currentWebsite.value.expires_at && new Date(currentWebsite.value.expires_at).getTime() <= Date.now()))
 
+const buildWebsiteProfilePayload = (overrides: Record<string, any> = {}) => ({
+  id: Number(currentWebsite.value.id || 0),
+  name: currentWebsite.value.name,
+  domain: currentWebsite.value.domain,
+  root_dir: currentWebsite.value.root_dir,
+  dir: currentWebsite.value.dir,
+  remark: currentWebsite.value.remark,
+  type: currentWebsite.value.type,
+  class: currentWebsite.value.class,
+  pact: currentWebsite.value.pact,
+  tar_url: currentWebsite.value.tar_url,
+  send_url: currentWebsite.value.send_url,
+  enabled: Boolean(currentWebsite.value.enabled),
+  expires_at: expiresAt.value ? new Date(expiresAt.value).toISOString() : null,
+  ...overrides
+})
+
 const hydrateDocument = (data: any) => {
   const runtime = props.website || {}
   data.website = {
@@ -121,14 +139,16 @@ const saveSettings = async (success = i18n.t('website.notifications.settingsPubl
   if (!websiteId) return
   state.saving = true
   try {
-    const { data } = await Api.updateWebsiteSettings(websiteId, state.settings)
-    hydrateDocument(data)
-    state.settings = structuredClone(data.settings || {})
-    state.settings.bindings ||= []
-    state.settings.redirects ||= []
-    state.settings.proxy_rules ||= []
+    await submitOperation('website.settings.update', {
+      websiteId,
+      settings: structuredClone(state.settings)
+    })
+    await load()
     ElMessage.success(success)
     emit('changed')
+  } catch (error: any) {
+    if (isOperationCancelled(error)) return
+    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.saving = false }
 }
 const saveWebsiteProfile = async (domainOnly = false) => {
@@ -136,30 +156,30 @@ const saveWebsiteProfile = async (domainOnly = false) => {
   if (!domains.length) { ElMessage.warning(i18n.t('website.notifications.domainRequired')); return }
   state.saving = true
   try {
-    await Api.updateWebsite({
-      ...currentWebsite.value,
-      domain: domains.join(','),
-      expires_at: expiresAt.value ? new Date(expiresAt.value).toISOString() : null
-    })
+    await submitOperation('website.update', buildWebsiteProfilePayload({
+      domain: domains.join(',')
+    }))
     ElMessage.success(i18n.t(domainOnly ? 'website.notifications.domainUpdated' : 'website.notifications.profileUpdated'))
     await load()
     emit('changed')
+  } catch (error: any) {
+    if (isOperationCancelled(error)) return
+    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.saving = false }
 }
 const toggleStatus = async (enabled: boolean) => {
-  if (!enabled) {
-    try {
-      await ElMessageBox.confirm(t('website.disableConfirmMessage', { name: currentWebsite.value.name }), t('website.disableConfirmTitle'), {
-        type: 'warning', confirmButtonText: t('website.disableConfirmAction'), cancelButtonText: t('common.cancel')
-      })
-    } catch { return }
-  }
   statusLoading.value = true
   try {
-    await Api.setWebsiteStatus(Number(currentWebsite.value.id), enabled)
+    await submitOperation('website.toggle', {
+      id: Number(currentWebsite.value.id),
+      enabled
+    })
     ElMessage.success(i18n.t(enabled ? 'website.notifications.enabled' : 'website.notifications.disabled'))
     await load()
     emit('changed')
+  } catch (error: any) {
+    if (isOperationCancelled(error)) return
+    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { statusLoading.value = false }
 }
 const loadConfig = async () => {
@@ -177,12 +197,17 @@ const loadConfig = async () => {
 const saveConfig = async () => {
   state.config.saving = true
   try {
-    const { data } = await Api.updateWebsiteManagedConfig(Number(currentWebsite.value.id), {
-      content: state.config.content, revision: state.config.revision
+    await submitOperation('website.config.update', {
+      websiteId: Number(currentWebsite.value.id),
+      content: state.config.content,
+      revision: state.config.revision
     })
-    state.config.content = data.content || state.config.content
-    state.config.revision = data.revision || state.config.revision
+    await loadConfig()
     ElMessage.success(i18n.t('website.notifications.configReloaded'))
+    emit('changed')
+  } catch (error: any) {
+    if (isOperationCancelled(error)) return
+    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.config.saving = false }
 }
 const loadLog = async () => {

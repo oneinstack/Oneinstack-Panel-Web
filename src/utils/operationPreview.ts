@@ -17,6 +17,7 @@ export interface OperationPreview {
     path: string
     action: string
     changeSummary?: string
+    diff?: string
   }>
   actions?: Array<{
     type: string
@@ -93,6 +94,9 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
 const operationTitleKeys: Record<string, string> = {
   'website.create': 'common.operationPreview.operationTitles.websiteCreate',
   'website.update': 'common.operationPreview.operationTitles.websiteUpdate',
+  'website.settings.update': 'common.operationPreview.operationTitles.websiteSettingsUpdate',
+  'website.config.update': 'common.operationPreview.operationTitles.websiteConfigUpdate',
+  'website.webserver.config.update': 'common.operationPreview.operationTitles.websiteWebServerConfigUpdate',
   'website.toggle': 'common.operationPreview.operationTitles.websiteToggle',
   'software.install': 'common.operationPreview.operationTitles.softwareInstall',
   'software.uninstall': 'common.operationPreview.operationTitles.softwareUninstall',
