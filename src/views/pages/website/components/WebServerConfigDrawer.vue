@@ -165,29 +165,17 @@ const save = async () => {
   if (!state.selectedPath || !dirty.value || state.saving) return
   state.saving = true
   try {
-    const currentContent = state.content
     const currentPath = state.selectedPath
-    const { data } = await submitOperation('website.update', {
-      action: 'web_server_config',
+    await submitOperation('website.webserver.config.update', {
       path: state.selectedPath,
       content: state.content,
       revision: state.revision
     })
-    const savedContent = typeof data?.content === 'string' ? data.content : currentContent
-    state.content = savedContent
-    state.originalContent = savedContent
-    state.revision = data?.revision || state.revision
-    state.modifiedAt = data?.modifiedAt || state.modifiedAt
-    const file = state.files.find((item) => item.path === (data?.path || currentPath))
-    if (file) {
-      file.revision = data?.revision || file.revision
-      file.size = data?.size || savedContent.length
-      file.modifiedAt = data?.modifiedAt || file.modifiedAt
-    }
-    if (typeof data?.content !== 'string' && currentPath) {
+    await load(true)
+    if (currentPath) {
       await readFile(currentPath, false)
     }
-    ElMessage.success(i18n.t((data?.config?.reloaded || data?.reloaded) ? 'website.notifications.webServerConfigSavedReloaded' : 'website.notifications.webServerConfigSavedStopped'))
+    ElMessage.success(i18n.t('website.notifications.webServerConfigSavedReloaded'))
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) {
