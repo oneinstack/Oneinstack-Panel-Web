@@ -114,13 +114,15 @@ const rollbackSummary = computed(() => {
   <div class="operation-preview">
     <section class="preview-summary" :class="`is-${riskLevel}`">
       <div class="preview-summary__content">
-        <el-tag :type="riskTagType" effect="light" size="small">{{ riskLabel }}</el-tag>
-        <span>{{ primarySummary }}</span>
-      </div>
-      <div v-if="formattedExpiresAt" class="preview-expiry">
-        <el-icon><Clock /></el-icon>
-        <span>{{ t('common.operationPreview.expiresAt', 'Valid until') }}</span>
-        <strong>{{ formattedExpiresAt }}</strong>
+        <div class="preview-summary__meta">
+          <el-tag :type="riskTagType" effect="light" size="small">{{ riskLabel }}</el-tag>
+          <div v-if="formattedExpiresAt" class="preview-expiry">
+            <el-icon><Clock /></el-icon>
+            <span>{{ t('common.operationPreview.expiresAt', 'Valid until') }}</span>
+            <strong>{{ formattedExpiresAt }}</strong>
+          </div>
+        </div>
+        <p class="preview-summary__headline">{{ primarySummary }}</p>
       </div>
     </section>
 
@@ -249,46 +251,58 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 42px;
-  padding: 9px 12px;
-  border-left: 3px solid var(--el-color-info);
-  border-radius: 4px;
-  background: var(--surface-subtle);
+  padding: 12px 14px;
+  border: 1px solid rgba(var(--primary-color), 0.12);
+  border-left: 4px solid var(--el-color-info);
+  border-radius: 10px;
+  background: linear-gradient(135deg, rgba(var(--primary-color), 0.04), var(--surface-subtle));
 
   &.is-medium {
+    border-color: rgba(var(--warning-color), 0.18);
     border-left-color: var(--el-color-warning);
   }
 
   &.is-high {
+    border-color: rgba(var(--danger-color), 0.2);
     border-left-color: var(--el-color-danger);
-    background: var(--el-color-danger-light-9);
+    background: linear-gradient(135deg, rgba(var(--danger-color), 0.08), var(--el-color-danger-light-9));
   }
 }
 
 .preview-summary__content {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   min-width: 0;
   gap: 9px;
+}
 
-  > span:last-child {
-    color: var(--text-primary);
-    font-size: 13px;
-    line-height: 1.5;
-  }
+.preview-summary__meta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.preview-summary__headline {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .preview-expiry {
   display: flex;
   align-items: center;
   flex: none;
-  gap: 4px;
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
   color: var(--text-tertiary);
-  font-size: 12px;
+  font-size: 11px;
   white-space: nowrap;
 
   strong {
@@ -298,7 +312,8 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-description {
-  margin: -2px 0 0;
+  margin: -1px 0 0;
+  padding: 0 2px;
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.6;
@@ -525,14 +540,14 @@ const rollbackSummary = computed(() => {
 }
 
 :global(.operation-preview-message-box) {
-  width: 600px;
+  width: 640px;
   max-width: calc(100vw - 32px);
   padding: 0;
-  border-radius: 8px;
+  border-radius: 12px;
 }
 
 :global(.operation-preview-message-box .el-message-box__header) {
-  padding: 18px 20px 12px;
+  padding: 18px 20px 10px;
 }
 
 :global(.operation-preview-message-box .el-message-box__title) {
@@ -541,7 +556,7 @@ const rollbackSummary = computed(() => {
 }
 
 :global(.operation-preview-message-box .el-message-box__content) {
-  padding: 0 20px;
+  padding: 0 20px 2px;
 }
 
 :global(.operation-preview-message-box .el-message-box__container) {
@@ -555,10 +570,14 @@ const rollbackSummary = computed(() => {
 }
 
 @media (max-width: 640px) {
-  .preview-summary {
+  .preview-summary__meta {
     align-items: flex-start;
     flex-direction: column;
-    gap: 7px;
+    gap: 8px;
+  }
+
+  .preview-expiry {
+    white-space: normal;
   }
 
   .preview-impact {

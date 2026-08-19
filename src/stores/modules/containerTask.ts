@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { Api } from "@/api/modules";
 import System from "@/utils/System";
 import { piniaPersistConfig } from "@/stores/helper/persist";
+import i18n from "@/lang";
 
 export interface ContainerTask {
   id: string;
@@ -62,6 +63,10 @@ const logPollTimers = new Map<string, number>();
 const snapshotPollTimers = new Map<string, number>();
 const logFetches = new Map<string, Promise<any>>();
 const autoStartInFlight = new Set<string>();
+const t = (key: string, fallback?: string, params?: Record<string, any>) => {
+  const value = (i18n.t as any)(key, params);
+  return value && value !== key ? value : fallback || key;
+};
 
 const taskURL = (path: string) => {
   const apiBase = new URL(System.env.API || "/v1", window.location.origin);
@@ -234,7 +239,12 @@ export const useContainerTaskStore = defineStore("containerTask", {
         this.tasks[task.id] = {
           ...this.tasks[task.id],
           autoStartStatus: "failed",
-          autoStartError: error?.message || "容器创建成功，但自动启动失败",
+          autoStartError:
+            error?.message ||
+            t(
+              "container.task.autoStartFailed",
+              "Container created, but automatic startup failed. Start or remove it manually.",
+            ),
         };
       } finally {
         autoStartInFlight.delete(task.id);

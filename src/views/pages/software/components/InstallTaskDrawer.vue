@@ -214,6 +214,28 @@ const cancelTask = async () => {
   await softwareTaskStore.cancel(props.taskId)
 }
 
+const writeClipboardText = async (value: string) => {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(value)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = value
+  textarea.setAttribute('readonly', 'readonly')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  if (!copied) {
+    throw new Error('copy failed')
+  }
+}
+
 const copyDiagnostics = async () => {
   const value = [
     `Task: ${task.value?.id}`,
@@ -224,8 +246,12 @@ const copyDiagnostics = async () => {
     '',
     logs.value
   ].join('\n')
-  await navigator.clipboard.writeText(value)
-  ElMessage.success(t('software.task.diagnosticsCopied', 'Diagnostics copied'))
+  try {
+    await writeClipboardText(value)
+    ElMessage.success(t('software.task.diagnosticsCopied', 'Diagnostics copied'))
+  } catch {
+    ElMessage.error(t('software.task.copyDiagnosticsFailed', 'Copy failed. Check browser clipboard permission.'))
+  }
 }
 
 const downloadLog = async () => {

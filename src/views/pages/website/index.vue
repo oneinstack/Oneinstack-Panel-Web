@@ -260,7 +260,7 @@ const conf = reactive({
     activeIndex: 0,
     list: [
       {
-        name: 'PHP项目',
+        name: 'PHP',
         nameKey: 'website.tabs.php',
         index: 0,
         value: 'php'
@@ -282,13 +282,13 @@ const conf = reactive({
       //   index: 4
       // },
       {
-        name: '反向代理',
+        name: 'Proxy',
         nameKey: 'website.tabs.proxy',
         index: 5,
         value: 'proxy'
       },
       {
-        name: 'HTML项目',
+        name: 'HTML',
         nameKey: 'website.tabs.static',
         index: 6,
         value: 'static'
@@ -738,7 +738,7 @@ webServer.load()
               @change="toggleWebsiteStatus(row, Boolean($event))"
             />
             <span :class="{ expired: row.disabled_reason === 'expired' }">
-              {{ row.enabled ? '运行中' : row.disabled_reason === 'expired' ? '已到期' : '已停用' }}
+              {{ row.enabled ? $t('website.running') : row.disabled_reason === 'expired' ? $t('website.expired') : $t('common.disabled') }}
             </span>
           </div>
         </template>

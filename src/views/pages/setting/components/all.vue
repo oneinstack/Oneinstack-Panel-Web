@@ -16,37 +16,37 @@ const allinfo = ref<any>()
 const tabItems = markRaw([
   {
     key: 'appearance',
-    label: '界面设置',
+    label: 'Appearance',
     labelKey: 'setting.tabs.appearance',
     component: AppearanceSetting
   },
   {
     key: 'panel',
-    label: '面板设置',
+    label: 'Panel settings',
     labelKey: 'setting.tabs.panel',
     component: panelSetting
   },
   {
     key: 'network',
-    label: '访问方式',
+    label: 'Access settings',
     labelKey: 'setting.tabs.network',
     component: NetworkSetting
   },
   {
     key: 'account-security',
-    label: '安全设置',
+    label: 'Security',
     labelKey: 'setting.tabs.accountSecurity',
     component: AccountSecurity
   },
   {
     key: 'backup',
-    label: '备份还原',
+    label: 'Backup and restore',
     labelKey: 'setting.tabs.backup',
     component: PanelBackup
   },
   {
     key: 'update',
-    label: '面板更新',
+    label: 'Panel update',
     labelKey: 'setting.tabs.update',
     component: PanelUpdate
   }

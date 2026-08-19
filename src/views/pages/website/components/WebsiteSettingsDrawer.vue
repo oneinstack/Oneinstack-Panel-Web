@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import { ElMessage } from 'element-plus'
-import { Close, FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
+import { ArrowLeft, FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
 import WebsiteCertificateDrawer from './WebsiteCertificateDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
@@ -75,6 +75,8 @@ const formatBytes = (value: unknown) => {
 }
 const isExpired = computed(() => Boolean(currentWebsite.value.expires_at && new Date(currentWebsite.value.expires_at).getTime() <= Date.now()))
 
+const cloneSettingsPayload = () => JSON.parse(JSON.stringify(state.settings || {}))
+
 const buildWebsiteProfilePayload = (overrides: Record<string, any> = {}) => ({
   id: Number(currentWebsite.value.id || 0),
   name: currentWebsite.value.name,
@@ -112,7 +114,7 @@ const load = async () => {
   try {
     const { data } = await Api.getWebsiteSettings(websiteId)
     hydrateDocument(data)
-    state.settings = structuredClone(data.settings || {})
+    state.settings = JSON.parse(JSON.stringify(data.settings || {}))
     state.settings.bindings ||= []
     state.settings.redirects ||= []
     state.settings.proxy_rules ||= []
@@ -141,7 +143,7 @@ const saveSettings = async (success = i18n.t('website.notifications.settingsPubl
   try {
     await submitOperation('website.settings.update', {
       websiteId,
-      settings: structuredClone(state.settings)
+      settings: cloneSettingsPayload()
     })
     await load()
     ElMessage.success(success)
@@ -230,18 +232,31 @@ const openCertificate = () => {
   certificate.website = currentWebsite.value
   certificate.show = true
 }
+
+const closeDrawer = () => {
+  visible.value = false
+}
 </script>
 
 <template>
-  <el-dialog
+  <el-drawer
     v-model="visible"
-    class="website-settings-dialog"
-    width="min(980px, calc(100vw - 56px))"
+    class="website-settings-drawer"
+    size="1180px"
     :show-close="false"
-    align-center
-    append-to-body
-    destroy-on-close
+    :close-on-click-modal="true"
+    :destroy-on-close="false"
   >
+    <template #header>
+      <div class="website-drawer-header">
+        <button type="button" class="website-drawer-back" @click="closeDrawer">
+          <el-icon><ArrowLeft /></el-icon>
+          <span>{{ t('website.webConfigDrawer.back') }}</span>
+        </button>
+        <h3>{{ currentWebsite.name || t('website.settingsDrawer.title') }}</h3>
+      </div>
+    </template>
+
     <div v-loading="state.loading" class="settings-layout">
       <header class="settings-header">
         <div class="settings-header__title">
@@ -252,7 +267,6 @@ const openCertificate = () => {
           <div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div>
           <div><span>{{ t('website.expiration') }}</span><strong :class="{ expired: isExpired }">{{ formatTime(currentWebsite.expires_at) }}</strong></div>
           <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
-          <el-button class="settings-close" text :icon="Close" @click="visible = false" />
         </div>
       </header>
       <div class="settings-body">
@@ -383,29 +397,69 @@ const openCertificate = () => {
       </div>
     </div>
     <website-certificate-drawer v-model="certificate.show" :website="certificate.website" @changed="load(); emit('changed')" />
-  </el-dialog>
+  </el-drawer>
 </template>
 
 <style scoped lang="less">
-.settings-layout { height: 100%; min-height: 0; display: flex; flex-direction: column; background: var(--surface-card); }
-.settings-header { min-height: 82px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--border-subtle); }
+.website-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
+  }
+}
+
+.website-drawer-back {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 20px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  border-right: 1px solid var(--border-subtle);
+  color: var(--text-tertiary);
+  background: transparent;
+  cursor: pointer;
+  transition: color 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color));
+  }
+
+  .el-icon {
+    font-size: 18px;
+  }
+
+  span {
+    font-size: 15px;
+  }
+}
+
+.settings-layout { display: flex; flex-direction: column; gap: 16px; }
+.settings-header { min-height: 82px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-card); }
 .settings-header__title { min-width: 0; display: flex; align-items: center; gap: 14px; }
-.settings-header__mark { width: 46px; height: 46px; flex: 0 0 46px; display: grid; place-items: center; border: 1px solid color-mix(in srgb, var(--el-color-primary) 28%, transparent); border-radius: 13px; color: var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 9%, transparent); font-size: 21px; font-weight: 800; }
+.settings-header__mark { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border: 1px solid rgba(var(--primary-color), 0.16); border-radius: 14px; color: var(--el-color-primary); background: rgba(var(--primary-color), 0.08); font-size: 20px; font-weight: 800; }
 .settings-header__title span { color: var(--el-color-primary); font-size: 10px; font-weight: 800; letter-spacing: .16em; }
-.settings-header__title h2 { margin: 2px 0; overflow: hidden; color: var(--text-primary); font-size: 19px; text-overflow: ellipsis; white-space: nowrap; }
-.settings-header__title p { margin: 0; color: var(--text-tertiary); font-size: 12px; }
+.settings-header__title h2 { margin: 2px 0; overflow: hidden; color: var(--text-primary); font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
+.settings-header__title p { margin: 5px 0 0; color: var(--text-tertiary); font-size: 12px; }
 .settings-header__summary { display: flex; align-items: center; gap: 16px; }
 .settings-header__summary > div { display: flex; flex-direction: column; gap: 4px; }
 .settings-header__summary span { color: var(--text-tertiary); font-size: 11px; }
 .settings-header__summary strong { color: var(--text-primary); font-size: 13px; white-space: nowrap; }
 .settings-header__summary strong.expired { color: var(--el-color-danger); }
-.settings-close { margin-left: 4px; font-size: 22px; }
-.settings-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 168px minmax(0, 1fr); }
-.settings-nav { padding: 14px 10px 22px; overflow-y: auto; border-right: 1px solid var(--border-subtle); background: color-mix(in srgb, var(--surface-muted) 72%, var(--surface-card)); }
+.settings-body { height: 650px; min-height: 650px; display: grid; grid-template-columns: 240px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--surface-card); }
+.settings-nav { min-height: 0; padding: 10px; overflow-y: auto; border-right: 1px solid var(--border-subtle); background: var(--surface-subtle); }
 .settings-nav button { width: 100%; height: 42px; padding: 0 18px; border: 0; border-radius: 9px; color: var(--text-secondary); background: transparent; font-size: 13px; text-align: left; cursor: pointer; transition: .18s ease; }
-.settings-nav button:hover { color: var(--text-primary); background: var(--surface-card); }
-.settings-nav button.active { color: var(--el-color-primary); background: color-mix(in srgb, var(--el-color-primary) 10%, var(--surface-card)); font-weight: 650; box-shadow: inset 3px 0 var(--el-color-primary); }
-.settings-content { min-width: 0; overflow-y: auto; padding: 22px 24px 30px; }
+.settings-nav button:hover { border-color: rgba(var(--primary-color), 0.14); color: var(--text-primary); background: rgba(var(--primary-color), 0.05); }
+.settings-nav button.active { border-color: rgba(var(--primary-color), 0.22); color: var(--el-color-primary); background: rgba(var(--primary-color), 0.09); font-weight: 650; box-shadow: inset 3px 0 var(--el-color-primary); }
+.settings-content { min-width: 0; min-height: 0; overflow-y: auto; padding: 22px 24px 30px; }
 .setting-panel { min-height: 100%; display: flex; flex-direction: column; gap: 20px; }
 .setting-panel--fill { height: 100%; }
 .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
@@ -441,10 +495,63 @@ const openCertificate = () => {
 </style>
 
 <style lang="less">
-.website-settings-dialog { height: min(720px, calc(100vh - 72px)); margin: 0 !important; overflow: hidden; border: 1px solid var(--border-subtle); border-radius: 16px; background: var(--surface-card); box-shadow: 0 24px 70px rgba(15, 23, 42, .22); }
-.website-settings-dialog .el-dialog__header { display: none; }
-.website-settings-dialog .el-dialog__body { height: 100%; padding: 0; overflow: hidden; }
-@media (max-width: 900px) {
-  .website-settings-dialog { width: calc(100vw - 24px) !important; height: calc(100vh - 32px); border-radius: 13px; }
+.website-settings-drawer {
+  top: 14px;
+  right: 14px;
+  height: calc(100% - 28px);
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 24px;
+  background: var(--surface-page);
+}
+
+.website-settings-drawer .el-drawer__header {
+  margin: 0;
+  min-height: 88px;
+  padding: 0 36px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+}
+
+.website-settings-drawer .el-drawer__body {
+  padding: 18px 22px 22px;
+  overflow: auto;
+}
+
+@media (max-width: 760px) {
+  .website-settings-drawer {
+    top: 8px;
+    right: 8px;
+    height: calc(100% - 16px);
+    border-radius: 18px;
+  }
+
+  .website-settings-drawer .el-drawer__header {
+    min-height: 76px;
+    padding: 0 18px;
+  }
+
+  .website-settings-drawer .el-drawer__body {
+    padding: 14px;
+  }
+
+  .settings-body {
+    height: auto;
+    min-height: 0;
+    grid-template-columns: 1fr;
+  }
+
+  .settings-nav {
+    max-height: 230px;
+    border-right: 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .settings-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
 }
 </style>

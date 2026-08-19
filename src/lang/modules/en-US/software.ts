@@ -139,6 +139,7 @@ export default {
     historyTask: 'History task',
     unknownTime: 'Unknown time',
     diagnosticsCopied: 'Diagnostics copied',
+    copyDiagnosticsFailed: 'Copy failed. Check browser clipboard permission.',
     logDownloadStarted: 'Full task log download started',
     logDownloadFailed: 'Failed to download task log',
     confirmCancel: 'Confirm cancel',

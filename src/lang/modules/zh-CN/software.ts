@@ -139,6 +139,7 @@ export default {
     historyTask: '历史任务',
     unknownTime: '时间未知',
     diagnosticsCopied: '诊断信息已复制',
+    copyDiagnosticsFailed: '复制失败，请检查浏览器剪贴板权限。',
     logDownloadStarted: '完整任务日志已开始下载',
     logDownloadFailed: '下载任务日志失败',
     confirmCancel: '确认取消',

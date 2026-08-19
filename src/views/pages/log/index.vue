@@ -508,7 +508,7 @@ onMounted(async () => {
         <el-descriptions-item :label="$t('audit.requestId')" :span="2"
           ><code>{{ detail.requestId }}</code></el-descriptions-item
         >
-        <el-descriptions-item label="User-Agent" :span="2">{{
+        <el-descriptions-item :label="$t('audit.userAgent')" :span="2">{{
           detail.userAgent || "—"
         }}</el-descriptions-item>
         <el-descriptions-item :label="$t('common.description')" :span="2">{{

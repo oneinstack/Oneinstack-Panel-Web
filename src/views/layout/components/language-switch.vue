@@ -6,8 +6,8 @@ type SupportedLocale = 'zh-CN' | 'en-US'
 
 const currentLanguage = ref<SupportedLocale>(i18n.locale === 'en-US' ? 'en-US' : 'zh-CN')
 const languageOptions = computed<Array<{ label: string; value: SupportedLocale; mark: string }>>(() => [
-  { label: '中文', value: 'zh-CN', mark: '中' },
-  { label: 'English', value: 'en-US', mark: 'EN' }
+  { label: i18n.t('common.chinese'), value: 'zh-CN', mark: '中' },
+  { label: i18n.t('common.english'), value: 'en-US', mark: 'EN' }
 ])
 const activeLanguage = computed(
   () => languageOptions.value.find((item) => item.value === currentLanguage.value) || languageOptions.value[0]

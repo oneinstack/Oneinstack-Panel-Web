@@ -31,6 +31,7 @@ export default {
   messageCommand: 'Message / command',
   requestSize: 'Request size',
   requestId: 'Request ID',
+  userAgent: 'User-Agent',
   previousHash: 'Previous hash',
   entryHash: 'Entry hash',
   detailTitle: 'Audit record details',

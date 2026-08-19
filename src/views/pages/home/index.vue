@@ -74,7 +74,7 @@ const conf = reactive({
   },
   category: [
     {
-      name: '网站-全部',
+      name: 'Websites',
       nameKey: 'home.websiteAll',
       icon: 'home-website',
       value: 0,
@@ -83,7 +83,7 @@ const conf = reactive({
       linkFn: () => System.router.push('/website')
     },
     {
-      name: '数据-全部',
+      name: 'Databases',
       nameKey: 'home.databaseAll',
       icon: 'home-data',
       value: 0,
@@ -92,13 +92,13 @@ const conf = reactive({
       linkFn: () => System.router.push('/database')
     },
     {
-      name: '安全风险',
+      name: 'Security risks',
       nameKey: 'home.securityRisk',
       icon: 'home-software',
       value: 0
     },
     {
-      name: '备忘录',
+      name: 'Memo',
       nameKey: 'home.memo',
       icon: 'home-mome',
       value: '',
@@ -127,44 +127,44 @@ const conf = reactive({
     },
     network: [
       {
-        label: '上行',
+        label: 'Upload',
         labelKey: 'home.upload',
         value: '--'
       },
       {
-        label: '下行',
+        label: 'Download',
         labelKey: 'home.download',
         value: '--'
       },
       {
-        label: '总发送',
+        label: 'Total sent',
         labelKey: 'home.totalSent',
         value: '--'
       },
       {
-        label: '总接收',
+        label: 'Total received',
         labelKey: 'home.totalReceived',
         value: '--'
       }
     ] as Options[],
     disk: [
       {
-        label: '读取',
+        label: 'Read',
         labelKey: 'home.read',
         value: '--'
       },
       {
-        label: '写入',
+        label: 'Write',
         labelKey: 'home.write',
         value: '--'
       },
       {
-        label: '读取',
+        label: 'IO count',
         labelKey: 'home.ioCount',
         value: '--'
       },
       {
-        label: '写入',
+        label: 'Average latency',
         labelKey: 'home.averageLatency',
         value: '--'
       }
@@ -253,7 +253,7 @@ const conf = reactive({
         ],
         series: [
           {
-            name: conf.monitorData.selectedType == 'network' ? t('home.upload', '上行') : t('home.read', '读取'),
+            name: conf.monitorData.selectedType == 'network' ? t('home.upload', 'Upload') : t('home.read', 'Read'),
             type: 'line',
             smooth: 0.42,
             smoothMonotone: 'x',
@@ -288,7 +288,7 @@ const conf = reactive({
             data: conf.monitorData.chartData.ascend
           },
           {
-            name: conf.monitorData.selectedType == 'network' ? t('home.download', '下行') : t('home.write', '写入'),
+            name: conf.monitorData.selectedType == 'network' ? t('home.download', 'Download') : t('home.write', 'Write'),
             type: 'line',
             smooth: 0.42,
             smoothMonotone: 'x',
@@ -352,10 +352,10 @@ const conf = reactive({
               strValue: sutil.bytesTransform(RecvRate).strValue
             }
             conf.monitorData.network = [
-              { label: '上行', labelKey: 'home.upload', value: `${sutil.bytesTransform(SendRate).strValue}/s` },
-              { label: '下行', labelKey: 'home.download', value: `${sutil.bytesTransform(RecvRate).strValue}/s` },
-              { label: '总发送', labelKey: 'home.totalSent', value: sutil.bytesTransform(BytesSent).strValue },
-              { label: '总接收', labelKey: 'home.totalReceived', value: sutil.bytesTransform(BytesRecv).strValue }
+              { label: 'Upload', labelKey: 'home.upload', value: `${sutil.bytesTransform(SendRate).strValue}/s` },
+              { label: 'Download', labelKey: 'home.download', value: `${sutil.bytesTransform(RecvRate).strValue}/s` },
+              { label: 'Total sent', labelKey: 'home.totalSent', value: sutil.bytesTransform(BytesSent).strValue },
+              { label: 'Total received', labelKey: 'home.totalReceived', value: sutil.bytesTransform(BytesRecv).strValue }
             ]
           }
           break
@@ -373,10 +373,10 @@ const conf = reactive({
               strValue: sutil.bytesTransform(WriteSpeed).strValue
             }
             conf.monitorData.disk = [
-              { label: '读取', labelKey: 'home.read', value: sutil.bytesTransform(ReadSpeed).strValue },
-              { label: '写入', labelKey: 'home.write', value: sutil.bytesTransform(WriteSpeed).strValue },
-              { label: '读写次数', labelKey: 'home.ioCount', value: `${ReadOpsPerSec + WriteOpsPerSec}${t('home.timesPerSecond', '次/s')}` },
-              { label: '平均延迟', labelKey: 'home.averageLatency', value: `${AvgIoLatency.toFixed(2)}ms` }
+              { label: 'Read', labelKey: 'home.read', value: sutil.bytesTransform(ReadSpeed).strValue },
+              { label: 'Write', labelKey: 'home.write', value: sutil.bytesTransform(WriteSpeed).strValue },
+              { label: 'IO count', labelKey: 'home.ioCount', value: `${ReadOpsPerSec + WriteOpsPerSec}${t('home.timesPerSecond', 'times/s')}` },
+              { label: 'Average latency', labelKey: 'home.averageLatency', value: `${AvgIoLatency.toFixed(2)}ms` }
             ]
           }
           break
@@ -481,18 +481,18 @@ const conf = reactive({
     },
     selected: {
       value: 1,
-      label: '内存',
+      label: 'Memory',
       labelKey: 'home.memory'
     },
     options: markRaw([
       {
         value: 1,
-        label: '内存',
+        label: 'Memory',
         labelKey: 'home.memory'
       },
       {
         value: 2,
-        label: '磁盘',
+        label: 'Disk',
         labelKey: 'home.disk'
       },
       {

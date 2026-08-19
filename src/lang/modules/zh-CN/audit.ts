@@ -31,6 +31,7 @@ export default {
   messageCommand: '说明 / 指令',
   requestSize: '请求大小',
   requestId: '请求 ID',
+  userAgent: '用户代理',
   previousHash: '前置摘要',
   entryHash: '记录摘要',
   detailTitle: '审计记录详情',
