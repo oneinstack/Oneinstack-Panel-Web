@@ -54,13 +54,25 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   min-height: 106px;
   padding: 18px 20px 16px;
   border: 1px solid var(--border-subtle);
-  border-radius: 8px;
+  border-radius: 15px;
   background: var(--surface-card);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-xs);
+  cursor: default;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--primary-color), 0.26);
+    box-shadow: var(--shadow-sm);
+  }
 
   &__label {
     color: var(--text-secondary);
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.01em;
     margin-bottom: 10px;
   }
 
@@ -74,16 +86,34 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   strong {
     font-size: 22px;
     line-height: 1.2;
+    letter-spacing: -0.02em;
   }
 
   &--accent {
     background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
+    border-color: color-mix(in srgb, rgb(var(--primary-color)) 14%, var(--border-subtle));
+
+    &:hover {
+      border-color: color-mix(in srgb, rgb(var(--primary-color)) 26%, var(--border-subtle));
+      box-shadow: var(--shadow-sm);
+    }
   }
 }
 
 @media (max-width: 980px) {
   .runtime-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .runtime-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-card {
+    min-height: 96px;
+    padding: 16px 16px 14px;
   }
 }
 </style>

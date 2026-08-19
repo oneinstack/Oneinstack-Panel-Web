@@ -571,11 +571,21 @@ onMounted(async () => {
   min-height: 102px;
   padding: 18px 20px;
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border-radius: 15px;
   background: var(--surface-card);
   box-shadow: var(--shadow-xs);
   display: flex;
   flex-direction: column;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--primary-color), 0.26);
+    box-shadow: var(--shadow-sm);
+  }
 
   span,
   small {
@@ -596,6 +606,18 @@ onMounted(async () => {
   }
   &.warning strong {
     color: #d89532;
+  }
+
+  &.success:hover {
+    border-color: color-mix(in srgb, rgb(var(--success-color)) 28%, var(--border-subtle));
+  }
+
+  &.danger:hover {
+    border-color: color-mix(in srgb, var(--el-color-danger) 28%, var(--border-subtle));
+  }
+
+  &.warning:hover {
+    border-color: color-mix(in srgb, var(--el-color-warning) 28%, var(--border-subtle));
   }
 }
 

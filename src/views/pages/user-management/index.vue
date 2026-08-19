@@ -285,7 +285,7 @@ onMounted(async () => {
     <section class="hero-card">
       <div class="hero-main">
         <div class="hero-copy">
-          <span class="eyebrow">{{ $t('userManagement.eyebrow') }}</span>
+          <!-- <span class="eyebrow">{{ $t('userManagement.eyebrow') }}</span> -->
           <h2>{{ $t('userManagement.title') }}</h2>
           <p>{{ $t('userManagement.fullDescription') }}</p>
         </div>
@@ -620,26 +620,53 @@ onMounted(async () => {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.84),
     0 14px 30px rgba(15, 23, 42, 0.04);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.9),
+      var(--shadow-sm);
+  }
 }
 
 .metric-chip--total {
   background: linear-gradient(145deg, #fff8f5, #fff2eb);
   border-color: rgba(255, 120, 64, 0.14);
+
+  &:hover {
+    border-color: rgba(255, 120, 64, 0.28);
+  }
 }
 
 .metric-chip--granted {
   background: linear-gradient(145deg, #f3fdf7, #e9f9f0);
   border-color: rgba(22, 163, 74, 0.14);
+
+  &:hover {
+    border-color: rgba(22, 163, 74, 0.28);
+  }
 }
 
 .metric-chip--pending {
   background: linear-gradient(145deg, #fffaf0, #fff2dc);
   border-color: rgba(245, 158, 11, 0.16);
+
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.3);
+  }
 }
 
 .metric-chip--roles {
   background: linear-gradient(145deg, #f5f7ff, #edf1ff);
   border-color: rgba(99, 102, 241, 0.14);
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.28);
+  }
 }
 
 .metric-chip__accent {
