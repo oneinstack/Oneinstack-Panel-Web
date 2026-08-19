@@ -276,11 +276,13 @@ const catalogDetail = computed(() => {
 
 <style scoped lang="less">
 .software-content {
+  width: 100%;
+  min-width: 0;
   padding-bottom: 35px;
 }
 
 .software-box {
-  padding: 20px 22px 24px;
+  padding: clamp(16px, 2vw, 22px) clamp(14px, 2vw, 22px) 24px;
 }
 
 .catalog-source {
@@ -347,16 +349,34 @@ const catalogDetail = computed(() => {
 }
 
 .category {
+  display: flex;
   min-height: 58px;
   padding: 0 10px 0 14px;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   margin-bottom: 24px;
   background: var(--surface-subtle);
 }
 
+.category :deep(.el-tabs) {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
 .search-wrap {
+  flex: 0 0 auto;
+  width: min(320px, 100%);
   padding: 6px 0 6px 16px;
+}
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 4px;
 }
 
 :deep(.el-tabs__nav-wrap) {
@@ -367,6 +387,68 @@ const catalogDetail = computed(() => {
 
 :deep(.el-tabs__header) {
   margin: 0;
+  min-width: 0;
+}
+
+:deep(.el-tabs__nav-wrap) {
+  min-width: 0;
+  overflow: visible;
+}
+
+:deep(.el-tabs__nav-scroll) {
+  min-width: 0;
+}
+
+:deep(.el-tabs__nav) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  min-width: 0;
+}
+
+:deep(.el-tabs__nav-wrap.is-scrollable) {
+  padding: 0 22px;
+}
+
+:deep(.el-tabs__active-bar) {
+  max-width: calc(100% - 8px);
+}
+
+@media (max-width: 960px) {
+  .catalog-source {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .catalog-source :deep(.el-button) {
+    align-self: flex-start;
+  }
+
+  .category {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 14px;
+    overflow: visible;
+  }
+
+  .search-wrap {
+    flex: 1 1 auto;
+    width: 100%;
+    padding: 0;
+  }
+
+  :deep(.el-tabs) {
+    width: 100%;
+  }
+
+  :deep(.el-tabs__nav-wrap) {
+    overflow: visible;
+  }
+
+  :deep(.el-tabs__nav) {
+    flex-wrap: wrap;
+  }
 }
 
 @media (max-width: 780px) {
@@ -375,20 +457,63 @@ const catalogDetail = computed(() => {
   }
 
   .category {
-    padding: 10px;
-    align-items: stretch;
-    flex-direction: column;
-    gap: 8px;
+    padding: 10px 12px;
+  }
+
+  .catalog-source-copy .source-error {
+    max-width: 100%;
+  }
+
+  .pagination {
+    justify-content: center;
+  }
+
+  :deep(.el-pagination) {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 560px) {
+  .software-content {
+    padding-bottom: 24px;
   }
 
   .catalog-source {
-    align-items: stretch;
-    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
   }
 
-  .search-wrap {
+  .catalog-source :deep(.el-button) {
     width: 100%;
-    padding: 0;
+  }
+
+  :deep(.el-tabs__item) {
+    padding: 0 14px;
+    font-size: 13px;
+  }
+
+  :deep(.el-tabs__header) {
+    width: 100%;
+  }
+
+  :deep(.el-tabs__nav-wrap) {
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  :deep(.el-tabs__nav-scroll) {
+    min-width: max-content;
+  }
+
+  :deep(.el-tabs__nav) {
+    flex-wrap: nowrap;
+    gap: 0;
   }
 }
 </style>
