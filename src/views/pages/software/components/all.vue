@@ -23,6 +23,7 @@ interface ComponentServiceStatus {
   displayName: string
   serviceName: string
   manageScopes?: string[]
+  canConfigure?: boolean
   installed: boolean
   recordedVersion?: string
   runtimeVersion?: string
@@ -284,6 +285,9 @@ const loadServiceStatuses = async () => {
 const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action: ServiceAction) =>
   !!status?.availableActions?.includes(action) &&
   !(action === 'reload' && !status.canReload)
+
+const canShowConfigureButton = (item: any, status?: ComponentServiceStatus) =>
+  Boolean(status?.canConfigure) && canManageService(item, status)
 
 const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => {
   const deadline = Date.now() + timeoutMs
@@ -647,6 +651,7 @@ onMounted(() => {
               </div>
               <div v-if="canManageService(item, serviceStatus(item))" class="service-actions">
                 <el-button
+                  v-if="canShowConfigureButton(item, serviceStatus(item))"
                   size="small"
                   type="primary"
                   plain

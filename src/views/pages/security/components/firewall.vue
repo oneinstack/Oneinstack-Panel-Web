@@ -259,7 +259,7 @@ const buildUnifiedStatus = (
           : rawStatus.managedBackend,
     install: Boolean(rawStatus.install || hasSupportedRules),
     panelPort,
-    panelPortProtected: panelPortRules.length > 0,
+    panelPortProtected: Boolean(rawStatus.panelPortProtected),
     managedPanelRule,
     managedRuleCount: protectedRules.length,
     counts: {
