@@ -359,7 +359,7 @@ onMounted(async () => {
             >
               {{ $t('approvalCenter.reject') }}
             </el-button>
-            <el-button :plain="!isPendingApproval(row)" :link="isPendingApproval(row)" type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
+            <el-button link type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
           </div>
         </template>
       </custom-table>

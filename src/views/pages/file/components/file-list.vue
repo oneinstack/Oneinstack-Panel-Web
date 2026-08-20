@@ -1638,14 +1638,14 @@ const archiveTaskRunningCount = computed(
         </template>
         <template #action="{ row }">
           <div class="row-actions table-row-actions">
-            <el-button
-              v-if="showRowInlineAction(row, 'open')"
-              class="action-main"
-              type="primary"
-              link
-              :icon="conf.isImage(row) ? View : FolderOpened"
-              :loading="conf.editorLoadingPath === row.path"
-              @click="conf.handleFileClick(row)"
+    <el-button
+      v-if="showRowInlineAction(row, 'open')"
+      class="action-main action-open"
+      type="primary"
+      link
+      :icon="conf.isImage(row) ? View : FolderOpened"
+      :loading="conf.editorLoadingPath === row.path"
+      @click="conf.handleFileClick(row)"
             >
               {{
                 row.isDir
@@ -1655,52 +1655,56 @@ const archiveTaskRunningCount = computed(
                     : t("file.edit", "Edit")
               }}
             </el-button>
-            <el-button
-              v-if="showRowInlineAction(row, 'copy')"
-              type="primary"
-              link
-              :icon="CopyDocument"
-              @click="conf.setClipboard('copy', row)"
-            >
+    <el-button
+      v-if="showRowInlineAction(row, 'copy')"
+      class="action-copy"
+      type="primary"
+      link
+      :icon="CopyDocument"
+      @click="conf.setClipboard('copy', row)"
+    >
               {{ t("file.copy", "Copy") }}
             </el-button>
-            <el-button
-              v-if="showRowInlineAction(row, 'cut')"
-              type="primary"
-              link
-              :icon="Scissor"
-              @click="conf.setClipboard('move', row)"
-            >
+    <el-button
+      v-if="showRowInlineAction(row, 'cut')"
+      class="action-cut"
+      type="primary"
+      link
+      :icon="Scissor"
+      @click="conf.setClipboard('move', row)"
+    >
               {{ t("file.cut", "Cut") }}
             </el-button>
-            <el-button
-              v-if="showRowInlineAction(row, 'rename')"
-              type="primary"
-              link
-              :icon="EditPen"
-              @click="conf.operationDialog.open('rename', row)"
-            >
+    <el-button
+      v-if="showRowInlineAction(row, 'rename')"
+      class="action-rename"
+      type="primary"
+      link
+      :icon="EditPen"
+      @click="conf.operationDialog.open('rename', row)"
+    >
               {{ t("file.rename", "Rename") }}
             </el-button>
-            <el-button
-              v-if="showRowInlineAction(row, 'tree')"
-              type="primary"
-              link
-              :icon="Operation"
-              @click="conf.treeDialog.open(row)"
-            >
+    <el-button
+      v-if="showRowInlineAction(row, 'tree')"
+      class="action-tree"
+      type="primary"
+      link
+      :icon="Operation"
+      @click="conf.treeDialog.open(row)"
+    >
               {{ t("file.directoryTree", "Directory tree") }}
             </el-button>
-            <el-dropdown
-              v-if="hasRowMoreMenu(row)"
-              class="row-action-more"
-              trigger="click"
-              popper-class="table-action-popper"
-            >
-              <el-button type="primary" link :icon="MoreFilled">
-                {{ t("file.more", "More") }}
-                <el-icon class="el-icon--right"><ArrowDown /></el-icon>
-              </el-button>
+    <el-dropdown
+      v-if="hasRowMoreMenu(row)"
+      class="row-action-more"
+      trigger="click"
+      popper-class="table-action-popper"
+    >
+      <el-button class="action-more-trigger" type="primary" link :icon="MoreFilled">
+        {{ t("file.more", "More") }}
+        <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+      </el-button>
               <template #dropdown>
                 <el-dropdown-menu class="table-action-menu file-action-menu">
                   <el-dropdown-item
@@ -3079,10 +3083,60 @@ const archiveTaskRunningCount = computed(
   :deep(.el-button.is-link) {
     color: var(--text-secondary);
     font-size: 12px;
+    transition:
+      color 0.2s ease,
+      background-color 0.2s ease,
+      border-color 0.2s ease;
 
     &:hover {
       color: rgb(var(--primary-color));
       background: rgba(var(--primary-color), 0.08);
+    }
+  }
+
+  :deep(.action-open.is-link),
+  :deep(.action-more-trigger.is-link) {
+    color: rgb(var(--primary-color));
+
+    &:hover {
+      color: rgb(var(--primary-color));
+      background: rgba(var(--primary-color), 0.1);
+    }
+  }
+
+  :deep(.action-copy.is-link) {
+    color: #409eff;
+
+    &:hover {
+      color: #409eff;
+      background: rgba(64, 158, 255, 0.12);
+    }
+  }
+
+  :deep(.action-cut.is-link) {
+    color: #e6a23c;
+
+    &:hover {
+      color: #e6a23c;
+      background: rgba(230, 162, 60, 0.12);
+    }
+  }
+
+  :deep(.action-rename.is-link) {
+    color: #8b5cf6;
+
+    &:hover {
+      color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.12);
+    }
+  }
+
+  :deep(.action-tree.is-link) {
+    color: #16a085;
+
+    &:hover {
+      color: #16a085;
+      background: rgba(22, 160, 133, 0.12);
     }
   }
 
