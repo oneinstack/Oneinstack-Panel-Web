@@ -377,6 +377,11 @@ export default {
     dockerConfigObjectRequired: 'Docker 配置必须是 JSON 对象',
     dockerConfigSaved: 'Docker 配置已保存',
     actionSuccess: '{action}成功',
+    actionStateFailedTitle: '{action}失败',
+    actionStateFailed: '{action}失败，容器当前状态为 {state}。建议查看日志和启动配置。',
+    actionStateFailedWithExitCode: '{action}失败，容器当前状态为 {state}，退出码 {exitCode}。建议查看日志和启动配置。',
+    actionStateTimeout: '{action}状态仍在确认中，请稍后刷新',
+    viewLogs: '查看日志',
     cleanupCompleted: '{action}完成',
     runtimeActionExecuted: '{action}命令已执行'
   },

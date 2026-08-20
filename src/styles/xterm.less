@@ -10,6 +10,12 @@
   }
 }
 
+@keyframes xterm-cursor-blink-opacity {
+  50% {
+    opacity: 0;
+  }
+}
+
 @keyframes xterm-cursor-blink-block {
   0% {
     background-color: rgb(var(--primary-color));
@@ -33,6 +39,16 @@
 /* Use pure CSS blinking for underline cursors so strict CSP does not block xterm runtime styling. */
 .xterm .xterm-rows.xterm-focus .xterm-cursor.xterm-cursor-underline {
   animation: xterm-cursor-blink-underline 1s step-end infinite;
+}
+
+/* The DOM renderer may lose its generated cursor styles under strict CSP, so keep a static fallback. */
+.xterm .xterm-rows .xterm-cursor {
+  visibility: visible !important;
+}
+
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-bar,
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-underline {
+  animation: xterm-cursor-blink-opacity 1s step-end infinite;
 }
 
 .xterm .xterm-rows .xterm-cursor.xterm-cursor-block {

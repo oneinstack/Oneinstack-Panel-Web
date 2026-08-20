@@ -596,7 +596,7 @@ const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
     prop: "Mounts",
     label: t("container.columns.mounts", "Mounts"),
     minWidth: 180,
-    showOverflowTooltip: true,
+    slot: "containerMounts",
   },
   {
     prop: "actionColumn",
@@ -1512,6 +1512,249 @@ const submitDialog = async () => {
   }
 };
 
+const containerActionPollTokens = new Map<string, symbol>();
+
+const sleep = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+const normalizeContainerRuntimeState = (source: any) => {
+  const rawState =
+    source?.State?.Status ??
+    source?.status ??
+    source?.stateCode ??
+    source?.Status;
+  return String(rawState || "")
+    .trim()
+    .toLowerCase();
+};
+
+const isContainerFailedState = (state: string) =>
+  state === "exited" || state === "dead";
+
+const isContainerPendingState = (state: string) =>
+  state === "created" || state === "restarting" || state === "start" || state === "restart";
+
+const formatContainerStateLabel = (state?: string) => {
+  const normalized = String(state || "")
+    .trim()
+    .toLowerCase();
+  if (!normalized) return "--";
+  if (normalized === "running") {
+    return t("container.statusOptions.up", "Running");
+  }
+  return t(`container.statusOptions.${normalized}`, normalized);
+};
+
+const buildContainerActionFailureMessage = (
+  actionLabel: string,
+  snapshot: {
+    state?: string;
+    exitCode?: number | null;
+    stateMessage?: string;
+  },
+) => {
+  if (snapshot.stateMessage) return snapshot.stateMessage;
+  if (snapshot.exitCode !== undefined && snapshot.exitCode !== null) {
+    return t("container.notifications.actionStateFailedWithExitCode", undefined, {
+      action: actionLabel,
+      state: formatContainerStateLabel(snapshot.state),
+      exitCode: snapshot.exitCode,
+    });
+  }
+  return t("container.notifications.actionStateFailed", undefined, {
+    action: actionLabel,
+    state: formatContainerStateLabel(snapshot.state),
+  });
+};
+
+const readContainerActionSnapshot = (source: any) => {
+  const state = normalizeContainerRuntimeState(source);
+  const running =
+    source?.running === true || source?.State?.Running === true || state === "running";
+  const stateFailed =
+    source?.stateFailed === true ||
+    source?.stateCode === "CONTAINER_STARTUP_EXITED" ||
+    (!running && isContainerFailedState(state));
+  return {
+    state,
+    running,
+    paused: source?.paused === true || source?.State?.Paused === true,
+    exitCode:
+      typeof source?.exitCode === "number"
+        ? source.exitCode
+        : typeof source?.State?.ExitCode === "number"
+          ? source.State.ExitCode
+          : null,
+    stateFailed,
+    stateCode: source?.stateCode,
+    stateMessage: source?.stateMessage || source?.error,
+  };
+};
+
+const promptContainerActionFailure = async (
+  row: ContainerItem,
+  actionLabel: string,
+  snapshot: ReturnType<typeof readContainerActionSnapshot>,
+) => {
+  await ElMessageBox.confirm(
+    buildContainerActionFailureMessage(actionLabel, snapshot),
+    t("container.notifications.actionStateFailedTitle", undefined, {
+      action: actionLabel,
+    }),
+    {
+      type: "error",
+      confirmButtonText: t("container.notifications.viewLogs"),
+      cancelButtonText: t("common.cancel"),
+    },
+  )
+    .then(() => openLogs(row))
+    .catch(() => undefined);
+};
+
+const normalizeBatchContainerActionItems = (data: any) =>
+  normalizeList<any>(data?.items || data);
+
+const buildBatchContainerResultLine = (
+  item: any,
+  actionLabel: string,
+  currentRows?: ContainerItem[],
+) => {
+  const id = item?.id || item?.ID || item?.name || item?.Name || "--";
+  const row = currentRows?.find((entry) => entry.ID === id);
+  const name = row?.Names || id;
+  const snapshot = readContainerActionSnapshot(item);
+  const failed =
+    item?.success === false || snapshot.stateFailed || Boolean(item?.error);
+
+  if (failed) {
+    return `${name}: ${buildContainerActionFailureMessage(actionLabel, snapshot)}`;
+  }
+
+  if (snapshot.running) {
+    return `${name}: ${t("container.notifications.actionSuccess", undefined, {
+      action: actionLabel,
+    })}`;
+  }
+
+  if (isContainerPendingState(snapshot.state)) {
+    return `${name}: ${t("container.notifications.actionStateTimeout", undefined, {
+      action: actionLabel,
+    })}`;
+  }
+
+  return `${name}: ${formatContainerStateLabel(snapshot.state)}`;
+};
+
+const confirmBatchContainerActionStates = async (
+  items: any[],
+  action: Extract<ContainerAction, "start" | "restart">,
+) => {
+  const candidates = items.filter((item) => {
+    const snapshot = readContainerActionSnapshot(item);
+    return !snapshot.stateFailed && !snapshot.running && isContainerPendingState(snapshot.state);
+  });
+
+  if (!candidates.length) return items;
+
+  const resultMap = new Map<string, any>();
+  items.forEach((item) => {
+    const id = item?.id || item?.ID;
+    if (id) resultMap.set(id, item);
+  });
+
+  await Promise.all(
+    candidates.map(async (item) => {
+      const id = item?.id || item?.ID;
+      if (!id) return;
+      const result = await waitContainerStartup(
+        id,
+        action,
+        readContainerActionSnapshot(item),
+      );
+      const previous = resultMap.get(id) || item;
+      const mergedSnapshot = result.snapshot
+        ? {
+            ...previous,
+            status: result.snapshot.state || previous?.status,
+            running: result.snapshot.running,
+            paused: result.snapshot.paused,
+            exitCode: result.snapshot.exitCode,
+            stateFailed: result.snapshot.stateFailed,
+            stateCode: result.snapshot.stateCode,
+            stateMessage: result.snapshot.stateMessage,
+          }
+        : previous;
+      resultMap.set(id, {
+        ...mergedSnapshot,
+        success: result.success,
+        timeout: result.timeout,
+        canceled: result.canceled,
+      });
+    }),
+  );
+
+  return items.map((item) => {
+    const id = item?.id || item?.ID;
+    return (id && resultMap.get(id)) || item;
+  });
+};
+
+const waitContainerStartup = async (
+  id: string,
+  action: Extract<ContainerAction, "start" | "restart">,
+  initialSnapshot?: ReturnType<typeof readContainerActionSnapshot>,
+) => {
+  const deadline = Date.now() + 30_000;
+  const token = Symbol(`${id}:${action}`);
+  containerActionPollTokens.set(id, token);
+  const requiredStableChecks = action === "restart" ? 2 : 1;
+  let stableRunningChecks = 0;
+
+  const ensureActive = () => containerActionPollTokens.get(id) === token;
+
+  try {
+    if (initialSnapshot?.stateFailed) {
+      return { success: false, timeout: false, snapshot: initialSnapshot };
+    }
+
+    if (isContainerPendingState(initialSnapshot?.state || "")) {
+      await sleep(1500);
+    }
+
+    while (Date.now() < deadline) {
+      if (!ensureActive()) {
+        return { success: false, timeout: true, canceled: true, snapshot: initialSnapshot };
+      }
+      const { data } = await Api.getContainerDetail(id);
+      if (!ensureActive()) {
+        return { success: false, timeout: true, canceled: true, snapshot: initialSnapshot };
+      }
+      const snapshot = readContainerActionSnapshot(data);
+
+      if (snapshot.stateFailed) {
+        return { success: false, timeout: false, snapshot };
+      }
+
+      if (snapshot.running) {
+        stableRunningChecks += 1;
+        if (stableRunningChecks >= requiredStableChecks) {
+          return { success: true, timeout: false, snapshot };
+        }
+      } else {
+        stableRunningChecks = 0;
+      }
+
+      await sleep(1500);
+    }
+
+    return { success: false, timeout: true, snapshot: initialSnapshot };
+  } finally {
+    if (ensureActive()) containerActionPollTokens.delete(id);
+  }
+};
+
 const runContainerAction = async (
   row: ContainerItem,
   action: ContainerAction,
@@ -1545,11 +1788,49 @@ const runContainerAction = async (
   );
   actionLoading.value = `${row.ID}:${action}`;
   try {
-    await Api.runContainerAction(row.ID, {
+    const { data } = await Api.runContainerAction(row.ID, {
       action,
       confirm: dangerous,
       force: action === "kill" || (action === "rm" && canForceAction.value),
     });
+
+    if (action === "start" || action === "restart") {
+      const initialSnapshot = readContainerActionSnapshot(data);
+      if (initialSnapshot.stateFailed) {
+        loadedTabs.containers = false;
+        await loadActiveTab(true);
+        await promptContainerActionFailure(row, actionLabels[action], initialSnapshot);
+        return;
+      }
+
+      const result = await waitContainerStartup(row.ID, action, initialSnapshot);
+      loadedTabs.containers = false;
+      await loadActiveTab(true);
+
+      if (result.success) {
+        ElMessage.success(
+          t("container.notifications.actionSuccess", undefined, {
+            action: actionLabels[action],
+          }),
+        );
+        return;
+      }
+
+      if (!result.canceled && !result.timeout && result.snapshot) {
+        await promptContainerActionFailure(row, actionLabels[action], result.snapshot);
+        return;
+      }
+
+      if (!result.canceled) {
+        ElMessage.warning(
+          t("container.notifications.actionStateTimeout", undefined, {
+            action: actionLabels[action],
+          }),
+        );
+      }
+      return;
+    }
+
     ElMessage.success(
       t("container.notifications.actionSuccess", undefined, {
         action: actionLabels[action],
@@ -1562,25 +1843,19 @@ const runContainerAction = async (
   }
 };
 
-const showBatchResult = async (data: any, fallbackMessage: string) => {
-  const items = normalizeList<any>(data);
-  const failed = items.filter((item) => item?.success === false || item?.error);
-  if (!items.length || !failed.length) {
-    ElMessage.success(fallbackMessage);
-    return;
-  }
-  const message = h("div", { class: "batch-result" }, [
-    h(
-      "p",
-      t("container.confirmations.batchSummary", undefined, {
-        success: items.length - failed.length,
-        failed: failed.length,
-      }),
-    ),
-    h(
-      "pre",
-      failed
-        .map((item) => {
+const showBatchResult = async (
+  data: any,
+  fallbackMessage: string,
+  options: {
+    actionLabel?: string;
+    currentRows?: ContainerItem[];
+  } = {},
+) => {
+  const items = normalizeBatchContainerActionItems(data);
+  const lines = items.map((item) =>
+    options.actionLabel
+      ? buildBatchContainerResultLine(item, options.actionLabel, options.currentRows)
+      : (() => {
           const id = item.id || item.ID || item.name || item.Name || "--";
           const error =
             item.error?.detail ||
@@ -1588,9 +1863,29 @@ const showBatchResult = async (data: any, fallbackMessage: string) => {
             item.message ||
             t("common.operationFailed");
           return `${id}: ${error}`;
-        })
-        .join("\n"),
+        })(),
+  );
+  const failed = items.filter((item) => {
+    const snapshot = readContainerActionSnapshot(item);
+    return item?.success === false || snapshot.stateFailed || item?.error;
+  });
+  const pending = items.filter((item) => {
+    const snapshot = readContainerActionSnapshot(item);
+    return !snapshot.stateFailed && !snapshot.running && isContainerPendingState(snapshot.state);
+  });
+  if (!items.length || (!failed.length && !pending.length)) {
+    ElMessage.success(fallbackMessage);
+    return;
+  }
+  const message = h("div", { class: "batch-result" }, [
+    h(
+      "p",
+      t("container.confirmations.batchSummary", undefined, {
+        success: items.length - failed.length - pending.length,
+        failed: failed.length + pending.length,
+      }),
     ),
+    h("pre", lines.join("\n")),
   ]);
   await ElMessageBox.alert(
     message,
@@ -1640,11 +1935,22 @@ const runBatchContainerAction = async (action: ContainerAction) => {
       confirm: dangerous,
       force: action === "kill" || (action === "rm" && canForceAction.value),
     });
+    const batchItems =
+      action === "start" || action === "restart"
+        ? await confirmBatchContainerActionStates(
+            normalizeBatchContainerActionItems(data),
+            action,
+          )
+        : normalizeBatchContainerActionItems(data);
     await showBatchResult(
-      data,
+      { ...(data || {}), items: batchItems },
       t("container.confirmations.batchActionCompleted", undefined, {
         action: actionLabels[action],
       }),
+      {
+        actionLabel: actionLabels[action],
+        currentRows: selectedContainers.value,
+      },
     );
     loadedTabs.containers = false;
     await loadActiveTab(true);
@@ -2215,6 +2521,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearStatsTimer();
+  containerActionPollTokens.clear();
 });
 </script>
 
@@ -2651,6 +2958,15 @@ onBeforeUnmount(() => {
               {{ splitContainerStatus(row.Status).secondary }}
             </span>
           </div>
+        </template>
+        <template #containerMounts="{ row }">
+          <el-tooltip
+            :disabled="!row.Mounts || row.Mounts.length <= 18"
+            :content="row.Mounts || '--'"
+            placement="top"
+          >
+            <span class="table-ellipsis-cell">{{ row.Mounts || "--" }}</span>
+          </el-tooltip>
         </template>
         <template #containerAction="{ row }">
           <div class="row-actions table-row-actions">
@@ -3405,6 +3721,15 @@ onBeforeUnmount(() => {
     border-color: rgb(148 163 184 / 20%);
     background: rgb(148 163 184 / 10%);
   }
+}
+
+.table-ellipsis-cell {
+  display: inline-block;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
 }
 
 .panel-foot {

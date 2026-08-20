@@ -383,6 +383,11 @@ export default {
     dockerConfigObjectRequired: 'Docker configuration must be a JSON object',
     dockerConfigSaved: 'Docker configuration saved',
     actionSuccess: '{action} succeeded',
+    actionStateFailedTitle: '{action} failed',
+    actionStateFailed: '{action} failed and the container is currently {state}. Check the logs and startup configuration.',
+    actionStateFailedWithExitCode: '{action} failed and the container is currently {state} with exit code {exitCode}. Check the logs and startup configuration.',
+    actionStateTimeout: '{action} state is still being confirmed. Please refresh in a moment.',
+    viewLogs: 'View logs',
     cleanupCompleted: '{action} completed',
     runtimeActionExecuted: '{action} command executed'
   },

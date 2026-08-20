@@ -423,7 +423,7 @@ const initializeTerminal = async () => {
   if (!terminalDiv.value) return
   terminal = new Terminal({
     cursorBlink: false,
-    cursorStyle: 'underline',
+    cursorStyle: 'bar',
     cursorWidth: 2,
     convertEol: false,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
