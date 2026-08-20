@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { CopyDocument } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
 import i18n from '@/lang'
@@ -102,6 +103,38 @@ const statusType = computed(() => {
 const formatBytes = (value?: number) => {
   if (!value) return '—'
   return `${(value / 1024 / 1024).toFixed(1)} MiB`
+}
+
+const writeClipboardText = async (text: string) => {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', 'readonly')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  if (!copied) {
+    throw new Error('copy failed')
+  }
+}
+
+const copyCurrentVersion = async () => {
+  if (!currentVersionText.value) return
+  try {
+    await writeClipboardText(currentVersionText.value)
+    ElMessage.success(t('setting.update.copyVersionSuccess', 'Version copied'))
+  } catch {
+    ElMessage.error(t('setting.panel.copyFailed', 'Copy failed. Check browser clipboard permission.'))
+  }
 }
 
 const updateSource = computed(() => {
@@ -239,9 +272,30 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="version-grid">
-      <div class="version-item">
+      <div class="version-item version-item--version">
         <span>{{ $t('setting.update.currentVersion') }}</span>
-        <strong>{{ version?.version || '—' }}</strong>
+        <div class="version-value version-value--interactive">
+          <el-tooltip
+            :content="currentVersionText || '—'"
+            effect="dark"
+            placement="top-start"
+            :show-after="120"
+            :disabled="!currentVersionText"
+          >
+            <strong class="version-code">{{ currentVersionText || '—' }}</strong>
+          </el-tooltip>
+          <el-tooltip :content="$t('setting.update.copyVersion', 'Copy version')" effect="dark" placement="top">
+            <el-button
+              class="version-copy-button"
+              :icon="CopyDocument"
+              text
+              bg
+              circle
+              :disabled="!currentVersionText"
+              @click="copyCurrentVersion"
+            />
+          </el-tooltip>
+        </div>
       </div>
       <div class="version-item">
         <span>{{ $t('setting.update.platform') }}</span>
@@ -350,9 +404,10 @@ onBeforeUnmount(() => {
 
 .version-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: 12px;
   margin: 20px 0;
+  align-items: stretch;
 }
 
 .version-item {
@@ -360,6 +415,19 @@ onBeforeUnmount(() => {
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
   background: var(--surface-subtle);
+  box-shadow: var(--shadow-xs);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: rgba(var(--primary-color), 0.24);
+    box-shadow: var(--shadow-sm);
+    background: rgba(var(--primary-color), 0.04);
+  }
 
   span,
   strong,
@@ -376,7 +444,7 @@ onBeforeUnmount(() => {
     margin-top: 7px;
     color: var(--text-primary);
     font-size: 15px;
-    word-break: break-all;
+    word-break: break-word;
   }
 
   small {
@@ -384,6 +452,46 @@ onBeforeUnmount(() => {
     color: var(--text-tertiary);
     font-size: 11px;
   }
+}
+
+.version-item--version {
+  grid-column: span 1;
+  min-width: 0;
+}
+
+.version-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 7px;
+  min-width: 0;
+}
+
+.version-value--interactive {
+  justify-content: space-between;
+}
+
+.version-code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: normal;
+  line-height: 1.35;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.01em;
+}
+
+.version-copy-button {
+  flex-shrink: 0;
+  color: var(--text-secondary);
+}
+
+.version-copy-button:hover {
+  color: rgb(var(--primary-color));
 }
 
 .update-message {
@@ -409,6 +517,33 @@ onBeforeUnmount(() => {
 @media (max-width: 900px) {
   .version-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .version-item--version {
+    grid-column: span 2;
+  }
+
+  .version-value {
+    align-items: flex-start;
+  }
+
+  .version-code {
+    overflow: visible;
+    white-space: normal;
+    text-overflow: initial;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    line-height: 1.45;
+  }
+}
+
+@media (max-width: 640px) {
+  .version-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .version-item--version {
+    grid-column: span 1;
   }
 }
 </style>

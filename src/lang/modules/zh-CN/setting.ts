@@ -123,6 +123,8 @@ export default {
     startUpdate: '开始更新',
     taskStarted: '更新任务已启动，正在等待面板重新上线',
     startFailed: '启动更新失败',
+    copyVersion: '复制版本号',
+    copyVersionSuccess: '版本号已复制',
     completed: '面板更新完成',
     ended: '面板更新已结束',
     loadStatusFailed: '加载更新状态失败',

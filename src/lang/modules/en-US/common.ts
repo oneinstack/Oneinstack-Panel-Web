@@ -91,6 +91,9 @@ export default {
     confirmExecute: 'Confirm execution',
     riskLevel: 'Risk level',
     summary: 'Change summary',
+    summaryDetails: 'Execution details',
+    affectedFiles: 'Affected files',
+    executionActions: 'Execution actions',
     expiresAt: 'Preview valid until',
     noDetails: 'No detailed changes were returned for this preview. Confirm the target operation before continuing.',
     riskLevels: {

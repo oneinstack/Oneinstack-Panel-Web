@@ -123,6 +123,8 @@ export default {
     startUpdate: 'Start update',
     taskStarted: 'Update task started. Waiting for the panel to come back online.',
     startFailed: 'Failed to start update',
+    copyVersion: 'Copy version',
+    copyVersionSuccess: 'Version copied',
     completed: 'Panel update completed',
     ended: 'Panel update ended',
     loadStatusFailed: 'Failed to load update status',

@@ -91,6 +91,9 @@ export default {
     confirmExecute: '确认执行',
     riskLevel: '风险等级',
     summary: '变更摘要',
+    summaryDetails: '执行明细',
+    affectedFiles: '受影响文件',
+    executionActions: '执行动作',
     expiresAt: '预览有效期至',
     noDetails: '本次预览未返回详细变更项，请确认目标操作无误后再继续。',
     riskLevels: {

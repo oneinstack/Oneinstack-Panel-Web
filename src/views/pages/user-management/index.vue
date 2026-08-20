@@ -350,7 +350,7 @@ onMounted(async () => {
     <section class="panel-card">
       <div class="panel-head">
         <div>
-          <span class="panel-kicker">{{ $t('userManagement.accountDirectory') }}</span>
+          <!-- <span class="panel-kicker">{{ $t('userManagement.accountDirectory') }}</span> -->
           <h3>{{ $t('userManagement.userAndRole') }}</h3>
         </div>
         <div class="panel-summary">
