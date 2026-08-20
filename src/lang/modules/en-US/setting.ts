@@ -142,6 +142,9 @@ export default {
       recoveryRequired: 'Recovery required'
     }
   },
+  security: {
+    panelPortTip: 'Example: 8080<span style="color: var(--el-color-primary)">Note: if the server uses a security group, allow the new port there first</span>'
+  },
   network: {
     title: 'Panel access method',
     description: 'Configure panel entry, HTTPS certificates, and trusted proxies to keep remote access stable and secure.',
@@ -152,6 +155,7 @@ export default {
     overviewText: 'The panel listens on the server network interface by default and can be accessed directly with the server IP. HTTPS is an optional independent entry; enabling it does not disable HTTP or force redirects.',
     httpAddress: 'HTTP address',
     httpsAddress: 'HTTPS address',
+    serverIpPlaceholder: 'server IP',
     notEnabledOptional: 'Not enabled (optional)',
     currentListen: 'Current listen',
     autoApplyingTip: 'Configuration is being applied automatically by systemd. Startup failure will restore the original configuration.',

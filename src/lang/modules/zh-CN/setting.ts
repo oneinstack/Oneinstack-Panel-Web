@@ -142,6 +142,9 @@ export default {
       recoveryRequired: '需要恢复'
     }
   },
+  security: {
+    panelPortTip: '例如:8080<span style="color: var(--el-color-primary)">注意：有安全组的服务器请提前在安全组放行新端口</span>'
+  },
   network: {
     title: '面板访问方式',
     description: '配置面板入口、HTTPS 证书和可信代理，保证远程访问稳定且安全。',
@@ -152,6 +155,7 @@ export default {
     overviewText: '面板默认监听服务器网卡，可直接使用服务器 IP 访问。HTTPS 是可选的独立入口；启用后不会关闭 HTTP，也不会自动强制跳转。',
     httpAddress: 'HTTP 地址',
     httpsAddress: 'HTTPS 地址',
+    serverIpPlaceholder: '服务器IP',
     notEnabledOptional: '未启用（可选）',
     currentListen: '当前监听',
     autoApplyingTip: '配置正在由 systemd 自动应用，启动失败会恢复原配置。',

@@ -223,7 +223,16 @@ const browserHTTPOrigin = (url: string) => {
   const browserHost = window.location.hostname.includes(":")
     ? `[${window.location.hostname.replace(/^\[|\]$/g, "")}]`
     : window.location.hostname;
-  return url.replace("服务器IP", browserHost).replace(/\/+$/, "");
+  const localizedPlaceholder = String(
+    t("setting.network.serverIpPlaceholder", "服务器IP"),
+  );
+  return [localizedPlaceholder, "服务器IP", "server IP", "Server IP"].reduce(
+    (result, placeholder) =>
+      result.includes(placeholder)
+        ? result.replace(placeholder, browserHost)
+        : result,
+    url,
+  ).replace(/\/+$/, "");
 };
 
 const stopApplyPolling = () => {

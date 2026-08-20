@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch, watchEffect } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
-import { watchEffect } from 'vue'
 import PortDialog from './port-dialog.vue'
 import i18n from '@/lang'
 
@@ -194,6 +193,15 @@ const conf = reactive<Config>({
   ]
 })
 
+const applyLocalizedSettingText = () => {
+  if (!conf.settingData.length) return
+  conf.settingData[0].label = t('setting.port.panelPort')
+  if (conf.settingData[0].action && !Array.isArray(conf.settingData[0].action)) {
+    conf.settingData[0].action.text = t('common.edit')
+  }
+  conf.settingData[0].tip = t('setting.security.panelPortTip')
+}
+
 const dialogVisible = ref(false)
 const portDialog = ref(false)
 
@@ -215,6 +223,8 @@ watchEffect(() => {
   console.log(props.allinfo,'allinfo')
   
 })
+
+watch(() => i18n.locale, applyLocalizedSettingText, { immediate: true })
 </script>
 
 <template>
