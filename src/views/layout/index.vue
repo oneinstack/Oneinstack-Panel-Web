@@ -932,6 +932,7 @@ const BindButton = () => {
       margin: 2px 0 8px 18px;
       padding: 4px 0 3px 10px;
       border-left: 1px solid var(--border-subtle);
+      background: transparent !important;
     }
 
     :deep(.el-sub-menu > .el-menu > .el-menu-item) {
