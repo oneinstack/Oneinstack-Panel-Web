@@ -80,6 +80,7 @@ const connectionState = ref<ConnectionState>('disconnected')
 const terminalIdentity = ref('container@shell')
 const currentPath = ref('/')
 const isFullscreen = ref(false)
+const lastConnectionError = ref('')
 let terminal: Terminal | undefined
 let fitAddon: FitAddon | undefined
 let socket: WebSocket | undefined
@@ -142,6 +143,24 @@ const getApiErrorMessage = (error: any, fallback: string) =>
     || error,
     fallback
   )
+
+const getApiErrorCode = (error: any) =>
+  error?.xhr?.data?.error?.code
+  || error?.xhr?.data?.code
+  || error?.response?.data?.error?.code
+  || error?.response?.data?.code
+  || error?.data?.error?.code
+  || error?.data?.code
+  || error?.error?.code
+  || error?.code
+
+const getTerminalErrorMessage = (error: any) => {
+  const errorCode = String(getApiErrorCode(error) || '')
+  if (errorCode === '1103') {
+    return t('container.terminal.authFailedTip', '二次认证失败，请确认当前管理员密码后重试。')
+  }
+  return getApiErrorMessage(error, t('container.terminal.ticketFailed', 'Failed to create container terminal ticket'))
+}
 
 const encodeInput = (value: string) => {
   const bytes = new TextEncoder().encode(value)
@@ -299,6 +318,7 @@ const connectTerminal = async () => {
   if (!props.target?.ID || connecting.value || connectionState.value === 'connected') return
   connecting.value = true
   connectionState.value = 'connecting'
+  lastConnectionError.value = ''
   try {
     const { value: password } = await ElMessageBox.prompt(
       t('container.terminal.passwordPromptMessage', 'Enter the current administrator password to sign a one-time container terminal ticket.'),
@@ -308,7 +328,7 @@ const connectTerminal = async () => {
         inputPlaceholder: t('container.terminal.adminPassword', 'Administrator password'),
         confirmButtonText: t('container.terminal.authenticateAndConnect', 'Authenticate and connect'),
         cancelButtonText: t('common.cancel', 'Cancel'),
-        inputValidator: (value) => Boolean(value) || t('container.terminal.passwordRequired', 'Enter password')
+        inputValidator: (value) => Boolean(value?.trim()) || t('container.terminal.passwordRequired', 'Enter password')
       }
     )
     const confirmedHighRisk = await confirmHighRisk().catch(() => false)
@@ -318,7 +338,7 @@ const connectTerminal = async () => {
     const { data } = await Api.createContainerTerminalTicket(
       props.target.ID,
       {
-        password,
+        password: password.trim(),
         confirmHighRisk: status.value?.requiresHighRiskConfirmation ? true : undefined
       },
       { silentError: true }
@@ -368,7 +388,8 @@ const connectTerminal = async () => {
     connectionState.value = 'disconnected'
     destroyTerminal()
     if (!['cancel', 'close'].includes(error) && error?.message !== 'cancel') {
-      // ElMessage.error(getApiErrorMessage(error, t('container.terminal.ticketFailed', 'Failed to create container terminal ticket')))
+      lastConnectionError.value = getTerminalErrorMessage(error)
+      ElMessage.error(lastConnectionError.value)
       await loadStatus(true).catch(() => undefined)
     }
   }
@@ -381,6 +402,7 @@ const initializeTerminal = async () => {
   terminal = new Terminal({
     cursorBlink: false,
     cursorStyle: 'bar',
+    cursorInactiveStyle: 'bar',
     cursorWidth: 2,
     convertEol: false,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
@@ -452,6 +474,7 @@ watch(
     if (!isVisible) {
       disconnectTerminal()
       destroyTerminal()
+      lastConnectionError.value = ''
       return
     }
     resetTerminalState()
@@ -594,7 +617,9 @@ watch(
         <div v-if="connectionState !== 'connected'" class="terminal-placeholder">
           <el-icon><Monitor /></el-icon>
           <strong>{{ status?.enabled ? $t('container.terminal.notConnected', 'Terminal not connected') : $t('terminal.closed') }}</strong>
-          <span>{{ $t('container.terminal.passwordRequiredTip', 'Enter the current administrator password again when connecting.') }}</span>
+          <span :class="{ 'is-error': Boolean(lastConnectionError) }">
+            {{ lastConnectionError || $t('container.terminal.passwordRequiredTip', 'Enter the current administrator password again when connecting.') }}
+          </span>
         </div>
         <div class="terminal-shell__footer">
           <div class="terminal-legend">
@@ -917,6 +942,10 @@ watch(
 
   span {
     font-size: 12px;
+  }
+
+  .is-error {
+    color: #ff9f9f;
   }
 }
 

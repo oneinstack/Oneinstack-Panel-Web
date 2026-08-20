@@ -163,6 +163,7 @@ export default {
     adminPassword: '管理员密码',
     authenticateAndConnect: '认证并连接',
     passwordRequired: '请输入密码',
+    authFailedTip: '二次认证失败，请确认当前管理员密码后重试。',
     sameOriginOnly: '终端只允许同源连接',
     connectionFailed: '容器终端连接失败',
     outputDecodeFailed: '无法解析容器终端输出。',

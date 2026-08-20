@@ -47,11 +47,17 @@
 }
 
 .xterm .xterm-rows .xterm-cursor.xterm-cursor-bar,
-.xterm .xterm-rows .xterm-cursor.xterm-cursor-underline {
-  animation: xterm-cursor-blink-opacity 1s step-end infinite;
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-underline,
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-outline {
+  animation: xterm-cursor-blink-opacity 1s step-end infinite !important;
 }
 
 .xterm .xterm-rows .xterm-cursor.xterm-cursor-block {
   background-color: rgb(var(--primary-color));
   color: #08111f;
+}
+
+.xterm .xterm-rows .xterm-cursor.xterm-cursor-outline {
+  outline: 1px solid rgb(var(--primary-color));
+  outline-offset: -1px;
 }

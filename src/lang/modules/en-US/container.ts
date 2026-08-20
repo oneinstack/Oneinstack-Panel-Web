@@ -169,6 +169,7 @@ export default {
     adminPassword: 'Administrator password',
     authenticateAndConnect: 'Authenticate and connect',
     passwordRequired: 'Enter password',
+    authFailedTip: 'Secondary authentication failed. Verify the current administrator password and try again.',
     sameOriginOnly: 'Terminal only allows same-origin connections',
     connectionFailed: 'Container terminal connection failed',
     outputDecodeFailed: 'Failed to decode container terminal output.',

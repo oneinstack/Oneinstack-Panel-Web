@@ -424,6 +424,7 @@ const initializeTerminal = async () => {
   terminal = new Terminal({
     cursorBlink: false,
     cursorStyle: 'bar',
+    cursorInactiveStyle: 'bar',
     cursorWidth: 2,
     convertEol: false,
     fontFamily: '"SFMono-Regular", Consolas, "Liberation Mono", monospace',
