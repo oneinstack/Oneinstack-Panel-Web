@@ -571,31 +571,49 @@ onMounted(() => {
       <custom-table v-loading="loading" :data="snapshots" :columns="columns" :pagination="false" :auto-pagination="false" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
         <template #snapshotName="{ row }">
             <div class="snapshot-name-cell">
-              <strong class="cell-title">{{ localizedSnapshotText(row.name) || row.id }}</strong>
-              <span class="cell-subtitle">{{ localizedSnapshotText(row.description) || row.id }}</span>
+              <el-tooltip :content="localizedSnapshotText(row.name) || row.id" placement="top" :show-after="350">
+                <strong class="cell-title">{{ localizedSnapshotText(row.name) || row.id }}</strong>
+              </el-tooltip>
+              <el-tooltip :content="localizedSnapshotText(row.description) || row.id" placement="top" :show-after="350">
+                <span class="cell-subtitle">{{ localizedSnapshotText(row.description) || row.id }}</span>
+              </el-tooltip>
             </div>
         </template>
         <template #resource="{ row }">
             <div class="resource-cell">
-              <strong class="cell-title">{{ resourcePrimaryName(row) }}</strong>
+              <el-tooltip :content="resourcePrimaryName(row)" placement="top" :show-after="350">
+                <strong class="cell-title">{{ resourcePrimaryName(row) }}</strong>
+              </el-tooltip>
               <div class="resource-meta-line">
                 <span class="meta-chip">{{ resourceLabel(row.resourceType) }}</span>
-                <span v-if="resourceSecondaryText(row)" class="meta-text">{{ resourceSecondaryText(row) }}</span>
+                <el-tooltip v-if="resourceSecondaryText(row)" :content="resourceSecondaryText(row)" placement="top" :show-after="350">
+                  <span class="meta-text">{{ resourceSecondaryText(row) }}</span>
+                </el-tooltip>
               </div>
-              <span class="path-text">{{ resourceTertiaryText(row) }}</span>
+              <el-tooltip :content="resourceTertiaryText(row)" placement="top" :show-after="350">
+                <span class="path-text">{{ resourceTertiaryText(row) }}</span>
+              </el-tooltip>
             </div>
         </template>
         <template #versionBackupAccount="{ row }">
             <div class="snapshot-meta-cell">
-              <strong class="cell-code">{{ localizedSnapshotText(row.version) }}</strong>
-              <span class="meta-chip meta-chip--ghost">{{ localizedSnapshotText(row.backupAccount) }}</span>
+              <el-tooltip :content="localizedSnapshotText(row.version)" placement="top" :show-after="350">
+                <strong class="cell-code">{{ localizedSnapshotText(row.version) }}</strong>
+              </el-tooltip>
+              <el-tooltip :content="localizedSnapshotText(row.backupAccount)" placement="top" :show-after="350">
+                <span class="meta-chip meta-chip--ghost">{{ localizedSnapshotText(row.backupAccount) }}</span>
+              </el-tooltip>
             </div>
         </template>
         <template #sizeBytes="{ row }">
-          <span class="mono-text">{{ formatBytes(row.sizeBytes) }}</span>
+          <el-tooltip :content="formatBytes(row.sizeBytes)" placement="top" :show-after="350">
+            <span class="mono-text">{{ formatBytes(row.sizeBytes) }}</span>
+          </el-tooltip>
         </template>
         <template #operation="{ row }">
-          <span class="meta-chip meta-chip--action">{{ operationLabel(row.operation, row.operationLabel) }}</span>
+          <el-tooltip :content="operationLabel(row.operation, row.operationLabel)" placement="top" :show-after="350">
+            <span class="meta-chip meta-chip--action">{{ operationLabel(row.operation, row.operationLabel) }}</span>
+          </el-tooltip>
         </template>
         <template #status="{ row }">
             <el-tag :type="statusType(row.status)" effect="light">{{ statusLabel(row.status, row.statusLabel) }}</el-tag>
@@ -604,16 +622,28 @@ onMounted(() => {
             <div class="revision-cell">
               <div class="revision-item">
                 <label>{{ $t('configSnapshots.beforeRevision', { hash: '' }).replace(/\s+$/, '') }}</label>
-                <span class="cell-code">{{ shortHash(row.beforeRevision) }}</span>
+                <el-tooltip :content="row.beforeRevision || '—'" placement="top" :show-after="350">
+                  <span class="cell-code">{{ shortHash(row.beforeRevision) }}</span>
+                </el-tooltip>
               </div>
               <div class="revision-item revision-item--after">
                 <label>{{ $t('configSnapshots.afterRevision', { hash: '' }).replace(/\s+$/, '') }}</label>
-                <span class="cell-code">{{ shortHash(row.afterRevision) }}</span>
+                <el-tooltip :content="row.afterRevision || '—'" placement="top" :show-after="350">
+                  <span class="cell-code">{{ shortHash(row.afterRevision) }}</span>
+                </el-tooltip>
               </div>
             </div>
         </template>
-        <template #artifactSha256="{ row }"><span class="mono-text">{{ shortHash(row.artifactSha256) }}</span></template>
-        <template #createdAt="{ row }"><span class="mono-text mono-text--muted">{{ formatTime(row.createdAt) }}</span></template>
+        <template #artifactSha256="{ row }">
+          <el-tooltip :content="row.artifactSha256 || '—'" placement="top" :show-after="350">
+            <span class="mono-text">{{ shortHash(row.artifactSha256) }}</span>
+          </el-tooltip>
+        </template>
+        <template #createdAt="{ row }">
+          <el-tooltip :content="formatTime(row.createdAt)" placement="top" :show-after="350">
+            <span class="mono-text mono-text--muted">{{ formatTime(row.createdAt) }}</span>
+          </el-tooltip>
+        </template>
         <template #actionColumn="{ row }">
             <div class="action-group">
               <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>

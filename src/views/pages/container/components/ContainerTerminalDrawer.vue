@@ -379,7 +379,7 @@ const initializeTerminal = async () => {
   await nextTick()
   if (!terminalDiv.value) return
   terminal = new Terminal({
-    cursorBlink: true,
+    cursorBlink: false,
     cursorStyle: 'underline',
     cursorWidth: 2,
     convertEol: false,
