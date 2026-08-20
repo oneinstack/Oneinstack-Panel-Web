@@ -114,12 +114,12 @@ const restoreCount = computed(() => snapshots.value.filter((item) => item.operat
 const restoreRequiresForce = computed(() => Boolean(restorePreview.value?.hasDrift || restorePreview.value?.requiresForce))
 const columns = computed<ColumnItem<ConfigurationSnapshot>[]>(() => [
   { prop: 'name', label: t('configSnapshots.snapshot'), minWidth: 240, slot: 'snapshotName' },
-  { prop: 'resourceType', label: t('configSnapshots.resource'), minWidth: 210, slot: 'resource' },
-  { prop: 'version', label: t('configSnapshots.versionBackupAccount'), minWidth: 190, slot: 'versionBackupAccount' },
+  { prop: 'resourceType', label: t('configSnapshots.resource'), minWidth: 320, slot: 'resource' },
+  { prop: 'version', label: t('configSnapshots.versionBackupAccount'), minWidth: 220, slot: 'versionBackupAccount' },
   { prop: 'sizeBytes', label: t('common.size'), width: 110, slot: 'sizeBytes' },
-  { prop: 'operation', label: t('configSnapshots.action'), width: 100, slot: 'operation' },
+  { prop: 'operation', label: t('configSnapshots.action'), width: 140, slot: 'operation' },
   { prop: 'status', label: t('common.status'), width: 120, slot: 'status' },
-  { prop: 'revision', label: t('configSnapshots.version'), minWidth: 210, slot: 'revision' },
+  { prop: 'revision', label: t('configSnapshots.revisionChange', 'Before / after revision'), minWidth: 240, slot: 'revision' },
   { prop: 'artifactSha256', label: t('configSnapshots.artifactHash'), width: 150, slot: 'artifactSha256' },
   { prop: 'createdAt', label: t('configSnapshots.createdAt'), minWidth: 170, slot: 'createdAt' },
   { prop: 'actionColumn', label: t('common.action'), width: 270, fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
@@ -132,14 +132,17 @@ const resourceLabel = (value?: string) => ({
   panel_access: t('configSnapshots.resources.panelAccess', 'Panel access')
 }[value || ''] || value || '—')
 
-const operationLabel = (value?: string) => ({
+const operationLabel = (value?: string, localized?: string) => localized || ({
   create: t('common.create', 'Create'),
+  'settings.update': t('configSnapshots.operations.settingsUpdate', 'Update website settings'),
+  'config.update': t('configSnapshots.operations.configUpdate', 'Update website config'),
+  toggle: t('configSnapshots.operations.toggle', 'Toggle website status'),
   update: t('configSnapshots.operations.update', 'Update'),
   delete: t('common.delete', 'Delete'),
   restore: t('configSnapshots.operations.restore', 'Rollback')
-}[value || ''] || value || '—')
+}[value || ''] || t('configSnapshots.operations.change', 'Config change'))
 
-const statusLabel = (value?: string) => ({
+const statusLabel = (value?: string, localized?: string) => localized || ({
   pending: t('configSnapshots.status.pending', 'Pending'),
   applying: t('configSnapshots.status.applying', 'Applying'),
   succeeded: t('common.success', 'Success'),
@@ -164,6 +167,32 @@ const localizedSnapshotText = (value?: string | null) => {
   if (!value) return '—'
   const key = snapshotTextKeys[value]
   return key ? t(key, value) : value
+}
+
+const resourcePrimaryName = (row: ConfigurationSnapshot) =>
+  row.resourceName || row.resourceDisplayName || localizedSnapshotText(row.description) || row.resourceId || resourceLabel(row.resourceType)
+
+const resourceSecondaryText = (row: ConfigurationSnapshot) => {
+  const secondary = row.resourceDisplayName && row.resourceDisplayName !== row.resourceName
+    ? row.resourceDisplayName
+    : row.resourceId
+  if (!secondary || secondary === resourcePrimaryName(row)) return ''
+  return String(secondary)
+}
+
+const resourceTertiaryText = (row: ConfigurationSnapshot) => {
+  if (row.configPath) {
+    return t('configSnapshots.configPathValue', 'Config path: {path}', {
+      path: row.configPath
+    })
+  }
+  if (row.resourceMissing) return t('configSnapshots.resourceMissing', 'Resource no longer exists')
+  if (row.resourceId) {
+    return t('configSnapshots.resourceIdValue', 'Resource ID: {id}', {
+      id: row.resourceId
+    })
+  }
+  return '—'
 }
 
 const formatTime = (value?: string | null) => value ? new Date(value).toLocaleString() : '—'
@@ -542,56 +571,72 @@ onMounted(() => {
       <custom-table v-loading="loading" :data="snapshots" :columns="columns" :pagination="false" :auto-pagination="false" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
         <template #snapshotName="{ row }">
             <div class="snapshot-name-cell">
-              <strong>{{ localizedSnapshotText(row.name) || row.id }}</strong>
-              <span>{{ localizedSnapshotText(row.description) || row.id }}</span>
+              <strong class="cell-title">{{ localizedSnapshotText(row.name) || row.id }}</strong>
+              <span class="cell-subtitle">{{ localizedSnapshotText(row.description) || row.id }}</span>
             </div>
         </template>
         <template #resource="{ row }">
             <div class="resource-cell">
-              <strong>{{ resourceLabel(row.resourceType) }}</strong>
-              <span>{{ row.resourceId || '—' }}</span>
+              <strong class="cell-title">{{ resourcePrimaryName(row) }}</strong>
+              <div class="resource-meta-line">
+                <span class="meta-chip">{{ resourceLabel(row.resourceType) }}</span>
+                <span v-if="resourceSecondaryText(row)" class="meta-text">{{ resourceSecondaryText(row) }}</span>
+              </div>
+              <span class="path-text">{{ resourceTertiaryText(row) }}</span>
             </div>
         </template>
         <template #versionBackupAccount="{ row }">
             <div class="snapshot-meta-cell">
-              <strong>{{ localizedSnapshotText(row.version) }}</strong>
-              <span>{{ localizedSnapshotText(row.backupAccount) }}</span>
+              <strong class="cell-code">{{ localizedSnapshotText(row.version) }}</strong>
+              <span class="meta-chip meta-chip--ghost">{{ localizedSnapshotText(row.backupAccount) }}</span>
             </div>
         </template>
-        <template #sizeBytes="{ row }">{{ formatBytes(row.sizeBytes) }}</template>
-        <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
+        <template #sizeBytes="{ row }">
+          <span class="mono-text">{{ formatBytes(row.sizeBytes) }}</span>
+        </template>
+        <template #operation="{ row }">
+          <span class="meta-chip meta-chip--action">{{ operationLabel(row.operation, row.operationLabel) }}</span>
+        </template>
         <template #status="{ row }">
-            <el-tag :type="statusType(row.status)" effect="light">{{ statusLabel(row.status) }}</el-tag>
+            <el-tag :type="statusType(row.status)" effect="light">{{ statusLabel(row.status, row.statusLabel) }}</el-tag>
         </template>
         <template #revision="{ row }">
             <div class="revision-cell">
-              <span>{{ $t('configSnapshots.beforeRevision', { hash: shortHash(row.beforeRevision) }) }}</span>
-              <span>{{ $t('configSnapshots.afterRevision', { hash: shortHash(row.afterRevision) }) }}</span>
+              <div class="revision-item">
+                <label>{{ $t('configSnapshots.beforeRevision', { hash: '' }).replace(/\s+$/, '') }}</label>
+                <span class="cell-code">{{ shortHash(row.beforeRevision) }}</span>
+              </div>
+              <div class="revision-item revision-item--after">
+                <label>{{ $t('configSnapshots.afterRevision', { hash: '' }).replace(/\s+$/, '') }}</label>
+                <span class="cell-code">{{ shortHash(row.afterRevision) }}</span>
+              </div>
             </div>
         </template>
-        <template #artifactSha256="{ row }">{{ shortHash(row.artifactSha256) }}</template>
-        <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+        <template #artifactSha256="{ row }"><span class="mono-text">{{ shortHash(row.artifactSha256) }}</span></template>
+        <template #createdAt="{ row }"><span class="mono-text mono-text--muted">{{ formatTime(row.createdAt) }}</span></template>
         <template #actionColumn="{ row }">
-            <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
-            <el-button
-              link
-              type="warning"
-              :icon="RefreshLeft"
-              :disabled="!canWrite || row.status !== 'succeeded'"
-              @click="openRestore(row)"
-            >
-              {{ $t('configSnapshots.operations.restore') }}
-            </el-button>
-            <el-button
-              link
-              type="danger"
-              :icon="Delete"
-              :loading="deletingId === row.id"
-              :disabled="!canWrite || row.status === 'pending' || row.status === 'applying'"
-              @click="deleteSnapshot(row)"
-            >
-              {{ $t('common.delete') }}
-            </el-button>
+            <div class="action-group">
+              <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+              <el-button
+                link
+                type="warning"
+                :icon="RefreshLeft"
+                :disabled="!canWrite || row.status !== 'succeeded'"
+                @click="openRestore(row)"
+              >
+                {{ $t('configSnapshots.operations.restore') }}
+              </el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :loading="deletingId === row.id"
+                :disabled="!canWrite || row.status === 'pending' || row.status === 'applying'"
+                @click="deleteSnapshot(row)"
+              >
+                {{ $t('common.delete') }}
+              </el-button>
+            </div>
         </template>
       </custom-table>
 
@@ -858,26 +903,164 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
+:deep(.snapshot-panel .smart-table td.el-table__cell) {
+  height: auto;
+  padding: 16px 0;
+  vertical-align: top;
+}
+
+:deep(.snapshot-panel .smart-table th.el-table__cell) {
+  height: 54px;
+}
+
 .resource-cell,
 .revision-cell,
 .snapshot-name-cell,
 .snapshot-meta-cell {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   min-width: 0;
 
   strong,
+  label,
   span {
     overflow: hidden;
     text-overflow: ellipsis;
-    white-space: nowrap;
   }
 
   span {
     color: var(--text-tertiary);
     font-size: 12px;
   }
+}
+
+.cell-title {
+  color: var(--text-primary);
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+
+.cell-subtitle {
+  white-space: nowrap;
+}
+
+.cell-code,
+.mono-text {
+  font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  letter-spacing: 0.01em;
+}
+
+.cell-code {
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.mono-text {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.mono-text--muted {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.resource-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.meta-text {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(248, 250, 252, 0.96);
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.meta-chip--ghost {
+  border-style: dashed;
+  background: transparent;
+}
+
+.meta-chip--action {
+  color: rgb(var(--primary-color));
+  border-color: rgba(var(--primary-color), 0.18);
+  background: rgba(var(--primary-color), 0.08);
+}
+
+.path-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  line-height: 1.45;
+  white-space: normal;
+  word-break: break-all;
+}
+
+.revision-cell {
+  gap: 8px;
+}
+
+.revision-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid rgba(226, 232, 240, 0.95);
+
+  label {
+    flex: 0 0 auto;
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  span {
+    min-width: 0;
+  }
+}
+
+.revision-item--after {
+  background: rgba(var(--primary-color), 0.05);
+  border-color: rgba(var(--primary-color), 0.12);
+}
+
+.action-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 10px;
 }
 
 .snapshot-create-form {

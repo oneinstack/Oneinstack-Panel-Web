@@ -9,6 +9,8 @@ export default {
   resourceId: 'Resource ID / config path',
   resourceIdentifier: 'Resource identifier',
   versionBackupAccount: 'Version / backup account',
+  versionChange: 'Version / revision change',
+  revisionChange: 'Before / after revision',
   version: 'Version',
   artifactHash: 'Artifact hash',
   createdAt: 'Created at',
@@ -32,7 +34,13 @@ export default {
     rollbackFailed: 'Rollback failed'
   },
   operations: {
+    create: 'Create snapshot',
+    configUpdate: 'Update website config',
+    settingsUpdate: 'Update website settings',
+    toggle: 'Toggle website status',
     update: 'Update',
+    delete: 'Delete config',
+    change: 'Config change',
     restore: 'Rollback'
   },
   action: 'Action',
@@ -45,6 +53,12 @@ export default {
   noSnapshots: 'No config snapshots',
   beforeRevision: 'Before {hash}',
   afterRevision: 'After {hash}',
+  beforeRevisionDisplay: 'Before revision: {hash}',
+  afterRevisionDisplay: 'After revision: {hash}',
+  resourceMeta: '{type} · {value}',
+  resourceIdValue: 'Resource ID: {id}',
+  configPathValue: 'Config path: {path}',
+  resourceMissing: 'Resource no longer exists',
   placeholders: {
     selectResourceType: 'Select resource type',
     selectWebsite: 'Select website',

@@ -16,8 +16,8 @@ export interface ConfigurationSnapshot {
   id: string;
   resourceType: SnapshotResourceType;
   resourceId: string;
-  operation: SnapshotOperation;
-  status: SnapshotStatus;
+  operation: SnapshotOperation | string;
+  status: SnapshotStatus | string;
   beforeRevision?: string;
   afterRevision?: string;
   artifactSha256?: string;
@@ -31,6 +31,12 @@ export interface ConfigurationSnapshot {
   backupAccount?: string;
   sizeBytes?: number;
   description?: string;
+  resourceName?: string;
+  resourceDisplayName?: string;
+  configPath?: string;
+  resourceMissing?: boolean;
+  operationLabel?: string;
+  statusLabel?: string;
 }
 
 export interface SnapshotDiff {

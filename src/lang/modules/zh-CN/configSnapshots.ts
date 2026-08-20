@@ -9,6 +9,8 @@ export default {
   resourceId: '资源 ID / 配置路径',
   resourceIdentifier: '资源标识',
   versionBackupAccount: '版本 / 备份账号',
+  versionChange: '版本 / 前后变更',
+  revisionChange: '前后版本',
   version: '版本',
   artifactHash: '制品摘要',
   createdAt: '创建时间',
@@ -32,7 +34,13 @@ export default {
     rollbackFailed: '回滚失败'
   },
   operations: {
+    create: '创建配置快照',
+    configUpdate: '更新网站配置',
+    settingsUpdate: '更新网站设置',
+    toggle: '切换网站状态',
     update: '更新',
+    delete: '删除配置',
+    change: '配置变更',
     restore: '回滚'
   },
   action: '动作',
@@ -45,6 +53,12 @@ export default {
   noSnapshots: '暂无配置快照',
   beforeRevision: '前 {hash}',
   afterRevision: '后 {hash}',
+  beforeRevisionDisplay: '变更前版本：{hash}',
+  afterRevisionDisplay: '变更后版本：{hash}',
+  resourceMeta: '{type} · {value}',
+  resourceIdValue: '资源标识：{id}',
+  configPathValue: '配置路径：{path}',
+  resourceMissing: '资源已不存在',
   placeholders: {
     selectResourceType: '请选择资源类型',
     selectWebsite: '请选择网站',
