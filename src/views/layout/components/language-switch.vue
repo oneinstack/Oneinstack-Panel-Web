@@ -25,7 +25,12 @@ const handleLanguageCommand = (command: string | number | object) => {
 </script>
 
 <template>
-  <el-dropdown placement="bottom-end" trigger="click" @command="handleLanguageCommand">
+  <el-dropdown
+    placement="bottom-end"
+    trigger="click"
+    popper-class="header-dropdown-popper header-dropdown-popper--language"
+    @command="handleLanguageCommand"
+  >
     <button class="language-switch" type="button" :aria-label="$t('common.switchLanguage')">
       <span class="language-switch__mark">{{ activeLanguage.mark }}</span>
       <span class="language-switch__text">{{ activeLanguage.label }}</span>

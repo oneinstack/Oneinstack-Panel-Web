@@ -464,7 +464,7 @@ const BindButton = () => {
         </div>
         <language-switch />
         <theme-switch />
-        <el-dropdown placement="bottom-end">
+        <el-dropdown placement="bottom-end" popper-class="header-dropdown-popper header-dropdown-popper--user">
           <div class="user-menu">
             <div class="avatar">{{ displayInitial }}</div>
             <div class="user-copy">
