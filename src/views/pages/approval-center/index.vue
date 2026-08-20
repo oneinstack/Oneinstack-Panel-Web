@@ -4,26 +4,37 @@ import SearchInput from '@/components/search-input.vue'
 import { Api } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { CircleCheck, CircleClose, View } from '@element-plus/icons-vue'
+import { CircleCheck, CircleClose, CopyDocument, View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
 
 interface ApprovalRequest {
   id: string
   module: string
+  moduleName?: string
   action: string
+  actionName?: string
   resourceId?: string
   resourceName?: string
   riskLevel?: string
+  riskLevelName?: string
   status: string
+  statusName?: string
   reason?: string
   requestedBy?: string | number
+  applicantName?: string
   requestedByName?: string
   approvedBy?: string | number
   approvedByName?: string
+  rejectedByName?: string
+  approvedAt?: string
+  rejectedAt?: string
+  reviewedAt?: string
   reviewComment?: string
   boundTaskType?: string
   boundTaskId?: string
   createdAt?: string
+  appliedAt?: string
+  updatedAt?: string
   expiresAt?: string
   payloadSnapshot?: Record<string, any>
   result?: Record<string, any>
@@ -71,12 +82,12 @@ const approvalState = reactive({
   list: [] as ApprovalRequest[],
   columns: computed<ColumnItem[]>(() => [
     { prop: 'resourceName', label: t('approvalCenter.resource', '资源'), minWidth: 260 },
-    { prop: 'action', label: t('approvalCenter.action', '动作'), minWidth: 260 },
-    { prop: 'module', label: t('approvalCenter.module', '模块'), minWidth: 120 },
-    { prop: 'riskLevel', label: t('approvalCenter.risk', '风险'), minWidth: 110 },
+    { prop: 'actionName', label: t('approvalCenter.action', '动作'), minWidth: 180 },
+    { prop: 'moduleName', label: t('approvalCenter.module', '模块'), minWidth: 120 },
+    { prop: 'riskLevelName', label: t('approvalCenter.risk', '风险'), minWidth: 110 },
     { prop: 'status', label: t('common.status', '状态'), minWidth: 120 },
-    { prop: 'requestedByName', label: t('approvalCenter.applicant', '申请人'), minWidth: 140 },
-    { prop: 'createdAt', label: t('approvalCenter.appliedAt', '申请时间'), minWidth: 180 },
+    { prop: 'applicantName', label: t('approvalCenter.applicant', '申请人'), minWidth: 140 },
+    { prop: 'appliedAt', label: t('approvalCenter.appliedAt', '申请时间'), minWidth: 180 },
     { prop: 'actionColumn', label: t('common.action', '操作'), width: 220, fixed: 'right' }
   ])
 })
@@ -163,21 +174,32 @@ const isSelfApproval = (row?: ApprovalRequest | null) => {
 }
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
+const formatDisplayValue = (value?: string | number | null) => {
+  const normalized = String(value ?? '').trim()
+  return normalized || '—'
+}
+const detailReviewerName = computed(() => {
+  if (!approvalDialog.data) return '—'
+  return approvalDialog.data.approvedByName || approvalDialog.data.rejectedByName || '—'
+})
+const detailReviewedAt = computed(() => approvalDialog.data?.reviewedAt || approvalDialog.data?.approvedAt || approvalDialog.data?.rejectedAt || '')
 const statusLabelMap: Record<string, string> = {
   pending: 'approvalCenter.pending',
+  approved: 'approvalCenter.approved',
   completed: 'approvalCenter.completed',
   rejected: 'approvalCenter.rejected',
   executing: 'approvalCenter.executing',
-  executed: 'approvalCenter.executed',
+  failed: 'approvalCenter.failed',
   expired: 'approvalCenter.expired',
   canceled: 'approvalCenter.canceled'
 }
 const statusTypeMap: Record<string, TagType> = {
   pending: 'warning',
+  approved: 'success',
   completed: 'success',
   rejected: 'danger',
   executing: 'primary',
-  executed: 'success',
+  failed: 'danger',
   expired: 'info',
   canceled: 'info',
 }
@@ -194,6 +216,48 @@ const approvalStatusLabel = (status: string) => {
 const approvalStatusType = (status: string): TagType => statusTypeMap[status] || 'info'
 const approvalRiskType = (risk?: string): TagType => riskTypeMap[(risk || '').toLowerCase()] || 'info'
 const isPendingApproval = (row: ApprovalRequest) => row.status === 'pending'
+const getStatusName = (row: ApprovalRequest) => row.statusName || approvalStatusLabel(row.status)
+const getRiskName = (row: ApprovalRequest) => row.riskLevelName || row.riskLevel || '—'
+const getApplicantName = (row: ApprovalRequest) => row.applicantName || row.requestedByName || '—'
+const getAppliedAt = (row: ApprovalRequest) => row.appliedAt || row.createdAt || ''
+const getActionTitle = (row: ApprovalRequest) => row.actionName || row.action || '—'
+const getModuleTitle = (row: ApprovalRequest) => row.moduleName || row.module || '—'
+
+const writeClipboardText = async (text: string) => {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(text)
+    return
+  }
+
+  const textarea = document.createElement('textarea')
+  textarea.value = text
+  textarea.setAttribute('readonly', 'readonly')
+  textarea.style.position = 'fixed'
+  textarea.style.left = '-9999px'
+  textarea.style.top = '-9999px'
+  document.body.appendChild(textarea)
+  textarea.select()
+  textarea.setSelectionRange(0, textarea.value.length)
+  const copied = document.execCommand('copy')
+  document.body.removeChild(textarea)
+  if (!copied) {
+    throw new Error('copy failed')
+  }
+}
+
+const copyApprovalField = async (value?: string | number | null) => {
+  const normalized = String(value ?? '').trim()
+  if (!normalized) {
+    ElMessage.warning(t('approvalCenter.noInternalValue', '暂无可复制内容'))
+    return
+  }
+  try {
+    await writeClipboardText(normalized)
+    ElMessage.success(t('approvalCenter.copySuccess', '复制成功'))
+  } catch {
+    ElMessage.error(t('approvalCenter.copyFailed', '复制失败，请检查剪贴板权限'))
+  }
+}
 
 const loadBootstrap = async () => {
   loading.bootstrap = true
@@ -279,14 +343,18 @@ onMounted(async () => {
           <search-input v-model:model-value="approvalState.keyword" :placeholder="$t('approvalCenter.searchPlaceholder')" @search="searchApprovals" />
           <el-select v-model="approvalState.filters.status" :placeholder="$t('approvalCenter.approvalStatus')" clearable class="toolbar-select">
             <el-option :label="$t('approvalCenter.pending')" value="pending" />
+            <el-option :label="$t('approvalCenter.approved')" value="approved" />
             <el-option :label="$t('approvalCenter.completed')" value="completed" />
             <el-option :label="$t('approvalCenter.rejected')" value="rejected" />
-            <el-option :label="$t('approvalCenter.executed')" value="executed" />
+            <el-option :label="$t('approvalCenter.executing')" value="executing" />
+            <el-option :label="$t('approvalCenter.failed')" value="failed" />
+            <el-option :label="$t('approvalCenter.canceled')" value="canceled" />
             <el-option :label="$t('approvalCenter.expired')" value="expired" />
           </el-select>
           <el-select v-model="approvalState.filters.module" :placeholder="$t('approvalCenter.module')" clearable class="toolbar-select">
-            <el-option label="website" value="website" />
-            <el-option label="database" value="database" />
+            <el-option :label="$t('approvalCenter.moduleWebsite')" value="website" />
+            <el-option :label="$t('approvalCenter.moduleDatabase')" value="database" />
+            <el-option :label="$t('approvalCenter.moduleCertificate')" value="certificate" />
           </el-select>
           <div class="mini-tabs">
             <button
@@ -321,21 +389,30 @@ onMounted(async () => {
         <template #resourceName="{ row }">
           <div class="resource-cell">
             <strong>{{ row.resourceName || row.resourceId || $t('approvalCenter.unnamedResource') }}</strong>
-            <small>{{ row.id }}</small>
+            <small>{{ getActionTitle(row) }}</small>
           </div>
         </template>
-        <template #riskLevel="{ row }">
+        <template #actionName="{ row }">
+          <span>{{ getActionTitle(row) }}</span>
+        </template>
+        <template #moduleName="{ row }">
+          <span>{{ getModuleTitle(row) }}</span>
+        </template>
+        <template #riskLevelName="{ row }">
           <el-tag :type="approvalRiskType(row.riskLevel)" effect="light" round>
-            {{ row.riskLevel || 'unknown' }}
+            {{ getRiskName(row) }}
           </el-tag>
         </template>
         <template #status="{ row }">
           <el-tag :type="approvalStatusType(row.status)" effect="light" round>
-            {{ approvalStatusLabel(row.status) }}
+            {{ getStatusName(row) }}
           </el-tag>
         </template>
-        <template #createdAt="{ row }">
-          <span>{{ formatTime(row.createdAt) }}</span>
+        <template #applicantName="{ row }">
+          <span>{{ getApplicantName(row) }}</span>
+        </template>
+        <template #appliedAt="{ row }">
+          <span>{{ formatTime(getAppliedAt(row)) }}</span>
         </template>
         <template #actionColumn="{ row }">
           <div class="action-wrap table-row-actions">
@@ -383,25 +460,25 @@ onMounted(async () => {
             <div class="approval-detail-title">
               <span class="approval-detail-label">{{ $t('approvalCenter.resourceLabel') }}</span>
               <h4>{{ approvalDialog.data.resourceName || approvalDialog.data.resourceId || $t('approvalCenter.unnamedResource') }}</h4>
-              <p>{{ approvalDialog.data.action }} · {{ approvalDialog.data.module }}</p>
+              <p>{{ getActionTitle(approvalDialog.data) }} · {{ getModuleTitle(approvalDialog.data) }}</p>
             </div>
             <el-tag :type="approvalStatusType(approvalDialog.data.status)" effect="light" round>
-              {{ approvalStatusLabel(approvalDialog.data.status) }}
+              {{ getStatusName(approvalDialog.data) }}
             </el-tag>
           </div>
 
           <div class="detail-grid">
             <div class="detail-item">
               <span>{{ $t('approvalCenter.applicant') }}</span>
-              <strong class="detail-value">{{ approvalDialog.data.requestedByName || '—' }}</strong>
+              <strong class="detail-value">{{ getApplicantName(approvalDialog.data) }}</strong>
             </div>
             <div class="detail-item">
               <span>{{ $t('approvalCenter.reviewer') }}</span>
-              <strong class="detail-value">{{ approvalDialog.data.approvedByName || '—' }}</strong>
+              <strong class="detail-value">{{ detailReviewerName }}</strong>
             </div>
             <div class="detail-item">
               <span>{{ $t('approvalCenter.riskLevel') }}</span>
-              <strong class="detail-value detail-value--compact">{{ approvalDialog.data.riskLevel || '—' }}</strong>
+              <strong class="detail-value detail-value--compact">{{ getRiskName(approvalDialog.data) }}</strong>
             </div>
             <div class="detail-item">
               <span>{{ $t('approvalCenter.boundTask') }}</span>
@@ -409,11 +486,49 @@ onMounted(async () => {
             </div>
             <div class="detail-item">
               <span>{{ $t('approvalCenter.appliedAt') }}</span>
-              <strong class="detail-value detail-value--compact">{{ formatTime(approvalDialog.data.createdAt) }}</strong>
+              <strong class="detail-value detail-value--compact">{{ formatTime(getAppliedAt(approvalDialog.data)) }}</strong>
+            </div>
+            <div class="detail-item">
+              <span>{{ $t('approvalCenter.reviewedAt') }}</span>
+              <strong class="detail-value detail-value--compact">{{ formatTime(detailReviewedAt) }}</strong>
             </div>
             <div class="detail-item">
               <span>{{ $t('approvalCenter.expiredAt') }}</span>
               <strong class="detail-value detail-value--compact">{{ formatTime(approvalDialog.data.expiresAt) }}</strong>
+            </div>
+          </div>
+
+          <div class="detail-block">
+            <span>{{ $t('approvalCenter.internalInfo') }}</span>
+            <div class="internal-meta-list">
+              <div class="internal-meta-item">
+                <label>{{ $t('approvalCenter.approvalId') }}</label>
+                <div class="internal-meta-value">
+                  <code>{{ formatDisplayValue(approvalDialog.data.id) }}</code>
+                  <el-button link type="primary" :icon="CopyDocument" @click="copyApprovalField(approvalDialog.data.id)">{{ $t('common.copy', '复制') }}</el-button>
+                </div>
+              </div>
+              <div class="internal-meta-item">
+                <label>{{ $t('approvalCenter.actionCode') }}</label>
+                <div class="internal-meta-value">
+                  <code>{{ formatDisplayValue(approvalDialog.data.action) }}</code>
+                  <el-button link type="primary" :icon="CopyDocument" @click="copyApprovalField(approvalDialog.data.action)">{{ $t('common.copy', '复制') }}</el-button>
+                </div>
+              </div>
+              <div class="internal-meta-item">
+                <label>{{ $t('approvalCenter.moduleCode') }}</label>
+                <div class="internal-meta-value">
+                  <code>{{ formatDisplayValue(approvalDialog.data.module) }}</code>
+                  <el-button link type="primary" :icon="CopyDocument" @click="copyApprovalField(approvalDialog.data.module)">{{ $t('common.copy', '复制') }}</el-button>
+                </div>
+              </div>
+              <div class="internal-meta-item">
+                <label>{{ $t('approvalCenter.resourceId') }}</label>
+                <div class="internal-meta-value">
+                  <code>{{ formatDisplayValue(approvalDialog.data.resourceId) }}</code>
+                  <el-button link type="primary" :icon="CopyDocument" @click="copyApprovalField(approvalDialog.data.resourceId)">{{ $t('common.copy', '复制') }}</el-button>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -622,6 +737,44 @@ onMounted(async () => {
   color: var(--text-primary);
 }
 
+.internal-meta-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.internal-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.internal-meta-item label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.internal-meta-value {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(17, 24, 39, 0.04);
+}
+
+.internal-meta-value code {
+  min-width: 0;
+  flex: 1;
+  color: var(--text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
 .detail-block pre {
   margin: 10px 0 0;
   padding: 14px 16px;
@@ -649,6 +802,10 @@ onMounted(async () => {
   }
 
   .detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .internal-meta-list {
     grid-template-columns: 1fr;
   }
 
