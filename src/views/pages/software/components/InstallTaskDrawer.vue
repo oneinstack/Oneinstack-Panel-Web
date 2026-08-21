@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import { useSoftwareTaskStore } from '@/stores/modules/softwareTask';
 import i18n from '@/lang'
 
@@ -286,36 +286,33 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="task?.component || $t('software.task.softwareTask')"
     class="install-task-drawer"
     size="840px"
-    :show-close="false"
     :close-on-click-modal="terminal"
     :destroy-on-close="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="task-header">
-        <button type="button" class="task-back" @click="visible = false">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ $t('common.back') }}</span>
-        </button>
-        <div class="task-heading">
-          <div class="task-title">
-            <strong>{{ task?.component || $t('software.task.softwareTask') }}</strong>
-            <span class="task-operation">{{ operationLabel }}</span>
-            <small v-if="task?.requestedVersion">{{ task.requestedVersion }}</small>
-          </div>
+    <template #title>
+      <div class="task-heading">
+        <div class="task-title">
+          <strong>{{ task?.component || $t('software.task.softwareTask') }}</strong>
+          <span class="task-operation">{{ operationLabel }}</span>
+          <small v-if="task?.requestedVersion">{{ task.requestedVersion }}</small>
         </div>
-        <el-tag
-          class="task-status"
-          :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'"
-          effect="plain"
-          round
-        >
-          {{ statusText }}
-        </el-tag>
       </div>
+    </template>
+    <template #header-extra>
+      <el-tag
+        class="task-status"
+        :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'"
+        effect="plain"
+        round
+      >
+        {{ statusText }}
+      </el-tag>
     </template>
 
     <div v-if="task" class="task-content">
@@ -479,52 +476,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </template>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.log-toolbar,
-.task-actions {
+.log-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding: 20px;
-}
-
-.task-header {
-  width: 100%;
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.task-back {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
-
-  .el-icon {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
 }
 
 .task-heading {
@@ -1030,6 +991,7 @@ onBeforeUnmount(() => {
 
 .task-actions {
   width: 100%;
+  display: flex;
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
@@ -1063,57 +1025,6 @@ onBeforeUnmount(() => {
   }
 }
 
-:deep(.install-task-drawer) {
-  top: 16px;
-  right: 16px;
-  bottom: auto;
-  height: calc(100% - 32px);
-  position: relative;
-  box-sizing: border-box;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 28px;
-  background: var(--surface-page);
-  box-shadow: -24px 22px 64px rgba(16, 24, 40, 0.16);
-}
-
-:deep(.install-task-drawer .el-drawer__header) {
-  flex: 0 0 auto;
-  min-height: 88px;
-  padding: 0 36px;
-  margin-bottom: 0;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:deep(.install-task-drawer .el-drawer__body) {
-  flex: 1 1 auto;
-  min-height: 0;
-  padding: 20px !important;
-  overflow: auto;
-  background: transparent;
-}
-
-:deep(.install-task-drawer .el-drawer__footer) {
-  flex: 0 0 auto;
-  margin: 0;
-  padding: 16px 0 2px;
-  border-top: 1px solid var(--border-subtle);
-  border-right: 0;
-  border-bottom: 0;
-  border-left: 0;
-  background: transparent;
-  box-shadow: none;
-}
-
-:deep(.install-task-drawer .el-drawer__footer .el-button + .el-button) {
-  margin-left: 0;
-}
-
 @media (max-width: 960px) {
   .overview-foot,
   .diagnostic-grid {
@@ -1138,32 +1049,6 @@ onBeforeUnmount(() => {
     height: 420px;
     min-height: 420px;
     max-height: 420px;
-  }
-
-  :deep(.install-task-drawer) {
-    top: 8px;
-    right: 8px;
-    height: calc(100% - 16px);
-    gap: 10px;
-    padding: 10px;
-    border-radius: 18px;
-  }
-
-  :deep(.install-task-drawer .el-drawer__header) {
-    min-height: 76px;
-    padding: 0 20px;
-  }
-
-  :deep(.install-task-drawer .el-drawer__body) {
-    padding: 20px !important;
-  }
-
-  :deep(.install-task-drawer .el-drawer__footer) {
-    padding: 12px 0 2px;
-  }
-
-  .task-header {
-    gap: 16px;
   }
 
   .task-status {

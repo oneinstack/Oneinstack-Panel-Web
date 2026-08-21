@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Api } from "@/api/modules";
 import CustomDialog from "@/components/custom-dialog.vue";
+import CustomDrawer from "@/components/custom-drawer.vue";
 import CustomTable from "@/components/custom-table.vue";
 import { useConfigStore } from "@/stores/modules/config";
 import sutil from "@/utils/sutil";
@@ -2506,11 +2507,13 @@ const archiveTaskRunningCount = computed(
       </template>
     </custom-dialog>
 
-    <el-drawer
-      v-model="conf.archiveTasksVisible"
+    <custom-drawer
+      v-model:visible="conf.archiveTasksVisible"
       :title="t('file.archiveTasks', 'Archive tasks')"
       size="460px"
-      append-to-body
+      :append-to-body="true"
+      :show-footer="false"
+      body-mode="compact"
     >
       <div class="archive-task-drawer">
         <div class="archive-task-overview">
@@ -2659,7 +2662,7 @@ const archiveTaskRunningCount = computed(
           />
         </div>
       </div>
-    </el-drawer>
+    </custom-drawer>
 
     <file-search-dialog
       v-model="conf.searchVisible"

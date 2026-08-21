@@ -3,6 +3,8 @@ import { Back } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import i18n from '@/lang'
 
+type BeforeClose = (done: () => void) => void
+
 interface Props {
   visible: boolean
   title: string
@@ -17,10 +19,24 @@ interface Props {
   confirmType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | ''
   destroyOnClose?: boolean
   closeOnClickModal?: boolean
+  closeOnPressEscape?: boolean
+  closeDisabled?: boolean
   direction?: 'rtl' | 'ltr' | 'ttb' | 'btt'
+  appendToBody?: boolean
+  modal?: boolean
+  lockScroll?: boolean
+  bodyMode?: 'default' | 'compact' | 'flush'
+  beforeClose?: BeforeClose
   onClose?: () => void
   onConfirm?: () => void
 }
+
+const emit = defineEmits<{
+  (event: 'update:visible', value: boolean): void
+  (event: 'close'): void
+  (event: 'closed'): void
+  (event: 'confirm'): void
+}>()
 
 const props = withDefaults(defineProps<Props>(), {
   visible: false,
@@ -34,7 +50,13 @@ const props = withDefaults(defineProps<Props>(), {
   confirmType: 'primary',
   destroyOnClose: false,
   closeOnClickModal: true,
-  direction: 'rtl'
+  closeOnPressEscape: true,
+  closeDisabled: false,
+  direction: 'rtl',
+  appendToBody: false,
+  modal: true,
+  lockScroll: true,
+  bodyMode: 'default'
 })
 
 const t = (key: string, fallback?: string) => {
@@ -44,6 +66,34 @@ const t = (key: string, fallback?: string) => {
 
 const cancelLabel = computed(() => props.cancelText || t('common.cancel', 'Cancel'))
 const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Confirm'))
+
+const commitClose = () => {
+  emit('update:visible', false)
+  props.onClose?.()
+  emit('close')
+}
+
+const close = () => {
+  if (props.closeDisabled) return
+  if (props.beforeClose) {
+    props.beforeClose(commitClose)
+    return
+  }
+  commitClose()
+}
+
+const confirm = () => {
+  props.onConfirm?.()
+  emit('confirm')
+}
+
+const handleVisibleChange = (value: boolean) => {
+  if (value) {
+    emit('update:visible', true)
+    return
+  }
+  commitClose()
+}
 </script>
 
 <template>
@@ -55,34 +105,51 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
     :show-close="false"
     :destroy-on-close="destroyOnClose"
     :close-on-click-modal="closeOnClickModal"
-    @close="onClose"
+    :close-on-press-escape="closeOnPressEscape"
+    :append-to-body="appendToBody"
+    :modal="modal"
+    :lock-scroll="lockScroll"
+    :before-close="beforeClose"
+    @update:model-value="handleVisibleChange"
+    @closed="emit('closed')"
   >
     <template #header>
       <div class="drawerHeader">
-        <div class="back" @click="onClose">
-          <el-icon><Back /></el-icon>
-          <span>{{ $t('common.back') }}</span>
-        </div>
-        <span class="title">{{ props.title }}</span>
+        <slot name="header" :close="close">
+          <button type="button" class="back" :disabled="closeDisabled" @click="close">
+            <el-icon><Back /></el-icon>
+            <span>{{ $t('common.back') }}</span>
+          </button>
+          <div class="titleGroup">
+            <slot name="title">
+              <span class="title">{{ props.title }}</span>
+            </slot>
+          </div>
+          <div v-if="$slots['header-extra']" class="headerExtra">
+            <slot name="header-extra" />
+          </div>
+        </slot>
       </div>
     </template>
     <template #default>
-      <div class="drawerBody">
+      <div class="drawerBody" :class="`drawerBody--${bodyMode}`">
         <slot />
       </div>
     </template>
     <template v-if="showFooter" #footer>
       <div class="drawerFooter">
-        <el-button v-if="showCancel" @click="onClose">{{ cancelLabel }}</el-button>
-        <el-button
-          v-if="showConfirm"
-          :loading="loading"
-          :disabled="confirmDisabled"
-          :type="confirmType"
-          @click="onConfirm"
-        >
-          {{ confirmLabel }}
-        </el-button>
+        <slot name="footer" :close="close" :confirm="confirm">
+          <el-button v-if="showCancel" :disabled="closeDisabled" @click="close">{{ cancelLabel }}</el-button>
+          <el-button
+            v-if="showConfirm"
+            :loading="loading"
+            :disabled="confirmDisabled"
+            :type="confirmType"
+            @click="confirm"
+          >
+            {{ confirmLabel }}
+          </el-button>
+        </slot>
       </div>
     </template>
   </el-drawer>
@@ -101,11 +168,15 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
   box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--border-subtle) 55%, transparent);
 
   .back {
+    appearance: none;
     margin-right: 4px;
     padding: 12px 18px 12px 14px;
     display: flex;
     align-items: center;
     gap: 10px;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 0;
     border-right: 1px solid color-mix(in srgb, var(--border-subtle) 90%, transparent);
     border-radius: 14px;
     color: var(--text-tertiary);
@@ -123,6 +194,14 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
       border-color: color-mix(in srgb, rgb(var(--primary-color)) 24%, transparent);
     }
 
+    &:disabled {
+      color: var(--text-placeholder);
+      background: transparent;
+      border-color: color-mix(in srgb, var(--border-subtle) 90%, transparent);
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
     .el-icon {
       font-size: 18px;
     }
@@ -136,17 +215,38 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
   }
 }
 
+.titleGroup {
+  min-width: 0;
+  flex: 1;
+}
+
+.headerExtra {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
 .drawerBody {
   height: 100%;
   padding: 38px 36px 32px;
   box-sizing: border-box;
- background: linear-gradient(180deg, 
-color-mix(in srgb, var(--surface-card) 96%, transparent) 0%, var(--surface-card) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 96%, transparent) 0%,
+    var(--surface-card) 100%
+  );
   // background:
   //   radial-gradient(circle at top right, color-mix(in srgb, rgb(var(--primary-color)) 8%, transparent) 0%, transparent 28%),
   //   linear-gradient(180deg, color-mix(in srgb, var(--surface-page) 86%, var(--surface-card) 14%) 0%, var(--surface-page) 100%);
   overflow-x: hidden;
   scrollbar-gutter: stable;
+}
+
+.drawerBody--compact {
+  padding: 24px 28px 28px;
+}
+
+.drawerBody--flush {
+  padding: 0;
 }
 
 .drawerFooter {
@@ -169,6 +269,10 @@ color-mix(in srgb, var(--surface-card) 96%, transparent) 0%, var(--surface-card)
     border-radius: 12px;
     font-size: 15px;
     font-weight: 700;
+  }
+
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
   }
 }
 
@@ -235,6 +339,14 @@ color-mix(in srgb, var(--surface-card) 96%, transparent) 0%, var(--surface-card)
 
   .drawerBody {
     padding: 28px 20px 24px;
+  }
+
+  .drawerBody--compact {
+    padding: 20px;
+  }
+
+  .drawerBody--flush {
+    padding: 0;
   }
 
   .drawerFooter {

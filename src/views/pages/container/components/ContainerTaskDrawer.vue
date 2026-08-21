@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
-import { ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import { useContainerTaskStore } from '@/stores/modules/containerTask';
 import i18n from '@/lang'
 
@@ -208,30 +208,27 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="task?.resourceName || operationLabel"
     class="container-task-drawer"
     size="840px"
-    :show-close="false"
     :close-on-click-modal="terminal"
     :destroy-on-close="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="task-header">
-        <button type="button" class="task-back" @click="visible = false">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ $t('common.back') }}</span>
-        </button>
-        <div class="task-heading">
-          <div class="task-title">
-            <strong>{{ task?.resourceName || operationLabel }}</strong>
-            <span>{{ operationLabel }}</span>
-          </div>
+    <template #title>
+      <div class="task-heading">
+        <div class="task-title">
+          <strong>{{ task?.resourceName || operationLabel }}</strong>
+          <span>{{ operationLabel }}</span>
         </div>
-        <el-tag :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'" effect="plain" round>
-          {{ statusText }}
-        </el-tag>
       </div>
+    </template>
+    <template #header-extra>
+      <el-tag :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'" effect="plain" round>
+        {{ statusText }}
+      </el-tag>
     </template>
 
     <div v-if="task" class="task-content">
@@ -334,40 +331,16 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </template>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.task-header,
 .task-actions,
 .log-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-}
-
-.task-header {
-  min-width: 0;
-  width: 100%;
-  gap: 24px;
-}
-
-.task-back {
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
 }
 
 .task-heading {
@@ -620,24 +593,7 @@ onBeforeUnmount(() => {
 }
 
 .task-actions {
-  padding: 18px 36px;
-}
-
-:deep(.container-task-drawer .el-drawer__header) {
-  min-height: 88px;
-  margin: 0;
-  padding: 0 36px;
-  border-bottom: 1px solid var(--border-subtle);
-}
-
-:deep(.container-task-drawer .el-drawer__body) {
-  padding: 24px 28px;
-  overflow: auto;
-}
-
-:deep(.container-task-drawer .el-drawer__footer) {
-  padding: 0;
-  border-top: 1px solid var(--border-subtle);
+  width: 100%;
 }
 
 @media (max-width: 900px) {

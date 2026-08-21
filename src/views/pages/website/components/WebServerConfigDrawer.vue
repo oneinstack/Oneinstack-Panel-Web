@@ -2,7 +2,8 @@
 import { computed, reactive, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
-import { ArrowLeft, Document, Refresh } from '@element-plus/icons-vue'
+import { Document, Refresh } from '@element-plus/icons-vue'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 
@@ -189,7 +190,7 @@ const save = async () => {
   }
 }
 
-const close = async () => {
+const close = async (done?: () => void) => {
   if (dirty.value) {
     try {
       await ElMessageBox.confirm(
@@ -205,7 +206,8 @@ const close = async () => {
       return
     }
   }
-  visible.value = false
+  if (done) done()
+  else visible.value = false
 }
 
 watch(
@@ -217,25 +219,17 @@ watch(
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="t('website.webConfigDrawer.title', { name: state.server.name || t('website.webConfigDrawer.webServer') })"
     class="web-config-drawer"
     size="980px"
     :before-close="close"
-    :show-close="false"
     :close-on-click-modal="true"
     :destroy-on-close="false"
+    :show-footer="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="web-drawer-header">
-        <button type="button" class="web-drawer-back" @click="close">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ t('website.webConfigDrawer.back') }}</span>
-        </button>
-        <h3>{{ t('website.webConfigDrawer.title', { name: state.server.name || t('website.webConfigDrawer.webServer') }) }}</h3>
-      </div>
-    </template>
-
     <div v-loading="state.loading" class="web-config">
       <section class="server-summary">
         <div class="server-summary__identity">
@@ -310,7 +304,7 @@ watch(
               {{ t('website.webConfigDrawer.safeNote') }}
             </div>
             <div class="config-editor__actions">
-              <el-button @click="close">{{ t('website.webConfigDrawer.close') }}</el-button>
+              <el-button @click="close()">{{ t('website.webConfigDrawer.close') }}</el-button>
               <el-button
                 type="primary"
                 :loading="state.saving"
@@ -324,51 +318,10 @@ watch(
         </main>
       </section>
     </div>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.web-drawer-header {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-
-  h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 760;
-    line-height: 1.2;
-  }
-}
-
-.web-drawer-back {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
-
-  .el-icon {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
-}
-
 .web-config {
   display: flex;
   flex-direction: column;
@@ -623,31 +576,6 @@ watch(
 .config-editor__actions {
   display: flex;
   gap: 10px;
-}
-
-:global(.web-config-drawer) {
-  top: 14px;
-  right: 14px;
-  height: calc(100% - 28px);
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 24px;
-  background: var(--surface-page);
-}
-
-:global(.web-config-drawer .el-drawer__header) {
-  margin: 0;
-  min-height: 88px;
-  padding: 0 36px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:global(.web-config-drawer .el-drawer__body) {
-  padding: 18px 22px 22px;
-  overflow: auto;
 }
 
 @media (max-width: 760px) {

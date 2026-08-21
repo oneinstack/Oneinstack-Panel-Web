@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { ArrowLeft, Refresh, Check } from '@element-plus/icons-vue'
+import { Refresh, Check } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
+import CustomDrawer from '@/components/custom-drawer.vue'
 
 const props = defineProps<{
   modelValue: boolean
@@ -227,27 +228,23 @@ const beforeClose = async (done: () => void) => {
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="state.detail?.name || t('file.editor.title', 'File editor')"
     size="min(1040px, 92vw)"
     class="file-editor-drawer"
     :before-close="beforeClose"
-    :show-close="false"
-    destroy-on-close
+    :destroy-on-close="true"
+    :show-footer="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="editor-heading">
-        <button type="button" class="editor-back" @click="close">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ t('common.back', 'Back') }}</span>
-        </button>
-        <div class="heading-main">
-          <div class="heading-title">
-            <h3>{{ state.detail?.name || t('file.editor.title', 'File editor') }}</h3>
-            <el-tag v-if="dirty" type="warning" effect="plain">{{ t('file.editor.unsaved', 'Unsaved') }}</el-tag>
-          </div>
-          <p>{{ path }}</p>
+    <template #title>
+      <div class="heading-main">
+        <div class="heading-title">
+          <h3>{{ state.detail?.name || t('file.editor.title', 'File editor') }}</h3>
+          <el-tag v-if="dirty" type="warning" effect="plain">{{ t('file.editor.unsaved', 'Unsaved') }}</el-tag>
         </div>
+        <p>{{ path }}</p>
       </div>
     </template>
 
@@ -293,44 +290,10 @@ const beforeClose = async (done: () => void) => {
         </div>
       </div>
     </div>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.editor-heading {
-  display: flex;
-  min-width: 0;
-  align-items: center;
-  gap: 24px;
-}
-
-.editor-back {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
-
-  .el-icon {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
-}
-
 .heading-main {
   min-width: 0;
 
@@ -359,23 +322,9 @@ const beforeClose = async (done: () => void) => {
   }
 }
 
-:global(.file-editor-drawer .el-drawer__header) {
-  min-height: 88px;
-  margin: 0;
-  padding: 0 36px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:global(.file-editor-drawer .el-drawer__body) {
-  padding: 24px 28px 28px;
-}
-
 .editor-shell {
   display: flex;
-  height: calc(100vh - 112px);
+  height: 100%;
   min-height: 520px;
   flex-direction: column;
   overflow: hidden;

@@ -3,7 +3,8 @@ import { computed, reactive, ref, watch } from 'vue'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
+import { FolderOpened, Lock, Refresh, SwitchButton } from '@element-plus/icons-vue'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import WebsiteCertificateDrawer from './WebsiteCertificateDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
@@ -233,30 +234,19 @@ const openCertificate = () => {
   certificate.show = true
 }
 
-const closeDrawer = () => {
-  visible.value = false
-}
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="currentWebsite.name || t('website.settingsDrawer.title')"
     class="website-settings-drawer"
     size="1180px"
-    :show-close="false"
     :close-on-click-modal="true"
     :destroy-on-close="false"
+    :show-footer="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="website-drawer-header">
-        <button type="button" class="website-drawer-back" @click="closeDrawer">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ t('website.webConfigDrawer.back') }}</span>
-        </button>
-        <h3>{{ currentWebsite.name || t('website.settingsDrawer.title') }}</h3>
-      </div>
-    </template>
-
     <div v-loading="state.loading" class="settings-layout">
       <header class="settings-header">
         <div class="settings-header__title">
@@ -397,51 +387,10 @@ const closeDrawer = () => {
       </div>
     </div>
     <website-certificate-drawer v-model="certificate.show" :website="certificate.website" @changed="load(); emit('changed')" />
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.website-drawer-header {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-
-  h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 760;
-    line-height: 1.2;
-  }
-}
-
-.website-drawer-back {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
-
-  .el-icon {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
-}
-
 .settings-layout { display: flex; flex-direction: column; gap: 16px; }
 .settings-header { min-height: 82px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 20px; border: 1px solid var(--border-subtle); border-radius: 18px; background: var(--surface-card); }
 .settings-header__title { min-width: 0; display: flex; align-items: center; gap: 14px; }
@@ -495,48 +444,7 @@ const closeDrawer = () => {
 </style>
 
 <style lang="less">
-.website-settings-drawer {
-  top: 14px;
-  right: 14px;
-  height: calc(100% - 28px);
-  overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 24px;
-  background: var(--surface-page);
-}
-
-.website-settings-drawer .el-drawer__header {
-  margin: 0;
-  min-height: 88px;
-  padding: 0 36px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-.website-settings-drawer .el-drawer__body {
-  padding: 18px 22px 22px;
-  overflow: auto;
-}
-
 @media (max-width: 760px) {
-  .website-settings-drawer {
-    top: 8px;
-    right: 8px;
-    height: calc(100% - 16px);
-    border-radius: 18px;
-  }
-
-  .website-settings-drawer .el-drawer__header {
-    min-height: 76px;
-    padding: 0 18px;
-  }
-
-  .website-settings-drawer .el-drawer__body {
-    padding: 14px;
-  }
-
   .settings-body {
     height: auto;
     min-height: 0;

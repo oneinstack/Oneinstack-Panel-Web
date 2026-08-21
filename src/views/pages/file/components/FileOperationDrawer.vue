@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref, watch } from 'vue'
-import { ArrowLeft, Refresh, Search } from '@element-plus/icons-vue'
+import { Refresh, Search } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import i18n from '@/lang'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
 
 const props = defineProps<{ modelValue: boolean }>()
@@ -113,23 +114,15 @@ const columns = computed<ColumnItem[]>(() => [
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="t('file.operations.title', 'File operation records')"
     size="min(1180px, 94vw)"
     class="file-operation-drawer"
-    destroy-on-close
-    :show-close="false"
+    :destroy-on-close="true"
+    :show-footer="false"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="drawer-heading">
-        <button type="button" class="drawer-back" @click="visible = false">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ t('common.back', 'Back') }}</span>
-        </button>
-        <h3>{{ t('file.operations.title', 'File operation records') }}</h3>
-      </div>
-    </template>
-
     <div class="drawer-content">
       <div class="filter-bar">
         <el-input
@@ -183,71 +176,16 @@ const columns = computed<ColumnItem[]>(() => [
         />
       </div>
     </div>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.drawer-heading {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-
-  h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 760;
-    line-height: 1.2;
-  }
-}
-
-.drawer-back {
-  flex: 0 0 auto;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition: color 0.18s ease;
-
-  &:hover {
-    color: rgb(var(--primary-color));
-  }
-
-  .el-icon {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
-}
-
 .drawer-content {
   display: flex;
   height: 100%;
   flex-direction: column;
   gap: 14px;
   min-width: 0;
-}
-
-:global(.file-operation-drawer .el-drawer__header) {
-  min-height: 88px;
-  margin: 0;
-  padding: 0 36px;
-  display: flex;
-  align-items: center;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:global(.file-operation-drawer .el-drawer__body) {
-  padding: 24px 28px 28px;
 }
 
 .filter-bar {

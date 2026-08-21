@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
+import { Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
@@ -274,27 +275,17 @@ watch(values, () => {
 </script>
 
 <template>
-  <el-drawer
-    v-model="visible"
+  <custom-drawer
+    v-model:visible="visible"
+    :title="title"
     class="service-config-drawer"
     size="760px"
-    destroy-on-close
-    :show-close="false"
+    :destroy-on-close="true"
     :close-on-click-modal="!applying"
     :close-on-press-escape="!applying"
+    :close-disabled="applying"
+    body-mode="compact"
   >
-    <template #header>
-      <div class="drawer-navigation">
-        <button type="button" class="back-button" :disabled="applying" @click="visible = false">
-          <el-icon><ArrowLeft /></el-icon>
-          <span>{{ $t('common.back') }}</span>
-        </button>
-        <div class="drawer-heading">
-          <h2>{{ title }}</h2>
-        </div>
-      </div>
-    </template>
-
     <div v-if="loading" class="drawer-loading">
       <el-skeleton :rows="6" animated />
     </div>
@@ -499,76 +490,16 @@ watch(values, () => {
         </div>
       </div>
     </template>
-  </el-drawer>
+  </custom-drawer>
 </template>
 
 <style scoped lang="less">
-.drawer-navigation,
 .configuration-meta,
 .preview-title,
 .drawer-footer,
 .drawer-actions {
   display: flex;
   align-items: center;
-}
-
-.drawer-navigation {
-  width: 100%;
-  max-width: 680px;
-  min-width: 0;
-  margin: 0 auto;
-  gap: 24px;
-}
-
-.drawer-heading {
-  min-width: 0;
-  flex: 1;
-
-  h2 {
-    min-width: 0;
-    margin: 0;
-    overflow: hidden;
-    color: var(--text-primary);
-    font-size: 20px;
-    font-weight: 760;
-    line-height: 1.2;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.back-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-height: 38px;
-  padding: 0 20px 0 0;
-  border: 0;
-  border-right: 1px solid var(--border-subtle);
-  color: var(--text-tertiary);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    border-color 0.18s ease,
-    color 0.18s ease;
-
-  &:hover:not(:disabled) {
-    color: rgb(var(--primary-color));
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
-  }
-
-  :deep(.el-icon) {
-    font-size: 18px;
-  }
-
-  span {
-    font-size: 15px;
-  }
 }
 
 .drawer-loading {
@@ -977,37 +908,7 @@ watch(values, () => {
   gap: 8px;
 }
 
-:deep(.service-config-drawer) {
-  border-left: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-  box-shadow: -18px 0 50px rgba(16, 24, 40, 0.13);
-}
-
-:deep(.service-config-drawer .el-drawer__header) {
-  min-height: 88px;
-  padding: 0 36px;
-  margin-bottom: 0;
-  border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-}
-
-:deep(.service-config-drawer .el-drawer__body) {
-  padding: 22px 28px 34px;
-  background: var(--surface-subtle);
-}
-
-:deep(.service-config-drawer .el-drawer__footer) {
-  padding: 12px 28px;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--surface-card);
-  box-shadow: 0 -8px 24px rgba(16, 24, 40, 0.04);
-}
-
 @media (max-width: 760px) {
-  :deep(.service-config-drawer .el-drawer__body) {
-    padding: 18px 22px 28px;
-  }
-
   .notice-check {
     display: none;
   }
