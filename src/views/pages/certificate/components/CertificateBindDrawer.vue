@@ -116,6 +116,9 @@ watch(
           v-model="form.websiteId"
           :loading="websiteLoading"
           filterable
+          :teleported="false"
+          placement="bottom-start"
+          popper-class="bind-website-select-popper"
           style="width: 100%"
           :placeholder="$t('common.selectPlaceholder')"
         >
@@ -148,6 +151,10 @@ watch(
   :deep(.el-form-item__label) {
     color: var(--text-secondary);
     font-weight: 650;
+  }
+
+  :deep(.bind-website-select-popper.el-select__popper) {
+    max-width: 100%;
   }
 }
 

@@ -668,15 +668,13 @@ onMounted(() => {
 
 .system-page :deep(.custom-drawer-shell .el-drawer) {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    #0b1321;
+    linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .system-page :deep(.custom-drawer-shell .el-drawer__body) {
   background:
-    radial-gradient(circle at top right, rgba(var(--primary-color), 0.12), transparent 24%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
-    #0b1321;
+    radial-gradient(circle at top right, rgba(var(--primary-color), 0.08), transparent 24%),
+    linear-gradient(180deg, #f8fbff 0%, #f3f7fc 100%);
 }
 
 .detail-grid {
@@ -688,14 +686,12 @@ onMounted(() => {
 .detail-item,
 .detail-block {
   padding: 16px;
-  border: 1px solid rgba(120, 141, 179, 0.16);
+  border: 1px solid var(--border-default);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-    rgba(11, 18, 30, 0.72);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 14px 28px rgba(0, 0, 0, 0.14);
+  background: var(--surface-page);
+  // box-shadow:
+  //   inset 0 1px 0 rgba(255, 255, 255, 0.75),
+  //   0 14px 28px rgba(15, 23, 42, 0.06);
 }
 
 .detail-item {
@@ -730,9 +726,9 @@ onMounted(() => {
     word-break: break-word;
     padding: 14px 16px;
     border-radius: 14px;
-    border: 1px solid rgba(120, 141, 179, 0.12);
-    background: rgba(6, 12, 22, 0.74);
-    color: var(--text-secondary);
+    // border: 1px solid var(--border-default);
+    // background: linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+    color: var(--text-primary);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     line-height: 1.75;
   }
@@ -742,13 +738,13 @@ onMounted(() => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  color: var(--text-secondary);
+  color: #64748b;
 }
 
 .children-tags :deep(.el-tag) {
-  --el-tag-bg-color: rgba(255, 255, 255, 0.04);
-  --el-tag-border-color: rgba(120, 141, 179, 0.18);
-  --el-tag-text-color: var(--text-secondary);
+  --el-tag-bg-color: rgba(var(--primary-color), 0.08);
+  --el-tag-border-color: rgba(var(--primary-color), 0.16);
+  --el-tag-text-color: #315a9d;
 }
 
 .disk-progress-card {
@@ -761,13 +757,13 @@ onMounted(() => {
   }
 
   span {
-    color: var(--text-secondary);
+    color: #64748b;
     white-space: nowrap;
   }
 }
 
 .disk-progress-card :deep(.el-progress-bar__outer) {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(148, 163, 184, 0.18);
 }
 
 @media (max-width: 1280px) {

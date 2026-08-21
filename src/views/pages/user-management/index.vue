@@ -960,6 +960,7 @@ onMounted(async () => {
     padding-left: 0;
     line-height: 1.45;
     white-space: normal;
+    color: var(--text-primary);
   }
 }
 

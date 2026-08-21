@@ -1035,6 +1035,10 @@ webServer.load()
   margin-top: 16px;
 }
 
+:deep(.el-form-item__label) {
+  color: var(--text-primary);
+}
+
 @media (max-width: 1100px) {
   .website-container {
     .website-toolbar__search {
