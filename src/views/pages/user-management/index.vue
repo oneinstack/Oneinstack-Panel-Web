@@ -539,17 +539,21 @@ onMounted(async () => {
 
 .hero-card,
 .panel-card {
-  border: 1px solid rgba(218, 225, 236, 0.9);
+  border: 1px solid var(--border-subtle);
   border-radius: 24px;
   background: var(--surface-card);
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.05);
+  // box-shadow: 0 18px 44px rgba(3, 10, 24, 0.28);
 }
 
 .hero-card {
   padding: 28px;
   background:
-    radial-gradient(circle at top right, rgba(var(--primary-color), 0.12), transparent 28%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(246, 248, 252, 0.98));
+    radial-gradient(circle at top right, rgba(var(--primary-color), 0.16), transparent 30%),
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 92%, rgba(var(--primary-color), 0.08)),
+      color-mix(in srgb, var(--surface-card) 100%, transparent)
+    );
 }
 
 .hero-main {
@@ -615,27 +619,28 @@ onMounted(async () => {
   min-height: 108px;
   padding: 20px 22px;
   border-radius: 24px;
-  border: 1px solid transparent;
+  border: 1px solid var(--border-subtle);
   overflow: hidden;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.84),
-    0 14px 30px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 14px 32px rgba(3, 10, 24, 0.2);
   transition:
     transform 0.2s ease,
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 
   &:hover {
     transform: translateY(-3px);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.9),
-      var(--shadow-sm);
+    box-shadow: 0 18px 34px rgba(3, 10, 24, 0.26);
   }
 }
 
 .metric-chip--total {
-  background: linear-gradient(145deg, #fff8f5, #fff2eb);
-  border-color: rgba(255, 120, 64, 0.14);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 86%, rgba(255, 120, 64, 0.18)),
+    color-mix(in srgb, var(--surface-card) 94%, rgba(255, 120, 64, 0.08))
+  );
+  border-color: color-mix(in srgb, var(--border-subtle) 76%, rgba(255, 120, 64, 0.32));
 
   &:hover {
     border-color: rgba(255, 120, 64, 0.28);
@@ -643,8 +648,12 @@ onMounted(async () => {
 }
 
 .metric-chip--granted {
-  background: linear-gradient(145deg, #f3fdf7, #e9f9f0);
-  border-color: rgba(22, 163, 74, 0.14);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 86%, rgba(34, 197, 94, 0.18)),
+    color-mix(in srgb, var(--surface-card) 94%, rgba(34, 197, 94, 0.08))
+  );
+  border-color: color-mix(in srgb, var(--border-subtle) 76%, rgba(34, 197, 94, 0.28));
 
   &:hover {
     border-color: rgba(22, 163, 74, 0.28);
@@ -652,8 +661,12 @@ onMounted(async () => {
 }
 
 .metric-chip--pending {
-  background: linear-gradient(145deg, #fffaf0, #fff2dc);
-  border-color: rgba(245, 158, 11, 0.16);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 86%, rgba(245, 158, 11, 0.18)),
+    color-mix(in srgb, var(--surface-card) 94%, rgba(245, 158, 11, 0.08))
+  );
+  border-color: color-mix(in srgb, var(--border-subtle) 76%, rgba(245, 158, 11, 0.3));
 
   &:hover {
     border-color: rgba(245, 158, 11, 0.3);
@@ -661,8 +674,12 @@ onMounted(async () => {
 }
 
 .metric-chip--roles {
-  background: linear-gradient(145deg, #f5f7ff, #edf1ff);
-  border-color: rgba(99, 102, 241, 0.14);
+  background: linear-gradient(
+    145deg,
+    color-mix(in srgb, var(--surface-card) 86%, rgba(129, 140, 248, 0.18)),
+    color-mix(in srgb, var(--surface-card) 94%, rgba(129, 140, 248, 0.08))
+  );
+  border-color: color-mix(in srgb, var(--border-subtle) 76%, rgba(129, 140, 248, 0.28));
 
   &:hover {
     border-color: rgba(99, 102, 241, 0.28);
@@ -685,9 +702,10 @@ onMounted(async () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #6b7280;
-  background: rgba(255, 255, 255, 0.76);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.92);
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface-hover) 78%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 92%, transparent);
+  box-shadow: none;
 }
 
 .metric-chip__icon :deep(.el-icon) {
@@ -820,8 +838,12 @@ onMounted(async () => {
   margin-bottom: 20px;
   padding: 16px 18px;
   border-radius: 20px;
-  background: linear-gradient(180deg, rgba(248, 250, 252, 0.96), rgba(244, 247, 251, 0.9));
-  border: 1px solid rgba(218, 225, 236, 0.86);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 96%, rgba(255, 255, 255, 0.02)),
+    color-mix(in srgb, var(--surface-hover) 86%, transparent)
+  );
+  border: 1px solid var(--border-subtle);
 }
 
 .toolbar-note {
@@ -834,9 +856,13 @@ onMounted(async () => {
 .table-shell {
   padding: 8px;
   border-radius: 22px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 252, 0.96));
-  border: 1px solid rgba(218, 225, 236, 0.82);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 98%, transparent),
+    color-mix(in srgb, var(--surface-hover) 82%, transparent)
+  );
+  border: 1px solid var(--border-subtle);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .role-cell {
@@ -904,11 +930,21 @@ onMounted(async () => {
     align-items: center;
     gap: 10px;
     padding: 10px 12px;
-    border: 1px solid rgba(218, 225, 236, 0.9);
+    border: 1px solid var(--border-subtle);
     border-radius: 14px;
-    background: rgba(248, 250, 252, 0.7);
+    background: color-mix(in srgb, var(--surface-hover) 82%, transparent);
     cursor: pointer;
     user-select: none;
+    transition:
+      transform 0.2s ease,
+      border-color 0.2s ease,
+      background 0.2s ease;
+  }
+
+  :deep(.el-checkbox:hover) {
+    transform: translateY(-1px);
+    border-color: rgba(var(--primary-color), 0.28);
+    background: rgba(var(--primary-color), 0.08);
   }
 
   :deep(.el-checkbox__input) {

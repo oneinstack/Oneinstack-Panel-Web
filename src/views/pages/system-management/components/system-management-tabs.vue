@@ -53,14 +53,15 @@ const activate = (key: string) => {
   gap: 10px;
   padding: 0 14px;
   overflow-x: auto;
-  border: 1px solid rgba(120, 141, 179, 0.16);
+  border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-    rgba(11, 18, 30, 0.72);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 12px 28px rgba(0, 0, 0, 0.14);
+  background: var(--surface-raised);
+  // background:
+  //   linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+  //   rgba(11, 18, 30, 0.72);
+  // box-shadow:
+  //   inset 0 1px 0 rgba(255, 255, 255, 0.04),
+  //   0 12px 28px rgba(0, 0, 0, 0.14);
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 

@@ -153,14 +153,15 @@ defineProps<Props>()
 
 .process-toolbar {
   padding: 16px;
-  border: 1px solid rgba(120, 141, 179, 0.16);
+  // border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
-    rgba(11, 18, 30, 0.78);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    0 12px 28px rgba(0, 0, 0, 0.14);
+  background: var(--surface-raised);
+  // background:
+  //   linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+  //   rgba(11, 18, 30, 0.78);
+  // box-shadow:
+  //   inset 0 1px 0 rgba(255, 255, 255, 0.04),
+  //   0 12px 28px rgba(0, 0, 0, 0.14);
   gap: 12px;
   flex-wrap: wrap;
 
@@ -191,13 +192,13 @@ defineProps<Props>()
   cursor: pointer;
 }
 
-.process-toolbar :deep(.el-input__wrapper),
-.process-toolbar :deep(.el-select__wrapper) {
-  background: rgba(10, 16, 28, 0.88);
-  box-shadow:
-    inset 0 0 0 1px rgba(120, 141, 179, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-}
+// .process-toolbar :deep(.el-input__wrapper),
+// .process-toolbar :deep(.el-select__wrapper) {
+//   background: rgba(10, 16, 28, 0.88);
+//   box-shadow:
+//     inset 0 0 0 1px rgba(120, 141, 179, 0.18),
+//     inset 0 1px 0 rgba(255, 255, 255, 0.04);
+// }
 
 .process-toolbar :deep(.el-input__inner),
 .process-toolbar :deep(.el-select__selected-item),

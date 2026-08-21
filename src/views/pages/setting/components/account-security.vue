@@ -582,6 +582,11 @@ onMounted(() => load())
   font-size: 15px;
 }
 
+:deep(.el-popover.el-popper){
+  // background: red !important;
+  --el-popover-bg-color: red !important;
+}
+
 @media (max-width: 768px) {
   .section-header,
   .security-row,

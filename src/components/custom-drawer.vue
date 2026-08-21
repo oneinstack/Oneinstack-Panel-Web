@@ -90,28 +90,37 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
 
 <style scoped lang="less">
 .drawerHeader {
-  min-height: 88px;
+  min-height: 92px;
   padding: 0 36px;
   display: flex;
   align-items: center;
+  gap: 18px;
   border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
-  background: var(--surface-card);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 94%, white 6%) 0%, var(--surface-card) 100%);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--border-subtle) 55%, transparent);
 
   .back {
-    margin-right: 24px;
-    padding: 10px 20px 10px 0;
+    margin-right: 4px;
+    padding: 12px 18px 12px 14px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    border-right: 1px solid var(--border-subtle);
+    gap: 10px;
+    border-right: 1px solid color-mix(in srgb, var(--border-subtle) 90%, transparent);
+    border-radius: 14px;
     color: var(--text-tertiary);
     cursor: pointer;
     font-size: 15px;
     line-height: 1;
-    transition: color 0.18s ease;
+    transition:
+      color 0.18s ease,
+      background-color 0.18s ease,
+      border-color 0.18s ease;
 
     &:hover {
       color: rgb(var(--primary-color));
+      background: color-mix(in srgb, rgb(var(--primary-color)) 10%, transparent);
+      border-color: color-mix(in srgb, rgb(var(--primary-color)) 24%, transparent);
     }
 
     .el-icon {
@@ -128,27 +137,36 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
 }
 
 .drawerBody {
-  // min-height: 100%;
   height: 100%;
   padding: 38px 36px 32px;
   box-sizing: border-box;
+ background: linear-gradient(180deg, 
+color-mix(in srgb, var(--surface-card) 96%, transparent) 0%, var(--surface-card) 100%);
+  // background:
+  //   radial-gradient(circle at top right, color-mix(in srgb, rgb(var(--primary-color)) 8%, transparent) 0%, transparent 28%),
+  //   linear-gradient(180deg, color-mix(in srgb, var(--surface-page) 86%, var(--surface-card) 14%) 0%, var(--surface-page) 100%);
   overflow-x: hidden;
+  scrollbar-gutter: stable;
 }
 
 .drawerFooter {
   min-height: 84px;
-  padding: 18px 36px;
+  padding: 18px 36px calc(18px + env(safe-area-inset-bottom, 0px));
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 14px;
-  border-top: 1px solid var(--border-subtle);
-  background: var(--surface-card);
+  border-top: 1px solid color-mix(in srgb, var(--border-subtle) 92%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 96%, transparent) 0%, var(--surface-card) 100%);
+  // box-shadow:
+  //   0 -12px 28px color-mix(in srgb, #000 14%, transparent),
+  //   inset 0 1px 0 color-mix(in srgb, #fff 4%, transparent);
 
   :deep(.el-button) {
-    min-width: 88px;
-    height: 44px;
-    border-radius: 8px;
+    min-width: 96px;
+    height: 46px;
+    border-radius: 12px;
     font-size: 15px;
     font-weight: 700;
   }
@@ -159,6 +177,18 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
   flex-direction: column;
 }
 
+:global(.custom-drawer-shell .el-drawer) {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 92%, #0b1120 8%) 0%, var(--surface-page) 100%);
+  box-shadow:
+    -24px 0 48px color-mix(in srgb, #000 24%, transparent),
+    inset 1px 0 0 color-mix(in srgb, #fff 4%, transparent);
+}
+
 :global(.custom-drawer-shell .el-drawer__header),
 :global(.custom-drawer-shell .el-drawer__body),
 :global(.custom-drawer-shell .el-drawer__footer) {
@@ -166,28 +196,49 @@ const confirmLabel = computed(() => props.confirmText || t('common.confirm', 'Co
   padding: 0;
 }
 
+:global(.custom-drawer-shell .el-drawer__header),
+:global(.custom-drawer-shell .el-drawer__footer) {
+  flex-shrink: 0;
+}
+
 :global(.custom-drawer-shell .el-drawer__body) {
   flex: 1;
   overflow: auto;
+}
+
+:global(.custom-drawer-shell .el-drawer__body::-webkit-scrollbar) {
+  width: 10px;
+}
+
+:global(.custom-drawer-shell .el-drawer__body::-webkit-scrollbar-thumb) {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-quaternary) 70%, transparent);
+  background-clip: padding-box;
+}
+
+:global(.custom-drawer-shell .el-drawer__body::-webkit-scrollbar-track) {
+  background: transparent;
 }
 
 @media (max-width: 768px) {
   .drawerHeader {
     min-height: 76px;
     padding: 0 20px;
+    gap: 12px;
 
     .back {
-      margin-right: 16px;
-      padding-right: 14px;
+      margin-right: 0;
+      padding: 10px 14px 10px 10px;
     }
   }
 
   .drawerBody {
-    padding: 24px 18px 28px;
+    padding: 28px 20px 24px;
   }
 
   .drawerFooter {
-    padding: 14px 18px;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
   }
 }
 </style>

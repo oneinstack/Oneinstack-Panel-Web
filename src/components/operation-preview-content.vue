@@ -245,27 +245,34 @@ const rollbackSummary = computed(() => {
   flex-direction: column;
   max-height: 56vh;
   overflow: auto;
-  gap: 12px;
-  padding-right: 2px;
+  gap: 14px;
+  padding-right: 4px;
   text-align: left;
 }
 
 .preview-summary {
-  padding: 12px 14px;
-  border: 1px solid rgba(var(--primary-color), 0.12);
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, rgba(var(--primary-color), 0.2) 55%, var(--border-subtle));
   border-left: 4px solid var(--el-color-info);
-  border-radius: 10px;
-  background: linear-gradient(135deg, rgba(var(--primary-color), 0.04), var(--surface-subtle));
+  border-radius: 16px;
+  background:
+    linear-gradient(135deg, rgba(var(--primary-color), 0.1), transparent 42%),
+    color-mix(in srgb, var(--surface-raised) 78%, var(--surface-card));
+  // box-shadow:
+  //   inset 0 1px 0 rgba(255, 255, 255, 0.04),
+  //   0 14px 30px rgba(4, 8, 20, 0.24);
 
   &.is-medium {
-    border-color: rgba(var(--warning-color), 0.18);
+    border-color: color-mix(in srgb, rgba(var(--warning-color), 0.26) 55%, var(--border-subtle));
     border-left-color: var(--el-color-warning);
   }
 
   &.is-high {
-    border-color: rgba(var(--danger-color), 0.2);
+    border-color: color-mix(in srgb, rgba(var(--danger-color), 0.3) 58%, var(--border-subtle));
     border-left-color: var(--el-color-danger);
-    background: linear-gradient(135deg, rgba(var(--danger-color), 0.08), var(--el-color-danger-light-9));
+    background:
+      linear-gradient(135deg, rgba(var(--danger-color), 0.14), transparent 46%),
+      color-mix(in srgb, var(--surface-raised) 76%, rgba(var(--danger-color), 0.14));
   }
 }
 
@@ -298,9 +305,10 @@ const rollbackSummary = computed(() => {
   align-items: center;
   flex: none;
   gap: 5px;
-  padding: 4px 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.56);
+  background: color-mix(in srgb, var(--surface-card) 88%, rgba(var(--primary-color), 0.14));
   color: var(--text-tertiary);
   font-size: 11px;
   white-space: nowrap;
@@ -312,8 +320,11 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-description {
-  margin: -1px 0 0;
-  padding: 0 2px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-card) 92%, rgba(var(--primary-color), 0.08));
   color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.6;
@@ -323,6 +334,10 @@ const rollbackSummary = computed(() => {
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-card) 94%, rgba(var(--warning-color), 0.08));
 }
 
 .preview-label {
@@ -339,11 +354,21 @@ const rollbackSummary = computed(() => {
   gap: 6px;
 }
 
+.preview-section {
+  padding: 16px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-raised) 72%, var(--surface-card));
+  // box-shadow:
+  //   inset 0 1px 0 rgba(255, 255, 255, 0.03),
+  //   0 10px 24px rgba(4, 8, 20, 0.18);
+}
+
 .preview-section__title {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 
   h4 {
     margin: 0;
@@ -359,15 +384,22 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-list {
-  border-top: 1px solid var(--border-subtle);
+  overflow: hidden;
+  // border: 1px solid var(--border-subtle);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-card) 96%, rgba(var(--primary-color), 0.04));
 }
 
 .preview-item {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding: 9px 2px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 12px 14px;
+  // border-bottom: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-bottom: none;
+  }
 }
 
 .preview-item__icon {
@@ -420,12 +452,13 @@ const rollbackSummary = computed(() => {
 
 .preview-diff {
   grid-column: 1 / -1;
-  margin: 4px 0 0;
-  padding: 10px 12px;
+  margin: 6px 0 0;
+  padding: 12px 14px;
   overflow: auto;
-  border-radius: 8px;
+  // border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   color: var(--text-secondary);
-  background: var(--surface-muted);
+  background: color-mix(in srgb, var(--surface-muted) 86%, rgba(3, 8, 20, 0.35));
   font: 11px/1.6 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-word;
@@ -438,10 +471,11 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-metric {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  background: var(--surface-card);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-card) 95%, rgba(var(--primary-color), 0.05));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 
   span {
     display: block;
@@ -460,8 +494,8 @@ const rollbackSummary = computed(() => {
 .preview-safety {
   display: flex;
   flex-direction: column;
-  gap: 7px;
-  padding-top: 1px;
+  gap: 10px;
+  padding-top: 2px;
 }
 
 .preview-checklist {
@@ -471,10 +505,10 @@ const rollbackSummary = computed(() => {
 }
 
 .preview-check {
-  padding: 9px 12px;
+  padding: 12px 14px;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
-  background: var(--surface-card);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--surface-card) 95%, rgba(var(--primary-color), 0.04));
 
   &.is-failed {
     border-color: color-mix(in srgb, var(--el-color-danger) 32%, var(--border-subtle));
@@ -505,9 +539,15 @@ const rollbackSummary = computed(() => {
   display: flex;
   align-items: flex-start;
   gap: 8px;
+  padding: 11px 13px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-card) 94%, rgba(var(--success-color), 0.04));
   color: var(--el-color-success);
 
   &.is-danger {
+    border-color: color-mix(in srgb, var(--el-color-danger) 24%, var(--border-subtle));
+    background: color-mix(in srgb, var(--surface-card) 90%, rgba(var(--danger-color), 0.08));
     color: var(--el-color-danger);
   }
 
@@ -540,23 +580,29 @@ const rollbackSummary = computed(() => {
 }
 
 :global(.operation-preview-message-box) {
-  width: 640px;
+  width: 720px;
   max-width: calc(100vw - 32px);
   padding: 0;
-  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px rgba(3, 8, 20, 0.38);
+  background: color-mix(in srgb, var(--surface-raised) 84%, var(--surface-card));
 }
 
 :global(.operation-preview-message-box .el-message-box__header) {
-  padding: 18px 20px 10px;
+  padding: 22px 24px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 :global(.operation-preview-message-box .el-message-box__title) {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 650;
+  color: var(--text-primary);
 }
 
 :global(.operation-preview-message-box .el-message-box__content) {
-  padding: 0 20px 2px;
+  padding: 0 24px 6px;
 }
 
 :global(.operation-preview-message-box .el-message-box__container) {
@@ -564,9 +610,10 @@ const rollbackSummary = computed(() => {
 }
 
 :global(.operation-preview-message-box .el-message-box__btns) {
-  margin-top: 14px;
-  padding: 14px 20px 18px;
+  margin-top: 16px;
+  padding: 16px 24px 20px;
   border-top: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-raised) 84%, var(--surface-card));
 }
 
 @media (max-width: 640px) {
