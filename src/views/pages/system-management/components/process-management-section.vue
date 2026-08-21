@@ -153,9 +153,14 @@ defineProps<Props>()
 
 .process-toolbar {
   padding: 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  background: rgba(248, 250, 252, 0.72);
+  border: 1px solid rgba(120, 141, 179, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    rgba(11, 18, 30, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 28px rgba(0, 0, 0, 0.14);
   gap: 12px;
   flex-wrap: wrap;
 
@@ -172,12 +177,81 @@ defineProps<Props>()
 .data-table {
   width: 100%;
   overflow: hidden;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
+  border: 1px solid rgba(120, 141, 179, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    rgba(11, 18, 30, 0.74);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 18px 38px rgba(0, 0, 0, 0.16);
 }
 
 .process-table :deep(.el-table__row) {
   cursor: pointer;
+}
+
+.process-toolbar :deep(.el-input__wrapper),
+.process-toolbar :deep(.el-select__wrapper) {
+  background: rgba(10, 16, 28, 0.88);
+  box-shadow:
+    inset 0 0 0 1px rgba(120, 141, 179, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.process-toolbar :deep(.el-input__inner),
+.process-toolbar :deep(.el-select__selected-item),
+.process-toolbar :deep(.el-select__placeholder),
+.process-toolbar :deep(.el-input__prefix-inner),
+.process-toolbar :deep(.el-select__icon) {
+  color: var(--text-primary);
+}
+
+.process-toolbar :deep(.el-input__inner::placeholder) {
+  color: var(--text-tertiary);
+}
+
+.process-toolbar :deep(.el-button:not(.el-button--primary)) {
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(120, 141, 179, 0.18);
+  color: var(--text-secondary);
+}
+
+.process-toolbar :deep(.el-button:not(.el-button--primary):hover) {
+  border-color: rgba(var(--primary-color), 0.28);
+  color: var(--text-primary);
+}
+
+.data-table :deep(.table-container) {
+  background: transparent;
+}
+
+.data-table :deep(.el-table),
+.data-table :deep(.el-table__inner-wrapper),
+.data-table :deep(.el-table tr),
+.data-table :deep(.el-table th.el-table__cell),
+.data-table :deep(.el-table td.el-table__cell) {
+  background: transparent;
+}
+
+.data-table :deep(.el-table th.el-table__cell) {
+  color: var(--text-secondary);
+}
+
+.data-table :deep(.el-table td.el-table__cell) {
+  border-bottom-color: rgba(120, 141, 179, 0.12);
+}
+
+.data-table :deep(.el-table__row:hover > td.el-table__cell) {
+  background: rgba(255, 255, 255, 0.03) !important;
+}
+
+.table-footer :deep(.el-pagination) {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: rgba(255, 255, 255, 0.03);
+  --el-pagination-button-disabled-bg-color: rgba(255, 255, 255, 0.02);
+  --el-pagination-hover-color: rgb(var(--primary-color));
+  --el-pagination-text-color: var(--text-secondary);
 }
 
 .table-footer {

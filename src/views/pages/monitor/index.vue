@@ -1594,9 +1594,95 @@ onUnmounted(() => {
 
 .monitor-drawer-form {
   max-width: 620px;
+  padding: 26px;
+  border: 1px solid rgba(120, 141, 179, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035), rgba(255, 255, 255, 0)),
+    rgba(10, 16, 28, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 20px 46px rgba(4, 10, 22, 0.28);
+
+  :deep(.el-form-item__label) {
+    color: rgba(236, 242, 255, 0.9);
+    font-size: 15px;
+    font-weight: 650;
+    line-height: 1.4;
+    margin-bottom: 10px;
+  }
 
   :deep(.el-form-item) {
     margin-bottom: 22px;
+  }
+
+  :deep(.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::before) {
+    color: #ff7d7d;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper),
+  :deep(.el-textarea__inner),
+  :deep(.el-input-number) {
+    border: 1px solid rgba(126, 148, 186, 0.18);
+    background: rgba(13, 21, 36, 0.96);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  }
+
+  :deep(.el-input__wrapper.is-focus),
+  :deep(.el-select__wrapper.is-focused),
+  :deep(.el-input-number.is-focus),
+  :deep(.el-textarea__inner:focus) {
+    border-color: rgba(249, 115, 22, 0.7);
+    box-shadow:
+      0 0 0 1px rgba(249, 115, 22, 0.24),
+      0 0 0 6px rgba(249, 115, 22, 0.12);
+  }
+
+  :deep(.el-input__inner),
+  :deep(.el-select__selected-item),
+  :deep(.el-input-number__input),
+  :deep(.el-textarea__inner) {
+    color: rgba(244, 247, 255, 0.96);
+  }
+
+  :deep(.el-input__inner::placeholder),
+  :deep(.el-textarea__inner::placeholder) {
+    color: rgba(144, 160, 193, 0.68);
+  }
+
+  :deep(.el-input-number) {
+    width: 100%;
+  }
+
+  :deep(.el-input-number__increase),
+  :deep(.el-input-number__decrease) {
+    color: rgba(194, 205, 229, 0.82);
+    background: rgba(255, 255, 255, 0.04);
+    border-inline-start: 1px solid rgba(126, 148, 186, 0.12);
+  }
+
+  :deep(.el-input-number__increase:hover),
+  :deep(.el-input-number__decrease:hover) {
+    color: #fff;
+    background: rgba(249, 115, 22, 0.18);
+  }
+
+  :deep(.el-input__count) {
+    color: rgba(148, 163, 184, 0.78);
+  }
+
+  :deep(.el-input__count-inner) {
+    padding: 2px 8px;
+    border: 1px solid rgba(126, 148, 186, 0.14);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  :deep(.el-switch) {
+    --el-switch-on-color: #f97316;
+    --el-switch-off-color: rgba(120, 141, 179, 0.32);
   }
 }
 
@@ -1610,6 +1696,37 @@ onUnmounted(() => {
 
 .channel-form {
   margin-top: 18px;
+}
+
+.monitor-page {
+  :deep(.custom-drawer-shell .el-drawer),
+  :deep(.custom-drawer-shell .drawerHeader),
+  :deep(.custom-drawer-shell .drawerBody),
+  :deep(.custom-drawer-shell .drawerFooter) {
+    background:
+      radial-gradient(circle at top right, rgba(249, 115, 22, 0.08), transparent 28%),
+      linear-gradient(180deg, rgba(18, 27, 45, 0.98), rgba(10, 16, 28, 0.98));
+  }
+
+  :deep(.custom-drawer-shell .drawerBody) {
+    padding: 30px 28px 24px;
+  }
+
+  :deep(.custom-drawer-shell .drawerFooter) {
+    border-top-color: rgba(120, 141, 179, 0.14);
+  }
+
+  :deep(.custom-drawer-shell .el-alert) {
+    border: 1px solid rgba(249, 115, 22, 0.14);
+    background: rgba(249, 115, 22, 0.08);
+    color: rgba(246, 249, 255, 0.88);
+  }
+
+  :deep(.custom-drawer-shell .el-alert__title),
+  :deep(.custom-drawer-shell .el-alert__description),
+  :deep(.custom-drawer-shell .el-alert__icon) {
+    color: inherit;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -1631,6 +1748,7 @@ onUnmounted(() => {
   .stats-grid, .service-health-grid, .history-grid, .form-grid { grid-template-columns: 1fr; }
   .service-health-panel, .trend-panel, .history-panel, .management-panel { padding: 12px; }
   .filters { flex-wrap: wrap; }
+  .monitor-drawer-form { padding: 18px; }
 
   .history-controls {
     :deep(.el-button-group),

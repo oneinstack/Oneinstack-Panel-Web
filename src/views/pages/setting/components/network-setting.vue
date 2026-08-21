@@ -775,11 +775,12 @@ onBeforeUnmount(stopApplyPolling);
   margin-top: 18px;
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.96),
-    rgba(248, 250, 252, 0.96)
-  );
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    var(--surface-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 14px 30px rgba(4, 10, 20, 0.14);
 
   &__intro {
     display: flex;
@@ -816,11 +817,14 @@ onBeforeUnmount(stopApplyPolling);
 
 .summary-card {
   padding: 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 14px;
-  background: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0)),
+    var(--surface-subtle);
   box-shadow:
-    0 1px 0 rgba(15, 23, 42, 0.04),
-    0 10px 24px rgba(15, 23, 42, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 8px 18px rgba(4, 10, 20, 0.1);
 
   &__label {
     display: block;
@@ -848,7 +852,12 @@ onBeforeUnmount(stopApplyPolling);
   padding: 24px;
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background: #fff;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    var(--surface-card);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 14px 30px rgba(4, 10, 20, 0.12);
 
   &__footer {
     display: flex;
@@ -888,7 +897,7 @@ onBeforeUnmount(stopApplyPolling);
 .form-section + .form-section {
   margin-top: 26px;
   padding-top: 26px;
-  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .form-section__header {
@@ -934,7 +943,10 @@ onBeforeUnmount(stopApplyPolling);
   gap: 16px;
   padding: 18px 20px;
   border-radius: 16px;
-  background: var(--surface-subtle);
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.025), rgba(255, 255, 255, 0)),
+    rgba(255, 255, 255, 0.02);
 
   &__content {
     display: flex;
@@ -967,7 +979,39 @@ onBeforeUnmount(stopApplyPolling);
 :deep(.network-form .el-input__wrapper),
 :deep(.network-form .el-textarea__inner) {
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.16) inset;
+  color: var(--text-primary);
+  background: rgba(8, 17, 31, 0.42);
+  box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.14) inset;
+}
+
+:deep(.network-form .el-input__wrapper:hover),
+:deep(.network-form .el-textarea__inner:hover) {
+  box-shadow: 0 0 0 1px rgba(var(--primary-color), 0.18) inset;
+}
+
+:deep(.network-form .el-input__wrapper.is-focus),
+:deep(.network-form .el-textarea__inner:focus) {
+  background: rgba(8, 17, 31, 0.58);
+  box-shadow:
+    0 0 0 1px rgba(var(--primary-color), 0.45) inset,
+    0 0 0 4px rgba(var(--primary-color), 0.08);
+}
+
+:deep(.network-form .el-input__inner),
+:deep(.network-form .el-textarea__inner) {
+  color: var(--text-primary);
+}
+
+:deep(.network-form .el-input__inner::placeholder),
+:deep(.network-form .el-textarea__inner::placeholder) {
+  color: var(--text-placeholder);
+}
+
+:deep(.network-form .el-input-group__append),
+:deep(.network-form .el-input-group__prepend) {
+  color: var(--text-secondary);
+  border-color: rgba(148, 163, 184, 0.14);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 :deep(.network-form .el-switch) {

@@ -245,18 +245,18 @@ defineExpose({
 :deep(.smart-table th.el-table__cell) {
   height: 46px;
   padding: 0;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9);
+  border-bottom: 1px solid var(--border-subtle) !important;
   color: #64748b;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: linear-gradient(180deg, #f8fafc, #f5f7fb);
+  background: var(--surface-page) !important;
 }
 
 :deep(.smart-table td.el-table__cell) {
   height: 48px;
   padding: 0;
-  border-bottom: 1px solid rgba(241, 245, 249, 0.95);
+  border-bottom: 1px solid var(--border-subtle) !important;
 }
 
 :deep(.smart-table td.el-table-fixed-column--left),
@@ -269,6 +269,10 @@ defineExpose({
 :deep(.smart-table .el-table__body tr.hover-row > td.el-table-fixed-column--left),
 :deep(.smart-table .el-table__body tr.hover-row > td.el-table-fixed-column--right) {
   background-color: var(--el-table-row-hover-bg-color);
+}
+
+:deep(.smart-table .el-table__body tr:hover > td){
+  background-color: var(--surface-page) !important;
 }
 
 :deep(.smart-table .cell) {

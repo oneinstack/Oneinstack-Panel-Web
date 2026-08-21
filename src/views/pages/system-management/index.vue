@@ -666,6 +666,19 @@ onMounted(() => {
   gap: 16px;
 }
 
+.system-page :deep(.custom-drawer-shell .el-drawer) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    #0b1321;
+}
+
+.system-page :deep(.custom-drawer-shell .el-drawer__body) {
+  background:
+    radial-gradient(circle at top right, rgba(var(--primary-color), 0.12), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0)),
+    #0b1321;
+}
+
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -675,9 +688,14 @@ onMounted(() => {
 .detail-item,
 .detail-block {
   padding: 16px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  background: var(--surface-base);
+  border: 1px solid rgba(120, 141, 179, 0.16);
+  border-radius: 18px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0.015)),
+    rgba(11, 18, 30, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 28px rgba(0, 0, 0, 0.14);
 }
 
 .detail-item {
@@ -710,6 +728,10 @@ onMounted(() => {
     margin: 0;
     white-space: pre-wrap;
     word-break: break-word;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(120, 141, 179, 0.12);
+    background: rgba(6, 12, 22, 0.74);
     color: var(--text-secondary);
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
     line-height: 1.75;
@@ -721,6 +743,12 @@ onMounted(() => {
   flex-wrap: wrap;
   gap: 8px;
   color: var(--text-secondary);
+}
+
+.children-tags :deep(.el-tag) {
+  --el-tag-bg-color: rgba(255, 255, 255, 0.04);
+  --el-tag-border-color: rgba(120, 141, 179, 0.18);
+  --el-tag-text-color: var(--text-secondary);
 }
 
 .disk-progress-card {
@@ -736,6 +764,10 @@ onMounted(() => {
     color: var(--text-secondary);
     white-space: nowrap;
   }
+}
+
+.disk-progress-card :deep(.el-progress-bar__outer) {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 @media (max-width: 1280px) {
