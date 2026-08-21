@@ -350,6 +350,7 @@ onUnmounted(() => {
 
   strong {
     flex: 1;
+    color: var(--text-primary);
   }
 }
 
@@ -369,6 +370,13 @@ onUnmounted(() => {
   :deep(.el-date-editor) {
     width: 100%;
   }
+}
+
+:deep(.el-card) {
+  background: var(--surface-card) !important;
+  border: none !important;
+  // border: 1px solid var(--border-subtle) !important;
+  // border-radius: 16px !important;
 }
 
 @media (max-width: 760px) {

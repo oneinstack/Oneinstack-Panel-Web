@@ -548,6 +548,12 @@ onMounted(() => {
   border-radius: 10px;
 }
 
+:deep(.el-card.is-always-shadow) {
+  background: var(--surface-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 16px !important;
+}
+
 :deep(.task-table) {
   --el-table-border-color: rgba(226, 232, 240, 0.86);
   overflow: hidden;

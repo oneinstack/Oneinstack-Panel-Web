@@ -2230,6 +2230,7 @@ const archiveTaskRunningCount = computed(
     <custom-dialog
       v-model="conf.operationDialog.show"
       :title="conf.operationDialog.title"
+      v-if="conf.operationDialog.type !== 'properties'"
     >
       <div class="operation-dialog">
         <template v-if="conf.operationDialog.type === 'rename'">
@@ -2348,69 +2349,17 @@ const archiveTaskRunningCount = computed(
             </el-input>
           </div>
         </template>
-        <template v-else-if="conf.operationDialog.type === 'properties'">
-          <div
-            v-loading="conf.operationDialog.loading"
-            class="properties-panel"
-          >
-            <el-descriptions
-              v-if="conf.operationDialog.properties"
-              :column="1"
-              border
-              label-width="130"
-            >
-              <el-descriptions-item :label="t('common.name', 'Name')">
-                {{ conf.operationDialog.properties.name }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="t('file.path', 'Path')">
-                <span class="break-path">{{
-                  conf.operationDialog.properties.path
-                }}</span>
-              </el-descriptions-item>
-              <el-descriptions-item :label="t('common.type', 'Type')">
-                {{
-                  conf.operationDialog.properties.type === "directory"
-                    ? t("file.directory", "Directory")
-                    : conf.operationDialog.properties.type === "symlink"
-                      ? t("file.symlink", "Symbolic link")
-                      : t("file.file", "File")
-                }}
-              </el-descriptions-item>
-              <el-descriptions-item
-                :label="t('file.columns.identity', 'Permissions / Owner')"
-              >
-                {{ conf.operationDialog.properties.permissions }} /
-                {{ conf.operationDialog.properties.owner }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="t('common.size', 'Size')">
-                {{ formatBytes(conf.operationDialog.properties.size) }}
-              </el-descriptions-item>
-              <el-descriptions-item :label="t('file.mimeType', 'MIME type')">
-                {{ conf.operationDialog.properties.mimeType || "—" }}
-              </el-descriptions-item>
-              <el-descriptions-item
-                :label="t('file.columns.modTime', 'Modified time')"
-              >
-                {{ conf.operationDialog.properties.modTime }}
-              </el-descriptions-item>
-            </el-descriptions>
-          </div>
-        </template>
       </div>
       <template #footer>
         <el-button @click="conf.operationDialog.close">
           {{
-            conf.operationDialog.type === "properties" ||
             conf.operationDialog.shareUrl
               ? t("common.close", "Close")
               : t("common.cancel", "Cancel")
           }}
         </el-button>
         <el-button
-          v-if="
-            conf.operationDialog.type !== 'properties' &&
-            !conf.operationDialog.shareUrl
-          "
+          v-if="!conf.operationDialog.shareUrl"
           type="primary"
           :loading="conf.operationDialog.submitting"
           @click="conf.operationDialog.confirm"
@@ -2423,6 +2372,82 @@ const archiveTaskRunningCount = computed(
         </el-button>
       </template>
     </custom-dialog>
+
+    <custom-drawer
+      :visible="
+        conf.operationDialog.show && conf.operationDialog.type === 'properties'
+      "
+      :title="t('file.fileProperties', 'File properties')"
+      size="min(820px, 92vw)"
+      body-mode="compact"
+      :show-confirm="false"
+      :cancel-text="t('common.close', 'Close')"
+      :on-close="conf.operationDialog.close"
+    >
+      <template #title>
+        <div class="properties-heading">
+          <h3>{{ t("file.fileProperties", "File properties") }}</h3>
+          <p v-if="conf.operationDialog.properties?.path">
+            {{ conf.operationDialog.properties.path }}
+          </p>
+        </div>
+      </template>
+
+      <div
+        v-loading="conf.operationDialog.loading"
+        class="properties-panel properties-drawer"
+      >
+        <template v-if="conf.operationDialog.properties">
+          <div class="properties-list">
+            <div class="properties-row">
+              <span>{{ t("common.name", "Name") }}</span>
+              <strong>{{ conf.operationDialog.properties.name }}</strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("file.path", "Path") }}</span>
+              <strong class="break-path">{{
+                conf.operationDialog.properties.path
+              }}</strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("common.type", "Type") }}</span>
+              <strong>
+                {{
+                  conf.operationDialog.properties.type === "directory"
+                    ? t("file.directory", "Directory")
+                    : conf.operationDialog.properties.type === "symlink"
+                      ? t("file.symlink", "Symbolic link")
+                      : t("file.file", "File")
+                }}
+              </strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("file.columns.identity", "Permissions / Owner") }}</span>
+              <strong>
+                {{ conf.operationDialog.properties.permissions }} /
+                {{ conf.operationDialog.properties.owner }}
+              </strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("common.size", "Size") }}</span>
+              <strong>{{
+                formatBytes(conf.operationDialog.properties.size)
+              }}</strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("file.mimeType", "MIME type") }}</span>
+              <strong>{{
+                conf.operationDialog.properties.mimeType || "—"
+              }}</strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("file.columns.modTime", "Modified time") }}</span>
+              <strong>{{ conf.operationDialog.properties.modTime }}</strong>
+            </div>
+          </div>
+        </template>
+      </div>
+    </custom-drawer>
 
     <custom-dialog
       v-model="conf.copyDialog.show"
@@ -3486,8 +3511,96 @@ const archiveTaskRunningCount = computed(
   min-height: 180px;
 }
 
+.properties-heading {
+  min-width: 0;
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 760;
+    line-height: 1.2;
+  }
+
+  p {
+    overflow: hidden;
+    margin: 6px 0 0;
+    color: var(--text-tertiary);
+    font-family:
+      ui-monospace,
+      SFMono-Regular,
+      Menlo,
+      Monaco,
+      Consolas,
+      monospace;
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.properties-drawer {
+  padding-top: 4px;
+}
+
+.properties-list {
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+  border-radius: 20px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 96%, white 4%) 0%,
+      color-mix(in srgb, var(--surface-card) 92%, transparent) 100%
+    );
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+}
+
+.properties-row {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr);
+  align-items: start;
+
+  & + & {
+    border-top: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent);
+  }
+
+  > span,
+  > strong {
+    min-width: 0;
+    padding: 16px 18px;
+    line-height: 1.6;
+  }
+
+  > span {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--surface-card) 76%, white 24%);
+    border-right: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent);
+  }
+
+  > strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 520;
+    background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+  }
+}
+
 .break-path {
   word-break: break-all;
+}
+
+@media (max-width: 980px) {
+  .properties-row {
+    grid-template-columns: 1fr;
+
+    > span {
+      border-right: 0;
+      border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 76%, transparent);
+    }
+  }
 }
 
 :global(.favorite-menu) {

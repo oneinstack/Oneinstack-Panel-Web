@@ -98,7 +98,9 @@ defineExpose({
         <div class="field-help">{{ t('container.create.imageHelp') }}</div>
       </el-form-item>
 
-      <el-divider content-position="left">{{ t('container.create.networkMounts') }}</el-divider>
+      <div class="section-divider">
+        <span>{{ t('container.create.networkMounts') }}</span>
+      </div>
       <el-form-item :label="t('container.create.portMapping')">
         <div class="port-publish">
           <el-radio-group v-model="form.portPublishMode" class="port-mode-options">
@@ -237,7 +239,9 @@ defineExpose({
         </div>
       </el-form-item>
 
-      <el-divider content-position="left">{{ t('container.create.startupParameters') }}</el-divider>
+      <div class="section-divider">
+        <span>{{ t('container.create.startupParameters') }}</span>
+      </div>
       <el-form-item :label="t('container.create.command')">
         <el-input
           v-model="form.commandText"
@@ -276,7 +280,9 @@ defineExpose({
         </div>
       </el-form-item>
 
-      <el-divider content-position="left">{{ t('container.resourceLimits') }}</el-divider>
+      <div class="section-divider">
+        <span>{{ t('container.resourceLimits') }}</span>
+      </div>
       <el-form-item :label="t('container.create.cpuWeight')">
         <el-input-number
           v-model="form.cpuWeight"
@@ -314,7 +320,9 @@ defineExpose({
         <div class="resource-help">{{ t('container.create.memoryLimitHelp') }}</div>
       </el-form-item>
 
-      <el-divider content-position="left">{{ t('container.create.labelsEnvironment') }}</el-divider>
+      <div class="section-divider">
+        <span>{{ t('container.create.labelsEnvironment') }}</span>
+      </div>
       <el-form-item label="Labels">
         <el-input
           v-model="form.labelsText"
@@ -375,18 +383,40 @@ defineExpose({
     resize: vertical;
   }
 
-  :deep(.el-divider) {
-    margin: 26px 0 20px;
+  :deep(.resource-limit-input) {
+    width: calc(100% - 82px);
+  }
+}
+
+.section-divider {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin: 28px 0 22px;
+  min-height: 28px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: color-mix(in srgb, var(--border-subtle) 84%, transparent);
+    transform: translateY(-50%);
   }
 
-  :deep(.el-divider__text) {
+  > span {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px 0 0;
+    background: var(--surface-page);
     color: var(--text-primary);
     font-size: 16px;
     font-weight: 760;
-  }
-
-  :deep(.resource-limit-input) {
-    width: calc(100% - 82px);
+    line-height: 1.35;
   }
 }
 
@@ -428,9 +458,9 @@ defineExpose({
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    border: 1px solid rgba(218, 225, 236, 0.9);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    background: rgba(248, 250, 252, 0.82);
+    background: transparent;
     cursor: pointer;
     user-select: none;
   }
@@ -444,6 +474,8 @@ defineExpose({
     display: inline-flex;
     align-items: center;
     padding-left: 0;
+    white-space: normal;
+    color: var(--text-primary);
   }
 }
 
@@ -472,9 +504,9 @@ defineExpose({
     align-items: center;
     gap: 10px;
     padding: 8px 12px;
-    border: 1px solid rgba(218, 225, 236, 0.9);
+    border: 1px solid var(--border-subtle);
     border-radius: 12px;
-    background: rgba(248, 250, 252, 0.7);
+    background: transparent;
     cursor: pointer;
     user-select: none;
   }
@@ -491,6 +523,7 @@ defineExpose({
     min-width: 0;
     padding-left: 0;
     white-space: normal;
+    color: var(--text-primary);
   }
 }
 
