@@ -468,63 +468,86 @@ onMounted(async () => {
         }
       "
     >
-      <el-descriptions
-        v-if="detail"
-        class="audit-detail-descriptions"
-        :column="2"
-        border
-      >
-        <el-descriptions-item :label="$t('audit.sequence')"
-          >#{{ detail.sequence }}</el-descriptions-item
+      <div v-if="detail" class="audit-detail">
+        <section class="audit-detail__hero">
+          <div class="audit-detail__hero-main">
+            <span class="audit-detail__eyebrow">
+              {{ $t("audit.sequence") }} #{{ detail.sequence }}
+            </span>
+            <h3>{{ detail.action }}</h3>
+            <p>{{ detail.route || detail.path }}</p>
+          </div>
+          <div class="audit-detail__hero-side">
+            <div
+              class="audit-detail__status"
+              :class="`is-${detail.outcome}`"
+            >
+              {{ detail.status }} / {{ detail.outcome }}
+            </div>
+            <div class="audit-detail__meta">
+              <span>{{ formatTime(detail.createdAt) }}</span>
+              <span>{{ detail.durationMs }} ms</span>
+            </div>
+          </div>
+        </section>
+
+        <el-descriptions
+          class="audit-detail-descriptions"
+          :column="2"
+          border
         >
-        <el-descriptions-item :label="$t('common.time')">{{
-          formatTime(detail.createdAt)
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('common.user')"
-          >{{ detail.username || $t("common.unauthenticated") }}（ID
-          {{ detail.userId || 0 }}）</el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.authMode')">{{
-          detail.authMode || "—"
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('approvalCenter.action')" :span="2">{{
-          detail.action
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('audit.route')" :span="2">{{
-          detail.route || detail.path
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('audit.result')"
-          >{{ detail.status }} / {{ detail.outcome }}</el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.duration')"
-          >{{ detail.durationMs }} ms</el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.remoteIp')">{{
-          detail.remoteIp || "—"
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('audit.requestSize')"
-          >{{ detail.contentLength }} bytes</el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.requestId')" :span="2"
-          ><code>{{ detail.requestId }}</code></el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.userAgent')" :span="2">{{
-          detail.userAgent || "—"
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('common.description')" :span="2">{{
-          detail.message || "—"
-        }}</el-descriptions-item>
-        <el-descriptions-item :label="$t('audit.previousHash')" :span="2"
-          ><code class="hash">{{
-            detail.previousHash
-          }}</code></el-descriptions-item
-        >
-        <el-descriptions-item :label="$t('audit.entryHash')" :span="2"
-          ><code class="hash">{{
-            detail.entryHash
-          }}</code></el-descriptions-item
-        >
-      </el-descriptions>
+          <el-descriptions-item :label="$t('common.user')"
+            >{{ detail.username || $t("common.unauthenticated") }}（ID
+            {{ detail.userId || 0 }}）</el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.authMode')">{{
+            detail.authMode || "—"
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('common.time')">{{
+            formatTime(detail.createdAt)
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('audit.duration')"
+            >{{ detail.durationMs }} ms</el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.result')"
+            >{{ detail.status }} / {{ detail.outcome }}</el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.requestSize')"
+            >{{ detail.contentLength }} bytes</el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.remoteIp')">{{
+            detail.remoteIp || "—"
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('audit.sequence')"
+            >#{{ detail.sequence }}</el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('approvalCenter.action')" :span="2">{{
+            detail.action
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('audit.route')" :span="2">{{
+            detail.route || detail.path
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('audit.requestId')" :span="2"
+            ><code class="detail-code">{{ detail.requestId }}</code></el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.userAgent')" :span="2">{{
+            detail.userAgent || "—"
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('common.description')" :span="2">{{
+            detail.message || "—"
+          }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('audit.previousHash')" :span="2"
+            ><code class="detail-code hash">{{
+              detail.previousHash
+            }}</code></el-descriptions-item
+          >
+          <el-descriptions-item :label="$t('audit.entryHash')" :span="2"
+            ><code class="detail-code hash">{{
+              detail.entryHash
+            }}</code></el-descriptions-item
+          >
+        </el-descriptions>
+      </div>
     </custom-drawer>
   </div>
 </template>
@@ -710,18 +733,157 @@ code {
   word-break: break-all;
 }
 
+.audit-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.audit-detail__hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 84%, transparent);
+  border-radius: 18px;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 96%, white 4%) 0%,
+      color-mix(in srgb, var(--surface-page) 78%, transparent) 100%
+    );
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.06);
+}
+
+.audit-detail__hero-main {
+  min-width: 0;
+
+  h3 {
+    margin: 8px 0 6px;
+    color: var(--text-primary);
+    font-size: 22px;
+    font-weight: 780;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    line-height: 1.6;
+    word-break: break-all;
+  }
+}
+
+.audit-detail__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: rgb(var(--primary-color));
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, rgb(var(--primary-color)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, rgb(var(--primary-color)) 24%, transparent);
+}
+
+.audit-detail__hero-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.audit-detail__status {
+  min-height: 32px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  &.is-success {
+    color: #15803d;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.22);
+  }
+
+  &.is-failure {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.22);
+  }
+}
+
+.audit-detail__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
 .audit-detail-descriptions {
+  :deep(.el-descriptions) {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #f8fafc;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  }
+
+  :deep(.el-descriptions__table) {
+    border-collapse: separate;
+  }
+
+  :deep(.el-descriptions__body),
+  :deep(.el-descriptions__table.is-bordered),
+  :deep(.el-descriptions__cell) {
+    border-color: rgba(148, 163, 184, 0.18) !important;
+  }
+
   :deep(.el-descriptions__label) {
-    width: 96px;
-    color: var(--text-secondary);
-    font-weight: 650;
+    width: 104px;
+    color: #475569;
+    font-weight: 700;
+    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
   }
 
   :deep(.el-descriptions__content) {
-    color: var(--text-primary);
+    color: #0f172a;
     line-height: 1.65;
     word-break: break-word;
+    background: rgba(255, 255, 255, 0.96);
   }
+
+  :deep(.el-descriptions__cell) {
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+}
+
+.detail-code {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 12px;
+  color: #0f172a;
+  font-size: 12px;
+  line-height: 1.7;
+  background:
+    linear-gradient(
+      180deg,
+      #f8fafc 0%,
+      #eff6ff 100%
+    );
 }
 
 @media (max-width: 1350px) {
@@ -755,6 +917,21 @@ code {
 
   .audit-panel {
     padding: 12px;
+  }
+
+  .audit-detail__hero {
+    flex-direction: column;
+  }
+
+  .audit-detail__hero-side,
+  .audit-detail__meta {
+    align-items: flex-start;
+  }
+
+  .audit-detail-descriptions {
+    :deep(.el-descriptions) {
+      display: block;
+    }
   }
 }
 </style>
