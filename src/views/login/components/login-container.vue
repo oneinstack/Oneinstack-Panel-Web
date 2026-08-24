@@ -89,8 +89,12 @@ withDefaults(defineProps<Props>(), {
   display: grid;
   grid-template-columns: minmax(500px, 1.08fr) minmax(440px, 0.92fr);
   overflow: hidden;
-  color: #f8fafc;
-  background: #0b1120;
+  isolation: isolate;
+  pointer-events: none;
+  color: var(--text-primary);
+  background:
+    radial-gradient(circle at left top, rgba(var(--primary-color), 0.16), transparent 24rem),
+    linear-gradient(135deg, var(--surface-page) 0%, color-mix(in srgb, var(--surface-page) 78%, #101828 22%) 100%);
 }
 
 .ambient {
@@ -121,10 +125,12 @@ withDefaults(defineProps<Props>(), {
   top: 28px;
   right: 34px;
   z-index: 5;
+  pointer-events: auto;
 }
 
 .login-hero {
   position: relative;
+  z-index: 0;
   min-height: 100vh;
   padding: clamp(34px, 5vw, 70px) clamp(38px, 7vw, 104px);
   display: flex;
@@ -132,6 +138,7 @@ withDefaults(defineProps<Props>(), {
   justify-content: space-between;
   overflow: hidden;
   border-right: 1px solid rgba(255, 255, 255, 0.07);
+  pointer-events: none;
 
   &::before {
     content: '';
@@ -415,27 +422,81 @@ withDefaults(defineProps<Props>(), {
 
 .login-panel {
   position: relative;
-  z-index: 2;
+  z-index: 3;
   min-height: 100vh;
   padding: 42px clamp(38px, 7vw, 104px);
   display: flex;
   flex-direction: column;
   justify-content: center;
-  color: #182230;
-  background: #ffffff;
+  color: var(--text-primary);
+  pointer-events: auto;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-card) 96%, white 4%) 0%,
+      var(--surface-card) 100%
+    );
+  box-shadow: inset 1px 0 0 color-mix(in srgb, var(--border-subtle) 84%, transparent);
 
   &__inner {
+    position: relative;
+    z-index: 1;
     width: min(100%, 440px);
     margin: auto;
   }
 
   .panel-footer {
+    position: relative;
+    z-index: 1;
     width: 100%;
     margin-top: 32px;
-    color: #98a2b3;
+    color: var(--text-placeholder);
     font-size: 10px;
     text-align: center;
     letter-spacing: 0.04em;
+  }
+}
+
+.login-panel,
+.login-panel * {
+  pointer-events: auto;
+}
+
+:global(:root:root[class='dark']) {
+  .login-container {
+    background:
+      radial-gradient(circle at left top, rgba(var(--primary-color), 0.18), transparent 24rem),
+      radial-gradient(circle at right bottom, rgba(59, 130, 246, 0.1), transparent 28rem),
+      linear-gradient(135deg, #08101e 0%, #0b1120 36%, #10192d 100%);
+  }
+
+  .login-hero {
+    border-right-color: color-mix(in srgb, var(--border-default) 44%, transparent);
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(8, 16, 30, 0.18), rgba(8, 16, 30, 0.04));
+      pointer-events: none;
+    }
+  }
+
+  .login-panel {
+    background:
+      radial-gradient(circle at left top, rgba(var(--primary-color), 0.08), transparent 18rem),
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--surface-card) 90%, #1b2436 10%) 0%,
+        color-mix(in srgb, var(--surface-card) 96%, transparent) 100%
+      );
+    box-shadow:
+      inset 1px 0 0 color-mix(in srgb, var(--border-default) 56%, transparent),
+      -28px 0 56px rgba(0, 0, 0, 0.16);
+  }
+
+  .panel-footer {
+    color: var(--text-tertiary);
   }
 }
 
@@ -468,7 +529,9 @@ withDefaults(defineProps<Props>(), {
 @media (max-width: 980px) {
   .login-container {
     grid-template-columns: 1fr;
-    background: #f8fafc;
+    background:
+      radial-gradient(circle at 20% 0, rgba(var(--primary-color), 0.08), transparent 28rem),
+      var(--surface-page);
   }
 
   .login-hero {
@@ -480,7 +543,12 @@ withDefaults(defineProps<Props>(), {
     padding: 32px 24px;
     background:
       radial-gradient(circle at 20% 0, rgba(var(--primary-color), 0.08), transparent 28rem),
-      #f8fafc;
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--surface-page) 92%, var(--surface-card) 8%) 0%,
+        var(--surface-page) 100%
+      );
+    box-shadow: none;
   }
 
   .guest-language-switch {

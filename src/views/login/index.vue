@@ -214,7 +214,8 @@ const conf = reactive({
     place-items: center;
     border-radius: 12px;
     color: rgb(var(--primary-color));
-    background: #fff1e7;
+    background: color-mix(in srgb, rgba(var(--primary-color), 0.14) 100%, var(--surface-card));
+    border: 1px solid color-mix(in srgb, rgba(var(--primary-color), 0.18) 100%, transparent);
     font-size: 13px;
     font-weight: 800;
   }
@@ -226,12 +227,12 @@ const conf = reactive({
   }
 
   strong {
-    color: #182230;
+    color: var(--text-primary);
     font-size: 14px;
   }
 
   span {
-    color: #98a2b3;
+    color: var(--text-tertiary);
     font-size: 10px;
   }
 }
@@ -249,7 +250,7 @@ const conf = reactive({
 
   h2 {
     margin: 0;
-    color: #182230;
+    color: var(--text-primary);
     font-size: 30px;
     font-weight: 720;
     line-height: 1.3;
@@ -258,7 +259,7 @@ const conf = reactive({
 
   p {
     margin-top: 10px;
-    color: #667085;
+    color: var(--text-secondary);
     font-size: 13px;
     line-height: 1.7;
   }
@@ -272,7 +273,7 @@ const conf = reactive({
   :deep(.el-form-item__label) {
     height: auto;
     margin-bottom: 8px;
-    color: #344054;
+    color: var(--text-secondary);
     font-size: 12px;
     font-weight: 620;
     line-height: 1.4;
@@ -282,15 +283,15 @@ const conf = reactive({
     min-height: 50px;
     padding: 1px 15px;
     border-radius: 11px;
-    background: #f9fafb;
-    box-shadow: 0 0 0 1px #e4e7ec inset;
+    background: color-mix(in srgb, var(--surface-subtle) 86%, var(--surface-card) 14%);
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--border-subtle) 92%, transparent) inset;
 
     &:hover {
-      box-shadow: 0 0 0 1px #cfd4dc inset;
+      box-shadow: 0 0 0 1px color-mix(in srgb, var(--border-default) 92%, transparent) inset;
     }
 
     &.is-focus {
-      background: #fff;
+      background: var(--surface-card);
       box-shadow:
         0 0 0 1px rgb(var(--primary-color)) inset,
         0 0 0 4px rgba(var(--primary-color), 0.11);
@@ -298,12 +299,22 @@ const conf = reactive({
   }
 
   :deep(.el-input__inner) {
-    color: #182230;
+    color: var(--text-primary);
     font-size: 13px;
   }
 
+  :deep(.el-input__prefix),
+  :deep(.el-input__suffix) {
+    color: var(--text-tertiary);
+  }
+
+  :deep(.el-checkbox__inner) {
+    background: color-mix(in srgb, var(--surface-subtle) 86%, var(--surface-card) 14%);
+    border-color: color-mix(in srgb, var(--border-default) 84%, transparent);
+  }
+
   :deep(.el-checkbox__label) {
-    color: #667085;
+    color: var(--text-secondary);
     font-size: 12px;
   }
 }
@@ -322,7 +333,7 @@ const conf = reactive({
     display: flex;
     align-items: center;
     gap: 6px;
-    color: #98a2b3;
+    color: var(--text-tertiary);
     font-size: 10px;
 
     i {
@@ -352,9 +363,9 @@ const conf = reactive({
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  border: 1px solid #eaecf0;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 92%, transparent);
   border-radius: 11px;
-  background: #f9fafb;
+  background: color-mix(in srgb, var(--surface-subtle) 88%, var(--surface-card) 12%);
 
   .shield {
     width: 23px;
@@ -364,22 +375,63 @@ const conf = reactive({
     place-items: center;
     border-radius: 7px;
     color: #12b76a;
-    background: #ecfdf3;
+    background: color-mix(in srgb, rgba(18, 183, 106, 0.12) 100%, var(--surface-card));
     font-size: 11px;
     font-weight: 700;
   }
 
   strong {
-    color: #475467;
+    color: var(--text-secondary);
     font-size: 10px;
     font-weight: 650;
   }
 
   p {
     margin-top: 2px;
-    color: #98a2b3;
+    color: var(--text-tertiary);
     font-size: 9px;
     line-height: 1.5;
+  }
+}
+
+:global(:root:root[class='dark']) {
+  .login-form {
+    :deep(.el-input__wrapper) {
+      background: color-mix(in srgb, var(--surface-subtle) 72%, #1e293b 28%);
+      box-shadow:
+        0 0 0 1px color-mix(in srgb, var(--border-default) 80%, transparent) inset,
+        inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+      &:hover {
+        box-shadow:
+          0 0 0 1px color-mix(in srgb, var(--border-strong) 82%, transparent) inset,
+          inset 0 1px 0 rgba(255, 255, 255, 0.04);
+      }
+
+      &.is-focus {
+        background: color-mix(in srgb, var(--surface-card) 88%, #1e293b 12%);
+      }
+    }
+
+    :deep(.el-input__inner::placeholder) {
+      color: var(--text-placeholder);
+    }
+
+    :deep(.el-checkbox__inner) {
+      background: color-mix(in srgb, var(--surface-subtle) 74%, #1e293b 26%);
+      border-color: color-mix(in srgb, var(--border-default) 82%, transparent);
+    }
+  }
+
+  .login-note {
+    border-color: color-mix(in srgb, var(--border-default) 72%, transparent);
+    background:
+      linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--surface-subtle) 82%, #1e293b 18%) 0%,
+        color-mix(in srgb, var(--surface-card) 96%, transparent) 100%
+      );
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
 }
 

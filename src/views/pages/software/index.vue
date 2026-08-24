@@ -221,19 +221,10 @@ const catalogDetail = computed(() => {
           class="catalog-source"
           :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"
         >
-          <div class="catalog-source-copy">
-            <span class="source-dot" />
-            <span>
-              <strong>{{ catalogLabel }}</strong>
-              <small>{{ catalogDetail }}</small>
-              <small v-if="conf.catalog.status?.lastError" class="source-error">
-                {{ $t('software.lastSyncFailed', { message: conf.catalog.status.lastError }) }}
-              </small>
-            </span>
-          </div>
           <el-button
-            v-if="conf.catalog.status?.enabled"
+            v-if="conf.catalog.status"
             :loading="conf.catalog.loading"
+            :disabled="!conf.catalog.status?.enabled"
             plain
             @click="conf.catalog.sync"
           >
@@ -287,15 +278,16 @@ const catalogDetail = computed(() => {
 
 .catalog-source {
   display: flex;
-  min-height: 66px;
-  padding: 12px 14px 12px 16px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  justify-content: end;
+  // min-height: 66px;
+  // padding: 12px 14px 12px 16px;
+  // align-items: center;
+  // justify-content: space-between;
+  // gap: 16px;
   margin-bottom: 14px;
-  border: 1px solid color-mix(in srgb, var(--el-color-success) 24%, var(--border-subtle));
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--el-color-success) 5%, var(--surface-card));
+  // border: 1px solid color-mix(in srgb, var(--el-color-success) 24%, var(--border-subtle));
+  // border-radius: 12px;
+  // background: color-mix(in srgb, var(--el-color-success) 5%, var(--surface-card));
 
   &.warning {
     border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--border-subtle));

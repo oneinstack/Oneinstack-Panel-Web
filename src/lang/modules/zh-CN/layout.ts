@@ -1,5 +1,5 @@
 export default {
-  brandSubtitle: 'SERVER CONTROL',
+  brandSubtitle: '服务器管理控制台',
   navigation: '管理中心',
   expandNavigation: '展开导航',
   collapseNavigation: '收起导航',
