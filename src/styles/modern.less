@@ -192,6 +192,21 @@ html {
   }
 }
 
+:root:root[class='dark'] .el-input .el-input__inner,
+:root:root[class='dark'] .el-select .el-select__selected-item,
+:root:root[class='dark'] .el-select .el-select__placeholder,
+:root:root[class='dark'] .el-date-editor .el-range-input,
+:root:root[class='dark'] .el-cascader .el-input__inner {
+  color: var(--text-secondary) !important;
+}
+
+:root:root[class='dark'] .el-select .el-select__placeholder,
+:root:root[class='dark'] .el-input .el-input__inner::placeholder,
+:root:root[class='dark'] .el-textarea__inner::placeholder,
+:root:root[class='dark'] .el-range-input::placeholder {
+  color: var(--text-tertiary) !important;
+}
+
 .el-date-editor {
   min-width: 0;
   max-width: 100%;
@@ -342,7 +357,7 @@ html {
 :root:root[class='dark'] .el-pagination .btn-prev:disabled,
 :root:root[class='dark'] .el-pagination .btn-next:disabled,
 :root:root[class='dark'] .el-pagination button:disabled {
-  color: var(--text-placeholder) !important;
+  color: var(--text-tertiary) !important;
   border-color: rgba(71, 84, 103, 0.58) !important;
   background: rgba(23, 32, 51, 0.96) !important;
   box-shadow: none !important;
@@ -355,6 +370,18 @@ html {
   color: var(--text-secondary);
   border-color: var(--border-subtle);
   background: var(--surface-card);
+}
+
+:root:root[class='dark'] .el-pagination .el-pagination__total,
+:root:root[class='dark'] .el-pagination .el-pagination__jump,
+:root:root[class='dark'] .el-pagination .el-select .el-select__selected-item,
+:root:root[class='dark'] .el-pagination .el-select .el-select__placeholder,
+:root:root[class='dark'] .el-pagination .el-input__inner {
+  color: var(--text-secondary) !important;
+}
+
+:root:root[class='dark'] .el-pagination .el-pagination__jump .el-input__inner::placeholder {
+  color: var(--text-tertiary) !important;
 }
 
 :root:root[class='dark'] .el-pagination .btn-prev:not(:disabled):hover,
@@ -397,6 +424,24 @@ html {
 .el-dropdown-menu__item {
   min-height: 38px;
   border-radius: 8px;
+}
+
+:root:root[class='dark'] .el-dropdown-menu__item,
+:root:root[class='dark'] .el-select-dropdown__item {
+  color: var(--text-secondary);
+}
+
+:root:root[class='dark'] .el-dropdown-menu__item.is-disabled,
+:root:root[class='dark'] .el-select-dropdown__item.is-disabled {
+  color: var(--text-tertiary) !important;
+  opacity: 0.88;
+}
+
+:root:root[class='dark'] .el-select-dropdown__item.hover,
+:root:root[class='dark'] .el-select-dropdown__item.is-hovering:not(.is-disabled),
+:root:root[class='dark'] .el-select-dropdown__item:not(.is-disabled):hover {
+  color: var(--text-primary) !important;
+  background: rgba(var(--primary-color), 0.12) !important;
 }
 
 .header-dropdown-popper.el-popper {

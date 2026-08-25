@@ -154,6 +154,8 @@ export default {
     dnsListFailed: '读取 DNS 账号失败',
     websiteListFailed: '读取网站列表失败',
     materialFailed: '读取证书材料失败',
+    submitFailed: '创建证书失败，请检查输入或稍后重试',
+    errorCodeLabel: '错误码',
     taskCreated: '任务已创建，正在等待执行',
     taskCanceled: '已提交取消请求',
     certificateDeleted: '证书已删除',

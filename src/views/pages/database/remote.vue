@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import { Back, Connection, Delete, EditPen, Refresh } from '@element-plus/icons-vue'
+import { HttpRequestError } from '@/api'
 import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
@@ -74,18 +75,40 @@ const conf: Record<string, any> = reactive({
     title: '',
     type: 'add',
     loading: false,
+    errorMessage: '',
+    errorDetail: '',
+    errorCode: '',
     open: (type: 'add' | 'edit', row?: any) => {
-      conf.drawer.title = t('database.remote.addDatabase', 'Add database')
+      conf.drawer.title = t('database.remote.addRemoteDatabase', 'Add remote database')
+      conf.drawer.errorMessage = ''
+      conf.drawer.errorDetail = ''
+      conf.drawer.errorCode = ''
+      conf.form.errors.addr = ''
+      conf.form.errors.port = ''
+      conf.form.errors.root = ''
+      conf.form.errors.password = ''
       if (type === 'edit') {
-        conf.drawer.title = t('database.remote.editDatabase', 'Edit database')
+        conf.drawer.title = t('database.remote.editRemoteDatabase', 'Edit remote database')
         const cloneRow = structuredClone(toRaw(row))
         cloneRow.password = ''
         conf.form.data.value = cloneRow
+      } else {
+        conf.form.data.value = {
+          type: connectionType,
+          port: connectionType === 'mysql' ? '3306' : '6379'
+        }
       }
       conf.drawer.type = type
       conf.drawer.show = true
     },
     onClose: () => {
+      conf.drawer.errorMessage = ''
+      conf.drawer.errorDetail = ''
+      conf.drawer.errorCode = ''
+      conf.form.errors.addr = ''
+      conf.form.errors.port = ''
+      conf.form.errors.root = ''
+      conf.form.errors.password = ''
       conf.form.instance?.clearValidate()
       conf.form.instance?.resetFields()
       conf.drawer.show = false
@@ -93,6 +116,13 @@ const conf: Record<string, any> = reactive({
     onConfirm: () => {
       conf.form.instance?.validate(async (valid: boolean) => {
         if (!valid) return
+        conf.drawer.errorMessage = ''
+        conf.drawer.errorDetail = ''
+        conf.drawer.errorCode = ''
+        conf.form.errors.addr = ''
+        conf.form.errors.port = ''
+        conf.form.errors.root = ''
+        conf.form.errors.password = ''
         conf.drawer.loading = true
         try {
           const api = conf.drawer.type === 'add' ? Api.addDatabaseConn : Api.updateDatabaseConn
@@ -101,6 +131,22 @@ const conf: Record<string, any> = reactive({
           ElMessage.success(conf.drawer.type === 'add' ? t('database.remote.addSuccess', 'Connection tested and added') : t('database.remote.saveSuccess', 'Connection tested and saved'))
           await conf.list.getData()
           conf.drawer.show = false
+        } catch (error: any) {
+          const payload = error instanceof HttpRequestError && error.data && typeof error.data === 'object'
+            ? error.data as any
+            : null
+          conf.drawer.errorMessage = error instanceof HttpRequestError
+            ? error.message || t('database.remote.submitFailed', 'Failed to save the remote database connection')
+            : t('database.remote.submitFailed', 'Failed to save the remote database connection')
+          conf.drawer.errorDetail = payload?.error?.detail || ''
+          conf.drawer.errorCode = String(payload?.error?.code ?? payload?.code ?? error?.code ?? '')
+          const primaryField = payload?.error?.field || payload?.errors?.[0]?.field
+          const message = payload?.error?.message || payload?.message || conf.drawer.errorMessage
+          if (primaryField && conf.form.errors[primaryField] !== undefined) {
+            conf.form.errors[primaryField] = message
+          } else if (String(payload?.code ?? error?.code ?? '') === '4003') {
+            conf.form.errors.addr = message
+          }
         } finally {
           conf.drawer.loading = false
         }
@@ -109,9 +155,16 @@ const conf: Record<string, any> = reactive({
   },
   form: {
     instance: null as FormInstance | null,
+    errors: {
+      addr: '',
+      port: '',
+      root: '',
+      password: ''
+    },
     data: {
       value: {
-        type: connectionType
+        type: connectionType,
+        port: connectionType === 'mysql' ? '3306' : '6379'
       } as any,
       items: computed<FormItem[]>((): FormItem[] => {
         switch (conf.list.params.type) {
@@ -122,24 +175,28 @@ const conf: Record<string, any> = reactive({
                 label: t('database.remote.databaseAddress', 'Database address'),
                 prop: 'addr',
                 type: 'input',
+                error: conf.form.errors.addr,
                 rules: [{ required: true, message: t('database.remote.inputDatabaseAddress', 'Enter database address'), trigger: 'blur' }]
               },
               {
                 label: t('database.remote.port', 'Port'),
                 prop: 'port',
                 type: 'input',
+                error: conf.form.errors.port,
                 rules: [{ required: true, message: t('database.remote.inputPort', 'Enter port'), trigger: 'blur' }]
               },
               {
                 label: t('common.username', 'Username'),
                 prop: 'root',
                 type: 'input',
+                error: conf.form.errors.root,
                 rules: [{ required: true, message: t('database.remote.inputUsername', 'Enter username'), trigger: 'blur' }]
               },
               {
                 label: t('common.password', 'Password'),
                 prop: 'password',
                 type: 'password',
+                error: conf.form.errors.password,
                 placeholder: conf.drawer.type === 'edit' ? t('database.remote.keepPasswordPlaceholder', 'Leave blank to keep existing password') : '',
                 rules: [{
                   required: conf.list.params.type === 'mysql' && conf.drawer.type === 'add',
@@ -169,7 +226,7 @@ conf.list.getData()
     <div class="container">
       <div class="tool-bar">
         <div class="btn-group">
-          <el-button type="primary" @click="conf.drawer.open('add')">{{ t('database.remote.addRemoteServer', '添加远程服务器') }}</el-button>
+          <el-button type="primary" @click="conf.drawer.open('add')">{{ t('database.remote.addRemoteDatabase', '添加远程数据库') }}</el-button>
         </div>
       </div>
       <div class="box2">
@@ -178,7 +235,7 @@ conf.list.getData()
             <el-icon><Back /></el-icon>
             <span>{{ t('common.back', '返回') }}</span>
           </div>
-          <span class="title">{{ t('database.remote.remoteServer', '远程服务器') }}</span>
+          <span class="title">{{ t('database.remote.remoteDatabase', '远程数据库') }}</span>
         </div>
         <custom-table :loading="conf.list.loading" :data="conf.list.data" :columns="conf.list.columns">
           <template #empty>
@@ -190,7 +247,7 @@ conf.list.getData()
                   style="color: var(--el-color-primary); text-decoration: underline"
                   @click="conf.drawer.open('add')"
                 >
-                  {{ t('database.remote.emptyAction', '添加远程服务器') }}
+                  {{ t('database.remote.emptyAction', '添加远程数据库') }}
                 </a>
               </span>
             </div>
@@ -220,6 +277,25 @@ conf.list.getData()
       :on-confirm="conf.drawer.onConfirm"
     >
       <template v-if="conf.drawer.type === 'add' || conf.drawer.type === 'edit'">
+        <el-alert
+          v-if="conf.drawer.errorMessage"
+          class="drawer-error-alert"
+          :title="conf.drawer.errorMessage"
+          type="error"
+          show-icon
+          :closable="false"
+        >
+          <template v-if="conf.drawer.errorCode || conf.drawer.errorDetail" #default>
+            <div class="drawer-error-alert__detail">
+              <div v-if="conf.drawer.errorCode">
+                {{ t('database.remote.errorCodeLabel', '错误码') }}: {{ conf.drawer.errorCode }}
+              </div>
+              <div v-if="conf.drawer.errorDetail">
+                {{ conf.drawer.errorDetail }}
+              </div>
+            </div>
+          </template>
+        </el-alert>
         <custom-form :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)"></custom-form>
       </template>
     </custom-drawer>
@@ -227,7 +303,18 @@ conf.list.getData()
 </template>
 
 <style scoped lang="less">
+.drawer-error-alert {
+  margin-bottom: 16px;
+}
 
+.drawer-error-alert__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
 
 .drawerHeader {
   padding: 20px 0;

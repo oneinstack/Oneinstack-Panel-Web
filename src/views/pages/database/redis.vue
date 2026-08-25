@@ -86,7 +86,7 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
   <div class="container">
     <div class="tool-bar">
       <el-space class="btn-group">
-        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteServer', '远程服务器') }}</el-button>
+        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteDatabase', '远程数据库') }}</el-button>
       </el-space>
       <div class="demo-form-inline flex" style="gap: 16px">
         <span class="flex items-center" style="color: var(--el-color-primary); gap: 8px">

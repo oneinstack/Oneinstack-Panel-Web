@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { HttpRequestError } from '@/api'
 import { Api } from '@/api/modules'
 import type { CertificateAlgorithm, CertificateTask } from '@/api/modules'
 import i18n from '@/lang'
@@ -18,6 +19,15 @@ const emit = defineEmits<{
 
 const formRef = ref<any>()
 const loading = ref(false)
+const submitErrorMessage = ref('')
+const submitErrorDetail = ref('')
+const submitErrorCode = ref('')
+const fieldErrors = reactive<Record<string, string>>({
+  domains: '',
+  certificate: '',
+  privateKey: '',
+  algorithm: ''
+})
 const form = reactive({
   domains: '',
   certificate: '',
@@ -44,7 +54,64 @@ const rules = computed(() => ({
   algorithm: [{ required: !isUpload.value, message: t('certificate.messages.algorithmRequired'), trigger: 'change' }]
 }))
 
+const clearSubmitErrors = () => {
+  submitErrorMessage.value = ''
+  submitErrorDetail.value = ''
+  submitErrorCode.value = ''
+  fieldErrors.domains = ''
+  fieldErrors.certificate = ''
+  fieldErrors.privateKey = ''
+  fieldErrors.algorithm = ''
+}
+
+const normalizeFieldName = (field?: string) => {
+  if (!field) return ''
+  const mapping: Record<string, string> = {
+    domains: 'domains',
+    certificate: 'certificate',
+    certificatePem: 'certificate',
+    privateKey: 'privateKey',
+    private_key: 'privateKey',
+    privateKeyPem: 'privateKey',
+    algorithm: 'algorithm'
+  }
+  return mapping[field] || ''
+}
+
+const applyRequestError = (error: unknown) => {
+  clearSubmitErrors()
+  if (!(error instanceof HttpRequestError)) {
+    submitErrorMessage.value = t('certificate.messages.submitFailed')
+    return
+  }
+
+  submitErrorMessage.value = error.message || t('certificate.messages.submitFailed')
+
+  const payload = error.data && typeof error.data === 'object' ? error.data as any : null
+  const detail = payload?.error?.detail
+  const code = payload?.error?.code ?? payload?.code ?? error.code
+  if (detail && detail !== submitErrorMessage.value) {
+    submitErrorDetail.value = String(detail)
+  }
+  if (code !== undefined && code !== null && code !== '') {
+    submitErrorCode.value = String(code)
+  }
+
+  const allErrors = Array.isArray(payload?.errors) ? payload.errors : []
+  const primaryField = normalizeFieldName(payload?.error?.field || allErrors[0]?.field)
+  if (primaryField && payload?.error?.message) {
+    fieldErrors[primaryField] = String(payload.error.message)
+  }
+  allErrors.forEach((item: any) => {
+    const field = normalizeFieldName(item?.field)
+    if (field && item?.message && !fieldErrors[field]) {
+      fieldErrors[field] = String(item.message)
+    }
+  })
+}
+
 const reset = () => {
+  clearSubmitErrors()
   form.domains = ''
   form.certificate = ''
   form.privateKey = ''
@@ -57,6 +124,7 @@ const reset = () => {
 }
 
 const close = () => {
+  clearSubmitErrors()
   form.certificate = ''
   form.privateKey = ''
   emit('update:visible', false)
@@ -65,6 +133,7 @@ const close = () => {
 const submit = async () => {
   const valid = await formRef.value?.validate?.().catch(() => false)
   if (!valid) return
+  clearSubmitErrors()
   loading.value = true
   try {
     const common = {
@@ -83,6 +152,8 @@ const submit = async () => {
     ElMessage.success(t('certificate.messages.taskCreated'))
     emit('created', response.data)
     close()
+  } catch (error) {
+    applyRequestError(error)
   } finally {
     loading.value = false
   }
@@ -95,6 +166,22 @@ watch(
   },
   { deep: true }
 )
+
+watch(() => form.domains, () => {
+  fieldErrors.domains = ''
+})
+
+watch(() => form.certificate, () => {
+  fieldErrors.certificate = ''
+})
+
+watch(() => form.privateKey, () => {
+  fieldErrors.privateKey = ''
+})
+
+watch(() => form.algorithm, () => {
+  fieldErrors.algorithm = ''
+})
 </script>
 
 <template>
@@ -114,8 +201,27 @@ watch(
       show-icon
       :closable="false"
     />
+    <el-alert
+      v-if="submitErrorMessage"
+      class="drawer-alert drawer-alert--error"
+      :title="submitErrorMessage"
+      type="error"
+      show-icon
+      :closable="false"
+    >
+      <template v-if="submitErrorCode || submitErrorDetail" #default>
+        <div class="submit-error-details">
+          <div v-if="submitErrorCode">
+            {{ $t('certificate.messages.errorCodeLabel') }}: {{ submitErrorCode }}
+          </div>
+          <div v-if="submitErrorDetail">
+            {{ submitErrorDetail }}
+          </div>
+        </div>
+      </template>
+    </el-alert>
     <el-form ref="formRef" class="certificate-form" :model="form" :rules="rules" label-position="top">
-      <el-form-item prop="domains" :label="$t('certificate.form.domains')" :required="!isUpload">
+      <el-form-item prop="domains" :label="$t('certificate.form.domains')" :required="!isUpload" :error="fieldErrors.domains">
         <el-input
           v-model="form.domains"
           type="textarea"
@@ -125,7 +231,7 @@ watch(
       </el-form-item>
 
       <template v-if="isUpload">
-        <el-form-item prop="certificate" :label="$t('certificate.form.certificatePem')" required>
+        <el-form-item prop="certificate" :label="$t('certificate.form.certificatePem')" required :error="fieldErrors.certificate">
           <el-input
             v-model="form.certificate"
             class="pem-input"
@@ -134,7 +240,7 @@ watch(
             :placeholder="$t('certificate.form.certificatePlaceholder')"
           />
         </el-form-item>
-        <el-form-item prop="privateKey" :label="$t('certificate.form.privateKeyPem')" required>
+        <el-form-item prop="privateKey" :label="$t('certificate.form.privateKeyPem')" required :error="fieldErrors.privateKey">
           <el-input
             v-model="form.privateKey"
             class="pem-input"
@@ -146,7 +252,7 @@ watch(
       </template>
 
       <div v-else class="form-grid">
-        <el-form-item prop="algorithm" :label="$t('certificate.form.algorithm')" required>
+        <el-form-item prop="algorithm" :label="$t('certificate.form.algorithm')" required :error="fieldErrors.algorithm">
           <el-select v-model="form.algorithm" style="width: 100%">
             <el-option v-for="item in algorithms" :key="item.value" :label="item.label" :value="item.value" />
           </el-select>
@@ -174,6 +280,21 @@ watch(
 <style scoped lang="less">
 .drawer-alert {
   margin-bottom: 24px;
+}
+
+.drawer-alert--error {
+  :deep(.el-alert__description) {
+    margin-top: 8px;
+  }
+}
+
+.submit-error-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .certificate-form {

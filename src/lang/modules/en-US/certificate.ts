@@ -154,6 +154,8 @@ export default {
     dnsListFailed: 'Failed to load DNS accounts',
     websiteListFailed: 'Failed to load websites',
     materialFailed: 'Failed to load certificate material',
+    submitFailed: 'Failed to create the certificate. Check the input and try again later.',
+    errorCodeLabel: 'Error code',
     taskCreated: 'Task created and waiting to run',
     taskCanceled: 'Cancellation requested',
     certificateDeleted: 'Certificate deleted',

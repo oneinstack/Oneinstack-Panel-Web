@@ -13,6 +13,7 @@ export interface FormItem {
   type: 'input' | 'checkbox-group' | 'checkbox' | 'textarea' | 'file-select' | 'password' | 'select' | 'custom'
   prop: string
   placeholder?: string
+  error?: string
   options?: Options[]
   asyncOptions?: () => Promise<Options[]>
   rules?: FormItemRule[]
@@ -72,7 +73,7 @@ onMounted(() => {
 <template>
   <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" class="custom-form">
     <template v-for="(item, index) in data.items">
-      <el-form-item v-if="item.ifShow?.(data.value) ?? true" :key="index" :label="item.label" :prop="item.prop">
+      <el-form-item v-if="item.ifShow?.(data.value) ?? true" :key="index" :label="item.label" :prop="item.prop" :error="item.error">
         <template v-if="item.type === 'input' || item.type === 'password'">
           <el-input
             v-model="data.value[item.prop]"
