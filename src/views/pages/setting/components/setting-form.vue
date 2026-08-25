@@ -93,6 +93,13 @@ const props = defineProps<Props>()
   &-item__content {
     width: 100%;
   }
+
+  &-item__label {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.6;
+  }
 }
 
 :deep(.el-form-item) {
@@ -112,6 +119,12 @@ const props = defineProps<Props>()
 .setting-form-item__field {
   flex: 0 1 297px;
   min-width: 0;
+}
+
+:root:root[class='dark'] .setting-form-item {
+  :deep(.el-form-item__label) {
+    color: #e5e7eb;
+  }
 }
 
 .setting-form-item__button {

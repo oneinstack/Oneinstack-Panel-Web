@@ -504,7 +504,7 @@ const handleMoreAction = async (command: string, row: any) => {
               :icon="Link"
               @click="openPhpMyAdmin(row.name)"
             >{{ t('database.quickManage', '快捷管理') }}</el-button>
-            <el-button :plain="!phpMyAdminInstalled" type="primary" :link="phpMyAdminInstalled" :icon="Key" @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
+            <el-button type="primary" link :icon="Key" @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
             <el-button type="primary" link :icon="Lock" @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
             <el-dropdown trigger="click" popper-class="table-action-popper" @command="(command: string) => handleMoreAction(command, row)">
               <el-button type="primary" link :icon="MoreFilled">
@@ -589,6 +589,7 @@ const handleMoreAction = async (command: string, row: any) => {
     <install-task-drawer
       v-model="phpMyAdminDrawer.visible"
       :task-id="phpMyAdminDrawer.taskId"
+      :close-on-click-modal="true"
       @retry="installPhpMyAdmin"
     />
   </div>

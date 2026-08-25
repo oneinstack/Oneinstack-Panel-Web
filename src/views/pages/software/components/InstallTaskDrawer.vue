@@ -10,6 +10,7 @@ const softwareTaskStore = useSoftwareTaskStore()
 const props = defineProps<{
   modelValue: boolean
   taskId: string
+  closeOnClickModal?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -291,7 +292,7 @@ onBeforeUnmount(() => {
     :title="task?.component || $t('software.task.softwareTask')"
     class="install-task-drawer"
     size="840px"
-    :close-on-click-modal="terminal"
+    :close-on-click-modal="props.closeOnClickModal ?? terminal"
     :destroy-on-close="false"
     body-mode="compact"
   >
@@ -579,16 +580,24 @@ onBeforeUnmount(() => {
   padding: 22px;
   border: 1px solid var(--border-subtle);
   border-radius: 24px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 253, 0.96));
-  box-shadow: 0 14px 32px rgba(16, 24, 40, 0.05);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-card) 96%, white 4%),
+    color-mix(in srgb, var(--surface-card) 92%, var(--surface-subtle) 8%)
+  );
+  box-shadow: 0 14px 32px rgba(16, 24, 40, 0.08);
 }
 
 .overview {
   border-color: rgba(var(--primary-color), 0.12);
   background:
-    radial-gradient(circle at top right, rgba(var(--primary-color), 0.1), transparent 30%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 253, 0.95));
-  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.07);
+    radial-gradient(circle at top right, rgba(var(--primary-color), 0.12), transparent 30%),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--surface-card) 96%, rgba(var(--primary-color), 0.04) 4%),
+      color-mix(in srgb, var(--surface-subtle) 92%, rgba(var(--primary-color), 0.08) 8%)
+    );
+  box-shadow: 0 18px 40px rgba(16, 24, 40, 0.12);
 }
 
 .overview-hero {
@@ -653,9 +662,14 @@ onBeforeUnmount(() => {
   align-items: flex-start;
   justify-content: center;
   gap: 8px;
-  border: 1px solid rgba(var(--primary-color), 0.12);
+  border: 1px solid rgba(var(--primary-color), 0.2);
   border-radius: 20px;
-  background: linear-gradient(180deg, rgba(var(--primary-color), 0.08), rgba(var(--primary-color), 0.04));
+  background: linear-gradient(
+    180deg,
+    rgba(var(--primary-color), 0.1),
+    color-mix(in srgb, var(--surface-subtle) 88%, rgba(var(--primary-color), 0.12) 12%)
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 
   small {
     color: var(--text-tertiary);
@@ -692,7 +706,7 @@ onBeforeUnmount(() => {
   padding: 13px 14px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.64);
+  background: color-mix(in srgb, var(--surface-subtle) 88%, white 12%);
   display: grid;
   gap: 6px;
 
@@ -839,7 +853,7 @@ onBeforeUnmount(() => {
   padding: 8px 6px;
   border-radius: 18px;
   border-color: color-mix(in srgb, var(--el-color-danger) 22%, var(--border-subtle));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .failure__row + .failure__row {
@@ -862,15 +876,15 @@ onBeforeUnmount(() => {
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 22px;
-  background: var(--surface-card);
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.06);
+  background: linear-gradient(180deg, var(--surface-card), color-mix(in srgb, var(--surface-card) 90%, #020617 10%));
+  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.1);
 }
 
 .log-toolbar {
   min-height: 64px;
   padding: 0 18px;
   border-bottom: 1px solid var(--border-subtle);
-  background: var(--surface-card);
+  background: color-mix(in srgb, var(--surface-card) 94%, var(--surface-subtle) 6%);
 
   strong {
     color: var(--text-primary);
@@ -915,8 +929,8 @@ onBeforeUnmount(() => {
   overflow-x: auto;
   overflow-y: scroll;
   overscroll-behavior: contain;
-  color: #d7e0ee;
-  background: linear-gradient(180deg, rgba(20, 29, 46, 0.98), rgba(11, 18, 32, 1));
+  color: #dbe6f5;
+  background: linear-gradient(180deg, rgba(10, 16, 29, 0.98), rgba(4, 9, 20, 1));
   font: 12px/1.75 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   white-space: pre-wrap;
   word-break: break-all;
@@ -973,7 +987,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   border-radius: 16px;
   border: 1px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.8);
+  background: color-mix(in srgb, var(--surface-subtle) 90%, white 10%);
 
   span {
     color: var(--text-tertiary);
@@ -997,6 +1011,78 @@ onBeforeUnmount(() => {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.install-task-drawer :deep(.drawer-body) {
+  background: var(--surface-page);
+}
+
+.install-task-drawer :deep(.drawer-footer) {
+  border-top: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 94%, transparent), var(--surface-card));
+}
+
+.install-task-drawer :deep(.el-progress-bar__outer) {
+  background: color-mix(in srgb, var(--surface-subtle) 86%, black 14%);
+}
+
+.install-task-drawer :deep(.el-checkbox__label) {
+  color: var(--text-secondary);
+}
+
+:root:root[class='dark'] .install-task-drawer {
+  .overview,
+  .stage-section,
+  .summary-panel {
+    border-color: var(--border-default);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.03),
+      0 18px 36px rgba(0, 0, 0, 0.22);
+  }
+
+  .overview {
+    background:
+      radial-gradient(circle at top right, rgba(var(--primary-color), 0.16), transparent 34%),
+      linear-gradient(135deg, #182131, #101827 62%, #0f172a);
+  }
+
+  .overview-copy p,
+  .overview-progress-card span,
+  .log-toolbar__copy span {
+    color: var(--text-secondary);
+  }
+
+  .overview-progress-card {
+    border-color: rgba(var(--primary-color), 0.24);
+    background: linear-gradient(180deg, rgba(var(--primary-color), 0.14), rgba(30, 41, 59, 0.78));
+  }
+
+  .log-section {
+    border-color: var(--border-default);
+    background: linear-gradient(180deg, #131d2d, #0f172a);
+  }
+
+  .log-toolbar {
+    background: rgba(15, 23, 42, 0.86);
+  }
+
+  .task-log {
+    color: #e2e8f0;
+    background: linear-gradient(180deg, #0b1220, #050b16);
+    scrollbar-color: #475467 #0b1220;
+  }
+
+  .task-actions :deep(.el-button:not(.el-button--primary):not(.el-button--danger)) {
+    background: var(--surface-subtle);
+    border-color: var(--border-default);
+    color: var(--text-primary);
+  }
+
+  .task-actions :deep(.el-button.is-plain.el-button--danger) {
+    background: rgba(var(--error-color), 0.08);
+    border-color: rgba(var(--error-color), 0.32);
+    color: rgb(var(--error-color));
+  }
 }
 
 .task-actions__group {

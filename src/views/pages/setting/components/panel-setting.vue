@@ -692,11 +692,11 @@ onMounted(() => {
   }
 
   &__body {
-    // padding: 8px 0;
     padding: 22px;
     border: 1px solid var(--border-subtle);
     border-radius: 14px;
     background: var(--surface-subtle);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
   }
 }
 
@@ -706,6 +706,9 @@ onMounted(() => {
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   background: var(--surface-subtle);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 10px 24px rgba(0, 0, 0, 0.08);
 
   &__header {
     display: flex;
@@ -771,8 +774,10 @@ onMounted(() => {
   &__item {
     padding: 16px 18px;
     border-radius: 12px;
-    background: var(--surface-card);
-    box-shadow: 0 0 0 1px var(--border-subtle) inset;
+    background: linear-gradient(180deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.98));
+    box-shadow:
+      0 0 0 1px var(--border-subtle) inset,
+      inset 0 1px 0 rgba(255, 255, 255, 0.03);
 
     span {
       display: block;
@@ -804,10 +809,17 @@ onMounted(() => {
     grid-template-columns: 140px minmax(0, 1fr);
     gap: 18px;
     align-items: start;
+    padding: 12px 0;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+
+    &:first-child {
+      padding-top: 0;
+      border-top: none;
+    }
 
     label {
       padding-top: 11px;
-      color: var(--text-primary);
+      color: var(--text-secondary);
       font-size: 14px;
       font-weight: 650;
     }
@@ -839,6 +851,8 @@ onMounted(() => {
   gap: 12px;
   flex-wrap: wrap;
   margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(148, 163, 184, 0.08);
 
   &__risk {
     display: flex;
@@ -849,6 +863,54 @@ onMounted(() => {
     color: var(--text-tertiary);
     font-size: 12px;
     line-height: 1.6;
+  }
+}
+
+:root:root[class='dark'] .basic-card__body {
+  border-color: var(--border-default);
+}
+
+:root:root[class='dark'] .panel-entry-card {
+  border-color: var(--border-default);
+}
+
+:root:root[class='dark'] .panel-entry-form__row label {
+  color: #e5e7eb;
+}
+
+:root:root[class='dark'] .panel-entry-form {
+  :deep(.el-input__wrapper) {
+    background: rgba(12, 19, 33, 0.96) !important;
+    box-shadow: 0 0 0 1px rgba(118, 137, 172, 0.2) inset !important;
+  }
+
+  :deep(.el-input__wrapper:hover) {
+    box-shadow: 0 0 0 1px rgba(249, 115, 22, 0.28) inset !important;
+  }
+
+  :deep(.el-input__wrapper.is-focus) {
+    box-shadow:
+      0 0 0 1px rgba(249, 115, 22, 0.72) inset,
+      0 0 0 4px rgba(249, 115, 22, 0.12) !important;
+  }
+
+  :deep(.el-input__inner) {
+    color: rgba(244, 247, 255, 0.96) !important;
+  }
+
+  :deep(.el-input__inner::placeholder) {
+    color: rgba(145, 160, 192, 0.66) !important;
+  }
+
+  :deep(.el-input.is-disabled .el-input__wrapper) {
+    background: rgba(15, 22, 36, 0.92) !important;
+    box-shadow: 0 0 0 1px rgba(118, 137, 172, 0.14) inset !important;
+    cursor: not-allowed;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner) {
+    color: rgba(180, 193, 220, 0.72) !important;
+    -webkit-text-fill-color: rgba(180, 193, 220, 0.72) !important;
   }
 }
 

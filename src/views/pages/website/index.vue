@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, reactive, toRaw } from 'vue'
+import { computed, reactive, ref, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting, WarningFilled } from '@element-plus/icons-vue'
+import { ArrowDown, Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting, WarningFilled } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/modules'
@@ -192,12 +192,323 @@ const webServer = reactive({
   }
 })
 
+const websiteTypeOptions = computed(() => [
+  { label: t('website.categoryAll', '全部分类'), value: conf.website.params.type },
+  { label: t('website.tabs.php', 'PHP 项目'), value: 'php' },
+  { label: t('website.tabs.proxy', '反向代理'), value: 'proxy' },
+  { label: t('website.tabs.static', 'HTML 项目'), value: 'static' }
+])
+
+type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
+
+interface ComponentServiceStatus {
+  component: string
+  softwareKey: string
+  displayName: string
+  serviceName: string
+  manageScopes?: string[]
+  canConfigure?: boolean
+  installed: boolean
+  recordedVersion?: string
+  runtimeVersion?: string
+  state: 'not_installed' | 'running' | 'stopped' | 'failed' | 'transitioning' | 'unknown'
+  activeState?: string
+  subState?: string
+  canReload: boolean
+  availableActions: ServiceAction[]
+  busy: boolean
+  activeTaskId?: string
+  probeError?: string
+}
+
+const canReadSoftwareService = computed(() =>
+  sconfig.hasActionAccess('software.service.read') ||
+  sconfig.hasScopeAccess('software.service', 'read') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.service?.read) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service.read']) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service']?.read)
+)
+
+const canWriteSoftwareService = computed(() =>
+  sconfig.hasActionAccess('software.service.write') ||
+  sconfig.hasScopeAccess('software.service', 'write') ||
+  Boolean((sconfig.scopeAccess as any)?.software?.service?.write) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service.write']) ||
+  Boolean((sconfig.scopeAccess as any)?.['software.service']?.write)
+)
+
+const allowedManageScopes = computed(() => {
+  if (sconfig.isAdministrator()) return new Set(['*'])
+  const scopes = new Set<string>()
+  const entries = Object.entries((sconfig.scopeAccess as any) || {})
+  for (const [scopeKey, value] of entries as Array<[string, any]>) {
+    if (value?.write === true || value === true) {
+      scopes.add(scopeKey)
+    }
+  }
+  return scopes
+})
+
+const serviceStatuses = ref<Record<string, ComponentServiceStatus>>({})
+const serviceLoading = ref(false)
+const serviceSubmitting = ref<ServiceAction | ''>('')
+
+const loadServiceStatuses = async () => {
+  if (!canReadSoftwareService.value) {
+    serviceStatuses.value = {}
+    return
+  }
+  serviceLoading.value = true
+  try {
+    const { data } = await Api.getComponentServices()
+    serviceStatuses.value = Object.fromEntries(
+      ((data || []) as ComponentServiceStatus[]).map((status) => [status.softwareKey, status])
+    )
+  } catch {
+    serviceStatuses.value = {}
+  } finally {
+    serviceLoading.value = false
+  }
+}
+
+const webServerAliases = computed(() => {
+  const aliases = new Set<string>()
+  const component = String(webServer.data.component || '').trim().toLowerCase()
+  const name = String(webServer.data.name || '').trim().toLowerCase()
+  for (const key of [component, name]) {
+    if (!key) continue
+    aliases.add(key)
+    if (key.includes('nginx')) aliases.add('nginx')
+    if (key.includes('openresty')) aliases.add('openresty')
+    if (key.includes('caddy')) aliases.add('caddy')
+  }
+  return Array.from(aliases)
+})
+
+const webServerServiceStatus = computed(() => {
+  const aliases = webServerAliases.value
+  if (!aliases.length) return undefined
+  return Object.values(serviceStatuses.value).find((status) => {
+    const candidates = [
+      String(status.component || '').toLowerCase(),
+      String(status.softwareKey || '').toLowerCase(),
+      String(status.displayName || '').toLowerCase(),
+      String(status.serviceName || '').toLowerCase()
+    ]
+    return candidates.some((candidate) =>
+      candidate && aliases.some((alias) => candidate === alias || candidate.includes(alias) || alias.includes(candidate))
+    )
+  })
+})
+
+const getManageScopes = (status?: ComponentServiceStatus) => {
+  if (!status) return []
+  const scopes = (status.manageScopes || []).filter(Boolean)
+  if (scopes.length) return scopes
+  return [
+    `software.${status.softwareKey}`,
+    `software.service.${status.softwareKey}`,
+    `software.${status.component}`,
+    `software.service.${status.component}`
+  ].filter(Boolean)
+}
+
+const canManageService = (status?: ComponentServiceStatus) => {
+  if (!status || !canReadSoftwareService.value || !canWriteSoftwareService.value) return false
+  if (allowedManageScopes.value.has('*')) return true
+  const scopes = getManageScopes(status)
+  if (!scopes.length) return true
+  return scopes.some((scope) => allowedManageScopes.value.has(scope))
+}
+
+const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action: ServiceAction) =>
+  !!status?.availableActions?.includes(action) &&
+  !(action === 'reload' && !status.canReload)
+
+const webServerDisplayName = computed(() =>
+  webServer.data.available
+    ? webServer.data.name || webServerServiceStatus.value?.displayName || webServer.data.component || 'Web Server'
+    : t('website.webServerNotDetected', '未检测到 Nginx、OpenResty 或 Caddy')
+)
+
+const webServerVersionText = computed(() =>
+  webServer.data.version ||
+  webServerServiceStatus.value?.runtimeVersion ||
+  webServerServiceStatus.value?.recordedVersion ||
+  t('website.versionUnknown', '版本未知')
+)
+
+const webServerLogoText = computed(() => {
+  const aliases = webServerAliases.value
+  if (aliases.includes('openresty')) return 'O'
+  if (aliases.includes('caddy')) return 'C'
+  if (aliases.includes('nginx')) return 'N'
+  return webServer.data.available ? 'W' : '?'
+})
+
+const webServerState = computed(() => {
+  const status = webServerServiceStatus.value
+  if (status?.state) return status.state
+  if (!webServer.data.available) return 'not_installed'
+  return webServer.data.running ? 'running' : 'stopped'
+})
+
+const webServerStatusType = computed(() => {
+  switch (webServerState.value) {
+    case 'running':
+      return 'success'
+    case 'failed':
+      return 'danger'
+    case 'transitioning':
+      return 'warning'
+    case 'not_installed':
+      return 'info'
+    default:
+      return 'warning'
+  }
+})
+
+const webServerStatusLabel = computed(() => {
+  switch (webServerState.value) {
+    case 'running':
+      return t('website.running', '运行中')
+    case 'failed':
+      return t('common.failed', '失败')
+    case 'transitioning':
+      return t('common.processing', '处理中')
+    case 'not_installed':
+      return t('website.notInstalled', '未安装')
+    default:
+      return t('website.serviceStopped', '服务已停止')
+  }
+})
+
+const canManageCurrentWebServer = computed(() => canManageService(webServerServiceStatus.value))
+
+const runtimeDropdownDisabled = computed(() =>
+  !webServer.data.available ||
+  !webServerServiceStatus.value ||
+  !canManageCurrentWebServer.value ||
+  serviceLoading.value
+)
+
+const runtimeDropdownDisabledReason = computed(() => {
+  if (webServer.loading || serviceLoading.value) {
+    return t('container.checking', '检测中')
+  }
+  if (!webServer.data.available) {
+    return webServer.data.message || t('website.installWebServerTip', '请先安装 Nginx、OpenResty 或 Caddy，网站模块会自动识别并使用已安装的服务。')
+  }
+  if (!webServerServiceStatus.value) {
+    return t('website.webServerRuntimeNotManaged', '当前 Web 服务暂未接入可管理状态')
+  }
+  if (!canManageCurrentWebServer.value) {
+    return t('common.noPermission', '暂无权限')
+  }
+  return ''
+})
+
+const runtimeActionLabels: Record<ServiceAction, string> = {
+  start: t('website.startService', '启动服务'),
+  stop: t('website.stopService', '停止服务'),
+  restart: t('website.restartService', '重启服务'),
+  reload: t('website.reloadService', '重载配置')
+}
+
+const websiteMetrics = computed(() => {
+  const list = (Array.isArray(conf.website.data) ? conf.website.data : []) as Array<Record<string, any>>
+  const sslCount = list.filter((item) => Boolean(item?.ssl_enabled)).length
+  const runningCount = list.filter((item) => Boolean(item?.enabled)).length
+  const expiringCount = list.filter((item) => {
+    if (!item?.expires_at) return false
+    const expiresAt = new Date(item.expires_at).getTime()
+    if (!Number.isFinite(expiresAt)) return false
+    const remain = expiresAt - Date.now()
+    return remain > 0 && remain <= 30 * 24 * 60 * 60 * 1000
+  }).length
+  return {
+    total: Number(conf.website.total || list.length || 0),
+    sslCount,
+    runningCount,
+    expiringCount
+  }
+})
+
+const selectedCategory = computed({
+  get: () => conf.website.params.type,
+  set: (value: string) => {
+    const target = conf.tabs.list.find((item) => item.value === value)
+    if (target) {
+      conf.tabs.clickActive(target)
+    }
+  }
+})
+
+const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    const { data: task } = await Api.getSoftwareTask(taskId)
+    if (['succeeded', 'failed', 'canceled', 'cancelled', 'interrupted'].includes(String(task?.status || '').toLowerCase())) {
+      return task
+    }
+    await new Promise((resolve) => window.setTimeout(resolve, 800))
+  }
+  throw new Error(t('website.serviceActionTimeout', '等待服务操作完成超时，请到右上角任务中心查看执行结果'))
+}
+
+const handleWebServerAction = async (action: ServiceAction) => {
+  const status = webServerServiceStatus.value
+  if (!status || !canManageCurrentWebServer.value || !serviceActionAllowed(status, action) || serviceSubmitting.value) {
+    return
+  }
+  if (status.activeTaskId || status.busy) {
+    ElMessage.warning(t('website.serviceBusy', '已有服务任务执行中，请到任务中心查看'))
+    return
+  }
+  serviceSubmitting.value = action
+  try {
+    const { data: result } = await submitOperation('software.service_action', {
+      component: status.component,
+      softwareKey: status.softwareKey,
+      action
+    })
+    serviceStatuses.value[status.softwareKey] = {
+      ...status,
+      busy: true,
+      activeTaskId: result.taskId
+    }
+    if (action === 'restart') {
+      const task = await waitForServiceTask(result.taskId)
+      if (String(task?.status || '').toLowerCase() === 'succeeded') {
+        ElMessage.success(t('website.serviceActionSuccess', '{name}{action}成功', { name: status.displayName, action: runtimeActionLabels[action] }))
+      } else {
+        ElMessage.error(task?.errorMessage || task?.message || t('website.serviceActionFailed', '{name}{action}失败', { name: status.displayName, action: runtimeActionLabels[action] }))
+      }
+    } else {
+      ElMessage.success(t('website.serviceActionTaskCreated', '{action}任务已创建，可在后台继续执行', { action: runtimeActionLabels[action] }))
+    }
+  } catch (error: any) {
+    if (!isOperationCancelled(error)) {
+      ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
+    }
+  } finally {
+    serviceSubmitting.value = ''
+    await Promise.all([webServer.load(), loadServiceStatuses()])
+  }
+}
+
+const handleWebsitePageRefresh = () => {
+  conf.website.getData()
+  webServer.load()
+  loadServiceStatuses()
+}
+
 const addSiteDisabledReason = computed(() => {
   if (webServer.loading) {
     return t('container.checking', '检测中')
   }
   if (!webServer.data.available) {
-    return webServer.data.message || t('website.addSiteDisabledReason', '未检测到 Nginx/OpenResty，暂不可添加站点')
+    return webServer.data.message || t('website.addSiteDisabledReason', '未检测到 Nginx、OpenResty 或 Caddy，暂不可添加站点')
   }
   return ''
 })
@@ -606,128 +917,205 @@ const conf = reactive({
 
 conf.website.getData()
 webServer.load()
+loadServiceStatuses()
 </script>
 
 <template>
   <div class="website-container">
-    <section v-loading="webServer.loading" class="web-server-card" :class="{ unavailable: !webServer.data.available }">
-      <div class="web-server-card__identity">
-        <div class="web-server-card__logo">
-          {{ webServer.data.component === 'openresty' ? 'O' : webServer.data.available ? 'N' : '?' }}
-        </div>
-        <div class="web-server-card__copy">
+    <section v-loading="webServer.loading || serviceLoading" class="website-runtime-strip" :class="{ unavailable: !webServer.data.available }">
+      <div class="website-runtime-strip__overview">
+        <button class="website-runtime-chip" type="button" :disabled="runtimeDropdownDisabled" @click.prevent>
+          <span class="website-runtime-chip__logo">{{ webServerLogoText }}</span>
+          <span class="website-runtime-chip__meta">
+            <strong>{{ webServerDisplayName }}</strong>
+            <small>{{ webServerVersionText }}</small>
+          </span>
+          <el-tag class="website-runtime-chip__status" :type="webServerStatusType" effect="dark" round>
+            {{ webServerStatusLabel }}
+          </el-tag>
+        </button>
+        <div class="website-runtime-strip__copy">
           <span>{{ $t('website.currentWebServer') }}</span>
-          <div>
-            <h3>{{ webServer.data.available ? webServer.data.name : $t('website.webServerNotDetected') }}</h3>
-            <el-tag
-              :type="webServer.data.running ? 'success' : webServer.data.available ? 'warning' : 'info'"
-              effect="plain"
-              round
-            >
-              {{ webServer.data.running ? $t('website.running') : webServer.data.available ? $t('website.serviceStopped') : $t('website.notInstalled') }}
-            </el-tag>
-          </div>
           <p v-if="webServer.data.available">
-            {{ webServer.data.version || $t('website.versionUnknown') }} · {{ $t('website.siteConfigDir') }} {{ webServer.data.siteConfigDir || '-' }}
+            {{ $t('website.siteConfigDir') }} {{ webServer.data.siteConfigDir || '-' }}
           </p>
           <p v-else>{{ $t('website.installWebServerTip') }}</p>
         </div>
       </div>
-      <div class="web-server-card__actions">
-        <el-button :icon="Refresh" @click="webServer.load">{{ $t('website.refreshStatus') }}</el-button>
+      <div class="website-runtime-strip__controls">
+        <el-tooltip :content="runtimeDropdownDisabledReason" :disabled="!runtimeDropdownDisabledReason">
+          <span class="disabled-action-wrapper">
+            <el-dropdown
+              trigger="click"
+              placement="bottom-end"
+              :disabled="runtimeDropdownDisabled"
+              @command="handleWebServerAction"
+            >
+              <el-button class="website-runtime-strip__server-btn">
+                <span>{{ webServerDisplayName }}</span>
+                <span class="website-runtime-strip__server-version">{{ webServerVersionText }}</span>
+                <el-icon><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu class="website-runtime-menu">
+                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'start')" command="start">
+                    {{ $t('website.startService') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'stop')" command="stop">
+                    {{ $t('website.stopService') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'restart')" command="restart">
+                    {{ $t('website.restartService') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'reload')" command="reload">
+                    {{ $t('website.reloadService') }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </span>
+        </el-tooltip>
+
         <el-button
-          type="primary"
+          class="website-runtime-strip__plain-btn"
           :icon="Setting"
           :disabled="!webServer.data.configurationAvailable"
           @click="webServer.configVisible = true"
         >
           {{ $t('website.manageConfigFiles') }}
         </el-button>
+        <el-button class="website-runtime-strip__plain-btn" :icon="Refresh" @click="handleWebsitePageRefresh">
+          {{ $t('website.refreshStatus') }}
+        </el-button>
       </div>
     </section>
 
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
-    <div class="tool-bar website-toolbar">
-      <el-space class="btn-group website-toolbar__actions" :size="14" style="width: 100%;">
-        <div class="action-with-reason">
-          <el-tooltip :content="addSiteDisabledReason" :disabled="!addSiteDisabledReason">
-            <span class="disabled-action-wrapper">
-              <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
-            </span>
-          </el-tooltip>
-          <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
-            <el-icon><WarningFilled /></el-icon>
-            <span>{{ addSiteDisabledReason }}</span>
-          </div>
-        </div>
-        <el-button @click="backupDrawer.open()">{{ $t('website.fullBackupManagement') }}</el-button>
-
-        <!-- <el-dropdown>
-            <el-button type="primary">
-              <span class="el-dropdown-link">
-                高级设置
-                <el-icon class="el-icon--right"><arrow-down /></el-icon>
+    <section class="website-console">
+      <div class="website-console__main">
+        <div class="website-console__actions">
+          <div class="action-with-reason">
+            <el-tooltip :content="addSiteDisabledReason" :disabled="!addSiteDisabledReason">
+              <span class="disabled-action-wrapper">
+                <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
               </span>
+            </el-tooltip>
+            <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
+              <el-icon><WarningFilled /></el-icon>
+              <span>{{ addSiteDisabledReason }}</span>
+            </div>
+          </div>
+
+          <el-dropdown trigger="click" placement="bottom-start">
+            <el-button class="website-console__ghost-btn">
+              <span>{{ $t('website.advancedActions', '高级设置') }}</span>
+              <el-icon><ArrowDown /></el-icon>
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item>修改默认页面</el-dropdown-item>
-                <el-dropdown-item>默认站点</el-dropdown-item>
-                <el-dropdown-item>PHP命令行版本</el-dropdown-item>
-                <el-dropdown-item>HTTPS防窜站</el-dropdown-item>
-                <el-dropdown-item>TLS设置</el-dropdown-item>
-                <el-dropdown-item>全局设置</el-dropdown-item>
-                <el-dropdown-item>关联数据库</el-dropdown-item>
+                <el-dropdown-item @click="backupDrawer.open()">
+                  {{ $t('website.fullBackupManagement') }}
+                </el-dropdown-item>
+                <el-dropdown-item :disabled="!webServer.data.configurationAvailable" @click="webServer.configVisible = true">
+                  {{ $t('website.manageConfigFiles') }}
+                </el-dropdown-item>
+                <el-dropdown-item @click="handleWebsitePageRefresh">
+                  {{ $t('website.refreshStatus') }}
+                </el-dropdown-item>
               </el-dropdown-menu>
             </template>
-</el-dropdown>
-<el-button type="primary">
-  <span>漏洞扫描（0）</span>
-</el-button>
-<el-button type="primary">
-  <span style="font-size: 14px; margin-right: 8px">nignx</span>
-  <el-icon>
-    <CaretBottom />
-  </el-icon>
-</el-button>
-<el-dropdown>
-  <el-button type="primary">
-    <span class="el-dropdown-link">
-      全部分类
-      <el-icon class="el-icon--right"><arrow-down /></el-icon>
-    </span>
-  </el-button>
-  <template #dropdown>
-              <el-dropdown-menu>
-                <el-dropdown-item>修改默认页面</el-dropdown-item>
-                <el-dropdown-item>默认站点</el-dropdown-item>
-                <el-dropdown-item>PHP命令行版本</el-dropdown-item>
-                <el-dropdown-item>HTTPS防窜站</el-dropdown-item>
-                <el-dropdown-item>TLS设置</el-dropdown-item>
-                <el-dropdown-item>全局设置</el-dropdown-item>
-                <el-dropdown-item>关联数据库</el-dropdown-item>
-              </el-dropdown-menu>
-            </template>
-</el-dropdown> -->
+          </el-dropdown>
 
-      </el-space>
-      <div class="demo-form-inline website-toolbar__search">
+          <button class="website-console__metric" type="button">
+            <span>{{ $t('website.metricTotal', '网站统计总览') }}</span>
+            <strong>{{ websiteMetrics.total }}</strong>
+          </button>
+          <button class="website-console__metric" type="button">
+            <span>{{ $t('website.metricRunning', '运行中') }}</span>
+            <strong>{{ websiteMetrics.runningCount }}</strong>
+          </button>
+          <button class="website-console__metric" type="button">
+            <span>{{ $t('website.metricSsl', 'SSL 已启用') }}</span>
+            <strong>{{ websiteMetrics.sslCount }}</strong>
+          </button>
+          <button class="website-console__metric" type="button">
+            <span>{{ $t('website.metricExpiring', '即将到期') }}</span>
+            <strong>{{ websiteMetrics.expiringCount }}</strong>
+          </button>
+        </div>
+
+        <div class="website-console__runtime">
+          <span class="website-console__runtime-label">{{ $t('website.currentWebServer') }}</span>
+          <el-tooltip :content="runtimeDropdownDisabledReason" :disabled="!runtimeDropdownDisabledReason">
+            <span class="disabled-action-wrapper">
+              <el-dropdown
+                trigger="click"
+                placement="bottom"
+                :disabled="runtimeDropdownDisabled"
+                @command="handleWebServerAction"
+              >
+                <button class="website-console__runtime-chip" type="button">
+                  <span class="website-console__runtime-badge">{{ webServerLogoText }}</span>
+                  <span>{{ webServerDisplayName }}</span>
+                  <span class="website-console__runtime-version">{{ webServerVersionText }}</span>
+                  <el-icon><ArrowDown /></el-icon>
+                </button>
+                <template #dropdown>
+                  <el-dropdown-menu class="website-runtime-menu">
+                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'start')" command="start">
+                      {{ $t('website.startService') }}
+                    </el-dropdown-item>
+                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'stop')" command="stop">
+                      {{ $t('website.stopService') }}
+                    </el-dropdown-item>
+                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'restart')" command="restart">
+                      {{ $t('website.restartService') }}
+                    </el-dropdown-item>
+                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'reload')" command="reload">
+                      {{ $t('website.reloadService') }}
+                    </el-dropdown-item>
+                  </el-dropdown-menu>
+                </template>
+              </el-dropdown>
+            </span>
+          </el-tooltip>
+        </div>
+      </div>
+
+      <div class="website-console__search">
+        <div class="website-console__category">
+          <el-select v-model="selectedCategory" style="width: 160px">
+            <el-option
+              v-for="item in websiteTypeOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </div>
         <div class="website-search-panel">
           <search-input
             v-model="conf.website.params.name"
             class="website-search-panel__input"
-            :placeholder="$t('website.domainPlaceholder')"
+            :placeholder="$t('website.searchPlaceholder', '请输入域名或备注')"
             @search="conf.website.getData()"
           />
-          <el-button class="website-search-panel__refresh" :icon="Refresh" type="primary" @click="conf.website.getData()" />
-          <!-- <el-button :icon="Setting" type="primary" /> -->
+          <el-button class="website-search-panel__refresh" :icon="Refresh" @click="handleWebsitePageRefresh" />
+          <el-button class="website-search-panel__refresh" :icon="Setting" @click="webServer.configVisible = true" />
         </div>
       </div>
-    </div>
-    <div class="box2">
+    </section>
+    <div class="website-table-panel">
       <custom-table v-model:page="conf.website.params.page" v-model:page-size="conf.website.params.pageSize" :loading="conf.website.loading" :empty-text="$t('common.noData')" :data="conf.website.data"
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
         @update:page="conf.website.getData" @update:page-size="() => { conf.website.params.page = 1; conf.website.getData() }">
+        <template #summary>
+          <div class="website-table-summary">
+            <span>{{ $t('website.metricTotal', '网站统计总览') }} {{ websiteMetrics.total }}</span>
+            <span>{{ $t('website.metricRunning', '运行中') }} {{ websiteMetrics.runningCount }}</span>
+            <span>{{ $t('website.metricSsl', 'SSL 已启用') }} {{ websiteMetrics.sslCount }}</span>
+          </div>
+        </template>
         <template #root_dir="{ row }">
           <el-link
             v-if="row.root_dir"
@@ -876,18 +1264,18 @@ webServer.load()
 </template>
 
 <style scoped lang="less">
-.web-server-card {
-  min-height: 112px;
+.website-runtime-strip {
+  min-height: 96px;
   margin-bottom: 16px;
-  padding: 18px 20px;
+  padding: 16px 18px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 20px;
-  border: 1px solid rgba(var(--primary-color), 0.16);
-  border-radius: 20px;
+  gap: 18px;
+  border: 1px solid rgba(var(--primary-color), 0.18);
+  border-radius: 18px;
   background:
-    radial-gradient(circle at top left, rgba(var(--primary-color), 0.1), transparent 34%),
+    linear-gradient(135deg, rgba(var(--primary-color), 0.08), transparent 40%),
     var(--surface-card);
   box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
 
@@ -897,28 +1285,68 @@ webServer.load()
   }
 }
 
-.web-server-card__identity {
+.website-runtime-strip__overview {
   min-width: 0;
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
 }
 
-.web-server-card__logo {
-  width: 58px;
-  height: 58px;
-  flex: 0 0 58px;
+.website-runtime-chip {
+  padding: 12px 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(var(--primary-color), 0.18);
+  border-radius: 16px;
+  background: rgba(var(--primary-color), 0.08);
+  color: var(--text-primary);
+  cursor: default;
+  transition: border-color 0.2s ease, background 0.2s ease;
+
+  &:disabled {
+    opacity: 1;
+  }
+}
+
+.website-runtime-chip__logo {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(var(--primary-color), 0.16);
-  border-radius: 18px;
+  border-radius: 14px;
+  background: rgba(var(--primary-color), 0.16);
   color: var(--el-color-primary);
-  background: rgba(var(--primary-color), 0.09);
-  font-size: 26px;
+  font-size: 21px;
   font-weight: 800;
 }
 
-.web-server-card__copy {
+.website-runtime-chip__meta {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  strong {
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  small {
+    color: var(--text-secondary);
+    font-size: 12px;
+    line-height: 1.2;
+  }
+}
+
+.website-runtime-chip__status {
+  margin-left: 2px;
+}
+
+.website-runtime-strip__copy {
   min-width: 0;
 
   > span {
@@ -928,56 +1356,179 @@ webServer.load()
     letter-spacing: 0.06em;
   }
 
-  > div {
-    margin-top: 5px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  h3 {
-    margin: 0;
-    color: var(--text-primary);
-    font-size: 20px;
-    line-height: 1.3;
-  }
-
   p {
-    margin: 7px 0 0;
+    margin: 5px 0 0;
     overflow: hidden;
-    color: var(--text-tertiary);
-    font-size: 12px;
+    color: var(--text-secondary);
+    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
-.web-server-card__actions {
+.website-runtime-strip__controls {
   flex: 0 0 auto;
   display: flex;
+  align-items: center;
   gap: 10px;
 }
 
+.website-runtime-strip__server-btn,
+.website-runtime-strip__plain-btn {
+  min-height: 40px;
+}
+
+.website-runtime-strip__server-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.website-runtime-strip__server-version {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
 .website-container {
-  .website-toolbar {
-    align-items: center;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.website-console {
+  padding: 16px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 92%, #0f172a 8%), var(--surface-card));
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.06),
+    0 14px 30px rgba(15, 23, 42, 0.06);
+}
+
+.website-console__main,
+.website-console__search {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.website-console__search {
+  margin-top: 14px;
+}
+
+.website-console__actions {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.website-console__ghost-btn {
+  min-height: 40px;
+}
+
+.website-console__metric {
+  min-width: 124px;
+  padding: 10px 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--surface-card) 94%, transparent);
+  color: var(--text-secondary);
+
+  span {
+    font-size: 12px;
+    white-space: nowrap;
   }
 
-  .website-toolbar__actions {
-    flex: 1 1 420px;
-    min-width: 0;
+  strong {
+    color: var(--text-primary);
+    font-size: 16px;
+    font-weight: 700;
   }
+}
 
-  .website-toolbar__search {
-    flex: 0 1 360px;
-    width: min(100%, 360px);
-    margin-left: auto;
+.website-console__runtime {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.website-console__runtime-label {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.website-console__runtime-chip {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 12px;
+  background: rgba(34, 197, 94, 0.08);
+  color: #16a34a;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.website-console__runtime-badge {
+  width: 18px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.18);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.website-console__runtime-version {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.website-console__category {
+  flex: 0 0 auto;
+}
+
+.website-table-panel {
+  padding: 14px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  background: var(--surface-card);
+  box-shadow:
+    inset 0 0 0 1px rgba(148, 163, 184, 0.06),
+    0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.website-table-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+    white-space: nowrap;
   }
 }
 
 .website-search-panel {
   width: 100%;
-  padding: 14px;
+  padding: 0;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1098,36 +1649,50 @@ webServer.load()
 }
 
 @media (max-width: 1100px) {
-  .website-container {
-    .website-toolbar__search {
-      flex-basis: 100%;
-      width: 100%;
-    }
-  }
-}
-
-@media (max-width: 768px) {
-  .web-server-card {
+  .website-console__main,
+  .website-console__search {
     align-items: stretch;
     flex-direction: column;
   }
 
-  .web-server-card__actions {
-    justify-content: flex-end;
+  .website-console__runtime {
+    width: 100%;
+    justify-content: space-between;
   }
 
-  .website-container {
-    .website-toolbar {
-      justify-content: flex-start;
-      align-items: stretch;
-    }
+  .website-search-panel {
+    width: 100%;
+  }
+}
 
-    .website-toolbar__actions,
-    .website-toolbar__search {
-      flex-basis: auto;
-      width: 100%;
-      margin-left: 0;
-    }
+@media (max-width: 768px) {
+  .website-runtime-strip {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .website-runtime-strip__controls {
+    justify-content: stretch;
+    flex-wrap: wrap;
+  }
+
+  .website-runtime-strip__server-btn,
+  .website-runtime-strip__plain-btn {
+    flex: 1 1 calc(50% - 5px);
+  }
+
+  .website-console {
+    padding: 14px;
+  }
+
+  .website-console__actions,
+  .website-console__runtime {
+    width: 100%;
+  }
+
+  .website-console__metric {
+    flex: 1 1 calc(50% - 5px);
+    min-width: 0;
   }
 
   .website-search-panel {
@@ -1143,18 +1708,39 @@ webServer.load()
 }
 
 @media (max-width: 560px) {
-  .web-server-card__identity {
+  .website-runtime-strip__overview {
     align-items: flex-start;
+    flex-direction: column;
   }
 
-  .web-server-card__copy {
+  .website-runtime-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .website-runtime-strip__copy {
     p {
       white-space: normal;
     }
   }
 
-  .web-server-card__actions {
+  .website-runtime-strip__controls {
     flex-direction: column;
+  }
+
+  .website-console__metric,
+  .website-console__runtime,
+  .website-console__runtime-chip {
+    width: 100%;
+  }
+
+  .website-console__runtime {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .website-console__search {
+    margin-top: 12px;
   }
 
   .website-search-panel {
@@ -1163,6 +1749,11 @@ webServer.load()
   }
 
   .website-search-panel__refresh {
+    width: 100%;
+  }
+
+  .website-runtime-strip__server-btn,
+  .website-runtime-strip__plain-btn {
     width: 100%;
   }
 }

@@ -289,8 +289,6 @@ onBeforeUnmount(() => {
               class="version-copy-button"
               :icon="CopyDocument"
               text
-              bg
-              circle
               :disabled="!currentVersionText"
               @click="copyCurrentVersion"
             />
@@ -488,10 +486,31 @@ onBeforeUnmount(() => {
 .version-copy-button {
   flex-shrink: 0;
   color: var(--text-secondary);
+  min-width: 34px;
+  min-height: 34px;
+  padding: 0 !important;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-xs);
 }
 
 .version-copy-button:hover {
   color: rgb(var(--primary-color));
+  border-color: rgba(var(--primary-color), 0.24);
+  background: rgba(var(--primary-color), 0.06);
+}
+
+:root:root[class='dark'] .version-copy-button {
+  border-color: var(--border-default);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+}
+
+:root:root[class='dark'] .version-copy-button:hover {
+  color: #fdba74;
+  border-color: rgba(var(--primary-color), 0.28);
+  background: rgba(var(--primary-color), 0.08);
 }
 
 .update-message {
