@@ -13,7 +13,7 @@ withDefaults(defineProps<Props>(), {
 </script>
 
 <template>
-  <div v-loading="loading" class="login-container">
+  <div class="login-container" :aria-busy="loading">
     <div class="ambient ambient-one"></div>
     <div class="ambient ambient-two"></div>
     <div class="guest-language-switch">

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import i18n from '@/lang'
 
 type SupportedLocale = 'zh-CN' | 'en-US'
 
-const currentLanguage = ref<SupportedLocale>(i18n.locale === 'en-US' ? 'en-US' : 'zh-CN')
+const currentLanguage = computed<SupportedLocale>(() => i18n.locale === 'en-US' ? 'en-US' : 'zh-CN')
 const languageOptions = computed<Array<{ label: string; value: SupportedLocale; mark: string }>>(() => [
   { label: '中文', value: 'zh-CN', mark: '中' },
   { label: 'English', value: 'en-US', mark: 'EN' }
@@ -15,12 +15,7 @@ const activeLanguage = computed(
 
 const setLanguage = async (lang: SupportedLocale) => {
   if (lang === currentLanguage.value) return
-  currentLanguage.value = lang
   await i18n.setLang(lang)
-}
-
-const handleLanguageCommand = (command: string | number | object) => {
-  void setLanguage(command as SupportedLocale)
 }
 </script>
 
@@ -29,7 +24,6 @@ const handleLanguageCommand = (command: string | number | object) => {
     placement="bottom-end"
     trigger="click"
     popper-class="header-dropdown-popper header-dropdown-popper--language"
-    @command="handleLanguageCommand"
   >
     <button class="language-switch" type="button" :aria-label="$t('common.switchLanguage')">
       <span class="language-switch__mark">{{ activeLanguage.mark }}</span>
@@ -41,8 +35,8 @@ const handleLanguageCommand = (command: string | number | object) => {
         <el-dropdown-item
           v-for="item in languageOptions"
           :key="item.value"
-          :command="item.value"
           :class="{ 'is-active-language': item.value === currentLanguage }"
+          @click="setLanguage(item.value)"
         >
           {{ item.label }}
         </el-dropdown-item>

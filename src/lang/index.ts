@@ -33,6 +33,7 @@ i18n.setLang = async (lang: string = Cookie.get(EKey.language) || defaultLocale)
   i18n.global.locale = locale
   activeLocale.value = locale
   Cookie.set(EKey.language, locale)
+  document.documentElement.lang = locale
 }
 
 //@ts-ignore

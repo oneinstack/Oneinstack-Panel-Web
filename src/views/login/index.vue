@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useTemplateRef } from 'vue'
 import LoginContainer from './components/login-container.vue'
 import System from '@/utils/System'
 import { Api } from '@/api/modules'
@@ -18,7 +18,7 @@ const updateViewport = () => {
 onMounted(() => window.addEventListener('resize', updateViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
-const goAfterLogin = (routePath: string) => {
+const goAfterLogin = async (routePath: string) => {
   const normalizedRoute = routePath.startsWith('/') ? routePath : `/${routePath}`
   const currentPathname = window.location.pathname || '/'
   if (currentPathname !== '/') {
@@ -26,7 +26,7 @@ const goAfterLogin = (routePath: string) => {
     window.location.replace(hashURL)
     return
   }
-  System.router.push(normalizedRoute)
+  await System.router.replace(normalizedRoute)
 }
 
 const loginRules = computed<FormRules>(() => ({
@@ -45,45 +45,49 @@ const conf = reactive({
   requiresTwoFactor: false,
   loading: false,
   formRef: useTemplateRef<FormInstance>('formRef'),
-  handleLogin: () => {
-    conf.formRef?.validate(async valid => {
-      if (!valid) return
-      conf.loading = true
-      try {
-        const { data: res } = await Api.login({
-          username: conf.form.username,
-          password: conf.form.password,
-          totpCode: conf.requiresTwoFactor ? conf.form.totpCode : ''
-        })
-        if (res.requiresTwoFactor && !res.authenticated) {
-          conf.requiresTwoFactor = true
-          conf.form.totpCode = ''
-          ElMessage.info(i18n.t('login.totpMessage'))
-          return
-        }
+  handleLogin: async () => {
+    const valid = await conf.formRef?.validate().catch(() => false)
+    if (!valid || conf.loading) return
 
-        sconfig.login(res)
-        if (res.mustChangePassword) {
-          sconfig.setAccessMatrix({})
-        } else {
-          try {
-            const matrixResponse = await Api.getAccessMatrix()
-            sconfig.setAccessMatrix(matrixResponse?.data || {})
-          } catch {
-            sconfig.setAccessMatrix({})
-          }
-        }
-
-        ElMessage.success(i18n.t('login.loginSuccess'))
-        setTimeout(() => {
-          goAfterLogin(res.mustChangePassword ? '/first-login' : getFirstAccessiblePath())
-        }, 500)
-      } catch {
-        // 请求层已经统一展示错误，此处只负责恢复加载状态。
-      } finally {
-        conf.loading = false
+    let nextRoute = ''
+    conf.loading = true
+    try {
+      const { data: res } = await Api.login({
+        username: conf.form.username,
+        password: conf.form.password,
+        totpCode: conf.requiresTwoFactor ? conf.form.totpCode : ''
+      })
+      if (res.requiresTwoFactor && !res.authenticated) {
+        conf.requiresTwoFactor = true
+        conf.form.totpCode = ''
+        ElMessage.info(i18n.t('login.totpMessage'))
+        return
       }
-    })
+
+      sconfig.login(res)
+      if (res.mustChangePassword) {
+        sconfig.setAccessMatrix({})
+      } else {
+        try {
+          const matrixResponse = await Api.getAccessMatrix()
+          sconfig.setAccessMatrix(matrixResponse?.data || {})
+        } catch {
+          sconfig.setAccessMatrix({})
+        }
+      }
+
+      nextRoute = res.mustChangePassword ? '/first-login' : getFirstAccessiblePath()
+      ElMessage.success(i18n.t('login.loginSuccess'))
+    } catch {
+      // 请求层已经统一展示错误，此处只负责恢复加载状态。
+    } finally {
+      conf.loading = false
+    }
+
+    if (!nextRoute) return
+    // 先让表单完成加载态更新，避免登录页状态进入下一个路由。
+    await nextTick()
+    await goAfterLogin(nextRoute)
   }
 })
 </script>
@@ -107,7 +111,7 @@ const conf = reactive({
         </p>
       </div>
 
-      <el-form ref="formRef" :model="conf.form" :rules="loginRules" class="login-form">
+      <el-form ref="formRef" :model="conf.form" :rules="loginRules" :disabled="conf.loading" class="login-form">
         <el-alert
           v-if="conf.requiresTwoFactor"
           :title="$t('login.twoFactorTitle')"
@@ -179,9 +183,18 @@ const conf = reactive({
           ← {{ $t('login.backToPasswordLogin') }}
         </el-button>
 
-        <button :class="className.loginBtn" type="button" @click="conf.handleLogin">
-          <span>{{ conf.requiresTwoFactor ? $t('login.verifyAndLogin') : $t('login.secureLogin') }}</span>
-          <span aria-hidden="true">→</span>
+        <button
+          :class="className.loginBtn"
+          type="button"
+          :disabled="conf.loading"
+          :aria-busy="conf.loading"
+          @click="conf.handleLogin"
+        >
+          <span>
+            {{ conf.loading ? $t('common.loading') : conf.requiresTwoFactor ? $t('login.verifyAndLogin') : $t('login.secureLogin') }}
+          </span>
+          <span v-if="!conf.loading" aria-hidden="true">→</span>
+          <span v-else class="login-button-spinner" aria-hidden="true"></span>
         </button>
       </el-form>
 
@@ -355,6 +368,27 @@ const conf = reactive({
   align-items: center;
   justify-content: space-between;
   padding: 0 19px;
+
+  &:disabled {
+    cursor: wait;
+    opacity: 0.78;
+    transform: none;
+  }
+}
+
+.login-button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: login-button-spin 0.8s linear infinite;
+}
+
+@keyframes login-button-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .login-note {
