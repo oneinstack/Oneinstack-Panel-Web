@@ -466,8 +466,9 @@ onBeforeUnmount(() => {
           >
             {{ $t('software.task.retryWithNewInput') }}
           </el-button>
+
+          <!-- :type="failed && !cancelable ? 'info' : 'primary'" -->
           <el-button
-            :type="failed && !cancelable ? 'info' : 'primary'"
             :plain="failed && !cancelable"
             @click="visible = false"
           >

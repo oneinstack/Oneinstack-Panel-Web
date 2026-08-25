@@ -22,6 +22,7 @@ import {
   Upload,
   VideoPause,
   VideoPlay,
+  WarningFilled,
 } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox, type FormRules } from "element-plus";
 import { Api } from "@/api/modules";
@@ -289,6 +290,22 @@ const canCleanup = computed(
 );
 
 const runtimeAvailable = computed(() => runtime.value?.available !== false);
+const createContainerDisabledReason = computed(() => {
+  if (runtimeLoading.value) return t("container.checking", "Checking");
+  if (!runtimeAvailable.value) {
+    return (
+      runtime.value?.message ||
+      t("container.createDisabledRuntime", "未检测到可用容器运行时，暂不可创建容器")
+    );
+  }
+  if (!canCreateContainer.value) {
+    return t(
+      "container.createDisabledPermission",
+      "当前账号没有创建容器权限",
+    );
+  }
+  return "";
+});
 const runtimeStatusText = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
   return runtimeAvailable.value
@@ -2550,14 +2567,31 @@ onBeforeUnmount(() => {
           {{ t("container.task.containerTask", "Container task")
           }}<span v-if="activeTaskCount">（{{ activeTaskCount }}）</span>
         </el-button>
-        <el-button
-          type="primary"
-          :icon="Plus"
-          :disabled="!runtimeAvailable || !canCreateContainer"
-          @click="openDialog('container')"
-        >
-          {{ t("container.createContainer", "Create container") }}
-        </el-button>
+        <div class="action-with-reason">
+          <el-tooltip
+            :content="createContainerDisabledReason"
+            :disabled="!createContainerDisabledReason"
+          >
+            <span class="disabled-action-wrapper">
+              <el-button
+                type="primary"
+                :icon="Plus"
+                :disabled="!runtimeAvailable || !canCreateContainer"
+                @click="openDialog('container')"
+              >
+                {{ t("container.createContainer", "Create container") }}
+              </el-button>
+            </span>
+          </el-tooltip>
+          <div
+            v-if="createContainerDisabledReason"
+            class="action-disabled-reason"
+            role="note"
+          >
+            <el-icon><WarningFilled /></el-icon>
+            <span>{{ createContainerDisabledReason }}</span>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -2629,6 +2663,7 @@ onBeforeUnmount(() => {
         <div class="panel-actions">
           <el-button
             v-if="activeTab === 'containers'"
+            class="cleanup-action-button"
             type="warning"
             plain
             :loading="actionLoading === 'cleanup:containers'"
@@ -3557,6 +3592,44 @@ onBeforeUnmount(() => {
   flex-wrap: wrap;
 }
 
+.action-with-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.disabled-action-wrapper {
+  display: inline-flex;
+}
+
+.action-disabled-reason {
+  max-width: 320px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(250, 173, 20, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 247, 230, 0.92);
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  .el-icon {
+    flex: 0 0 auto;
+    font-size: 14px;
+    color: #f97316;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .resource-panel {
   padding: 18px 20px 16px;
   border: 1px solid var(--border-subtle);
@@ -3593,6 +3666,65 @@ onBeforeUnmount(() => {
   min-height: 48px;
   padding-bottom: 8px;
   justify-content: flex-end;
+
+  :deep(.cleanup-action-button) {
+    border-color: rgba(245, 158, 11, 0.28);
+    background: linear-gradient(180deg, rgba(255, 247, 237, 0.92), rgba(255, 251, 235, 0.98));
+    color: #b45309;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.7) inset,
+      0 8px 18px rgba(245, 158, 11, 0.12);
+
+    &:not(.is-disabled):hover,
+    &:not(.is-disabled):focus-visible {
+      border-color: rgba(217, 119, 6, 0.42);
+      background: linear-gradient(180deg, rgba(255, 237, 213, 0.98), rgba(255, 247, 237, 1));
+      color: #92400e;
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.78) inset,
+        0 10px 24px rgba(245, 158, 11, 0.16);
+    }
+
+    &.is-disabled,
+    &.is-disabled:hover,
+    &:disabled,
+    &:disabled:hover {
+      border-color: rgba(245, 158, 11, 0.18) !important;
+      background: linear-gradient(180deg, rgba(255, 247, 237, 0.54), rgba(255, 251, 235, 0.7)) !important;
+      color: rgba(180, 83, 9, 0.72) !important;
+      box-shadow: none !important;
+      transform: none !important;
+    }
+  }
+}
+
+:root:root[class='dark'] .container-page .panel-actions :deep(.cleanup-action-button) {
+  border-color: rgba(245, 158, 11, 0.34);
+  background: linear-gradient(180deg, rgba(101, 67, 18, 0.38), rgba(74, 48, 16, 0.48));
+  color: #fcd34d;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.03) inset,
+    0 10px 22px rgba(0, 0, 0, 0.18);
+
+  &:not(.is-disabled):hover,
+  &:not(.is-disabled):focus-visible {
+    border-color: rgba(251, 191, 36, 0.5);
+    background: linear-gradient(180deg, rgba(120, 82, 12, 0.46), rgba(96, 62, 16, 0.58));
+    color: #fde68a;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 12px 26px rgba(0, 0, 0, 0.24);
+  }
+
+  &.is-disabled,
+  &.is-disabled:hover,
+  &:disabled,
+  &:disabled:hover {
+    border-color: rgba(180, 131, 19, 0.26) !important;
+    background: linear-gradient(180deg, rgba(80, 58, 24, 0.34), rgba(66, 48, 22, 0.42)) !important;
+    color: rgba(252, 211, 77, 0.72) !important;
+    box-shadow: none !important;
+  }
 }
 
 .table-toolbar {

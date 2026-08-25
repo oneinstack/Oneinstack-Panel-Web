@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting } from '@element-plus/icons-vue'
+import { Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting, WarningFilled } from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/modules'
@@ -190,6 +190,16 @@ const webServer = reactive({
       webServer.loading = false
     }
   }
+})
+
+const addSiteDisabledReason = computed(() => {
+  if (webServer.loading) {
+    return t('container.checking', '检测中')
+  }
+  if (!webServer.data.available) {
+    return webServer.data.message || t('website.addSiteDisabledReason', '未检测到 Nginx/OpenResty，暂不可添加站点')
+  }
+  return ''
 })
 
 const certificateDrawer = reactive({
@@ -639,7 +649,17 @@ webServer.load()
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <div class="tool-bar website-toolbar">
       <el-space class="btn-group website-toolbar__actions" :size="14" style="width: 100%;">
-        <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
+        <div class="action-with-reason">
+          <el-tooltip :content="addSiteDisabledReason" :disabled="!addSiteDisabledReason">
+            <span class="disabled-action-wrapper">
+              <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
+            </span>
+          </el-tooltip>
+          <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
+            <el-icon><WarningFilled /></el-icon>
+            <span>{{ addSiteDisabledReason }}</span>
+          </div>
+        </div>
         <el-button @click="backupDrawer.open()">{{ $t('website.fullBackupManagement') }}</el-button>
 
         <!-- <el-dropdown>
@@ -974,6 +994,44 @@ webServer.load()
   padding-inline: 14px;
 }
 
+.action-with-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.disabled-action-wrapper {
+  display: inline-flex;
+}
+
+.action-disabled-reason {
+  max-width: 320px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(250, 173, 20, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 247, 230, 0.92);
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  .el-icon {
+    flex: 0 0 auto;
+    font-size: 14px;
+    color: #f97316;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .website-root-link {
   max-width: 100%;
   vertical-align: middle;
@@ -1075,6 +1133,12 @@ webServer.load()
   .website-search-panel {
     padding: 12px;
     gap: 10px;
+  }
+
+  .action-disabled-reason {
+    max-width: 100%;
+    white-space: normal;
+    border-radius: 12px;
   }
 }
 

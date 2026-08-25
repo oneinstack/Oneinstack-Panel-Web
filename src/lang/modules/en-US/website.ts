@@ -7,6 +7,7 @@ export default {
   createWebsite: 'Create website',
   setWebsite: 'Website settings',
   addSite: 'Add site',
+  addSiteDisabledReason: 'Nginx or OpenResty not detected. Add site is unavailable.',
   fullBackupManagement: 'Full-site backup management',
   createSuccess: 'Website created successfully',
   updateSuccess: 'Website updated successfully',

@@ -617,30 +617,30 @@ const handleMoreAction = async (command: string, row: any) => {
   }
 
   .phpmyadmin-card {
-    margin-bottom: 18px;
-    padding: 18px 20px;
+    margin-bottom: 14px;
+    padding: 14px 16px;
     display: grid;
-    grid-template-columns: 48px minmax(0, 1fr) auto;
+    grid-template-columns: 40px minmax(0, 1fr) auto;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
     border: 1px solid var(--border-subtle);
-    border-radius: 14px;
+    border-radius: 12px;
     background:
       linear-gradient(110deg, color-mix(in srgb, var(--el-color-primary) 7%, transparent), transparent 48%),
       var(--surface-card);
     box-shadow: var(--shadow-xs);
 
     &__icon {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       display: grid;
       place-items: center;
-      border-radius: 13px;
+      border-radius: 11px;
       color: var(--el-color-primary);
       background: color-mix(in srgb, var(--el-color-primary) 12%, var(--surface-card));
 
       .el-icon {
-        font-size: 24px;
+        font-size: 20px;
       }
     }
 
@@ -648,23 +648,23 @@ const handleMoreAction = async (command: string, row: any) => {
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 5px;
 
       > span {
         color: var(--text-tertiary);
-        font-size: 13px;
-        line-height: 1.5;
+        font-size: 12px;
+        line-height: 1.45;
       }
     }
 
     &__title {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
 
       strong {
         color: var(--text-primary);
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 650;
       }
     }
@@ -672,7 +672,14 @@ const handleMoreAction = async (command: string, row: any) => {
     &__actions {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+
+      :deep(.el-button) {
+        min-height: 36px;
+        padding: 8px 14px;
+        border-radius: 9px;
+        font-size: 13px;
+      }
     }
   }
 
@@ -697,7 +704,7 @@ const handleMoreAction = async (command: string, row: any) => {
 
 @media (max-width: 920px) {
   .database-container .phpmyadmin-card {
-    grid-template-columns: 48px minmax(0, 1fr);
+    grid-template-columns: 40px minmax(0, 1fr);
 
     &__actions {
       grid-column: 1 / -1;

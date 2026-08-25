@@ -7,6 +7,7 @@ export default {
   createWebsite: '创建网站',
   setWebsite: '设置网站',
   addSite: '添加站点',
+  addSiteDisabledReason: '未检测到 Nginx/OpenResty，暂不可添加站点',
   fullBackupManagement: '整站备份管理',
   createSuccess: '创建网站成功',
   updateSuccess: '更新网站成功',

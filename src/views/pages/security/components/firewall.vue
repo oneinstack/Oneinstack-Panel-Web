@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Delete, EditPen } from "@element-plus/icons-vue";
+import { Delete, EditPen, WarningFilled } from "@element-plus/icons-vue";
 
 import { Api } from "@/api/modules";
 import SearchInput from "@/components/search-input.vue";
@@ -1164,6 +1164,11 @@ const forwardActionReason = () => {
   return baseActionDisabledReason.value;
 };
 
+const currentToolbarActionReason = computed(() => {
+  if (activeTab.value === "auto_block") return "";
+  return activeTab.value === "forward" ? forwardActionReason() : actionReason();
+});
+
 const handleCurrentChange = (page: number) => {
   pagination.currentPage = page;
   getData();
@@ -1432,18 +1437,28 @@ onMounted(() => {
         <div class="toolbar-actions security-toolbar__actions">
           <el-tooltip
             v-if="activeTab !== 'auto_block'"
-            :content="activeTab === 'forward' ? forwardActionReason() : actionReason()"
-            :disabled="!(activeTab === 'forward' ? forwardActionReason() : actionReason())"
+            :content="currentToolbarActionReason"
+            :disabled="!currentToolbarActionReason"
           >
-            <span class="disabled-action-wrapper">
-              <el-button
-                type="primary"
-                :disabled="Boolean(activeTab === 'forward' ? forwardActionReason() : actionReason())"
-                @click="openAddDialog"
+            <div class="action-with-reason">
+              <span class="disabled-action-wrapper">
+                <el-button
+                  type="primary"
+                  :disabled="Boolean(currentToolbarActionReason)"
+                  @click="openAddDialog"
+                >
+                  {{ addRuleButtonText }}
+                </el-button>
+              </span>
+              <div
+                v-if="currentToolbarActionReason"
+                class="action-disabled-reason"
+                role="note"
               >
-                {{ addRuleButtonText }}
-              </el-button>
-            </span>
+                <el-icon><WarningFilled /></el-icon>
+                <span>{{ currentToolbarActionReason }}</span>
+              </div>
+            </div>
           </el-tooltip>
           <template v-if="isRuleTab">
             <el-tooltip :content="actionReason()" :disabled="!actionReason()">
@@ -2019,8 +2034,42 @@ onMounted(() => {
   gap: 10px;
 }
 
+.action-with-reason {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
 .disabled-action-wrapper {
   display: inline-flex;
+}
+
+.action-disabled-reason {
+  max-width: 320px;
+  padding: 7px 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(250, 173, 20, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 247, 230, 0.92);
+  color: #b45309;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+
+  .el-icon {
+    flex: 0 0 auto;
+    font-size: 14px;
+    color: #f97316;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 .rule-search {
