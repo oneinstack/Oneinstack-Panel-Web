@@ -20,13 +20,34 @@ export type PortPublishMode = 'ports' | 'all'
 export type PortProtocol = 'tcp' | 'udp' | 'sctp'
 export type DetailType = 'container' | 'image' | 'network' | 'volume'
 export type ContainerAction = 'start' | 'stop' | 'restart' | 'pause' | 'unpause' | 'kill' | 'rm'
+export type RuntimeCapabilityKey =
+  | 'runtime'
+  | 'containerManage'
+  | 'imageManage'
+  | 'networkManage'
+  | 'volumeManage'
+  | 'composeManage'
+  | 'registryManage'
+  | 'registryTest'
+  | 'dockerConfig'
+
+export interface RuntimeCapabilityInfo {
+  available: boolean
+  requiresDockerCli?: boolean
+  requiresDockerDaemon?: boolean
+  disabledReasonCode?: string
+  disabledReason?: string
+}
 
 export interface RuntimeInfo {
   available: boolean
+  installed?: boolean
+  running?: boolean
   dockerVersion?: string
   composeVersion?: string
   serverVersion?: string
   message?: string
+  capabilities?: Partial<Record<RuntimeCapabilityKey, RuntimeCapabilityInfo>>
 }
 
 export interface ContainerItem {

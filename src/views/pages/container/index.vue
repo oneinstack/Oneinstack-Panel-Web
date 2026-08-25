@@ -50,6 +50,8 @@ import type {
   PortPublishMode,
   RegistryItem,
   ResourceTab,
+  RuntimeCapabilityInfo,
+  RuntimeCapabilityKey,
   RuntimeInfo,
   TemplateItem,
   VolumeItem,
@@ -289,22 +291,98 @@ const canCleanup = computed(
     sconfig.hasScopeAccess("container", "dangerousCleanup"),
 );
 
+const capabilityFallbackAvailability: Record<RuntimeCapabilityKey, boolean> = {
+  runtime: false,
+  containerManage: false,
+  imageManage: false,
+  networkManage: false,
+  volumeManage: false,
+  composeManage: false,
+  registryManage: true,
+  registryTest: true,
+  dockerConfig: true,
+};
+
+const getCapabilityState = (
+  key: RuntimeCapabilityKey,
+): RuntimeCapabilityInfo => {
+  const capability = runtime.value?.capabilities?.[key];
+  if (capability) return capability;
+  return {
+    available: capabilityFallbackAvailability[key]
+      ? true
+      : runtime.value?.available !== false,
+  };
+};
+
+const getCapabilityDisabledReason = (
+  key: RuntimeCapabilityKey,
+  permissionAllowed: boolean,
+  permissionReason: string,
+) => {
+  if (!permissionAllowed) return permissionReason;
+  const capability = getCapabilityState(key);
+  if (capability.available) return "";
+  return (
+    capability.disabledReason ||
+    runtime.value?.message ||
+    t("container.runtimeUnavailable", "Runtime unavailable")
+  );
+};
+
 const runtimeAvailable = computed(() => runtime.value?.available !== false);
+const registryManageAvailable = computed(
+  () => getCapabilityState("registryManage").available,
+);
+const registryTestAvailable = computed(
+  () => getCapabilityState("registryTest").available,
+);
+const dockerConfigAvailable = computed(
+  () => getCapabilityState("dockerConfig").available,
+);
 const createContainerDisabledReason = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
-  if (!runtimeAvailable.value) {
-    return (
-      runtime.value?.message ||
-      t("container.createDisabledRuntime", "未检测到可用容器运行时，暂不可创建容器")
-    );
-  }
-  if (!canCreateContainer.value) {
-    return t(
+  return getCapabilityDisabledReason(
+    "containerManage",
+    canCreateContainer.value,
+    t(
       "container.createDisabledPermission",
       "当前账号没有创建容器权限",
-    );
-  }
-  return "";
+    ),
+  );
+});
+const registryManageDisabledReason = computed(() => {
+  if (runtimeLoading.value) return t("container.checking", "Checking");
+  return getCapabilityDisabledReason(
+    "registryManage",
+    canRegistryWrite.value,
+    t(
+      "container.registryWriteDisabled",
+      "当前账号没有 Registry 管理权限",
+    ),
+  );
+});
+const registryTestDisabledReason = computed(() => {
+  if (runtimeLoading.value) return t("container.checking", "Checking");
+  return getCapabilityDisabledReason(
+    "registryTest",
+    canRegistryWrite.value,
+    t(
+      "container.registryWriteDisabled",
+      "当前账号没有 Registry 管理权限",
+    ),
+  );
+});
+const dockerConfigDisabledReason = computed(() => {
+  if (runtimeLoading.value) return t("container.checking", "Checking");
+  return getCapabilityDisabledReason(
+    "dockerConfig",
+    canConfigWrite.value,
+    t(
+      "container.configWriteDisabled",
+      "当前账号没有 Docker 配置写入权限",
+    ),
+  );
 });
 const runtimeStatusText = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
@@ -867,6 +945,15 @@ const loadActiveTab = async (force = false) => {
         listQuery("registries"),
       );
       registries.value = normalizeList<RegistryItem>(data);
+      if (data?.capabilities) {
+        runtime.value = {
+          ...(runtime.value || { available: false }),
+          capabilities: {
+            ...(runtime.value?.capabilities || {}),
+            ...data.capabilities,
+          },
+        };
+      }
       updateListState("registries", data);
     }
     if (activeTab.value === "config") {
@@ -2763,24 +2850,56 @@ onBeforeUnmount(() => {
           >
             {{ t("container.createTemplate", "Create template") }}
           </el-button>
-          <el-button
-            v-if="activeTab === 'registries'"
-            type="primary"
-            :icon="Plus"
-            :disabled="!runtimeAvailable || !canRegistryWrite"
-            @click="openDialog('registry')"
-          >
-            {{ t("container.addRegistry", "Add Registry") }}
-          </el-button>
-          <el-button
-            v-if="activeTab === 'config'"
-            type="primary"
-            :loading="actionLoading === 'config:save'"
-            :disabled="!runtimeAvailable || !canConfigWrite"
-            @click="saveDockerConfig"
-          >
-            {{ t("container.saveConfig", "Save config") }}
-          </el-button>
+          <div v-if="activeTab === 'registries'" class="action-with-reason">
+            <el-tooltip
+              :content="registryManageDisabledReason"
+              :disabled="!registryManageDisabledReason"
+            >
+              <span class="disabled-action-wrapper">
+                <el-button
+                  type="primary"
+                  :icon="Plus"
+                  :disabled="!registryManageAvailable || !canRegistryWrite"
+                  @click="openDialog('registry')"
+                >
+                  {{ t("container.addRegistry", "Add Registry") }}
+                </el-button>
+              </span>
+            </el-tooltip>
+            <div
+              v-if="registryManageDisabledReason"
+              class="action-disabled-reason"
+              role="note"
+            >
+              <el-icon><WarningFilled /></el-icon>
+              <span>{{ registryManageDisabledReason }}</span>
+            </div>
+          </div>
+          <div v-if="activeTab === 'config'" class="action-with-reason">
+            <el-tooltip
+              :content="dockerConfigDisabledReason"
+              :disabled="!dockerConfigDisabledReason"
+            >
+              <span class="disabled-action-wrapper">
+                <el-button
+                  type="primary"
+                  :loading="actionLoading === 'config:save'"
+                  :disabled="!dockerConfigAvailable || !canConfigWrite"
+                  @click="saveDockerConfig"
+                >
+                  {{ t("container.saveConfig", "Save config") }}
+                </el-button>
+              </span>
+            </el-tooltip>
+            <div
+              v-if="dockerConfigDisabledReason"
+              class="action-disabled-reason"
+              role="note"
+            >
+              <el-icon><WarningFilled /></el-icon>
+              <span>{{ dockerConfigDisabledReason }}</span>
+            </div>
+          </div>
           <el-button
             v-if="activeTab === 'config'"
             type="warning"
@@ -2793,6 +2912,34 @@ onBeforeUnmount(() => {
           </el-button>
         </div>
       </div>
+
+      <el-alert
+        v-if="activeTab === 'registries'"
+        class="container-alert container-alert--inline"
+        :title="
+          t(
+            'container.registryCapabilityHint',
+            'Registry configuration and connectivity testing do not depend on Docker CLI or the daemon. They remain available when permissions allow, even if Docker is not installed.',
+          )
+        "
+        type="info"
+        show-icon
+        :closable="false"
+      />
+
+      <el-alert
+        v-if="activeTab === 'config'"
+        class="container-alert container-alert--inline"
+        :title="
+          t(
+            'container.dockerConfigCapabilityHint',
+            'Docker config read/write does not depend on Docker CLI or the daemon. Saving changes may still require restarting Docker later to take effect.',
+          )
+        "
+        type="info"
+        show-icon
+        :closable="false"
+      />
 
       <div v-if="hasPagination" class="table-toolbar">
         <div class="table-toolbar__filters">
@@ -3345,16 +3492,23 @@ onBeforeUnmount(() => {
         </template>
         <template #registryAction="{ row }">
           <div class="row-actions table-row-actions">
-            <el-button
-              link
-              type="primary"
-              :icon="Connection"
-              :loading="actionLoading === `registry-test:${row.id}`"
-              :disabled="!runtimeAvailable || !canRegistryWrite"
-              @click="testRegistry(row)"
+            <el-tooltip
+              :content="registryTestDisabledReason"
+              :disabled="!registryTestDisabledReason"
             >
-              {{ t("container.test", "Test") }}
-            </el-button>
+              <span class="disabled-action-wrapper">
+                <el-button
+                  link
+                  type="primary"
+                  :icon="Connection"
+                  :loading="actionLoading === `registry-test:${row.id}`"
+                  :disabled="!registryTestAvailable || !canRegistryWrite"
+                  @click="testRegistry(row)"
+                >
+                  {{ t("container.test", "Test") }}
+                </el-button>
+              </span>
+            </el-tooltip>
             <el-button
               link
               type="primary"
@@ -3368,7 +3522,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === `registry:${row.id}`"
-              :disabled="!canDelete"
+              :disabled="!canRegistryWrite"
               @click="deleteRegistry(row)"
             >
               {{ t("container.delete", "Delete") }}

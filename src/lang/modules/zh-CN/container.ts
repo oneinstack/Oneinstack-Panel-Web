@@ -239,6 +239,8 @@ export default {
   enabledShort: '启用',
   closed: '关闭',
   composeWriteDisabled: '后端暂未启用 Compose 写操作',
+  registryWriteDisabled: '当前账号没有 Registry 管理权限',
+  configWriteDisabled: '当前账号没有 Docker 配置写入权限',
   notEnabled: '暂未启用',
   templatesDisabled: '编排模板暂未启用',
   configFile: '配置文件：{path}',
@@ -246,6 +248,8 @@ export default {
   notCreated: '未创建',
   configPlaceholder: '请输入 Docker 配置 JSON，例如',
   configSaveTip: '保存只写入 daemon.json，不会自动重启 Docker。需要生效时请点击“重启 Docker”并确认操作预览。',
+  registryCapabilityHint: 'Registry 配置管理和连通性测试不依赖 Docker CLI 或 daemon；只要当前账号有权限，即使 Docker 未安装也仍可使用。',
+  dockerConfigCapabilityHint: 'Docker 配置读写不依赖 Docker CLI 或 daemon；保存配置后如需生效，仍可能需要稍后手动重启 Docker。',
   footer: {
     containers: '共 {total} 个容器，当前页 {running} 个运行中',
     images: '共 {total} 个镜像，当前页大小 {size}',

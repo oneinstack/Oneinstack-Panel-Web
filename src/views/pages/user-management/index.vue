@@ -3,8 +3,8 @@ import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
 import { Api } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
-import { ElMessage } from 'element-plus'
-import { CircleCheck, CollectionTag, Key, User } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { CircleCheck, CollectionTag, Delete, Key, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
 
 interface AccessRole {
@@ -32,7 +32,8 @@ const loading = reactive({
   users: false,
   createUser: false,
   updateRoles: false,
-  resetPassword: false
+  resetPassword: false,
+  deleteUserId: 0
 })
 
 const currentUser = ref<any>(null)
@@ -53,7 +54,7 @@ const userState = reactive({
     { prop: 'scope', label: t('userManagement.scope', 'Permission scope'), minWidth: 140 },
     { prop: 'mustChangePassword', label: t('common.status', 'Status'), minWidth: 120 },
     { prop: 'createdAt', label: t('userManagement.createdAt', 'Created at'), minWidth: 180 },
-    { prop: 'action', label: t('common.action', 'Action'), width: 220, fixed: 'right' }
+    { prop: 'action', label: t('common.action', 'Action'), width: 300, fixed: 'right' }
   ])
 })
 
@@ -151,6 +152,15 @@ const userScopeLabel = (row: AccessUser) => {
   if (!(row.roles || []).length) return t('userManagement.unauthorized', 'Unauthorized')
   return t('userManagement.roleAuthorized', 'Role authorized')
 }
+const currentLoginUserId = computed(() =>
+  Number(currentUser.value?.id || currentUser.value?.user?.id || 0)
+)
+const currentLoginUsername = computed(() =>
+  String(currentUser.value?.username || currentUser.value?.user?.username || '')
+)
+const isCurrentLoginUser = (row: AccessUser) =>
+  Boolean((currentLoginUserId.value && row.id === currentLoginUserId.value) || (currentLoginUsername.value && row.username === currentLoginUsername.value))
+const isSuperAdminUser = (row?: AccessUser | null) => Boolean(row?.isSuperAdmin || row?.isAdmin)
 
 const loadBootstrap = async () => {
   loading.bootstrap = true
@@ -267,6 +277,64 @@ const submitPasswordReset = async () => {
     // ElMessage.error(error?.message || t('userManagement.resetPasswordFailed', 'Failed to reset password'))
   } finally {
     loading.resetPassword = false
+  }
+}
+
+const getSuperAdminCount = async () => {
+  const response = await Api.getAccessUsers({
+    page: 1,
+    pageSize: 100,
+    keyword: ''
+  })
+  const items = response.data?.items || []
+  return items.filter((item: AccessUser) => isSuperAdminUser(item)).length
+}
+
+const deleteUser = async (row: AccessUser) => {
+  if (!row?.id) {
+    ElMessage.warning(t('userManagement.invalidUserId', 'Invalid user ID'))
+    return
+  }
+  if (isCurrentLoginUser(row)) {
+    ElMessage.warning(t('userManagement.cannotDeleteCurrentUser', 'You cannot delete the current signed-in account'))
+    return
+  }
+  if (isSuperAdminUser(row)) {
+    const superAdminCount = await getSuperAdminCount()
+    if (superAdminCount <= 1) {
+      ElMessage.warning(t('userManagement.cannotDeleteLastSuperAdmin', 'You cannot delete the last super administrator'))
+      await loadUsers()
+      return
+    }
+  }
+
+  await ElMessageBox.confirm(
+    t('userManagement.deleteConfirmMessage', 'Permanently delete user "{username}"? This action cannot be undone.', { username: row.username }),
+    t('userManagement.deleteUser', 'Delete user'),
+    {
+      type: 'warning',
+      confirmButtonText: t('userManagement.confirmDelete', 'Delete permanently'),
+      cancelButtonText: t('common.cancel', 'Cancel')
+    }
+  )
+
+  loading.deleteUserId = row.id
+  try {
+    await Api.deleteAccessUser(row.id)
+    ElMessage.success(t('userManagement.deleteSuccess', 'User deleted'))
+    await loadUsers()
+  } catch (error: any) {
+    const code = Number(error?.code || error?.response?.data?.code || 0)
+    if (code === 1200) {
+      ElMessage.warning(t('userManagement.cannotDeleteCurrentUser', 'You cannot delete the current signed-in account'))
+    } else if (code === 1002) {
+      ElMessage.warning(t('userManagement.cannotDeleteLastSuperAdmin', 'You cannot delete the last super administrator'))
+    } else if (code === 2000) {
+      ElMessage.warning(t('userManagement.userAlreadyDeleted', 'The user no longer exists. The list has been refreshed.'))
+    }
+    await loadUsers()
+  } finally {
+    loading.deleteUserId = 0
   }
 }
 
@@ -418,6 +486,16 @@ onMounted(async () => {
             <div class="action-wrap action-wrap--compact table-row-actions">
               <el-button link type="primary" :icon="CollectionTag" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
               <el-button link type="primary" :icon="Key" :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
+              <el-button
+                link
+                type="danger"
+                :icon="Delete"
+                :disabled="!canManageUsers || isCurrentLoginUser(row)"
+                :loading="loading.deleteUserId === row.id"
+                @click="deleteUser(row)"
+              >
+                {{ $t('common.delete') }}
+              </el-button>
             </div>
           </template>
         </custom-table>

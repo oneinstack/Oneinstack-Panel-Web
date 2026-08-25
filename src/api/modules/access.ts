@@ -21,6 +21,10 @@ export const accessApi = {
   createAccessUser: (obj: any) => {
     return http.post("/access/users", obj);
   },
+  /** 删除指定用户 */
+  deleteAccessUser: (id: number | string) => {
+    return http.delete(`/access/users/${id}?confirm=true`);
+  },
   /** 更新指定用户角色 */
   updateAccessUserRoles: (
     id: number | string,

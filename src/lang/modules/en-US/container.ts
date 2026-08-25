@@ -245,6 +245,8 @@ export default {
   enabledShort: 'Enabled',
   closed: 'Off',
   composeWriteDisabled: 'Compose write operations are not enabled by the backend',
+  registryWriteDisabled: 'The current account does not have Registry management permission',
+  configWriteDisabled: 'The current account does not have Docker config write permission',
   notEnabled: 'Not enabled',
   templatesDisabled: 'Compose templates are not enabled',
   configFile: 'Config file: {path}',
@@ -252,6 +254,8 @@ export default {
   notCreated: 'Not created',
   configPlaceholder: 'Enter Docker config JSON, for example',
   configSaveTip: 'Saving only writes daemon.json and does not restart Docker automatically. To apply changes, click "Restart Docker" and confirm the operation preview.',
+  registryCapabilityHint: 'Registry configuration and connectivity testing do not depend on Docker CLI or the daemon. They remain available when permissions allow, even if Docker is not installed.',
+  dockerConfigCapabilityHint: 'Docker config read/write does not depend on Docker CLI or the daemon. Saving changes may still require restarting Docker later to take effect.',
   footer: {
     containers: '{total} containers, {running} running on current page',
     images: '{total} images, current page size {size}',
