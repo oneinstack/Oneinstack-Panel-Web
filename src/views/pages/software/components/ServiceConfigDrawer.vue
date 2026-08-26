@@ -443,14 +443,16 @@ watch(values, () => {
           </div>
           <span v-if="preview.hasChanges">{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
         </div>
-        <custom-table v-if="preview.hasChanges" :data="preview.changes" :columns="previewColumns" :pagination="false" size="small">
+        <div v-if="preview.hasChanges" class="preview-table-wrap">
+          <custom-table :data="preview.changes" :columns="previewColumns" :pagination="false" size="small">
           <template #before="{ row }">
-              <span class="value-before">{{ row.before }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
+              <span class="value-chip value-before">{{ row.before }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
           </template>
           <template #after="{ row }">
-              <span class="value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
+              <span class="value-chip value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
           </template>
-        </custom-table>
+          </custom-table>
+        </div>
         <el-empty v-else :description="$t('software.config.noChanges')" :image-size="64" />
       </section>
     </div>
@@ -612,6 +614,21 @@ watch(values, () => {
   flex: 0 0 auto;
   align-self: center;
   margin: 0 14px;
+  color: rgb(var(--primary-color)) !important;
+
+  :deep(.el-button) {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  :deep(.el-button .el-icon) {
+    color: inherit;
+  }
+
+  :deep(.el-button:hover),
+  :deep(.el-button:focus-visible) {
+    color: var(--text-primary);
+  }
 }
 
 .settings-panel {
@@ -737,8 +754,9 @@ watch(values, () => {
   overflow: hidden;
   margin-top: 18px;
   border: 1px solid var(--border-subtle);
-  border-radius: 10px;
+  border-radius: 12px;
   background: var(--surface-card);
+  box-shadow: 0 4px 14px rgba(16, 24, 40, 0.035);
 }
 
 .history-panel {
@@ -781,6 +799,20 @@ watch(values, () => {
     margin-top: 4px;
     color: var(--text-tertiary);
     font-size: 10px;
+  }
+
+  :deep(.el-button) {
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+
+  :deep(.el-button .el-icon) {
+    color: inherit;
+  }
+
+  :deep(.el-button:hover),
+  :deep(.el-button:focus-visible) {
+    color: var(--text-primary);
   }
 }
 
@@ -851,8 +883,8 @@ watch(values, () => {
 
 .preview-title {
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 16px;
+  padding: 16px 18px;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-subtle);
 
@@ -863,28 +895,84 @@ watch(values, () => {
 
   h3 {
     color: var(--text-primary);
-    font-size: 12px;
-    font-weight: 620;
+    font-size: 13px;
+    font-weight: 650;
   }
 
   p,
   > span {
-    color: var(--text-tertiary);
     font-size: 10px;
   }
 
   p {
-    margin-top: 3px;
+    margin-top: 4px;
+    color: var(--text-tertiary);
+    line-height: 1.55;
+  }
+
+  > span {
+    flex: 0 0 auto;
+    padding: 6px 10px;
+    border: 1px solid rgba(var(--primary-color), 0.2);
+    border-radius: 999px;
+    color: rgb(var(--primary-color));
+    background: rgba(var(--primary-color), 0.08);
+    font-weight: 600;
   }
 }
 
+.preview-table-wrap {
+  padding: 0;
+
+  :deep(.table) {
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  :deep(.el-table th.el-table__cell) {
+    background: var(--surface-subtle);
+  }
+
+  :deep(.el-table) {
+    background: transparent;
+  }
+
+  :deep(.el-table td.el-table__cell) {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  :deep(.el-table tr:last-child td.el-table__cell) {
+    border-bottom: 0;
+  }
+}
+
+.value-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 .value-before {
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+  background: var(--surface-subtle);
 }
 
 .value-after {
   color: rgb(var(--primary-color));
-  font-weight: 620;
+  border-color: rgba(var(--primary-color), 0.22);
+  background: rgba(var(--primary-color), 0.08);
 }
 
 .drawer-footer {

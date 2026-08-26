@@ -403,6 +403,49 @@ const statusLabel = computed(() => {
     font-size: 12px;
     line-height: 1.5;
   }
+
+  :deep(.el-select) {
+    --el-fill-color-blank: var(--surface-card);
+    --el-disabled-bg-color: var(--surface-subtle);
+    --el-disabled-text-color: var(--text-secondary);
+    --el-disabled-border-color: var(--border-subtle);
+  }
+
+  :deep(.el-select .el-select__wrapper) {
+    min-height: 42px;
+    border-radius: 10px;
+    background: var(--surface-card);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+  }
+
+  :deep(.el-select .el-select__wrapper:hover) {
+    box-shadow: 0 0 0 1px var(--border-strong) inset;
+  }
+
+  :deep(.el-select .el-select__wrapper.is-disabled) {
+    background: color-mix(in srgb, var(--surface-subtle) 88%, var(--surface-card));
+    box-shadow: 0 0 0 1px var(--border-subtle) inset;
+    cursor: not-allowed;
+  }
+
+  :deep(.el-select .el-select__selected-item),
+  :deep(.el-select .el-select__placeholder) {
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-select .el-select__wrapper.is-disabled .el-select__selected-item),
+  :deep(.el-select .el-select__wrapper.is-disabled .el-select__placeholder) {
+    color: color-mix(in srgb, var(--text-secondary) 82%, var(--text-tertiary));
+    -webkit-text-fill-color: currentColor;
+  }
+
+  :deep(.el-select .el-select__caret) {
+    color: var(--text-tertiary);
+  }
+
+  :deep(.el-select .el-select__wrapper.is-disabled .el-select__caret) {
+    color: var(--text-placeholder);
+  }
 }
 
 .phpmyadmin-security {
