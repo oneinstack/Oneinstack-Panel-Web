@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/modules/app';
 import System from '@/utils/System'
-import { ArrowDown, CircleClose, DataAnalysis, Delete, Download, Files, FolderAdd, Key, Link, Lock, MoreFilled, Setting } from '@element-plus/icons-vue'
+import { ArrowDown, CircleClose, DataAnalysis, Delete, Files, FolderAdd, Key, Link, Lock, MoreFilled, Setting } from '@element-plus/icons-vue'
 import type { ConfProps } from './index.vue'
 import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, reactive, watch, type CSSProperties } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import DatabaseBackupDrawer from './components/DatabaseBackupDrawer.vue'
 import i18n from '@/lang'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 import { useSoftwareTaskStore } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '../software/components/InstallTaskDrawer.vue'
+import PhpMyAdminDrawer from './components/PhpMyAdminDrawer.vue'
 
 const sapp = useAppStore()
 const softwareTaskStore = useSoftwareTaskStore()
@@ -49,8 +50,9 @@ const webServerItem = computed(() =>
 )
 const phpMyAdminInstalled = computed(() => phpMyAdminItem.value?.installed === true)
 const phpMyAdminTask = computed(() => softwareTaskStore.activeForKey('phpmyadmin'))
-const phpMyAdminVersion = computed(() => {
-  const versions = (phpMyAdminItem.value?.versions ?? []) as string[]
+const phpMyAdminVersions = computed(() => (phpMyAdminItem.value?.versions ?? []) as string[])
+const phpMyAdminRecommendedVersion = computed(() => {
+  const versions = phpMyAdminVersions.value
   const phpVersion = String(phpItem.value?.install_version || '')
   const match = phpVersion.match(/^(\d+)\.(\d+)/)
   if (match) {
@@ -63,6 +65,8 @@ const phpMyAdminVersion = computed(() => {
   return phpMyAdminItem.value?.recommendedVersion ||
     versions.find((version) => version === '5.2.3') || versions[0] || ''
 })
+const phpMyAdminSelectedVersion = ref('')
+const phpMyAdminVersion = computed(() => phpMyAdminSelectedVersion.value || phpMyAdminRecommendedVersion.value)
 const phpMyAdminDescription = computed(() => {
   if (phpMyAdminTask.value) return t('database.phpMyAdmin.taskRunning', 'The installation task is running in the background. Click to view realtime progress and logs.')
   if (phpMyAdminInstalled.value) {
@@ -76,89 +80,33 @@ const phpMyAdminDescription = computed(() => {
   })
 })
 
-const isDarkAppearance = computed(() =>
-  sapp.theme === 'dark' || document.documentElement.classList.contains('dark')
-)
+const phpMyAdminPanel = reactive({
+  visible: false,
+  activeTab: 'service'
+})
 
-const getPhpMyAdminStatusStyle = (type: 'success' | 'warning' | 'info'): CSSProperties => {
-  const baseStyle: CSSProperties = {
-    minHeight: '28px',
-    padding: '2px 10px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: '1px',
-    borderStyle: 'solid',
-    borderRadius: '999px',
-    fontSize: '12px',
-    fontWeight: '650',
-    lineHeight: '1.2',
-    whiteSpace: 'nowrap',
-    boxShadow: 'none'
-  }
-
-  if (isDarkAppearance.value) {
-    if (type === 'success') {
-      return {
-        ...baseStyle,
-        borderColor: 'rgb(var(--success-color))',
-        color: 'rgb(var(--success-color))',
-        background: 'transparent'
-      }
-    }
-
-    if (type === 'warning') {
-      return {
-        ...baseStyle,
-        borderColor: 'rgb(var(--primary-color))',
-        color: 'rgb(var(--primary-color))',
-        background: 'transparent'
-      }
-    }
-
-    return {
-      ...baseStyle,
-      borderColor: 'rgba(148, 163, 184, 0.72)',
-      color: '#94a3b8',
-      background: 'transparent'
-    }
-  }
-
-  if (type === 'success') {
-    return {
-      ...baseStyle,
-      borderColor: 'rgb(var(--success-color))',
-      color: 'rgb(var(--success-color))',
-      background: 'rgba(var(--success-color), 0.08)'
-    }
-  }
-
-  if (type === 'warning') {
-    return {
-      ...baseStyle,
-      borderColor: 'rgb(var(--primary-color))',
-      color: 'rgb(var(--primary-color))',
-      background: 'rgba(var(--primary-color), 0.08)'
-    }
-  }
-
-  return {
-    ...baseStyle,
-    borderColor: 'rgba(148, 163, 184, 0.32)',
-    color: '#64748b',
-    background: 'rgba(148, 163, 184, 0.08)'
-  }
-}
-
-const phpMyAdminDrawer = reactive({
+const phpMyAdminTaskDrawer = reactive({
   visible: false,
   taskId: ''
 })
 
+const phpMyAdminStatus = computed(() => {
+  if (phpMyAdminTask.value) return 'installing'
+  return phpMyAdminInstalled.value ? 'installed' : 'notInstalled'
+})
+
+const openPhpMyAdminPanel = async () => {
+  phpMyAdminPanel.visible = true
+  await Promise.allSettled([
+    phpMyAdminCatalog.getData(),
+    softwareTaskStore.loadAll()
+  ])
+}
+
 const showPhpMyAdminTask = (taskId?: string) => {
   if (!taskId) return
-  phpMyAdminDrawer.taskId = taskId
-  phpMyAdminDrawer.visible = true
+  phpMyAdminTaskDrawer.taskId = taskId
+  phpMyAdminTaskDrawer.visible = true
 }
 
 const routeToPrerequisite = async (name: string, component: string) => {
@@ -266,6 +214,16 @@ void Promise.allSettled([
 watch(
   () => softwareTaskStore.terminalRevision,
   () => void phpMyAdminCatalog.getData().catch(() => undefined)
+)
+
+watch(
+  [phpMyAdminRecommendedVersion, phpMyAdminVersions],
+  ([recommendedVersion, versions]) => {
+    if (!phpMyAdminSelectedVersion.value || !versions.includes(phpMyAdminSelectedVersion.value)) {
+      phpMyAdminSelectedVersion.value = recommendedVersion
+    }
+  },
+  { immediate: true }
 )
 
 onMounted(() => {
@@ -482,64 +440,17 @@ const handleMoreAction = async (command: string, row: any) => {
     <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false" style="margin-left: 24px;"><CircleClose /></el-icon>
   </div>
   <div class="container">
-    <div class="phpmyadmin-card">
-      <div class="phpmyadmin-card__icon">
-        <el-icon><DataAnalysis /></el-icon>
-      </div>
-      <div class="phpmyadmin-card__content">
-        <div class="phpmyadmin-card__title">
-          <strong>{{ t('database.phpMyAdmin.quickTitle', 'phpMyAdmin 快捷管理') }}</strong>
-          <span
-            v-if="phpMyAdminInstalled"
-            class="phpmyadmin-card__status phpmyadmin-card__status--success"
-            :style="getPhpMyAdminStatusStyle('success')"
-          >{{ t('database.phpMyAdmin.installed', '已安装') }}</span>
-          <span
-            v-else-if="phpMyAdminTask"
-            class="phpmyadmin-card__status phpmyadmin-card__status--warning"
-            :style="getPhpMyAdminStatusStyle('warning')"
-          >{{ t('database.phpMyAdmin.installing', '安装中') }}</span>
-          <span
-            v-else
-            class="phpmyadmin-card__status phpmyadmin-card__status--info"
-            :style="getPhpMyAdminStatusStyle('info')"
-          >{{ t('database.phpMyAdmin.notInstalled', '未安装') }}</span>
-        </div>
-        <span>{{ phpMyAdminDescription }}</span>
-      </div>
-      <div class="phpmyadmin-card__actions">
-        <el-button
-          v-if="phpMyAdminTask"
-          type="primary"
-          plain
-          @click="showPhpMyAdminTask(phpMyAdminTask.id)"
-        >
-          {{ t('database.phpMyAdmin.viewProgress', '查看安装进度') }}
-        </el-button>
-        <el-button
-          v-else-if="phpMyAdminInstalled"
-          type="primary"
-          :icon="Link"
-          @click="openPhpMyAdmin()"
-        >
-          {{ t('database.phpMyAdmin.open', '打开 phpMyAdmin') }}
-        </el-button>
-        <el-button
-          v-else
-          type="primary"
-          :icon="Download"
-          :loading="phpMyAdminCatalog.loading || phpMyAdminCatalog.installing"
-          @click="installPhpMyAdmin"
-        >
-          {{ t('database.phpMyAdmin.quickInstall', '快捷安装') }}
-        </el-button>
-        <el-button @click="System.router.push('/software?component=phpmyadmin')">{{ t('database.phpMyAdmin.versionDetail', '版本与详情') }}</el-button>
-      </div>
-    </div>
     <div class="tool-bar">
       <el-space class="btn-group" :size="14">
         <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
         <el-button type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ t('database.remoteDatabase', '远程数据库') }}</el-button>
+        <el-button :icon="DataAnalysis" @click="openPhpMyAdminPanel">
+          phpMyAdmin
+          <span
+            class="phpmyadmin-button__status"
+            :class="`phpmyadmin-button__status--${phpMyAdminStatus}`"
+          />
+        </el-button>
       </el-space>
       <div class="demo-form-inline">
         <search-input
@@ -672,9 +583,28 @@ const handleMoreAction = async (command: string, row: any) => {
         <el-button type="primary" @click="confirmCredentialPasswordDialog">{{ t('database.modifyPassword', '修改密码') }}</el-button>
       </template>
     </custom-dialog>
+    <php-my-admin-drawer
+      v-model="phpMyAdminPanel.visible"
+      v-model:selected-version="phpMyAdminSelectedVersion"
+      v-model:active-tab="phpMyAdminPanel.activeTab"
+      :loading="phpMyAdminCatalog.loading"
+      :installing="phpMyAdminCatalog.installing"
+      :installed="phpMyAdminInstalled"
+      :task-id="phpMyAdminTask?.id"
+      :software="phpMyAdminItem"
+      :php-runtime="phpItem"
+      :web-server="webServerItem"
+      :versions="phpMyAdminVersions"
+      :recommended-version="phpMyAdminRecommendedVersion"
+      :description="phpMyAdminDescription"
+      @install="installPhpMyAdmin"
+      @open="openPhpMyAdmin()"
+      @view-task="showPhpMyAdminTask"
+      @go-detail="System.router.push('/software?component=phpmyadmin')"
+    />
     <install-task-drawer
-      v-model="phpMyAdminDrawer.visible"
-      :task-id="phpMyAdminDrawer.taskId"
+      v-model="phpMyAdminTaskDrawer.visible"
+      :task-id="phpMyAdminTaskDrawer.taskId"
       :close-on-click-modal="true"
       @retry="installPhpMyAdmin"
     />
@@ -703,80 +633,6 @@ const handleMoreAction = async (command: string, row: any) => {
     }
   }
 
-  .phpmyadmin-card {
-    margin-bottom: 14px;
-    padding: 14px 16px;
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) auto;
-    align-items: center;
-    gap: 12px;
-    border: 1px solid var(--border-subtle);
-    border-radius: 12px;
-    background:
-      linear-gradient(110deg, color-mix(in srgb, var(--el-color-primary) 7%, transparent), transparent 48%),
-      var(--surface-card);
-    box-shadow: var(--shadow-xs);
-
-    &__icon {
-      width: 40px;
-      height: 40px;
-      display: grid;
-      place-items: center;
-      border-radius: 11px;
-      color: var(--el-color-primary);
-      background: color-mix(in srgb, var(--el-color-primary) 12%, var(--surface-card));
-
-      .el-icon {
-        font-size: 20px;
-      }
-    }
-
-    &__content {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-
-      > span {
-        color: var(--text-tertiary);
-        font-size: 12px;
-        line-height: 1.45;
-      }
-    }
-
-    &__title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      strong {
-        color: var(--text-primary);
-        font-size: 14px;
-        font-weight: 650;
-      }
-    }
-
-    &__actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-
-      :deep(.el-button) {
-        min-height: 36px;
-        padding: 8px 14px;
-        border-radius: 9px;
-        font-size: 13px;
-      }
-    }
-
-    &__status {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-    }
-  }
-
   .database-row-actions {
     display: flex;
     align-items: center;
@@ -796,16 +652,23 @@ const handleMoreAction = async (command: string, row: any) => {
   }
 }
 
-@media (max-width: 920px) {
-  .database-container .phpmyadmin-card {
-    grid-template-columns: 40px minmax(0, 1fr);
+.phpmyadmin-button__status {
+  width: 7px;
+  height: 7px;
+  margin-left: 8px;
+  display: inline-block;
+  border-radius: 50%;
+  background: var(--text-placeholder);
 
-    &__actions {
-      grid-column: 1 / -1;
-      justify-content: flex-end;
-    }
+  &--installed {
+    background: rgb(var(--success-color));
+  }
+
+  &--installing {
+    background: rgb(var(--warning-color));
   }
 }
+
 
 .verify-password-dialog {
   &__desc {
