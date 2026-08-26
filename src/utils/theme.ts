@@ -46,6 +46,65 @@ const rgbToHex = (red: number, green: number, blue: number) => {
   return `#${channel(red)}${channel(green)}${channel(blue)}`.toUpperCase()
 }
 
+let interactionRecoveryTimer: number | null = null
+
+const clearElementPlusLoadingState = () => {
+  document.querySelectorAll('.el-loading-mask').forEach(mask => mask.remove())
+  document
+    .querySelectorAll('.el-loading-parent--relative, .el-loading-parent--hidden')
+    .forEach(node => {
+      node.classList.remove('el-loading-parent--relative', 'el-loading-parent--hidden')
+    })
+}
+
+const healPageInteraction = () => {
+  const root = document.documentElement
+  const body = document.body
+  const appBox = document.getElementById('app-box')
+  const appBoxBackground = document.getElementById('app-box-bg-fill')
+  const appRoot = document.getElementById('app')
+
+  root.style.pointerEvents = 'auto'
+  body.style.pointerEvents = 'auto'
+  appBox?.style.setProperty('pointer-events', 'auto')
+  appRoot?.style.setProperty('pointer-events', 'auto')
+  appBoxBackground?.style.setProperty('pointer-events', 'none', 'important')
+
+  clearElementPlusLoadingState()
+
+  const centerHit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)
+  if (centerHit !== root && centerHit !== body) {
+    return
+  }
+
+  appBox?.style.setProperty('position', 'relative')
+  appBox?.style.setProperty('z-index', '1')
+  appRoot?.style.setProperty('position', 'relative')
+  appRoot?.style.setProperty('z-index', '1')
+}
+
+export const scheduleInteractionRecovery = () => {
+  if (interactionRecoveryTimer) {
+    window.clearTimeout(interactionRecoveryTimer)
+  }
+
+  const checkpoints = [0, 40, 120, 240, 420, 640]
+  const runCheckpoint = (index: number) => {
+    healPageInteraction()
+    if (index >= checkpoints.length - 1) {
+      interactionRecoveryTimer = null
+      return
+    }
+
+    interactionRecoveryTimer = window.setTimeout(
+      () => runCheckpoint(index + 1),
+      checkpoints[index + 1] - checkpoints[index]
+    )
+  }
+
+  runCheckpoint(0)
+}
+
 export const mixHexColor = (source: string, target: string, targetWeight: number) => {
   const from = hexToRgb(source)
   const to = hexToRgb(target)

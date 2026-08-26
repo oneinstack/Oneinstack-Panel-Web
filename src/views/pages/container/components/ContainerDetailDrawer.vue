@@ -40,6 +40,7 @@ const handleClose = () => {
     :cancel-text="i18n.t('container.resourceDetail.close')"
     :show-confirm="false"
     :on-close="handleClose"
+    body-mode="compact"
   >
     <div v-loading="loading" class="detail-drawer-body">
       <div v-if="detailType === 'container'" class="stats-grid">
@@ -79,10 +80,11 @@ const handleClose = () => {
 
 <style scoped lang="less">
 .detail-drawer-body {
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  min-height: calc(100vh - 168px);
+  min-height: 0;
 }
 
 .stats-grid {
@@ -124,6 +126,8 @@ const handleClose = () => {
 }
 
 .detail-json {
+  display: flex;
+  flex-direction: column;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   overflow: hidden;
@@ -148,9 +152,10 @@ const handleClose = () => {
 }
 
 .detail-json pre {
-  max-height: calc(100vh - 390px);
+  flex: 1;
+  min-height: 0;
   margin: 0;
-  padding: 18px;
+  padding: 18px 18px 28px;
   overflow: auto;
   color: #e5edf6;
   white-space: pre-wrap;
@@ -162,7 +167,7 @@ const handleClose = () => {
 
 @media (max-width: 768px) {
   .detail-drawer-body {
-    min-height: auto;
+    min-height: 0;
   }
 
   .stats-grid {
@@ -170,7 +175,7 @@ const handleClose = () => {
   }
 
   .detail-json pre {
-    max-height: 48vh;
+    padding-bottom: 22px;
   }
 }
 </style>

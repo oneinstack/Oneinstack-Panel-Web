@@ -90,7 +90,7 @@ withDefaults(defineProps<Props>(), {
   grid-template-columns: minmax(500px, 1.08fr) minmax(440px, 0.92fr);
   overflow: hidden;
   isolation: isolate;
-  pointer-events: none;
+  pointer-events: auto;
   color: var(--text-primary);
   background:
     radial-gradient(circle at left top, rgba(var(--primary-color), 0.16), transparent 24rem),

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useAppStore } from '@/stores/modules/app';
 import { toRefs } from 'vue'
+import { scheduleInteractionRecovery } from '@/utils/theme'
 
 const sapp = useAppStore()
 
@@ -20,7 +21,11 @@ const colors = {
 
 const toggleTheme = (event: MouseEvent) => {
   // @ts-ignore
-  if (!document.startViewTransition) return sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
+  if (!document.startViewTransition) {
+    sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
+    scheduleInteractionRecovery()
+    return
+  }
 
   const x = event.clientX
   const y = event.clientY
@@ -46,6 +51,10 @@ const toggleTheme = (event: MouseEvent) => {
         pseudoElement: isDark ? '::view-transition-old(root)' : '::view-transition-new(root)'
       }
     )
+  })
+
+  transition.finished.finally(() => {
+    scheduleInteractionRecovery()
   })
 }
 </script>
@@ -97,9 +106,12 @@ const toggleTheme = (event: MouseEvent) => {
 </style>
 <style>
 ::view-transition-old(root),
-::view-transition-new(root) {
+::view-transition-new(root),
+::view-transition-group(root),
+::view-transition-image-pair(root) {
   animation: none;
   mix-blend-mode: normal;
+  pointer-events: none !important;
 }
 
 /* 进入dark模式和退出dark模式时，两个图像的位置顺序正好相反 */

@@ -354,6 +354,33 @@ const rollbackSummary = computed(() => {
   gap: 6px;
 }
 
+:global(html.dark .operation-preview .preview-impact) {
+  border-color: rgba(var(--warning-color), 0.18);
+  background:
+    linear-gradient(180deg, rgba(120, 82, 12, 0.12), rgba(23, 29, 41, 0.92));
+}
+
+:global(html.dark .operation-preview .preview-impact .preview-label) {
+  color: #d6deea;
+}
+
+:global(html.dark .operation-preview .impact-tags .el-tag) {
+  border-color: rgba(245, 158, 11, 0.28);
+  color: #fcd34d;
+  background: rgba(120, 82, 12, 0.18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+:global(html.dark .operation-preview .impact-tags .el-tag .el-tag__content) {
+  color: inherit;
+}
+
+:global(html.dark .operation-preview .impact-tags .el-tag.el-tag--danger) {
+  border-color: rgba(var(--error-color), 0.3);
+  color: #fda4af;
+  background: rgba(127, 29, 29, 0.22);
+}
+
 .preview-section {
   padding: 16px 18px;
   border: 1px solid var(--border-subtle);

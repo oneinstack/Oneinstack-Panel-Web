@@ -2670,14 +2670,14 @@ onBeforeUnmount(() => {
               </el-button>
             </span>
           </el-tooltip>
-          <div
+          <!-- <div
             v-if="createContainerDisabledReason"
             class="action-disabled-reason"
             role="note"
           >
             <el-icon><WarningFilled /></el-icon>
             <span>{{ createContainerDisabledReason }}</span>
-          </div>
+          </div> -->
         </div>
       </div>
     </section>

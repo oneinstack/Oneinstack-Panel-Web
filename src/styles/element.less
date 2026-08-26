@@ -277,6 +277,19 @@
   box-shadow: 0 0 0 1px var(--border-default) inset !important;
 }
 
+:root:root[class='dark'] .el-date-editor .el-range-input,
+:root:root[class='dark'] .el-date-editor .el-range-separator,
+:root:root[class='dark'] .el-range-editor .el-range-input,
+:root:root[class='dark'] .el-range-editor .el-range-separator {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+}
+
+:root:root[class='dark'] .el-date-editor .el-range-input::placeholder,
+:root:root[class='dark'] .el-range-editor .el-range-input::placeholder {
+  color: var(--text-placeholder) !important;
+}
+
 :root:root[class='dark'] .el-date-range-picker,
 :root:root[class='dark'] .el-picker-panel,
 :root:root[class='dark'] .el-date-picker {

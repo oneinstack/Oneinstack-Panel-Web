@@ -96,6 +96,7 @@ const submitting = ref(false)
 const serviceLoading = ref(false)
 const serviceStatuses = ref<Record<string, ComponentServiceStatus>>({})
 const selectedItem = ref<any>()
+const taskPopoverVisible = ref(false)
 const taskDrawer = reactive({
   show: false,
   taskId: ''
@@ -196,6 +197,53 @@ const allowedManageScopes = computed(() => {
 })
 
 const activeTask = (item: any) => softwareTaskStore.activeForKey(item.key)
+
+const latestTerminalTask = (softwareKey: string) =>
+  softwareTaskStore.order
+    .map((id) => softwareTaskStore.tasks[id])
+    .filter((task): task is SoftwareTask =>
+      !!task &&
+      task.softwareKey === softwareKey &&
+      softwareTaskStore.isTerminal(task.status)
+    )
+    .sort((left, right) =>
+      Date.parse(right.updatedAt || right.finishedAt || right.createdAt) -
+      Date.parse(left.updatedAt || left.finishedAt || left.createdAt)
+    )[0]
+
+const shouldShowInstallFailure = (item: any) => {
+  if (isInstalled(item)) return false
+  if (item.status !== 3) return false
+
+  const task = latestTerminalTask(item.key)
+  if (!task) return true
+
+  if (task.operation === 'uninstall' && task.status === 'succeeded') return false
+
+  return ['install', 'upgrade'].includes(task.operation) &&
+    ['failed', 'interrupted', 'canceled'].includes(task.status)
+}
+
+const statusBadge = (item: any) => {
+  if (activeTask(item)) return null
+  if (isInstalled(item)) {
+    return {
+      text: item.status === 3
+        ? t('software.installedWithFailure', 'Installed · operation failed')
+        : t('software.installed', 'Installed'),
+      className: item.status === 3 ? 'error' : 'success'
+    }
+  }
+
+  if (shouldShowInstallFailure(item)) {
+    return {
+      text: t('software.installFailed', 'Install failed'),
+      className: 'error'
+    }
+  }
+
+  return null
+}
 
 const taskStatusLabel = (task?: SoftwareTask) => {
   if (!task) return ''
@@ -469,6 +517,7 @@ const clearSecretFields = () => {
 }
 
 const showTask = (taskId: string) => {
+  taskPopoverVisible.value = false
   taskDrawer.taskId = taskId
   taskDrawer.show = true
 }
@@ -530,6 +579,16 @@ onMounted(() => {
     void loadServiceStatuses().catch(() => undefined)
   }
 })
+
+watch(
+  () => i18n.locale,
+  () => {
+    void softwareTaskStore.loadAll()
+    if (canReadSoftwareService.value) {
+      void loadServiceStatuses().catch(() => undefined)
+    }
+  }
+)
 </script>
 
 <template>
@@ -538,6 +597,7 @@ onMounted(() => {
       <div class="title">{{ t('software.apps', 'Apps') }}</div>
       <el-popover
         v-if="recentTasks.length"
+        v-model:visible="taskPopoverVisible"
         placement="bottom-end"
         width="360"
         trigger="click"
@@ -598,15 +658,11 @@ onMounted(() => {
                     {{ taskStatusLabel(activeTask(item)) }} {{ activeTask(item)!.progress }}%
                   </span>
                   <span
-                    v-else-if="isInstalled(item) || item.status === 3"
+                    v-else-if="statusBadge(item)"
                     class="status"
-                    :class="{ error: item.status === 3, success: item.status === 2 }"
+                    :class="statusBadge(item)?.className"
                   >
-                    {{
-                      isInstalled(item)
-                        ? item.status === 3 ? t('software.installedWithFailure', 'Installed · operation failed') : t('software.installed', 'Installed')
-                        : t('software.installFailed', 'Install failed')
-                    }}
+                    {{ statusBadge(item)?.text }}
                   </span>
                 </div>
                 <div class="tip">{{ localizedSoftwareDescription(item) }}</div>
@@ -902,11 +958,66 @@ onMounted(() => {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+
+  strong,
+  small,
+  span:last-child {
+    color: inherit;
+  }
 }
 
 :global(.software-task-popover.el-popper) {
   max-height: calc(100vh - 96px);
   overflow: hidden;
+}
+
+:global(html.dark .software-task-popover.el-popper) {
+  border: 1px solid var(--border-default);
+  background:
+    linear-gradient(180deg, rgba(18, 27, 41, 0.98), rgba(12, 19, 31, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+:global(html.dark .software-task-popover.el-popper .el-popper__arrow::before) {
+  border-color: var(--border-default);
+  background: #152033;
+}
+
+:global(html.dark .software-task-popover .task-stats) {
+  color: #c7d2e1;
+  border-bottom-color: rgba(148, 163, 184, 0.16);
+}
+
+:global(html.dark .software-task-popover .task-stats strong) {
+  color: #86efac;
+}
+
+:global(html.dark .software-task-popover .task-center-scroll) {
+  scrollbar-color: rgba(148, 163, 184, 0.36) transparent;
+}
+
+:global(html.dark .software-task-popover .task-center-item) {
+  color: #e5edf8;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(180deg, rgba(19, 29, 45, 0.66), rgba(15, 23, 42, 0.66));
+}
+
+:global(html.dark .software-task-popover .task-center-item small) {
+  color: #93a4ba;
+}
+
+:global(html.dark .software-task-popover .task-center-item span:last-child) {
+  color: #cdd8e7;
+  font-weight: 700;
+}
+
+:global(html.dark .software-task-popover .task-center-item:hover) {
+  border-color: rgba(var(--primary-color), 0.24);
+  background:
+    linear-gradient(180deg, rgba(var(--primary-color), 0.14), rgba(30, 41, 59, 0.82));
 }
 
 .list {

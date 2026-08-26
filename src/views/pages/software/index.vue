@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, markRaw, reactive } from 'vue'
+import { computed, markRaw, reactive, watch } from 'vue'
 import AllSoft from './components/all.vue'
 import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
@@ -27,6 +27,8 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+
+const showCatalogSyncButton = !import.meta.env.PROD
 
 const categoryNameKeys: Record<string, string> = {
   全部: 'software.category.all',
@@ -173,6 +175,14 @@ const conf = reactive({
   }
 })
 
+const reloadSoftwarePageData = async () => {
+  await Promise.all([
+    conf.catalog.getStatus(),
+    conf.tabs.getData(),
+    conf.list.getData()
+  ])
+}
+
 const requestedComponent = String(System.getRouterParams().component || '').toLowerCase()
 const componentSearchNames: Record<string, string> = {
   mysql: 'MySQL',
@@ -185,9 +195,14 @@ if (componentSearchNames[requestedComponent]) {
   conf.list.params.name = componentSearchNames[requestedComponent]
 }
 
-conf.list.getData()
-void conf.catalog.getStatus()
-void conf.tabs.getData()
+void reloadSoftwarePageData()
+
+watch(
+  () => i18n.locale,
+  () => {
+    void reloadSoftwarePageData()
+  }
+)
 
 const catalogLabel = computed(() => {
   const status = conf.catalog.status
@@ -222,7 +237,7 @@ const catalogDetail = computed(() => {
           :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"
         >
           <el-button
-            v-if="conf.catalog.status"
+            v-if="showCatalogSyncButton && conf.catalog.status"
             :loading="conf.catalog.loading"
             :disabled="!conf.catalog.status?.enabled"
             plain

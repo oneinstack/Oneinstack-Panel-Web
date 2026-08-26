@@ -5,7 +5,7 @@ import { ArrowDown, CircleClose, DataAnalysis, Delete, Download, Files, FolderAd
 import type { ConfProps } from './index.vue'
 import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, reactive, watch } from 'vue'
+import { computed, onMounted, reactive, watch, type CSSProperties } from 'vue'
 import DatabaseBackupDrawer from './components/DatabaseBackupDrawer.vue'
 import i18n from '@/lang'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
@@ -75,6 +75,80 @@ const phpMyAdminDescription = computed(() => {
     version: phpMyAdminVersion.value
   })
 })
+
+const isDarkAppearance = computed(() =>
+  sapp.theme === 'dark' || document.documentElement.classList.contains('dark')
+)
+
+const getPhpMyAdminStatusStyle = (type: 'success' | 'warning' | 'info'): CSSProperties => {
+  const baseStyle: CSSProperties = {
+    minHeight: '28px',
+    padding: '2px 10px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: '1px',
+    borderStyle: 'solid',
+    borderRadius: '999px',
+    fontSize: '12px',
+    fontWeight: '650',
+    lineHeight: '1.2',
+    whiteSpace: 'nowrap',
+    boxShadow: 'none'
+  }
+
+  if (isDarkAppearance.value) {
+    if (type === 'success') {
+      return {
+        ...baseStyle,
+        borderColor: 'rgb(var(--success-color))',
+        color: 'rgb(var(--success-color))',
+        background: 'transparent'
+      }
+    }
+
+    if (type === 'warning') {
+      return {
+        ...baseStyle,
+        borderColor: 'rgb(var(--primary-color))',
+        color: 'rgb(var(--primary-color))',
+        background: 'transparent'
+      }
+    }
+
+    return {
+      ...baseStyle,
+      borderColor: 'rgba(148, 163, 184, 0.72)',
+      color: '#94a3b8',
+      background: 'transparent'
+    }
+  }
+
+  if (type === 'success') {
+    return {
+      ...baseStyle,
+      borderColor: 'rgb(var(--success-color))',
+      color: 'rgb(var(--success-color))',
+      background: 'rgba(var(--success-color), 0.08)'
+    }
+  }
+
+  if (type === 'warning') {
+    return {
+      ...baseStyle,
+      borderColor: 'rgb(var(--primary-color))',
+      color: 'rgb(var(--primary-color))',
+      background: 'rgba(var(--primary-color), 0.08)'
+    }
+  }
+
+  return {
+    ...baseStyle,
+    borderColor: 'rgba(148, 163, 184, 0.32)',
+    color: '#64748b',
+    background: 'rgba(148, 163, 184, 0.08)'
+  }
+}
 
 const phpMyAdminDrawer = reactive({
   visible: false,
@@ -415,9 +489,21 @@ const handleMoreAction = async (command: string, row: any) => {
       <div class="phpmyadmin-card__content">
         <div class="phpmyadmin-card__title">
           <strong>{{ t('database.phpMyAdmin.quickTitle', 'phpMyAdmin 快捷管理') }}</strong>
-          <el-tag v-if="phpMyAdminInstalled" type="success" effect="plain">{{ t('database.phpMyAdmin.installed', '已安装') }}</el-tag>
-          <el-tag v-else-if="phpMyAdminTask" type="warning" effect="plain">{{ t('database.phpMyAdmin.installing', '安装中') }}</el-tag>
-          <el-tag v-else type="info" effect="plain">{{ t('database.phpMyAdmin.notInstalled', '未安装') }}</el-tag>
+          <span
+            v-if="phpMyAdminInstalled"
+            class="phpmyadmin-card__status phpmyadmin-card__status--success"
+            :style="getPhpMyAdminStatusStyle('success')"
+          >{{ t('database.phpMyAdmin.installed', '已安装') }}</span>
+          <span
+            v-else-if="phpMyAdminTask"
+            class="phpmyadmin-card__status phpmyadmin-card__status--warning"
+            :style="getPhpMyAdminStatusStyle('warning')"
+          >{{ t('database.phpMyAdmin.installing', '安装中') }}</span>
+          <span
+            v-else
+            class="phpmyadmin-card__status phpmyadmin-card__status--info"
+            :style="getPhpMyAdminStatusStyle('info')"
+          >{{ t('database.phpMyAdmin.notInstalled', '未安装') }}</span>
         </div>
         <span>{{ phpMyAdminDescription }}</span>
       </div>
@@ -681,6 +767,13 @@ const handleMoreAction = async (command: string, row: any) => {
         border-radius: 9px;
         font-size: 13px;
       }
+    }
+
+    &__status {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
     }
   }
 

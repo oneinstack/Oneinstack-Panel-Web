@@ -1000,10 +1000,10 @@ loadServiceStatuses()
                 <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
               </span>
             </el-tooltip>
-            <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
+            <!-- <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
               <el-icon><WarningFilled /></el-icon>
               <span>{{ addSiteDisabledReason }}</span>
-            </div>
+            </div> -->
           </div>
 
           <el-dropdown trigger="click" placement="bottom-start">
@@ -1642,6 +1642,18 @@ loadServiceStatuses()
 
 .delete-form {
   margin-top: 16px;
+
+  :deep(.el-input__inner),
+  :deep(.el-select__selected-item) {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+  }
+
+  :deep(.el-input__inner::placeholder),
+  :deep(.el-select__placeholder) {
+    color: var(--text-placeholder) !important;
+    -webkit-text-fill-color: var(--text-placeholder) !important;
+  }
 }
 
 :deep(.el-form-item__label) {

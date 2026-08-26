@@ -623,8 +623,11 @@ watch(
         </div>
         <div class="terminal-shell__footer">
           <div class="terminal-legend">
-            <span><i class="is-risk" /><el-icon><WarningFilled /></el-icon>{{ $t('container.terminal.highRiskBadge', 'Risk checked') }}</span>
-            <span><i class="is-audit" /><el-icon><Lock /></el-icon>{{ $t('container.terminal.auditBadge', 'Ticket bound to current session') }}</span>
+            <span><i class="is-directory" />{{ $t('container.terminal.directory', 'Directory') }}</span>
+            <span><i class="is-executable" />{{ $t('container.terminal.executableFile', 'Executable') }}</span>
+            <span><i class="is-archive" />{{ $t('container.terminal.archiveFile', 'Archive') }}</span>
+            <span><i class="is-link" />{{ $t('container.terminal.symlink', 'Symlink') }}</span>
+            <span><i class="is-file" />{{ $t('container.terminal.regularFile', 'Regular file') }}</span>
           </div>
           <div class="terminal-environment">
             <i :class="connectionState" />
@@ -882,8 +885,102 @@ watch(
 .terminal-screen :deep(.xterm) {
   box-sizing: border-box;
   height: calc(100% - 8px);
-  padding-bottom: 8px;
   color: #d8e2f0;
+}
+
+.terminal-screen :deep(.xterm-rows) {
+  color: #d8e2f0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  font-kerning: none;
+  white-space: pre;
+  text-shadow: 0 0 1px rgb(216 226 240 / 18%);
+}
+
+.terminal-screen :deep(.xterm-rows span:not(.xterm-bold)) {
+  font-weight: 400;
+}
+
+.terminal-screen :deep(.xterm-italic) {
+  font-style: italic;
+}
+
+// xterm's DOM renderer normally inserts its ANSI palette through runtime
+// <style> elements. The Panel deliberately rejects inline styles in its CSP,
+// so those rules never reach the page. Generate the complete xterm-256color
+// palette at build time instead so shell file colors remain visible.
+.terminal-ansi-color(@index, @value) {
+  .terminal-screen :deep(.xterm-fg-@{index}) {
+    color: @value !important;
+  }
+
+  .terminal-screen :deep(.xterm-bg-@{index}) {
+    background-color: @value !important;
+  }
+}
+
+.terminal-ansi-color(0, #526176);
+.terminal-ansi-color(1, #ff6b7a);
+.terminal-ansi-color(2, #50d890);
+.terminal-ansi-color(3, #f7c65f);
+.terminal-ansi-color(4, #62a8ff);
+.terminal-ansi-color(5, #c792ea);
+.terminal-ansi-color(6, #55d6e8);
+.terminal-ansi-color(7, #d8e2f0);
+.terminal-ansi-color(8, #8392a8);
+.terminal-ansi-color(9, #ff8490);
+.terminal-ansi-color(10, #69e5a4);
+.terminal-ansi-color(11, #ffd779);
+.terminal-ansi-color(12, #82baff);
+.terminal-ansi-color(13, #d9a7f5);
+.terminal-ansi-color(14, #78e3ef);
+.terminal-ansi-color(15, #ffffff);
+
+@terminal-ansi-levels: 0, 95, 135, 175, 215, 255;
+
+.terminal-ansi-blue(@red, @green, @blue) when (@blue < 6) {
+  @index: 16 + (@red * 36) + (@green * 6) + @blue;
+  @red-value: extract(@terminal-ansi-levels, (@red + 1));
+  @green-value: extract(@terminal-ansi-levels, (@green + 1));
+  @blue-value: extract(@terminal-ansi-levels, (@blue + 1));
+  .terminal-ansi-color(@index, rgb(@red-value, @green-value, @blue-value));
+  .terminal-ansi-blue(@red, @green, (@blue + 1));
+}
+
+.terminal-ansi-green(@red, @green) when (@green < 6) {
+  .terminal-ansi-blue(@red, @green, 0);
+  .terminal-ansi-green(@red, (@green + 1));
+}
+
+.terminal-ansi-red(@red) when (@red < 6) {
+  .terminal-ansi-green(@red, 0);
+  .terminal-ansi-red((@red + 1));
+}
+
+.terminal-ansi-gray(@offset) when (@offset < 24) {
+  @index: 232 + @offset;
+  @value: 8 + (@offset * 10);
+  .terminal-ansi-color(@index, rgb(@value, @value, @value));
+  .terminal-ansi-gray((@offset + 1));
+}
+
+.terminal-ansi-red(0);
+.terminal-ansi-gray(0);
+
+.terminal-screen :deep(.xterm-fg-257) {
+  color: #08111f !important;
+}
+
+.terminal-screen :deep(.xterm-bg-257) {
+  background-color: #d8e2f0 !important;
+}
+
+.terminal-screen :deep(.xterm-dim) {
+  opacity: 0.55;
+}
+
+.terminal-screen :deep(.xterm-bold) {
+  font-weight: 700;
 }
 
 .terminal-screen :deep(.xterm-screen),
@@ -951,23 +1048,57 @@ watch(
 
 .terminal-legend,
 .terminal-environment {
-  gap: 12px;
+  display: flex;
+  align-items: center;
 }
 
-.terminal-legend span {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+.terminal-legend {
+  gap: 15px;
+
+  span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+  }
+
+  i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .is-directory { background: #62a8ff; }
+  .is-executable { background: #50d890; }
+  .is-archive { background: #ff6b7a; }
+  .is-link { background: #55d6e8; }
+  .is-file { background: #d8e2f0; }
+}
+
+.terminal-environment {
+  flex-shrink: 0;
+  gap: 9px;
 }
 
 .terminal-environment i {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: #9aa6b6;
+  background: #66768c;
 
-  &.connected { background: #22c77a; }
-  &.connecting { background: #f59e0b; }
+  &.connected {
+    background: #50d890;
+    box-shadow: 0 0 0 3px rgb(80 216 144 / 10%);
+  }
+
+  &.connecting {
+    background: #f7c65f;
+  }
+}
+
+.terminal-environment span + span {
+  padding-left: 9px;
+  border-left: 1px solid #29364a;
 }
 
 :global(.container-terminal-drawer .custom-drawer-shell .el-drawer__body) {
@@ -997,8 +1128,23 @@ watch(
     height: 520px;
   }
 
+  .terminal-legend span:nth-child(n + 4) {
+    display: none;
+  }
+
   .terminal-path {
     max-width: 180px;
+  }
+}
+
+@media (max-width: 560px) {
+  .terminal-identity small,
+  .terminal-legend {
+    display: none;
+  }
+
+  .terminal-shell__footer {
+    justify-content: flex-end;
   }
 }
 </style>

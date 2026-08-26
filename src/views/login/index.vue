@@ -171,7 +171,9 @@ const conf = reactive({
         </el-form-item>
 
         <div v-if="!conf.requiresTwoFactor" class="form-options">
-          <el-checkbox v-model="conf.form.remember" :label="$t('login.rememberLogin')" />
+          <el-checkbox v-model="conf.form.remember" class="remember-checkbox">
+            <span class="remember-checkbox__label">{{ $t('login.rememberLogin') }}</span>
+          </el-checkbox>
           <span class="security-tip"><i></i> {{ $t('login.encryptedConnection') }}</span>
         </div>
         <el-button
@@ -341,8 +343,29 @@ const conf = reactive({
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 14px;
+
+  .remember-checkbox {
+    flex: 0 1 auto;
+    min-width: 0;
+    cursor: pointer;
+    user-select: none;
+
+    :deep(.el-checkbox__label) {
+      padding-left: 8px;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+  }
+
+  .remember-checkbox__label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 18px;
+  }
 
   .security-tip {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -476,6 +499,11 @@ const conf = reactive({
 }
 
 @media (max-width: 520px) {
+  .form-options {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .login-brand-mobile {
     margin-bottom: 42px;
   }

@@ -538,11 +538,40 @@ watch(
     padding: 18px;
     border: 0;
     border-radius: 0;
-    color: #d7e0ee;
-    background: #101827;
+    color: #1f2937;
+    background: #ffffff;
     box-shadow: none;
     font: 12px/1.72 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     tab-size: 4;
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+
+    &:disabled {
+      color: #475569;
+      background: #f8fafc;
+      -webkit-text-fill-color: #475569;
+    }
+  }
+}
+
+:global(html.dark) {
+  .config-code {
+    :deep(.el-textarea__inner) {
+      color: #d7e0ee;
+      background: #101827;
+
+      &::placeholder {
+        color: rgba(215, 224, 238, 0.45);
+      }
+
+      &:disabled {
+        color: #d7e0ee;
+        background: #101827;
+        -webkit-text-fill-color: #d7e0ee;
+      }
+    }
   }
 }
 

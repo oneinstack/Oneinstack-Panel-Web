@@ -3186,6 +3186,88 @@ const archiveTaskRunningCount = computed(
   }
 }
 
+:global(html.dark) {
+  .row-actions {
+    :deep(.el-button.is-link) {
+      border: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      color: var(--text-secondary) !important;
+    }
+
+    :deep(.el-button.is-link:hover),
+    :deep(.el-button.is-link:focus-visible) {
+      border: 0 !important;
+      color: rgb(var(--primary-color)) !important;
+      background: rgba(var(--primary-color), 0.08) !important;
+      box-shadow: none !important;
+    }
+
+    :deep(.action-open.is-link),
+    :deep(.action-more-trigger.is-link) {
+      color: rgb(var(--primary-color)) !important;
+    }
+
+    :deep(.action-open.is-link:hover),
+    :deep(.action-open.is-link:focus-visible),
+    :deep(.action-more-trigger.is-link:hover),
+    :deep(.action-more-trigger.is-link:focus-visible) {
+      color: rgb(var(--primary-color)) !important;
+      background: rgba(var(--primary-color), 0.1) !important;
+    }
+
+    :deep(.action-copy.is-link) {
+      color: #409eff !important;
+    }
+
+    :deep(.action-copy.is-link:hover),
+    :deep(.action-copy.is-link:focus-visible) {
+      color: #409eff !important;
+      background: rgba(64, 158, 255, 0.12) !important;
+    }
+
+    :deep(.action-cut.is-link) {
+      color: #e6a23c !important;
+    }
+
+    :deep(.action-cut.is-link:hover),
+    :deep(.action-cut.is-link:focus-visible) {
+      color: #e6a23c !important;
+      background: rgba(230, 162, 60, 0.12) !important;
+    }
+
+    :deep(.action-rename.is-link) {
+      color: #8b5cf6 !important;
+    }
+
+    :deep(.action-rename.is-link:hover),
+    :deep(.action-rename.is-link:focus-visible) {
+      color: #8b5cf6 !important;
+      background: rgba(139, 92, 246, 0.12) !important;
+    }
+
+    :deep(.action-tree.is-link) {
+      color: #16a085 !important;
+    }
+
+    :deep(.action-tree.is-link:hover),
+    :deep(.action-tree.is-link:focus-visible) {
+      color: #16a085 !important;
+      background: rgba(22, 160, 133, 0.12) !important;
+    }
+
+    :deep(.row-action-danger.is-link) {
+      color: var(--el-color-danger) !important;
+    }
+
+    :deep(.row-action-danger.is-link:hover),
+    :deep(.row-action-danger.is-link:focus-visible) {
+      color: var(--el-color-danger) !important;
+      background: rgba(245, 108, 108, 0.1) !important;
+    }
+  }
+}
+
 .file-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));

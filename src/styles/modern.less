@@ -267,6 +267,36 @@ html {
   box-shadow: var(--shadow-xs);
 }
 
+.el-loading-parent--relative {
+  background: inherit;
+}
+
+.el-loading-mask {
+  border-radius: inherit;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-card) 72%, transparent), color-mix(in srgb, var(--surface-page) 84%, transparent))
+    !important;
+  backdrop-filter: blur(3px);
+
+  .el-loading-spinner {
+    .el-loading-text,
+    i {
+      color: rgb(var(--primary-color));
+    }
+
+    .path {
+      stroke: rgb(var(--primary-color));
+    }
+  }
+}
+
+:root:root[class='dark'] .el-loading-mask {
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.76), rgba(11, 17, 32, 0.88))
+    !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
 .el-card {
   --el-card-border-color: var(--border-subtle);
   --el-card-border-radius: var(--radius-lg);
@@ -550,6 +580,13 @@ html {
   opacity: 0.95;
 }
 
+:root:root[class='dark'] .table-action-column .el-button.is-link:not(.is-disabled) > span,
+:root:root[class='dark'] .table-row-actions .el-button.is-link:not(.is-disabled) > span,
+:root:root[class='dark'] .table-action-column .el-button.is-link:not(.is-disabled) .el-button__text,
+:root:root[class='dark'] .table-row-actions .el-button.is-link:not(.is-disabled) .el-button__text {
+  color: inherit !important;
+}
+
 :root:root[class='dark'] .table-action-column .el-button.is-link:not(.is-disabled):hover,
 :root:root[class='dark'] .table-row-actions .el-button.is-link:not(.is-disabled):hover,
 :root:root[class='dark'] .table-action-column .el-button.is-link:not(.is-disabled):focus-visible,
@@ -581,6 +618,65 @@ html {
   border-color: transparent !important;
   color: #ffe4e6 !important;
   background: rgba(var(--error-color), 0.12) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-open.el-button.is-link:not(.is-disabled),
+:root:root[class='dark'] .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled) {
+  color: rgb(var(--primary-color)) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-open.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-open.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-open.el-button.is-link:not(.is-disabled).is-active,
+:root:root[class='dark'] .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled).is-active {
+  color: rgb(var(--primary-color)) !important;
+  background: rgba(var(--primary-color), 0.1) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-copy.el-button.is-link:not(.is-disabled) {
+  color: #409eff !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-copy.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-copy.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-copy.el-button.is-link:not(.is-disabled).is-active {
+  color: #409eff !important;
+  background: rgba(64, 158, 255, 0.12) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-cut.el-button.is-link:not(.is-disabled) {
+  color: #e6a23c !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-cut.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-cut.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-cut.el-button.is-link:not(.is-disabled).is-active {
+  color: #e6a23c !important;
+  background: rgba(230, 162, 60, 0.12) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-rename.el-button.is-link:not(.is-disabled) {
+  color: #8b5cf6 !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-rename.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-rename.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-rename.el-button.is-link:not(.is-disabled).is-active {
+  color: #8b5cf6 !important;
+  background: rgba(139, 92, 246, 0.12) !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-tree.el-button.is-link:not(.is-disabled) {
+  color: #16a085 !important;
+}
+
+:root:root[class='dark'] .table-row-actions .action-tree.el-button.is-link:not(.is-disabled):hover,
+:root:root[class='dark'] .table-row-actions .action-tree.el-button.is-link:not(.is-disabled):focus-visible,
+:root:root[class='dark'] .table-row-actions .action-tree.el-button.is-link:not(.is-disabled).is-active {
+  color: #16a085 !important;
+  background: rgba(22, 160, 133, 0.12) !important;
 }
 
 .table-action-popper.el-popper {
@@ -635,6 +731,22 @@ html {
 .table-action-menu .table-action-menu__danger:not(.is-disabled):hover,
 .table-action-menu .table-action-menu__danger:not(.is-disabled):focus {
   background: rgba(245, 108, 108, 0.1);
+}
+
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled),
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled) .el-icon {
+  color: #fca5a5 !important;
+}
+
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled):hover,
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled):focus {
+  color: #ffe4e6 !important;
+  background: rgba(var(--error-color), 0.12) !important;
+}
+
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled):hover .el-icon,
+:root:root[class='dark'] .table-action-menu .table-action-menu__danger:not(.is-disabled):focus .el-icon {
+  color: #ffe4e6 !important;
 }
 
 .el-tabs__item {
@@ -769,6 +881,44 @@ html {
   border-radius: 12px;
   background: var(--surface-raised);
   box-shadow: var(--shadow-md);
+}
+
+:root:root[class='dark'] .el-notification {
+  border-color: color-mix(in srgb, var(--border-default) 84%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, var(--surface-raised) 92%, #1a2334 8%),
+      color-mix(in srgb, var(--surface-card) 96%, #101828 4%)
+    );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 20px 40px rgba(0, 0, 0, 0.28);
+}
+
+:root:root[class='dark'] .el-notification .el-notification__title {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+:root:root[class='dark'] .el-notification .el-notification__content {
+  color: var(--text-secondary);
+}
+
+:root:root[class='dark'] .el-notification .el-notification__closeBtn {
+  color: var(--text-placeholder);
+}
+
+:root:root[class='dark'] .el-notification .el-notification__closeBtn:hover {
+  color: var(--text-primary);
+}
+
+:root:root[class='dark'] .el-notification.right {
+  border-left-color: rgba(var(--success-color), 0.26);
+}
+
+:root:root[class='dark'] .el-notification .el-icon.el-notification__icon {
+  color: #86efac;
 }
 
 .el-overlay {

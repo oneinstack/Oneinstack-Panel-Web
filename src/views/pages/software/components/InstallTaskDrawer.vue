@@ -292,7 +292,7 @@ onBeforeUnmount(() => {
     :title="task?.component || $t('software.task.softwareTask')"
     class="install-task-drawer"
     size="840px"
-    :close-on-click-modal="props.closeOnClickModal ?? terminal"
+    close-on-click-modal
     :destroy-on-close="false"
     body-mode="compact"
   >
@@ -317,7 +317,13 @@ onBeforeUnmount(() => {
     </template>
 
     <div v-if="task" class="task-content">
-      <section class="overview">
+      <section
+        class="overview"
+        :class="{
+          'is-success': task.status === 'succeeded',
+          'is-failed': failed
+        }"
+      >
         <div class="overview-hero">
           <div class="overview-copy">
             <div class="overview-label">
@@ -598,6 +604,35 @@ onBeforeUnmount(() => {
       color-mix(in srgb, var(--surface-subtle) 92%, rgba(var(--primary-color), 0.08) 8%)
     );
   box-shadow: 0 18px 40px rgba(16, 24, 40, 0.12);
+
+  &.is-success {
+    border-color: rgba(var(--success-color), 0.2);
+    background:
+      radial-gradient(circle at top right, rgba(var(--success-color), 0.14), transparent 30%),
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--surface-card) 97%, rgba(var(--success-color), 0.04) 3%),
+        color-mix(in srgb, var(--surface-subtle) 93%, rgba(var(--success-color), 0.08) 7%)
+      );
+
+    .overview-phase {
+      color: rgb(var(--success-color));
+      background: rgba(var(--success-color), 0.1);
+    }
+
+    .overview-progress-card {
+      border-color: rgba(var(--success-color), 0.24);
+      background: linear-gradient(
+        180deg,
+        rgba(var(--success-color), 0.1),
+        color-mix(in srgb, var(--surface-subtle) 90%, rgba(var(--success-color), 0.12) 10%)
+      );
+
+      strong {
+        color: rgb(var(--success-color));
+      }
+    }
+  }
 }
 
 .overview-hero {
@@ -1026,11 +1061,43 @@ onBeforeUnmount(() => {
   background: color-mix(in srgb, var(--surface-subtle) 86%, black 14%);
 }
 
+.install-task-drawer :deep(.el-progress__text) {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
 .install-task-drawer :deep(.el-checkbox__label) {
   color: var(--text-secondary);
 }
 
 :root:root[class='dark'] .install-task-drawer {
+  .task-status {
+    border-color: rgba(var(--primary-color), 0.38);
+    color: #fed7aa;
+    background: linear-gradient(180deg, rgba(var(--primary-color), 0.16), rgba(var(--primary-color), 0.08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 20px rgba(var(--primary-color), 0.16);
+  }
+
+  :deep(.task-status.el-tag--success) {
+    border-color: rgba(var(--success-color), 0.34);
+    color: #86efac;
+    background: linear-gradient(180deg, rgba(var(--success-color), 0.16), rgba(var(--success-color), 0.08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 20px rgba(var(--success-color), 0.14);
+  }
+
+  :deep(.task-status.el-tag--danger) {
+    border-color: rgba(var(--error-color), 0.34);
+    color: #fda4af;
+    background: linear-gradient(180deg, rgba(var(--error-color), 0.16), rgba(var(--error-color), 0.08));
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.04),
+      0 8px 20px rgba(var(--error-color), 0.14);
+  }
+
   .overview,
   .stage-section,
   .summary-panel {
@@ -1044,17 +1111,81 @@ onBeforeUnmount(() => {
     background:
       radial-gradient(circle at top right, rgba(var(--primary-color), 0.16), transparent 34%),
       linear-gradient(135deg, #182131, #101827 62%, #0f172a);
+
+    .overview-copy h3 {
+      color: #f8fafc;
+    }
+
+    .overview-label__title {
+      color: #c7d2e1;
+    }
+
+    .overview-phase {
+      color: #fdba74;
+      background: rgba(var(--primary-color), 0.16);
+    }
+
+    .overview-progress-card {
+      border-color: rgba(var(--primary-color), 0.28);
+      background: linear-gradient(180deg, rgba(var(--primary-color), 0.16), rgba(42, 27, 14, 0.72));
+
+      small {
+        color: #f3d5bf;
+      }
+
+      strong {
+        color: #fff7ed;
+        text-shadow: 0 6px 24px rgba(var(--primary-color), 0.22);
+      }
+
+      span {
+        color: #e7edf6;
+      }
+    }
+
+    &.is-success {
+      border-color: rgba(var(--success-color), 0.28);
+      background:
+        radial-gradient(circle at top right, rgba(var(--success-color), 0.16), transparent 32%),
+        linear-gradient(135deg, #18261f, #101827 60%, #0f172a);
+
+      .overview-copy h3 {
+        color: #f8fafc;
+      }
+
+      .overview-copy p {
+        color: #c7d2e1;
+      }
+
+      .overview-phase {
+        color: #86efac;
+        background: rgba(var(--success-color), 0.16);
+      }
+
+      .overview-progress-card {
+        border-color: rgba(var(--success-color), 0.3);
+        background: linear-gradient(180deg, rgba(var(--success-color), 0.12), rgba(19, 31, 24, 0.82));
+
+        small {
+          color: #b7c7bc;
+        }
+
+        strong {
+          color: #86efac;
+          text-shadow: 0 4px 18px rgba(var(--success-color), 0.18);
+        }
+
+        span {
+          color: #d3dde8;
+        }
+      }
+    }
   }
 
   .overview-copy p,
   .overview-progress-card span,
   .log-toolbar__copy span {
     color: var(--text-secondary);
-  }
-
-  .overview-progress-card {
-    border-color: rgba(var(--primary-color), 0.24);
-    background: linear-gradient(180deg, rgba(var(--primary-color), 0.14), rgba(30, 41, 59, 0.78));
   }
 
   .log-section {
@@ -1070,6 +1201,15 @@ onBeforeUnmount(() => {
     color: #e2e8f0;
     background: linear-gradient(180deg, #0b1220, #050b16);
     scrollbar-color: #475467 #0b1220;
+  }
+
+  :deep(.el-progress-bar__outer) {
+    background: rgba(148, 163, 184, 0.16);
+  }
+
+  :deep(.el-progress-bar__innerText),
+  :deep(.el-progress__text) {
+    color: #f8fafc !important;
   }
 
   .task-actions :deep(.el-button:not(.el-button--primary):not(.el-button--danger)) {
