@@ -14,11 +14,14 @@ type WebServerInfo = {
   version?: string
   running: boolean
   binaryPath?: string
+  serviceName?: string
   configRoot?: string
   mainConfigPath?: string
   siteConfigDir?: string
   configurationAvailable: boolean
 }
+
+type WebServerKind = 'nginx' | 'openresty' | 'caddy' | 'unknown'
 
 type ConfigFile = {
   path: string
@@ -66,6 +69,22 @@ const dirty = computed(() => state.content !== state.originalContent)
 const selectedFile = computed(() =>
   state.files.find((file) => file.path === state.selectedPath)
 )
+const serverKind = computed<WebServerKind>(() => {
+  const identity = [state.server.component, state.server.name, state.server.binaryPath, state.server.serviceName]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+  if (identity.includes('openresty')) return 'openresty'
+  if (identity.includes('caddy')) return 'caddy'
+  if (identity.includes('nginx') || /(^|\s)ng(\s|$)/.test(identity)) return 'nginx'
+  return 'unknown'
+})
+const serverLogoText = computed(() => ({
+  nginx: 'N',
+  openresty: 'O',
+  caddy: 'C',
+  unknown: 'W'
+})[serverKind.value])
 const serverStateText = computed(() =>
   t(state.server.running ? 'website.webConfigDrawer.running' : 'website.webConfigDrawer.stopped')
 )
@@ -233,7 +252,7 @@ watch(
     <div v-loading="state.loading" class="web-config">
       <section class="server-summary">
         <div class="server-summary__identity">
-          <div class="server-logo">{{ state.server.component === 'openresty' ? 'O' : 'N' }}</div>
+          <div class="server-logo" :class="`is-${serverKind}`">{{ serverLogoText }}</div>
           <div>
             <div class="server-summary__title">
               <strong>{{ state.server.name || t('website.webConfigDrawer.unknown') }}</strong>
@@ -368,6 +387,24 @@ watch(
   background: rgba(var(--primary-color), 0.08);
   font-size: 20px;
   font-weight: 800;
+
+  &.is-nginx {
+    border-color: rgba(0, 150, 57, 0.2);
+    color: #009639;
+    background: rgba(0, 150, 57, 0.08);
+  }
+
+  &.is-openresty {
+    border-color: rgba(67, 160, 71, 0.2);
+    color: #2e7d32;
+    background: rgba(67, 160, 71, 0.08);
+  }
+
+  &.is-caddy {
+    border-color: rgba(14, 165, 233, 0.22);
+    color: #0284c7;
+    background: rgba(14, 165, 233, 0.08);
+  }
 }
 
 .server-summary__title {

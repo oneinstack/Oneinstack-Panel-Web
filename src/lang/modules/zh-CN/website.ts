@@ -49,6 +49,8 @@ export default {
   rootDirUnsafeCharacters: '网站根目录包含不安全字符',
   rootDirTraversalNotAllowed: '网站根目录不能包含越界路径',
   currentWebServer: '当前网站 Web 服务器',
+  webServerMenuLabel: '管理 {name}',
+  webServerConfigAction: '配置设置',
   webServerNotDetected: '未检测到 Nginx、OpenResty 或 Caddy',
   webServerRuntimeNotManaged: '当前 Web 服务暂未接入可管理状态',
   running: '运行中',
@@ -76,7 +78,7 @@ export default {
   enableConfirmMessage: '启用后将恢复 {name} 的访问，网站文件和数据不会被修改。',
   enableConfirmAction: '确认启用',
   deleteConfirmTitle: '网站删除确认',
-  deleteSnapshotTip: '删除前会强制创建并验证整站快照。默认只移除 Nginx/证书状态并保留业务文件；选择删除文件后，目录只会在受管根路径校验通过时删除。',
+  deleteSnapshotTip: '删除前会强制创建并验证整站快照。默认只移除 Web 服务器站点配置和证书状态并保留业务文件；选择删除文件后，目录只会在受管根路径校验通过时删除。',
   databaseOptional: '关联 MySQL 数据库（可选）',
   noDatabase: '不包含数据库',
   fileHandling: '文件处理',
@@ -133,16 +135,16 @@ export default {
     issue: '签发', renew: '续签', logSuffix: '日志', noLog: '暂无日志', logReadFailed: '读取日志失败', acmeTip: 'ACME 使用 HTTP-01 验证：域名必须解析到本机，且公网 80 端口需要能够访问。私钥只保存在服务器，不会通过 API 返回。',
     issuer: '颁发机构', domains: '覆盖域名', validFrom: '生效时间', validUntil: '到期时间', autoRenew: '自动续签', forceHttps: '强制 HTTPS', on: '已开启', off: '已关闭', lastError: '最近错误', accountEmail: '账户邮箱', renewEarly: '提前续签', days: '天',
     reissueApply: '重新签发并应用设置', issueDeploy: '申请并部署证书', renewNow: '立即续签', disableSsl: '关闭 SSL', recentTasks: '最近任务', noTasks: '暂无证书任务', log: '日志', cancel: '取消',
-    issueConfirm: '将为 {domain} 发起 HTTP-01 验证，请确认所有域名均已解析到本服务器且公网 80 端口可访问。', reissueTitle: '重新签发证书', issueTitle: '申请证书', startIssue: '开始签发', disableConfirm: '关闭后将移除 Nginx HTTPS 监听，但保留证书文件。请输入主域名 {domain} 确认。', disableTitle: '关闭网站 SSL', domainMismatch: '主域名不匹配'
+    issueConfirm: '将为 {domain} 发起 HTTP-01 验证，请确认所有域名均已解析到本服务器且公网 80 端口可访问。', reissueTitle: '重新签发证书', issueTitle: '申请证书', startIssue: '开始签发', disableConfirm: '关闭后将移除当前 Web 服务器的 HTTPS 监听配置，但保留证书文件。请输入主域名 {domain} 确认。', disableTitle: '关闭网站 SSL', domainMismatch: '主域名不匹配'
   },
   backupDrawer: {
     title: '整站备份 · {name}', manager: '整站备份管理', website: '网站', source: '来源', database: '数据库', size: '大小', createdAt: '创建时间', action: '操作', status: '状态', progress: '进度',
     statuses: { queued: '排队中', running: '执行中', canceling: '取消中', succeeded: '成功', failed: '失败', canceled: '已取消', interrupted: '已中断' }, operations: { backup: '备份', restore: '恢复', delete: '安全删除' }, sources: { manual: '手动备份', pre_restore: '恢复前安全快照', pre_delete: '删除前强制快照' },
-    tip: '备份包使用逐文件摘要和整包 SHA-256 校验，包含网站文件、网站元数据、Nginx 配置快照及一个可选 MySQL 数据库；证书私钥不会写入备份。', databasePlaceholder: '可选：关联一个 MySQL 数据库', excludeDatabase: '不包含数据库', backupNow: '立即备份', deletedSiteTip: '这里保留已删除网站的强制快照，可直接重新恢复站点。', refresh: '刷新', backupFiles: '备份文件', noBackups: '暂无整站备份', notIncluded: '未包含', download: '下载', restore: '恢复', delete: '删除', taskRecords: '任务记录', noTasks: '暂无网站任务', log: '日志', cancel: '取消', noLog: '暂无日志', logSuffix: '日志',
-    restorePrompt: '恢复会先创建当前站点的安全快照，再替换网站文件、重新生成 Nginx 配置{database}。证书私钥不在备份包内。请输入网站名 {name} 确认：', restoreDatabase: '并恢复关联数据库', restoreTitle: '恢复整站备份', startRestore: '开始恢复', nameMismatch: '网站名不匹配', deletePrompt: '永久删除备份 {file}。请输入网站名 {name} 确认：', deleteTitle: '删除整站备份', permanentDelete: '永久删除'
+    tip: '备份包使用逐文件摘要和整包 SHA-256 校验，包含网站文件、网站元数据、Web 服务器配置快照及一个可选 MySQL 数据库；证书私钥不会写入备份。', databasePlaceholder: '可选：关联一个 MySQL 数据库', excludeDatabase: '不包含数据库', backupNow: '立即备份', deletedSiteTip: '这里保留已删除网站的强制快照，可直接重新恢复站点。', refresh: '刷新', backupFiles: '备份文件', noBackups: '暂无整站备份', notIncluded: '未包含', download: '下载', restore: '恢复', delete: '删除', taskRecords: '任务记录', noTasks: '暂无网站任务', log: '日志', cancel: '取消', noLog: '暂无日志', logSuffix: '日志',
+    restorePrompt: '恢复会先创建当前站点的安全快照，再替换网站文件、重新生成 Web 服务器配置{database}。证书私钥不在备份包内。请输入网站名 {name} 确认：', restoreDatabase: '并恢复关联数据库', restoreTitle: '恢复整站备份', startRestore: '开始恢复', nameMismatch: '网站名不匹配', deletePrompt: '永久删除备份 {file}。请输入网站名 {name} 确认：', deleteTitle: '删除整站备份', permanentDelete: '永久删除'
   },
   webConfigDrawer: {
-    back: '返回', title: '{name} 配置管理', webServer: 'Web 服务器', unknown: '未识别', versionUnknown: '版本未知', running: '运行中', stopped: '服务已停止', refreshFiles: '刷新文件', configFiles: '配置文件', fileCount: '共 {count} 个', mainConfig: '主配置', siteConfig: '站点配置', extensionConfig: '扩展配置', noFiles: '没有可管理的 .conf 文件', selectFile: '请选择配置文件', lastModified: '最近修改 {time}', unsaved: '未保存', reread: '重新读取', selectLeftFile: '请选择左侧配置文件', safeNote: '修改不会直接生效：后端会先备份并执行全量语法检查，失败时自动恢复。', close: '关闭', saveApply: '保存并应用', discardMessage: '当前配置还有未保存的修改，切换文件会丢失这些内容。', discardTitle: '放弃未保存修改？', discardSwitch: '放弃并切换', continueEditing: '继续编辑', rereadMessage: '重新读取会覆盖当前未保存内容。', rereadTitle: '重新读取配置？', cancel: '取消', closeMessage: '关闭后将丢失当前未保存的配置内容。', closeTitle: '关闭配置编辑器？', discardClose: '放弃并关闭'
+    back: '返回', title: '{name} 配置管理', webServer: 'Web 服务器', unknown: '未识别', versionUnknown: '版本未知', running: '运行中', stopped: '服务已停止', refreshFiles: '刷新文件', configFiles: '配置文件', fileCount: '共 {count} 个', mainConfig: '主配置', siteConfig: '站点配置', extensionConfig: '扩展配置', noFiles: '没有可管理的配置文件', selectFile: '请选择配置文件', lastModified: '最近修改 {time}', unsaved: '未保存', reread: '重新读取', selectLeftFile: '请选择左侧配置文件', safeNote: '修改不会直接生效：后端会先备份并执行全量语法检查，失败时自动恢复。', close: '关闭', saveApply: '保存并应用', discardMessage: '当前配置还有未保存的修改，切换文件会丢失这些内容。', discardTitle: '放弃未保存修改？', discardSwitch: '放弃并切换', continueEditing: '继续编辑', rereadMessage: '重新读取会覆盖当前未保存内容。', rereadTitle: '重新读取配置？', cancel: '取消', closeMessage: '关闭后将丢失当前未保存的配置内容。', closeTitle: '关闭配置编辑器？', discardClose: '放弃并关闭'
   },
   notifications: {
     domainRequired: '至少保留一个网站域名',

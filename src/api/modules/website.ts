@@ -5,7 +5,7 @@ export const websiteApi = {
   getWebsiteList: (obj: any) => {
     return http.post("/website/list", obj);
   },
-  /** 获取当前网站模块使用的 Nginx/OpenResty 运行时 */
+  /** 获取当前网站模块使用的 Nginx、OpenResty 或 Caddy 运行时 */
   getWebsiteWebServer: () => {
     return http.get("/website/web-server");
   },

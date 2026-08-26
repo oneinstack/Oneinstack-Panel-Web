@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { computed, reactive, ref, toRaw } from 'vue'
 import SearchInput from '@/components/search-input.vue'
-import { ArrowDown, Delete, FolderAdd, FolderOpened, Lock, Refresh, Setting, WarningFilled } from '@element-plus/icons-vue'
+import {
+  ArrowDown,
+  Delete,
+  FolderAdd,
+  FolderOpened,
+  Lock,
+  Refresh,
+  RefreshRight,
+  Setting,
+  SwitchButton,
+  VideoPlay
+} from '@element-plus/icons-vue'
 import CardTabs from '@/components/card-tabs.vue'
 import CustomTable from '@/components/custom-table.vue'
 import { Api } from '@/api/modules'
@@ -174,6 +185,7 @@ const webServer = reactive({
     running: false,
     configurationAvailable: false
   } as Record<string, any>,
+  menuVisible: false,
   configVisible: false,
   load: async () => {
     webServer.loading = true
@@ -271,6 +283,25 @@ const loadServiceStatuses = async () => {
   }
 }
 
+type WebServerKind = 'nginx' | 'openresty' | 'caddy' | 'unknown'
+
+const webServerKind = computed<WebServerKind>(() => {
+  const identity = [
+    webServer.data.component,
+    webServer.data.name,
+    webServer.data.binaryPath,
+    webServer.data.serviceName
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
+
+  if (identity.includes('openresty')) return 'openresty'
+  if (identity.includes('caddy')) return 'caddy'
+  if (identity.includes('nginx') || /(^|\s)ng(\s|$)/.test(identity)) return 'nginx'
+  return 'unknown'
+})
+
 const webServerAliases = computed(() => {
   const aliases = new Set<string>()
   const component = String(webServer.data.component || '').trim().toLowerCase()
@@ -282,6 +313,7 @@ const webServerAliases = computed(() => {
     if (key.includes('openresty')) aliases.add('openresty')
     if (key.includes('caddy')) aliases.add('caddy')
   }
+  if (webServerKind.value !== 'unknown') aliases.add(webServerKind.value)
   return Array.from(aliases)
 })
 
@@ -339,10 +371,9 @@ const webServerVersionText = computed(() =>
 )
 
 const webServerLogoText = computed(() => {
-  const aliases = webServerAliases.value
-  if (aliases.includes('openresty')) return 'O'
-  if (aliases.includes('caddy')) return 'C'
-  if (aliases.includes('nginx')) return 'N'
+  if (webServerKind.value === 'openresty') return 'O'
+  if (webServerKind.value === 'caddy') return 'C'
+  if (webServerKind.value === 'nginx') return 'N'
   return webServer.data.available ? 'W' : '?'
 })
 
@@ -351,21 +382,6 @@ const webServerState = computed(() => {
   if (status?.state) return status.state
   if (!webServer.data.available) return 'not_installed'
   return webServer.data.running ? 'running' : 'stopped'
-})
-
-const webServerStatusType = computed(() => {
-  switch (webServerState.value) {
-    case 'running':
-      return 'success'
-    case 'failed':
-      return 'danger'
-    case 'transitioning':
-      return 'warning'
-    case 'not_installed':
-      return 'info'
-    default:
-      return 'warning'
-  }
 })
 
 const webServerStatusLabel = computed(() => {
@@ -495,6 +511,16 @@ const handleWebServerAction = async (action: ServiceAction) => {
     serviceSubmitting.value = ''
     await Promise.all([webServer.load(), loadServiceStatuses()])
   }
+}
+
+const runWebServerAction = (action: ServiceAction) => {
+  webServer.menuVisible = false
+  void handleWebServerAction(action)
+}
+
+const openWebServerConfig = () => {
+  webServer.menuVisible = false
+  webServer.configVisible = true
 }
 
 const handleWebsitePageRefresh = () => {
@@ -922,74 +948,6 @@ loadServiceStatuses()
 
 <template>
   <div class="website-container">
-    <section v-loading="webServer.loading || serviceLoading" class="website-runtime-strip" :class="{ unavailable: !webServer.data.available }">
-      <div class="website-runtime-strip__overview">
-        <button class="website-runtime-chip" type="button" :disabled="runtimeDropdownDisabled" @click.prevent>
-          <span class="website-runtime-chip__logo">{{ webServerLogoText }}</span>
-          <span class="website-runtime-chip__meta">
-            <strong>{{ webServerDisplayName }}</strong>
-            <small>{{ webServerVersionText }}</small>
-          </span>
-          <el-tag class="website-runtime-chip__status" :type="webServerStatusType" effect="dark" round>
-            {{ webServerStatusLabel }}
-          </el-tag>
-        </button>
-        <div class="website-runtime-strip__copy">
-          <span>{{ $t('website.currentWebServer') }}</span>
-          <p v-if="webServer.data.available">
-            {{ $t('website.siteConfigDir') }} {{ webServer.data.siteConfigDir || '-' }}
-          </p>
-          <p v-else>{{ $t('website.installWebServerTip') }}</p>
-        </div>
-      </div>
-      <div class="website-runtime-strip__controls">
-        <el-tooltip :content="runtimeDropdownDisabledReason" :disabled="!runtimeDropdownDisabledReason">
-          <span class="disabled-action-wrapper">
-            <el-dropdown
-              trigger="click"
-              placement="bottom-end"
-              :disabled="runtimeDropdownDisabled"
-              @command="handleWebServerAction"
-            >
-              <el-button class="website-runtime-strip__server-btn">
-                <span>{{ webServerDisplayName }}</span>
-                <span class="website-runtime-strip__server-version">{{ webServerVersionText }}</span>
-                <el-icon><ArrowDown /></el-icon>
-              </el-button>
-              <template #dropdown>
-                <el-dropdown-menu class="website-runtime-menu">
-                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'start')" command="start">
-                    {{ $t('website.startService') }}
-                  </el-dropdown-item>
-                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'stop')" command="stop">
-                    {{ $t('website.stopService') }}
-                  </el-dropdown-item>
-                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'restart')" command="restart">
-                    {{ $t('website.restartService') }}
-                  </el-dropdown-item>
-                  <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'reload')" command="reload">
-                    {{ $t('website.reloadService') }}
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </span>
-        </el-tooltip>
-
-        <el-button
-          class="website-runtime-strip__plain-btn"
-          :icon="Setting"
-          :disabled="!webServer.data.configurationAvailable"
-          @click="webServer.configVisible = true"
-        >
-          {{ $t('website.manageConfigFiles') }}
-        </el-button>
-        <el-button class="website-runtime-strip__plain-btn" :icon="Refresh" @click="handleWebsitePageRefresh">
-          {{ $t('website.refreshStatus') }}
-        </el-button>
-      </div>
-    </section>
-
     <card-tabs :list="conf.tabs.list" :active-index="conf.tabs.activeIndex" :click-active="conf.tabs.clickActive" />
     <section class="website-console">
       <div class="website-console__main">
@@ -1026,6 +984,76 @@ loadServiceStatuses()
             </template>
           </el-dropdown>
 
+          <el-tooltip
+            :content="runtimeDropdownDisabledReason || `${webServerStatusLabel} · ${$t('website.siteConfigDir')} ${webServer.data.siteConfigDir || '-'}`"
+            placement="top"
+          >
+            <span class="disabled-action-wrapper">
+              <el-popover
+                v-model:visible="webServer.menuVisible"
+                trigger="click"
+                placement="top-start"
+                :width="'auto'"
+                popper-class="website-webserver-popover"
+                :disabled="!webServer.data.available"
+              >
+                <div class="website-server-actions">
+                  <el-button
+                    v-if="webServerState === 'running'"
+                    link
+                    :icon="SwitchButton"
+                    :loading="serviceSubmitting === 'stop'"
+                    :disabled="runtimeDropdownDisabled || !serviceActionAllowed(webServerServiceStatus, 'stop')"
+                    @click="runWebServerAction('stop')"
+                  >{{ $t('website.stopService') }}</el-button>
+                  <el-button
+                    v-else
+                    link
+                    :icon="VideoPlay"
+                    :loading="serviceSubmitting === 'start'"
+                    :disabled="runtimeDropdownDisabled || !serviceActionAllowed(webServerServiceStatus, 'start')"
+                    @click="runWebServerAction('start')"
+                  >{{ $t('website.startService') }}</el-button>
+                  <el-button
+                    link
+                    :icon="RefreshRight"
+                    :loading="serviceSubmitting === 'restart'"
+                    :disabled="runtimeDropdownDisabled || !serviceActionAllowed(webServerServiceStatus, 'restart')"
+                    @click="runWebServerAction('restart')"
+                  >{{ $t('website.restartService') }}</el-button>
+                  <el-button
+                    link
+                    :icon="Refresh"
+                    :loading="serviceSubmitting === 'reload'"
+                    :disabled="runtimeDropdownDisabled || !serviceActionAllowed(webServerServiceStatus, 'reload')"
+                    @click="runWebServerAction('reload')"
+                  >{{ $t('website.reloadService') }}</el-button>
+                  <el-button
+                    link
+                    :icon="Setting"
+                    :disabled="!webServer.data.configurationAvailable"
+                    @click="openWebServerConfig"
+                  >{{ $t('website.webServerConfigAction') }}</el-button>
+                </div>
+                <template #reference>
+                  <button
+                    type="button"
+                    class="website-console__runtime-chip"
+                    :class="`is-${webServerState}`"
+                    :disabled="!webServer.data.available"
+                    :aria-label="$t('website.webServerMenuLabel', { name: webServerDisplayName })"
+                  >
+                    <span class="website-console__runtime-badge">{{ webServerLogoText }}</span>
+                    <span class="website-console__runtime-name">{{ webServerDisplayName }}</span>
+                    <span class="website-console__runtime-version">{{ webServerVersionText }}</span>
+                    <span class="website-console__runtime-state" aria-hidden="true"></span>
+                    <el-icon><ArrowDown /></el-icon>
+                  </button>
+                </template>
+              </el-popover>
+            </span>
+          </el-tooltip>
+
           <button class="website-console__metric" type="button">
             <span>{{ $t('website.metricTotal', '网站统计总览') }}</span>
             <strong>{{ websiteMetrics.total }}</strong>
@@ -1044,42 +1072,6 @@ loadServiceStatuses()
           </button>
         </div>
 
-        <div class="website-console__runtime">
-          <span class="website-console__runtime-label">{{ $t('website.currentWebServer') }}</span>
-          <el-tooltip :content="runtimeDropdownDisabledReason" :disabled="!runtimeDropdownDisabledReason">
-            <span class="disabled-action-wrapper">
-              <el-dropdown
-                trigger="click"
-                placement="bottom"
-                :disabled="runtimeDropdownDisabled"
-                @command="handleWebServerAction"
-              >
-                <button class="website-console__runtime-chip" type="button">
-                  <span class="website-console__runtime-badge">{{ webServerLogoText }}</span>
-                  <span>{{ webServerDisplayName }}</span>
-                  <span class="website-console__runtime-version">{{ webServerVersionText }}</span>
-                  <el-icon><ArrowDown /></el-icon>
-                </button>
-                <template #dropdown>
-                  <el-dropdown-menu class="website-runtime-menu">
-                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'start')" command="start">
-                      {{ $t('website.startService') }}
-                    </el-dropdown-item>
-                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'stop')" command="stop">
-                      {{ $t('website.stopService') }}
-                    </el-dropdown-item>
-                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'restart')" command="restart">
-                      {{ $t('website.restartService') }}
-                    </el-dropdown-item>
-                    <el-dropdown-item :disabled="!serviceActionAllowed(webServerServiceStatus, 'reload')" command="reload">
-                      {{ $t('website.reloadService') }}
-                    </el-dropdown-item>
-                  </el-dropdown-menu>
-                </template>
-              </el-dropdown>
-            </span>
-          </el-tooltip>
-        </div>
       </div>
 
       <div class="website-console__search">
@@ -1264,132 +1256,6 @@ loadServiceStatuses()
 </template>
 
 <style scoped lang="less">
-.website-runtime-strip {
-  min-height: 96px;
-  margin-bottom: 16px;
-  padding: 16px 18px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  border: 1px solid rgba(var(--primary-color), 0.18);
-  border-radius: 18px;
-  background:
-    linear-gradient(135deg, rgba(var(--primary-color), 0.08), transparent 40%),
-    var(--surface-card);
-  box-shadow: 0 10px 28px rgba(16, 24, 40, 0.05);
-
-  &.unavailable {
-    border-color: var(--border-subtle);
-    background: var(--surface-card);
-  }
-}
-
-.website-runtime-strip__overview {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.website-runtime-chip {
-  padding: 12px 14px;
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  border: 1px solid rgba(var(--primary-color), 0.18);
-  border-radius: 16px;
-  background: rgba(var(--primary-color), 0.08);
-  color: var(--text-primary);
-  cursor: default;
-  transition: border-color 0.2s ease, background 0.2s ease;
-
-  &:disabled {
-    opacity: 1;
-  }
-}
-
-.website-runtime-chip__logo {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: rgba(var(--primary-color), 0.16);
-  color: var(--el-color-primary);
-  font-size: 21px;
-  font-weight: 800;
-}
-
-.website-runtime-chip__meta {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-
-  strong {
-    color: var(--text-primary);
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.2;
-  }
-
-  small {
-    color: var(--text-secondary);
-    font-size: 12px;
-    line-height: 1.2;
-  }
-}
-
-.website-runtime-chip__status {
-  margin-left: 2px;
-}
-
-.website-runtime-strip__copy {
-  min-width: 0;
-
-  > span {
-    color: var(--text-tertiary);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-  }
-
-  p {
-    margin: 5px 0 0;
-    overflow: hidden;
-    color: var(--text-secondary);
-    font-size: 13px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.website-runtime-strip__controls {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.website-runtime-strip__server-btn,
-.website-runtime-strip__plain-btn {
-  min-height: 40px;
-}
-
-.website-runtime-strip__server-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.website-runtime-strip__server-version {
-  color: var(--text-tertiary);
-  font-size: 12px;
-  font-weight: 500;
-}
-
 .website-container {
   display: flex;
   flex-direction: column;
@@ -1455,31 +1321,47 @@ loadServiceStatuses()
   }
 }
 
-.website-console__runtime {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.website-console__runtime-label {
-  color: var(--text-tertiary);
-  font-size: 12px;
-  white-space: nowrap;
-}
-
 .website-console__runtime-chip {
   min-height: 40px;
   padding: 0 14px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  border-radius: 12px;
-  background: rgba(34, 197, 94, 0.08);
-  color: #16a34a;
-  font-size: 14px;
+  border: 1px solid rgba(34, 197, 94, 0.28);
+  border-radius: 8px;
+  background: rgba(34, 197, 94, 0.07);
+  color: #15803d;
+  font-size: 13px;
   font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: rgba(34, 197, 94, 0.48);
+    background: rgba(34, 197, 94, 0.12);
+    outline: none;
+  }
+
+  &.is-stopped,
+  &.is-unknown,
+  &.is-transitioning {
+    border-color: rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.08);
+    color: #b45309;
+  }
+
+  &.is-failed {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.07);
+    color: #dc2626;
+  }
+
+  &.is-not_installed {
+    border-color: var(--border-subtle);
+    background: var(--surface-subtle);
+    color: var(--text-secondary);
+  }
 }
 
 .website-console__runtime-badge {
@@ -1493,10 +1375,52 @@ loadServiceStatuses()
   font-weight: 800;
 }
 
+.website-console__runtime-name {
+  max-width: 126px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .website-console__runtime-version {
   color: var(--text-secondary);
   font-size: 12px;
   font-weight: 500;
+}
+
+.website-console__runtime-state {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 7px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 12%, transparent);
+}
+
+.website-server-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+
+  :deep(.el-button) {
+    min-height: 30px;
+    margin-left: 0;
+    padding: 0 8px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  :deep(.el-button:hover) {
+    color: var(--el-color-primary);
+    background: color-mix(in srgb, var(--el-color-primary) 8%, transparent);
+  }
+}
+
+:global(.website-webserver-popover.el-popper) {
+  min-width: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
 }
 
 .website-console__category {
@@ -1667,38 +1591,17 @@ loadServiceStatuses()
     flex-direction: column;
   }
 
-  .website-console__runtime {
-    width: 100%;
-    justify-content: space-between;
-  }
-
   .website-search-panel {
     width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .website-runtime-strip {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .website-runtime-strip__controls {
-    justify-content: stretch;
-    flex-wrap: wrap;
-  }
-
-  .website-runtime-strip__server-btn,
-  .website-runtime-strip__plain-btn {
-    flex: 1 1 calc(50% - 5px);
-  }
-
   .website-console {
     padding: 14px;
   }
 
-  .website-console__actions,
-  .website-console__runtime {
+  .website-console__actions {
     width: 100%;
   }
 
@@ -1720,35 +1623,9 @@ loadServiceStatuses()
 }
 
 @media (max-width: 560px) {
-  .website-runtime-strip__overview {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .website-runtime-chip {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .website-runtime-strip__copy {
-    p {
-      white-space: normal;
-    }
-  }
-
-  .website-runtime-strip__controls {
-    flex-direction: column;
-  }
-
   .website-console__metric,
-  .website-console__runtime,
   .website-console__runtime-chip {
     width: 100%;
-  }
-
-  .website-console__runtime {
-    align-items: stretch;
-    flex-direction: column;
   }
 
   .website-console__search {
@@ -1761,11 +1638,6 @@ loadServiceStatuses()
   }
 
   .website-search-panel__refresh {
-    width: 100%;
-  }
-
-  .website-runtime-strip__server-btn,
-  .website-runtime-strip__plain-btn {
     width: 100%;
   }
 }
