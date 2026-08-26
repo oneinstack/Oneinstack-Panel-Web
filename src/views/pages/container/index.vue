@@ -3852,7 +3852,7 @@ onBeforeUnmount(() => {
   }
 }
 
-:root:root[class='dark'] .container-page .panel-actions :deep(.cleanup-action-button) {
+:root:root.dark .container-page .panel-actions :deep(.cleanup-action-button) {
   border-color: rgba(245, 158, 11, 0.34);
   background: linear-gradient(180deg, rgba(101, 67, 18, 0.38), rgba(74, 48, 16, 0.48));
   color: #fcd34d;

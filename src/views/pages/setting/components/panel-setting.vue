@@ -866,19 +866,19 @@ onMounted(() => {
   }
 }
 
-:root:root[class='dark'] .basic-card__body {
+:root:root.dark .basic-card__body {
   border-color: var(--border-default);
 }
 
-:root:root[class='dark'] .panel-entry-card {
+:root:root.dark .panel-entry-card {
   border-color: var(--border-default);
 }
 
-:root:root[class='dark'] .panel-entry-form__row label {
+:root:root.dark .panel-entry-form__row label {
   color: #e5e7eb;
 }
 
-:root:root[class='dark'] .panel-entry-form {
+:root:root.dark .panel-entry-form {
   :deep(.el-input__wrapper) {
     background: rgba(12, 19, 33, 0.96) !important;
     box-shadow: 0 0 0 1px rgba(118, 137, 172, 0.2) inset !important;

@@ -451,7 +451,7 @@ const conf = reactive({
   }
 }
 
-:global(:root:root[class='dark']) {
+:global(:root:root.dark) {
   .login-form {
     :deep(.el-input__wrapper) {
       background: color-mix(in srgb, var(--surface-subtle) 72%, #1e293b 28%);

@@ -1070,7 +1070,7 @@ onBeforeUnmount(() => {
   color: var(--text-secondary);
 }
 
-:root:root[class='dark'] .install-task-drawer {
+:root:root.dark .install-task-drawer {
   .task-status {
     border-color: rgba(var(--primary-color), 0.38);
     color: #fed7aa;

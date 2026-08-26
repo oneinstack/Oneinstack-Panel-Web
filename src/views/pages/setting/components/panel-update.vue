@@ -501,13 +501,13 @@ onBeforeUnmount(() => {
   background: rgba(var(--primary-color), 0.06);
 }
 
-:root:root[class='dark'] .version-copy-button {
+:root:root.dark .version-copy-button {
   border-color: var(--border-default);
   background: var(--surface-subtle);
   color: var(--text-secondary);
 }
 
-:root:root[class='dark'] .version-copy-button:hover {
+:root:root.dark .version-copy-button:hover {
   color: #fdba74;
   border-color: rgba(var(--primary-color), 0.28);
   background: rgba(var(--primary-color), 0.08);

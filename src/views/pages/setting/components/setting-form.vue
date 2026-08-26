@@ -121,7 +121,7 @@ const props = defineProps<Props>()
   min-width: 0;
 }
 
-:root:root[class='dark'] .setting-form-item {
+:root:root.dark .setting-form-item {
   :deep(.el-form-item__label) {
     color: #e5e7eb;
   }

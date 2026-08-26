@@ -1822,7 +1822,7 @@ onUnmounted(() => {
   }
 }
 
-:root:root[class='dark'] .monitor-page {
+:root:root.dark .monitor-page {
   .monitor-drawer-form {
     border: 1px solid rgba(120, 141, 179, 0.16);
     background:

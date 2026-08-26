@@ -462,7 +462,7 @@ withDefaults(defineProps<Props>(), {
   pointer-events: auto;
 }
 
-:global(:root:root[class='dark']) {
+:global(:root:root.dark) {
   .login-container {
     background:
       radial-gradient(circle at left top, rgba(var(--primary-color), 0.18), transparent 24rem),
