@@ -213,6 +213,8 @@ const submit = async () => {
       result = await submitOperation('firewall.rule_change', {
         action: props.type ? 'create' : 'update',
         rule: payload
+      }, {
+        confirmPreview: false
       })
     } catch (error) {
       if (isOperationCancelled(error)) return

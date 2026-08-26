@@ -991,7 +991,7 @@ onMounted(() => {
 }
 
 .mono-text {
-  color: #475569;
+  color: var(--text-primary);
   font-size: 13px;
   font-weight: 600;
 }
@@ -1063,12 +1063,12 @@ onMounted(() => {
   min-width: 0;
   padding: 7px 10px;
   border-radius: 12px;
-  background: #f8fafc;
-  border: 1px solid rgba(226, 232, 240, 0.95);
+  background: var(--surface-page);
+  border: 1px solid var(--border-subtle);
 
   label {
     flex: 0 0 auto;
-    color: #64748b;
+    color: var(--text-primary) !important;
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -1128,6 +1128,228 @@ onMounted(() => {
     color: var(--text-tertiary);
     font-size: 12px;
     line-height: 1.5;
+  }
+}
+
+:global(html.dark) {
+  .snapshot-page {
+    .snapshot-panel {
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(11, 17, 32, 0.98));
+      border-color: rgba(52, 64, 84, 0.9);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.03),
+        0 14px 30px rgba(0, 0, 0, 0.22);
+    }
+
+    .snapshot-toolbar h2,
+    .guide-title strong,
+    .guide-card h3,
+    .resource-cell .cell-title,
+    .snapshot-name-cell .cell-title,
+    .snapshot-meta-cell .cell-code,
+    .snapshot-meta-cell .mono-text,
+    .resource-option strong,
+    .resource-option span,
+    .diff-summary span,
+    .force-restore-box span,
+    .check-text,
+    .snapshot-create-form :deep(.el-form-item__label),
+    .snapshot-create-form .form-help,
+    .resource-guide-panel :deep(.el-collapse-item__header),
+    .integration-checklist-panel :deep(.el-collapse-item__header) {
+      color: var(--text-primary);
+    }
+
+    .snapshot-toolbar p,
+    .resource-cell span,
+    .snapshot-name-cell span,
+    .snapshot-meta-cell span,
+    .guide-title span,
+    .guide-card p,
+    .guide-card code,
+    .integration-checklist,
+    .integration-checklist code,
+    .diff-lists span,
+    .mono-text--muted,
+    .path-text,
+    .resource-option span,
+    .form-help {
+      color: var(--text-tertiary);
+    }
+
+    .cell-code,
+    .mono-text {
+      color: #f1f5f9;
+    }
+
+    .cell-code {
+      font-weight: 700;
+    }
+
+    .mono-text {
+      font-weight: 600;
+    }
+
+    .meta-chip {
+      border-color: rgba(71, 84, 103, 0.92);
+      background: rgba(17, 24, 39, 0.96);
+      color: #e2e8f0;
+    }
+
+    .meta-chip--ghost {
+      background: rgba(15, 23, 42, 0.88);
+    }
+
+    .meta-chip--action {
+      color: #fdba74;
+      border-color: rgba(var(--primary-color), 0.28);
+      background: rgba(var(--primary-color), 0.12);
+    }
+
+    .revision-item {
+      border-color: rgba(71, 84, 103, 0.72);
+      background: rgba(15, 23, 42, 0.96);
+
+      label {
+        color: #94a3b8;
+      }
+
+      span {
+        color: #f8fafc;
+      }
+    }
+
+    .revision-item--after {
+      border-color: rgba(var(--primary-color), 0.26);
+      background: rgba(var(--primary-color), 0.14);
+    }
+
+    .snapshot-panel :deep(.el-tag--light) {
+      border-color: rgba(71, 84, 103, 0.92);
+      background: rgba(17, 24, 39, 0.95);
+      color: #e2e8f0;
+    }
+
+    .snapshot-panel :deep(.el-tag--light.el-tag--success) {
+      border-color: rgba(34, 197, 94, 0.28);
+      background: rgba(20, 83, 45, 0.35);
+      color: #bbf7d0;
+    }
+
+    .snapshot-panel :deep(.el-tag--light.el-tag--warning) {
+      border-color: rgba(245, 158, 11, 0.28);
+      background: rgba(120, 53, 15, 0.35);
+      color: #fdba74;
+    }
+
+    .snapshot-panel :deep(.el-tag--light.el-tag--danger) {
+      border-color: rgba(239, 68, 68, 0.28);
+      background: rgba(127, 29, 29, 0.34);
+      color: #fca5a5;
+    }
+
+    .diff-summary {
+      background: rgba(23, 32, 51, 0.9);
+      color: var(--text-secondary);
+    }
+
+    .force-restore-box {
+      border-color: rgba(251, 191, 36, 0.28);
+      background: rgba(120, 82, 12, 0.18);
+
+      span {
+        color: #cbd5e1;
+      }
+
+      code {
+        background: rgba(17, 24, 39, 0.92);
+        color: #fbbf24;
+      }
+    }
+
+    .guide-card {
+      border-color: rgba(52, 64, 84, 0.9);
+      background: rgba(17, 24, 39, 0.96);
+
+      code {
+        border-color: rgba(52, 64, 84, 0.9);
+        background: rgba(23, 32, 51, 0.95);
+        color: #cbd5e1;
+      }
+    }
+
+    .resource-guide-panel,
+    .integration-checklist-panel {
+      border-color: rgba(52, 64, 84, 0.9);
+      background: rgba(17, 24, 39, 0.96);
+
+      :deep(.el-collapse-item__header) {
+        border-bottom-color: rgba(52, 64, 84, 0.82);
+        background: rgba(17, 24, 39, 0.96);
+      }
+
+      :deep(.el-collapse-item__content) {
+        color: var(--text-secondary);
+      }
+    }
+
+    .integration-checklist {
+      li {
+        color: var(--text-secondary);
+      }
+
+      code {
+        border-color: rgba(52, 64, 84, 0.9);
+        background: rgba(23, 32, 51, 0.96);
+        color: #cbd5e1;
+      }
+    }
+
+    .check-dot {
+      background: #64748b;
+      opacity: 0.8;
+    }
+
+    .check-box {
+      border-color: rgba(71, 84, 103, 0.9);
+      background: rgba(17, 24, 39, 0.96);
+      box-shadow: inset 0 0 0 2px rgba(17, 24, 39, 0.96);
+    }
+
+    .snapshot-create-form {
+      :deep(.el-form-item__label) {
+        color: #e5e7eb;
+      }
+
+      :deep(.el-input__wrapper),
+      :deep(.el-select .el-input__wrapper) {
+        border-color: rgba(71, 84, 103, 0.82);
+        background: rgba(17, 24, 39, 0.96);
+      }
+
+      :deep(.el-textarea__inner) {
+        border-color: rgba(71, 84, 103, 0.82);
+        background: rgba(17, 24, 39, 0.96);
+        color: #e5e7eb;
+      }
+
+      :deep(.el-input__inner),
+      :deep(.el-select__selected-item) {
+        color: #e5e7eb;
+      }
+
+      .form-help {
+        color: #94a3b8;
+      }
+    }
+
+    :deep(.snapshot-panel .smart-table td.el-table__cell) {
+      color: #e5e7eb;
+    }
+
+    :deep(.snapshot-panel .smart-table th.el-table__cell) {
+      color: #cbd5e1;
+    }
   }
 }
 

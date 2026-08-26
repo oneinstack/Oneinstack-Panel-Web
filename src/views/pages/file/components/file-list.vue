@@ -3208,6 +3208,15 @@ const archiveTaskRunningCount = computed(
       color: rgb(var(--primary-color)) !important;
     }
 
+    :deep(.action-open.is-link > span),
+    :deep(.action-open.is-link .el-button__text),
+    :deep(.action-open.is-link .el-icon),
+    :deep(.action-more-trigger.is-link > span),
+    :deep(.action-more-trigger.is-link .el-button__text),
+    :deep(.action-more-trigger.is-link .el-icon) {
+      color: rgb(var(--primary-color)) !important;
+    }
+
     :deep(.action-open.is-link:hover),
     :deep(.action-open.is-link:focus-visible),
     :deep(.action-more-trigger.is-link:hover),
@@ -3217,6 +3226,12 @@ const archiveTaskRunningCount = computed(
     }
 
     :deep(.action-copy.is-link) {
+      color: #409eff !important;
+    }
+
+    :deep(.action-copy.is-link > span),
+    :deep(.action-copy.is-link .el-button__text),
+    :deep(.action-copy.is-link .el-icon) {
       color: #409eff !important;
     }
 
@@ -3230,6 +3245,12 @@ const archiveTaskRunningCount = computed(
       color: #e6a23c !important;
     }
 
+    :deep(.action-cut.is-link > span),
+    :deep(.action-cut.is-link .el-button__text),
+    :deep(.action-cut.is-link .el-icon) {
+      color: #e6a23c !important;
+    }
+
     :deep(.action-cut.is-link:hover),
     :deep(.action-cut.is-link:focus-visible) {
       color: #e6a23c !important;
@@ -3237,6 +3258,12 @@ const archiveTaskRunningCount = computed(
     }
 
     :deep(.action-rename.is-link) {
+      color: #8b5cf6 !important;
+    }
+
+    :deep(.action-rename.is-link > span),
+    :deep(.action-rename.is-link .el-button__text),
+    :deep(.action-rename.is-link .el-icon) {
       color: #8b5cf6 !important;
     }
 
@@ -3250,6 +3277,12 @@ const archiveTaskRunningCount = computed(
       color: #16a085 !important;
     }
 
+    :deep(.action-tree.is-link > span),
+    :deep(.action-tree.is-link .el-button__text),
+    :deep(.action-tree.is-link .el-icon) {
+      color: #16a085 !important;
+    }
+
     :deep(.action-tree.is-link:hover),
     :deep(.action-tree.is-link:focus-visible) {
       color: #16a085 !important;
@@ -3257,6 +3290,12 @@ const archiveTaskRunningCount = computed(
     }
 
     :deep(.row-action-danger.is-link) {
+      color: var(--el-color-danger) !important;
+    }
+
+    :deep(.row-action-danger.is-link > span),
+    :deep(.row-action-danger.is-link .el-button__text),
+    :deep(.row-action-danger.is-link .el-icon) {
       color: var(--el-color-danger) !important;
     }
 
@@ -3712,6 +3751,14 @@ const archiveTaskRunningCount = computed(
 
 :global(.file-action-menu) {
   max-height: 264px;
+}
+
+:global(html.dark .file-action-menu .el-dropdown-menu__item:not(.table-action-menu__danger)) {
+  color: var(--text-secondary) !important;
+}
+
+:global(html.dark .file-action-menu .el-dropdown-menu__item:not(.table-action-menu__danger) .el-icon) {
+  color: inherit !important;
 }
 
 .archive-task-drawer {

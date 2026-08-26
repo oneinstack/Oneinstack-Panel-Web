@@ -5,10 +5,12 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
+import { useAppStore } from '@/stores/modules/app'
 import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 
+const sapp = useAppStore()
 const sconfig = useConfigStore()
 
 interface MetricSample {
@@ -173,6 +175,18 @@ const historyRangePresets = computed(() => [
   { label: t('monitor.timeRanges.30d', '30 days'), hours: 24 * 30 }
 ])
 
+const chartTheme = computed(() => {
+  const isDark = sapp.theme === 'dark'
+  return {
+    textPrimary: isDark ? '#f8fafc' : '#334155',
+    textSecondary: isDark ? '#cbd5e1' : '#475569',
+    textMuted: isDark ? '#94a3b8' : '#64748b',
+    border: isDark ? '#334155' : '#cbd5e1',
+    tooltipBackground: isDark ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+    tooltipBorder: isDark ? '#334155' : '#cbd5e1'
+  }
+})
+
 const summary = ref<MonitorSummary>({
   ruleCount: 0,
   enabledRules: 0,
@@ -285,20 +299,54 @@ const channelForm = reactive({
 })
 
 const trendOption = computed<EChartsOption>(() => ({
-  tooltip: { trigger: 'axis' },
-  legend: { data: ['CPU', t('monitor.memory', 'Memory'), t('monitor.rootPartition', 'Root partition'), t('monitor.load1', '1-minute load')] },
+  color: ['#60a5fa', '#4ade80', '#fbbf24', '#fb7185'],
+  tooltip: {
+    trigger: 'axis',
+    backgroundColor: chartTheme.value.tooltipBackground,
+    borderColor: chartTheme.value.tooltipBorder,
+    textStyle: { color: chartTheme.value.textPrimary },
+    axisPointer: {
+      type: 'line',
+      lineStyle: { color: chartTheme.value.border }
+    }
+  },
+  legend: {
+    data: ['CPU', t('monitor.memory', 'Memory'), t('monitor.rootPartition', 'Root partition'), t('monitor.load1', '1-minute load')],
+    textStyle: { color: chartTheme.value.textSecondary },
+    inactiveColor: chartTheme.value.textMuted
+  },
   grid: { left: 48, right: 24, top: 48, bottom: 40 },
   xAxis: {
     type: 'category',
     boundaryGap: false,
+    axisLabel: { color: chartTheme.value.textMuted },
+    axisLine: { lineStyle: { color: chartTheme.value.border } },
+    axisTick: { lineStyle: { color: chartTheme.value.border } },
     data: metrics.value.map((item) => new Date(item.capturedAt).toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit'
     }))
   },
   yAxis: [
-    { type: 'value', min: 0, max: 100, axisLabel: { formatter: '{value}%' } },
-    { type: 'value', min: 0, position: 'right', name: t('monitor.load', 'Load') }
+    {
+      type: 'value',
+      min: 0,
+      max: 100,
+      axisLabel: { formatter: '{value}%', color: chartTheme.value.textMuted },
+      axisLine: { lineStyle: { color: chartTheme.value.border } },
+      axisTick: { lineStyle: { color: chartTheme.value.border } },
+      splitLine: { lineStyle: { color: chartTheme.value.border, opacity: 0.55 } }
+    },
+    {
+      type: 'value',
+      min: 0,
+      position: 'right',
+      name: t('monitor.load', 'Load'),
+      nameTextStyle: { color: chartTheme.value.textMuted },
+      axisLabel: { color: chartTheme.value.textMuted },
+      axisLine: { lineStyle: { color: chartTheme.value.border } },
+      axisTick: { lineStyle: { color: chartTheme.value.border } }
+    }
   ],
   series: [
     { name: 'CPU', type: 'line', smooth: true, showSymbol: false, data: metrics.value.map((item) => item.cpuPercent) },
@@ -335,21 +383,46 @@ const historyChartOptions = computed<Record<MonitorHistoryGroup, EChartsOption>>
         type: 'value',
         min: 0,
         max: 100,
-        axisLabel: { formatter: '{value}%' }
+        axisLabel: { formatter: '{value}%', color: chartTheme.value.textMuted },
+        axisLine: { lineStyle: { color: chartTheme.value.border } },
+        axisTick: { lineStyle: { color: chartTheme.value.border } },
+        splitLine: { lineStyle: { color: chartTheme.value.border, opacity: 0.55 } },
+        nameTextStyle: { color: chartTheme.value.textMuted }
       })
     }
     if (hasRate) {
       yAxis.push({
         type: 'value',
         position: hasPercent ? 'right' : 'left',
-        axisLabel: { formatter: (value: number) => formatRate(value).replace('/s', '') }
+        axisLabel: { formatter: (value: number) => formatRate(value).replace('/s', ''), color: chartTheme.value.textMuted },
+        axisLine: { lineStyle: { color: chartTheme.value.border } },
+        axisTick: { lineStyle: { color: chartTheme.value.border } },
+        splitLine: { lineStyle: { color: chartTheme.value.border, opacity: 0.55 } },
+        nameTextStyle: { color: chartTheme.value.textMuted }
       })
     }
-    if (!yAxis.length) yAxis.push({ type: 'value', min: 0 })
+    if (!yAxis.length) {
+      yAxis.push({
+        type: 'value',
+        min: 0,
+        axisLabel: { color: chartTheme.value.textMuted },
+        axisLine: { lineStyle: { color: chartTheme.value.border } },
+        axisTick: { lineStyle: { color: chartTheme.value.border } },
+        splitLine: { lineStyle: { color: chartTheme.value.border, opacity: 0.55 } },
+        nameTextStyle: { color: chartTheme.value.textMuted }
+      })
+    }
 
     return [group.key, {
       tooltip: {
         trigger: 'axis',
+        backgroundColor: chartTheme.value.tooltipBackground,
+        borderColor: chartTheme.value.tooltipBorder,
+        textStyle: { color: chartTheme.value.textPrimary },
+        axisPointer: {
+          type: 'line',
+          lineStyle: { color: chartTheme.value.border }
+        },
         valueFormatter: (value: unknown) => {
           const numeric = Number(value)
           return Number.isFinite(numeric) ? numeric.toFixed(2) : String(value)
@@ -358,10 +431,17 @@ const historyChartOptions = computed<Record<MonitorHistoryGroup, EChartsOption>>
       legend: {
         top: 0,
         type: 'scroll',
-        data: seriesList.map((series) => series.label)
+        data: seriesList.map((series) => series.label),
+        textStyle: { color: chartTheme.value.textSecondary },
+        inactiveColor: chartTheme.value.textMuted
       },
       grid: { left: 48, right: hasPercent && hasRate ? 58 : 24, top: 44, bottom: 34 },
-      xAxis: { type: 'time' },
+      xAxis: {
+        type: 'time',
+        axisLabel: { color: chartTheme.value.textMuted },
+        axisLine: { lineStyle: { color: chartTheme.value.border } },
+        axisTick: { lineStyle: { color: chartTheme.value.border } }
+      },
       yAxis,
       series: seriesList.map((series) => ({
         name: series.label,

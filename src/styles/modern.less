@@ -204,7 +204,7 @@ html {
 :root:root[class='dark'] .el-input .el-input__inner::placeholder,
 :root:root[class='dark'] .el-textarea__inner::placeholder,
 :root:root[class='dark'] .el-range-input::placeholder {
-  color: var(--text-tertiary) !important;
+  color: var(--text-placeholder) !important;
 }
 
 .el-date-editor {
@@ -256,6 +256,13 @@ html {
 .el-form-item__label {
   color: var(--text-secondary);
   font-weight: 550;
+}
+
+:root:root[class='dark'] .el-form-item.is-required:not(.is-no-asterisk).asterisk-left > .el-form-item__label-wrap > .el-form-item__label::before,
+:root:root[class='dark'] .el-form-item.is-required:not(.is-no-asterisk).asterisk-left > .el-form-item__label::before,
+:root:root[class='dark'] .el-form-item.is-required:not(.is-no-asterisk).asterisk-right > .el-form-item__label-wrap > .el-form-item__label::after,
+:root:root[class='dark'] .el-form-item.is-required:not(.is-no-asterisk).asterisk-right > .el-form-item__label::after {
+  color: #ff4d4f !important;
 }
 
 .el-card,

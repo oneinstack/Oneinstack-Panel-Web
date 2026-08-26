@@ -132,7 +132,7 @@ onMounted(() => {
 
   :deep(.el-form-item__label) {
     min-width: 96px;
-    color: var(--text-secondary);
+    color: var(--text-secondary) !important;
     font-weight: 560;
   }
 

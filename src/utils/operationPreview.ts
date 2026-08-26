@@ -151,9 +151,15 @@ const confirmOperationPreview = async (preview: OperationPreview) => {
   }
 }
 
-export const submitOperation = async <T = any>(operation: string, payload: unknown) => {
+export const submitOperation = async <T = any>(
+  operation: string,
+  payload: unknown,
+  options: { confirmPreview?: boolean } = {},
+) => {
   const response = await Api.previewOperation({ operation, payload })
   const preview = normalizeOperationPreview(response)
-  await confirmOperationPreview(preview)
+  if (options.confirmPreview !== false) {
+    await confirmOperationPreview(preview)
+  }
   return await Api.executeOperation(preview.previewId) as T
 }

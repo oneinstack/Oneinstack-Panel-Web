@@ -1584,6 +1584,13 @@ loadServiceStatuses()
   color: var(--text-primary);
 }
 
+:global(html.dark .website-container .custom-form .el-form-item.is-required:not(.is-no-asterisk).asterisk-left > .el-form-item__label-wrap > .el-form-item__label::before),
+:global(html.dark .website-container .custom-form .el-form-item.is-required:not(.is-no-asterisk).asterisk-left > .el-form-item__label::before),
+:global(html.dark .website-container .custom-form .el-form-item.is-required:not(.is-no-asterisk).asterisk-right > .el-form-item__label-wrap > .el-form-item__label::after),
+:global(html.dark .website-container .custom-form .el-form-item.is-required:not(.is-no-asterisk).asterisk-right > .el-form-item__label::after) {
+  color: var(--el-color-danger) !important;
+}
+
 @media (max-width: 1100px) {
   .website-console__main,
   .website-console__search {
