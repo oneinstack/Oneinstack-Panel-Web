@@ -256,7 +256,13 @@ watch(
           <div>
             <div class="server-summary__title">
               <strong>{{ state.server.name || t('website.webConfigDrawer.unknown') }}</strong>
-              <el-tag :type="state.server.running ? 'success' : 'info'" effect="plain" round>
+              <el-tag
+                :type="state.server.running ? 'success' : 'info'"
+                effect="plain"
+                round
+                class="web-config__state-tag"
+                :class="{ 'is-running': state.server.running, 'is-stopped': !state.server.running }"
+              >
                 {{ serverStateText }}
               </el-tag>
             </div>
@@ -415,6 +421,35 @@ watch(
   strong {
     color: var(--text-primary);
     font-size: 16px;
+  }
+}
+
+.web-config__state-tag {
+  min-width: 74px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: transparent !important;
+  --el-tag-bg-color: transparent;
+  --el-tag-border-color: #909399;
+  --el-tag-text-color: #909399;
+
+  :deep(.el-tag__content) {
+    color: inherit;
+  }
+
+  &.is-running {
+    border-color: #67c23a !important;
+    color: #67c23a !important;
+    --el-tag-border-color: #67c23a;
+    --el-tag-text-color: #67c23a;
+  }
+
+  &.is-stopped {
+    border-color: #909399 !important;
+    color: #909399 !important;
+    --el-tag-border-color: #909399;
+    --el-tag-text-color: #909399;
   }
 }
 

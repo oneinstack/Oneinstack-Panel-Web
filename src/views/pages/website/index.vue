@@ -505,7 +505,7 @@ const handleWebServerAction = async (action: ServiceAction) => {
     }
   } catch (error: any) {
     if (!isOperationCancelled(error)) {
-      ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
+      // ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
     }
   } finally {
     serviceSubmitting.value = ''
@@ -578,7 +578,7 @@ const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) =
     await conf.website.getData()
   } catch (error: any) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
+    // ElMessage.error(error?.message || t('common.operationFailed', '操作失败'))
   } finally {
     statusLoading.delete(row.id)
   }
@@ -1125,7 +1125,7 @@ loadServiceStatuses()
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
-              class="website-action-btn website-action-btn--primary"
+              class="website-action-btn website-action-btn--ssl"
               type="primary"
               link
               :icon="Lock"
@@ -1134,7 +1134,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">SSL</span>
             </el-button>
             <el-button
-              class="website-action-btn website-action-btn--primary"
+              class="website-action-btn website-action-btn--backup"
               type="primary"
               link
               :icon="FolderAdd"
@@ -1143,7 +1143,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">{{ $t('website.backup') }}</span>
             </el-button>
             <el-button
-              class="website-action-btn website-action-btn--primary"
+              class="website-action-btn website-action-btn--settings"
               type="primary"
               link
               :icon="Setting"
@@ -1182,7 +1182,7 @@ loadServiceStatuses()
         </template>
         <template #expiration="{ row }">
           <el-tag
-            class="website-expiration-tag"
+            class="website-expiration-tag website-chip"
             :type="row.expires_at && new Date(row.expires_at).getTime() <= Date.now() ? 'danger' : row.expires_at ? 'warning' : 'info'"
             effect="plain"
           >
@@ -1190,10 +1190,10 @@ loadServiceStatuses()
           </el-tag>
         </template>
         <template #ssl="{ row }">
-          <el-tag v-if="row.ssl_enabled" :type="row.certificate_status === 'active' ? 'success' : 'warning'">
+          <el-tag v-if="row.ssl_enabled" class="website-chip" :type="row.certificate_status === 'active' ? 'success' : 'warning'">
             {{ row.certificate_status === 'active' ? $t('common.enabled') : row.certificate_status === 'expired' ? $t('website.expired') : $t('website.expiringSoon') }}
           </el-tag>
-          <el-tag v-else type="info">{{ $t('common.disabled') }}</el-tag>
+          <el-tag v-else class="website-chip" type="info">{{ $t('common.disabled') }}</el-tag>
         </template>
       </custom-table>
     </div>
@@ -1564,28 +1564,105 @@ loadServiceStatuses()
   color: var(--text-tertiary, #94a3b8);
 }
 
-:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag) {
+.website-expiration-tag {
   min-width: 74px;
   justify-content: center;
   padding-inline: 10px;
   border-radius: 999px;
   font-weight: 500;
   letter-spacing: 0.01em;
-  color: #d1d5db !important;
-  background: rgba(100, 116, 139, 0.14) !important;
-  border-color: rgba(148, 163, 184, 0.22) !important;
 }
 
-:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag.el-tag--warning) {
-  color: #fcd34d !important;
-  background: rgba(245, 158, 11, 0.12) !important;
-  border-color: rgba(251, 191, 36, 0.22) !important;
+.table-row-actions {
+  gap: 8px !important;
 }
 
-:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag.el-tag--danger) {
-  color: #fca5a5 !important;
-  background: rgba(239, 68, 68, 0.12) !important;
-  border-color: rgba(248, 113, 113, 0.22) !important;
+.website-action-btn.is-link:not(.is-disabled) {
+  --website-action-color: #f97316;
+  --website-action-icon-color: color-mix(in srgb, var(--website-action-color) 82%, white 18%);
+  --website-action-hover-bg: color-mix(in srgb, var(--website-action-color) 12%, transparent);
+  --table-action-color: var(--website-action-color);
+  --table-action-hover-color: var(--website-action-color);
+  --el-button-text-color: var(--website-action-color);
+  --el-button-hover-text-color: var(--website-action-color);
+  --el-button-active-color: var(--website-action-color);
+  min-height: 28px !important;
+  padding: 4px 6px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--website-action-color) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  transition:
+    color 0.18s ease,
+    opacity 0.18s ease,
+    transform 0.18s ease,
+    background-color 0.18s ease;
+
+  &:hover,
+  &:focus-visible,
+  &:active {
+    background: var(--website-action-hover-bg) !important;
+    color: var(--website-action-color) !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.el-icon) {
+    color: var(--website-action-icon-color) !important;
+    opacity: 1;
+    font-size: 13px;
+  }
+
+  :deep(.el-button__text),
+  :deep(.el-button__content),
+  :deep(> span) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+}
+
+.website-action-btn__label {
+  color: inherit;
+  font-weight: 700;
+  -webkit-text-fill-color: currentColor;
+}
+
+.website-action-btn--ssl.is-link:not(.is-disabled) {
+  --website-action-color: #ea580c;
+}
+
+.website-action-btn--backup.is-link:not(.is-disabled) {
+  --website-action-color: #2563eb;
+}
+
+.website-action-btn--settings.is-link:not(.is-disabled) {
+  --website-action-color: #7c3aed;
+}
+
+.website-action-btn--danger.is-link:not(.is-disabled) {
+  --website-action-color: #dc2626;
+  --website-action-icon-color: color-mix(in srgb, var(--website-action-color) 84%, white 16%);
+  --website-action-hover-bg: color-mix(in srgb, var(--website-action-color) 14%, transparent);
+  --table-action-danger-color: var(--website-action-color);
+  --table-action-danger-hover-color: var(--website-action-color);
+  --el-button-text-color: var(--website-action-color);
+  --el-button-hover-text-color: var(--website-action-color);
+  --el-button-active-color: var(--website-action-color);
+}
+
+.website-action-btn--danger.is-link:not(.is-disabled) :deep(.el-icon) {
+  color: var(--website-action-icon-color) !important;
+}
+
+.website-action-btn--danger.is-link:not(.is-disabled):hover,
+.website-action-btn--danger.is-link:not(.is-disabled):focus-visible,
+.website-action-btn--danger.is-link:not(.is-disabled):active {
+  background: var(--website-action-hover-bg) !important;
+  color: var(--website-action-color) !important;
 }
 
 .website-status,
@@ -1624,16 +1701,36 @@ loadServiceStatuses()
 .delete-form {
   margin-top: 16px;
 
+  :deep(.el-select) {
+    --el-select-input-color: var(--text-primary);
+    --el-select-placeholder-color: var(--text-placeholder);
+    --el-text-color-regular: var(--text-primary);
+  }
+
+  :deep(.el-select .el-select__wrapper) {
+    background: var(--surface-card);
+  }
+
   :deep(.el-input__inner),
-  :deep(.el-select__selected-item) {
+  :deep(.el-select .el-select__selected-item),
+  :deep(.el-select .el-select__selected-item > span),
+  :deep(.el-select .el-select__placeholder),
+  :deep(.el-select .el-select__placeholder > span) {
     color: var(--text-primary) !important;
     -webkit-text-fill-color: var(--text-primary) !important;
   }
 
   :deep(.el-input__inner::placeholder),
-  :deep(.el-select__placeholder) {
+  :deep(.el-select .el-select__placeholder),
+  :deep(.el-select .el-select__placeholder > span),
+  :deep(.el-select .el-select__selected-item.is-placeholder),
+  :deep(.el-select .el-select__selected-item.is-placeholder > span) {
     color: var(--text-placeholder) !important;
     -webkit-text-fill-color: var(--text-placeholder) !important;
+  }
+
+  :deep(.el-select .el-select__caret) {
+    color: var(--text-tertiary);
   }
 }
 

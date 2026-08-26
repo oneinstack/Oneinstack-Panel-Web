@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
 
       <el-descriptions v-if="certificate" :column="2" border style="margin-bottom: 18px">
         <el-descriptions-item :label="t('website.status')">
-          <el-tag :type="statusType(certificate.status)">
+          <el-tag class="website-chip" :type="statusType(certificate.status)">
             {{ statusText[certificate.status] || certificate.status }}
           </el-tag>
         </el-descriptions-item>
@@ -280,7 +280,7 @@ onBeforeUnmount(() => {
       <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" :empty-text="t('website.certificateDrawer.noTasks')">
         <template #type="{ row }">{{ t(`website.certificateDrawer.${row.operation === 'renew' ? 'renew' : 'issue'}`) }}</template>
         <template #status="{ row }">
-            <el-tag size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
+            <el-tag class="website-chip" size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
         </template>
         <template #progress="{ row }">
             <el-progress :percentage="row.progress || 0" :stroke-width="8" />

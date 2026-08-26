@@ -397,6 +397,14 @@ const catalogDetail = computed(() => {
   &::after {
     background: transparent;
   }
+
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 :deep(.el-tabs__header) {
@@ -404,28 +412,58 @@ const catalogDetail = computed(() => {
   min-width: 0;
 }
 
-:deep(.el-tabs__nav-wrap) {
-  min-width: 0;
-  overflow: visible;
-}
-
 :deep(.el-tabs__nav-scroll) {
   min-width: 0;
 }
 
-:deep(.el-tabs__nav) {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 8px;
-  min-width: 0;
+:deep(.el-tabs__nav-prev),
+:deep(.el-tabs__nav-next) {
+  width: 30px !important;
+  height: 30px !important;
+  top: 50% !important;
+  bottom: auto !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%) !important;
+  border-radius: 9px;
+  color: var(--text-tertiary);
+  line-height: 30px !important;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    color: rgb(var(--primary-color)) !important;
+    background: rgba(var(--primary-color), 0.1) !important;
+    box-shadow: inset 0 0 0 1px rgba(var(--primary-color), 0.12);
+  }
 }
 
-:deep(.el-tabs__nav-wrap.is-scrollable) {
-  padding: 0 22px;
+:deep(.el-tabs__nav-prev i),
+:deep(.el-tabs__nav-next i) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 14px;
+}
+
+:deep(.el-tabs__nav) {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  min-width: max-content;
 }
 
 :deep(.el-tabs__active-bar) {
-  max-width: calc(100% - 8px);
+  max-width: none;
+}
+
+:deep(.el-tabs__item) {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 @media (max-width: 960px) {
@@ -456,12 +494,15 @@ const catalogDetail = computed(() => {
     width: 100%;
   }
 
-  :deep(.el-tabs__nav-wrap) {
-    overflow: visible;
+  :deep(.el-tabs__nav-prev),
+  :deep(.el-tabs__nav-next) {
+    top: 50% !important;
+    transform: translateY(-50%) !important;
   }
 
-  :deep(.el-tabs__nav) {
-    flex-wrap: wrap;
+  :deep(.el-tabs__nav-prev:hover),
+  :deep(.el-tabs__nav-next:hover) {
+    background: rgba(var(--primary-color), 0.12) !important;
   }
 }
 
@@ -509,25 +550,6 @@ const catalogDetail = computed(() => {
 
   :deep(.el-tabs__header) {
     width: 100%;
-  }
-
-  :deep(.el-tabs__nav-wrap) {
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: none;
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  :deep(.el-tabs__nav-scroll) {
-    min-width: max-content;
-  }
-
-  :deep(.el-tabs__nav) {
-    flex-wrap: nowrap;
-    gap: 0;
   }
 }
 </style>

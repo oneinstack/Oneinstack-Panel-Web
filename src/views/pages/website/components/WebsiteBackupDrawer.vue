@@ -271,7 +271,7 @@ onBeforeUnmount(() => {
         <custom-table v-loading="state.loading" :data="state.tasks" :columns="taskColumns" :pagination="false" :empty-text="t('website.backupDrawer.noTasks')">
           <template #operation="{ row }">{{ operationLabel(row.operation) }}</template>
           <template #status="{ row }">
-              <el-tag :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
+              <el-tag class="website-chip" :type="statusType(row.status)">{{ statusLabel(row.status) }}</el-tag>
           </template>
           <template #progress="{ row }">
               <el-progress :percentage="row.progress || 0" :status="row.status === 'failed' ? 'exception' : undefined" />

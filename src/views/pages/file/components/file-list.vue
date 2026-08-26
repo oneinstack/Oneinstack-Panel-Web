@@ -3109,71 +3109,142 @@ const archiveTaskRunningCount = computed(
   }
 
   :deep(.el-button.is-link) {
-    color: var(--text-secondary);
+    min-height: 28px;
+    padding: 5px 10px;
+    border: 0 !important;
+    border-radius: 8px;
     font-size: 12px;
+    background: transparent !important;
+    box-shadow: none !important;
     transition:
       color 0.2s ease,
       background-color 0.2s ease,
       border-color 0.2s ease;
 
     &:hover {
-      color: rgb(var(--primary-color));
-      background: rgba(var(--primary-color), 0.08);
+      background: transparent !important;
+      box-shadow: none;
     }
   }
 
   :deep(.action-open.is-link),
   :deep(.action-more-trigger.is-link) {
-    color: rgb(var(--primary-color));
+    color: #f97316 !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: rgb(var(--primary-color));
-      background: rgba(var(--primary-color), 0.1);
+      color: #ea580c !important;
+      background: transparent !important;
     }
   }
 
   :deep(.action-copy.is-link) {
-    color: #409eff;
+    color: #409eff !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: #409eff;
-      background: rgba(64, 158, 255, 0.12);
+      color: #409eff !important;
+      background: transparent !important;
     }
   }
 
   :deep(.action-cut.is-link) {
-    color: #e6a23c;
+    color: #e6a23c !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: #e6a23c;
-      background: rgba(230, 162, 60, 0.12);
+      color: #e6a23c !important;
+      background: transparent !important;
     }
   }
 
   :deep(.action-rename.is-link) {
-    color: #8b5cf6;
+    color: #8b5cf6 !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: #8b5cf6;
-      background: rgba(139, 92, 246, 0.12);
+      color: #8b5cf6 !important;
+      background: transparent !important;
     }
   }
 
   :deep(.action-tree.is-link) {
-    color: #16a085;
+    color: #16a085 !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: #16a085;
-      background: rgba(22, 160, 133, 0.12);
+      color: #16a085 !important;
+      background: transparent !important;
     }
   }
 
   :deep(.row-action-danger.is-link) {
-    color: var(--el-color-danger);
+    color: var(--el-color-danger) !important;
+
+    :deep(.el-icon) {
+      color: currentColor !important;
+    }
+
+    :deep(.el-button__text),
+    :deep(.el-button__content),
+    :deep(> span) {
+      color: inherit !important;
+      -webkit-text-fill-color: currentColor !important;
+    }
 
     &:hover {
-      color: var(--el-color-danger);
-      background: rgba(245, 108, 108, 0.1);
+      color: var(--el-color-danger) !important;
+      background: transparent !important;
     }
   }
 
@@ -3183,127 +3254,6 @@ const archiveTaskRunningCount = computed(
 
   .row-action-more {
     grid-column: 4;
-  }
-}
-
-:global(html.dark) {
-  .row-actions {
-    :deep(.el-button.is-link) {
-      border: 0 !important;
-      background: transparent !important;
-      box-shadow: none !important;
-      color: var(--text-secondary) !important;
-    }
-
-    :deep(.el-button.is-link:hover),
-    :deep(.el-button.is-link:focus-visible) {
-      border: 0 !important;
-      color: rgb(var(--primary-color)) !important;
-      background: rgba(var(--primary-color), 0.08) !important;
-      box-shadow: none !important;
-    }
-
-    :deep(.action-open.is-link),
-    :deep(.action-more-trigger.is-link) {
-      color: rgb(var(--primary-color)) !important;
-    }
-
-    :deep(.action-open.is-link > span),
-    :deep(.action-open.is-link .el-button__text),
-    :deep(.action-open.is-link .el-icon),
-    :deep(.action-more-trigger.is-link > span),
-    :deep(.action-more-trigger.is-link .el-button__text),
-    :deep(.action-more-trigger.is-link .el-icon) {
-      color: rgb(var(--primary-color)) !important;
-    }
-
-    :deep(.action-open.is-link:hover),
-    :deep(.action-open.is-link:focus-visible),
-    :deep(.action-more-trigger.is-link:hover),
-    :deep(.action-more-trigger.is-link:focus-visible) {
-      color: rgb(var(--primary-color)) !important;
-      background: rgba(var(--primary-color), 0.1) !important;
-    }
-
-    :deep(.action-copy.is-link) {
-      color: #409eff !important;
-    }
-
-    :deep(.action-copy.is-link > span),
-    :deep(.action-copy.is-link .el-button__text),
-    :deep(.action-copy.is-link .el-icon) {
-      color: #409eff !important;
-    }
-
-    :deep(.action-copy.is-link:hover),
-    :deep(.action-copy.is-link:focus-visible) {
-      color: #409eff !important;
-      background: rgba(64, 158, 255, 0.12) !important;
-    }
-
-    :deep(.action-cut.is-link) {
-      color: #e6a23c !important;
-    }
-
-    :deep(.action-cut.is-link > span),
-    :deep(.action-cut.is-link .el-button__text),
-    :deep(.action-cut.is-link .el-icon) {
-      color: #e6a23c !important;
-    }
-
-    :deep(.action-cut.is-link:hover),
-    :deep(.action-cut.is-link:focus-visible) {
-      color: #e6a23c !important;
-      background: rgba(230, 162, 60, 0.12) !important;
-    }
-
-    :deep(.action-rename.is-link) {
-      color: #8b5cf6 !important;
-    }
-
-    :deep(.action-rename.is-link > span),
-    :deep(.action-rename.is-link .el-button__text),
-    :deep(.action-rename.is-link .el-icon) {
-      color: #8b5cf6 !important;
-    }
-
-    :deep(.action-rename.is-link:hover),
-    :deep(.action-rename.is-link:focus-visible) {
-      color: #8b5cf6 !important;
-      background: rgba(139, 92, 246, 0.12) !important;
-    }
-
-    :deep(.action-tree.is-link) {
-      color: #16a085 !important;
-    }
-
-    :deep(.action-tree.is-link > span),
-    :deep(.action-tree.is-link .el-button__text),
-    :deep(.action-tree.is-link .el-icon) {
-      color: #16a085 !important;
-    }
-
-    :deep(.action-tree.is-link:hover),
-    :deep(.action-tree.is-link:focus-visible) {
-      color: #16a085 !important;
-      background: rgba(22, 160, 133, 0.12) !important;
-    }
-
-    :deep(.row-action-danger.is-link) {
-      color: var(--el-color-danger) !important;
-    }
-
-    :deep(.row-action-danger.is-link > span),
-    :deep(.row-action-danger.is-link .el-button__text),
-    :deep(.row-action-danger.is-link .el-icon) {
-      color: var(--el-color-danger) !important;
-    }
-
-    :deep(.row-action-danger.is-link:hover),
-    :deep(.row-action-danger.is-link:focus-visible) {
-      color: var(--el-color-danger) !important;
-      background: rgba(245, 108, 108, 0.1) !important;
-    }
   }
 }
 

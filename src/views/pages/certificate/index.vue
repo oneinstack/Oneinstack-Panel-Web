@@ -325,7 +325,7 @@ onBeforeUnmount(() => {
                 <span>{{ row.domains }}</span>
               </div>
             </template>
-            <template #provider="{ row }"><el-tag effect="plain">{{ certificateProviderLabel(row.provider) }}</el-tag></template>
+            <template #provider="{ row }"><el-tag effect="plain" class="certificate-source-tag">{{ certificateProviderLabel(row.provider) }}</el-tag></template>
             <template #status="{ row }"><el-tag :type="statusType(row.status)">{{ certificateStatusLabel(row.status) }}</el-tag></template>
             <template #notAfter="{ row }">{{ certificateTime(row.notAfter) }}</template>
             <template #actionColumn="{ row }">

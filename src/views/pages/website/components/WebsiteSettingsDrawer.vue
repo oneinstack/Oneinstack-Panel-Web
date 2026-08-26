@@ -151,7 +151,7 @@ const saveSettings = async (success = i18n.t('website.notifications.settingsPubl
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
+    // ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.saving = false }
 }
 const saveWebsiteProfile = async (domainOnly = false) => {
@@ -167,7 +167,7 @@ const saveWebsiteProfile = async (domainOnly = false) => {
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
+    // ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.saving = false }
 }
 const toggleStatus = async (enabled: boolean) => {
@@ -182,7 +182,7 @@ const toggleStatus = async (enabled: boolean) => {
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
+    // ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { statusLoading.value = false }
 }
 const loadConfig = async () => {
@@ -210,7 +210,7 @@ const saveConfig = async () => {
     emit('changed')
   } catch (error: any) {
     if (isOperationCancelled(error)) return
-    ElMessage.error(error?.message || i18n.t('common.operationFailed'))
+    // ElMessage.error(error?.message || i18n.t('common.operationFailed'))
   } finally { state.config.saving = false }
 }
 const loadLog = async () => {
