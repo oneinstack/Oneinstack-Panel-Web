@@ -258,11 +258,11 @@ html {
   font-weight: 550;
 }
 
-html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label-wrap > .el-form-item__label::before,
-html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::before,
-html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label-wrap > .el-form-item__label::after,
-html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::after {
-  color: rgb(var(--error-color)) !important;
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label-wrap > .el-form-item__label::before,
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::before,
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label-wrap > .el-form-item__label::after,
+.el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label::after {
+  color: var(--form-required-color, #f56c6c) !important;
 }
 
 .el-card,
@@ -555,19 +555,46 @@ html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:
 
 .table-action-column .el-button.is-link:not(.is-disabled),
 .table-row-actions .el-button.is-link:not(.is-disabled) {
-  color: var(--el-color-primary);
+  --el-button-text-color: var(--table-action-color, var(--el-color-primary)) !important;
+  --el-button-hover-link-text-color: var(--table-action-hover-color, var(--el-color-primary-dark-2)) !important;
+  --el-button-active-color: var(--table-action-hover-color, var(--el-color-primary-dark-2)) !important;
+  color: var(--table-action-color, var(--el-color-primary)) !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.table-action-column .el-button.is-link:not(.is-disabled) > span,
+.table-action-column .el-button.is-link:not(.is-disabled) .el-icon,
+.table-action-column .el-button.is-link:not(.is-disabled) .el-icon *,
+.table-row-actions .el-button.is-link:not(.is-disabled) > span,
+.table-row-actions .el-button.is-link:not(.is-disabled) .el-icon,
+.table-row-actions .el-button.is-link:not(.is-disabled) .el-icon * {
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
+.table-action-column .el-button.is-link:not(.is-disabled) svg,
+.table-row-actions .el-button.is-link:not(.is-disabled) svg {
+  fill: currentColor !important;
 }
 
 .table-action-column .el-button.is-link:not(.is-disabled):hover,
 .table-row-actions .el-button.is-link:not(.is-disabled):hover {
   background: rgba(var(--primary-color), 0.08);
-  color: var(--primary-button-bg-hover) !important;
+  color: var(--table-action-hover-color, var(--primary-button-bg-hover)) !important;
+}
+
+.table-action-column .el-button--danger.is-link:not(.is-disabled),
+.table-row-actions .el-button--danger.is-link:not(.is-disabled) {
+  --el-button-text-color: var(--table-action-danger-color, var(--el-color-danger)) !important;
+  --el-button-hover-link-text-color: var(--table-action-danger-hover-color, var(--el-color-danger)) !important;
+  --el-button-active-color: var(--table-action-danger-hover-color, var(--el-color-danger)) !important;
+  color: var(--table-action-danger-color, var(--el-color-danger)) !important;
 }
 
 .table-action-column .el-button--danger.is-link:not(.is-disabled):hover,
 .table-row-actions .el-button--danger.is-link:not(.is-disabled):hover {
   background: rgba(245, 108, 108, 0.1);
-  color: var(--el-color-danger) !important;
+  color: var(--table-action-danger-hover-color, var(--el-color-danger)) !important;
 }
 
 :root:root.dark .table-action-column .el-button.is-link:not(.is-disabled),
@@ -576,7 +603,7 @@ html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:
   padding: 5px 9px !important;
   border: 1px solid transparent !important;
   border-radius: 6px !important;
-  color: #fdba74 !important;
+  color: var(--table-action-color, #fdba74) !important;
   background: transparent !important;
   box-shadow: none !important;
 }
@@ -601,7 +628,7 @@ html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:
 :root:root.dark .table-action-column .el-button.is-link:not(.is-disabled):focus-visible,
 :root:root.dark .table-row-actions .el-button.is-link:not(.is-disabled):focus-visible {
   border-color: transparent !important;
-  color: #fff7ed !important;
+  color: var(--table-action-hover-color, #fff7ed) !important;
   background: rgba(var(--primary-color), 0.1) !important;
   box-shadow: none !important;
 }
@@ -609,14 +636,14 @@ html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:
 :root:root.dark .table-action-column .el-button.is-link:not(.is-disabled):active,
 :root:root.dark .table-row-actions .el-button.is-link:not(.is-disabled):active {
   border-color: transparent !important;
-  color: #fff7ed !important;
+  color: var(--table-action-hover-color, #fff7ed) !important;
   background: rgba(var(--primary-color), 0.14) !important;
   box-shadow: none !important;
 }
 
 :root:root.dark .table-action-column .el-button--danger.is-link:not(.is-disabled),
 :root:root.dark .table-row-actions .el-button--danger.is-link:not(.is-disabled) {
-  color: #fca5a5 !important;
+  color: var(--table-action-danger-color, #fca5a5) !important;
   background: transparent !important;
 }
 
@@ -625,7 +652,7 @@ html.dark .el-form-item.is-required:not(.is-no-asterisk) > .el-form-item__label:
 :root:root.dark .table-action-column .el-button--danger.is-link:not(.is-disabled):focus-visible,
 :root:root.dark .table-row-actions .el-button--danger.is-link:not(.is-disabled):focus-visible {
   border-color: transparent !important;
-  color: #ffe4e6 !important;
+  color: var(--table-action-danger-hover-color, #ffe4e6) !important;
   background: rgba(var(--error-color), 0.12) !important;
 }
 

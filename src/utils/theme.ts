@@ -146,6 +146,11 @@ export const applyThemeAppearance = (
   root.style.setProperty('--el-color-primary-light-7', mixHexColor(accent, surface, 0.7))
   root.style.setProperty('--el-color-primary-light-8', mixHexColor(accent, surface, 0.8))
   root.style.setProperty('--el-color-primary-light-9', mixHexColor(accent, surface, 0.9))
+  root.style.setProperty('--form-required-color', '#F56C6C')
+  root.style.setProperty('--table-action-color', theme === 'dark' ? '#FDBA74' : accent)
+  root.style.setProperty('--table-action-hover-color', theme === 'dark' ? '#FFF7ED' : darkColor)
+  root.style.setProperty('--table-action-danger-color', theme === 'dark' ? '#FCA5A5' : 'var(--el-color-danger)')
+  root.style.setProperty('--table-action-danger-hover-color', theme === 'dark' ? '#FFE4E6' : 'var(--el-color-danger)')
 
   return accent
 }
