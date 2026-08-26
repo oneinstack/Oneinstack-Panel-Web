@@ -152,7 +152,14 @@ const conf = reactive({
       const { data: res } = await Api.getSoftList(conf.list.params)
       conf.list.loading = false
       conf.list.total = res.total
-      conf.list.data = res.data ?? []
+      conf.list.data = (res.data ?? []).map((item: Record<string, any>) => {
+        const port = item?.http_port ?? item?.httpPort
+        if (port === undefined || port === null || port === '') return item
+        return {
+          ...item,
+          port
+        }
+      })
     },
     pageChange: (value: number) => {
       conf.list.params.page = value

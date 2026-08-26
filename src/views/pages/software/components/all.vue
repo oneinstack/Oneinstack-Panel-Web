@@ -760,6 +760,9 @@ watch(
                 <template v-if="!isInstalled(item)">{{ t('software.notInstalled', 'Not installed') }}</template>
                 <template v-else>
                   {{ t('software.installedVersion', 'Installed version: {version}', { version: item.install_version || item.versions?.[0] }) }}
+                  <span v-if="item.port !== undefined && item.port !== null && item.port !== ''">
+                    · {{ t('software.servicePort', 'Service port: {port}', { port: item.port }) }}
+                  </span>
                   <span v-if="hasUpgrade(item)"> · {{ t('software.upgradeTo', 'Upgradeable to {version}', { version: recommendedVersion(item) }) }}</span>
                 </template>
               </div>

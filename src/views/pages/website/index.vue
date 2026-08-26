@@ -26,18 +26,32 @@ import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
 import System from '@/utils/System'
+import { useAppStore } from '@/stores/modules/app'
 import { useConfigStore } from '@/stores/modules/config'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+const sapp = useAppStore()
 const sconfig = useConfigStore()
 const canReadDatabase = () =>
   sconfig.hasMenuAccess('database') ||
   sconfig.hasActionAccess('database.read') ||
   Boolean((sconfig.scopeAccess as any)?.database?.read) ||
   Boolean((sconfig.scopeAccess as any)?.['database.read'])
+
+const websiteActionButtonStyle = (variant: 'primary' | 'danger') => {
+  if (sapp.theme !== 'dark') return undefined
+  const color = variant === 'danger' ? 'var(--el-color-danger)' : 'rgb(var(--primary-color))'
+  const hoverColor = variant === 'danger' ? '#ffe4e6' : '#fff7ed'
+  return {
+    color,
+    '--el-button-text-color': color,
+    '--el-button-hover-text-color': hoverColor,
+    '--el-button-active-text-color': hoverColor
+  } as Record<string, string>
+}
 
 const websiteRootDirPattern = /^(?!\.)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9][A-Za-z0-9._/-]*$/
 const rootDirForbiddenCharacters = /[\0\r\n\t ;{}"'$]/
@@ -1124,10 +1138,46 @@ loadServiceStatuses()
         </template>
         <template #action="{ row }">
           <div class="table-row-actions">
-            <el-button type="primary" link :icon="Lock" @click="certificateDrawer.open(row)">SSL</el-button>
-            <el-button type="primary" link :icon="FolderAdd" @click="backupDrawer.open(row)">{{ $t('website.backup') }}</el-button>
-            <el-button type="primary" link :icon="Setting" @click="settingsDrawer.open(row)">{{ $t('website.settings') }}</el-button>
-            <el-button type="danger" link :icon="Delete" @click="conf.dialog.open('delete', row)">{{ $t('common.delete') }}</el-button>
+            <el-button
+              class="website-action-btn website-action-btn--primary"
+              type="primary"
+              link
+              :style="websiteActionButtonStyle('primary')"
+              :icon="Lock"
+              @click="certificateDrawer.open(row)"
+            >
+              <span class="website-action-btn__label">SSL</span>
+            </el-button>
+            <el-button
+              class="website-action-btn website-action-btn--primary"
+              type="primary"
+              link
+              :style="websiteActionButtonStyle('primary')"
+              :icon="FolderAdd"
+              @click="backupDrawer.open(row)"
+            >
+              <span class="website-action-btn__label">{{ $t('website.backup') }}</span>
+            </el-button>
+            <el-button
+              class="website-action-btn website-action-btn--primary"
+              type="primary"
+              link
+              :style="websiteActionButtonStyle('primary')"
+              :icon="Setting"
+              @click="settingsDrawer.open(row)"
+            >
+              <span class="website-action-btn__label">{{ $t('website.settings') }}</span>
+            </el-button>
+            <el-button
+              class="website-action-btn website-action-btn--danger"
+              type="danger"
+              link
+              :style="websiteActionButtonStyle('danger')"
+              :icon="Delete"
+              @click="conf.dialog.open('delete', row)"
+            >
+              <span class="website-action-btn__label">{{ $t('common.delete') }}</span>
+            </el-button>
           </div>
         </template>
         <template #status="{ row }">
@@ -1150,6 +1200,7 @@ loadServiceStatuses()
         </template>
         <template #expiration="{ row }">
           <el-tag
+            class="website-expiration-tag"
             :type="row.expires_at && new Date(row.expires_at).getTime() <= Date.now() ? 'danger' : row.expires_at ? 'warning' : 'info'"
             effect="plain"
           >
@@ -1529,6 +1580,80 @@ loadServiceStatuses()
 
 .website-root-link__empty {
   color: var(--text-tertiary, #94a3b8);
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled)) {
+  color: rgb(var(--primary-color)) !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button--danger.is-link:not(.is-disabled)) {
+  color: #fca5a5 !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn.is-link:not(.is-disabled) *),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled) .el-icon),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled) .el-button__content),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled) .el-button__text),
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn__label) {
+  color: inherit !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn.is-link:not(.is-disabled) svg),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled) .el-icon),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled) svg) {
+  fill: currentColor !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled):hover),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button.is-link:not(.is-disabled):focus-visible) {
+  color: #fff7ed !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button--danger.is-link:not(.is-disabled):hover),
+:global(html.dark .website-container .website-table-panel .table-row-actions .el-button--danger.is-link:not(.is-disabled):focus-visible) {
+  color: #ffe4e6 !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--primary.is-link:not(.is-disabled)) {
+  color: rgb(var(--primary-color)) !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--primary.is-link:not(.is-disabled) .website-action-btn__label),
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--primary.is-link:not(.is-disabled) .el-icon) {
+  color: rgb(var(--primary-color)) !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--danger.is-link:not(.is-disabled)) {
+  color: #fca5a5 !important;
+}
+
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--danger.is-link:not(.is-disabled) .website-action-btn__label),
+:global(html.dark .website-container .website-table-panel .table-row-actions .website-action-btn--danger.is-link:not(.is-disabled) .el-icon) {
+  color: #fca5a5 !important;
+}
+
+:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag) {
+  min-width: 74px;
+  justify-content: center;
+  padding-inline: 10px;
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #d1d5db !important;
+  background: rgba(100, 116, 139, 0.14) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+}
+
+:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag.el-tag--warning) {
+  color: #fcd34d !important;
+  background: rgba(245, 158, 11, 0.12) !important;
+  border-color: rgba(251, 191, 36, 0.22) !important;
+}
+
+:global(html.dark .website-container .website-table-panel .website-expiration-tag.el-tag.el-tag--danger) {
+  color: #fca5a5 !important;
+  background: rgba(239, 68, 68, 0.12) !important;
+  border-color: rgba(248, 113, 113, 0.22) !important;
 }
 
 .website-status,
