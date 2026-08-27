@@ -3583,7 +3583,7 @@ onBeforeUnmount(() => {
         @size-change="handlePageSizeChange"
       />
 
-      <div class="panel-foot">
+      <!-- <div class="panel-foot">
         <span v-if="activeTab === 'containers'">{{
           t(
             "container.footer.containers",
@@ -3626,7 +3626,7 @@ onBeforeUnmount(() => {
         <span v-if="activeTab === 'config'">{{
           t("container.footer.config", "Docker config read and save")
         }}</span>
-      </div>
+      </div> -->
     </section>
 
     <ContainerCreateDrawer

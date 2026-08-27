@@ -70,6 +70,24 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key;
 };
 
+const normalizeProgress = (value?: number | null) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
+  return Math.min(100, Math.max(0, value));
+};
+
+const mergeProgress = (current?: ContainerTask, next?: ContainerTask) => {
+  const currentProgress = normalizeProgress(current?.progress);
+  const incomingProgress = normalizeProgress(next?.progress);
+  if (next?.status === "succeeded") return 100;
+  if (currentProgress == null) {
+    return incomingProgress ?? 0;
+  }
+  if (!next) {
+    return currentProgress;
+  }
+  return Math.max(currentProgress, incomingProgress ?? currentProgress);
+};
+
 const clearSessionWork = () => {
   eventSources.forEach((source) => {
     source.close();
@@ -200,7 +218,17 @@ export const useContainerTaskStore = defineStore("containerTask", {
 
     upsert(task: ContainerTask) {
       const current = this.tasks[task.id];
-      const next = current ? { ...current, ...task } : task;
+      const next = current
+        ? {
+            ...current,
+            ...task,
+            progress: mergeProgress(current, task),
+            phaseProgress: task.phaseProgress ?? current.phaseProgress,
+          }
+        : {
+            ...task,
+            progress: normalizeProgress(task.progress) ?? 0,
+          };
       this.tasks[task.id] = next;
       this.order = [
         task.id,

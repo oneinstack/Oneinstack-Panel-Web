@@ -3529,6 +3529,31 @@ const archiveTaskRunningCount = computed(
   display: flex;
   flex-direction: column;
   gap: 18px;
+
+  :deep(.el-form-item__label) {
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-input.is-disabled .el-input__wrapper) {
+    background: var(--surface-subtle);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner),
+  :deep(.el-input.is-disabled .el-input__inner::placeholder) {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    opacity: 1 !important;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner::placeholder) {
+    color: var(--text-placeholder) !important;
+    -webkit-text-fill-color: var(--text-placeholder) !important;
+  }
+
+  :deep(.el-switch__label) {
+    color: var(--text-secondary);
+  }
 }
 
 .copy-dialog__form {

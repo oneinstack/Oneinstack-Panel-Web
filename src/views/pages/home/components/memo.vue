@@ -149,6 +149,52 @@ const handleSaveShortcut = (event: KeyboardEvent) => {
   }
 }
 
+:root:root.dark .memo-editor {
+  border-color: rgba(71, 84, 103, 0.6);
+  background:
+    linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(12, 18, 31, 0.98));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.03),
+    0 14px 28px rgba(0, 0, 0, 0.28);
+}
+
+:root:root.dark .memo-editor__gutter {
+  border-right-color: rgba(71, 84, 103, 0.48);
+  background:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.98));
+
+  span {
+    color: #94a3b8;
+  }
+}
+
+:root:root.dark .memo-editor__input {
+  background:
+    linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(12, 18, 31, 0.98)),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 33px,
+      rgba(51, 65, 85, 0.7) 33px,
+      rgba(51, 65, 85, 0.7) 34px
+    );
+  color: #e5e7eb;
+  caret-color: rgb(var(--primary-color));
+
+  &::placeholder {
+    color: #64748b;
+  }
+
+  &::selection {
+    background: rgba(var(--primary-color), 0.24);
+    color: #fff7ed;
+  }
+}
+
+:root:root.dark .memo-editor__input::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.28);
+}
+
 @media (max-width: 768px) {
   .memo-editor__hint {
     margin-bottom: 12px;

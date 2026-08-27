@@ -343,8 +343,10 @@ const writeClipboard = async (value: string) => {
   }
   const textarea = document.createElement('textarea')
   textarea.value = value
-  textarea.style.position = 'fixed'
-  textarea.style.opacity = '0'
+  textarea.className = 'terminal-copy-helper'
+  textarea.setAttribute('aria-hidden', 'true')
+  textarea.setAttribute('readonly', 'readonly')
+  textarea.tabIndex = -1
   document.body.appendChild(textarea)
   textarea.select()
   const copied = document.execCommand('copy')
@@ -925,8 +927,16 @@ onBeforeUnmount(() => {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 14px;
   font-kerning: none;
+  padding-bottom: 80px;
+  box-sizing: content-box;
   white-space: pre;
   text-shadow: 0 0 1px rgb(216 226 240 / 18%);
+}
+
+.terminal-screen :deep(.xterm-rows::after) {
+  display: block;
+  height: 80px;
+  content: '';
 }
 
 .terminal-screen :deep(.xterm-rows span:not(.xterm-bold)) {
@@ -1051,6 +1061,24 @@ onBeforeUnmount(() => {
     border-radius: 8px;
     background: #30415a;
   }
+}
+
+:global(.terminal-copy-helper) {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  color: transparent;
+  resize: none;
+  overflow: hidden;
+  z-index: -1;
 }
 
 .terminal-placeholder {

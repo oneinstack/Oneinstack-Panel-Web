@@ -547,6 +547,7 @@ onBeforeUnmount(() => {
 
 .summary-panel {
   padding: 14px;
+  min-width: 0;
 }
 
 .summary-card,
@@ -554,6 +555,7 @@ onBeforeUnmount(() => {
   padding: 12px;
   border-radius: 8px;
   background: var(--surface-subtle);
+  min-width: 0;
 }
 
 .summary-card {
@@ -569,6 +571,16 @@ onBeforeUnmount(() => {
     margin-top: 6px;
     color: var(--text-primary);
     font-size: 18px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  p {
+    margin-top: 6px;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
 
@@ -588,7 +600,9 @@ onBeforeUnmount(() => {
   strong {
     margin-top: 5px;
     color: var(--text-primary);
-    word-break: break-all;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
 

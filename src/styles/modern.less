@@ -563,14 +563,27 @@ html {
   align-items: center;
   flex-wrap: wrap;
   gap: 0 !important;
+  position: relative;
+  z-index: 2;
+  isolation: isolate;
 }
 
 .table-action-column .cell {
+  position: relative;
+  z-index: 2;
+  overflow: visible;
   white-space: nowrap;
+}
+
+.smart-table .el-table__fixed-right,
+.smart-table .el-table__fixed-right-patch {
+  z-index: 4;
 }
 
 .table-action-column .el-button,
 .table-row-actions .el-button {
+  position: relative;
+  z-index: 2;
   min-height: 28px !important;
   margin-left: 0 !important;
   padding: 5px 7px !important;

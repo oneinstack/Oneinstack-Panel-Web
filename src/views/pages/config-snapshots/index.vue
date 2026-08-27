@@ -1021,10 +1021,10 @@ onMounted(() => {
   max-width: 100%;
   min-height: 24px;
   padding: 0 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background: rgba(248, 250, 252, 0.96);
-  color: #64748b;
+  border-radius: 9px;
+  border: 1px solid var(--border-subtle);
+  // background: rgba(248, 250, 252, 0.96);
+  color: #6b7280;
   font-size: 12px;
   font-weight: 700;
   line-height: 1;
@@ -1289,6 +1289,72 @@ onMounted(() => {
       color: #fca5a5;
     }
 
+    :deep(.snapshot-panel .smart-table .resource-cell .cell-title),
+    :deep(.snapshot-panel .smart-table .snapshot-name-cell .cell-title),
+    :deep(.snapshot-panel .smart-table .snapshot-meta-cell .cell-code),
+    :deep(.snapshot-panel .smart-table .snapshot-meta-cell .mono-text) {
+      color: #f8fafc !important;
+    }
+
+    :deep(.snapshot-panel .smart-table .resource-cell .meta-text),
+    :deep(.snapshot-panel .smart-table .resource-cell .path-text),
+    :deep(.snapshot-panel .smart-table .snapshot-name-cell .cell-subtitle),
+    :deep(.snapshot-panel .smart-table .snapshot-meta-cell .meta-chip--ghost),
+    :deep(.snapshot-panel .smart-table .snapshot-meta-cell .mono-text--muted) {
+      color: #cbd5e1 !important;
+    }
+
+    :deep(.snapshot-panel .smart-table .resource-cell .meta-chip),
+    :deep(.snapshot-panel .smart-table .snapshot-meta-cell .meta-chip) {
+      min-height: 34px;
+      padding: 0 14px;
+      border-color: rgba(75, 85, 99, 0.96);
+      background: rgba(17, 24, 39, 0.98);
+      color: #cbd5e1;
+      font-size: 14px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    :deep(.snapshot-panel .smart-table .resource-cell .meta-chip--action) {
+      color: #fdba74;
+      border-color: rgba(var(--primary-color), 0.28);
+      background: rgba(var(--primary-color), 0.12);
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group) {
+      gap: 6px 12px;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button) {
+      min-height: 28px;
+      padding: 0 2px;
+      color: #e2e8f0;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button .el-icon) {
+      color: inherit;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button--primary.is-link) {
+      color: #f59e0b;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button--warning.is-link) {
+      color: #fbbf24;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button--danger.is-link) {
+      color: #fca5a5;
+    }
+
+    :deep(.snapshot-panel .smart-table .action-group .el-button:hover),
+    :deep(.snapshot-panel .smart-table .action-group .el-button:focus-visible) {
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
     .diff-summary {
       background: rgba(23, 32, 51, 0.9);
       color: var(--text-secondary);
@@ -1419,6 +1485,15 @@ onMounted(() => {
     color: var(--text-tertiary);
     font-size: 12px;
   }
+}
+
+:deep(.snapshot-panel .smart-table .resource-cell .cell-title),
+:deep(.snapshot-panel .smart-table .snapshot-name-cell .cell-title) {
+  line-height: 1.35;
+}
+
+.resource-meta-line {
+  flex-wrap: wrap;
 }
 
 .pagination-row {

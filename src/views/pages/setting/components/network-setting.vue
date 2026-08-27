@@ -348,7 +348,10 @@ const saveSettings = async () => {
         : "",
       rotatePanelEntry: false,
     });
-    applySettings(data);
+    applySettings({
+      ...data,
+      trustedProxies,
+    });
     if (data.applyTransaction) {
       ElMessage.success(
         t(
@@ -980,7 +983,7 @@ onBeforeUnmount(stopApplyPolling);
 :deep(.network-form .el-textarea__inner) {
   border-radius: 12px;
   color: var(--text-primary);
-  background: rgba(8, 17, 31, 0.42);
+  // background: rgba(8, 17, 31, 0.42);
   box-shadow: 0 0 0 1px rgba(148, 163, 184, 0.14) inset;
 }
 
@@ -991,7 +994,7 @@ onBeforeUnmount(stopApplyPolling);
 
 :deep(.network-form .el-input__wrapper.is-focus),
 :deep(.network-form .el-textarea__inner:focus) {
-  background: rgba(8, 17, 31, 0.58);
+  // background: rgba(8, 17, 31, 0.58);
   box-shadow:
     0 0 0 1px rgba(var(--primary-color), 0.45) inset,
     0 0 0 4px rgba(var(--primary-color), 0.08);
@@ -1016,6 +1019,64 @@ onBeforeUnmount(stopApplyPolling);
 
 :deep(.network-form .el-switch) {
   --el-switch-on-color: rgb(var(--primary-color));
+}
+
+/* 浅色模式下，访问方式区域需要更轻的卡片和输入框底色，避免视觉过重 */
+:global(:root:root.light) {
+  .network-overview {
+    border-color: var(--border-subtle);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .summary-card {
+    border-color: var(--border-subtle);
+    background: var(--surface-subtle);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .network-form {
+    border-color: var(--border-subtle);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
+  }
+
+  .form-section + .form-section {
+    border-top-color: var(--border-subtle);
+  }
+
+  .https-toggle {
+    border-color: var(--border-subtle);
+    background: var(--surface-subtle);
+    box-shadow: var(--shadow-xs);
+  }
+
+  :deep(.network-form .el-input__wrapper),
+  :deep(.network-form .el-textarea__inner) {
+    background-color: var(--surface-card) !important;
+    box-shadow: 0 0 0 1px var(--border-default) inset !important;
+  }
+
+  :deep(.network-form .el-input__wrapper:hover),
+  :deep(.network-form .el-textarea__inner:hover) {
+    background-color: var(--surface-card) !important;
+    box-shadow: 0 0 0 1px rgba(var(--primary-color), 0.22) inset !important;
+  }
+
+  :deep(.network-form .el-input__wrapper.is-focus),
+  :deep(.network-form .el-textarea__inner:focus) {
+    background-color: var(--surface-card) !important;
+    box-shadow:
+      0 0 0 1px rgba(var(--primary-color), 0.48) inset,
+      0 0 0 4px rgba(var(--primary-color), 0.1) !important;
+  }
+
+  :deep(.network-form .el-input-group__append),
+  :deep(.network-form .el-input-group__prepend) {
+    color: var(--text-secondary);
+    border-color: var(--border-default) !important;
+    background-color: var(--surface-subtle) !important;
+  }
 }
 
 @media (max-width: 1024px) {

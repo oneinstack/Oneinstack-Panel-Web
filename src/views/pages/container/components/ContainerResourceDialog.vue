@@ -311,6 +311,11 @@ defineExpose({
   :deep(.el-form-item) {
     margin-bottom: 20px;
   }
+
+  :deep(.el-divider) {
+    margin: 10px 0 18px;
+    border-top-color: rgba(148, 163, 184, 0.18);
+  }
 }
 
 .file-picker {
@@ -333,6 +338,19 @@ defineExpose({
 
 :deep(.el-divider__text) {
   color: var(--text-secondary);
+  background: var(--surface-raised);
   font-weight: 700;
+}
+
+:root:root.dark .resource-dialog-form {
+  :deep(.el-divider) {
+    border-top-color: rgba(71, 84, 103, 0.72);
+  }
+
+  :deep(.el-divider__text) {
+    color: #d1d5db;
+    background: var(--surface-raised);
+    box-shadow: 0 0 0 6px var(--surface-raised);
+  }
 }
 </style>

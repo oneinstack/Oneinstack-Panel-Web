@@ -287,7 +287,9 @@ watch(values, () => {
     body-mode="compact"
   >
     <div v-if="loading" class="drawer-loading">
-      <el-skeleton :rows="6" animated />
+      <div class="drawer-loading__shell">
+        <el-skeleton :rows="6" animated />
+      </div>
     </div>
     <div v-else-if="configuration" class="configuration-content">
       <div class="configuration-notice">
@@ -505,7 +507,33 @@ watch(values, () => {
 }
 
 .drawer-loading {
-  padding: 8px 0;
+  min-height: 240px;
+  padding: 18px 20px 20px;
+}
+
+.drawer-loading__shell {
+  overflow: hidden;
+  padding: 22px 20px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  background:
+    linear-gradient(180deg, rgba(16, 24, 40, 0.94), rgba(15, 23, 42, 0.9)),
+    var(--surface-card);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+
+  :deep(.el-skeleton) {
+    --el-skeleton-color: rgba(148, 163, 184, 0.14);
+    --el-skeleton-to-color: rgba(148, 163, 184, 0.22);
+  }
+
+  :deep(.el-skeleton__item),
+  :deep(.el-skeleton__text),
+  :deep(.el-skeleton__circle),
+  :deep(.el-skeleton__image) {
+    height: 14px;
+    border-radius: 8px;
+    background-color: rgba(148, 163, 184, 0.14);
+  }
 }
 
 .configuration-content {
@@ -552,14 +580,14 @@ watch(values, () => {
   strong {
     display: block;
     color: var(--text-primary);
-    font-size: 12px;
+    font-size: 14px;
     font-weight: 650;
   }
 
   p {
     margin-top: 4px;
     color: var(--text-tertiary);
-    font-size: 10px;
+    font-size: 12px;
     line-height: 1.5;
   }
 }
@@ -571,7 +599,7 @@ watch(values, () => {
   border-radius: 999px;
   color: rgb(var(--primary-color));
   background: var(--surface-card);
-  font-size: 9px;
+  font-size: 14px;
 }
 
 .configuration-meta {
@@ -597,13 +625,13 @@ watch(values, () => {
 
   span {
     color: var(--text-tertiary);
-    font-size: 11px;
+    font-size: 12px;
   }
 
   strong {
     overflow: hidden;
     color: var(--text-secondary);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -656,14 +684,14 @@ watch(values, () => {
 
   h3 {
     color: var(--text-primary);
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 650;
   }
 
   p {
     margin-top: 4px;
     color: var(--text-tertiary);
-    font-size: 11px;
+    font-size: 12px;
   }
 
   > span {
@@ -673,7 +701,7 @@ watch(values, () => {
     border-radius: 999px;
     color: var(--text-tertiary);
     background: var(--surface-card);
-    font-size: 10px;
+    font-size: 12px;
   }
 }
 
@@ -693,7 +721,7 @@ watch(values, () => {
     margin-bottom: 9px;
     padding: 0;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     line-height: 1.5;
   }
@@ -731,7 +759,7 @@ watch(values, () => {
 .boolean-field p {
   margin: 8px 0 0;
   color: var(--text-placeholder);
-  font-size: 11px;
+  font-size: 12px;
   line-height: 1.55;
 }
 
@@ -745,7 +773,7 @@ watch(values, () => {
 
   :deep(.el-checkbox__label) {
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
   }
 }
@@ -787,7 +815,7 @@ watch(values, () => {
     align-items: center;
     gap: 7px;
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 650;
   }
 
@@ -798,7 +826,7 @@ watch(values, () => {
   p {
     margin-top: 4px;
     color: var(--text-tertiary);
-    font-size: 10px;
+    font-size: 12px;
   }
 
   :deep(.el-button) {
@@ -867,7 +895,7 @@ watch(values, () => {
 
   strong {
     color: var(--text-secondary);
-    font-size: 11px;
+    font-size: 13px;
     font-weight: 650;
   }
 
@@ -875,7 +903,7 @@ watch(values, () => {
     overflow: hidden;
     margin: 5px 0 0;
     color: var(--text-placeholder);
-    font-size: 10px;
+    font-size: 12px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
@@ -895,13 +923,13 @@ watch(values, () => {
 
   h3 {
     color: var(--text-primary);
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 650;
   }
 
   p,
   > span {
-    font-size: 10px;
+    font-size: 12px;
   }
 
   p {
@@ -957,7 +985,7 @@ watch(values, () => {
   padding: 6px 10px;
   border: 1px solid transparent;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   line-height: 1.4;
   word-break: break-word;
@@ -984,10 +1012,60 @@ watch(values, () => {
 
   > span {
     overflow: hidden;
-    color: var(--text-placeholder);
-    font-size: 10px;
+    color: rgb(var(--primary-color)) !important;
+    font-size: 14px;
     text-overflow: ellipsis;
     white-space: nowrap;
+  }
+}
+
+:global(html.dark) {
+  .drawer-loading {
+    background: transparent;
+
+    .drawer-loading__shell {
+      border-color: rgba(75, 85, 99, 0.94);
+      background:
+        linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(15, 23, 42, 0.92)),
+        var(--surface-card);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+
+      :deep(.el-skeleton__item),
+      :deep(.el-skeleton__text),
+      :deep(.el-skeleton__circle),
+      :deep(.el-skeleton__image) {
+        background-color: rgba(203, 213, 225, 0.08);
+      }
+
+      :deep(.el-skeleton__item.is-animated),
+      :deep(.el-skeleton__text.is-animated),
+      :deep(.el-skeleton__circle.is-animated),
+      :deep(.el-skeleton__image.is-animated) {
+        background-image: linear-gradient(
+          90deg,
+          rgba(203, 213, 225, 0.06),
+          rgba(203, 213, 225, 0.14),
+          rgba(203, 213, 225, 0.06)
+        );
+        background-size: 200% 100%;
+      }
+    }
+  }
+
+  .configuration-notice {
+    border-color: rgba(var(--primary-color), 0.22);
+    background: rgba(var(--primary-color), 0.08);
+  }
+
+  .notice-check {
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .configuration-meta,
+  .settings-panel,
+  .history-panel,
+  .preview-section {
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
   }
 }
 

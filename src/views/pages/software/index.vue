@@ -30,6 +30,12 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 
 const showCatalogSyncButton = !import.meta.env.PROD
 
+const buildCategoryQuery = () => {
+  if (conf.activeIndex === 1) return { installed: true }
+  if (conf.activeIndex === 2) return { isUpdate: true }
+  return undefined
+}
+
 const categoryNameKeys: Record<string, string> = {
   全部: 'software.category.all',
   建站: 'software.category.website',
@@ -82,8 +88,8 @@ const conf = reactive({
       conf.list.params.tags = tab?.value || undefined
       await conf.list.getData()
     },
-    getData: async () => {
-      const { data } = await Api.getSoftCategories()
+    getData: async (query?: { installed?: boolean; isUpdate?: boolean }) => {
+      const { data } = await Api.getSoftCategories(query)
       const categories = Array.isArray(data) ? data : []
       conf.tabs.list = categories
       const current = categories.find((item) => item.value === conf.list.params.tags)
@@ -114,7 +120,7 @@ const conf = reactive({
       try {
         const { data } = await Api.syncSoftwareCatalog()
         conf.catalog.status = data
-        await conf.tabs.getData()
+        await conf.tabs.getData(buildCategoryQuery())
         await conf.list.getData()
         ElMessage.success(t('software.syncSuccess', 'Software store updated from Center'))
       } catch (error) {
@@ -133,7 +139,10 @@ const conf = reactive({
     conf.list.params.name = undefined
     conf.list.params.tags = undefined
     conf.tabs.selected = ''
-    conf.list.getData()
+    void Promise.all([
+      conf.tabs.getData(buildCategoryQuery()),
+      conf.list.getData()
+    ])
   },
   list: {
     loading: true,
@@ -185,7 +194,7 @@ const conf = reactive({
 const reloadSoftwarePageData = async () => {
   await Promise.all([
     conf.catalog.getStatus(),
-    conf.tabs.getData(),
+    conf.tabs.getData(buildCategoryQuery()),
     conf.list.getData()
   ])
 }

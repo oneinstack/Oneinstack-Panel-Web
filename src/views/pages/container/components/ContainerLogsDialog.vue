@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { nextTick, ref, watch } from 'vue'
 import { Download, Refresh } from '@element-plus/icons-vue'
 import type { ContainerItem } from '../types'
 import i18n from '@/lang'
 
 const t = i18n.t as any
 
-defineProps<{
+const props = defineProps<{
   visible: boolean
   loading: boolean
   downloading: boolean
@@ -26,12 +27,47 @@ const emit = defineEmits<{
   (event: 'refresh'): void
   (event: 'download'): void
 }>()
+
+const logElement = ref<HTMLDivElement | null>(null)
+let autoScrollPending = false
+
+const scrollToBottom = async () => {
+  await nextTick()
+  const element = logElement.value
+  if (!element) return
+  element.scrollTop = element.scrollHeight
+}
+
+watch(
+  () => props.visible,
+  async (isVisible) => {
+    if (!isVisible) {
+      autoScrollPending = false
+      return
+    }
+
+    autoScrollPending = true
+    if (props.logsText) {
+      await scrollToBottom()
+      autoScrollPending = false
+    }
+  }
+)
+
+watch(
+  () => props.logsText,
+  async (value) => {
+    if (!props.visible || !autoScrollPending || !value) return
+    await scrollToBottom()
+    autoScrollPending = false
+  }
+)
 </script>
 
 <template>
   <custom-drawer
-    :visible="visible"
-    :title="t('container.logViewer.title', { name: target?.Names || t('container.logViewer.containerFallback') })"
+    :visible="props.visible"
+    :title="t('container.logViewer.title', { name: props.target?.Names || t('container.logViewer.containerFallback') })"
     size="880px"
     :cancel-text="t('container.logViewer.close')"
     :show-confirm="false"
@@ -42,7 +78,7 @@ const emit = defineEmits<{
         <div class="toolbar-field">
           <span>{{ t('container.logViewer.filter') }}</span>
           <el-select
-            :model-value="timeFilter"
+            :model-value="props.timeFilter"
             :placeholder="t('container.logViewer.filter')"
             @update:model-value="emit('update:timeFilter', String($event || 'all'))"
           >
@@ -54,10 +90,10 @@ const emit = defineEmits<{
             <el-option :label="t('container.logViewer.customTime')" value="custom" />
           </el-select>
         </div>
-        <div v-if="timeFilter === 'custom'" class="toolbar-field toolbar-field--range">
+        <div v-if="props.timeFilter === 'custom'" class="toolbar-field toolbar-field--range">
           <span>{{ t('container.logViewer.time') }}</span>
           <el-date-picker
-            :model-value="customRange"
+            :model-value="props.customRange"
             type="datetimerange"
             :start-placeholder="t('container.logViewer.startTime')"
             :end-placeholder="t('container.logViewer.endTime')"
@@ -68,7 +104,7 @@ const emit = defineEmits<{
         <div class="toolbar-field">
           <span>{{ t('container.logViewer.count') }}</span>
           <el-select
-            :model-value="tail"
+            :model-value="props.tail"
             :placeholder="t('container.logViewer.count')"
             @update:model-value="emit('update:tail', Number($event || 100))"
           >
@@ -80,17 +116,17 @@ const emit = defineEmits<{
           </el-select>
         </div>
         <el-switch
-          :model-value="timestamps"
+          :model-value="props.timestamps"
           inline-prompt
           :active-text="t('container.logViewer.timestamp')"
           :inactive-text="t('container.logViewer.raw')"
           @update:model-value="emit('update:timestamps', Boolean($event))"
         />
-        <el-button :icon="Refresh" :loading="loading" @click="emit('refresh')">{{ t('container.logViewer.refresh') }}</el-button>
-        <el-button :icon="Download" :loading="downloading" @click="emit('download')">{{ t('container.logViewer.download') }}</el-button>
+        <el-button :icon="Refresh" :loading="props.loading" @click="emit('refresh')">{{ t('container.logViewer.refresh') }}</el-button>
+        <el-button :icon="Download" :loading="props.downloading" @click="emit('download')">{{ t('container.logViewer.download') }}</el-button>
       </div>
-      <div v-loading="loading" class="logs-box">
-        <pre v-if="logsText">{{ logsText }}</pre>
+      <div ref="logElement" v-loading="props.loading" class="logs-box">
+        <pre v-if="props.logsText">{{ props.logsText }}</pre>
         <el-empty v-else :description="t('container.logViewer.empty')" />
       </div>
     </div>

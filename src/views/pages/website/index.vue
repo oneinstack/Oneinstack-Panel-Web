@@ -379,8 +379,6 @@ const webServerLogoText = computed(() => {
 })
 
 const webServerState = computed(() => {
-  const status = webServerServiceStatus.value
-  if (status?.state) return status.state
   if (!webServer.data.available) return 'not_installed'
   return webServer.data.running ? 'running' : 'stopped'
 })
@@ -389,10 +387,6 @@ const webServerStatusLabel = computed(() => {
   switch (webServerState.value) {
     case 'running':
       return t('website.running', '运行中')
-    case 'failed':
-      return t('common.failed', '失败')
-    case 'transitioning':
-      return t('common.processing', '处理中')
     case 'not_installed':
       return t('website.notInstalled', '未安装')
     default:
@@ -1209,7 +1203,7 @@ loadServiceStatuses()
       </custom-table>
     </div>
     <!--创建网站弹窗-->
-    <custom-drawer :visible="conf.drawer.show" :title="conf.drawer.title" :empty-text="$t('common.noData')" :loading="conf.drawer.loading"
+    <custom-drawer class="website-create-drawer" :visible="conf.drawer.show" :title="conf.drawer.title" :empty-text="$t('common.noData')" :loading="conf.drawer.loading"
       size="820px" :on-close="conf.drawer.onClose" :on-confirm="conf.drawer.onConfirm">
       <custom-form v-if="conf.drawer.show" :data="conf.form.data" :on-init="(el) => (conf.form.instance = el)">
         <template #send_url="{ row }">
@@ -1755,6 +1749,18 @@ loadServiceStatuses()
   }
 }
 
+.website-create-drawer {
+  :deep(.el-input-group__prepend) {
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  :deep(.el-input-group__prepend .el-select__wrapper) {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
 :deep(.el-form-item__label) {
   color: var(--text-primary);
 }
@@ -1815,5 +1821,9 @@ loadServiceStatuses()
   .website-search-panel__refresh {
     width: 100%;
   }
+}
+
+:deep(.el-input-group--prepend .el-input-group__prepend .el-select .el-select__wrapper) {
+  border-radius: 0 !important;
 }
 </style>

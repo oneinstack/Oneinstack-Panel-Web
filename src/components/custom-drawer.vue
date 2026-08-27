@@ -223,6 +223,10 @@ const handleVisibleChange = (value: boolean) => {
 .headerExtra {
   flex: 0 0 auto;
   margin-left: auto;
+
+  :deep(.el-tag--plain.el-tag--danger){
+    background: transparent !important;
+  }
 }
 
 .drawerBody {

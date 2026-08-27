@@ -6,8 +6,8 @@ export const softwareApi = {
     return http.post("/soft/list", obj);
   },
   /** 获取软件分类列表 */
-  getSoftCategories: () => {
-    return http.get("/soft/categories");
+  getSoftCategories: (obj?: { installed?: boolean; isUpdate?: boolean }) => {
+    return http.get("/soft/categories", obj);
   },
   /** 创建系统变更操作预览票据 */
   previewOperation: (obj: { operation: string; payload: unknown }) => {

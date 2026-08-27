@@ -276,31 +276,35 @@ onBeforeUnmount(() => {
         </el-form-item>
       </el-form>
 
-      <el-divider content-position="left">{{ t('website.certificateDrawer.recentTasks') }}</el-divider>
-      <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" :empty-text="t('website.certificateDrawer.noTasks')">
-        <template #type="{ row }">{{ t(`website.certificateDrawer.${row.operation === 'renew' ? 'renew' : 'issue'}`) }}</template>
-        <template #status="{ row }">
-            <el-tag class="website-chip" size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
-        </template>
-        <template #progress="{ row }">
-            <el-progress :percentage="row.progress || 0" :stroke-width="8" />
-        </template>
-        <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
-        <template #actionColumn="{ row }">
-            <div class="table-row-actions">
-              <el-button link type="primary" :icon="Document" @click="showLog(row)">{{ t('website.certificateDrawer.log') }}</el-button>
-              <el-button
-                v-if="activeStatuses.includes(row.status)"
-                link
-                type="danger"
-                :icon="CircleClose"
-                @click="cancelTask(row)"
-              >
-                {{ t('website.certificateDrawer.cancel') }}
-              </el-button>
-            </div>
-        </template>
-      </custom-table>
+      <section class="recent-tasks">
+        <div class="recent-tasks__header">
+          <span class="recent-tasks__title">{{ t('website.certificateDrawer.recentTasks') }}</span>
+        </div>
+        <custom-table :data="tasks" :columns="taskColumns" :pagination="false" size="small" :empty-text="t('website.certificateDrawer.noTasks')">
+          <template #type="{ row }">{{ t(`website.certificateDrawer.${row.operation === 'renew' ? 'renew' : 'issue'}`) }}</template>
+          <template #status="{ row }">
+              <el-tag class="website-chip" size="small" :type="statusType(row.status)">{{ statusText[row.status] || row.status }}</el-tag>
+          </template>
+          <template #progress="{ row }">
+              <el-progress :percentage="row.progress || 0" :stroke-width="8" />
+          </template>
+          <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
+          <template #actionColumn="{ row }">
+              <div class="table-row-actions">
+                <el-button link type="primary" :icon="Document" @click="showLog(row)">{{ t('website.certificateDrawer.log') }}</el-button>
+                <el-button
+                  v-if="activeStatuses.includes(row.status)"
+                  link
+                  type="danger"
+                  :icon="CircleClose"
+                  @click="cancelTask(row)"
+                >
+                  {{ t('website.certificateDrawer.cancel') }}
+                </el-button>
+              </div>
+          </template>
+        </custom-table>
+      </section>
     </div>
   </custom-drawer>
 
@@ -331,5 +335,31 @@ onBeforeUnmount(() => {
   border-radius: 6px;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.recent-tasks {
+  margin-top: 22px;
+}
+
+.recent-tasks__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.recent-tasks__header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: color-mix(in srgb, var(--border-subtle) 86%, transparent);
+}
+
+.recent-tasks__title {
+  flex: 0 0 auto;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
 }
 </style>
