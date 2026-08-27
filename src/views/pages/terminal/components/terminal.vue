@@ -330,6 +330,19 @@ const sendSize = () => {
   socket.send(JSON.stringify({ rows: terminal.rows, cols: terminal.cols }))
 }
 
+const fitTerminal = () => {
+  const addon = fitAddon
+  if (!addon || !terminalDiv.value) return
+  window.requestAnimationFrame(() => {
+    try {
+      addon.fit()
+      sendSize()
+    } catch {
+      // The terminal container may still be in transition; the next resize will fix it.
+    }
+  })
+}
+
 const focusTerminal = () => {
   if (!terminal || connectionState.value !== 'connected') return
   terminal.focus()
@@ -388,14 +401,7 @@ const toggleFullscreen = async () => {
 
 const handleFullscreenChange = () => {
   isFullscreen.value = document.fullscreenElement === terminalShell.value
-  window.setTimeout(() => {
-    try {
-      fitAddon?.fit()
-      sendSize()
-    } catch {
-      // The container size may not be stable during fullscreen layout changes.
-    }
-  }, 80)
+  window.setTimeout(fitTerminal, 80)
 }
 
 const syncTerminalTitle = (title: string) => {
@@ -523,7 +529,7 @@ const initializeTerminal = async () => {
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalDiv.value)
-  fitAddon.fit()
+  fitTerminal()
   terminal.write(`\x1b[1;38;5;45mOneinStack Root Console\x1b[0m \x1b[38;5;245m· ${t('terminal.waitingAuthenticationBanner')}\x1b[0m\r\n`)
   terminal.onTitleChange(syncTerminalTitle)
   terminal.onData(data => {
@@ -532,11 +538,7 @@ const initializeTerminal = async () => {
   terminal.onResize(sendSize)
   if (terminalDiv.value) {
     resizeObserver = new ResizeObserver(() => {
-      try {
-        fitAddon?.fit()
-      } catch {
-        // 抽屉或页面切换时容器可能暂时没有尺寸。
-      }
+      fitTerminal()
     })
     resizeObserver.observe(terminalDiv.value)
   }
@@ -908,7 +910,6 @@ onBeforeUnmount(() => {
   flex: 1 1 auto;
   min-height: 0;
   overflow: hidden;
-  padding: 15px 11px 12px;
   transition: filter 180ms ease, opacity 180ms ease;
 
   &.is-blurred {
@@ -918,7 +919,8 @@ onBeforeUnmount(() => {
 }
 
 .terminal-screen :deep(.xterm) {
-  height: calc(100% - 54px - 34px);
+  box-sizing: border-box;
+  height: 100%;
   color: #d8e2f0;
 }
 
@@ -927,16 +929,8 @@ onBeforeUnmount(() => {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 14px;
   font-kerning: none;
-  padding-bottom: 80px;
-  box-sizing: content-box;
   white-space: pre;
   text-shadow: 0 0 1px rgb(216 226 240 / 18%);
-}
-
-.terminal-screen :deep(.xterm-rows::after) {
-  display: block;
-  height: 80px;
-  content: '';
 }
 
 .terminal-screen :deep(.xterm-rows span:not(.xterm-bold)) {
@@ -1042,6 +1036,7 @@ onBeforeUnmount(() => {
 
 .terminal-screen :deep(.xterm-screen),
 .terminal-screen :deep(.xterm-viewport) {
+  height: 100%;
   max-height: 100%;
 }
 

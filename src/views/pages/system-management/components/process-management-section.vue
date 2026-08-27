@@ -223,6 +223,22 @@ defineProps<Props>()
   color: var(--text-primary);
 }
 
+.process-toolbar :deep(.el-button--primary) {
+  --el-button-bg-color: rgb(var(--primary-color));
+  --el-button-border-color: rgb(var(--primary-color));
+  --el-button-hover-text-color: #ffffff;
+  --el-button-hover-bg-color: color-mix(in srgb, rgb(var(--primary-color)) 88%, var(--surface-card));
+  --el-button-hover-border-color: color-mix(in srgb, rgb(var(--primary-color)) 88%, var(--surface-card));
+  --el-button-active-bg-color: color-mix(in srgb, rgb(var(--primary-color)) 82%, var(--surface-card));
+  --el-button-active-border-color: color-mix(in srgb, rgb(var(--primary-color)) 82%, var(--surface-card));
+  box-shadow: 0 8px 18px rgba(var(--primary-color), 0.12);
+}
+
+.process-toolbar :deep(.el-button--primary:hover),
+.process-toolbar :deep(.el-button--primary:focus-visible) {
+  box-shadow: 0 10px 22px rgba(var(--primary-color), 0.18);
+}
+
 .data-table :deep(.table-container) {
   background: transparent;
 }
