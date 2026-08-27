@@ -187,13 +187,10 @@ defineExpose({
         <div class="mount-list">
           <div v-for="(mount, index) in form.mounts" :key="index" class="mount-card">
             <div class="mount-card__top">
-              <el-segmented
-                v-model="mount.mode"
-                :options="[
-                  { label: t('container.create.volumeMount'), value: 'volume' },
-                  { label: t('container.create.bindMount'), value: 'bind' }
-                ]"
-              />
+              <el-radio-group v-model="mount.mode" class="mount-mode-options">
+                <el-radio value="volume">{{ t('container.create.volumeMount') }}</el-radio>
+                <el-radio value="bind">{{ t('container.create.bindMount') }}</el-radio>
+              </el-radio-group>
               <el-button link type="primary" @click="emit('remove-mount', index)">{{ t('common.delete') }}</el-button>
             </div>
             <div class="mount-card__grid">
@@ -645,20 +642,27 @@ defineExpose({
   justify-content: space-between;
   gap: 12px;
   margin-bottom: 16px;
+}
 
-  :deep(.el-segmented) {
-    --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
-    --el-segmented-item-selected-color: #fff;
-    padding: 0;
-    border: 1px solid var(--border-subtle);
-    border-radius: 6px;
+.mount-mode-options {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px 24px;
+
+  :deep(.el-radio) {
+    height: 32px;
+    margin-right: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 700;
   }
 
-  :deep(.el-segmented__item) {
-    min-width: 88px;
-    height: 34px;
-    border-radius: 5px;
-    font-weight: 700;
+  :deep(.el-radio.is-checked) {
+    color: var(--el-color-primary);
+  }
+
+  :deep(.el-radio__label) {
+    padding-left: 10px;
   }
 }
 

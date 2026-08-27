@@ -253,8 +253,68 @@ const decodeOutput = (value: string) => {
   for (let index = 0; index < binary.length; index++) {
     bytes[index] = binary.charCodeAt(index)
   }
-  return bytes
+  return new TextDecoder().decode(bytes)
 }
+
+const terminalFileTypeColors = {
+  directory: '\x1b[38;2;98;168;255m',
+  executable: '\x1b[38;2;80;216;144m',
+  archive: '\x1b[38;2;255;107;122m',
+  link: '\x1b[38;2;85;214;232m',
+  file: '\x1b[38;2;216;226;240m'
+} as const
+
+const terminalAnsiReset = '\x1b[0m'
+const terminalAnsiPattern = /\x1b\[[0-9;]*m/
+const terminalArchivePattern = /\.(?:tar(?:\.(?:gz|bz2|xz))?|tgz|tbz|txz|gz|bz2|xz|zip|rar|7z)$/i
+const terminalExecutablePattern = /\*$/i
+const terminalSymlinkPattern = /@$/i
+const terminalDirectoryPattern = /\/$/i
+
+const splitTerminalToken = (token: string) => {
+  const prefixMatch = token.match(/^[([<{'"`]+/)
+  const suffixMatch = token.match(/[)\]}>.,;:!]+$/)
+  const prefix = prefixMatch?.[0] || ''
+  const suffix = suffixMatch?.[0] || ''
+  const core = token.slice(prefix.length, token.length - suffix.length)
+  return { prefix, core, suffix }
+}
+
+const detectTerminalFileType = (token: string) => {
+  if (terminalDirectoryPattern.test(token)) return 'directory'
+  if (terminalExecutablePattern.test(token)) return 'executable'
+  if (terminalArchivePattern.test(token)) return 'archive'
+  if (terminalSymlinkPattern.test(token)) return 'link'
+  return 'file'
+}
+
+const colorizeTerminalListingLine = (line: string) => {
+  if (terminalAnsiPattern.test(line)) return line
+
+  const segments = line.split(/(\s+)/)
+  const tokens = segments.filter(segment => segment.trim().length > 0)
+  const looksLikeListing = tokens.length >= 2
+    && !tokens.some(token => token === '#' || token === '$' || token === '%')
+    && tokens.some(token =>
+    terminalDirectoryPattern.test(token)
+    || terminalExecutablePattern.test(token)
+    || terminalArchivePattern.test(token)
+    || terminalSymlinkPattern.test(token)
+  )
+
+  if (!looksLikeListing) return line
+
+  return segments.map((segment) => {
+    if (!segment.trim()) return segment
+    const { prefix, core, suffix } = splitTerminalToken(segment)
+    const fileType = detectTerminalFileType(core)
+    const color = terminalFileTypeColors[fileType]
+    return `${prefix}${color}${core}${terminalAnsiReset}${suffix}`
+  }).join('')
+}
+
+const colorizeTerminalOutput = (value: string) =>
+  value.replace(/[^\r\n]+/g, line => colorizeTerminalListingLine(line))
 
 const loadStatus = async (quiet = false) => {
   try {
@@ -391,7 +451,7 @@ const connectTerminal = async () => {
     }
     socket.onmessage = event => {
       try {
-        terminal?.write(decodeOutput(String(event.data)))
+        terminal?.write(colorizeTerminalOutput(decodeOutput(String(event.data))))
       } catch {
         terminal?.write(`\r\n\x1b[31m${t('terminal.outputDecodeFailed', 'Failed to decode terminal output.')}\x1b[0m\r\n`)
       }

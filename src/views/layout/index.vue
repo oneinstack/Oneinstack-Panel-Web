@@ -56,6 +56,7 @@ import userManagementIcon from '../../../public/static/menu/user-management.svg?
 import userManagementActiveIcon from '../../../public/static/menu/user-management-active.svg?raw'
 import websiteIcon from '../../../public/static/menu/website.svg?raw'
 import websiteActiveIcon from '../../../public/static/menu/website-active.svg?raw'
+import { scheduleInteractionRecovery } from '@/utils/theme'
 
 const sapp = useAppStore()
 const sconfig = useConfigStore()
@@ -338,6 +339,7 @@ watch(
 )
 
 onMounted(() => {
+  scheduleInteractionRecovery()
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
     .then((response) => {
@@ -347,6 +349,12 @@ onMounted(() => {
       sconfig.setAccessMatrix({})
     })
 })
+
+watch(
+  () => route.path,
+  () => scheduleInteractionRecovery(),
+  { immediate: true }
+)
 
 const Beturn = () => {
   ElMessageBox.confirm(translateWithFallback('layout.logoutConfirm', 'Sign out of the panel?'), translateWithFallback('layout.logoutTitle', 'Sign out'), {

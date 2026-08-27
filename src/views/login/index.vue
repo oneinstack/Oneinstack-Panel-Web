@@ -11,6 +11,7 @@ import { getFirstAccessiblePath } from '@/utils/access'
 const sconfig = useConfigStore()
 
 const isDesktop = ref(window.innerWidth > 980)
+const currentLanguage = computed(() => (i18n.locale === 'en-US' ? 'en-US' : 'zh-CN'))
 const updateViewport = () => {
   isDesktop.value = window.innerWidth > 980
 }
@@ -93,7 +94,7 @@ const conf = reactive({
 </script>
 
 <template>
-  <login-container :loading="conf.loading" current-active="login">
+  <login-container :key="currentLanguage" :loading="conf.loading" current-active="login">
     <template #default="{ className }">
       <div class="login-brand-mobile" :class="{ visible: !isDesktop }">
         <div class="brand-mark">1S</div>
@@ -283,15 +284,25 @@ const conf = reactive({
 .login-form {
   :deep(.el-form-item) {
     margin-bottom: 21px;
+    align-items: center;
   }
 
   :deep(.el-form-item__label) {
-    height: auto;
-    margin-bottom: 8px;
+    min-width: 92px;
+    min-height: 50px;
+    margin-bottom: 0;
+    padding-right: 12px;
+    display: inline-flex;
+    align-items: center;
     color: var(--text-secondary);
     font-size: 12px;
     font-weight: 620;
     line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  :deep(.el-form-item__content) {
+    min-width: 0;
   }
 
   :deep(.el-input__wrapper) {

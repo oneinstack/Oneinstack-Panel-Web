@@ -187,6 +187,7 @@ const handleTaskCreated = (task: CertificateTask) => {
   taskDrawer.taskId = task.id
   taskDrawer.visible = true
   void loadTasks(true)
+  void loadCertificates(true)
 }
 
 const deleteCertificate = async (certificate: ManagedCertificate) => {

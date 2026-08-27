@@ -68,19 +68,12 @@ const healPageInteraction = () => {
   body.style.pointerEvents = 'auto'
   appBox?.style.setProperty('pointer-events', 'auto')
   appRoot?.style.setProperty('pointer-events', 'auto')
-  appBoxBackground?.style.setProperty('pointer-events', 'none', 'important')
-
-  clearElementPlusLoadingState()
-
-  const centerHit = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2)
-  if (centerHit !== root && centerHit !== body) {
-    return
-  }
-
   appBox?.style.setProperty('position', 'relative')
   appBox?.style.setProperty('z-index', '1')
   appRoot?.style.setProperty('position', 'relative')
   appRoot?.style.setProperty('z-index', '1')
+  appBoxBackground?.style.setProperty('pointer-events', 'none', 'important')
+  clearElementPlusLoadingState()
 }
 
 export const scheduleInteractionRecovery = () => {

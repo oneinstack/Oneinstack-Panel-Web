@@ -8,6 +8,7 @@ import CustomDrawer from '@/components/custom-drawer.vue'
 import WebsiteCertificateDrawer from './WebsiteCertificateDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
+import { getWebsiteEngineLabel, getWebsiteEngineTagStyle } from '@/utils/websiteEngine'
 
 interface Props {
   modelValue: boolean
@@ -256,6 +257,16 @@ const openCertificate = () => {
         <div class="settings-header__summary">
           <div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div>
           <div><span>{{ t('website.expiration') }}</span><strong :class="{ expired: isExpired }">{{ formatTime(currentWebsite.expires_at) }}</strong></div>
+          <div class="settings-header__engine">
+            <span>{{ t('website.webServerOwner', '归属 Web Server') }}</span>
+            <el-tag
+              class="website-engine-tag"
+              effect="plain"
+              :style="getWebsiteEngineTagStyle(currentWebsite.engine)"
+            >
+              {{ getWebsiteEngineLabel(currentWebsite.engine) }}
+            </el-tag>
+          </div>
           <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
         </div>
       </header>
@@ -398,11 +409,12 @@ const openCertificate = () => {
 .settings-header__title span { color: var(--el-color-primary); font-size: 10px; font-weight: 800; letter-spacing: .16em; }
 .settings-header__title h2 { margin: 2px 0; overflow: hidden; color: var(--text-primary); font-size: 16px; text-overflow: ellipsis; white-space: nowrap; }
 .settings-header__title p { margin: 5px 0 0; color: var(--text-tertiary); font-size: 12px; }
-.settings-header__summary { display: flex; align-items: center; gap: 16px; }
+.settings-header__summary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
 .settings-header__summary > div { display: flex; flex-direction: column; gap: 4px; }
 .settings-header__summary span { color: var(--text-tertiary); font-size: 11px; }
 .settings-header__summary strong { color: var(--text-primary); font-size: 13px; white-space: nowrap; }
 .settings-header__summary strong.expired { color: var(--el-color-danger); }
+.settings-header__engine { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .settings-body { height: 650px; min-height: 650px; display: grid; grid-template-columns: 240px minmax(0, 1fr); overflow: hidden; border: 1px solid var(--border-subtle); border-radius: 20px; background: var(--surface-card); }
 .settings-nav { min-height: 0; padding: 10px; overflow-y: auto; border-right: 1px solid var(--border-subtle); background: var(--surface-subtle); }
 .settings-nav button { width: 100%; height: 42px; padding: 0 18px; border: 0; border-radius: 9px; color: var(--text-secondary); background: transparent; font-size: 13px; text-align: left; cursor: pointer; transition: .18s ease; }

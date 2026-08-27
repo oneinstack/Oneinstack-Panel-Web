@@ -27,6 +27,7 @@ import i18n from '@/lang'
 import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
 import System from '@/utils/System'
 import { useConfigStore } from '@/stores/modules/config'
+import { getWebsiteEngineLabel, getWebsiteEngineTagStyle } from '@/utils/websiteEngine'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -657,6 +658,7 @@ const conf = reactive({
     columns: computed(() => [
       { prop: 'name', label: t('website.websiteName', 'Website name'), width: 180 },
       { prop: 'domain', label: t('website.domain', 'Domain'), width: 180 },
+      { prop: 'engine', label: t('website.webServerOwner', '归属 Web Server'), width: 170 },
       { prop: 'root_dir', label: t('website.rootDir', '根目录') },
       { prop: 'status', label: t('website.status', 'Status'), width: 130 },
       { prop: 'traffic', label: t('website.todayTraffic', 'Today traffic'), width: 120 },
@@ -1122,6 +1124,15 @@ loadServiceStatuses()
           </el-link>
           <span v-else class="website-root-link__empty">—</span>
         </template>
+        <template #engine="{ row }">
+          <el-tag
+            class="website-engine-tag"
+            effect="plain"
+            :style="getWebsiteEngineTagStyle(row.engine)"
+          >
+            {{ getWebsiteEngineLabel(row.engine) }}
+          </el-tag>
+        </template>
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
@@ -1562,6 +1573,16 @@ loadServiceStatuses()
 
 .website-root-link__empty {
   color: var(--text-tertiary, #94a3b8);
+}
+
+.website-engine-tag {
+  min-width: 112px;
+  justify-content: center;
+  padding-inline: 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .website-expiration-tag {

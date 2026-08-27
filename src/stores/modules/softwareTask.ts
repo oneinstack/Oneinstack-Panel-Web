@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { Api } from "@/api/modules";
 import { useConfigStore } from "@/stores/modules/config";
 import System from "@/utils/System";
+import { SESSION_LOGOUT_EVENT } from "@/utils/session";
 
 export interface SoftwareTask {
   id: string;
@@ -74,6 +75,26 @@ const reconnectTimers = new Map<string, number>();
 const logPollTimers = new Map<string, number>();
 const snapshotPollTimers = new Map<string, number>();
 const logFetches = new Map<string, Promise<any>>();
+let logoutListenerBound = false;
+
+const clearSessionWork = () => {
+  eventSources.forEach((source) => {
+    source.close();
+  });
+  eventSources.clear();
+  reconnectTimers.forEach((timer) => window.clearTimeout(timer));
+  reconnectTimers.clear();
+  logPollTimers.forEach((timer) => window.clearInterval(timer));
+  logPollTimers.clear();
+  snapshotPollTimers.forEach((timer) => window.clearInterval(timer));
+  snapshotPollTimers.clear();
+  logFetches.clear();
+};
+
+if (typeof window !== "undefined" && !logoutListenerBound) {
+  logoutListenerBound = true;
+  window.addEventListener(SESSION_LOGOUT_EVENT, clearSessionWork);
+}
 
 const taskURL = (path: string) => {
   const apiBase = new URL(System.env.API || "/v1", window.location.origin);

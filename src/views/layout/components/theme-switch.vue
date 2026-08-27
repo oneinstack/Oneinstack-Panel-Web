@@ -20,42 +20,10 @@ const colors = {
 }
 
 const toggleTheme = (event: MouseEvent) => {
-  // @ts-ignore
-  if (!document.startViewTransition) {
-    sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
-    scheduleInteractionRecovery()
-    return
-  }
-
-  const x = event.clientX
-  const y = event.clientY
-  const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y))
-
-  let isDark: boolean
-
-  // @ts-ignore
-  const transition = document.startViewTransition(() => {
-    isDark = theme.value === 'dark'
-    sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
-  })
-
-  transition.ready.then(() => {
-    const clipPath = [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`]
-    document.documentElement.animate(
-      {
-        clipPath: isDark ? clipPath.reverse() : clipPath
-      },
-      {
-        duration: 500,
-        easing: 'ease-in',
-        pseudoElement: isDark ? '::view-transition-old(root)' : '::view-transition-new(root)'
-      }
-    )
-  })
-
-  transition.finished.finally(() => {
-    scheduleInteractionRecovery()
-  })
+  event.preventDefault()
+  const nextTheme = theme.value === 'light' ? 'dark' : 'light'
+  sapp.setTheme(nextTheme)
+  scheduleInteractionRecovery()
 }
 </script>
 
@@ -102,30 +70,5 @@ const toggleTheme = (event: MouseEvent) => {
       height: 16px;
     }
   }
-}
-</style>
-<style>
-::view-transition-old(root),
-::view-transition-new(root),
-::view-transition-group(root),
-::view-transition-image-pair(root) {
-  animation: none;
-  mix-blend-mode: normal;
-  pointer-events: none !important;
-}
-
-/* 进入dark模式和退出dark模式时，两个图像的位置顺序正好相反 */
-.dark::view-transition-old(root) {
-  z-index: 1;
-}
-.dark::view-transition-new(root) {
-  z-index: 999;
-}
-
-::view-transition-old(root) {
-  z-index: 999;
-}
-::view-transition-new(root) {
-  z-index: 1;
 }
 </style>

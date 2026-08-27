@@ -3,6 +3,7 @@ import { Api } from "@/api/modules";
 import System from "@/utils/System";
 import { piniaPersistConfig } from "@/stores/helper/persist";
 import i18n from "@/lang";
+import { SESSION_LOGOUT_EVENT } from "@/utils/session";
 
 export interface ContainerTask {
   id: string;
@@ -63,10 +64,31 @@ const logPollTimers = new Map<string, number>();
 const snapshotPollTimers = new Map<string, number>();
 const logFetches = new Map<string, Promise<any>>();
 const autoStartInFlight = new Set<string>();
+let logoutListenerBound = false;
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
   return value && value !== key ? value : fallback || key;
 };
+
+const clearSessionWork = () => {
+  eventSources.forEach((source) => {
+    source.close();
+  });
+  eventSources.clear();
+  reconnectTimers.forEach((timer) => window.clearTimeout(timer));
+  reconnectTimers.clear();
+  logPollTimers.forEach((timer) => window.clearInterval(timer));
+  logPollTimers.clear();
+  snapshotPollTimers.forEach((timer) => window.clearInterval(timer));
+  snapshotPollTimers.clear();
+  logFetches.clear();
+  autoStartInFlight.clear();
+};
+
+if (typeof window !== "undefined" && !logoutListenerBound) {
+  logoutListenerBound = true;
+  window.addEventListener(SESSION_LOGOUT_EVENT, clearSessionWork);
+}
 
 const taskURL = (path: string) => {
   const apiBase = new URL(System.env.API || "/v1", window.location.origin);

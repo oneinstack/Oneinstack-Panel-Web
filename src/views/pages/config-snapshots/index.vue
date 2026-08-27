@@ -1177,9 +1177,50 @@ onMounted(() => {
       color: var(--text-tertiary);
     }
 
+    .resource-cell .cell-title,
+    .snapshot-name-cell .cell-title {
+      color: #f8fafc;
+    }
+
+    .resource-cell .meta-text,
+    .resource-cell .path-text,
+    .snapshot-name-cell .cell-subtitle,
+    .snapshot-meta-cell .meta-chip--ghost,
+    .snapshot-meta-cell .mono-text--muted {
+      color: #cbd5e1;
+    }
+
+    .resource-cell .meta-text {
+      color: #f8fafc;
+      font-weight: 600;
+    }
+
+    .resource-cell .path-text {
+      color: #cbd5e1;
+    }
+
+    .resource-cell .meta-chip,
+    .snapshot-meta-cell .meta-chip {
+      border-color: rgba(148, 163, 184, 0.28);
+      background: rgba(255, 255, 255, 0.05);
+      color: #f8fafc;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    .resource-cell .meta-chip--ghost {
+      border-color: rgba(148, 163, 184, 0.22);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .resource-cell .meta-chip--action {
+      color: #fdba74;
+      border-color: rgba(var(--primary-color), 0.34);
+      background: rgba(var(--primary-color), 0.16);
+    }
+
     .cell-code,
     .mono-text {
-      color: #f1f5f9;
+      color: #f8fafc;
     }
 
     .cell-code {
@@ -1211,7 +1252,7 @@ onMounted(() => {
       background: rgba(15, 23, 42, 0.96);
 
       label {
-        color: #94a3b8;
+        color: #cbd5e1;
       }
 
       span {

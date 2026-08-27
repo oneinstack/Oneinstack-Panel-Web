@@ -26,6 +26,7 @@ export default {
   websiteName: '网站名',
   domain: '域名',
   rootDir: '根目录',
+  webServerOwner: '归属 Web Server',
   status: '状态',
   todayTraffic: '今日流量',
   requestCount: '{count} 次请求',
@@ -51,6 +52,13 @@ export default {
   currentWebServer: '当前网站 Web 服务器',
   webServerMenuLabel: '管理 {name}',
   webServerConfigAction: '配置设置',
+  webServerEngines: {
+    nginx: 'Nginx',
+    openresty: 'OpenResty',
+    tengine: 'Tengine',
+    apache: 'Apache HTTP Server',
+    caddy: 'Caddy'
+  },
   webServerNotDetected: '未检测到 Nginx、OpenResty 或 Caddy',
   webServerRuntimeNotManaged: '当前 Web 服务暂未接入可管理状态',
   running: '运行中',

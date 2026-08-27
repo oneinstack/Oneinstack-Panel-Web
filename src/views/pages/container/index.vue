@@ -1192,6 +1192,7 @@ const buildPorts = () => {
 const buildMounts = () => {
   const rows = form.mounts
     .map((item) => ({
+      type: item.mode,
       source: item.source.trim(),
       target: item.target.trim(),
       readOnly: item.permission === "ro",
@@ -1203,6 +1204,7 @@ const buildMounts = () => {
   });
   if (!rows.length) return undefined;
   return rows.map((item) => ({
+    type: item.type,
     source: item.source,
     target: item.target,
     readOnly: item.readOnly,

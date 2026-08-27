@@ -26,6 +26,7 @@ export default {
   websiteName: 'Website name',
   domain: 'Domain',
   rootDir: 'Root directory',
+  webServerOwner: 'Web server ownership',
   status: 'Status',
   todayTraffic: 'Today traffic',
   requestCount: '{count} requests',
@@ -51,6 +52,13 @@ export default {
   currentWebServer: 'Current website web server',
   webServerMenuLabel: 'Manage {name}',
   webServerConfigAction: 'Configuration',
+  webServerEngines: {
+    nginx: 'Nginx',
+    openresty: 'OpenResty',
+    tengine: 'Tengine',
+    apache: 'Apache HTTP Server',
+    caddy: 'Caddy'
+  },
   webServerNotDetected: 'Nginx, OpenResty, or Caddy not detected',
   webServerRuntimeNotManaged: 'The current web service is not yet managed by the panel',
   running: 'Running',

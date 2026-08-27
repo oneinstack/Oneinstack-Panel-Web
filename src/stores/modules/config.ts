@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import piniaPersistConfig from "../helper/persist";
 import System from "@/utils/System";
+import { SESSION_LOGOUT_EVENT } from "@/utils/session";
 
 interface PanelEntryAccess {
   enabled: boolean;
@@ -85,6 +86,7 @@ export const useConfigStore = defineStore("config", {
 
     /** 清理当前会话状态并按需返回登录页。 */
     logout(toLogin = false) {
+      window.dispatchEvent(new Event(SESSION_LOGOUT_EVENT));
       this.userInfo = null;
       this.menuAccess = {};
       this.scopeAccess = {};
