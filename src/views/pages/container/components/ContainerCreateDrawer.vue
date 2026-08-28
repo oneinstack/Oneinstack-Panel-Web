@@ -150,11 +150,11 @@ defineExpose({
               </el-select>
             </label>
             <label>
-              <span>IPv4</span>
+              <span>{{ t('container.create.ipv4') }}</span>
               <el-input v-model.trim="form.ipv4" :placeholder="t('container.create.ipv4Placeholder')" />
             </label>
             <label>
-              <span>IPv6</span>
+              <span>{{ t('container.create.ipv6') }}</span>
               <el-input v-model.trim="form.ipv6" :placeholder="t('container.create.ipv6Placeholder')" />
             </label>
           </div>
@@ -248,7 +248,7 @@ defineExpose({
         />
         <div class="field-help">{{ t('container.create.commandHelp') }}</div>
       </el-form-item>
-      <el-form-item label="EntryPoint">
+      <el-form-item :label="t('container.create.entrypoint')">
         <el-input
           v-model="form.entrypointText"
           type="textarea"
@@ -268,7 +268,7 @@ defineExpose({
       <el-form-item :label="t('container.create.runtimeOptions')">
         <div class="form-switches">
           <el-checkbox v-model="form.autoRemove">{{ t('container.create.autoRemove') }}</el-checkbox>
-          <el-checkbox v-model="form.tty">TTY</el-checkbox>
+          <el-checkbox v-model="form.tty">{{ t('container.create.tty') }}</el-checkbox>
           <el-checkbox v-model="form.openStdin">{{ t('container.create.keepStdin') }}</el-checkbox>
           <el-checkbox v-model="form.privileged">{{ t('container.create.privileged') }}</el-checkbox>
         </div>
@@ -320,7 +320,7 @@ defineExpose({
       <div class="section-divider">
         <span>{{ t('container.create.labelsEnvironment') }}</span>
       </div>
-      <el-form-item label="Labels">
+      <el-form-item :label="t('container.create.labels')">
         <el-input
           v-model="form.labelsText"
           type="textarea"

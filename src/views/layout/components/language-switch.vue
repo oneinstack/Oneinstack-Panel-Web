@@ -8,9 +8,13 @@ const rootRef = ref<HTMLElement | null>(null)
 const visible = ref(false)
 
 const currentLanguage = computed<SupportedLocale>(() => i18n.locale === 'en-US' ? 'en-US' : 'zh-CN')
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 const languageOptions = computed<Array<{ label: string; value: SupportedLocale; mark: string }>>(() => [
-  { label: '中文', value: 'zh-CN', mark: '中' },
-  { label: 'English', value: 'en-US', mark: 'EN' }
+  { label: t('common.chinese', '中文'), value: 'zh-CN', mark: '中' },
+  { label: t('common.english', 'English'), value: 'en-US', mark: 'EN' }
 ])
 const activeLanguage = computed(
   () => languageOptions.value.find((item) => item.value === currentLanguage.value) || languageOptions.value[0]

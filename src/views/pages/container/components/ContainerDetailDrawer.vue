@@ -45,7 +45,7 @@ const handleClose = () => {
     <div v-loading="loading" class="detail-drawer-body">
       <div v-if="detailType === 'container'" class="stats-grid">
         <div class="stat-card">
-          <span>CPU</span>
+          <span>{{ i18n.t('container.resourceDetail.cpu') }}</span>
           <strong>{{ detailStats?.cpuPercent || '--' }}</strong>
         </div>
         <div class="stat-card">
@@ -62,7 +62,7 @@ const handleClose = () => {
           <strong>{{ detailStats?.blockIO || '--' }}</strong>
         </div>
         <div class="stat-card">
-          <span>PIDs</span>
+          <span>{{ i18n.t('container.resourceDetail.pids') }}</span>
           <strong>{{ detailStats?.pids || '--' }}</strong>
         </div>
       </div>
@@ -83,7 +83,7 @@ const handleClose = () => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
   min-height: 0;
 }
 
@@ -94,8 +94,8 @@ const handleClose = () => {
 }
 
 .stat-card {
-  min-height: 104px;
-  padding: 18px;
+  min-height: 88px;
+  padding: 16px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   background: var(--surface-card);
@@ -111,16 +111,16 @@ const handleClose = () => {
 
   strong {
     display: block;
-    margin-top: 10px;
+    margin-top: 8px;
     color: var(--text-primary);
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     line-height: 1.25;
     overflow-wrap: anywhere;
   }
 
   small {
-    margin-top: 6px;
+    margin-top: 4px;
     font-weight: 600;
   }
 }
@@ -128,6 +128,7 @@ const handleClose = () => {
 .detail-json {
   display: flex;
   flex-direction: column;
+  min-height: 320px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   overflow: hidden;
@@ -172,6 +173,10 @@ const handleClose = () => {
 
   .stats-grid {
     grid-template-columns: 1fr;
+  }
+
+  .detail-json {
+    min-height: 240px;
   }
 
   .detail-json pre {

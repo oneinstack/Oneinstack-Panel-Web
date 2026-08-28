@@ -30,7 +30,7 @@ const activate = (key: string) => {
 </script>
 
 <template>
-  <div class="system-management-tabs" role="tablist" aria-label="System management sections">
+  <div class="system-management-tabs" role="tablist" :aria-label="t('systemManagement.title', 'System management')">
     <button
       v-for="item in items"
       :key="item.key"

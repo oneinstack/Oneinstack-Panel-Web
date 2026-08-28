@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import Scheduled from '@/views/pages/task/components/scheduled.vue'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const conf = reactive({
   activeIndex: 0,
   list: [
     {
-      name: '计划任务',
+      name: t('task.scheduled', '计划任务'),
       nameKey: 'task.scheduled',
       index: 0,
       component: Scheduled

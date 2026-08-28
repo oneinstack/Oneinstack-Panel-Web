@@ -4,6 +4,12 @@ import { computed, markRaw, nextTick, onMounted, reactive, ref } from 'vue'
 import { Api } from '@/api/modules'
 import Firewall from './components/firewall.vue'
 import Fail2ban from './components/fail2ban.vue'
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 interface Fail2banCapabilities {
   showSecurityMenu: boolean
@@ -44,7 +50,7 @@ const conf = reactive({
   fail2banCapabilities: defaultCapabilities(),
   list: markRaw([
     {
-      name: '系统防火墙',
+      name: t('security.systemFirewall', '系统防火墙'),
       nameKey: 'security.systemFirewall',
       index: 0,
       component: Firewall
@@ -71,7 +77,7 @@ const conf = reactive({
     //   index: 4
     // },
     {
-      name: '入侵防御',
+      name: t('security.intrusionPrevention', '入侵防御'),
       nameKey: 'security.intrusionPrevention',
       index: 5,
       component: Fail2ban

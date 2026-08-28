@@ -6,12 +6,18 @@ import PanelSetting from './components/panel-setting.vue'
 import SecuritySetting from './components/security-setting.vue'
 import AlarmNotification from './components/alarm-notification.vue'
 import MessageNotification from './components/message-notification.vue';
+import i18n from '@/lang'
+
+const t = (key: string, fallback?: string) => {
+  const value = (i18n.t as any)(key)
+  return value && value !== key ? value : fallback || key
+}
 
 const conf = reactive({
   activeIndex: 0,
   menuList: markRaw([
     {
-      name: '全部设置',
+      name: t('setting.tabs.all', '全部设置'),
       nameKey: 'setting.tabs.all',
       index: 0,
       component: AllSetting

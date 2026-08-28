@@ -60,8 +60,8 @@ const approvalState = reactive({
   mineTabs: {
     activeIndex: 0,
     list: [
-      { name: '全部', nameKey: 'approvalCenter.all', index: 0, value: false },
-      { name: '我的', nameKey: 'approvalCenter.mine', index: 1, value: true }
+      { name: t('approvalCenter.all', '全部'), nameKey: 'approvalCenter.all', index: 0, value: false },
+      { name: t('approvalCenter.mine', '我的'), nameKey: 'approvalCenter.mine', index: 1, value: true }
     ],
     clickActive: (item: { index: number; value: boolean }) => {
       approvalState.mineTabs.activeIndex = item.index

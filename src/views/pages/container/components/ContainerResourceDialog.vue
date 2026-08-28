@@ -81,7 +81,7 @@ defineExpose({
           <el-input v-model.trim="imageActionForm.reference" :placeholder="t('container.resourceDialog.imageReferencePlaceholder')" />
         </el-form-item>
         <template v-else>
-          <el-form-item label="Registry">
+          <el-form-item :label="t('container.resourceDialog.registry')">
             <el-select v-model="imageActionForm.registryId" :placeholder="t('container.resourceDialog.registryPlaceholder')" filterable>
               <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
             </el-select>
@@ -107,18 +107,18 @@ defineExpose({
             <el-radio value="path">{{ t('container.resourceDialog.serverPath') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="imageActionForm.buildMode === 'dockerfile'" label="Dockerfile">
+        <el-form-item v-if="imageActionForm.buildMode === 'dockerfile'" :label="t('container.resourceDialog.dockerfile')">
           <el-input v-model="imageActionForm.dockerfile" type="textarea" :rows="8" />
         </el-form-item>
         <template v-else>
           <el-form-item :label="t('container.resourceDialog.contextPath')">
             <el-input v-model.trim="imageActionForm.contextPath" :placeholder="t('container.resourceDialog.contextPathPlaceholder')" />
           </el-form-item>
-          <el-form-item label="Dockerfile">
+          <el-form-item :label="t('container.resourceDialog.dockerfile')">
             <el-input v-model.trim="imageActionForm.dockerfilePath" :placeholder="t('container.resourceDialog.dockerfilePathPlaceholder')" />
           </el-form-item>
         </template>
-        <el-form-item label="Labels">
+        <el-form-item :label="t('container.resourceDialog.labels')">
           <el-input v-model="imageActionForm.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
@@ -146,7 +146,7 @@ defineExpose({
           <el-input v-model.trim="imageActionForm.pushReference" :placeholder="t('container.resourceDialog.pushReferencePlaceholder')" />
         </el-form-item>
         <template v-else>
-          <el-form-item label="Registry">
+          <el-form-item :label="t('container.resourceDialog.registry')">
             <el-select v-model="imageActionForm.registryId" :placeholder="t('container.resourceDialog.registryPlaceholder')" filterable>
               <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
             </el-select>
@@ -178,7 +178,7 @@ defineExpose({
 
       <template v-if="dialogType === 'network'">
         <el-divider content-position="left">{{ t('container.resourceDialog.ipam') }}</el-divider>
-        <el-form-item label="IPv4">
+        <el-form-item :label="t('container.resourceDialog.ipv4')">
           <el-switch v-model="form.networkIpv4" />
         </el-form-item>
         <template v-if="form.networkIpv4">
@@ -195,7 +195,7 @@ defineExpose({
             <el-input v-model="form.networkIpv4AuxAddressesText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.reservedPlaceholder', { version: 'IPv4', example: 'host1=172.16.10.10' })" />
           </el-form-item>
         </template>
-        <el-form-item label="IPv6">
+        <el-form-item :label="t('container.resourceDialog.ipv6')">
           <el-switch v-model="form.networkIpv6" />
         </el-form-item>
         <template v-if="form.networkIpv6">
@@ -212,21 +212,21 @@ defineExpose({
             <el-input v-model="form.networkIpv6AuxAddressesText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.reservedPlaceholder', { version: 'IPv6', example: 'host1=2408:400e::10' })" />
           </el-form-item>
         </template>
-        <el-form-item label="Options">
+        <el-form-item :label="t('container.resourceDialog.options')">
           <el-input v-model="form.optionsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionsPlaceholder')" />
         </el-form-item>
-        <el-form-item label="Labels">
+        <el-form-item :label="t('container.resourceDialog.labels')">
           <el-input v-model="form.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
 
       <template v-if="dialogType === 'volume'">
         <el-divider content-position="left">{{ t('container.resourceDialog.storageParameters') }}</el-divider>
-        <el-form-item label="NFS">
+        <el-form-item :label="t('container.resourceDialog.nfs')">
           <el-switch v-model="form.volumeNfs" />
           <div class="field-help">{{ t('container.resourceDialog.nfsHelp') }}</div>
         </el-form-item>
-        <el-form-item label="Options">
+        <el-form-item :label="t('container.resourceDialog.options')">
           <el-input
             v-model="form.optionsText"
             type="textarea"
@@ -234,7 +234,7 @@ defineExpose({
             :placeholder="t('container.resourceDialog.nfsOptionsPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="Labels">
+        <el-form-item :label="t('container.resourceDialog.labels')">
           <el-input v-model="form.labelsText" type="textarea" :rows="2" :placeholder="t('container.resourceDialog.optionalLabelsPlaceholder')" />
         </el-form-item>
       </template>
@@ -272,7 +272,7 @@ defineExpose({
         <el-form-item :label="t('container.resourceDialog.description')">
           <el-input v-model.trim="templateForm.description" :placeholder="t('container.resourceDialog.templateDescriptionPlaceholder')" />
         </el-form-item>
-        <el-form-item label="YAML">
+        <el-form-item :label="t('container.resourceDialog.yaml')">
           <el-input v-model="templateForm.content" type="textarea" :rows="10" />
         </el-form-item>
       </template>

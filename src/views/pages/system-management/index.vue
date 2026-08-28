@@ -63,9 +63,9 @@ const processFilters = reactive({
 })
 
 const tabItems = markRaw([
-  { key: 'processes', label: '进程管理', labelKey: 'systemManagement.tabs.processes' },
-  { key: 'ssh', label: 'SSH 配置', labelKey: 'systemManagement.tabs.ssh' },
-  { key: 'disks', label: '磁盘管理', labelKey: 'systemManagement.tabs.disks' }
+  { key: 'processes', label: t('systemManagement.tabs.processes', '进程管理'), labelKey: 'systemManagement.tabs.processes' },
+  { key: 'ssh', label: t('systemManagement.tabs.ssh', 'SSH 配置'), labelKey: 'systemManagement.tabs.ssh' },
+  { key: 'disks', label: t('systemManagement.tabs.disks', '磁盘管理'), labelKey: 'systemManagement.tabs.disks' }
 ])
 
 const processSortOptions = computed<Array<{ label: string; value: ProcessSort }>>(() => [
