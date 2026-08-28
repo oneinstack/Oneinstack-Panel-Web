@@ -3129,7 +3129,7 @@ const archiveTaskRunningCount = computed(
 
   :deep(.action-open.is-link),
   :deep(.action-more-trigger.is-link) {
-    color: #f97316 !important;
+    color: var(--table-action-color) !important;
 
     :deep(.el-icon) {
       color: currentColor !important;
@@ -3143,7 +3143,7 @@ const archiveTaskRunningCount = computed(
     }
 
     &:hover {
-      color: #ea580c !important;
+      color: var(--table-action-hover-color) !important;
       background: transparent !important;
     }
   }

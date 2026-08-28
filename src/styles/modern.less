@@ -38,7 +38,7 @@ html {
     transform: translateY(1px);
   }
 
-  &--primary {
+  &--primary:not(.is-plain):not(.is-link):not(.is-text):not(.is-disabled) {
     color: var(--primary-button-text);
     border-color: var(--primary-button-bg);
     background: var(--primary-button-bg);
@@ -109,15 +109,15 @@ html {
 }
 
 :root:root.dark .el-button--primary.is-plain {
-  color: #fdba74;
+  color: var(--table-action-color);
   border-color: rgba(var(--primary-color), 0.4);
-  background: rgba(101, 67, 18, 0.22);
+  background: rgba(var(--primary-color), 0.12);
 
   &:not(.is-disabled):hover,
   &:not(.is-disabled):focus-visible {
-    color: #fff7ed;
+    color: var(--table-action-hover-color);
     border-color: rgba(var(--primary-color), 0.56);
-    background: rgba(124, 45, 18, 0.52);
+    background: rgba(var(--primary-color), 0.22);
   }
 }
 
@@ -141,7 +141,7 @@ html {
 :root:root.dark .el-button--primary:disabled,
 :root:root.dark .el-button--primary:disabled:hover {
   color: var(--text-tertiary) !important;
-  border-color: var(--primary-color) !important;
+  border-color: rgb(var(--primary-color)) !important;
   background: rgba(var(--primary-color), 0.52) !important;
 }
 
@@ -699,7 +699,7 @@ html {
 
 :root:root.dark .table-row-actions .action-open.el-button.is-link:not(.is-disabled),
 :root:root.dark .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled) {
-  color: rgb(var(--primary-color)) !important;
+  color: var(--table-action-color) !important;
 }
 
 :root:root.dark .table-row-actions .action-open.el-button.is-link:not(.is-disabled):hover,
@@ -708,7 +708,7 @@ html {
 :root:root.dark .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled):hover,
 :root:root.dark .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled):focus-visible,
 :root:root.dark .table-row-actions .action-more-trigger.el-button.is-link:not(.is-disabled).is-active {
-  color: rgb(var(--primary-color)) !important;
+  color: var(--table-action-hover-color) !important;
   background: rgba(var(--primary-color), 0.1) !important;
 }
 
@@ -963,7 +963,7 @@ html {
 :root:root.dark .el-tag.el-tag--primary:not(.el-tag--plain):not(.el-tag--dark) {
   --el-tag-bg-color: rgba(var(--primary-color), 0.16);
   --el-tag-border-color: rgba(var(--primary-color), 0.28);
-  --el-tag-text-color: #fdba74;
+  --el-tag-text-color: var(--table-action-color);
 }
 
 :root:root.dark .website-chip.el-tag {

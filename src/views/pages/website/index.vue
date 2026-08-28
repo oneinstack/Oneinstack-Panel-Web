@@ -1562,7 +1562,7 @@ loadServiceStatuses()
 }
 
 .website-action-btn.is-link:not(.is-disabled) {
-  --website-action-color: #f97316;
+  --website-action-color: var(--el-color-primary);
   --website-action-icon-color: color-mix(in srgb, var(--website-action-color) 82%, white 18%);
   --website-action-hover-bg: color-mix(in srgb, var(--website-action-color) 12%, transparent);
   --table-action-color: var(--website-action-color);
@@ -1616,7 +1616,7 @@ loadServiceStatuses()
 }
 
 .website-action-btn--ssl.is-link:not(.is-disabled) {
-  --website-action-color: #ea580c;
+  --website-action-color: var(--el-color-primary);
 }
 
 .website-action-btn--backup.is-link:not(.is-disabled) {
