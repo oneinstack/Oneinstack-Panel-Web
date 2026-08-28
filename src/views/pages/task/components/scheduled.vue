@@ -455,7 +455,7 @@ onMounted(() => {
         </template>
         <template #schedule="scope">
             <div class="schedule-cell">
-              <span v-html="formatCron(scope.row.schedule)"></span>
+              <span class="schedule-cell__text" v-html="formatCron(scope.row.schedule)"></span>
             </div>
         </template>
         <template #lastRunAt="scope">
@@ -646,6 +646,17 @@ onMounted(() => {
 .last-run-cell {
   color: #475569;
   overflow-wrap: anywhere;
+}
+
+.schedule-cell {
+  align-items: flex-start;
+}
+
+.schedule-cell__text {
+  display: inline-grid;
+  gap: 4px;
+  line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 :deep(.task-actions-column .cell) {

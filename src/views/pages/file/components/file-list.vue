@@ -2500,7 +2500,7 @@ const archiveTaskRunningCount = computed(
           />
         </template>
         <template v-else-if="conf.operationDialog.type === 'archive'">
-          <el-form label-position="top">
+          <el-form label-position="top" class="archive-dialog__form">
             <el-form-item
               :label="t('file.archiveName', 'Archive name')"
               required
@@ -2530,7 +2530,7 @@ const archiveTaskRunningCount = computed(
           />
         </template>
         <template v-else-if="conf.operationDialog.type === 'extract'">
-          <el-form label-position="top">
+          <el-form label-position="top" class="extract-dialog__form">
             <el-form-item :label="t('file.extractSource', 'Source file')">
               <el-input :model-value="conf.operationDialog.row.path" disabled />
             </el-form-item>
@@ -3892,6 +3892,30 @@ const archiveTaskRunningCount = computed(
 .copy-dialog__form {
   :deep(.el-form-item:last-child) {
     margin-bottom: 0;
+  }
+}
+
+.archive-dialog__form,
+.extract-dialog__form {
+  :deep(.el-form-item__label) {
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-input.is-disabled .el-input__wrapper) {
+    background: var(--surface-subtle);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner),
+  :deep(.el-input.is-disabled .el-input__inner::placeholder) {
+    color: var(--text-primary) !important;
+    -webkit-text-fill-color: var(--text-primary) !important;
+    opacity: 1 !important;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner::placeholder) {
+    color: var(--text-placeholder) !important;
+    -webkit-text-fill-color: var(--text-placeholder) !important;
   }
 }
 

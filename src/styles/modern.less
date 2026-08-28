@@ -1003,14 +1003,85 @@ html {
   box-shadow: var(--shadow-md);
 }
 
-// :root:root.dark .el-message .el-message__content,
-// :root:root.dark .el-message--success .el-message__content,
-// :root:root.dark .el-message--info .el-message__content,
-// :root:root.dark .el-message--warning .el-message__content,
-// :root:root.dark .el-message--error .el-message__content {
-//   color: #182230 !important;
-//   -webkit-text-fill-color: #182230 !important;
-// }
+.el-message {
+  max-width: min(560px, calc(100vw - 32px));
+  padding: 15px 18px;
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  border-color: rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.06);
+}
+
+.el-message .el-message__content {
+  color: #243041;
+  line-height: 1.5;
+  font-weight: 500;
+  font-size: 15px;
+  word-break: break-word;
+  -webkit-text-fill-color: #243041;
+}
+
+.el-message .el-message__icon,
+.el-message .el-message__closeBtn {
+  color: #667085;
+}
+
+.el-message .el-message__icon {
+  font-size: 20px;
+}
+
+.el-message .el-message__closeBtn:hover {
+  color: #243041;
+}
+
+.el-message--success {
+  border-color: #e1f3d8;
+  background: #f0f9eb;
+}
+
+.el-message--success .el-message__content,
+.el-message--success .el-message__icon,
+.el-message--success .el-message__closeBtn {
+  color: #67c23a !important;
+  -webkit-text-fill-color: #67c23a !important;
+}
+
+.el-message--warning {
+  border-color: #faecd8;
+  background: #fdf6ec;
+}
+
+.el-message--warning .el-message__content,
+.el-message--warning .el-message__icon,
+.el-message--warning .el-message__closeBtn {
+  color: #e6a23c !important;
+  -webkit-text-fill-color: #e6a23c !important;
+}
+
+.el-message--error {
+  border-color: #fde2e2;
+  background: #fef0f0;
+}
+
+.el-message--error .el-message__content,
+.el-message--error .el-message__icon,
+.el-message--error .el-message__closeBtn {
+  color: #f56c6c !important;
+  -webkit-text-fill-color: #f56c6c !important;
+}
+
+.el-message--info {
+  border-color: #d9ecff;
+  background: #ecf5ff;
+}
+
+.el-message--info .el-message__content,
+.el-message--info .el-message__icon,
+.el-message--info .el-message__closeBtn {
+  color: #409eff !important;
+  -webkit-text-fill-color: #409eff !important;
+}
 
 :root:root.dark .el-notification {
   border-color: color-mix(in srgb, var(--border-default) 84%, transparent);
@@ -1100,7 +1171,16 @@ html {
     max-width: 100vw;
   }
 
+  .el-overlay-message-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
   .el-message-box {
+    margin: 0 !important;
     width: calc(100vw - 24px) !important;
     max-width: 440px;
     padding: 18px;

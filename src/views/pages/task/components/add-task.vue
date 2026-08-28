@@ -127,146 +127,186 @@
       </el-form-item>
 
       <el-form-item :label="i18n.t('task.editor.schedule')" required>
-        <div v-for="(cycle, index) in ruleForm.cycles" :key="index" class="cycle-row">
-          <el-select v-model="cycle.type" @change="(val:string) => handleCycleChange(val, index)" :placeholder="i18n.t('task.editor.schedulePlaceholder')" style="width: 120px;">
-            <el-option :label="i18n.t('task.editor.everyMinute')" value="minute" />
-            <el-option :label="i18n.t('task.editor.everyHour')" value="hour" />
-            <el-option :label="i18n.t('task.editor.everyDay')" value="day" />
-            <el-option :label="i18n.t('task.editor.everyWeek')" value="week" />
-            <el-option :label="i18n.t('task.editor.everyMonth')" value="month" />
-            <!-- <el-option label="每N分钟" value="n_minute" /> -->
-          </el-select>
-
-          <div class="cycle-inputs" :class="cycle.type">
-            <template v-if="cycle.type === 'month'" >
-              <div v-for="(monthTime, mIndex) in cycle.monthTimes" :key="mIndex" class="time-row">
-                <div class="time-input-group">
-                  <el-input-number 
-                    controls-position="right"
-                    v-model="monthTime.day" 
-                    :min="1" 
-                    :max="31" 
-                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                    style="width: 120px"
-                  >
-                    <template #suffix><span>{{ i18n.t('task.editor.dayUnit') }}</span></template>
-                  </el-input-number>
-                </div>
-                <div class="time-input-group">
-                  <el-input-number 
-                    controls-position="right"
-                    v-model="monthTime.hour" 
-                    :min="0" 
-                    :max="23" 
-                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                    style="width: 120px"
-                  >
-                    <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
-                  </el-input-number>
-                </div>
-                <div class="time-input-group">
-                  <el-input-number 
-                    controls-position="right"
-                    v-model="monthTime.minute" 
-                    :min="0" 
-                    :max="59" 
-                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                    style="width: 120px"
-                  >
-                    <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
-                  </el-input-number>
-                </div>
-                
-              </div>
-            </template>
-
-            <template v-if="cycle.type === 'week'">
-              <div v-for="(weekTime, wIndex) in cycle.weekTimes" :key="wIndex" class="time-row">
-                <el-select v-model="weekTime.day" :placeholder="i18n.t('task.editor.inputPlaceholder')">
-                  <el-option v-for="i in weekDays" :key="i.value" :label="i.day" :value="i.value" />
-                </el-select>
-                <el-input-number 
-                  controls-position="right"
-                  v-model="weekTime.hour" 
-                  :min="0" 
-                  :max="23" 
-                  :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                  style="width: 120px"
-                >
-                  <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
-                </el-input-number>
-                <el-input-number 
-                  controls-position="right"
-                  v-model="weekTime.minute" 
-                  :min="0" 
-                  :max="59" 
-                  :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                  style="width: 120px"
-                >
-                  <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
-                </el-input-number>
-              </div>
-            </template>
-
-            <template v-if="cycle.type === 'day'">
-              <el-input-number 
-                controls-position="right"
-                v-model="cycle.dayHour" 
-                :min="0" 
-                :max="23" 
-                :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                style="width: 120px"
-              >
-                <template #suffix><span>{{ i18n.t('task.editor.hourUnit') }}</span></template>
-              </el-input-number>
-              <el-input-number 
-                controls-position="right"
-                v-model="cycle.dayMinute" 
-                :min="0" 
-                :max="59" 
-                :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                style="width: 120px"
-              >
-                <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
-              </el-input-number>
-            </template>
-
-            <template v-if="cycle.type === 'hour'">
-              <el-input-number 
-                controls-position="right"
-                v-model="cycle.hourMinute" 
-                :min="0" 
-                :max="59" 
-                :placeholder="i18n.t('task.editor.inputPlaceholder')"
-                style="width: 120px"
-              >
-                <template #suffix><span>{{ i18n.t('task.editor.minuteUnit') }}</span></template>
-              </el-input-number>
-            </template>
-
-            <template v-if="cycle.type === 'n_minute'">
-              <el-input-number 
-                controls-position="right"
-                v-model="cycle.n_minute" 
-                :min="1" 
-                :placeholder="i18n.t('task.editor.nValuePlaceholder')"
-                style="width: 120px"
+        <div class="schedule-editor">
+          <div v-for="(cycle, index) in ruleForm.cycles" :key="index" class="cycle-row">
+            <el-select
+              v-model="cycle.type"
+              class="cycle-type-select"
+              @change="(val:string) => handleCycleChange(val, index)"
+              :placeholder="i18n.t('task.editor.schedulePlaceholder')"
+            >
+              <el-option
+                v-for="option in cycleTypeOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
               />
-            </template>
+            </el-select>
 
+            <div class="cycle-inputs" :class="cycle.type">
+              <template v-if="cycle.type === 'month'">
+                <div class="time-row">
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.monthTimes[0].day"
+                    :min="1"
+                    :max="31"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.dayUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.monthTimes[0].hour"
+                    :min="0"
+                    :max="23"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.hourUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.monthTimes[0].minute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'week'">
+                <div class="time-row">
+                  <el-select v-model="cycle.weekTimes[0].day" :placeholder="i18n.t('task.editor.inputPlaceholder')">
+                    <el-option v-for="i in weekDays" :key="i.value" :label="i.day" :value="i.value" />
+                  </el-select>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.weekTimes[0].hour"
+                    :min="0"
+                    :max="23"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.hourUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.weekTimes[0].minute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'day'">
+                <div class="time-row">
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.dayHour"
+                    :min="0"
+                    :max="23"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.hourUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.dayMinute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'hour'">
+                <div class="time-row">
+                  <span class="inline-prefix">{{ i18n.t('task.editor.everyHourPrefix') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.hourMinute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'n_day'">
+                <div class="time-row">
+                  <span class="inline-prefix">{{ i18n.t('task.editor.everyNPrefix') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.n_day"
+                    :min="1"
+                    :placeholder="i18n.t('task.editor.nValuePlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.dayUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.dayHour"
+                    :min="0"
+                    :max="23"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.hourUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.dayMinute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'n_hour'">
+                <div class="time-row">
+                  <span class="inline-prefix">{{ i18n.t('task.editor.everyNPrefix') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.n_hour"
+                    :min="1"
+                    :placeholder="i18n.t('task.editor.nValuePlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.hourUnit') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.hourMinute"
+                    :min="0"
+                    :max="59"
+                    :placeholder="i18n.t('task.editor.inputPlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+
+              <template v-if="cycle.type === 'n_minute'">
+                <div class="time-row">
+                  <span class="inline-prefix">{{ i18n.t('task.editor.everyNPrefix') }}</span>
+                  <el-input-number
+                    controls-position="right"
+                    v-model="cycle.n_minute"
+                    :min="1"
+                    :placeholder="i18n.t('task.editor.nValuePlaceholder')"
+                  />
+                  <span class="inline-unit">{{ i18n.t('task.editor.minuteUnit') }}</span>
+                </div>
+              </template>
+            </div>
+            <div class="cycle-actions">
+              <el-button type="danger" link @click="removeCycle(index)" v-if="ruleForm.cycles.length > 1">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
           </div>
-          <div class="cycle-actions">
-            <el-button type="danger" link @click="removeCycle(index)" v-if="ruleForm.cycles.length > 1">
-              <el-icon><Delete /></el-icon>
+          <div class="schedule-add-actions">
+            <el-button type="primary" @click="addCycle">
+              <el-icon><Plus /></el-icon>{{ i18n.t('task.editor.addSchedule') }}
             </el-button>
           </div>
         </div>
-        <div class="cycle-actions" style="width: 100%;">
-          <el-button type="primary"  @click="addCycle" >
-            <el-icon><Plus /></el-icon>{{ i18n.t('task.editor.addSchedule') }}
-          </el-button>
-        </div>
-        
       </el-form-item>
     </el-form>
   </custom-drawer>
@@ -312,9 +352,65 @@ interface TaskTemplate {
 }
 
 const templates = ref<TaskTemplate[]>([])
+type CycleType = 'month' | 'week' | 'day' | 'hour' | 'n_day' | 'n_hour' | 'n_minute'
+
+interface CycleTimeEntry {
+  day: number
+  hour: number
+  minute: number
+}
+
+interface TaskCycle {
+  type: CycleType
+  monthTimes: CycleTimeEntry[]
+  weekTimes: CycleTimeEntry[]
+  dayHour: number
+  dayMinute: number
+  hourMinute: number
+  customCron: string
+  n_day: number
+  n_hour: number
+  n_minute: number
+}
+
 const weekDays = computed(() => {
   const labels = i18n.t('task.cron.weekdays') as unknown as string[]
   return [1, 2, 3, 4, 5, 6, 0].map((value) => ({ day: labels[value], value }))
+})
+
+const cycleTypeOptions = computed(() => [
+  { value: 'month', label: i18n.t('task.editor.everyMonth') },
+  { value: 'week', label: i18n.t('task.editor.everyWeek') },
+  { value: 'day', label: i18n.t('task.editor.everyDay') },
+  { value: 'hour', label: i18n.t('task.editor.everyHour') },
+  { value: 'n_day', label: i18n.t('task.editor.everyNDay') },
+  { value: 'n_hour', label: i18n.t('task.editor.everyNHour') },
+  { value: 'n_minute', label: i18n.t('task.editor.everyNMinute') }
+])
+
+const createDefaultCycle = (type: CycleType = 'day'): TaskCycle => ({
+  type,
+  monthTimes: [
+    {
+      day: 1,
+      hour: 0,
+      minute: 0
+    }
+  ],
+  weekTimes: [
+    {
+      day: 1,
+      hour: 0,
+      minute: 0
+    }
+  ],
+  dayHour: 0,
+  dayMinute: 0,
+  hourMinute: 0,
+  customCron: '',
+  n_day: 1,
+  n_hour: 1,
+  n_minute: 1
 })
 
 const ruleForm = reactive({
@@ -326,30 +422,7 @@ const ruleForm = reactive({
   notify_on_failure: false,
   timeout_seconds: 1800,
   concurrency_policy: 'forbid',
-  cycles: [
-    {
-      type: 'day',
-      monthTimes: [
-        {
-          day: 1,
-          hour: 0,
-          minute: 0
-        }
-      ],
-      weekTimes: [
-        {
-          day: 1,
-          hour: 0,
-          minute: 0
-        }
-      ],
-      dayHour: 0,
-      dayMinute: 0,
-      hourMinute: 0,
-      customCron: '',
-      n_minute: 1
-    }
-  ]
+  cycles: [createDefaultCycle()]
 })
 
 const rules = reactive<FormRules>({
@@ -400,11 +473,9 @@ const loadTemplates = async () => {
 
 const handleCycleChange = (type: string, index: number) => {
   const cycle = ruleForm.cycles[index]
+  cycle.type = type as CycleType
 
   switch (type) {
-    case 'minute':
-      cycle.customCron = '* * * * *'
-      break
     case 'hour':
       cycle.customCron = '0 * * * *'
       break
@@ -416,6 +487,12 @@ const handleCycleChange = (type: string, index: number) => {
       break
     case 'month':
       cycle.customCron = '0 0 1 * *'
+      break
+    case 'n_day':
+      cycle.customCron = `0 0 */${cycle.n_day} * *`
+      break
+    case 'n_hour':
+      cycle.customCron = `0 */${cycle.n_hour} * * *`
       break
     case 'n_minute':
       cycle.customCron = `*/${cycle.n_minute} * * * *`
@@ -461,20 +538,18 @@ const handleSubmit = async () => {
         // 转换所有周期为 cron 表达式数组
         const cronExpressions = ruleForm.cycles.flatMap((cycle) => {
           switch (cycle.type) {
-            case 'minute':
-              return ['* * * * *']
             case 'hour':
               return [`${cycle.hourMinute} * * * *`]
             case 'day':
               return [`${cycle.dayMinute} ${cycle.dayHour} * * *`]
             case 'week':
-              return cycle.weekTimes.map((time) =>
-                `${time.minute} ${time.hour} * * ${time.day}`
-              )
+              return [`${cycle.weekTimes[0].minute} ${cycle.weekTimes[0].hour} * * ${cycle.weekTimes[0].day}`]
             case 'month':
-              return cycle.monthTimes.map((time) =>
-                `${time.minute} ${time.hour} ${time.day} * *`
-              )
+              return [`${cycle.monthTimes[0].minute} ${cycle.monthTimes[0].hour} ${cycle.monthTimes[0].day} * *`]
+            case 'n_day':
+              return [`${cycle.dayMinute} ${cycle.dayHour} */${cycle.n_day} * *`]
+            case 'n_hour':
+              return [`${cycle.hourMinute} */${cycle.n_hour} * * *`]
             case 'n_minute':
               return [`*/${cycle.n_minute} * * * *`]
             default:
@@ -551,45 +626,52 @@ watch(() => props.formData, (val) => {
 
         cronTimes.forEach((cronTime: string) => {
             const [minutes, hours, dayOfMonth, month, dayOfWeek] = cronTime.split(' ');
-            let cycle: any = {
-                customCron: cronTime
-            };
+            const cycle = createDefaultCycle();
+            cycle.customCron = cronTime
 
-            if (cronTime === '* * * * *') {
-                cycle.type = 'minute';
-            } else if (hours === '*' && minutes.startsWith('*/')) {
+            if (hours === '*' && minutes.startsWith('*/')) {
                 cycle.type = 'n_minute';
                 cycle.n_minute = parseInt(minutes.split('/')[1]);
+            } else if (hours.startsWith('*/') && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
+                cycle.type = 'n_hour';
+                cycle.n_hour = parseInt(hours.split('/')[1]);
+                cycle.hourMinute = parseInt(minutes);
+            } else if (dayOfMonth.startsWith('*/') && month === '*' && dayOfWeek === '*') {
+                cycle.type = 'n_day';
+                cycle.n_day = parseInt(dayOfMonth.split('/')[1]);
+                cycle.dayHour = parseInt(hours);
+                cycle.dayMinute = parseInt(minutes);
             } else if (hours === '0' && minutes === '0' && dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
                 cycle.type = 'day';
                 cycle.dayHour = 0;
                 cycle.dayMinute = 0;
             } else if (dayOfMonth === '*' && month === '*' && /^\d+$/.test(dayOfWeek)) {
                 cycle.type = 'week';
-                cycle.weekTimes = [
-                    {
-                        day: parseInt(dayOfWeek),
-                        hour: parseInt(hours),
-                        minute: parseInt(minutes)
-                    }
-                ];
+                cycle.weekTimes[0] = {
+                  day: parseInt(dayOfWeek),
+                  hour: parseInt(hours),
+                  minute: parseInt(minutes)
+                };
             } else if (month === '*' && /^\d+$/.test(dayOfMonth)) {
                 cycle.type = 'month';
-                cycle.monthTimes = [
-                    {
-                        day: parseInt(dayOfMonth),
-                        hour: parseInt(hours),
-                        minute: parseInt(minutes)
-                    }
-                ];
+                cycle.monthTimes[0] = {
+                  day: parseInt(dayOfMonth),
+                  hour: parseInt(hours),
+                  minute: parseInt(minutes)
+                };
             } else if (dayOfMonth === '*' && month === '*' && dayOfWeek === '*') {
                 cycle.type = 'day';
                 cycle.dayHour = parseInt(hours);
                 cycle.dayMinute = parseInt(minutes);
+            } else {
+                cycle.type = 'day';
             }
 
             ruleForm.cycles.push(cycle);
         });
+        if (!ruleForm.cycles.length) {
+          ruleForm.cycles = [createDefaultCycle()]
+        }
     }else{
       ruleForm.name= ''
       ruleForm.task_type = 'template'
@@ -601,30 +683,7 @@ watch(() => props.formData, (val) => {
       ruleForm.timeout_seconds = 1800
       ruleForm.concurrency_policy = 'forbid'
       copy_content.value =  ''
-  ruleForm.cycles = [
-    {
-      type: 'day',
-      monthTimes: [
-        {
-          day: 1,
-          hour: 0,
-          minute: 0
-        }
-      ],
-      weekTimes: [
-        {
-          day: 1,
-          hour: 0,
-          minute: 0
-        }
-      ],
-      dayHour: 0,
-      dayMinute: 0,
-      hourMinute: 0,
-      customCron: '',
-      n_minute: 1
-    }
-  ]
+      ruleForm.cycles = [createDefaultCycle()]
   
     }
 }, { immediate: true });
@@ -635,28 +694,7 @@ onMounted(() => {
 
 // 添加新的周期行
 const addCycle = () => {
-  ruleForm.cycles.push({
-    type: 'day',
-    monthTimes: [
-      {
-        day: 1,
-        hour: 0,
-        minute: 0
-      }
-    ],
-    weekTimes: [
-      {
-        day: 1,
-        hour: 0,
-        minute: 0
-      }
-    ],
-    dayHour: 0,
-    dayMinute: 0,
-    hourMinute: 0,
-    customCron: '',
-    n_minute: 1,
-  })
+  ruleForm.cycles.push(createDefaultCycle())
 }
 
 // 删除周期行
@@ -664,41 +702,6 @@ const removeCycle = (index: number) => {
   if (ruleForm.cycles.length > 1) {
     ruleForm.cycles.splice(index, 1)
   }
-}
-
-function generateCronExpression(minutesInput: number, hoursInput: number): string {
-  // 初始化 Cron 表达式的各个部分
-  let minutes = minutesInput % 60;
-  let hours = Math.floor(minutesInput / 60) + hoursInput;
-  let days = 1;
-  let months = 1;
-  let weeks = "*";
-
-  // 处理小时进位到天
-  if (hours >= 24) {
-    days += Math.floor(hours / 24);
-    hours = hours % 24;
-  }
-
-  // 处理天进位到月（简单假设每月 30 天）
-  if (days > 30) {
-    months += Math.floor(days / 30);
-    days = days % 30;
-    if (days === 0) {
-      days = 30;
-    }
-  }
-
-  // 处理月进位到年（简单假设一年 12 个月）
-  if (months > 12) {
-    months = months % 12;
-    if (months === 0) {
-      months = 12;
-    }
-  }
-
-  // 生成新的 Cron 表达式
-  return `${minutes} ${hours} ${days} ${months} ${weeks}`;
 }
 
 const handleScriptInput = (event: Event) => {
@@ -727,16 +730,30 @@ const handleScriptInput = (event: Event) => {
   max-width: 680px;
 }
 
-.cycle-row {
+.schedule-editor {
   width: 100%;
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.cycle-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 168px minmax(0, 1fr) auto;
+  align-items: start;
   margin-bottom: 16px;
   gap: 16px;
 
   .cycle-inputs {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    gap: 12px;
+    min-width: 0;
+    // padding: 14px 16px;
+    // border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    // background: var(--surface-card);
 
     .el-input-number,
     .el-select {
@@ -747,7 +764,43 @@ const handleScriptInput = (event: Event) => {
   .cycle-actions {
     display: flex;
     gap: 8px;
+    padding-top: 6px;
   }
+}
+
+.cycle-type-select {
+  width: 168px;
+}
+
+.schedule-add-actions {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.time-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.inline-prefix,
+.inline-unit {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+:deep(.cycle-inputs .el-input-number) {
+  width: 136px;
+}
+
+:deep(.cycle-inputs .el-input-number .el-input__wrapper),
+:deep(.cycle-inputs .el-select .el-select__wrapper) {
+  min-height: 44px;
+  border-radius: 10px;
 }
 
 .tip-text {
@@ -772,20 +825,7 @@ const handleScriptInput = (event: Event) => {
 }
 
 .time-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-  gap: 8px;
-  width: 100%;
-
-  &:last-child {
-    margin-bottom: 0;
-  }
-
-  .time-actions {
-    display: flex;
-    gap: 8px;
-  }
+  margin-bottom: 0;
 }
 
 .code-editor-wrapper {
@@ -829,10 +869,10 @@ const handleScriptInput = (event: Event) => {
 
 @media (max-width: 640px) {
   .cycle-row {
-    flex-wrap: wrap;
+    grid-template-columns: 1fr;
     gap: 10px;
 
-    > .el-select {
+    > .cycle-type-select {
       width: 100% !important;
     }
 
@@ -840,16 +880,16 @@ const handleScriptInput = (event: Event) => {
       flex: 1 1 100%;
       min-width: 0;
       flex-wrap: wrap;
-
-      &.week,
-      &.month {
-        flex-direction: column;
-      }
     }
   }
 
   .time-row {
     flex-wrap: wrap;
+  }
+
+  :deep(.cycle-inputs .el-input-number),
+  :deep(.cycle-inputs .el-select) {
+    width: 100%;
   }
 
   .tip-text {
