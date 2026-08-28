@@ -13,8 +13,8 @@ const t = (key: string, fallback?: string) => {
   return value && value !== key ? value : fallback || key
 }
 const languageOptions = computed<Array<{ label: string; value: SupportedLocale; mark: string }>>(() => [
-  { label: t('common.chinese', '中文'), value: 'zh-CN', mark: '中' },
-  { label: t('common.english', 'English'), value: 'en-US', mark: 'EN' }
+  { label: '中文', value: 'zh-CN', mark: '中' },
+  { label: 'English', value: 'en-US', mark: 'EN' }
 ])
 const activeLanguage = computed(
   () => languageOptions.value.find((item) => item.value === currentLanguage.value) || languageOptions.value[0]
