@@ -162,6 +162,9 @@ onBeforeUnmount(clearPolling)
         />
 
         <dl class="detail-list">
+          <div v-if="task.challengeType"><dt>{{ $t('certificate.task.challengeType') }}</dt><dd>{{ task.challengeType }}</dd></div>
+          <div v-if="task.email"><dt>{{ $t('certificate.form.accountEmail') }}</dt><dd>{{ task.email }}</dd></div>
+          <div v-if="task.dnsAccountId"><dt>{{ $t('certificate.form.dnsAccount') }}</dt><dd>{{ task.dnsAccountId }}</dd></div>
           <div><dt>{{ $t('certificate.columns.message') }}</dt><dd>{{ task.message || '—' }}</dd></div>
           <div><dt>{{ $t('certificate.task.managedId') }}</dt><dd>{{ task.managedId || task.certificateId || '—' }}</dd></div>
           <div><dt>{{ $t('certificate.task.websiteId') }}</dt><dd>{{ task.websiteId || '—' }}</dd></div>

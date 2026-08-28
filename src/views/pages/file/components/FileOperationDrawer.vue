@@ -34,6 +34,7 @@ const actionKeys = [
   'file.move',
   'file.rename',
   'file.archive',
+  'file.extract',
   'file.preview',
   'file.share.create',
   'file.share.revoke',

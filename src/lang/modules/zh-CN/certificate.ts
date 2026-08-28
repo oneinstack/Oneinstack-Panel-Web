@@ -7,6 +7,7 @@ export default {
     dnsAccounts: 'DNS 账号'
   },
   actions: {
+    issue: '申请证书',
     upload: '上传证书',
     selfSigned: '创建自签证书',
     bind: '绑定网站',
@@ -69,8 +70,11 @@ export default {
     tencentcloud: '腾讯云'
   },
   form: {
+    challengeType: '申请方式',
+    accountEmail: '账户邮箱',
     domains: '域名',
     domainsPlaceholder: '每行一个域名或 IP，上传时可留空自动识别',
+    acmeDomainsPlaceholder: '每行一个域名，支持 example.com 或 *.example.com',
     certificatePem: '证书 PEM',
     privateKeyPem: '私钥 PEM',
     certificatePlaceholder: '粘贴证书或完整证书链',
@@ -80,7 +84,11 @@ export default {
     autoRenew: '自动续签标记',
     renewBeforeDays: '提前续签天数',
     website: '目标网站',
+    websiteDomains: '网站域名',
+    selectWebsite: '请选择需要验证的网站',
     forceHttps: '强制 HTTPS',
+    dnsAccount: 'DNS 账号',
+    selectDnsAccount: '请选择已启用的 DNS 账号',
     accountName: '账号名称',
     dnsProvider: 'DNS 服务商',
     credentialOne: '凭据一',
@@ -89,7 +97,11 @@ export default {
     enabled: '启用账号',
     uploadHint: '证书和私钥仅用于服务端校验与受管存储，不会写入浏览器持久化状态。',
     selfSignedHint: '自签证书适合内网或测试环境，浏览器默认不会信任。',
-    dnsHint: 'DNS 账号当前仅用于安全存储和管理，尚未接入 DNS-01 证书申请。'
+    dnsHint: 'DNS 账号可用于 DNS-01 证书申请与统一管理，请确保账号已启用且凭据已配置完整。',
+    issueDnsHint: '使用 DNS-01 申请证书，可为不在本机的网站或通配符域名签发证书。域名不能填写 IP。',
+    issueHttpHint: '使用 HTTP-01 验证时，会直接使用所选网站域名；请确认域名已解析到当前服务器，且公网 80 端口可访问。',
+    noDnsAccountHint: '当前没有可用的 DNS 账号。请先新增并配置可用凭据后再申请。',
+    issueRemarkPlaceholder: '填写证书用途、项目名称或备注信息'
   },
   detail: {
     title: '证书详情',
@@ -111,6 +123,7 @@ export default {
     title: '证书任务',
     log: '执行日志',
     noLog: '暂无任务日志',
+    challengeType: '验证方式',
     errorCode: '错误代码',
     errorMessage: '错误信息',
     managedId: '证书资源 ID',
@@ -155,8 +168,10 @@ export default {
     websiteListFailed: '读取网站列表失败',
     materialFailed: '读取证书材料失败',
     submitFailed: '创建证书失败，请检查输入或稍后重试',
+    issueFailed: '证书申请失败，请检查申请参数或稍后重试',
     errorCodeLabel: '错误码',
     taskCreated: '任务已创建，正在等待执行',
+    approvalSubmitted: '申请已提交审批，等待管理员审核',
     taskCanceled: '已提交取消请求',
     certificateDeleted: '证书已删除',
     unbound: '网站已解绑',
@@ -167,9 +182,22 @@ export default {
     certificateRequired: '请填写证书 PEM',
     privateKeyRequired: '请填写私钥 PEM',
     algorithmRequired: '请选择密钥算法',
+    challengeTypeRequired: '请选择申请方式',
     websiteRequired: '请选择目标网站',
+    dnsAccountRequired: '请选择 DNS 账号',
+    acmeEmailRequired: '请填写 ACME 账户邮箱',
+    invalidAcmeEmail: '请输入正确的邮箱地址',
+    acmeDnsNoIp: 'DNS 账号申请不支持填写 IP 地址',
+    renewBeforeDaysRequired: '提前续签天数需在 1 到 90 之间',
+    remarkTooLong: '备注不能超过 512 个字符',
     dnsNameRequired: '请填写账号名称',
     dnsProviderRequired: '请选择 DNS 服务商',
     credentialRequired: '新增账号时请填写凭据一'
+  },
+  issue: {
+    challengeDns: 'DNS 账号申请',
+    challengeDnsDesc: '适合通配符域名或未托管在本面板的网站。',
+    challengeHttp: '通过验证获取',
+    challengeHttpDesc: '适合已在本面板管理且已解析到本机的网站。'
   }
 }

@@ -123,6 +123,19 @@ const operationFallbackMessage: Record<string, string> = {
   create: "Container creation task created",
 };
 
+const normalizeCreatedTaskPayload = (data: any) => {
+  const envelope = data?.data ?? data ?? {};
+  const payload = envelope?.data ?? envelope ?? {};
+  return {
+    taskId:
+      payload?.taskId ||
+      envelope?.taskId ||
+      payload?.id ||
+      envelope?.id,
+    payload,
+  };
+};
+
 export const useContainerTaskStore = defineStore("containerTask", {
   state: (): ContainerTaskState => ({
     tasks: {} as Record<string, ContainerTask>,
@@ -178,9 +191,9 @@ export const useContainerTaskStore = defineStore("containerTask", {
 
     acceptCreated(data: any, request: Record<string, any> = {}) {
       const now = new Date().toISOString();
-      const id = data?.taskId || data?.id;
+      const { taskId: id, payload } = normalizeCreatedTaskPayload(data);
       if (!id) return;
-      const operation = data.operation || request.operation || "create";
+      const operation = payload?.operation || data?.operation || request.operation || "create";
       const resourceName =
         request.name ||
         request.image ||
@@ -190,20 +203,20 @@ export const useContainerTaskStore = defineStore("containerTask", {
       this.upsert({
         id,
         operation,
-        status: data.status || "queued",
-        phase: data.phase || data.status || "queued",
-        progress: data.progress ?? 0,
-        phaseProgress: data.phaseProgress,
+        status: payload?.status || data?.status || "queued",
+        phase: payload?.phase || payload?.status || data?.phase || data?.status || "queued",
+        progress: payload?.progress ?? data?.progress ?? 0,
+        phaseProgress: payload?.phaseProgress ?? data?.phaseProgress,
         message:
-          data.message || operationFallbackMessage[operation] || "Task created",
-        details: data.details || [],
-        containerId: data.containerId,
-        errorCode: data.errorCode,
-        errorMessage: data.errorMessage,
+          payload?.message || data?.message || operationFallbackMessage[operation] || "Task created",
+        details: payload?.details || data?.details || [],
+        containerId: payload?.containerId || data?.containerId,
+        errorCode: payload?.errorCode || data?.errorCode,
+        errorMessage: payload?.errorMessage || data?.errorMessage,
         cancelRequested: false,
-        eventSeq: data.eventSeq || 0,
-        createdAt: data.createdAt || now,
-        updatedAt: data.updatedAt || now,
+        eventSeq: payload?.eventSeq || data?.eventSeq || 0,
+        createdAt: payload?.createdAt || data?.createdAt || now,
+        updatedAt: payload?.updatedAt || data?.updatedAt || now,
         resourceName,
         autoStartStatus: request.startAfterCreate ? "pending" : undefined,
       });

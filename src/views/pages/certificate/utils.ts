@@ -22,6 +22,7 @@ const statusKeys: Record<string, string> = {
 }
 
 const operationKeys: Record<string, string> = {
+  issue_managed: 'certificate.operations.issue',
   issue: 'certificate.operations.issue',
   renew: 'certificate.operations.renew',
   upload: 'certificate.operations.upload',

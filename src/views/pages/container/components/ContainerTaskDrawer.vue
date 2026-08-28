@@ -36,6 +36,7 @@ const autoScroll = ref(true)
 const logElement = ref<HTMLElement>()
 const downloading = ref(false)
 const bootstrapping = ref(false)
+const requestSequence = ref(0)
 
 const operationLabel = computed(() => {
   const labels: Record<string, string> = {
@@ -118,43 +119,92 @@ const summaryItems = computed(() => [
   { label: t('container.task.summary.errorCode', 'Error code'), value: task.value?.errorCode || '-' }
 ])
 
-const pickLatestTaskId = (tasks: Array<{ id?: string; status?: string }>) => {
-  const activeTask = tasks.find((item) => item?.id && !containerTaskStore.isTerminal(item.status))
-  if (activeTask?.id) return activeTask.id
-  return tasks.find((item) => item?.id)?.id || ''
+const pickLatestTaskId = (
+  tasks: Array<{ id?: string; status?: string; createdAt?: string }>,
+) => {
+  return [...tasks]
+    .filter((item) => item?.id && !containerTaskStore.isTerminal(item.status))
+    .sort((left, right) => {
+      const leftTime = left.createdAt ? new Date(left.createdAt).getTime() : 0
+      const rightTime = right.createdAt ? new Date(right.createdAt).getTime() : 0
+      return rightTime - leftTime
+    })[0]?.id || ''
 }
 
-const ensureTaskLoaded = async () => {
+const resetTaskSelection = (closeSubscription = true) => {
+  const previousTaskId = currentTaskId.value
+  currentTaskId.value = ''
+  autoScroll.value = true
+  bootstrapping.value = false
+  requestSequence.value += 1
+  if (previousTaskId && closeSubscription) {
+    containerTaskStore.close(previousTaskId)
+  }
+}
+
+const loadTasksByPriority = async () => {
+  const { data: activeResult } = await Api.getContainerTasks({
+    active: true,
+    page: 1,
+    pageSize: 20
+  })
+  const activeTasks = Array.isArray(activeResult)
+    ? activeResult
+    : Array.isArray(activeResult?.data)
+      ? activeResult.data
+      : activeResult?.items || []
+  containerTaskStore.ingest(activeTasks)
+  return pickLatestTaskId(activeTasks)
+}
+
+const ensureTaskLoaded = async (preferredTaskId?: string) => {
   if (!props.modelValue || bootstrapping.value) return
+  const sequence = ++requestSequence.value
   bootstrapping.value = true
   try {
-    let taskId = props.taskId || currentTaskId.value || ''
+    let taskId = preferredTaskId || props.taskId || ''
     if (!taskId) {
-      const [{ data: activeResult }, { data: latestResult }] = await Promise.all([
-        Api.getContainerTasks({ active: true, page: 1, pageSize: 20 }),
-        Api.getContainerTasks({ page: 1, pageSize: 20 })
-      ])
-      const activeTasks = Array.isArray(activeResult) ? activeResult : Array.isArray(activeResult?.data) ? activeResult.data : activeResult?.items || []
-      const latestTasks = Array.isArray(latestResult) ? latestResult : Array.isArray(latestResult?.data) ? latestResult.data : latestResult?.items || []
-      containerTaskStore.ingest(activeTasks)
-      containerTaskStore.ingest(latestTasks)
-      taskId = pickLatestTaskId(activeTasks) || pickLatestTaskId(latestTasks) || containerTaskStore.order[0] || ''
+      taskId = await loadTasksByPriority()
+    }
+    if (sequence !== requestSequence.value || !props.modelValue) return
+    if (currentTaskId.value && currentTaskId.value !== taskId) {
+      containerTaskStore.close(currentTaskId.value)
     }
     currentTaskId.value = taskId
     if (!taskId) return
     await containerTaskStore.track(taskId).catch(() => undefined)
+    if (sequence !== requestSequence.value || currentTaskId.value !== taskId || !props.modelValue) return
     await containerTaskStore.fetchLog(taskId).catch(() => undefined)
+    if (sequence !== requestSequence.value || currentTaskId.value !== taskId || !props.modelValue) return
   } finally {
-    bootstrapping.value = false
+    if (sequence === requestSequence.value) {
+      bootstrapping.value = false
+    }
   }
 }
 
 watch(
   () => ({ isVisible: props.modelValue, taskId: props.taskId }),
   async ({ isVisible, taskId }) => {
-    if (!isVisible) return
-    if (taskId && taskId !== currentTaskId.value) currentTaskId.value = taskId
-    await ensureTaskLoaded()
+    if (!isVisible) {
+      resetTaskSelection(true)
+      return
+    }
+    if (taskId) {
+      if (taskId !== currentTaskId.value) {
+        autoScroll.value = true
+        await ensureTaskLoaded(taskId)
+        return
+      }
+      if (!task.value) {
+        await ensureTaskLoaded(taskId)
+      }
+      return
+    }
+    if (currentTaskId.value) {
+      resetTaskSelection(true)
+    }
+    await ensureTaskLoaded('')
   },
   { immediate: true }
 )
@@ -203,7 +253,7 @@ const downloadLog = async () => {
 }
 
 onBeforeUnmount(() => {
-  if (currentTaskId.value && terminal.value) containerTaskStore.close(currentTaskId.value)
+  resetTaskSelection(true)
 })
 </script>
 

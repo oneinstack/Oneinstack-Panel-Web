@@ -1,4 +1,5 @@
 import http from "@/api";
+import type { CertificateAcmeIssuePayload } from "../types";
 
 export const certificateApi = {
   /** 获取可用证书密钥算法。 */
@@ -61,4 +62,7 @@ export const certificateApi = {
   /** 删除 DNS 账号。 */
   deleteCertificateDnsAccount: (id: string) =>
     http.delete(`/certificates/dns-accounts/${encodeURIComponent(id)}`),
+  /** 使用 ACME 申请托管证书。 */
+  issueManagedCertificate: (data: CertificateAcmeIssuePayload) =>
+    http.post("/certificates/acme", data),
 };

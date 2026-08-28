@@ -90,6 +90,14 @@ export const fileApi = {
   }, options: Record<string, any> = {}) => {
     return http.post("/ftp/archive", obj, options);
   },
+  /** 解压压缩文件 */
+  extractFile: (obj: {
+    path: string;
+    targetDir?: string;
+    overwrite?: boolean;
+  }, options: Record<string, any> = {}) => {
+    return http.post("/ftp/extract", obj, options);
+  },
   /** 获取当前用户归档任务列表 */
   getArchiveTasks: (
     obj?: {
@@ -101,10 +109,29 @@ export const fileApi = {
   ) => {
     return http.get("/ftp/archive/tasks", obj, options);
   },
+  /** 获取当前用户解压任务列表 */
+  getExtractTasks: (
+    obj?: {
+      page?: number;
+      pageSize?: number;
+      status?: "queued" | "running" | "succeeded" | "failed";
+    },
+    options: Record<string, any> = {},
+  ) => {
+    return http.get("/ftp/extract/tasks", obj, options);
+  },
   /** 获取单个归档任务详情 */
   getArchiveTask: (taskId: string, options: Record<string, any> = {}) => {
     return http.get(
       `/ftp/archive/tasks/${encodeURIComponent(taskId)}`,
+      undefined,
+      options,
+    );
+  },
+  /** 获取单个解压任务详情 */
+  getExtractTask: (taskId: string, options: Record<string, any> = {}) => {
+    return http.get(
+      `/ftp/extract/tasks/${encodeURIComponent(taskId)}`,
       undefined,
       options,
     );

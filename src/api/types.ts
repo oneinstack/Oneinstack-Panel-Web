@@ -134,11 +134,13 @@ export type CertificateTaskStatus =
   | "canceled"
   | "interrupted";
 export type CertificateTaskOperation =
+  | "issue_managed"
   | "issue"
   | "renew"
   | "upload"
   | "self_signed"
   | "bind";
+export type CertificateChallengeType = "dns-01" | "http-01";
 
 export interface CertificateAlgorithm {
   value: string;
@@ -190,6 +192,8 @@ export interface CertificateTask {
   managedId?: string;
   email?: string;
   domains?: string;
+  challengeType?: CertificateChallengeType;
+  dnsAccountId?: string;
   autoRenew?: boolean;
   renewBeforeDays?: number;
   forceHttps?: boolean;
@@ -217,4 +221,15 @@ export interface DnsAccount {
   enabled: boolean;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CertificateAcmeIssuePayload {
+  challengeType: CertificateChallengeType;
+  websiteId?: number;
+  domains?: string[];
+  email: string;
+  dnsAccountId?: string;
+  autoRenew?: boolean;
+  renewBeforeDays?: number;
+  remark?: string;
 }

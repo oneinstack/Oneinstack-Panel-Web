@@ -28,6 +28,7 @@ import CertificateFormDrawer from './components/CertificateFormDrawer.vue'
 import CertificateBindDrawer from './components/CertificateBindDrawer.vue'
 import CertificateTaskDrawer from './components/CertificateTaskDrawer.vue'
 import DnsAccountDrawer from './components/DnsAccountDrawer.vue'
+import CertificateIssueDrawer from './components/CertificateIssueDrawer.vue'
 import {
   certificateDnsProviderLabel,
   certificateOperationLabel,
@@ -51,6 +52,7 @@ const dnsLoading = ref(false)
 const certificateTotal = ref(0)
 const taskTotal = ref(0)
 const formDrawer = reactive({ visible: false, mode: 'upload' as 'upload' | 'self-signed' })
+const issueDrawer = reactive({ visible: false })
 const detailDrawer = reactive({ visible: false, certificateId: '' })
 const bindDrawer = reactive({ visible: false, certificateId: '' })
 const taskDrawer = reactive({ visible: false, taskId: '' })
@@ -58,6 +60,8 @@ const dnsDrawer = reactive({ visible: false, account: null as DnsAccount | null 
 const certificateQuery = reactive({ page: 1, pageSize: 20 })
 const taskQuery = reactive({ page: 1, pageSize: 20, status: '' })
 let taskPollTimer: number | undefined
+let approvalPollTimer: number | undefined
+const pendingApprovalIds = ref<string[]>([])
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -170,6 +174,9 @@ const openCreate = (mode: 'upload' | 'self-signed') => {
   formDrawer.mode = mode
   formDrawer.visible = true
 }
+const openIssue = () => {
+  issueDrawer.visible = true
+}
 const openDetail = (certificate: ManagedCertificate) => {
   detailDrawer.certificateId = certificate.id
   detailDrawer.visible = true
@@ -188,6 +195,109 @@ const handleTaskCreated = (task: CertificateTask) => {
   taskDrawer.visible = true
   void loadTasks(true)
   void loadCertificates(true)
+}
+
+const extractApprovalBoundTaskId = (payload: any) => {
+  const envelope = payload?.data ?? payload ?? {}
+  const root = envelope?.data ?? envelope ?? {}
+  const result = root?.result || envelope?.result || root?.data?.result || {}
+  const meta = root?.meta || envelope?.meta || root?.data?.meta || {}
+  const candidates = [
+    root?.boundTaskId,
+    root?.bound_task_id,
+    root?.taskId,
+    root?.task_id,
+    root?.task?.id,
+    result?.boundTaskId,
+    result?.bound_task_id,
+    result?.taskId,
+    result?.task_id,
+    result?.task?.id,
+    meta?.boundTaskId,
+    meta?.bound_task_id,
+    meta?.taskId,
+    meta?.task_id
+  ]
+  const taskId = candidates.find((item) => typeof item === 'string' || typeof item === 'number')
+  return taskId ? String(taskId) : ''
+}
+
+const extractApprovalStatus = (payload: any) => {
+  const envelope = payload?.data ?? payload ?? {}
+  const root = envelope?.data ?? envelope ?? {}
+  const result = root?.result || envelope?.result || root?.data?.result || {}
+  const meta = root?.meta || envelope?.meta || root?.data?.meta || {}
+  const candidates = [
+    root?.status,
+    root?.state,
+    root?.phase,
+    result?.status,
+    result?.state,
+    result?.phase,
+    meta?.status,
+    meta?.state,
+    meta?.phase
+  ]
+  const status = candidates.find((item) => typeof item === 'string')
+  return typeof status === 'string' ? status.toLowerCase() : ''
+}
+
+const ensureApprovalPolling = () => {
+  if (approvalPollTimer || !pendingApprovalIds.value.length) return
+  approvalPollTimer = window.setInterval(async () => {
+    const currentIds = [...pendingApprovalIds.value]
+    for (const approvalId of currentIds) {
+      try {
+        const response = await Api.getApprovalDetail(approvalId)
+        const taskId = extractApprovalBoundTaskId(response)
+        const status = extractApprovalStatus(response)
+        if (taskId) {
+          pendingApprovalIds.value = pendingApprovalIds.value.filter((item) => item !== approvalId)
+          taskDrawer.taskId = taskId
+          taskDrawer.visible = true
+          void loadTasks(true)
+          void loadCertificates(true)
+          continue
+        }
+        if (['rejected', 'expired', 'canceled', 'failed'].includes(status)) {
+          pendingApprovalIds.value = pendingApprovalIds.value.filter((item) => item !== approvalId)
+        }
+      } catch {
+        // 审批轮询失败时保留当前条目，下一轮继续尝试。
+      }
+    }
+    if (!pendingApprovalIds.value.length && approvalPollTimer) {
+      window.clearInterval(approvalPollTimer)
+      approvalPollTimer = undefined
+    }
+  }, 3500)
+}
+
+const handleIssueSubmitted = (payload: {
+  task?: CertificateTask | null
+  taskId?: string
+  approvalId?: string
+  status?: string
+}) => {
+  issueDrawer.visible = false
+  const taskId = payload.task?.id || payload.taskId || ''
+  if (taskId) {
+    if (payload.task?.id) {
+      handleTaskCreated(payload.task)
+    } else {
+      taskDrawer.taskId = taskId
+      taskDrawer.visible = true
+      void loadTasks(true)
+      void loadCertificates(true)
+    }
+    return
+  }
+  if (payload.approvalId) {
+    if (!pendingApprovalIds.value.includes(payload.approvalId)) {
+      pendingApprovalIds.value = [...pendingApprovalIds.value, payload.approvalId]
+    }
+    ensureApprovalPolling()
+  }
 }
 
 const deleteCertificate = async (certificate: ManagedCertificate) => {
@@ -235,6 +345,11 @@ const editDnsAccount = (account?: DnsAccount) => {
   dnsDrawer.account = account || null
   dnsDrawer.visible = true
 }
+const openDnsManagerFromIssue = () => {
+  issueDrawer.visible = false
+  activeTab.value = 'dnsAccounts'
+  editDnsAccount()
+}
 const deleteDnsAccount = async (account: DnsAccount) => {
   try {
     await ElMessageBox.confirm(
@@ -271,10 +386,12 @@ onMounted(async () => {
   taskPollTimer = window.setInterval(() => {
     if (hasActiveTasks.value) void loadTasks(true)
   }, 3500)
+  ensureApprovalPolling()
 })
 
 onBeforeUnmount(() => {
   if (taskPollTimer) window.clearInterval(taskPollTimer)
+  if (approvalPollTimer) window.clearInterval(approvalPollTimer)
 })
 </script>
 
@@ -287,10 +404,13 @@ onBeforeUnmount(() => {
       </div>
       <div class="toolbar-actions">
         <el-button :icon="Refresh" @click="refreshCurrent">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openIssue">
+          {{ $t('certificate.actions.issue') }}
+        </el-button>
         <el-button v-if="canWrite" :icon="Upload" @click="openCreate('upload')">
           {{ $t('certificate.actions.upload') }}
         </el-button>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openCreate('self-signed')">
+        <el-button v-if="canWrite" :icon="Plus" @click="openCreate('self-signed')">
           {{ $t('certificate.actions.selfSigned') }}
         </el-button>
       </div>
@@ -413,6 +533,12 @@ onBeforeUnmount(() => {
       :mode="formDrawer.mode"
       :algorithms="algorithms"
       @created="handleTaskCreated"
+    />
+    <certificate-issue-drawer
+      v-model:visible="issueDrawer.visible"
+      :dns-accounts="dnsAccounts"
+      @manage-dns="openDnsManagerFromIssue"
+      @submitted="handleIssueSubmitted"
     />
     <certificate-detail-drawer
       v-model:visible="detailDrawer.visible"

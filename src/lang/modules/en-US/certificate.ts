@@ -7,6 +7,7 @@ export default {
     dnsAccounts: 'DNS accounts'
   },
   actions: {
+    issue: 'Issue certificate',
     upload: 'Upload certificate',
     selfSigned: 'Create self-signed',
     bind: 'Bind website',
@@ -69,8 +70,11 @@ export default {
     tencentcloud: 'Tencent Cloud'
   },
   form: {
+    challengeType: 'Issuance method',
+    accountEmail: 'Account email',
     domains: 'Domains',
     domainsPlaceholder: 'One domain or IP per line; optional for upload auto-detection',
+    acmeDomainsPlaceholder: 'One domain per line, for example example.com or *.example.com',
     certificatePem: 'Certificate PEM',
     privateKeyPem: 'Private key PEM',
     certificatePlaceholder: 'Paste the certificate or full certificate chain',
@@ -80,7 +84,11 @@ export default {
     autoRenew: 'Auto-renew flag',
     renewBeforeDays: 'Renew before days',
     website: 'Target website',
+    websiteDomains: 'Website domains',
+    selectWebsite: 'Select the website to validate',
     forceHttps: 'Force HTTPS',
+    dnsAccount: 'DNS account',
+    selectDnsAccount: 'Select an enabled DNS account',
     accountName: 'Account name',
     dnsProvider: 'DNS provider',
     credentialOne: 'Credential one',
@@ -89,7 +97,11 @@ export default {
     enabled: 'Enable account',
     uploadHint: 'The certificate and private key are sent only for server validation and managed storage. They are never persisted in the browser.',
     selfSignedHint: 'Self-signed certificates suit internal or test environments and are not trusted by browsers by default.',
-    dnsHint: 'DNS accounts are currently stored securely for management only. DNS-01 certificate issuance is not available yet.'
+    dnsHint: 'DNS accounts can be used for DNS-01 certificate issuance and centralized management. Make sure the account is enabled and credentials are complete.',
+    issueDnsHint: 'Use DNS-01 to issue certificates for websites not hosted on this panel or for wildcard domains. IP addresses are not supported.',
+    issueHttpHint: 'HTTP-01 uses the selected website domains directly. Make sure they resolve to this server and that public port 80 is reachable.',
+    noDnsAccountHint: 'No usable DNS accounts are available yet. Add one with valid credentials before issuing.',
+    issueRemarkPlaceholder: 'Describe the certificate purpose, project name, or notes'
   },
   detail: {
     title: 'Certificate details',
@@ -111,6 +123,7 @@ export default {
     title: 'Certificate task',
     log: 'Execution log',
     noLog: 'No task log',
+    challengeType: 'Challenge type',
     errorCode: 'Error code',
     errorMessage: 'Error message',
     managedId: 'Certificate resource ID',
@@ -155,8 +168,10 @@ export default {
     websiteListFailed: 'Failed to load websites',
     materialFailed: 'Failed to load certificate material',
     submitFailed: 'Failed to create the certificate. Check the input and try again later.',
+    issueFailed: 'Failed to issue the certificate. Check the request parameters and try again later.',
     errorCodeLabel: 'Error code',
     taskCreated: 'Task created and waiting to run',
+    approvalSubmitted: 'Issuance request submitted for approval. Waiting for an administrator review.',
     taskCanceled: 'Cancellation requested',
     certificateDeleted: 'Certificate deleted',
     unbound: 'Website unbound',
@@ -167,9 +182,22 @@ export default {
     certificateRequired: 'Enter the certificate PEM',
     privateKeyRequired: 'Enter the private key PEM',
     algorithmRequired: 'Select a key algorithm',
+    challengeTypeRequired: 'Select an issuance method',
     websiteRequired: 'Select a target website',
+    dnsAccountRequired: 'Select a DNS account',
+    acmeEmailRequired: 'Enter the ACME account email',
+    invalidAcmeEmail: 'Enter a valid email address',
+    acmeDnsNoIp: 'DNS-01 issuance does not support IP addresses',
+    renewBeforeDaysRequired: 'Renew-before days must be between 1 and 90',
+    remarkTooLong: 'Remark cannot exceed 512 characters',
     dnsNameRequired: 'Enter an account name',
     dnsProviderRequired: 'Select a DNS provider',
     credentialRequired: 'Credential one is required for a new account'
+  },
+  issue: {
+    challengeDns: 'DNS account issuance',
+    challengeDnsDesc: 'Best for wildcard domains or websites not managed by this panel.',
+    challengeHttp: 'Validate by website',
+    challengeHttpDesc: 'Best for websites already managed by this panel and resolved to this server.'
   }
 }

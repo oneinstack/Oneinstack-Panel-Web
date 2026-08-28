@@ -136,6 +136,7 @@ const terminalDrawer = reactive({
 });
 const taskDrawer = reactive({
   show: false,
+  taskId: "",
 });
 let statsTimer: ReturnType<typeof setInterval> | undefined;
 
@@ -1414,6 +1415,95 @@ const buildImageBuildPayload = () => {
   };
 };
 
+const truncatePreviewText = (value: string, maxLength = 88) => {
+  const text = value.trim().replace(/\s+/g, " ");
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 1)}…`;
+};
+
+const summarizeLabelEntries = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return t("container.confirmations.none");
+  try {
+    const parsed = parseKeyValueMap(trimmed, "Labels");
+    if (!parsed) return t("container.confirmations.none");
+    const entries = Object.entries(parsed);
+    if (!entries.length) return t("container.confirmations.none");
+    return entries
+      .map(([key, item]) => `${key}=${truncatePreviewText(String(item), 48)}`)
+      .join(", ");
+  } catch {
+    return truncatePreviewText(trimmed, 160);
+  }
+};
+
+const summarizeDockerfile = (dockerfile: string) => {
+  const lines = dockerfile
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (!lines.length) return t("container.confirmations.none");
+  const preview = lines
+    .slice(0, 3)
+    .map((line) => truncatePreviewText(line, 72))
+    .join(" | ");
+  return lines.length > 3
+    ? `${preview} … (+${lines.length - 3} ${t("container.resourceDialog.lines", "lines")})`
+    : preview;
+};
+
+const createImageBuildPreview = () => {
+  const noneLabel = t("container.confirmations.none");
+  const buildModeLabel =
+    imageActionForm.buildMode === "path"
+      ? t("container.resourceDialog.serverPath")
+      : t("container.resourceDialog.editDockerfile");
+  const buildContextLabel =
+    imageActionForm.buildMode === "path"
+      ? imageActionForm.contextPath.trim() || noneLabel
+      : t("container.confirmations.inlineDockerfile");
+  const dockerfilePathLabel =
+    imageActionForm.buildMode === "path"
+      ? imageActionForm.dockerfilePath.trim() ||
+        (imageActionForm.contextPath.trim()
+          ? `${imageActionForm.contextPath.trim().replace(/\/+$/, "")}/Dockerfile`
+          : noneLabel)
+      : summarizeDockerfile(imageActionForm.dockerfile);
+  const previewRows = [
+    [t("container.confirmations.buildTargetImage"), imageActionForm.buildName.trim() || noneLabel],
+    [t("container.confirmations.buildMode"), buildModeLabel],
+    [t("container.confirmations.buildContext"), buildContextLabel],
+    [
+      imageActionForm.buildMode === "path"
+        ? t("container.confirmations.dockerfilePath")
+        : t("container.confirmations.dockerfileContent"),
+      dockerfilePathLabel,
+    ],
+    [t("container.confirmations.labels"), summarizeLabelEntries(imageActionForm.labelsText)],
+  ];
+
+  return h("div", { class: "container-create-preview" }, [
+    h(
+      "div",
+      { class: "container-create-preview__notice" },
+      t(
+        "container.confirmations.buildNotice",
+        "Building an image reads the build context and consumes CPU and disk space. The preview below shows what will be built so you can verify the target image, context, Dockerfile source, and labels before continuing.",
+      ),
+    ),
+    h(
+      "div",
+      { class: "container-create-preview__grid" },
+      previewRows.map(([label, value]) =>
+        h("div", { class: "container-create-preview__row" }, [
+          h("span", { class: "container-create-preview__label" }, label),
+          h("span", { class: "container-create-preview__value" }, value),
+        ]),
+      ),
+    ),
+  ]);
+};
+
 const buildNetworkPayload = () => ({
   name: form.name.trim(),
   driver: form.driver.trim() || undefined,
@@ -1445,25 +1535,45 @@ const buildVolumePayload = () => ({
   labelsText: form.labelsText.trim() || undefined,
 });
 
-const extractTaskResult = (response: any) => response?.data || response;
+const extractTaskResult = (response: any) => {
+  const envelope = response?.data ?? response;
+  return envelope?.data ?? envelope;
+};
+
+const extractContainerTaskId = (response: any) => {
+  const envelope = response?.data ?? response ?? {};
+  const payload = envelope?.data ?? envelope ?? {};
+  return String(
+    payload?.taskId ?? envelope?.taskId ?? payload?.id ?? envelope?.id ?? "",
+  );
+};
 
 const openContainerTask = (
   result: any,
   request: Record<string, any>,
   targetTab: "containers" | "images",
 ) => {
-  const data = extractTaskResult(result);
-  const taskId = data?.taskId || data?.id;
+  const taskId = extractContainerTaskId(result);
   if (!taskId) throw new Error(t("container.validation.taskIdMissing"));
-  containerTaskStore.acceptCreated(data, request);
+  containerTaskStore.acceptCreated(result, request);
+  taskDrawer.taskId = String(taskId);
   taskDrawer.show = true;
   dialogVisible.value = false;
   activeTab.value = targetTab;
 };
 
 const openTaskDrawer = () => {
+  taskDrawer.taskId = "";
   taskDrawer.show = true;
 };
+
+watch(
+  () => taskDrawer.show,
+  (show) => {
+    if (show) return;
+    taskDrawer.taskId = "";
+  },
+);
 
 const submitDialog = async () => {
   if (dialogType.value === "container") await createDrawerRef.value?.validate();
@@ -1508,7 +1618,7 @@ const submitDialog = async () => {
     }
     if (dialogType.value === "image-build") {
       await ElMessageBox.confirm(
-        t("container.confirmations.buildNotice"),
+        createImageBuildPreview(),
         t("container.confirmations.buildTitle"),
         {
           type: "warning",
@@ -3701,6 +3811,7 @@ onBeforeUnmount(() => {
 
     <ContainerTaskDrawer
       v-model="taskDrawer.show"
+      :task-id="taskDrawer.taskId"
       @finished="refreshTaskAffectedLists"
     />
   </div>

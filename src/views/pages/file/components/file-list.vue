@@ -100,6 +100,7 @@ type FilePermission =
   | "move"
   | "read"
   | "share";
+type FileTaskOperation = "archive" | "extract";
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
@@ -122,6 +123,27 @@ const requireFilePermission = (permission: FilePermission) => {
 };
 const imageExtensionPattern = /\.(avif|bmp|gif|ico|jpe?g|png|webp)$/i;
 const archiveExtensionPattern = /\.(7z|bz2|gz|rar|tar|tgz|xz|zip)$/i;
+const archiveSuffixPatterns: RegExp[] = [
+  /\.tar\.gz$/i,
+  /\.tar\.bz2$/i,
+  /\.tar\.xz$/i,
+  /\.tar\.zst$/i,
+  /\.tar\.zstd$/i,
+  /\.tgz$/i,
+  /\.tbz2$/i,
+  /\.tbz$/i,
+  /\.txz$/i,
+  /\.tzst$/i,
+  /\.zip$/i,
+  /\.tar$/i,
+  /\.gz$/i,
+  /\.bz2$/i,
+  /\.xz$/i,
+  /\.zst$/i,
+  /\.zstd$/i,
+  /\.rar$/i,
+  /\.7z$/i,
+];
 const currentPath = () => conf.path.join("/").replace(/\/\//g, "/");
 const normalizeBool = (value: any) =>
   value === true || value === 1 || value === "1" || value === "true";
@@ -270,7 +292,7 @@ const fileTypeLabel = (row: any) => {
   if (row?.isDir) return t("file.folder", "文件夹");
   if (imageExtensionPattern.test(row?.name || ""))
     return t("file.typeLabels.image", "图片");
-  if (archiveExtensionPattern.test(row?.name || ""))
+  if (isArchiveFile(row))
     return t("file.typeLabels.archive", "压缩包");
   const extension = String(row?.name || "")
     .split(".")
@@ -280,13 +302,47 @@ const fileTypeLabel = (row: any) => {
     : t("file.file", "文件");
 };
 
+const isArchiveFile = (row: any) => normalizeBool(row?.isArchive) || archiveExtensionPattern.test(row?.name || "");
+const canExtractRow = (row: any) => canFilePermission("archive") && normalizeBool(row?.canExtract);
+const archiveFormatLabel = (row: any) => String(row?.archiveFormat || "").trim() || (isArchiveFile(row) ? t("file.archive", "压缩") : "—");
+const getArchiveFormatHint = (row: any) => {
+  const format = String(row?.archiveFormat || "").trim().toLowerCase();
+  if (canExtractRow(row)) return t("file.extract", "解压");
+  if (!isArchiveFile(row)) return "";
+  if (["rar", "7z"].includes(format)) {
+    return t(
+      "file.archiveExtractUnsupported",
+      "分卷压缩暂不支持解压",
+    );
+  }
+  return t("file.extractUnsupported", "当前压缩文件暂不支持解压");
+};
+const stripArchiveSuffix = (name: string) => {
+  const trimmed = String(name || "").trim();
+  for (const pattern of archiveSuffixPatterns) {
+    if (pattern.test(trimmed)) return trimmed.replace(pattern, "");
+  }
+  return trimmed;
+};
+const defaultExtractTarget = (path?: string) => {
+  const source = normalizeVirtualPath(path || "");
+  if (!source || source === "/") return "/";
+  const dir = parentPath(source);
+  const fileName = source.split("/").filter(Boolean).pop() || "";
+  const targetName = stripArchiveSuffix(fileName) || fileName;
+  return targetName ? joinVirtualPath(dir, targetName) : dir;
+};
+
 type ArchiveTaskStatus = "queued" | "running" | "succeeded" | "failed";
 
 interface ArchiveTask {
   id: string;
+  operation?: FileTaskOperation;
   sourcePath: string;
   targetDir: string;
   archiveName: string;
+  archiveFormat?: string;
+  overwrite?: boolean;
   resultPath?: string;
   status: ArchiveTaskStatus;
   message: string;
@@ -327,19 +383,54 @@ const archiveTaskStatusLabel = (status: ArchiveTaskStatus) =>
       : status === "succeeded"
         ? t("file.archiveTaskStatusSucceeded", "Succeeded")
         : t("file.archiveTaskStatusFailed", "Failed");
-const archiveTaskProgressText = (task: ArchiveTask) => {
+const taskOperationLabel = (operation?: FileTaskOperation) =>
+  operation === "extract"
+    ? t("file.extract", "Extract")
+    : t("file.archive", "Archive");
+const taskDisplayName = (task: ArchiveTask) =>
+  task.operation === "extract"
+    ? archiveTaskFileName(task.sourcePath) || task.archiveName || t("file.extract", "Extract")
+    : task.archiveName || archiveTaskFileName(task.sourcePath) || t("file.archive", "Archive");
+const taskProgressHint = (task: ArchiveTask) => {
   if (task.status === "queued")
     return t(
       "file.archiveTaskQueuedHint",
       "Waiting for another archive task to finish",
     );
-  if (task.status === "running" && task.totalBytes <= 0)
-    return t("file.archiveTaskPackingHint", "Preparing archive contents");
-  if (task.status === "failed")
+  if (task.status === "running" && task.totalBytes <= 0) {
+    return task.operation === "extract"
+      ? t("file.extractTaskPackingHint", "Preparing extracted contents")
+      : t("file.archiveTaskPackingHint", "Preparing archive contents");
+  }
+  if (task.status === "failed") {
     return t("file.archiveTaskFailedAt", "Failed at {progress}%", {
       progress: Math.max(0, Math.min(100, Math.round(task.progress || 0))),
     });
+  }
   return `${Math.max(0, Math.min(100, Math.round(task.progress || 0)))}%`;
+};
+const taskFinishedMessage = (task: ArchiveTask) =>
+  task.operation === "extract"
+    ? t("file.extractTaskFinishedSimple", "Extract ready")
+    : t("file.archiveTaskFinishedSimple", "Archive ready");
+const taskFailedMessage = (task: ArchiveTask) =>
+  task.operation === "extract"
+    ? t("file.extractTaskFailed", "Failed to extract")
+    : t("file.archiveTaskFailed", "Failed to create archive");
+const taskSubmittedMessage = (task: ArchiveTask) =>
+  task.operation === "extract"
+    ? t("file.extractTaskSubmitted", "Extract task submitted")
+    : t("file.archiveTaskSubmitted", "Archive task submitted");
+const taskCompletedMessage = (task: ArchiveTask) =>
+  task.operation === "extract"
+    ? t("file.extractTaskFinished", "Archive {name} has been extracted", {
+        name: taskDisplayName(task),
+      })
+    : t("file.archiveTaskFinished", "Archive {name} is ready", {
+        name: taskDisplayName(task),
+      });
+const archiveTaskProgressText = (task: ArchiveTask) => {
+  return taskProgressHint(task);
 };
 const formatArchiveTaskTime = (value?: string) => {
   if (!value) return "—";
@@ -361,9 +452,12 @@ const archiveTaskFileName = (path?: string) =>
     .pop() || "";
 const normalizeArchiveTask = (raw: any): ArchiveTask => ({
   id: String(raw?.id || raw?.taskId || ""),
+  operation: raw?.operation === "extract" ? "extract" : "archive",
   sourcePath: String(raw?.sourcePath || raw?.path || ""),
   targetDir: String(raw?.targetDir || "/"),
   archiveName: String(raw?.archiveName || ""),
+  archiveFormat: raw?.archiveFormat ? String(raw.archiveFormat) : undefined,
+  overwrite: raw?.overwrite === undefined ? undefined : normalizeBool(raw.overwrite),
   resultPath: raw?.resultPath ? String(raw.resultPath) : undefined,
   status: (raw?.status || "queued") as ArchiveTaskStatus,
   message: String(raw?.message || ""),
@@ -555,7 +649,10 @@ const conf = reactive({
   locateArchiveResult: (task: ArchiveTask) => {
     const targetDir = normalizeVirtualPath(task.targetDir || "/");
     const resultName =
-      archiveTaskFileName(task.resultPath) || task.archiveName || "";
+      archiveTaskFileName(task.resultPath) ||
+      archiveTaskFileName(task.sourcePath) ||
+      task.archiveName ||
+      "";
     conf.quickFilter = resultName;
     if (currentPath() === targetDir) {
       conf.refresh();
@@ -563,20 +660,34 @@ const conf = reactive({
     }
     conf.handleNavigate(targetDir);
   },
+  locateTaskResult: (task: ArchiveTask) => {
+    conf.locateArchiveResult(task);
+  },
   retryArchiveTask: async (task: ArchiveTask) => {
-    if (!task.sourcePath || !task.targetDir || !task.archiveName) return;
-    const { data } = await Api.archiveFile(
-      {
-        path: task.sourcePath,
-        targetDir: task.targetDir,
-        archiveName: task.archiveName,
-      },
-      { timeout: 10000 },
-    );
+    if (!task.sourcePath || !task.targetDir) return;
+    const { data } =
+      task.operation === "extract"
+        ? await Api.extractFile(
+            {
+              path: task.sourcePath,
+              targetDir: task.targetDir,
+              overwrite: task.overwrite,
+            },
+            { timeout: 10000 },
+          )
+        : await Api.archiveFile(
+            {
+              path: task.sourcePath,
+              targetDir: task.targetDir,
+              archiveName: task.archiveName,
+            },
+            { timeout: 10000 },
+          );
     const created = normalizeArchiveTask({
       ...task,
       ...data,
       id: data?.taskId || data?.id,
+      operation: task.operation || data?.operation || "archive",
       status: data?.status || "queued",
       statusUrl: data?.statusUrl,
       progress: 0,
@@ -584,7 +695,10 @@ const conf = reactive({
       totalBytes: 0,
       resultPath: undefined,
       currentPath: undefined,
-      message: t("file.archiveTaskSubmitted", "Archive task submitted"),
+      message: taskSubmittedMessage({
+        ...task,
+        operation: task.operation || "archive",
+      }),
       createdAt: new Date().toISOString(),
       startedAt: undefined,
       finishedAt: undefined,
@@ -595,7 +709,10 @@ const conf = reactive({
     conf.archiveTasksVisible = true;
     archiveTaskNotified.delete(created.id);
     ElMessage.success(
-      t("file.archiveTaskSubmitted", "Archive task submitted"),
+      taskSubmittedMessage({
+        ...task,
+        operation: task.operation || "archive",
+      }),
     );
     conf.scheduleArchiveTaskPoll(created.id, 1200);
   },
@@ -610,12 +727,15 @@ const conf = reactive({
       !archiveTaskNotified.has(task.id)
     ) {
       archiveTaskNotified.add(task.id);
-      ElMessage.success(
-        t("file.archiveTaskFinished", "Archive {name} is ready", {
-          name: task.archiveName,
-        }),
-      );
-      if (currentPath() === normalizeVirtualPath(task.targetDir)) conf.refresh();
+      ElMessage.success(taskCompletedMessage(task));
+      const targetDir = normalizeVirtualPath(task.targetDir);
+      if (
+        currentPath() === targetDir ||
+        currentPath().startsWith(`${targetDir}/`) ||
+        targetDir.startsWith(`${currentPath()}/`)
+      ) {
+        conf.refresh();
+      }
       return;
     }
     if (
@@ -624,17 +744,17 @@ const conf = reactive({
       !archiveTaskNotified.has(task.id)
     ) {
       archiveTaskNotified.add(task.id);
-      ElMessage.error(
-        task.message ||
-          t("file.archiveTaskFailed", "Failed to create archive"),
-      );
+      ElMessage.error(task.message || taskFailedMessage(task));
     }
   },
   pollArchiveTask: async (taskId: string) => {
     const localTask = conf.archiveTasks[taskId];
     if (!localTask || archiveTaskTerminalStatuses.has(localTask.status)) return;
     try {
-      const { data } = await Api.getArchiveTask(taskId, { silentError: true });
+      const { data } =
+        localTask.operation === "extract"
+          ? await Api.getExtractTask(taskId, { silentError: true })
+          : await Api.getArchiveTask(taskId, { silentError: true });
       const next = normalizeArchiveTask({
         ...localTask,
         ...data,
@@ -680,11 +800,39 @@ const conf = reactive({
     if (!canFilePermission("archive")) return;
     conf.archiveTasksLoading = true;
     try {
-      const { data } = await Api.getArchiveTasks(
-        { page: 1, pageSize: 20 },
-        { silentError: true },
-      );
-      const tasks = Array.isArray(data?.data) ? data.data : [];
+      const [archiveResult, extractResult] = await Promise.allSettled([
+        Api.getArchiveTasks(
+          { page: 1, pageSize: 20 },
+          { silentError: true },
+        ),
+        Api.getExtractTasks(
+          { page: 1, pageSize: 20 },
+          { silentError: true },
+        ),
+      ]);
+      const tasks: any[] = [];
+      if (archiveResult.status === "fulfilled") {
+        const data = archiveResult.value?.data;
+        if (Array.isArray(data?.data)) {
+          tasks.push(
+            ...data.data.map((item: any) => ({
+              ...item,
+              operation: item?.operation || "archive",
+            })),
+          );
+        }
+      }
+      if (extractResult.status === "fulfilled") {
+        const data = extractResult.value?.data;
+        if (Array.isArray(data?.data)) {
+          tasks.push(
+            ...data.data.map((item: any) => ({
+              ...item,
+              operation: item?.operation || "extract",
+            })),
+          );
+        }
+      }
       tasks.forEach((item: any) => {
         const task = normalizeArchiveTask(item);
         conf.upsertArchiveTask(task);
@@ -986,22 +1134,25 @@ const conf = reactive({
   },
   operationDialog: {
     show: false,
-    type: "" as "rename" | "archive" | "properties" | "share" | "",
+    type: "" as "rename" | "archive" | "extract" | "properties" | "share" | "",
     title: "",
     row: {} as any,
     value: "",
+    targetDir: "",
+    overwrite: false,
     submitting: false,
     properties: null as any,
     expiryHours: 24,
     shareUrl: "",
     loading: false,
     open: async (
-      type: "rename" | "archive" | "properties" | "share",
+      type: "rename" | "archive" | "extract" | "properties" | "share",
       row: any,
     ) => {
       const permissionMap: Record<typeof type, FilePermission> = {
         rename: "modify",
         archive: "archive",
+        extract: "archive",
         properties: "read",
         share: "share",
       };
@@ -1011,6 +1162,8 @@ const conf = reactive({
       conf.operationDialog.type = type;
       conf.operationDialog.row = row;
       conf.operationDialog.value = "";
+      conf.operationDialog.targetDir = "";
+      conf.operationDialog.overwrite = false;
       conf.operationDialog.properties = null;
       conf.operationDialog.expiryHours = 24;
       conf.operationDialog.shareUrl = "";
@@ -1021,6 +1174,9 @@ const conf = reactive({
       } else if (type === "archive") {
         conf.operationDialog.title = t("file.createArchive", "Create archive");
         conf.operationDialog.value = `${row.name}.tar.gz`;
+      } else if (type === "extract") {
+        conf.operationDialog.title = t("file.extractFile", "Extract file");
+        conf.operationDialog.targetDir = defaultExtractTarget(row.path);
       } else if (type === "share") {
         conf.operationDialog.title = t("file.shareLink", "Share link");
       } else {
@@ -1042,6 +1198,8 @@ const conf = reactive({
       conf.operationDialog.row = {};
       conf.operationDialog.properties = null;
       conf.operationDialog.shareUrl = "";
+      conf.operationDialog.targetDir = "";
+      conf.operationDialog.overwrite = false;
       conf.operationDialog.submitting = false;
     },
     confirm: async () => {
@@ -1061,6 +1219,55 @@ const conf = reactive({
         ElMessage.success(t("file.renameSuccess", "Renamed successfully"));
         dialog.close();
         conf.refresh();
+        return;
+      }
+      if (dialog.type === "extract") {
+        const targetDir = normalizeVirtualPath(dialog.targetDir || "");
+        if (!targetDir)
+          return ElMessage.warning(
+            t("file.extractTargetRequired", "Select an extraction directory"),
+          );
+        dialog.submitting = true;
+        try {
+          const { data } = await Api.extractFile(
+            {
+              path: dialog.row.path,
+              targetDir,
+              overwrite: dialog.overwrite,
+            },
+            { timeout: 10000 },
+          );
+          const created = normalizeArchiveTask({
+            ...dialog.row,
+            ...data,
+            id: data?.taskId || data?.id,
+            operation: data?.operation || "extract",
+            sourcePath: dialog.row.path,
+            targetDir,
+            archiveFormat: data?.archiveFormat || dialog.row.archiveFormat,
+            overwrite: dialog.overwrite,
+            status: data?.status || "queued",
+            statusUrl: data?.statusUrl,
+            message: taskSubmittedMessage({
+              ...dialog.row,
+              operation: "extract",
+            }),
+            progress: 0,
+            processedBytes: 0,
+            totalBytes: 0,
+            createdAt: new Date().toISOString(),
+          });
+          conf.upsertArchiveTask(created);
+          archiveTaskNotified.delete(created.id);
+          dialog.close();
+          conf.archiveTasksVisible = true;
+          ElMessage.success(
+            taskSubmittedMessage({ ...dialog.row, operation: "extract" }),
+          );
+          conf.scheduleArchiveTaskPoll(created.id, 1200);
+        } finally {
+          dialog.submitting = false;
+        }
         return;
       }
       if (dialog.type === "archive") {
@@ -1176,7 +1383,13 @@ const conf = reactive({
   selectFolder: {
     show: false,
     path: "",
-    open: () => {
+    target: "download" as "download" | "extract",
+    open: (target: "download" | "extract" = "download") => {
+      conf.selectFolder.target = target;
+      conf.selectFolder.path =
+        target === "extract"
+          ? conf.operationDialog.targetDir || currentPath()
+          : conf.fileDialog.row.path || currentPath();
       conf.selectFolder.show = true;
     },
     select: (node: any) => {
@@ -1184,7 +1397,11 @@ const conf = reactive({
       conf.selectFolder.path = node.path;
     },
     confirm: () => {
-      conf.fileDialog.row.path = conf.selectFolder.path;
+      if (conf.selectFolder.target === "extract") {
+        conf.operationDialog.targetDir = conf.selectFolder.path;
+      } else {
+        conf.fileDialog.row.path = conf.selectFolder.path;
+      }
       conf.selectFolder.show = false;
     },
   },
@@ -1196,6 +1413,10 @@ const canCutRow = (_row: any) => canFilePermission("move");
 const canRenameRow = (_row: any) => canFilePermission("modify");
 const canDeleteRow = (row: any) =>
   canFilePermission("delete") && normalizeBool(row?.canDelete);
+const extractActionLabel = (row: any) =>
+  canExtractRow(row)
+    ? t("file.extract", "Extract")
+    : getArchiveFormatHint(row) || t("file.extract", "Extract");
 const canPasteClipboard = () => {
   if (conf.clipboard.mode === "copy") return canCopyFile();
   if (conf.clipboard.mode === "move") return canFilePermission("move");
@@ -1489,7 +1710,7 @@ const archiveTaskRunningCount = computed(
         </div>
         <el-tooltip
           v-if="canFilePermission('archive')"
-          :content="t('file.archiveTasks', 'Archive tasks')"
+          :content="t('file.tasks', 'Tasks')"
           placement="bottom"
         >
           <el-badge
@@ -1499,7 +1720,7 @@ const archiveTaskRunningCount = computed(
             <el-button
               class="icon-command"
               :icon="Bell"
-              :aria-label="t('file.archiveTasks', 'Archive tasks')"
+              :aria-label="t('file.tasks', 'Tasks')"
               @click="conf.archiveTasksVisible = true"
             />
           </el-badge>
@@ -1791,6 +2012,14 @@ const archiveTaskRunningCount = computed(
                     >{{ t("file.permissions", "Permissions") }}
                   </el-dropdown-item>
                   <el-dropdown-item
+                    v-if="isArchiveFile(row) && canFilePermission('archive')"
+                    :disabled="!canExtractRow(row)"
+                    @click="canExtractRow(row) && conf.operationDialog.open('extract', row)"
+                  >
+                    <el-icon><Download /></el-icon
+                    >{{ extractActionLabel(row) }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
                     v-if="canFilePermission('archive')"
                     @click="conf.operationDialog.open('archive', row)"
                   >
@@ -1965,6 +2194,14 @@ const archiveTaskRunningCount = computed(
                 >
                   <el-icon><Lock /></el-icon
                   >{{ t("file.permissions", "权限") }}
+                </el-dropdown-item>
+                <el-dropdown-item
+                  v-if="isArchiveFile(row) && canFilePermission('archive')"
+                  :disabled="!canExtractRow(row)"
+                  @click="canExtractRow(row) && conf.operationDialog.open('extract', row)"
+                >
+                  <el-icon><Download /></el-icon
+                  >{{ extractActionLabel(row) }}
                 </el-dropdown-item>
                 <el-dropdown-item
                   v-if="canFilePermission('archive')"
@@ -2292,6 +2529,54 @@ const archiveTaskRunningCount = computed(
             :closable="false"
           />
         </template>
+        <template v-else-if="conf.operationDialog.type === 'extract'">
+          <el-form label-position="top">
+            <el-form-item :label="t('file.extractSource', 'Source file')">
+              <el-input :model-value="conf.operationDialog.row.path" disabled />
+            </el-form-item>
+            <el-form-item :label="t('file.extractTarget', 'Extract to')" required>
+              <el-input
+                v-model="conf.operationDialog.targetDir"
+                :placeholder="
+                  t(
+                    'file.extractTargetPlaceholder',
+                    'Select an extraction directory',
+                  )
+                "
+              >
+                <template #append>
+                  <v-s-icon
+                    class="cursor-pointer"
+                    name="folders"
+                    @click="conf.selectFolder.open('extract')"
+                  />
+                </template>
+              </el-input>
+            </el-form-item>
+            <el-form-item :label="t('file.extractOverwrite', 'Overwrite existing files')">
+              <el-switch v-model="conf.operationDialog.overwrite" />
+              <div class="form-unit">
+                {{
+                  t(
+                    'file.extractOverwriteTip',
+                    'Replace files with the same name. Existing directories will be merged and non-conflicting files will be kept.',
+                  )
+                }}
+              </div>
+            </el-form-item>
+          </el-form>
+          <el-alert
+            :title="
+              t(
+                'file.extractTip',
+                'The backend will precheck the archive format and target directory, then create an asynchronous extract task.',
+              )
+            "
+            type="info"
+            show-icon
+            :closable="false"
+          />
+        </template>
         <template v-else-if="conf.operationDialog.type === 'share'">
           <template v-if="!conf.operationDialog.shareUrl">
             <el-alert
@@ -2441,9 +2726,50 @@ const archiveTaskRunningCount = computed(
               }}</strong>
             </div>
             <div class="properties-row">
+              <span>{{ t("file.archiveFormat", "Archive format") }}</span>
+              <strong>{{
+                conf.operationDialog.properties.isArchive
+                  ? conf.operationDialog.properties.archiveFormat || "—"
+                  : "—"
+              }}</strong>
+            </div>
+            <div class="properties-row">
+              <span>{{ t("file.extractStatus", "Can extract") }}</span>
+              <strong>
+                {{
+                  conf.operationDialog.properties.isArchive
+                    ? conf.operationDialog.properties.canExtract
+                      ? t("common.yes", "Yes")
+                      : t("common.no", "No")
+                    : "—"
+                }}
+              </strong>
+            </div>
+            <div class="properties-row">
               <span>{{ t("file.columns.modTime", "Modified time") }}</span>
               <strong>{{ conf.operationDialog.properties.modTime }}</strong>
             </div>
+          </div>
+          <div class="properties-actions">
+            <el-button
+              v-if="conf.operationDialog.properties.isArchive && conf.operationDialog.properties.canExtract"
+              type="primary"
+              @click="
+                conf.operationDialog.open('extract', conf.operationDialog.properties)
+              "
+            >
+              {{ t("file.extract", "Extract") }}
+            </el-button>
+            <el-alert
+              v-else-if="conf.operationDialog.properties.isArchive"
+              type="warning"
+              show-icon
+              :closable="false"
+              :title="
+                getArchiveFormatHint(conf.operationDialog.properties) ||
+                t('file.extractUnsupported', 'This archive cannot be extracted')
+              "
+            />
           </div>
         </template>
       </div>
@@ -2534,7 +2860,7 @@ const archiveTaskRunningCount = computed(
 
     <custom-drawer
       v-model:visible="conf.archiveTasksVisible"
-      :title="t('file.archiveTasks', 'Archive tasks')"
+      :title="t('file.tasks', 'Tasks')"
       size="460px"
       :append-to-body="true"
       :show-footer="false"
@@ -2544,22 +2870,22 @@ const archiveTaskRunningCount = computed(
         <div class="archive-task-overview">
           <div class="archive-task-overview__card">
             <strong>{{ archiveTaskRunningCount }}</strong>
-            <span>{{ t("file.archiveTaskStatusRunning", "Compressing") }}</span>
+            <span>{{ t("file.taskStatusRunning", "In progress") }}</span>
           </div>
           <div class="archive-task-overview__card">
             <strong>{{ archiveTaskQueuedCount }}</strong>
-            <span>{{ t("file.archiveTaskStatusQueued", "Queued") }}</span>
+            <span>{{ t("file.taskStatusQueued", "Queued") }}</span>
           </div>
           <div class="archive-task-overview__card">
             <strong>{{ archiveTaskList.length }}</strong>
-            <span>{{ t("file.archiveTaskRecent", "Recent") }}</span>
+            <span>{{ t("file.taskStatusRecent", "Recent") }}</span>
           </div>
         </div>
 
         <div v-loading="conf.archiveTasksLoading" class="archive-task-sections">
           <div v-if="archiveTaskActiveList.length" class="archive-task-section">
             <div class="archive-task-section__title">
-              {{ t("file.archiveTaskActive", "In progress") }}
+              {{ t("file.taskActive", "In progress") }}
             </div>
             <article
               v-for="task in archiveTaskActiveList"
@@ -2568,7 +2894,8 @@ const archiveTaskRunningCount = computed(
             >
               <div class="archive-task-card__header">
                 <div>
-                  <strong>{{ task.archiveName }}</strong>
+                  <strong>{{ taskDisplayName(task) }}</strong>
+                  <small>{{ taskOperationLabel(task.operation) }}</small>
                   <small>{{ formatArchiveTaskTime(task.createdAt) }}</small>
                 </div>
                 <el-tag
@@ -2584,10 +2911,12 @@ const archiveTaskRunningCount = computed(
                   task.message ||
                   (task.status === "queued"
                     ? t(
-                        "file.archiveTaskQueuedHint",
-                        "Waiting for another archive task to finish",
+                        "file.taskQueuedHint",
+                        "Waiting for another task to finish",
                       )
-                    : t("file.archiveTaskPacking", "Creating archive"))
+                    : task.operation === "extract"
+                      ? t("file.extractTaskPacking", "Extracting archive")
+                      : t("file.archiveTaskPacking", "Creating archive"))
                 }}
               </p>
               <div
@@ -2622,9 +2951,9 @@ const archiveTaskRunningCount = computed(
             </article>
           </div>
 
-          <div v-if="archiveTaskRecentList.length" class="archive-task-section">
+        <div v-if="archiveTaskRecentList.length" class="archive-task-section">
             <div class="archive-task-section__title">
-              {{ t("file.archiveTaskRecent", "Recent") }}
+              {{ t("file.taskRecent", "Recent") }}
             </div>
             <article
               v-for="task in archiveTaskRecentList"
@@ -2633,7 +2962,8 @@ const archiveTaskRunningCount = computed(
             >
               <div class="archive-task-card__header">
                 <div>
-                  <strong>{{ task.archiveName }}</strong>
+                  <strong>{{ taskDisplayName(task) }}</strong>
+                  <small>{{ taskOperationLabel(task.operation) }}</small>
                   <small>{{ formatArchiveTaskTime(task.finishedAt || task.createdAt) }}</small>
                 </div>
                 <el-tag
@@ -2647,9 +2977,9 @@ const archiveTaskRunningCount = computed(
               <p class="archive-task-card__message">
                 {{
                   task.message ||
-                  (task.status === "succeeded"
-                    ? t("file.archiveTaskFinishedSimple", "Archive ready")
-                    : t("file.archiveTaskFailed", "Failed to create archive"))
+                    (task.status === "succeeded"
+                    ? taskFinishedMessage(task)
+                    : taskFailedMessage(task))
                 }}
               </p>
               <div class="archive-task-card__meta">
@@ -2663,9 +2993,9 @@ const archiveTaskRunningCount = computed(
                   v-if="task.status === 'succeeded'"
                   link
                   type="primary"
-                  @click="conf.locateArchiveResult(task)"
+                  @click="conf.locateTaskResult(task)"
                 >
-                  {{ t("file.archiveTaskLocateFile", "Locate file") }}
+                  {{ t("file.taskLocateResult", "Locate result") }}
                 </el-button>
                 <el-button
                   v-if="task.status === 'failed'"
@@ -2682,7 +3012,7 @@ const archiveTaskRunningCount = computed(
           <el-empty
             v-if="!archiveTaskList.length && !conf.archiveTasksLoading"
             :description="
-              t('file.archiveTaskEmpty', 'No archive tasks yet')
+              t('file.taskEmpty', 'No tasks yet')
             "
           />
         </div>
