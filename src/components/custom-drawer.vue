@@ -330,23 +330,44 @@ const handleVisibleChange = (value: boolean) => {
 }
 
 @media (max-width: 768px) {
+  :global(.custom-drawer-shell.el-drawer),
+  :global(.custom-drawer-shell .el-drawer) {
+    width: 100vw !important;
+    max-width: 100vw;
+    border-left: 0;
+  }
+
   .drawerHeader {
-    min-height: 76px;
-    padding: 0 20px;
-    gap: 12px;
+    min-height: 68px;
+    padding: 0 16px;
+    gap: 10px;
 
     .back {
       margin-right: 0;
-      padding: 10px 14px 10px 10px;
+      padding: 9px 11px 9px 8px;
+      border-radius: 10px;
+
+      span {
+        display: none;
+      }
+    }
+
+    .title {
+      overflow: hidden;
+      display: block;
+      font-size: 17px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
   }
 
   .drawerBody {
-    padding: 28px 20px 24px;
+    padding: 22px 16px 20px;
+    scrollbar-gutter: auto;
   }
 
   .drawerBody--compact {
-    padding: 20px;
+    padding: 16px;
   }
 
   .drawerBody--flush {
@@ -354,7 +375,21 @@ const handleVisibleChange = (value: boolean) => {
   }
 
   .drawerFooter {
-    padding: 16px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+    min-height: 72px;
+    padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+
+    :deep(.el-button) {
+      min-width: 0;
+      height: 42px;
+      flex: 1;
+      border-radius: 10px;
+      font-size: 14px;
+    }
+  }
+
+  .headerExtra {
+    max-width: 42%;
+    overflow: hidden;
   }
 }
 </style>

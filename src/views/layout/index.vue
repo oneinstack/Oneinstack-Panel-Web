@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import LanguageSwitch from './components/language-switch.vue'
 import { useAppStore } from '@/stores/modules/app';
@@ -84,6 +84,16 @@ interface NavItem {
 
 const route = useRoute()
 const router = useRouter()
+const isMobileNavigation = ref(false)
+const mobileNavigationOpen = ref(false)
+const navigationCollapsed = computed(() => isMobileNavigation.value ? !mobileNavigationOpen.value : conf.isCollapse)
+let mobileNavigationMedia: MediaQueryList | undefined
+
+const syncMobileNavigation = (event?: MediaQueryListEvent) => {
+  const matches = event?.matches ?? mobileNavigationMedia?.matches ?? false
+  isMobileNavigation.value = matches
+  mobileNavigationOpen.value = false
+}
 
 const navActiveColor: ItemColor = {
   light: ['#eab170', '#8B8B8B'],
@@ -227,6 +237,7 @@ const navigateNavItem = (item: NavItem) => {
   if (item.path && route.path !== item.path) {
     router.push(item.path)
   }
+  mobileNavigationOpen.value = false
   item.event?.()
 }
 const menuPathLocaleKey: Record<string, string> = {
@@ -339,6 +350,9 @@ watch(
 )
 
 onMounted(() => {
+  mobileNavigationMedia = window.matchMedia('(max-width: 768px)')
+  syncMobileNavigation()
+  mobileNavigationMedia.addEventListener('change', syncMobileNavigation)
   scheduleInteractionRecovery()
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
@@ -350,9 +364,16 @@ onMounted(() => {
     })
 })
 
+onBeforeUnmount(() => {
+  mobileNavigationMedia?.removeEventListener('change', syncMobileNavigation)
+})
+
 watch(
   () => route.path,
-  () => scheduleInteractionRecovery(),
+  () => {
+    scheduleInteractionRecovery()
+    mobileNavigationOpen.value = false
+  },
   { immediate: true }
 )
 
@@ -378,7 +399,9 @@ const Beturn = () => {
           .catch(() => {})
 }
 const BindButton = () => {
-  conf.isCollapse = !conf.isCollapse
+  // 手机菜单独立开关，避免改变桌面侧栏的折叠偏好。
+  if (isMobileNavigation.value) mobileNavigationOpen.value = !mobileNavigationOpen.value
+  else conf.isCollapse = !conf.isCollapse
 }
 </script>
 
@@ -397,11 +420,12 @@ const BindButton = () => {
       <button
         class="sidebar-trigger"
         type="button"
-        :aria-label="conf.isCollapse ? $t('layout.expandNavigation') : $t('layout.collapseNavigation')"
+        :aria-label="navigationCollapsed ? $t('layout.expandNavigation') : $t('layout.collapseNavigation')"
+        :aria-expanded="!navigationCollapsed"
         @click="BindButton"
       >
         <el-icon :size="18">
-          <Expand v-if="conf.isCollapse" />
+          <Expand v-if="navigationCollapsed" />
           <Fold v-else />
         </el-icon>
       </button>
@@ -490,11 +514,16 @@ const BindButton = () => {
       </div>
     </el-header>
     <el-container class="layout-container__body">
-      <aside class="layout-container__body-left" :class="{ collapsed: conf.isCollapse }">
-        <div class="navigation-label" v-show="!conf.isCollapse">{{ $t('layout.navigation') }}</div>
+      <aside
+        class="layout-container__body-left"
+        :class="{ collapsed: navigationCollapsed }"
+        :inert="isMobileNavigation && !mobileNavigationOpen"
+        @keydown.esc="mobileNavigationOpen = false"
+      >
+        <div class="navigation-label" v-show="isMobileNavigation || !conf.isCollapse">{{ $t('layout.navigation') }}</div>
         <el-scrollbar class="nav-scrollbar">
           <el-menu
-            :collapse="conf.isCollapse"
+            :collapse="!isMobileNavigation && conf.isCollapse"
             :default-active="activeMenuIndex"
             :default-openeds="activeGroupIndexes"
             :unique-opened="true"
@@ -538,6 +567,13 @@ const BindButton = () => {
           </el-menu>
         </el-scrollbar>
       </aside>
+      <button
+        v-if="isMobileNavigation && mobileNavigationOpen"
+        class="mobile-navigation-backdrop"
+        type="button"
+        :aria-label="$t('common.close')"
+        @click="mobileNavigationOpen = false"
+      />
       <el-main class="layout-container__body-main">
         <div class="route-stage">
           <router-view />
@@ -966,6 +1002,10 @@ const BindButton = () => {
     overflow-x: hidden;
     overflow-y: auto;
   }
+
+  .mobile-navigation-backdrop {
+    display: none;
+  }
 }
 
 @media (max-width: 1100px) {
@@ -981,7 +1021,7 @@ const BindButton = () => {
   }
 }
 
-@media (max-width: 760px) {
+@media (max-width: 768px) {
   .layout-container {
     &__header {
       height: 64px;
@@ -1005,8 +1045,14 @@ const BindButton = () => {
     }
 
     .page-context {
+      min-width: 0;
+      flex: 1;
+
       .page-title {
+        overflow: hidden;
         font-size: 14px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
     }
 
@@ -1047,26 +1093,71 @@ const BindButton = () => {
 
     &__body-left,
     &__body-left.collapsed {
-      width: 68px;
-      flex-basis: 68px;
-      padding-inline: 8px;
+      position: fixed;
+      z-index: 32;
+      top: 64px;
+      bottom: 0;
+      left: 0;
+      width: min(84vw, 304px);
+      max-width: 304px;
+      padding: 16px 12px calc(16px + env(safe-area-inset-bottom, 0px));
+      border-right: 1px solid var(--border-subtle);
+      box-shadow: 18px 0 42px rgba(15, 23, 42, 0.2);
+      transform: translateX(0);
+      transition: transform 0.22s ease;
 
-      .navigation-label,
-      .menu-item-name {
-        display: none;
+      &.collapsed {
+        width: min(84vw, 304px);
+        transform: translateX(-105%);
       }
 
       .el-menu {
         :deep(.el-menu-item),
         :deep(.el-sub-menu__title) {
-          justify-content: center;
-          padding: 0 !important;
+          justify-content: flex-start;
+          padding: 0 13px !important;
         }
       }
     }
 
     &__body-main {
-      padding: 16px 14px 22px;
+      width: 100%;
+      padding: 14px 12px calc(18px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-navigation-backdrop {
+      position: fixed;
+      z-index: 31;
+      inset: 64px 0 0;
+      display: block;
+      border: 0;
+      background: rgba(15, 23, 42, 0.46);
+      backdrop-filter: blur(2px);
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .layout-container {
+    &__header-right {
+      gap: 6px;
+    }
+
+    .task-center-trigger {
+      display: none;
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .layout-container {
+    &__header {
+      padding-inline: 10px;
+      gap: 7px;
+    }
+
+    .page-context {
+      display: none;
     }
   }
 }

@@ -1792,7 +1792,7 @@ loadServiceStatuses()
   }
 
   .website-search-panel {
-    padding: 12px;
+    padding: 0;
     gap: 10px;
   }
 
@@ -1814,12 +1814,15 @@ loadServiceStatuses()
   }
 
   .website-search-panel {
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px 40px;
     align-items: stretch;
   }
 
   .website-search-panel__refresh {
-    width: 100%;
+    width: 40px;
+    min-width: 40px;
+    margin-left: 0;
   }
 }
 

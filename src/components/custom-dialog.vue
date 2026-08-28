@@ -97,4 +97,33 @@ const show = defineModel<boolean>('show')
     padding: 20px 24px 24px;
   }
 }
+
+@media (max-width: 640px) {
+  :global(.el-dialog.custom-dialog) {
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 24px);
+    border-radius: 14px;
+  }
+
+  .custom-dialog {
+    &__header {
+      padding: 16px;
+    }
+
+    &__body {
+      max-height: calc(100dvh - 174px);
+      padding: 16px 16px 0;
+      overflow: auto;
+    }
+
+    &__footer {
+      padding: 16px;
+
+      :deep(.el-button) {
+        min-width: 0;
+        flex: 1;
+      }
+    }
+  }
+}
 </style>

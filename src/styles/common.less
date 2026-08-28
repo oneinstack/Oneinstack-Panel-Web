@@ -85,3 +85,189 @@
     width: 100%;
   }
 }
+
+@media (max-width: 768px) {
+  .tool-bar,
+  .page-heading,
+  .container-hero,
+  .system-hero,
+  .snapshot-toolbar,
+  .certificate-page .page-toolbar,
+  .bastion-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .toolbar,
+  .toolbar-actions,
+  .filters,
+  .section-filters,
+  .resource-filters {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .filters > *,
+  .section-filters > *,
+  .resource-filters > * {
+    min-width: 0;
+    flex: 1 1 160px;
+  }
+
+  .stats-grid,
+  .summary-grid,
+  .hero-metrics,
+  .metric-strip {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .el-card__body {
+    padding: 16px;
+  }
+
+  .el-date-editor,
+  .el-date-editor.el-input,
+  .el-date-editor.el-input__wrapper,
+  .el-select,
+  .el-cascader {
+    max-width: 100%;
+  }
+
+  .box2 {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  // 双月日期弹层在手机上纵向排列，避免结束日期和确认按钮超出屏幕。
+  .el-picker__popper:has(.el-date-range-picker) {
+    position: fixed !important;
+    top: 16px !important;
+    left: 12px !important;
+    transform: none !important;
+
+    .el-popper__arrow {
+      display: none;
+    }
+  }
+
+  .el-date-range-picker {
+    width: calc(100vw - 24px) !important;
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+
+    .el-picker-panel__body {
+      min-width: 0 !important;
+      margin-left: 0 !important;
+    }
+
+    .el-picker-panel__sidebar {
+      position: static;
+      width: 100%;
+    }
+
+    .el-date-range-picker__content {
+      width: 100%;
+      float: none;
+      padding: 12px;
+      border-right: 0;
+    }
+
+    .el-date-range-picker__time-header {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+
+      > span:not(.el-date-range-picker__editors-wrap) {
+        display: none;
+      }
+    }
+
+    .el-date-range-picker__editors-wrap {
+      display: flex;
+      width: 100%;
+    }
+
+    .el-picker-panel__footer {
+      position: sticky;
+      bottom: 0;
+      z-index: 1;
+      background: var(--el-bg-color-overlay);
+    }
+  }
+
+  .btn-group {
+    flex-wrap: wrap;
+    row-gap: 10px !important;
+
+    .el-space__item {
+      flex: 1 1 140px;
+      min-width: 0;
+      margin-right: 0 !important;
+    }
+
+    .el-button,
+    .btnItem {
+      width: 100%;
+      min-width: 0;
+      margin-left: 0;
+    }
+  }
+
+  .el-form:not(.el-form--inline) > .el-form-item,
+  .el-form:not(.el-form--inline) .el-form-item.mobile-stack {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .el-form:not(.el-form--inline) > .el-form-item > .el-form-item__label,
+  .el-form:not(.el-form--inline) > .el-form-item > .el-form-item__label-wrap,
+  .el-form:not(.el-form--inline) .el-form-item.mobile-stack > .el-form-item__label,
+  .el-form:not(.el-form--inline) .el-form-item.mobile-stack > .el-form-item__label-wrap {
+    width: 100% !important;
+    height: auto;
+    min-height: 30px;
+    margin-left: 0 !important;
+    padding-right: 0;
+    justify-content: flex-start;
+    line-height: 1.45;
+  }
+
+  .el-form:not(.el-form--inline) > .el-form-item > .el-form-item__content,
+  .el-form:not(.el-form--inline) .el-form-item.mobile-stack > .el-form-item__content {
+    width: 100%;
+    margin-left: 0 !important;
+  }
+
+  .el-form-item__content > .el-input,
+  .el-form-item__content > .el-select,
+  .el-form-item__content > .el-input-number,
+  .el-form-item__content > .el-cascader,
+  .el-form-item__content > .el-date-editor {
+    width: 100% !important;
+  }
+
+  .filters,
+  .section-filters,
+  .resource-filters {
+    flex-direction: column;
+  }
+
+  .filters > *,
+  .section-filters > *,
+  .resource-filters > * {
+    width: 100% !important;
+    flex-basis: auto;
+  }
+
+  .el-message {
+    width: calc(100vw - 24px) !important;
+    min-width: 0 !important;
+  }
+
+  .el-notification {
+    width: calc(100vw - 24px) !important;
+    right: 12px !important;
+  }
+}

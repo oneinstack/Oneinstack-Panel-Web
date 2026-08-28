@@ -523,10 +523,29 @@ onUnmounted(() => {
 }
 
 .console-toolbar {
+  flex-wrap: wrap;
   justify-content: space-between;
   margin-bottom: 10px;
   color: var(--text-tertiary);
   font-size: 13px;
+
+  > div {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  > div > span {
+    flex: 1 1 180px;
+  }
+
+  :deep(.el-switch) {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .el-button {
+    margin-left: 0;
+  }
 }
 
 .log-console {

@@ -1375,9 +1375,9 @@ const archiveTaskRunningCount = computed(
             t('file.filterCurrentDirectory', 'Filter current directory')
           "
         />
-        <el-button :icon="Search" @click="conf.searchVisible = true">{{
-          t("file.deepSearch", "Deep search")
-        }}</el-button>
+        <el-button :icon="Search" :aria-label="t('file.deepSearch', 'Deep search')" :title="t('file.deepSearch', 'Deep search')" @click="conf.searchVisible = true">
+          <span class="deep-search-label">{{ t('file.deepSearch', 'Deep search') }}</span>
+        </el-button>
       </div>
     </section>
 
@@ -3381,9 +3381,12 @@ const archiveTaskRunningCount = computed(
 
   .navigation-search > .el-button {
     width: 40px;
+    flex: 0 0 40px;
     padding: 0;
-    overflow: hidden;
-    color: transparent;
+
+    :deep(> span) {
+      display: none;
+    }
 
     :deep(.el-icon) {
       margin: 0;

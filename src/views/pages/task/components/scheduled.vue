@@ -520,6 +520,7 @@ onMounted(() => {
 
 .task-toolbar__actions {
   flex-wrap: wrap;
+  row-gap: 8px !important;
 }
 
 .task-toolbar__button {

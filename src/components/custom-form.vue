@@ -141,4 +141,29 @@ onMounted(() => {
     width: 100%;
   }
 }
+
+@media (max-width: 640px) {
+  .custom-form {
+    :deep(.el-form-item) {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    :deep(.el-form-item__label),
+    :deep(.el-form-item__label-wrap) {
+      width: 100% !important;
+      height: auto;
+      min-height: 30px;
+      margin-left: 0 !important;
+      padding-right: 0;
+      justify-content: flex-start;
+      line-height: 1.45;
+    }
+
+    :deep(.el-form-item__content) {
+      width: 100%;
+      margin-left: 0 !important;
+    }
+  }
+}
 </style>

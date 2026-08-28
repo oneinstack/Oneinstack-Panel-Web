@@ -4130,4 +4130,34 @@ onBeforeUnmount(() => {
     flex-direction: column;
   }
 }
+
+@media (max-width: 640px) {
+  .container-page {
+    padding: 0;
+  }
+
+  .resource-panel {
+    padding: 12px;
+  }
+
+  .table-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .table-toolbar__filters :deep(> .el-input) {
+    width: 100%;
+  }
+
+  .status-filter {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .resource-pagination {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    row-gap: 12px;
+  }
+}
 </style>

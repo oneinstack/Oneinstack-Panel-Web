@@ -628,7 +628,7 @@ onMounted(() => {
               <div class="live-badge"><i></i> {{ $t('home.liveBadge') }}</div>
             </div>
             <el-row :gutter="20">
-              <el-col v-for="item in conf.category" :key="item.name" :lg="6" :md="12" :sm="24">
+              <el-col v-for="item in conf.category" :key="item.name" :lg="6" :md="12" :sm="12" :xs="12">
                 <div class="category-item" @click="conf.handleCategoryClick(item)">
                   <div class="icon">
                     <v-s-icon :name="item.icon" size="30" :color="conf.themeColor[sapp.theme]" />
@@ -1292,6 +1292,14 @@ onMounted(() => {
   }
 }
 
+@media (max-width: 991px) {
+  .home-container .basic-card__body > .chart-box {
+    height: 240px;
+    min-height: 240px;
+    flex: 0 0 240px;
+  }
+}
+
 @media (max-width: 900px) {
   .home-container {
     .dashboard-intro {
@@ -1321,15 +1329,62 @@ onMounted(() => {
     }
 
     .category-item {
-      min-height: 104px;
+      min-height: 96px;
       margin-bottom: 12px;
-      padding: 16px;
+      padding: 12px;
+      gap: 10px;
+
+      .icon {
+        width: 32px;
+        height: 40px;
+        flex-basis: 32px;
+      }
+
+      .text {
+        min-width: 0;
+
+        span {
+          max-width: 100%;
+          overflow-wrap: anywhere;
+        }
+      }
     }
 
     .flow {
       align-items: flex-start;
       flex-direction: column;
       gap: 12px;
+
+      .lefts {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        width: 100%;
+        gap: 12px !important;
+
+        :deep(> span) {
+          display: none;
+        }
+
+        :deep(.el-space__item) {
+          min-width: 0;
+          overflow-wrap: anywhere;
+        }
+      }
+    }
+
+    .basic-card__body > .chart-box {
+      height: 220px;
+      min-height: 220px;
+      flex: 0 0 220px;
+    }
+
+    .status-right {
+      width: 140px;
+
+      .el-select {
+        width: 100% !important;
+        margin-right: 0 !important;
+      }
     }
   }
 }

@@ -80,4 +80,25 @@ const t = (key: string, fallback?: string) => {
     }
   }
 }
+
+@media (max-width: 640px) {
+  .head-tabs {
+    min-height: 44px;
+    padding: 4px;
+    border-radius: 11px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .item {
+      min-width: max-content;
+      height: 36px;
+      padding: 0 13px;
+      border-radius: 8px;
+      font-size: 12px;
+    }
+  }
+}
 </style>

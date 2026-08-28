@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import i18n from '@/lang'
 import type { TableColumnCtx } from 'element-plus'
 import { Box } from '@element-plus/icons-vue'
@@ -71,7 +71,33 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<Emits>()
 const actionColumnProps = new Set(['action', 'actions', 'actionColumn', 'operation', 'operations'])
 const tableRef = ref<any>()
+const compactViewport = ref(false)
+let compactViewportMedia: MediaQueryList | undefined
 const schemaMode = computed(() => props.columns.length > 0)
+const resolvedColumns = computed<ColumnItem[]>(() => {
+  if (!compactViewport.value) return props.columns
+  const releaseFixedColumns = (columns: ColumnItem[]): ColumnItem[] => columns.map((column) => ({
+    ...column,
+    fixed: undefined,
+    children: column.children ? releaseFixedColumns(column.children) : column.children,
+    _children: column._children ? releaseFixedColumns(column._children) : column._children
+  }))
+  return releaseFixedColumns(props.columns)
+})
+
+const syncCompactViewport = (event?: MediaQueryListEvent) => {
+  compactViewport.value = event?.matches ?? compactViewportMedia?.matches ?? false
+}
+
+onMounted(() => {
+  compactViewportMedia = window.matchMedia('(max-width: 768px)')
+  syncCompactViewport()
+  compactViewportMedia.addEventListener('change', syncCompactViewport)
+})
+
+onBeforeUnmount(() => {
+  compactViewportMedia?.removeEventListener('change', syncCompactViewport)
+})
 
 const t = (key: string, fallback?: string) => {
   const value = (i18n.t as any)(key)
@@ -139,7 +165,7 @@ defineExpose({
       <template v-else>
         <el-table-column v-if="selection" type="selection" width="55" />
         <custom-table-column
-          v-for="(item, index) in columns"
+          v-for="(item, index) in resolvedColumns"
           :key="item.prop || item.type || index"
           :column="item"
           :action-column-props="actionColumnProps"
@@ -169,6 +195,7 @@ defineExpose({
 <style scoped lang="less">
 .table-content {
   width: 100%;
+  min-width: 0;
 }
 
 .pagination {
@@ -310,21 +337,63 @@ defineExpose({
 }
 
 @media (max-width: 768px) {
+  :deep(.smart-table) {
+    border-radius: 12px;
+  }
+
+  :deep(.smart-table th.el-table__cell) {
+    height: 42px;
+  }
+
+  :deep(.smart-table td.el-table__cell) {
+    height: 44px;
+  }
+
   :deep(.smart-table .cell) {
-    padding: 0 12px;
+    padding: 0 10px;
   }
 
   .table-empty {
-    min-height: 180px;
+    min-height: 150px;
+    padding: 20px 12px;
+
+    p {
+      max-width: 260px;
+    }
   }
 
   .pagination {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     justify-content: center;
   }
 
   .pagination.has-summary {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  :deep(.pagination .el-pagination) {
+    max-width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    row-gap: 8px;
+  }
+}
+
+@media (max-width: 560px) {
+  :deep(.pagination .el-pagination__total),
+  :deep(.pagination .el-pagination__sizes) {
+    display: none;
+  }
+
+  :deep(.pagination .el-pagination.is-background .btn-next),
+  :deep(.pagination .el-pagination.is-background .btn-prev),
+  :deep(.pagination .el-pagination.is-background .el-pager li) {
+    min-width: 34px;
+    height: 34px;
+    border-radius: 10px;
   }
 }
 </style>

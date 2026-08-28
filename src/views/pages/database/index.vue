@@ -340,4 +340,35 @@ const copyCredential = async () => {
     }
   }
 }
+
+@media (max-width: 640px) {
+  .database-container {
+    :deep(.tip) {
+      align-items: flex-start;
+      padding: 12px;
+      gap: 10px;
+    }
+
+    :deep(.tip .fit-width) {
+      align-items: flex-start;
+    }
+
+    :deep(.tip .ellipsis) {
+      margin-left: 10px !important;
+      overflow: visible;
+      white-space: normal;
+      line-height: 1.65;
+    }
+
+    :deep(.tip > .el-icon) {
+      margin-left: 0 !important;
+      flex: 0 0 auto;
+    }
+
+    :deep(.demo-form-inline),
+    :deep(.demo-form-inline .search-input) {
+      width: 100%;
+    }
+  }
+}
 </style>

@@ -826,4 +826,34 @@ const handleScriptInput = (event: Event) => {
     }
   }
 }
+
+@media (max-width: 640px) {
+  .cycle-row {
+    flex-wrap: wrap;
+    gap: 10px;
+
+    > .el-select {
+      width: 100% !important;
+    }
+
+    .cycle-inputs {
+      flex: 1 1 100%;
+      min-width: 0;
+      flex-wrap: wrap;
+
+      &.week,
+      &.month {
+        flex-direction: column;
+      }
+    }
+  }
+
+  .time-row {
+    flex-wrap: wrap;
+  }
+
+  .tip-text {
+    margin-left: 0;
+  }
+}
 </style>
