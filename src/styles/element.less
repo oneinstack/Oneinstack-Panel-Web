@@ -420,7 +420,7 @@
 :root:root.dark .el-picker-panel__footer .el-button--primary {
   background: rgb(var(--primary-color)) !important;
   border-color: rgb(var(--primary-color)) !important;
-  color: #fff7ed !important;
+  color: var(--text-primary) !important;
 }
 
 :root:root.dark .el-picker-panel__footer .el-button.is-disabled,
@@ -446,4 +446,8 @@ color-mix(in srgb, var(--surface-card) 94%, white 6%) 0%, var(--surface-card) 10
 
 .el-message-box__message{
   color: var(--text-primary) !important;
+}
+
+.el-button:focus-visible{
+  outline: none !important;
 }
