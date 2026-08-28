@@ -209,6 +209,8 @@ const currentNav = computed(() => {
   return matched ?? navigableNavItems.value[0]
 })
 const activeMenuIndex = computed(() => currentNav.value?.path || '')
+const menuRenderSeed = ref(0)
+const menuRenderKey = computed(() => `${activeMenuIndex.value}:${menuRenderSeed.value}`)
 const isNavItemActive = (item: NavItem): boolean =>
   item.children?.some(isNavItemActive) || (item.path.startsWith('/') && route.path.startsWith(item.path))
 const hoveredMenuKey = ref('')
@@ -233,9 +235,13 @@ const getMenuItemIcon = (item: NavItem) =>
 const activeGroupIndexes = computed(() =>
   visibleNavList.value.filter((item) => item.children?.length && isNavItemActive(item)).map((item) => item.path)
 )
-const navigateNavItem = (item: NavItem) => {
+const navigateNavItem = async (item: NavItem) => {
   if (item.path && route.path !== item.path) {
-    router.push(item.path)
+    const currentPath = route.path
+    await router.push(item.path).catch(() => undefined)
+    if (route.path === currentPath) {
+      menuRenderSeed.value += 1
+    }
   }
   mobileNavigationOpen.value = false
   item.event?.()
@@ -524,6 +530,7 @@ const BindButton = () => {
         <el-scrollbar class="nav-scrollbar">
           <el-menu
             :collapse="!isMobileNavigation && conf.isCollapse"
+            :key="menuRenderKey"
             :default-active="activeMenuIndex"
             :default-openeds="activeGroupIndexes"
             :unique-opened="true"

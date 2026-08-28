@@ -35,7 +35,7 @@ html {
     background-color 0.18s ease;
 
   &:not(.is-disabled):hover {
-    transform: translateY(-1px);
+    transform: translateY(1px);
   }
 
   &--primary {
@@ -50,7 +50,7 @@ html {
       // border-color: var(--primary-button-bg-hover);
       // background: var(--primary-button-bg-hover);
       // box-shadow: 0 8px 18px rgba(154, 52, 18, 0.24);
-      background: rgba(var(--primary-color), 0.07);
+      background: rgba(var(--primary-color), 0.5);
     }
 
     &:not(.is-disabled):active {
@@ -140,9 +140,9 @@ html {
 :root:root.dark .el-button--primary.is-disabled:hover,
 :root:root.dark .el-button--primary:disabled,
 :root:root.dark .el-button--primary:disabled:hover {
-  color: #fed7aa !important;
-  border-color: rgba(194, 120, 45, 0.42) !important;
-  background: rgba(111, 66, 30, 0.52) !important;
+  color: var(--text-tertiary) !important;
+  border-color: var(--primary-color) !important;
+  background: rgba(var(--primary-color), 0.52) !important;
 }
 
 :root:root.dark .el-button--warning.is-disabled,

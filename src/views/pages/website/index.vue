@@ -205,13 +205,6 @@ const webServer = reactive({
   }
 })
 
-const websiteTypeOptions = computed(() => [
-  { label: t('website.categoryAll', '全部分类'), value: conf.website.params.type },
-  { label: t('website.tabs.php', 'PHP 项目'), value: 'php' },
-  { label: t('website.tabs.proxy', '反向代理'), value: 'proxy' },
-  { label: t('website.tabs.static', 'HTML 项目'), value: 'static' }
-])
-
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
 interface ComponentServiceStatus {
@@ -442,16 +435,6 @@ const websiteMetrics = computed(() => {
     sslCount,
     runningCount,
     expiringCount
-  }
-})
-
-const selectedCategory = computed({
-  get: () => conf.website.params.type,
-  set: (value: string) => {
-    const target = conf.tabs.list.find((item) => item.value === value)
-    if (target) {
-      conf.tabs.clickActive(target)
-    }
   }
 })
 
@@ -1071,16 +1054,6 @@ loadServiceStatuses()
       </div>
 
       <div class="website-console__search">
-        <div class="website-console__category">
-          <el-select v-model="selectedCategory" style="width: 160px">
-            <el-option
-              v-for="item in websiteTypeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </div>
         <div class="website-search-panel">
           <search-input
             v-model="conf.website.params.name"
@@ -1459,10 +1432,6 @@ loadServiceStatuses()
   min-width: 0;
   padding: 6px 8px;
   border-radius: 8px;
-}
-
-.website-console__category {
-  flex: 0 0 auto;
 }
 
 .website-table-panel {
