@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import type { EChartsOption, EChartsType } from 'echarts'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
@@ -229,6 +229,7 @@ const eventFilters = reactive({
   eventType: '',
   severity: ''
 })
+const eventSeverityDisabled = computed(() => eventFilters.eventType === 'resolved')
 const deliveryFilters = reactive({
   page: 1,
   pageSize: 20,
@@ -636,13 +637,29 @@ const loadRules = async () => {
 const loadEvents = async () => {
   tableLoading.value = true
   try {
-    const { data } = await Api.getMonitorEvents(eventFilters)
+    const { data } = await Api.getMonitorEvents({
+      ...eventFilters,
+      severity: eventSeverityDisabled.value ? '' : eventFilters.severity
+    })
     events.value = data?.data || []
     eventTotal.value = data?.total || 0
   } finally {
     tableLoading.value = false
   }
 }
+
+watch(
+  () => eventFilters.eventType,
+  (value, previous) => {
+    if (value === 'resolved' && eventFilters.severity) {
+      eventFilters.severity = ''
+    }
+    if (value !== previous) {
+      eventFilters.page = 1
+      void loadEvents()
+    }
+  }
+)
 
 const loadChannels = async () => {
   tableLoading.value = true
@@ -1066,12 +1083,19 @@ onUnmounted(() => {
 
         <el-tab-pane name="events" :label="$t('monitor.events')">
           <div class="filters">
-            <el-select v-model="eventFilters.eventType" clearable :placeholder="$t('monitor.eventType')" @change="eventFilters.page = 1; loadEvents()">
+            <el-select v-model="eventFilters.eventType" clearable :placeholder="$t('monitor.eventType')">
               <el-option :label="$t('monitor.eventTypes.triggered')" value="triggered" />
               <el-option :label="$t('monitor.eventTypes.reminder')" value="reminder" />
               <el-option :label="$t('monitor.eventTypes.resolved')" value="resolved" />
             </el-select>
-            <el-select v-model="eventFilters.severity" clearable :placeholder="$t('monitor.severity')" @change="eventFilters.page = 1; loadEvents()">
+            <el-select
+              v-if="!eventSeverityDisabled"
+              v-model="eventFilters.severity"
+              clearable
+              :disabled="eventSeverityDisabled"
+              :placeholder="eventSeverityDisabled ? $t('monitor.severityDisabledForResolved') : $t('monitor.severity')"
+              @change="eventFilters.page = 1; loadEvents()"
+            >
               <el-option :label="$t('monitor.severities.info')" value="info" />
               <el-option :label="$t('monitor.severities.warning')" value="warning" />
               <el-option :label="$t('monitor.severities.critical')" value="critical" />

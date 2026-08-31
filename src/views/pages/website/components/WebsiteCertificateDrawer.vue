@@ -234,7 +234,7 @@ onBeforeUnmount(() => {
         style="margin-bottom: 18px"
       />
 
-      <el-descriptions v-if="certificate" :column="2" border style="margin-bottom: 18px">
+      <el-descriptions v-if="certificate" class="certificate-summary" :column="2" border style="margin-bottom: 18px">
         <el-descriptions-item :label="t('website.status')">
           <el-tag class="website-chip" :type="statusType(certificate.status)">
             {{ statusText[certificate.status] || certificate.status }}
@@ -251,7 +251,7 @@ onBeforeUnmount(() => {
         </el-descriptions-item>
       </el-descriptions>
 
-      <el-form label-width="110px" style="max-width: 620px">
+      <el-form class="certificate-form" label-width="110px" style="max-width: 620px">
         <el-form-item :label="t('website.certificateDrawer.accountEmail')" required>
           <el-input v-model="form.email" placeholder="admin@example.com" :disabled="!!activeTask" />
         </el-form-item>
@@ -314,6 +314,71 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.certificate-summary {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.certificate-summary :deep(.el-descriptions__table) {
+  border-color: var(--border-subtle);
+}
+
+.certificate-summary :deep(.el-descriptions__body) {
+  background: var(--surface-card);
+}
+
+.certificate-summary :deep(.el-descriptions__cell) {
+  border-color: var(--border-subtle) !important;
+}
+
+.certificate-summary :deep(.el-descriptions__label.el-descriptions__cell) {
+  width: 110px;
+  color: var(--text-secondary);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--surface-subtle) 82%, transparent);
+}
+
+.certificate-summary :deep(.el-descriptions__content.el-descriptions__cell) {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-card) 92%, transparent);
+}
+
+.certificate-summary :deep(.el-descriptions__content .website-chip) {
+  min-height: 28px;
+  padding-inline: 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.certificate-form :deep(.el-input__wrapper),
+.certificate-form :deep(.el-input-number__wrapper) {
+  background: var(--surface-card);
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.certificate-form :deep(.el-input.is-disabled .el-input__wrapper),
+.certificate-form :deep(.el-input-number.is-disabled .el-input__wrapper),
+.certificate-form :deep(.el-input-number.is-disabled .el-input-number__wrapper) {
+  background: color-mix(in srgb, var(--surface-card) 92%, black 8%) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-subtle) 88%, transparent);
+}
+
+.certificate-form :deep(.el-input.is-disabled .el-input__inner),
+.certificate-form :deep(.el-input-number.is-disabled .el-input__inner) {
+  color: var(--text-secondary) !important;
+  -webkit-text-fill-color: var(--text-secondary);
+}
+
+.certificate-form :deep(.el-input-number.is-disabled .el-input-number__decrease),
+.certificate-form :deep(.el-input-number.is-disabled .el-input-number__increase) {
+  background: color-mix(in srgb, var(--surface-subtle) 78%, transparent) !important;
+  color: var(--text-tertiary) !important;
+  border-color: var(--border-subtle) !important;
+}
+
 .form-tip {
   margin-left: 8px;
   color: var(--el-text-color-secondary);

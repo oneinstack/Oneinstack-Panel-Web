@@ -716,6 +716,7 @@ onMounted(() => {
             v-model="createForm.resourceId"
             :placeholder="resourceIdPlaceholder"
             :loading="createResourceLoading"
+            popper-class="snapshot-resource-select-dropdown"
             filterable
             clearable
             style="width: 100%"
@@ -1487,6 +1488,32 @@ onMounted(() => {
   }
 }
 
+:global(.snapshot-resource-select-dropdown .el-select-dropdown__item) {
+  display: flex;
+  align-items: center;
+  min-height: 56px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  line-height: normal;
+}
+
+:global(.snapshot-resource-select-dropdown .el-select-dropdown__item.hover),
+:global(.snapshot-resource-select-dropdown .el-select-dropdown__item.is-hovering) {
+  height: auto;
+}
+
+:global(.snapshot-resource-select-dropdown .resource-option) {
+  width: 100%;
+  min-height: 40px;
+}
+
+:global(.snapshot-resource-select-dropdown .resource-option strong),
+:global(.snapshot-resource-select-dropdown .resource-option span) {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 :deep(.snapshot-panel .smart-table .resource-cell .cell-title),
 :deep(.snapshot-panel .smart-table .snapshot-name-cell .cell-title) {
   line-height: 1.35;
@@ -1684,12 +1711,16 @@ onMounted(() => {
   justify-content: space-between;
   gap: 12px;
   padding: 12px 14px;
-  border: 1px solid var(--el-color-warning-light-5);
+  border: 1px solid var(--border-subtle);
   border-radius: 10px;
-  background: var(--el-color-warning-light-9);
+  background: var(--surface-card);
+
+  :deep(.el-checkbox__label){
+    color: var(--text-tertiary) !important;
+  }
 
   span {
-    color: var(--text-tertiary);
+    color: var(--primary-color) !important;
     font-size: 12px;
   }
 

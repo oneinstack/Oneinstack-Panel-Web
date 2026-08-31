@@ -333,6 +333,7 @@ const drawer = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const copy_content = ref('')
 const confirmUnsafeShell = ref(false)
+const fallbackWeekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 interface TemplateParameter {
   name: string
@@ -374,8 +375,11 @@ interface TaskCycle {
 }
 
 const weekDays = computed(() => {
-  const labels = i18n.t('task.cron.weekdays') as unknown as string[]
-  return [1, 2, 3, 4, 5, 6, 0].map((value) => ({ day: labels[value], value }))
+  const locale = i18n.locale || 'zh-CN'
+  const localeMessages = (i18n.global as any)?.getLocaleMessage?.(locale) || {}
+  const labels = localeMessages?.task?.cron?.weekdays
+  const normalizedLabels = Array.isArray(labels) && labels.length === 7 ? labels : fallbackWeekdays
+  return [1, 2, 3, 4, 5, 6, 0].map((value) => ({ day: normalizedLabels[value], value }))
 })
 
 const cycleTypeOptions = computed(() => [
@@ -795,6 +799,14 @@ const handleScriptInput = (event: Event) => {
 
 :deep(.cycle-inputs .el-input-number) {
   width: 136px;
+}
+
+:deep(.cycle-inputs .el-select) {
+  min-width: 136px;
+}
+
+:deep(.cycle-inputs.week .el-select) {
+  min-width: 160px;
 }
 
 :deep(.cycle-inputs .el-input-number .el-input__wrapper),

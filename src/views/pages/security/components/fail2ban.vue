@@ -1002,8 +1002,8 @@ onBeforeUnmount(() => {
       <div class="template-grid">
         <article v-for="item in templates" :key="item.key" class="template-card">
           <div class="template-card__head">
-            <strong>{{ item.name }}</strong>
-            <el-tag size="small" effect="plain">{{ item.key }}</el-tag>
+            <strong class="template-card__title">{{ item.name }}</strong>
+            <el-tag class="template-card__tag" size="small" effect="plain">{{ item.key }}</el-tag>
           </div>
           <p>{{ item.description }}</p>
           <dl>
@@ -1499,7 +1499,34 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.template-card__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+:deep(.template-card__tag) {
+  max-width: 100%;
+  padding: 0 10px;
+  border-radius: 999px;
+  border-color: rgba(var(--primary-color), 0.26);
+  background: rgba(var(--primary-color), 0.08);
+  color: rgb(var(--primary-color));
+  font-family: 'SFMono-Regular', 'Consolas', 'Liberation Mono', monospace;
+  font-weight: 600;
+}
+
+:deep(.template-card__tag .el-tag__content) {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .template-card p {

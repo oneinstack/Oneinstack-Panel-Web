@@ -62,6 +62,7 @@ export default {
   notSilenced: 'Not silenced',
   noRules: 'No alert rules yet',
   eventType: 'Event type',
+  severityDisabledForResolved: 'Resolved events do not use severity',
   severities: {
     info: 'Info',
     warning: 'Warning',

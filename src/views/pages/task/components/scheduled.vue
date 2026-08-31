@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, reactive, onMounted } from 'vue'
+import { computed, ref, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleClose, Delete, Document, EditPen, Refresh, VideoPlay, VideoPause, Warning } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
@@ -38,8 +38,14 @@ const clearTableSelection = () => {
 let searchValue = ref('')
 const tableData = ref([])
 const runningByTask = ref<Record<number, number>>({})
+let refreshTimer: ReturnType<typeof setInterval> | undefined
+let refreshing = false
+
+const hasRunningExecutions = computed(() => Object.keys(runningByTask.value).length > 0)
 
 const getData = async () => {
+  if (refreshing) return
+  refreshing = true
   multipleSelection.value = []
   try {
     const [{ data: res }, { data: running }] = await Promise.all([
@@ -64,7 +70,22 @@ const getData = async () => {
     ElMessage.error(t('task.fetchFailed', 'Failed to load data'))
     tableData.value = []
     pagination.total = 0
+  } finally {
+    refreshing = false
   }
+}
+
+const startAutoRefresh = () => {
+  if (refreshTimer) return
+  refreshTimer = setInterval(() => {
+    if (hasRunningExecutions.value) void getData()
+  }, 3000)
+}
+
+const stopAutoRefresh = () => {
+  if (!refreshTimer) return
+  clearInterval(refreshTimer)
+  refreshTimer = undefined
 }
 
 const onSubmit = () => {
@@ -318,7 +339,9 @@ const runSingleTask = async (row: any) => {
     return
   }
   runningByTask.value[row.id] = data.id
+  startAutoRefresh()
   ElMessage.success(t('task.runStarted', 'Task started. View progress in logs.'))
+  await getData()
 }
 
 const cancelRunningTask = async (row: any) => {
@@ -386,7 +409,19 @@ const collectionHeaderCellClassName = (row: any) => {
 }
 
 onMounted(() => {
-  getData()
+  void getData()
+})
+
+onUnmounted(() => {
+  stopAutoRefresh()
+})
+
+watch(hasRunningExecutions, (running) => {
+  if (running) {
+    startAutoRefresh()
+    return
+  }
+  stopAutoRefresh()
 })
 </script>
 <template>

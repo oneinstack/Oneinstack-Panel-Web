@@ -62,6 +62,7 @@ export default {
   notSilenced: '未静默',
   noRules: '还没有告警规则',
   eventType: '事件类型',
+  severityDisabledForResolved: '恢复事件无级别划分',
   severities: {
     info: '信息',
     warning: '警告',

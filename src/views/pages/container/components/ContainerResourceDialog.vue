@@ -124,7 +124,7 @@ defineExpose({
       </template>
 
       <template v-if="dialogType === 'image-tag'">
-        <el-form-item :label="t('container.resourceDialog.currentImage')">
+        <el-form-item :label="t('container.resourceDialog.currentImage')" class="readonly-field">
           <el-input :model-value="dialogTarget ? imageReference(dialogTarget) : ''" disabled />
         </el-form-item>
         <el-form-item :label="t('container.resourceDialog.newTag')">
@@ -334,6 +334,19 @@ defineExpose({
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 1.5;
+}
+
+:deep(.readonly-field .el-input.is-disabled .el-input__wrapper) {
+  // background: linear-gradient(180deg, rgba(31, 41, 55, 0.96), rgba(17, 24, 39, 0.96));
+  // border: 1px solid rgba(71, 85, 105, 0.72);
+  // box-shadow: inset 0 1px 0 rgba(148, 163, 184, 0.1);
+  background: var(--surface-card);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+}
+
+:deep(.readonly-field .el-input.is-disabled .el-input__inner) {
+  color: var(--text-secondary);
+  -webkit-text-fill-color: var(--text-secondary);
 }
 
 :deep(.el-divider__text) {

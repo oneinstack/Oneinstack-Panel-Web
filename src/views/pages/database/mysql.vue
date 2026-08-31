@@ -636,8 +636,11 @@ const handleMoreAction = async (command: string, row: any) => {
   .database-row-actions {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
     flex-wrap: nowrap;
     gap: 6px;
+    width: 100%;
+    min-width: 0;
     white-space: nowrap;
 
     :deep(.el-button) {
@@ -648,6 +651,7 @@ const handleMoreAction = async (command: string, row: any) => {
     :deep(.el-dropdown) {
       display: inline-flex;
       align-items: center;
+      flex: 0 0 auto;
     }
   }
 }

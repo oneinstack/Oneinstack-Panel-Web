@@ -526,6 +526,22 @@ const addRuleButtonText = computed(() => {
   return t("security.addPortRule", "添加端口规则");
 });
 
+const importButtonText = computed(() =>
+  activeTab.value === "auto_block"
+    ? t("security.importBlockedIps", "导入封禁 IP")
+    : t("security.importRules", "导入规则"),
+);
+
+const exportButtonText = computed(() =>
+  activeTab.value === "auto_block"
+    ? t("security.exportBlockedIps", "导出封禁 IP")
+    : t("security.exportRules", "导出规则"),
+);
+
+const showAutoBlockTemplateButton = computed(
+  () => activeTab.value === "auto_block",
+);
+
 const searchPlaceholder = computed(() =>
   activeTab.value === "forward"
     ? t("security.searchForwardPlaceholder", "请输入目标 IP / 备注")
@@ -1055,6 +1071,39 @@ const exportRules = async () => {
   ElMessage.success(t("security.ruleExported", "规则已导出"));
 };
 
+const downloadAutoBlockTemplate = () => {
+  const payload = {
+    rules: [
+      {
+        ruleType: "auto_block",
+        direction: "in",
+        protocol: "all",
+        strategy: "deny",
+        ips: "203.0.113.10,198.51.100.0/24",
+        ports: "",
+        state: 1,
+        location: "",
+        remark: t(
+          "security.blockedIpTemplateRemark",
+          "SSH 自动封禁导入示例",
+        ),
+        expiresAt: null,
+      },
+    ],
+  };
+  const blob = new Blob([`${JSON.stringify(payload, null, 2)}\n`], {
+    type: "application/json;charset=utf-8",
+  });
+  const objectURL = window.URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectURL;
+  anchor.download = "oneinstack-blocked-ips-template.json";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  window.setTimeout(() => window.URL.revokeObjectURL(objectURL), 1000);
+};
+
 const chooseImport = () => importInput.value?.click();
 
 const importRules = async (event: Event) => {
@@ -1464,12 +1513,13 @@ onMounted(() => {
             <el-tooltip :content="actionReason()" :disabled="!actionReason()">
               <span class="disabled-action-wrapper">
                 <el-button :disabled="Boolean(actionReason())" @click="chooseImport">{{
-                  t("security.importRules", "导入规则")
+                  importButtonText
                 }}</el-button>
               </span>
             </el-tooltip>
-            <el-button @click="exportRules">{{
-              t("security.exportRules", "导出规则")
+            <el-button @click="exportRules">{{ exportButtonText }}</el-button>
+            <el-button v-if="showAutoBlockTemplateButton" @click="downloadAutoBlockTemplate">{{
+              t("security.downloadBlockedIpTemplate", "下载 JSON 模板")
             }}</el-button>
           </template>
         </div>

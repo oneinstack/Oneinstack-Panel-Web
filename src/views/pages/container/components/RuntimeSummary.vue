@@ -89,15 +89,15 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
     letter-spacing: -0.02em;
   }
 
-  &--accent {
-    background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
-    border-color: color-mix(in srgb, rgb(var(--primary-color)) 14%, var(--border-subtle));
+  // &--accent {
+  //   background: color-mix(in srgb, var(--accent-color) 8%, var(--surface-card));
+  //   border-color: color-mix(in srgb, rgb(var(--primary-color)) 14%, var(--border-subtle));
 
-    &:hover {
-      border-color: color-mix(in srgb, rgb(var(--primary-color)) 26%, var(--border-subtle));
-      box-shadow: var(--shadow-sm);
-    }
-  }
+  //   &:hover {
+  //     border-color: color-mix(in srgb, rgb(var(--primary-color)) 26%, var(--border-subtle));
+  //     box-shadow: var(--shadow-sm);
+  //   }
+  // }
 }
 
 @media (max-width: 980px) {

@@ -94,6 +94,12 @@ const syncMobileNavigation = (event?: MediaQueryListEvent) => {
   isMobileNavigation.value = matches
   mobileNavigationOpen.value = false
 }
+const recoverInteractionState = () => {
+  scheduleInteractionRecovery()
+}
+const handleVisibilityRecovery = () => {
+  if (!document.hidden) recoverInteractionState()
+}
 
 const navActiveColor: ItemColor = {
   light: ['#eab170', '#8B8B8B'],
@@ -359,7 +365,10 @@ onMounted(() => {
   mobileNavigationMedia = window.matchMedia('(max-width: 768px)')
   syncMobileNavigation()
   mobileNavigationMedia.addEventListener('change', syncMobileNavigation)
-  scheduleInteractionRecovery()
+  recoverInteractionState()
+  document.addEventListener('visibilitychange', handleVisibilityRecovery)
+  window.addEventListener('focus', recoverInteractionState)
+  window.addEventListener('pageshow', recoverInteractionState)
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
     .then((response) => {
@@ -372,12 +381,15 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   mobileNavigationMedia?.removeEventListener('change', syncMobileNavigation)
+  document.removeEventListener('visibilitychange', handleVisibilityRecovery)
+  window.removeEventListener('focus', recoverInteractionState)
+  window.removeEventListener('pageshow', recoverInteractionState)
 })
 
 watch(
   () => route.path,
   () => {
-    scheduleInteractionRecovery()
+    recoverInteractionState()
     mobileNavigationOpen.value = false
   },
   { immediate: true }
