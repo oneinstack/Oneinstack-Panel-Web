@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import type { DialogType, ImageItem, RegistryItem } from '../types'
+import type { DialogType, ImageItem, RegistryItem, TemplateItem } from '../types'
 import i18n from '@/lang'
 
 const t = i18n.t as any
@@ -14,9 +14,11 @@ const props = defineProps<{
   form: Record<string, any>
   rules: FormRules
   imageActionForm: Record<string, any>
+  composeForm: Record<string, any>
   registryForm: Record<string, any>
   templateForm: Record<string, any>
   registries: RegistryItem[]
+  templates: TemplateItem[]
   imageReference: (row: ImageItem) => string
   registryLabel: (row: RegistryItem) => string
 }>()
@@ -45,6 +47,9 @@ const title = computed<string>(() => {
     case 'image-push': return t('container.resourceDialog.titles.imagePush')
     case 'network': return t('container.resourceDialog.titles.network')
     case 'volume': return t('container.resourceDialog.titles.volume')
+    case 'compose-create': return t('container.resourceDialog.titles.composeCreate')
+    case 'compose-edit': return t('container.resourceDialog.titles.composeEdit')
+    case 'compose-template-deploy': return t('container.resourceDialog.titles.composeTemplateDeploy')
     case 'registry': return t(props.dialogTarget ? 'container.resourceDialog.titles.registryEdit' : 'container.resourceDialog.titles.registryCreate')
     case 'template': return t(props.dialogTarget ? 'container.resourceDialog.titles.templateEdit' : 'container.resourceDialog.titles.templateCreate')
     default:
@@ -96,6 +101,69 @@ defineExpose({
         <input class="file-picker" type="file" accept=".tar,.gz,.tgz,.xz,.zst" @change="emit('import-file-change', $event)" />
         <div class="field-help">{{ t('container.resourceDialog.tarHelp') }}</div>
       </el-form-item>
+
+      <template v-if="['compose-create', 'compose-edit', 'compose-template-deploy'].includes(dialogType)">
+        <el-form-item :label="t('container.resourceDialog.composeProjectName')">
+          <el-input
+            v-model.trim="composeForm.name"
+            :disabled="dialogType === 'compose-edit'"
+            :placeholder="t('container.resourceDialog.composeProjectNamePlaceholder')"
+          />
+        </el-form-item>
+
+        <el-form-item v-if="dialogType === 'compose-template-deploy'" :label="t('container.resourceDialog.composeTemplate')">
+          <el-select v-model="composeForm.templateId" :placeholder="t('container.resourceDialog.composeTemplatePlaceholder')">
+            <el-option
+              v-for="item in templates"
+              :key="item.id || item.name"
+              :label="item.name"
+              :value="item.id ?? item.name"
+            />
+          </el-select>
+          <div class="field-help">{{ composeForm.templateDescription || t('container.resourceDialog.composeTemplateHelp') }}</div>
+        </el-form-item>
+
+        <el-form-item v-if="dialogType === 'compose-create'" :label="t('container.resourceDialog.composeSource')">
+          <el-radio-group v-model="composeForm.sourceMode">
+            <el-radio value="yaml">{{ t('container.resourceDialog.composePasteYaml') }}</el-radio>
+            <el-radio value="upload">{{ t('container.resourceDialog.composeUploadYaml') }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+
+        <el-form-item
+          v-if="dialogType === 'compose-create' && composeForm.sourceMode === 'upload'"
+          :label="t('container.resourceDialog.composeFile')"
+        >
+          <input class="file-picker" type="file" accept=".yml,.yaml" @change="emit('import-file-change', $event)" />
+          <div class="field-help">
+            {{
+              composeForm.sourceFileName
+                ? `${t('container.resourceDialog.composeUploadedFile')}${composeForm.sourceFileName}`
+                : t('container.resourceDialog.composeUploadHelp')
+            }}
+          </div>
+        </el-form-item>
+
+        <el-form-item
+          v-if="dialogType !== 'compose-template-deploy'"
+          :label="t('container.resourceDialog.yaml')"
+        >
+          <el-input
+            v-model="composeForm.content"
+            type="textarea"
+            :rows="14"
+            :placeholder="t('container.resourceDialog.composeYamlPlaceholder')"
+          />
+        </el-form-item>
+
+        <el-form-item
+          v-if="dialogType === 'compose-template-deploy'"
+          :label="t('container.resourceDialog.yamlPreview')"
+          class="readonly-field"
+        >
+          <el-input :model-value="composeForm.content || ''" type="textarea" :rows="12" disabled />
+        </el-form-item>
+      </template>
 
       <template v-if="dialogType === 'image-build'">
         <el-form-item :label="t('container.resourceDialog.targetImage')">

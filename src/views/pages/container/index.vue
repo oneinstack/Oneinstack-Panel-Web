@@ -25,6 +25,7 @@ import {
   WarningFilled,
 } from "@element-plus/icons-vue";
 import { ElMessage, ElMessageBox, type FormRules } from "element-plus";
+import { ElOption, ElSelect } from "element-plus";
 import { Api } from "@/api/modules";
 import { useConfigStore } from "@/stores/modules/config";
 import RuntimeSummary from "./components/RuntimeSummary.vue";
@@ -36,6 +37,7 @@ import ContainerTerminalDrawer from "./components/ContainerTerminalDrawer.vue";
 import ContainerTaskDrawer from "./components/ContainerTaskDrawer.vue";
 import { useContainerTaskStore } from "@/stores/modules/containerTask";
 import type {
+  ComposeProjectItem,
   ContainerAction,
   ContainerItem,
   ContainerStats,
@@ -76,7 +78,7 @@ const containers = ref<ContainerItem[]>([]);
 const images = ref<ImageItem[]>([]);
 const networks = ref<NetworkItem[]>([]);
 const volumes = ref<VolumeItem[]>([]);
-const composeProjects = ref<Record<string, any>[]>([]);
+const composeProjects = ref<ComposeProjectItem[]>([]);
 const registries = ref<RegistryItem[]>([]);
 const templates = ref<TemplateItem[]>([]);
 const templatesSupported = ref(true);
@@ -116,7 +118,12 @@ const selectedVolumes = ref<VolumeItem[]>([]);
 const logsVisible = ref(false);
 const logsLoading = ref(false);
 const logDownloading = ref(false);
-const logTarget = ref<ContainerItem | null>(null);
+const logTarget = ref<{
+  kind: "container" | "compose";
+  id: string;
+  name: string;
+  canDownload: boolean;
+} | null>(null);
 const logsText = ref("");
 const logTail = ref(100);
 const logTimeFilter = ref("all");
@@ -216,6 +223,17 @@ const templateForm = reactive({
   name: "",
   description: "",
   content: "services:\n  web:\n    image: nginx:1.27\n",
+});
+
+const composeForm = reactive({
+  name: "",
+  sourceMode: "yaml" as "yaml" | "upload",
+  content: "services:\n  web:\n    image: nginx:1.27\n",
+  templateId: undefined as number | string | undefined,
+  templateName: "",
+  templateDescription: "",
+  sourceFileName: "",
+  removeVolumes: false,
 });
 
 const configForm = reactive({
@@ -578,6 +596,14 @@ const resetForm = () => {
   templateForm.name = "";
   templateForm.description = "";
   templateForm.content = "services:\n  web:\n    image: nginx:1.27\n";
+  composeForm.name = "";
+  composeForm.sourceMode = "yaml";
+  composeForm.content = "services:\n  web:\n    image: nginx:1.27\n";
+  composeForm.templateId = undefined;
+  composeForm.templateName = "";
+  composeForm.templateDescription = "";
+  composeForm.sourceFileName = "";
+  composeForm.removeVolumes = false;
   importFile.value = null;
   dialogTarget.value = null;
   createDrawerRef.value?.clearValidate();
@@ -600,6 +626,11 @@ const statusType = (status?: string) => {
   if (value.includes("paused")) return "warning";
   if (value.includes("exited") || value.includes("dead")) return "danger";
   return "info";
+};
+
+const isCustomDockerNetworkMode = (value?: string) => {
+  const mode = String(value || "").trim().toLowerCase();
+  return !!mode && !["default", "bridge", "host", "none", "container"].includes(mode);
 };
 
 const splitContainerStatus = (status?: string) => {
@@ -643,6 +674,22 @@ const canDeleteContainer = (row: ContainerItem) =>
   !isContainerRemoving(row);
 const canOpenContainerTerminal = (row: ContainerItem) => canUseTerminal.value;
 
+const networkHealthTagType = (health?: string) => {
+  if (health === "healthy") return "success";
+  if (health === "unhealthy") return "danger";
+  return "warning";
+};
+
+const containerNetworkDisplay = (row: ContainerItem) => {
+  const networks = String(row.Networks || "").trim();
+  if (networks) return networks;
+  const networkMode = String(row.NetworkMode || "").trim();
+  if (isCustomDockerNetworkMode(networkMode)) {
+    return `${networkMode} · ${t("container.notifications.networkMissing")}`;
+  }
+  return "--";
+};
+
 const imageReference = (row: ImageItem) => {
   const repo = row.Repository || "<none>";
   const tag = row.Tag || "<none>";
@@ -650,6 +697,37 @@ const imageReference = (row: ImageItem) => {
 };
 
 const registryLabel = (row: RegistryItem) => `${row.protocol}://${row.address}`;
+
+const composeProjectName = (row?: ComposeProjectItem | null) =>
+  String(row?.projectName || row?.Name || row?.name || "").trim();
+
+const composeProjectStatus = (row?: ComposeProjectItem | null) =>
+  String(row?.Status || row?.status || "").trim();
+
+const composeProjectConfigFiles = (row?: ComposeProjectItem | null) => {
+  const value = row?.ConfigFiles ?? row?.configFiles;
+  if (Array.isArray(value)) return value.filter(Boolean).join(", ");
+  return String(value || "").trim();
+};
+
+const composeProjectWorkingDir = (row?: ComposeProjectItem | null) =>
+  String(row?.WorkingDir || row?.workingDir || "").trim();
+
+const composeProjectActions = (row?: ComposeProjectItem | null) =>
+  Array.isArray(row?.actions)
+    ? row.actions.map((item) => String(item || "").toLowerCase())
+    : [];
+
+const hasComposeAction = (row: ComposeProjectItem, action: string) =>
+  composeProjectActions(row).includes(action);
+
+const composeStatusTagType = (row: ComposeProjectItem) => {
+  const status = composeProjectStatus(row).toLowerCase();
+  if (status.includes("running") || status.includes("healthy")) return "success";
+  if (status.includes("stopped") || status.includes("exited")) return "info";
+  if (status.includes("error") || status.includes("failed")) return "danger";
+  return "warning";
+};
 
 const shortId = (id?: string) =>
   String(id || "")
@@ -686,7 +764,7 @@ const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
     prop: "Networks",
     label: t("container.columns.networks", "Networks"),
     minWidth: 120,
-    showOverflowTooltip: true,
+    slot: "containerNetworks",
   },
   {
     prop: "Mounts",
@@ -697,7 +775,7 @@ const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
   {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
-    width: 500,
+    width: 640,
     fixed: "right",
     slot: "containerAction",
     className: "table-action-column",
@@ -760,6 +838,12 @@ const networkColumns = computed<ColumnItem<NetworkItem>[]>(() => [
   },
   { prop: "EnableIPv6", label: "IPv6", width: 90, slot: "ipv6" },
   {
+    prop: "health",
+    label: t("container.columns.networkHealth", "Network health"),
+    minWidth: 140,
+    slot: "networkHealth",
+  },
+  {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
     width: 170,
@@ -799,33 +883,41 @@ const volumeColumns = computed<ColumnItem<VolumeItem>[]>(() => [
     className: "table-action-column",
   },
 ]);
-const composeColumns = computed<ColumnItem[]>(() => [
+const composeColumns = computed<ColumnItem<ComposeProjectItem>[]>(() => [
   {
-    prop: "Name",
+    prop: "projectName",
     label: t("container.columns.project", "Project"),
     minWidth: 180,
+    slot: "composeProject",
   },
   {
-    prop: "Status",
+    prop: "status",
     label: t("container.columns.status", "Status"),
     minWidth: 160,
+    slot: "composeStatus",
   },
   {
-    prop: "ConfigFiles",
+    prop: "services",
+    label: t("container.columns.services", "Services"),
+    minWidth: 220,
+    slot: "composeServices",
+  },
+  {
+    prop: "configFiles",
     label: t("container.columns.configFiles", "Config files"),
     minWidth: 260,
-    showOverflowTooltip: true,
+    slot: "composeConfigFiles",
   },
   {
-    prop: "WorkingDir",
+    prop: "workingDir",
     label: t("container.columns.workDir", "Working directory"),
     minWidth: 260,
-    showOverflowTooltip: true,
+    slot: "composeWorkingDir",
   },
   {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
-    width: 140,
+    width: 420,
     fixed: "right",
     slot: "composeAction",
     className: "table-action-column",
@@ -1029,6 +1121,19 @@ const ensureRegistriesLoaded = async () => {
   }
 };
 
+const ensureTemplatesLoaded = async () => {
+  if (templates.value.length || loadedTabs.templates) return;
+  try {
+    const { data } = await Api.getContainerTemplates();
+    templates.value = normalizeList<TemplateItem>(data);
+    templatesSupported.value = data?.supported !== false;
+    templatesMessage.value = data?.message || "";
+    loadedTabs.templates = true;
+  } catch (error) {
+    console.warn("加载 Compose 模板列表失败", error);
+  }
+};
+
 const openDialog = (type: DialogType, target?: any) => {
   resetForm();
   dialogType.value = type;
@@ -1051,6 +1156,12 @@ const openDialog = (type: DialogType, target?: any) => {
     templateForm.description = target.description || "";
     templateForm.content = target.content || "";
   }
+  if (type === "compose-template-deploy" && target) {
+    composeForm.templateId = target.id;
+    composeForm.templateName = target.name || "";
+    composeForm.templateDescription = target.description || "";
+    composeForm.content = target.content || "";
+  }
   dialogVisible.value = true;
   if (type === "container") {
     void ensureImagesLoaded();
@@ -1058,6 +1169,34 @@ const openDialog = (type: DialogType, target?: any) => {
     void ensureVolumesLoaded();
   }
   if (["image", "image-push"].includes(type)) void ensureRegistriesLoaded();
+  if (type === "compose-template-deploy") void ensureTemplatesLoaded();
+};
+
+const openComposeEditDialog = async (row: ComposeProjectItem) => {
+  const name = composeProjectName(row);
+  if (!name) return;
+  if (row.configReadable === false) {
+    ElMessage.warning(
+      row.editReason || t("container.compose.configUnreadable"),
+    );
+    return;
+  }
+  resetForm();
+  dialogType.value = "compose-edit";
+  dialogTarget.value = row;
+  composeForm.name = name;
+  saving.value = true;
+  try {
+    const { data } = await Api.getContainerComposeConfig(name);
+    composeForm.content = String(data?.content || data?.raw || "");
+    dialogVisible.value = true;
+  } catch (error: any) {
+    ElMessage.error(
+      error?.message || t("container.compose.configUnreadable"),
+    );
+  } finally {
+    saving.value = false;
+  }
 };
 
 const splitTokens = (value: string) =>
@@ -1535,6 +1674,169 @@ const buildVolumePayload = () => ({
   labelsText: form.labelsText.trim() || undefined,
 });
 
+const buildComposeSourceLabel = () => {
+  if (dialogType.value === "compose-template-deploy") {
+    return composeForm.templateName
+      ? `${t("container.confirmations.composeTemplate")} · ${composeForm.templateName}`
+      : t("container.confirmations.composeTemplate");
+  }
+  if (dialogType.value === "compose-edit") {
+    return t("container.confirmations.composeEditMode");
+  }
+  if (composeForm.sourceMode === "upload") {
+    return composeForm.sourceFileName
+      ? `${t("container.confirmations.composeFileMode")} · ${composeForm.sourceFileName}`
+      : t("container.confirmations.composeFileMode");
+  }
+  return t("container.confirmations.composePasteMode");
+};
+
+const buildComposePreviewPayload = (
+  action: "create" | "edit" | "update" | "delete",
+) => {
+  const name = composeForm.name.trim() || composeProjectName(dialogTarget.value);
+  if (!name) throw new Error(t("container.validation.composeNameRequired"));
+  if (dialogType.value === "compose-template-deploy") {
+    if (!composeForm.templateId) {
+      throw new Error(t("container.validation.composeTemplateRequired"));
+    }
+    return {
+      action,
+      name,
+      templateId: composeForm.templateId,
+      removeVolumes: composeForm.removeVolumes || undefined,
+    };
+  }
+  if (action === "create" || action === "edit") {
+    if (!composeForm.content.trim()) {
+      throw new Error(t("container.validation.composeContentRequired"));
+    }
+  }
+  return {
+    action,
+    name,
+    content: composeForm.content,
+    removeVolumes: composeForm.removeVolumes || undefined,
+  };
+};
+
+const normalizeComposePreviewList = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item || "").trim())
+      .filter(Boolean);
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value as Record<string, any>).map(([key, item]) =>
+      `${key}: ${Array.isArray(item) ? item.join(", ") : String(item ?? "")}`,
+    );
+  }
+  if (typeof value === "string") {
+    return value
+      .split(/[\n,]+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
+const composePreviewValue = (items: string[], fallbackKey: string) =>
+  items.length ? items.join(", ") : t(fallbackKey);
+
+const createComposePreviewMessage = (preview: any) => {
+  const summary = preview?.summary || {};
+  const warnings = normalizeComposePreviewList(summary.warnings);
+  const ports = normalizeComposePreviewList(summary.ports);
+  const networks = normalizeComposePreviewList(summary.networks);
+  const volumesList = normalizeComposePreviewList(summary.volumes);
+  const services = normalizeComposePreviewList(
+    Array.isArray(summary.services)
+      ? summary.services.map((item: any) =>
+          item?.image ? `${item.name || "--"} (${item.image})` : item?.name,
+        )
+      : summary.services,
+  );
+  const rows = [
+    [t("container.confirmations.composeProjectName"), preview?.name || composeForm.name.trim()],
+    [t("container.confirmations.composeSource"), buildComposeSourceLabel()],
+    [t("container.confirmations.composeServices"), composePreviewValue(services, "container.compose.noImpact")],
+    [t("container.confirmations.composePorts"), composePreviewValue(ports, "container.confirmations.none")],
+    [t("container.confirmations.composeNetworks"), composePreviewValue(networks, "container.confirmations.none")],
+    [t("container.confirmations.composeVolumes"), composePreviewValue(volumesList, "container.confirmations.none")],
+    [t("container.confirmations.composeWarnings"), composePreviewValue(warnings, "container.compose.noWarnings")],
+    [
+      t("container.confirmations.composeImpact"),
+      truncatePreviewText(String(preview?.impact || preview?.message || t("container.compose.noImpact")), 180),
+    ],
+  ];
+
+  return h("div", { class: "container-create-preview" }, [
+    h("div", { class: "container-create-preview__notice" }, t("container.confirmations.composeNotice")),
+    h(
+      "div",
+      { class: "container-create-preview__grid" },
+      rows.map(([label, value]) =>
+        h("div", { class: "container-create-preview__row" }, [
+          h("span", { class: "container-create-preview__label" }, label),
+          h("span", { class: "container-create-preview__value" }, value),
+        ]),
+      ),
+    ),
+  ]);
+};
+
+const getComposePreviewDialogMeta = (
+  action: "create" | "edit" | "update" | "delete",
+) => {
+  if (action === "create") {
+    return {
+      title:
+        dialogType.value === "compose-template-deploy"
+          ? t("container.confirmations.composeCreateTitle")
+          : t("container.confirmations.composeCreateTitle"),
+      confirmText:
+        dialogType.value === "compose-template-deploy"
+          ? t("container.confirmations.composeConfirmCreate")
+          : t("container.confirmations.composeConfirmCreate"),
+    };
+  }
+  if (action === "edit") {
+    return {
+      title: t("container.confirmations.composeEditTitle"),
+      confirmText: t("container.confirmations.composeConfirmEdit"),
+    };
+  }
+  if (action === "update") {
+    return {
+      title: t("container.confirmations.composeUpdateTitle"),
+      confirmText: t("container.confirmations.composeConfirmUpdate"),
+    };
+  }
+  return {
+    title: t("container.confirmations.composeDeleteTitle"),
+    confirmText: t("container.confirmations.composeConfirmDelete"),
+  };
+};
+
+const previewAndConfirmComposeAction = async (
+  action: "create" | "edit" | "update" | "delete",
+) => {
+  const payload = buildComposePreviewPayload(action);
+  const { data } = await Api.previewContainerCompose(payload);
+  const preview = extractTaskResult({ data }) || data || {};
+  const meta = getComposePreviewDialogMeta(action);
+  await ElMessageBox.confirm(createComposePreviewMessage(preview), meta.title, {
+    type: action === "delete" ? "warning" : "info",
+    confirmButtonText: meta.confirmText,
+    cancelButtonText: t("common.cancel"),
+  });
+  return {
+    request: payload,
+    preview,
+    fingerprint: String(preview?.previewFingerprint || ""),
+  };
+};
+
 const extractTaskResult = (response: any) => {
   const envelope = response?.data ?? response;
   return envelope?.data ?? envelope;
@@ -1551,7 +1853,7 @@ const extractContainerTaskId = (response: any) => {
 const openContainerTask = (
   result: any,
   request: Record<string, any>,
-  targetTab: "containers" | "images",
+  targetTab: "containers" | "images" | "compose",
 ) => {
   const taskId = extractContainerTaskId(result);
   if (!taskId) throw new Error(t("container.validation.taskIdMissing"));
@@ -1572,6 +1874,18 @@ watch(
   (show) => {
     if (show) return;
     taskDrawer.taskId = "";
+  },
+);
+
+watch(
+  () => composeForm.templateId,
+  (templateId) => {
+    if (!templateId) return;
+    const current = templates.value.find((item) => item.id === templateId);
+    if (!current) return;
+    composeForm.templateName = current.name || "";
+    composeForm.templateDescription = current.description || "";
+    composeForm.content = current.content || "";
   },
 );
 
@@ -1661,6 +1975,51 @@ const submitDialog = async () => {
       await Api.pushContainerImage(buildImagePushPayload());
       ElMessage.success(t("container.notifications.imagePushSuccess"));
       activeTab.value = "images";
+    }
+    if (
+      dialogType.value === "compose-create" ||
+      dialogType.value === "compose-template-deploy"
+    ) {
+      const { request, fingerprint } = await previewAndConfirmComposeAction("create");
+      const result = await Api.createContainerCompose({
+        name: request.name,
+        content: request.content,
+        templateId: request.templateId,
+        previewFingerprint: fingerprint,
+        confirm: true,
+      });
+      openContainerTask(
+        result,
+        {
+          ...request,
+          operation: "compose.create",
+        },
+        "compose",
+      );
+      ElMessage.success(
+        t(
+          dialogType.value === "compose-template-deploy"
+            ? "container.notifications.composeTemplateDeployTaskCreated"
+            : "container.notifications.composeTaskCreated",
+        ),
+      );
+    }
+    if (dialogType.value === "compose-edit") {
+      const { request, fingerprint } = await previewAndConfirmComposeAction("edit");
+      const result = await Api.updateContainerComposeConfig(request.name, {
+        content: String(request.content || ""),
+        previewFingerprint: fingerprint,
+        confirm: true,
+      });
+      openContainerTask(
+        result,
+        {
+          ...request,
+          operation: "compose.edit",
+        },
+        "compose",
+      );
+      ElMessage.success(t("container.notifications.composeTaskCreated"));
     }
     if (dialogType.value === "network") {
       await Api.createContainerNetwork(buildNetworkPayload());
@@ -1787,11 +2146,27 @@ const buildContainerActionFailureMessage = (
 
 const readContainerActionSnapshot = (source: any) => {
   const state = normalizeContainerRuntimeState(source);
+  const expectedNetwork =
+    source?.networkMode ||
+    source?.HostConfig?.NetworkMode ||
+    source?.NetworkMode;
+  const connectedNetworks = Array.isArray(source?.networks)
+    ? source.networks
+    : Object.keys(source?.NetworkSettings?.Networks || {});
+  const inferredNetworkConnected =
+    typeof source?.networkConnected === "boolean"
+      ? source.networkConnected
+      : isCustomDockerNetworkMode(expectedNetwork)
+        ? connectedNetworks.includes(String(expectedNetwork))
+        : true;
   const running =
     source?.running === true || source?.State?.Running === true || state === "running";
   const stateFailed =
     source?.stateFailed === true ||
     source?.stateCode === "CONTAINER_STARTUP_EXITED" ||
+    source?.stateCode === "CONTAINER_STARTUP_FAILED" ||
+    source?.stateCode === "CONTAINER_NETWORK_MISSING" ||
+    (!inferredNetworkConnected && isCustomDockerNetworkMode(expectedNetwork)) ||
     (!running && isContainerFailedState(state));
   return {
     state,
@@ -1804,9 +2179,74 @@ const readContainerActionSnapshot = (source: any) => {
           ? source.State.ExitCode
           : null,
     stateFailed,
+    actionSucceeded: source?.actionSucceeded,
+    networkExpected: source?.networkExpected,
+    networkConnected: inferredNetworkConnected,
+    expectedNetwork,
+    networks: connectedNetworks,
+    dockerError:
+      source?.dockerError ||
+      source?.State?.Error ||
+      source?.error?.detail ||
+      "",
     stateCode: source?.stateCode,
     stateMessage: source?.stateMessage || source?.error,
   };
+};
+
+const resolveContainerActionErrorPayload = (error: any) => {
+  const payload = error?.response?.data || error?.data || {};
+  const diagnostic = payload?.data || {};
+  return {
+    status: Number(error?.status || error?.response?.status || payload?.status || 0),
+    code: payload?.error?.code || payload?.code,
+    detail:
+      payload?.error?.detail ||
+      diagnostic?.stateMessage ||
+      error?.message ||
+      t("container.notifications.operationFailed"),
+    diagnostic,
+  };
+};
+
+const createContainerStartupDiagnosticMessage = (
+  actionLabel: string,
+  snapshot: ReturnType<typeof readContainerActionSnapshot>,
+) => {
+  const rows = [
+    [t("container.notifications.startupStatus"), formatContainerStateLabel(snapshot.state)],
+    [t("container.notifications.startupExitCode"), snapshot.exitCode ?? "--"],
+    [
+      t("container.notifications.startupExpectedNetwork"),
+      snapshot.expectedNetwork || "--",
+    ],
+    [
+      t("container.notifications.startupConnectedNetworks"),
+      snapshot.networks?.length ? snapshot.networks.join(", ") : "--",
+    ],
+    [
+      t("container.notifications.startupDockerError"),
+      snapshot.dockerError || snapshot.stateMessage || "--",
+    ],
+  ];
+
+  return h("div", { class: "container-create-preview" }, [
+    h(
+      "div",
+      { class: "container-create-preview__notice" },
+      buildContainerActionFailureMessage(actionLabel, snapshot),
+    ),
+    h(
+      "div",
+      { class: "container-create-preview__grid" },
+      rows.map(([label, value]) =>
+        h("div", { class: "container-create-preview__row" }, [
+          h("span", { class: "container-create-preview__label" }, String(label)),
+          h("span", { class: "container-create-preview__value" }, String(value)),
+        ]),
+      ),
+    ),
+  ]);
 };
 
 const promptContainerActionFailure = async (
@@ -1815,10 +2255,8 @@ const promptContainerActionFailure = async (
   snapshot: ReturnType<typeof readContainerActionSnapshot>,
 ) => {
   await ElMessageBox.confirm(
-    buildContainerActionFailureMessage(actionLabel, snapshot),
-    t("container.notifications.actionStateFailedTitle", undefined, {
-      action: actionLabel,
-    }),
+    createContainerStartupDiagnosticMessage(actionLabel, snapshot),
+    t("container.notifications.startupDiagnosticsTitle"),
     {
       type: "error",
       confirmButtonText: t("container.notifications.viewLogs"),
@@ -2054,6 +2492,21 @@ const runContainerAction = async (
     );
     loadedTabs.containers = false;
     await loadActiveTab(true);
+  } catch (error: any) {
+    if (action === "start" || action === "restart") {
+      const failure = resolveContainerActionErrorPayload(error);
+      const snapshot = readContainerActionSnapshot(failure.diagnostic);
+      loadedTabs.containers = false;
+      if (detailVisible.value && detailType.value === "container" && detailTarget.value?.ID === row.ID) {
+        void openDetail("container", row).catch(() => undefined);
+      }
+      await loadActiveTab(true).catch(() => undefined);
+      if (failure.status === 409) {
+        await promptContainerActionFailure(row, actionLabels[action], snapshot);
+        return;
+      }
+    }
+    throw error;
   } finally {
     actionLoading.value = "";
   }
@@ -2197,10 +2650,15 @@ const cleanupStoppedContainers = async () => {
 };
 
 const openLogs = async (row: ContainerItem) => {
-  logTarget.value = row;
+  logTarget.value = {
+    kind: "container",
+    id: row.ID,
+    name: row.Names || shortId(row.ID),
+    canDownload: true,
+  };
   logsText.value = "";
   logsVisible.value = true;
-  await loadLogs(row);
+  await loadLogs();
 };
 
 const openTerminal = (row: ContainerItem) => {
@@ -2249,28 +2707,38 @@ const buildContainerLogQuery = () => {
   };
 };
 
-const loadLogs = async (row = logTarget.value) => {
-  if (!row?.ID) return;
+const loadLogs = async (target = logTarget.value) => {
+  if (!target?.id) return;
   logsLoading.value = true;
   try {
-    const { data } = await Api.getContainerLogs(
-      row.ID,
-      buildContainerLogQuery(),
-    );
+    if (target.kind === "compose") {
+      const { data } = await Api.getContainerComposeLogs(target.id, {
+        tail: normalizeContainerLogTail(),
+        timestamps: logTimestamps.value,
+        follow: false,
+      });
+      logsText.value = data?.logs || data?.content || "";
+      return;
+    }
+    const { data } = await Api.getContainerLogs(target.id, buildContainerLogQuery());
     logsText.value = data?.logs || "";
   } finally {
     logsLoading.value = false;
   }
 };
 
-const downloadLogs = async (row = logTarget.value) => {
-  if (!row?.ID || logDownloading.value) return;
+const downloadLogs = async (target = logTarget.value) => {
+  if (!target?.id || logDownloading.value) return;
+  if (target.kind === "compose") {
+    ElMessage.info(t("container.notifications.composeLogDownloadUnsupported"));
+    return;
+  }
   logDownloading.value = true;
   try {
     await Api.downloadContainerLogs(
-      row.ID,
+      target.id,
       buildContainerLogFilters(),
-      `${row.Names || row.ID}-container.log`,
+      `${target.name || target.id}-container.log`,
     );
     ElMessage.success(t("container.notifications.logDownloadStarted"));
   } catch (error: any) {
@@ -2506,9 +2974,17 @@ const pruneVolumes = async () => {
   }
 };
 
-const handleImportFileChange = (event: Event) => {
+const handleImportFileChange = async (event: Event) => {
   const input = event.target as HTMLInputElement;
-  importFile.value = input.files?.[0] || null;
+  const file = input.files?.[0] || null;
+  if (dialogType.value === "compose-create") {
+    composeForm.sourceFileName = file?.name || "";
+    if (file) {
+      composeForm.content = await file.text();
+    }
+    return;
+  }
+  importFile.value = file;
 };
 
 const handleContainerSelectionChange = (rows: ContainerItem[]) => {
@@ -2521,6 +2997,92 @@ const handleNetworkSelectionChange = (rows: NetworkItem[]) => {
 
 const handleVolumeSelectionChange = (rows: VolumeItem[]) => {
   selectedVolumes.value = rows;
+};
+
+const pickReconnectTargetNetwork = async (row: ContainerItem) => {
+  await ensureNetworksLoaded();
+  const { data } = await Api.getContainerDetail(row.ID).catch(() => ({ data: null }));
+  const expectedNetwork =
+    String(
+      data?.HostConfig?.NetworkMode ||
+      row.NetworkMode ||
+      "",
+    ).trim();
+  const connectedNetworks = Object.keys(data?.NetworkSettings?.Networks || {});
+  const defaultNetwork =
+    isCustomDockerNetworkMode(expectedNetwork)
+      ? expectedNetwork
+      : connectedNetworks[0] || networks.value[0]?.Name || "";
+  const selected = ref(defaultNetwork);
+  await ElMessageBox.confirm(
+    h("div", { class: "container-create-preview" }, [
+      h("div", { class: "container-create-preview__notice" }, t("container.confirmations.containerNetworkDialogNotice")),
+      h(
+        "div",
+        { class: "container-network-picker" },
+        [
+          h("label", { class: "container-network-picker__label" }, t("container.confirmations.containerNetworkDialogLabel")),
+          h(
+            ElSelect,
+            {
+              modelValue: selected.value,
+              "onUpdate:modelValue": (value: string) => {
+                selected.value = value;
+              },
+              placeholder: t("container.confirmations.containerNetworkDialogLabel"),
+              style: "width:100%;",
+              filterable: true,
+            },
+            () =>
+              networks.value.map((network) =>
+                h(ElOption, {
+                  key: network.ID || network.Name,
+                  label: network.Name,
+                  value: network.Name,
+                }),
+              ),
+          ),
+        ],
+      ),
+    ]),
+    isCustomDockerNetworkMode(expectedNetwork)
+      ? t("container.confirmations.containerNetworkReconnectTitle")
+      : t("container.confirmations.containerNetworkConnectTitle"),
+    {
+      type: "warning",
+      confirmButtonText: isCustomDockerNetworkMode(expectedNetwork)
+        ? t("container.reconnectNetwork")
+        : t("container.connectNetwork"),
+      cancelButtonText: t("common.cancel"),
+    },
+  );
+  if (!selected.value) {
+    throw new Error(t("container.validation.networkRequired"));
+  }
+  return {
+    network: selected.value,
+    action: isCustomDockerNetworkMode(expectedNetwork) ? "reconnect" as const : "connect" as const,
+  };
+};
+
+const reconnectContainerNetwork = async (row: ContainerItem) => {
+  const selection = await pickReconnectTargetNetwork(row);
+  const result = await Api.runContainerNetworkAction(row.ID, {
+    action: selection.action,
+    network: selection.network,
+    confirm: selection.action !== "connect",
+  });
+  openContainerTask(
+    result,
+    {
+      operation: `network.${selection.action}`,
+      name: row.Names || row.ID,
+      containerId: row.ID,
+      network: selection.network,
+    },
+    "containers",
+  );
+  ElMessage.success(t("container.notifications.containerNetworkTaskCreated"));
 };
 
 const exportImage = async (row: ImageItem) => {
@@ -2624,6 +3186,64 @@ const deleteTemplate = async (row: TemplateItem) => {
   }
 };
 
+const openComposeLogs = async (row: ComposeProjectItem) => {
+  const name = composeProjectName(row);
+  if (!name) return;
+  logTarget.value = {
+    kind: "compose",
+    id: name,
+    name,
+    canDownload: false,
+  };
+  logsText.value = "";
+  logsVisible.value = true;
+  await loadLogs();
+};
+
+const runComposeAction = async (
+  row: ComposeProjectItem,
+  action: "start" | "stop" | "restart" | "update" | "delete",
+) => {
+  const name = composeProjectName(row);
+  if (!name) return;
+
+  actionLoading.value = `compose:${name}:${action}`;
+  try {
+    if (action === "update" || action === "delete") {
+      composeForm.name = name;
+      composeForm.removeVolumes = false;
+      const { request, fingerprint } = await previewAndConfirmComposeAction(action);
+      const result = await Api.runContainerComposeAction(name, {
+        action,
+        previewFingerprint: fingerprint,
+        confirm: true,
+        removeVolumes: request.removeVolumes,
+      });
+      openContainerTask(
+        result,
+        { ...request, operation: `compose.${action}` },
+        "compose",
+      );
+      ElMessage.success(t("container.notifications.composeTaskCreated"));
+      return;
+    }
+
+    const result = await Api.runContainerComposeAction(name, { action });
+    openContainerTask(
+      result,
+      { name, operation: `compose.${action}` },
+      "compose",
+    );
+    ElMessage.success(
+      t("container.notifications.composeTaskCreated"),
+    );
+  } catch (error) {
+    throw error;
+  } finally {
+    actionLoading.value = "";
+  }
+};
+
 const saveDockerConfig = async () => {
   let parsed: Record<string, any>;
   try {
@@ -2717,7 +3337,14 @@ const handlePageSizeChange = (pageSize: number) => {
 const refreshTaskAffectedLists = async () => {
   loadedTabs.containers = false;
   loadedTabs.images = false;
-  if (activeTab.value === "containers" || activeTab.value === "images") {
+  loadedTabs.compose = false;
+  loadedTabs.networks = false;
+  if (
+    activeTab.value === "containers" ||
+    activeTab.value === "images" ||
+    activeTab.value === "compose" ||
+    activeTab.value === "networks"
+  ) {
     await loadActiveTab(true);
   }
 };
@@ -2952,6 +3579,23 @@ onBeforeUnmount(() => {
             {{ t("container.cleanupUnusedVolumes", "Clean unused volumes") }}
           </el-button>
           <el-button
+            v-if="activeTab === 'compose'"
+            type="primary"
+            :icon="Plus"
+            :disabled="!runtimeAvailable || !canComposeWrite"
+            @click="openDialog('compose-create')"
+          >
+            {{ t("container.createCompose", "Create Compose") }}
+          </el-button>
+          <el-button
+            v-if="activeTab === 'compose'"
+            plain
+            :loading="listLoading"
+            @click="loadActiveTab(true)"
+          >
+            {{ t("common.refresh", "Refresh") }}
+          </el-button>
+          <el-button
             v-if="activeTab === 'templates'"
             type="primary"
             :icon="Plus"
@@ -2961,6 +3605,16 @@ onBeforeUnmount(() => {
             @click="openDialog('template')"
           >
             {{ t("container.createTemplate", "Create template") }}
+          </el-button>
+          <el-button
+            v-if="activeTab === 'templates'"
+            plain
+            :disabled="
+              !runtimeAvailable || !canComposeWrite || !templatesSupported
+            "
+            @click="openDialog('compose-template-deploy')"
+          >
+            {{ t("container.deployFromTemplate", "Deploy from template") }}
           </el-button>
           <div v-if="activeTab === 'registries'" class="action-with-reason">
             <el-tooltip
@@ -3262,6 +3916,20 @@ onBeforeUnmount(() => {
             <span class="table-ellipsis-cell">{{ row.Mounts || "--" }}</span>
           </el-tooltip>
         </template>
+        <template #containerNetworks="{ row }">
+          <el-tooltip
+            :disabled="containerNetworkDisplay(row).length <= 20"
+            :content="row.NetworkHealthMessage || containerNetworkDisplay(row)"
+            placement="top"
+          >
+            <span
+              class="table-ellipsis-cell"
+              :class="{ 'is-network-warning': row.NetworkHealth === 'unhealthy' }"
+            >
+              {{ containerNetworkDisplay(row) }}
+            </span>
+          </el-tooltip>
+        </template>
         <template #containerAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
@@ -3289,6 +3957,19 @@ onBeforeUnmount(() => {
               @click="openTerminal(row)"
             >
               {{ t("container.terminal.entry", "Terminal") }}
+            </el-button>
+            <el-button
+              link
+              type="warning"
+              :icon="Connection"
+              :disabled="!runtimeAvailable || !canNetworkWrite"
+              @click="reconnectContainerNetwork(row)"
+            >
+              {{
+                isCustomDockerNetworkMode(row.NetworkMode)
+                  ? t("container.reconnectNetwork", "Reconnect network")
+                  : t("container.connectNetwork", "Connect network")
+              }}
             </el-button>
             <el-button
               v-if="canStartContainer(row)"
@@ -3444,6 +4125,21 @@ onBeforeUnmount(() => {
         @selection-change="handleNetworkSelectionChange"
       >
         <template #networkId="{ row }">{{ shortId(row.ID) }}</template>
+        <template #networkHealth="{ row }">
+          <el-tooltip
+            :content="row.healthMessage || row.healthCode || '--'"
+            placement="top"
+          >
+            <el-tag :type="networkHealthTagType(row.health)" effect="light">
+              {{
+                t(
+                  `container.networkHealthState.${row.health || "unknown"}`,
+                  row.health || "unknown",
+                )
+              }}
+            </el-tag>
+          </el-tooltip>
+        </template>
         <template #ipv6="{ row }">
           <el-tag :type="row.EnableIPv6 ? 'success' : 'info'" effect="light">{{
             row.EnableIPv6
@@ -3520,19 +4216,126 @@ onBeforeUnmount(() => {
         :row-key="getRowKey"
         :empty-text="t('container.empty.compose', 'No Compose projects')"
       >
-        <template #composeAction>
+        <template #composeProject="{ row }">
+          <div class="primary-cell">
+            <strong>{{ composeProjectName(row) || "--" }}</strong>
+            <span>{{
+              row.managed
+                ? t("container.compose.managed", "Managed")
+                : t("container.compose.external", "External")
+            }}</span>
+          </div>
+        </template>
+        <template #composeStatus="{ row }">
+          <el-tag :type="composeStatusTagType(row)" effect="light">
+            {{ composeProjectStatus(row) || "--" }}
+          </el-tag>
+        </template>
+        <template #composeServices="{ row }">
+          <span class="table-ellipsis-cell">
+            {{
+              Array.isArray(row.services) && row.services.length
+                ? row.services.map((item: any) => item.name || "--").join(", ")
+                : "--"
+            }}
+          </span>
+        </template>
+        <template #composeConfigFiles="{ row }">
           <el-tooltip
-            :content="
-              t(
-                'container.composeWriteDisabled',
-                'Compose write operations are not enabled by the backend',
-              )
-            "
+            :disabled="composeProjectConfigFiles(row).length <= 32"
+            :content="composeProjectConfigFiles(row) || '--'"
           >
-            <el-button link type="info" :icon="SwitchButton" disabled>{{
-              t("container.notEnabled", "Not enabled")
-            }}</el-button>
+            <span class="table-ellipsis-cell">{{
+              composeProjectConfigFiles(row) || "--"
+            }}</span>
           </el-tooltip>
+        </template>
+        <template #composeWorkingDir="{ row }">
+          <el-tooltip
+            :disabled="composeProjectWorkingDir(row).length <= 32"
+            :content="composeProjectWorkingDir(row) || '--'"
+          >
+            <span class="table-ellipsis-cell">{{
+              composeProjectWorkingDir(row) || "--"
+            }}</span>
+          </el-tooltip>
+        </template>
+        <template #composeAction="{ row }">
+          <div class="row-actions table-row-actions">
+            <el-button
+              link
+              type="primary"
+              :icon="Document"
+              @click="openComposeLogs(row)"
+            >
+              {{ t("container.logs", "Logs") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'edit') || row.editable"
+              link
+              type="primary"
+              :icon="EditPen"
+              :disabled="!canComposeWrite || row.editable === false"
+              @click="openComposeEditDialog(row)"
+            >
+              {{ t("container.edit", "Edit") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'start')"
+              link
+              type="primary"
+              :icon="VideoPlay"
+              :loading="actionLoading === `compose:${composeProjectName(row)}:start`"
+              :disabled="!runtimeAvailable || !canComposeWrite"
+              @click="runComposeAction(row, 'start')"
+            >
+              {{ t("container.start", "Start") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'stop')"
+              link
+              type="primary"
+              :icon="SwitchButton"
+              :loading="actionLoading === `compose:${composeProjectName(row)}:stop`"
+              :disabled="!runtimeAvailable || !canComposeWrite"
+              @click="runComposeAction(row, 'stop')"
+            >
+              {{ t("container.stop", "Stop") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'restart')"
+              link
+              type="primary"
+              :icon="Refresh"
+              :loading="actionLoading === `compose:${composeProjectName(row)}:restart`"
+              :disabled="!runtimeAvailable || !canComposeWrite"
+              @click="runComposeAction(row, 'restart')"
+            >
+              {{ t("container.restart", "Restart") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'update')"
+              link
+              type="primary"
+              :icon="Upload"
+              :loading="actionLoading === `compose:${composeProjectName(row)}:update`"
+              :disabled="!runtimeAvailable || !canComposeWrite"
+              @click="runComposeAction(row, 'update')"
+            >
+              {{ t("container.update", "Update") }}
+            </el-button>
+            <el-button
+              v-if="hasComposeAction(row, 'delete')"
+              link
+              type="danger"
+              :icon="Delete"
+              :loading="actionLoading === `compose:${composeProjectName(row)}:delete`"
+              :disabled="!runtimeAvailable || !canComposeWrite"
+              @click="runComposeAction(row, 'delete')"
+            >
+              {{ t("container.delete", "Delete") }}
+            </el-button>
+          </div>
         </template>
       </custom-table>
 
@@ -3562,6 +4365,14 @@ onBeforeUnmount(() => {
         }}</template>
         <template #templateAction="{ row }">
           <div class="row-actions table-row-actions">
+            <el-button
+              link
+              type="primary"
+              :icon="Plus"
+              :disabled="!canComposeWrite || !templatesSupported"
+              @click="openDialog('compose-template-deploy', row)"
+              >{{ t("container.deployFromTemplate", "Deploy from template") }}</el-button
+            >
             <el-button
               link
               type="primary"
@@ -3766,9 +4577,11 @@ onBeforeUnmount(() => {
       :form="form"
       :rules="rules"
       :image-action-form="imageActionForm"
+      :compose-form="composeForm"
       :registry-form="registryForm"
       :template-form="templateForm"
       :registries="registries"
+      :templates="templates"
       :image-reference="imageReference"
       :registry-label="registryLabel"
       @confirm="submitDialog"
@@ -4129,6 +4942,23 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   vertical-align: middle;
+}
+
+.table-ellipsis-cell.is-network-warning {
+  color: var(--el-color-warning);
+  font-weight: 600;
+}
+
+.container-network-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.container-network-picker__label {
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .panel-foot {

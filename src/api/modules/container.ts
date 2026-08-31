@@ -122,6 +122,17 @@ export const containerApi = {
   ) => {
     return http.get(`/containers/${encodeURIComponent(id)}/logs`, obj);
   },
+  /** 连接、断开或重连容器网络 */
+  runContainerNetworkAction: (
+    id: string,
+    obj: {
+      action: "connect" | "disconnect" | "reconnect";
+      network: string;
+      confirm?: boolean;
+    },
+  ) => {
+    return http.post(`/containers/${encodeURIComponent(id)}/networks`, obj);
+  },
   /** 下载容器日志 */
   downloadContainerLogs: (
     id: string,
@@ -330,6 +341,69 @@ export const containerApi = {
   /** 获取 Compose 项目列表 */
   getContainerCompose: () => {
     return http.get("/containers/compose");
+  },
+  /** 预览 Compose 操作 */
+  previewContainerCompose: (obj: {
+    action: "create" | "edit" | "update" | "delete";
+    name: string;
+    content?: string;
+    templateId?: number | string;
+    removeVolumes?: boolean;
+  }) => {
+    return http.post("/containers/compose/preview", obj);
+  },
+  /** 创建 Compose 项目 */
+  createContainerCompose: (obj: {
+    name: string;
+    content?: string;
+    templateId?: number | string;
+    previewFingerprint: string;
+    confirm: true;
+  }) => {
+    return http.post("/containers/compose", obj);
+  },
+  /** 获取 Compose 项目详情 */
+  getContainerComposeDetail: (name: string) => {
+    return http.get(`/containers/compose/${encodeURIComponent(name)}`);
+  },
+  /** 获取 Compose 项目配置 */
+  getContainerComposeConfig: (name: string) => {
+    return http.get(`/containers/compose/${encodeURIComponent(name)}/config`);
+  },
+  /** 更新 Compose 项目配置 */
+  updateContainerComposeConfig: (
+    name: string,
+    obj: {
+      content: string;
+      previewFingerprint: string;
+      confirm: true;
+    },
+  ) => {
+    return http.put(`/containers/compose/${encodeURIComponent(name)}/config`, obj);
+  },
+  /** 执行 Compose 生命周期操作 */
+  runContainerComposeAction: (
+    name: string,
+    obj: {
+      action: "start" | "stop" | "restart" | "update" | "delete";
+      previewFingerprint?: string;
+      confirm?: boolean;
+      removeVolumes?: boolean;
+    },
+  ) => {
+    return http.post(`/containers/compose/${encodeURIComponent(name)}/actions`, obj);
+  },
+  /** 获取 Compose 项目日志 */
+  getContainerComposeLogs: (
+    name: string,
+    obj?: {
+      tail?: number;
+      service?: string;
+      timestamps?: boolean;
+      follow?: boolean;
+    },
+  ) => {
+    return http.get(`/containers/compose/${encodeURIComponent(name)}/logs`, obj);
   },
   /** 获取编排模板能力状态 */
   getContainerTemplates: () => {

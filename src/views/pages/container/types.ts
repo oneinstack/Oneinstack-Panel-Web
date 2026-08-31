@@ -9,6 +9,9 @@ export type DialogType = 'container'
   | 'image-build'
   | 'image-tag'
   | 'image-push'
+  | 'compose-create'
+  | 'compose-edit'
+  | 'compose-template-deploy'
   | 'network'
   | 'volume'
   | 'registry'
@@ -63,6 +66,10 @@ export interface ContainerItem {
   Size?: string
   Mounts?: string
   Networks?: string
+  NetworkMode?: string
+  NetworkHealth?: 'healthy' | 'unknown' | 'unhealthy'
+  NetworkHealthCode?: string
+  NetworkHealthMessage?: string
 }
 
 export interface ImageItem {
@@ -89,6 +96,11 @@ export interface NetworkItem {
   Options?: Record<string, string>
   Internal?: boolean
   EnableIPv6?: boolean
+  health?: 'healthy' | 'unknown' | 'unhealthy'
+  healthCode?: string
+  healthMessage?: string
+  connectivityVerified?: boolean
+  ipamVerified?: boolean
 }
 
 export interface VolumeItem {
@@ -119,6 +131,28 @@ export interface TemplateItem {
   content?: string
   supported?: boolean
   message?: string
+}
+
+export interface ComposeProjectItem {
+  Name?: string
+  name?: string
+  projectName?: string
+  Status?: string
+  status?: string
+  ConfigFiles?: string[] | string
+  configFiles?: string[] | string
+  WorkingDir?: string
+  workingDir?: string
+  managed?: boolean
+  configReadable?: boolean
+  editable?: boolean
+  editReason?: string
+  safetyTips?: string[]
+  actions?: string[]
+  services?: Array<{
+    name?: string
+    status?: string
+  }>
 }
 
 export interface ContainerStats {

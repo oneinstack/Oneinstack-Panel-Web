@@ -42,7 +42,10 @@ const operationLabel = computed(() => {
   const labels: Record<string, string> = {
     pull: t('container.pullImage', 'Pull image'),
     build: t('container.buildImage', 'Build image'),
-    create: t('container.createContainer', 'Create container')
+    create: t('container.createContainer', 'Create container'),
+    'network.connect': t('container.connectNetwork', 'Connect network'),
+    'network.reconnect': t('container.reconnectNetwork', 'Reconnect network'),
+    'network.disconnect': t('container.networks', 'Networks')
   }
   return labels[task.value?.operation || ''] || t('container.task.containerTask', 'Container task')
 })
@@ -92,6 +95,13 @@ const stageDefinitions = computed(() => {
       { key: 'resolving', name: t('container.task.stages.checkBuildParams', 'Check build parameters') },
       { key: 'building', name: t('container.task.stages.executeDockerBuild', 'Execute Docker build') },
       { key: 'verifying', name: t('container.task.stages.verifyImageTag', 'Verify image tag') }
+    ]
+  }
+  if (String(task.value?.operation || '').startsWith('network.')) {
+    return [
+      { key: 'queued', name: t('container.task.phase.queued', 'Task queued') },
+      { key: 'resolving', name: t('container.task.phase.resolving', 'Parameter check') },
+      { key: 'verifying', name: t('container.task.phase.verifying', 'Verify result') }
     ]
   }
   return [

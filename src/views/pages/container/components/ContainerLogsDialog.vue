@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue'
 import { Download, Refresh } from '@element-plus/icons-vue'
-import type { ContainerItem } from '../types'
 import i18n from '@/lang'
 
 const t = i18n.t as any
@@ -10,7 +9,11 @@ const props = defineProps<{
   visible: boolean
   loading: boolean
   downloading: boolean
-  target: ContainerItem | null
+  target: {
+    name?: string
+    kind?: 'container' | 'compose'
+    canDownload?: boolean
+  } | null
   logsText: string
   tail: number
   timeFilter: string
@@ -67,7 +70,7 @@ watch(
 <template>
   <custom-drawer
     :visible="props.visible"
-    :title="t('container.logViewer.title', { name: props.target?.Names || t('container.logViewer.containerFallback') })"
+    :title="t('container.logViewer.title', { name: props.target?.name || t('container.logViewer.containerFallback') })"
     size="880px"
     :cancel-text="t('container.logViewer.close')"
     :show-confirm="false"
@@ -123,7 +126,7 @@ watch(
           @update:model-value="emit('update:timestamps', Boolean($event))"
         />
         <el-button :icon="Refresh" :loading="props.loading" @click="emit('refresh')">{{ t('container.logViewer.refresh') }}</el-button>
-        <el-button :icon="Download" :loading="props.downloading" @click="emit('download')">{{ t('container.logViewer.download') }}</el-button>
+        <el-button :icon="Download" :loading="props.downloading" :disabled="props.target?.canDownload === false" @click="emit('download')">{{ t('container.logViewer.download') }}</el-button>
       </div>
       <div ref="logElement" v-loading="props.loading" class="logs-box">
         <pre v-if="props.logsText">{{ props.logsText }}</pre>
