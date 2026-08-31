@@ -450,6 +450,84 @@ const handleInstallClick = (item: any) => {
   openInstallForm(item)
 }
 
+const parseParams = (params: any): any[] => {
+  if (!params) return []
+  if (Array.isArray(params)) return params
+  try {
+    return JSON.parse(params)
+  } catch {
+    return []
+  }
+}
+
+const isPasswordInstallField = (field: any) => {
+  const candidates = [
+    field?.key,
+    field?.type,
+    field?.name,
+    field?.value
+  ]
+    .map((value) => String(value || '').toLowerCase())
+    .filter(Boolean)
+
+  return candidates.some((value) =>
+    ['pwd', 'password', 'secret', 'admin'].some((keyword) =>
+      value.includes(keyword)
+    )
+  )
+}
+
+const buildInstallFieldRules = (field: any) => {
+  const label = field.value || field.name || field.key
+  const ruleText = String(field?.rule || '').trim()
+  const required =
+    field.required === true ||
+    field.required === 'true' ||
+    isPasswordInstallField(field)
+
+  const rules: any[] = []
+  if (required) {
+    rules.push({
+      required: true,
+      message: t('software.inputField', 'Enter {field}', { field: label }),
+      trigger: 'blur'
+    })
+  }
+
+  if (!ruleText) return rules
+
+  ruleText.split('|').forEach((segment) => {
+    const [rawName, rawValue] = String(segment).split(':')
+    const name = String(rawName || '').trim().toLowerCase()
+    const value = Number(String(rawValue || '').trim())
+    if (!Number.isFinite(value)) return
+
+    if (name === 'min') {
+      rules.push({
+        min: value,
+        message: t('software.fieldMinLength', '{field}至少 {count} 位', {
+          field: label,
+          count: value
+        }),
+        trigger: 'blur'
+      })
+    }
+
+    if (name === 'max') {
+      rules.push({
+        max: value,
+        message: t('software.fieldMaxLength', '{field}最多 {count} 位', {
+          field: label,
+          count: value
+        }),
+        trigger: 'blur'
+      })
+    }
+  })
+
+  return rules
+}
+
 const openInstallForm = (item: any) => {
   if (!item) return
   selectedItem.value = item
@@ -460,15 +538,9 @@ const openInstallForm = (item: any) => {
   const config = item.key === 'db' ? [] : parseParams(item.params)
   installForm.items = config.map<FormItem>((field: any) => ({
     label: field.value || field.name || field.key,
-    type: ['pwd', 'password', 'secret'].some((value) =>
-      String(field.key || field.type).toLowerCase().includes(value)
-    ) ? 'password' : 'input',
+    type: isPasswordInstallField(field) ? 'password' : 'input',
     prop: field.key,
-    rules: [{
-      required: field.required === true || field.required === 'true',
-      message: t('software.inputField', 'Enter {field}', { field: field.value || field.name || field.key }),
-      trigger: 'blur'
-    }]
+    rules: buildInstallFieldRules(field)
   }))
   if (installForm.items.length === 0) {
     void handleInstall()
@@ -476,16 +548,6 @@ const openInstallForm = (item: any) => {
   }
   drawer.title = t('software.installTitle', 'Install {name} {version}', { name: item.name, version: installForm.value.version })
   drawer.show = true
-}
-
-const parseParams = (params: any): any[] => {
-  if (!params) return []
-  if (Array.isArray(params)) return params
-  try {
-    return JSON.parse(params)
-  } catch {
-    return []
-  }
 }
 
 const handleInstall = async () => {

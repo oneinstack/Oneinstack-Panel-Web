@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { DocumentAdd, Lock, Plus, Refresh, Warning } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
@@ -208,6 +208,8 @@ const policyForm = reactive({
 })
 
 const manualBanVisible = ref(false)
+const manualBanFormRef = ref<FormInstance>()
+const manualBanIpInputRef = ref<any>()
 const manualBanForm = reactive({
   policyId: '',
   ip: '',
@@ -342,6 +344,28 @@ const manualBanDisabled = computed(() => {
   if (!target) return false
   return actionBusy('fail2ban.ban', target)
 })
+
+const ipv4Pattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}$/
+const ipv4CidrPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)){3}\/([0-9]|[1-2]\d|3[0-2])$/
+
+const validateManualBanIp = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
+  const target = value.trim()
+  if (!target) {
+    callback(new Error(t('security.fail2ban.ban.ipRequired', '请输入 IP 地址')))
+    return
+  }
+  if (!ipv4Pattern.test(target) && !ipv4CidrPattern.test(target)) {
+    callback(new Error(t('security.fail2ban.ban.ipInvalid', '请输入有效的 IPv4 地址或 IPv4/CIDR')))
+    return
+  }
+  callback()
+}
+
+const manualBanRules = computed<FormRules>(() => ({
+  policyId: [{ required: true, message: t('security.fail2ban.ban.policyRequired', '请选择策略'), trigger: 'change' }],
+  ip: [{ validator: validateManualBanIp, trigger: ['blur', 'change'] }],
+  reason: [{ required: true, message: t('security.fail2ban.ban.reasonRequired', '请输入原因'), trigger: 'blur' }]
+}))
 
 const policyColumns = computed<ColumnItem<Fail2banPolicy>[]>(() => [
   { prop: 'name', label: t('security.fail2ban.policy.name', '策略名称'), minWidth: 180, showOverflowTooltip: true },
@@ -686,7 +710,13 @@ const submitTaskOperation = async (operation: string, payload: unknown) => {
       updatedAt: result.updatedAt || new Date().toISOString()
     } as Fail2banTask)
     await loadTasks()
-    if (isTaskActive(result.status || 'queued')) void connectTaskStream(result.taskId)
+    const currentTask = tasks.value.find(item => item.id === result.taskId)
+    const currentStatus = currentTask?.status || result.status || 'queued'
+    if (isTaskActive(currentStatus)) {
+      void connectTaskStream(result.taskId)
+    } else if (isTaskTerminal(currentStatus)) {
+      await refreshAfterTask()
+    }
   }
   return result
 }
@@ -808,6 +838,8 @@ const openManualBan = () => {
 }
 
 const submitManualBan = async () => {
+  const valid = await manualBanFormRef.value?.validate().catch(() => false)
+  if (valid === false) return
   loading.manualBanSubmit = true
   try {
     await submitTaskOperation('fail2ban.ban', {
@@ -884,6 +916,17 @@ const openAudit = (row: SecurityIncident) => {
 
 watch(() => policyForm.template, (value) => {
   if (policyDialogMode.value === 'create') applyTemplateDefaults(value)
+})
+
+watch(manualBanVisible, (visible) => {
+  if (!visible) {
+    manualBanFormRef.value?.resetFields()
+    return
+  }
+  nextTick(() => {
+    manualBanFormRef.value?.clearValidate()
+    manualBanIpInputRef.value?.focus?.()
+  })
 })
 
 watch(
@@ -1326,18 +1369,29 @@ onBeforeUnmount(() => {
       :title="$t('security.fail2ban.ban.manual')"
       width="600px"
       destroy-on-close
+      append-to-body
     >
-      <el-form label-width="120px">
-        <el-form-item :label="$t('security.fail2ban.ban.policy')">
+      <el-form ref="manualBanFormRef" :model="manualBanForm" :rules="manualBanRules" label-width="120px">
+        <el-form-item :label="$t('security.fail2ban.ban.policy')" prop="policyId">
           <el-select v-model="manualBanForm.policyId" style="width: 100%">
             <el-option v-for="item in policies" :key="item.id" :label="item.name" :value="item.id" />
           </el-select>
         </el-form-item>
-        <el-form-item :label="$t('security.fail2ban.ban.ip')">
-          <el-input v-model="manualBanForm.ip" />
+        <el-form-item :label="$t('security.fail2ban.ban.ip')" prop="ip">
+          <el-input
+            ref="manualBanIpInputRef"
+            v-model="manualBanForm.ip"
+            clearable
+            :placeholder="$t('security.fail2ban.ban.ipPlaceholder', '请输入 IPv4 地址或 IPv4/CIDR')"
+          />
         </el-form-item>
-        <el-form-item :label="$t('security.fail2ban.ban.reason')">
-          <el-input v-model="manualBanForm.reason" type="textarea" :rows="4" />
+        <el-form-item :label="$t('security.fail2ban.ban.reason')" prop="reason">
+          <el-input
+            v-model="manualBanForm.reason"
+            type="textarea"
+            :rows="4"
+            :placeholder="$t('security.fail2ban.ban.reasonPlaceholder', '说明为什么确认该来源需要封禁')"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -1493,6 +1547,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 14px;
+  height: 100%;
 }
 
 .template-card__head {
@@ -1539,6 +1594,7 @@ onBeforeUnmount(() => {
   margin: 0;
   display: grid;
   gap: 10px;
+  flex: 1;
 }
 
 .template-card dl div {
@@ -1551,6 +1607,12 @@ onBeforeUnmount(() => {
 .template-card dt,
 .template-card dd {
   margin: 0;
+}
+
+.template-card :deep(.el-button) {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
 }
 
 .time-stack {
