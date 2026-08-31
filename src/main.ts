@@ -11,6 +11,42 @@ import App from './App.vue'
 import './styles/index.less'
 import Config from './utils/Config'
 
+const CHUNK_RELOAD_FLAG = '__oneinstack_chunk_reload__'
+
+const shouldReloadForChunkFailure = (reason: unknown) => {
+  if (!reason) return false
+  const message =
+    reason instanceof Error
+      ? reason.message
+      : typeof reason === 'string'
+        ? reason
+        : typeof reason === 'object' && reason && 'message' in reason
+          ? String((reason as { message?: unknown }).message || '')
+          : ''
+  return [
+    'Failed to fetch dynamically imported module',
+    'Importing a module script failed',
+    'ChunkLoadError'
+  ].some((text) => message.includes(text))
+}
+
+const reloadOnceForChunkFailure = () => {
+  if (sessionStorage.getItem(CHUNK_RELOAD_FLAG)) return
+  sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1')
+  window.location.reload()
+}
+
+window.addEventListener('vite:preloadError', (event) => {
+  event.preventDefault()
+  reloadOnceForChunkFailure()
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  if (!shouldReloadForChunkFailure(event.reason)) return
+  event.preventDefault()
+  reloadOnceForChunkFailure()
+})
+
 const app = createApp(App)
 //#ifvar-dev
 import ElementPlus from 'element-plus'

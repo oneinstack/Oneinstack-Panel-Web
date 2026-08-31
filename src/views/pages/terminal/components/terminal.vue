@@ -215,6 +215,15 @@ let socket: WebSocket | undefined
 let resizeObserver: ResizeObserver | undefined
 let statusTimer: number | undefined
 
+const disableXtermTextareaSync = (instance: Terminal) => {
+  const proto = Object.getPrototypeOf(instance) as any
+  if (proto.__oneinstackTextareaSyncPatched) return
+  // xterm continuously rewrites helper textarea inline styles for cursor sync.
+  // Under a strict CSP this creates console noise and blocks the mutation.
+  proto._syncTextArea = function _syncTextArea() {}
+  proto.__oneinstackTextareaSyncPatched = true
+}
+
 const resetTerminalState = () => {
   terminalIdentity.value = 'root@panel'
   currentPath.value = '/root'
@@ -526,6 +535,7 @@ const initializeTerminal = async () => {
       brightWhite: '#ffffff'
     }
   })
+  disableXtermTextareaSync(terminal)
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalDiv.value)
