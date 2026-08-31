@@ -998,15 +998,20 @@ const loadRuntime = async () => {
   }
 };
 
+const loadContainerSummary = async () => {
+  const { data } = await Api.getContainers(listQuery("containers"));
+  containers.value = normalizeList<ContainerItem>(data);
+  updateListState("containers", data);
+  loadedTabs.containers = true;
+};
+
 const loadActiveTab = async (force = false) => {
   if (!canRead.value) return;
   if (!force && loadedTabs[activeTab.value]) return;
   listLoading.value = true;
   try {
     if (activeTab.value === "containers") {
-      const { data } = await Api.getContainers(listQuery("containers"));
-      containers.value = normalizeList<ContainerItem>(data);
-      updateListState("containers", data);
+      await loadContainerSummary();
     }
     if (activeTab.value === "images") {
       const { data } = await Api.getContainerImages(listQuery("images"));
@@ -3345,14 +3350,16 @@ const refreshTaskAffectedLists = async () => {
   loadedTabs.images = false;
   loadedTabs.compose = false;
   loadedTabs.networks = false;
+  const tasks: Promise<unknown>[] = [loadContainerSummary()];
   if (
     activeTab.value === "containers" ||
     activeTab.value === "images" ||
     activeTab.value === "compose" ||
     activeTab.value === "networks"
   ) {
-    await loadActiveTab(true);
+    tasks.push(loadActiveTab(true));
   }
+  await Promise.all(tasks);
 };
 
 watch(
