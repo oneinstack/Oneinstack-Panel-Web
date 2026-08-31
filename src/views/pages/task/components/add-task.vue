@@ -40,15 +40,24 @@
           style="margin-bottom: 18px"
         />
         <el-form-item :label="i18n.t('task.editor.taskTemplate')" required>
-          <el-select v-model="ruleForm.template_id" style="width: 100%" :placeholder="i18n.t('task.editor.templatePlaceholder')">
+          <el-select
+            v-model="ruleForm.template_id"
+            style="width: 100%"
+            :placeholder="i18n.t('task.editor.templatePlaceholder')"
+            :teleported="false"
+            placement="bottom-start"
+            popper-class="task-template-select-popper"
+          >
             <el-option
               v-for="template in templates"
               :key="template.id"
               :label="template.name"
               :value="template.id"
             >
-              <span>{{ template.name }}</span>
-              <span class="option-description">{{ template.description }}</span>
+              <div class="template-option">
+                <span class="template-option__name">{{ template.name }}</span>
+                <span class="template-option__description">{{ template.description }}</span>
+              </div>
             </el-option>
           </el-select>
           <div v-if="selectedTemplate" class="template-description">
@@ -696,6 +705,13 @@ onMounted(() => {
   void loadTemplates()
 })
 
+watch(
+  () => i18n.locale,
+  () => {
+    void loadTemplates()
+  }
+)
+
 // 添加新的周期行
 const addCycle = () => {
   ruleForm.cycles.push(createDefaultCycle())
@@ -827,15 +843,6 @@ const handleScriptInput = (event: Event) => {
   line-height: 1.5;
 }
 
-.option-description {
-  float: right;
-  max-width: 60%;
-  overflow: hidden;
-  color: #909399;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .time-row {
   margin-bottom: 0;
 }
@@ -907,5 +914,48 @@ const handleScriptInput = (event: Event) => {
   .tip-text {
     margin-left: 0;
   }
+}
+
+:deep(.task-template-select-popper.el-select__popper) {
+  max-width: 100%;
+}
+
+:deep(.task-template-select-popper .el-select-dropdown__item) {
+  align-items: flex-start;
+  min-height: 46px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  line-height: 1.4;
+}
+
+:deep(.task-template-select-popper .el-select-dropdown__item > span) {
+  width: 100%;
+}
+
+.template-option {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+}
+
+.template-option__name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.template-option__description {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: #909399;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: right;
 }
 </style>

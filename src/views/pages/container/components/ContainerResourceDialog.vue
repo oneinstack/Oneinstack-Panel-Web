@@ -103,7 +103,10 @@ defineExpose({
       </el-form-item>
 
       <template v-if="['compose-create', 'compose-edit', 'compose-template-deploy'].includes(dialogType)">
-        <el-form-item :label="t('container.resourceDialog.composeProjectName')">
+        <el-form-item
+          :label="t('container.resourceDialog.composeProjectName')"
+          :class="{ 'readonly-field': dialogType === 'compose-edit' }"
+        >
           <el-input
             v-model.trim="composeForm.name"
             :disabled="dialogType === 'compose-edit'"
