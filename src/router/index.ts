@@ -61,7 +61,7 @@ export const initRouter = () => {
   const authRedirectWhiteList = ['/login', '/login/scan']
   router.beforeEach(async (to, from, next) => {
     let _name = (to.meta.name as any) || ''
-    let _title = System.env.title
+    let _title = sconfig.panelTitle || System.env.title
     if (_name) _title = _title + ' - ' + _name
     document.title = _title
     document.documentElement.scrollTop = 0

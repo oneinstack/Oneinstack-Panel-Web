@@ -10,8 +10,10 @@ import SettingSectionTabs from './setting-section-tabs.vue'
 import { Api } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import i18n from '@/lang'
+import { useConfigStore } from '@/stores/modules/config'
 
 const allinfo = ref<any>()
+const sconfig = useConfigStore()
 
 const tabItems = markRaw([
   {
@@ -72,6 +74,7 @@ const getSystemInfo = async () => {
   try {
     const { data: res } = await Api.getSystemInfo()
     allinfo.value = res
+    sconfig.setPanelTitle(res?.title || '')
   } catch (error) {
     ElMessage.error(i18n.t('setting.systemInfoLoadFailed'))
   }

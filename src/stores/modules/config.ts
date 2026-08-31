@@ -14,6 +14,7 @@ interface ConfigState {
   scopeAccess: Record<string, Record<string, boolean>>;
   actionAccess: Record<string, boolean>;
   panelEntryAccess: PanelEntryAccess | null;
+  panelTitle: string;
 }
 
 const createState = (): ConfigState => ({
@@ -22,6 +23,7 @@ const createState = (): ConfigState => ({
   scopeAccess: {},
   actionAccess: {},
   panelEntryAccess: null,
+  panelTitle: "",
 });
 
 export const useConfigStore = defineStore("config", {
@@ -35,7 +37,7 @@ export const useConfigStore = defineStore("config", {
     piniaPersistConfig<ConfigState>(
       "oneinstack_panel_entry_access",
       localStorage,
-      ["panelEntryAccess"],
+      ["panelEntryAccess", "panelTitle"],
     ),
   ],
   actions: {
@@ -82,6 +84,10 @@ export const useConfigStore = defineStore("config", {
         enabled: Boolean(access.enabled),
         path: access.path || "",
       };
+    },
+
+    setPanelTitle(title?: string | null) {
+      this.panelTitle = String(title || "").trim();
     },
 
     /** 清理当前会话状态并按需返回登录页。 */

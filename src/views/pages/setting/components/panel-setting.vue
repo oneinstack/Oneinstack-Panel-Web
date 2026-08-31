@@ -108,6 +108,8 @@ async function savePanelTitle() {
     )
     setActionLoading('title', true)
     await Api.updateSystemTitley({ title })
+    sconfig.setPanelTitle(title)
+    System.env.title = title
     document.title = title
     ElMessage.success(t('setting.panel.aliasSuccess', 'Panel alias changed'))
   } catch (error) {
@@ -544,6 +546,7 @@ const copyPanelAccessURL = async () => {
 const getSystemInfo = async () => {
   const res = props.allinfo  // 使用 props 中的数据
   if (!res) return
+  sconfig.setPanelTitle(res.title || '')
   conf.settingData.forEach(item => {
     if (res) {  // 检查 res.data 是否存在
       item.value = res[item.prop] || res.user?.[item.prop] || ''

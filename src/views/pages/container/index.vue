@@ -1333,6 +1333,7 @@ const buildMounts = () => {
   const rows = form.mounts
     .map((item) => ({
       type: item.mode,
+      mode: item.mode,
       source: item.source.trim(),
       target: item.target.trim(),
       readOnly: item.permission === "ro",
@@ -1345,6 +1346,7 @@ const buildMounts = () => {
   if (!rows.length) return undefined;
   return rows.map((item) => ({
     type: item.type,
+    mode: item.mode,
     source: item.source,
     target: item.target,
     readOnly: item.readOnly,
@@ -2560,7 +2562,8 @@ const showBatchResult = async (
     message,
     t("container.confirmations.batchResultTitle"),
     {
-    confirmButtonText: t("container.confirmations.understood"),
+      confirmButtonText: t("container.confirmations.understood"),
+      customClass: "container-batch-result-message-box",
     },
   );
 };
@@ -2597,6 +2600,7 @@ const runBatchContainerAction = async (action: ContainerAction) => {
     },
   );
   actionLoading.value = `batch:${action}`;
+  let shouldResetLoading = true;
   try {
     const { data } = await Api.batchRunContainerAction({
       ids: selectedContainers.value.map((item) => item.ID),
@@ -2621,10 +2625,12 @@ const runBatchContainerAction = async (action: ContainerAction) => {
         currentRows: selectedContainers.value,
       },
     );
+    actionLoading.value = "";
+    shouldResetLoading = false;
     loadedTabs.containers = false;
     await loadActiveTab(true);
   } finally {
-    actionLoading.value = "";
+    if (shouldResetLoading) actionLoading.value = "";
   }
 };
 
@@ -4996,6 +5002,43 @@ onBeforeUnmount(() => {
 :global(.el-message-box:has(.container-create-preview)) {
   width: 560px;
   max-width: calc(100vw - 32px);
+}
+
+:global(.container-batch-result-message-box) {
+  width: min(680px, calc(100vw - 32px));
+}
+
+:global(.container-batch-result-message-box .el-message-box__message) {
+  margin-top: 2px;
+}
+
+:global(.batch-result) {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--text-primary);
+}
+
+:global(.batch-result p) {
+  margin: 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+:global(.batch-result pre) {
+  margin: 0;
+  max-height: min(40vh, 320px);
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-page) 74%, var(--surface-card));
+  color: var(--text-primary);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 :global(.container-create-preview) {

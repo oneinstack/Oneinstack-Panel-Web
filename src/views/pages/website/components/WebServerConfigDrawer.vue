@@ -612,6 +612,7 @@ watch(
     border-radius: 0;
     color: #1f2937;
     background: #ffffff;
+    caret-color: #2563eb;
     box-shadow: none;
     font: 12px/1.72 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     tab-size: 4;
@@ -633,9 +634,20 @@ watch(
     :deep(.el-textarea__inner) {
       color: #d7e0ee;
       background: #101827;
+      caret-color: #5eead4;
+      text-shadow: 0 0 0 transparent;
 
       &::placeholder {
         color: rgba(215, 224, 238, 0.45);
+      }
+
+      &::selection {
+        color: #f8fafc;
+        background: rgba(94, 234, 212, 0.3);
+      }
+
+      &:focus {
+        box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.18);
       }
 
       &:disabled {

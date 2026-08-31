@@ -31,7 +31,13 @@ export const containerApi = {
     networks?: string[];
     ipv4?: string;
     ipv6?: string;
-    mounts?: Array<{ source: string; target: string; readOnly: boolean; type: 'bind' | 'volume' }>;
+    mounts?: Array<{
+      source: string;
+      target: string;
+      readOnly: boolean;
+      type: 'bind' | 'volume';
+      mode?: 'bind' | 'volume';
+    }>;
     command?: string[];
     entrypoint?: string[];
     autoRemove?: boolean;
