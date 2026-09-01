@@ -376,6 +376,12 @@ export const containerApi = {
   getContainerComposeConfig: (name: string) => {
     return http.get(`/containers/compose/${encodeURIComponent(name)}/config`);
   },
+  /** 二次认证后查看 Compose 敏感配置明文 */
+  revealContainerComposeConfig: (name: string, panelPassword: string) => {
+    return http.post(`/containers/compose/${encodeURIComponent(name)}/config/reveal`, {
+      panelPassword,
+    });
+  },
   /** 更新 Compose 项目配置 */
   updateContainerComposeConfig: (
     name: string,

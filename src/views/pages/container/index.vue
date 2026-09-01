@@ -234,6 +234,9 @@ const composeForm = reactive({
   templateDescription: "",
   sourceFileName: "",
   removeVolumes: false,
+  contentMode: "redacted" as "redacted" | "plaintext",
+  containsSensitiveConfig: false,
+  redactionReason: "",
 });
 
 const configForm = reactive({
@@ -604,6 +607,9 @@ const resetForm = () => {
   composeForm.templateDescription = "";
   composeForm.sourceFileName = "";
   composeForm.removeVolumes = false;
+  composeForm.contentMode = "redacted";
+  composeForm.containsSensitiveConfig = false;
+  composeForm.redactionReason = "";
   importFile.value = null;
   dialogTarget.value = null;
   createDrawerRef.value?.clearValidate();
@@ -1194,6 +1200,9 @@ const openComposeEditDialog = async (row: ComposeProjectItem) => {
   try {
     const { data } = await Api.getContainerComposeConfig(name);
     composeForm.content = String(data?.content || data?.raw || "");
+    composeForm.contentMode = data?.contentMode === "plaintext" ? "plaintext" : "redacted";
+    composeForm.containsSensitiveConfig = Boolean(data?.containsSensitiveConfig);
+    composeForm.redactionReason = String(data?.redactionReason || "");
     dialogVisible.value = true;
   } catch (error: any) {
     ElMessage.error(
@@ -1201,6 +1210,35 @@ const openComposeEditDialog = async (row: ComposeProjectItem) => {
     );
   } finally {
     saving.value = false;
+  }
+};
+
+const revealComposeConfig = async () => {
+  const name = composeForm.name.trim();
+  if (!name || composeForm.contentMode === "plaintext") return;
+  try {
+    const { value: panelPassword } = await ElMessageBox.prompt(
+      t(
+        "container.resourceDialog.revealSensitiveConfigMessage",
+        "Sensitive values will be shown in plain text in the editor. Enter your current panel password to continue.",
+      ),
+      t("container.resourceDialog.revealSensitiveConfigTitle", "View sensitive Compose configuration"),
+      {
+        inputType: "password",
+        inputPlaceholder: t("container.resourceDialog.panelPasswordPlaceholder", "Enter your current panel password"),
+        confirmButtonText: t("common.confirm", "Confirm"),
+        cancelButtonText: t("common.cancel", "Cancel"),
+        inputValidator: (value) => Boolean(value?.trim()) || t("container.resourceDialog.panelPasswordRequired", "Enter your current panel password"),
+      },
+    );
+    const { data } = await Api.revealContainerComposeConfig(name, panelPassword.trim());
+    composeForm.content = String(data?.content || "");
+    composeForm.contentMode = "plaintext";
+    composeForm.containsSensitiveConfig = Boolean(data?.containsSensitiveConfig);
+    composeForm.redactionReason = "";
+  } catch (error: any) {
+    if (error === "cancel" || error === "close") return;
+    ElMessage.error(error?.message || t("container.resourceDialog.revealSensitiveConfigFailed", "Unable to view sensitive configuration"));
   }
 };
 
@@ -1874,6 +1912,16 @@ const openContainerTask = (
 const openTaskDrawer = () => {
   taskDrawer.taskId = "";
   taskDrawer.show = true;
+};
+
+const handleDialogVisibleChange = (visible: boolean) => {
+  dialogVisible.value = visible;
+  if (visible) return;
+  // Do not keep a revealed Compose secret in reactive state after the drawer closes.
+  composeForm.content = "";
+  composeForm.contentMode = "redacted";
+  composeForm.containsSensitiveConfig = false;
+  composeForm.redactionReason = "";
 };
 
 watch(
@@ -4574,7 +4622,7 @@ onBeforeUnmount(() => {
       :volumes="volumes"
       :image-reference="imageReference"
       @confirm="submitDialog"
-      @update:visible="dialogVisible = $event"
+      @update:visible="handleDialogVisibleChange"
       @add-port="addPort"
       @remove-port="removePort"
       @add-mount="addMount"
@@ -4597,8 +4645,9 @@ onBeforeUnmount(() => {
       :templates="templates"
       :image-reference="imageReference"
       :registry-label="registryLabel"
+      :reveal-compose-config="revealComposeConfig"
       @confirm="submitDialog"
-      @update:visible="dialogVisible = $event"
+      @update:visible="handleDialogVisibleChange"
       @import-file-change="handleImportFileChange"
     />
 

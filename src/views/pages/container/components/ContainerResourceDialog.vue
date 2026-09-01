@@ -21,6 +21,7 @@ const props = defineProps<{
   templates: TemplateItem[]
   imageReference: (row: ImageItem) => string
   registryLabel: (row: RegistryItem) => string
+  revealComposeConfig: () => void | Promise<void>
 }>()
 
 const emit = defineEmits<{
@@ -151,6 +152,30 @@ defineExpose({
           v-if="dialogType !== 'compose-template-deploy'"
           :label="t('container.resourceDialog.yaml')"
         >
+          <el-alert
+            v-if="dialogType === 'compose-edit' && (composeForm.containsSensitiveConfig || composeForm.contentMode === 'plaintext')"
+            type="warning"
+            show-icon
+            :closable="false"
+            :title="t('container.resourceDialog.sensitiveConfigWarning')"
+          >
+            <template #default>
+              <div class="sensitive-config-actions">
+                <span>{{ composeForm.contentMode === 'plaintext' ? t('container.resourceDialog.sensitiveConfigPlaintextActive') : t('container.resourceDialog.sensitiveConfigRedacted') }}</span>
+                <el-button
+                  v-if="composeForm.contentMode !== 'plaintext'"
+                  link
+                  type="warning"
+                  @click="revealComposeConfig"
+                >
+                  {{ t('container.resourceDialog.revealSensitiveConfig') }}
+                </el-button>
+              </div>
+            </template>
+          </el-alert>
+          <div v-if="composeForm.redactionReason" class="field-help sensitive-config-reason">
+            {{ composeForm.redactionReason }}
+          </div>
           <el-input
             v-model="composeForm.content"
             type="textarea"
@@ -405,6 +430,17 @@ defineExpose({
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.sensitive-config-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.sensitive-config-reason {
+  color: var(--el-color-warning);
 }
 
 :deep(.readonly-field .el-input.is-disabled .el-input__wrapper) {
