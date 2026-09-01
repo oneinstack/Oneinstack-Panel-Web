@@ -218,7 +218,9 @@ let resizeObserver: ResizeObserver | undefined
 let statusTimer: number | undefined
 
 const disableXtermTextareaSync = (instance: Terminal) => {
-  const proto = Object.getPrototypeOf(instance) as any
+  // xterm keeps the style-writing routine on its internal core, not the public Terminal prototype.
+  const core = (instance as any)._core
+  const proto = core ? Object.getPrototypeOf(core) : Object.getPrototypeOf(instance)
   if (proto.__oneinstackTextareaSyncPatched) return
   // xterm continuously rewrites helper textarea inline styles for cursor sync.
   // Under a strict CSP this creates console noise and blocks the mutation.

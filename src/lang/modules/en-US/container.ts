@@ -483,6 +483,14 @@ export default {
   },
   task: {
     noTask: 'No container tasks',
+    operations: {
+      composeCreate: 'Create Compose',
+      composeStart: 'Start Compose',
+      composeStop: 'Stop Compose',
+      composeRestart: 'Restart Compose',
+      composeUpdate: 'Update Compose',
+      composeDelete: 'Delete Compose'
+    },
     waitingDockerOutput: 'Waiting for Docker output...',
     containerTask: 'Container task',
     currentProgress: 'Current progress',
@@ -540,6 +548,8 @@ export default {
       checkContainerParams: 'Check container parameters',
       prepareRequiredImage: 'Prepare required image',
       createContainerInstance: 'Create container instance',
+      checkComposeParams: 'Check Compose parameters',
+      verifyComposeResult: 'Verify Compose result',
       verifyContainerResult: 'Verify container result'
     },
     summary: {

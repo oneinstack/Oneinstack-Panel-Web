@@ -477,6 +477,14 @@ export default {
   },
   task: {
     noTask: '暂无容器任务',
+    operations: {
+      composeCreate: '创建 Compose',
+      composeStart: '启动 Compose',
+      composeStop: '停止 Compose',
+      composeRestart: '重启 Compose',
+      composeUpdate: '更新 Compose',
+      composeDelete: '删除 Compose'
+    },
     waitingDockerOutput: '等待 Docker 输出...',
     containerTask: '容器任务',
     currentProgress: '当前进度',
@@ -534,6 +542,8 @@ export default {
       checkContainerParams: '检查容器参数',
       prepareRequiredImage: '准备所需镜像',
       createContainerInstance: '创建容器实例',
+      checkComposeParams: '检查 Compose 参数',
+      verifyComposeResult: '验证 Compose 结果',
       verifyContainerResult: '验证容器结果'
     },
     summary: {

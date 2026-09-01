@@ -43,6 +43,12 @@ const operationLabel = computed(() => {
     pull: t('container.pullImage', 'Pull image'),
     build: t('container.buildImage', 'Build image'),
     create: t('container.createContainer', 'Create container'),
+    'compose.create': t('container.task.operations.composeCreate', 'Create Compose'),
+    'compose.start': t('container.task.operations.composeStart', 'Start Compose'),
+    'compose.stop': t('container.task.operations.composeStop', 'Stop Compose'),
+    'compose.restart': t('container.task.operations.composeRestart', 'Restart Compose'),
+    'compose.update': t('container.task.operations.composeUpdate', 'Update Compose'),
+    'compose.delete': t('container.task.operations.composeDelete', 'Delete Compose'),
     'network.connect': t('container.connectNetwork', 'Connect network'),
     'network.reconnect': t('container.reconnectNetwork', 'Reconnect network'),
     'network.disconnect': t('container.networks', 'Networks')
@@ -56,7 +62,9 @@ const statusText = computed(() => {
     resolving: t('container.task.status.resolving', 'Resolving parameters'),
     pulling: t('container.task.status.pulling', 'Pulling image'),
     building: t('container.task.status.building', 'Building image'),
-    creating: t('container.task.status.creating', 'Creating container'),
+    creating: task.value?.operation?.startsWith('compose.')
+      ? operationLabel.value
+      : t('container.task.status.creating', 'Creating container'),
     verifying: t('container.task.status.verifying', 'Verifying result'),
     canceling: t('container.task.status.canceling', 'Canceling'),
     succeeded: t('container.task.status.succeeded', '{operation} succeeded', { operation: operationLabel.value }),
@@ -78,11 +86,20 @@ const phaseLabel = (phase: string) => ({
   resolving: t('container.task.phase.resolving', 'Parameter check'),
   pulling: t('container.task.phase.pulling', 'Pull image'),
   building: t('container.task.phase.building', 'Build image'),
-  creating: t('container.task.phase.creating', 'Create container'),
+  creating: task.value?.operation?.startsWith('compose.')
+    ? operationLabel.value
+    : t('container.task.phase.creating', 'Create container'),
   verifying: t('container.task.phase.verifying', 'Verify result')
 }[phase] || phase)
 
 const stageDefinitions = computed(() => {
+  if (String(task.value?.operation || '').startsWith('compose.')) {
+    return [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'creating', name: operationLabel.value },
+      { key: 'verifying', name: t('container.task.stages.verifyComposeResult', 'Verify Compose result') }
+    ]
+  }
   if (task.value?.operation === 'pull') {
     return [
       { key: 'resolving', name: t('container.task.stages.resolveImageParams', 'Resolve image parameters') },
