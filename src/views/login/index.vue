@@ -180,7 +180,11 @@ const conf = reactive({
         </el-form-item>
 
         <div v-if="!conf.requiresTwoFactor" class="form-options">
-          <el-checkbox v-model="conf.form.remember" class="remember-checkbox">
+          <el-checkbox
+            v-model="conf.form.remember"
+            class="remember-checkbox"
+            @change="conf.form.remember = Boolean($event)"
+          >
             <span class="remember-checkbox__label">{{ $t('login.rememberLogin') }}</span>
           </el-checkbox>
           <span class="security-tip"><i></i> {{ $t('login.encryptedConnection') }}</span>
@@ -374,7 +378,6 @@ const conf = reactive({
     user-select: none;
 
     :deep(.el-checkbox__input),
-    :deep(.el-checkbox__original),
     :deep(.el-checkbox__label) {
       pointer-events: auto;
     }
@@ -383,6 +386,15 @@ const conf = reactive({
       padding-left: 8px;
       cursor: pointer;
       line-height: 1.2;
+    }
+
+    :deep(.el-checkbox__input.is-checked .el-checkbox__inner) {
+      background-color: rgb(var(--primary-color));
+      border-color: rgb(var(--primary-color));
+    }
+
+    :deep(.el-checkbox__input.is-checked .el-checkbox__inner::after) {
+      border-color: #fff;
     }
   }
 
