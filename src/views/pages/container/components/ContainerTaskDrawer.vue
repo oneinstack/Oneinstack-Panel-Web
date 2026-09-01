@@ -37,34 +37,69 @@ const logElement = ref<HTMLElement>()
 const downloading = ref(false)
 const bootstrapping = ref(false)
 const requestSequence = ref(0)
+const isComposeOperation = (operation?: string) => String(operation || '').startsWith('compose.')
 
 const operationLabel = computed(() => {
+  const operation = task.value?.operation || ''
   const labels: Record<string, string> = {
     pull: t('container.pullImage', 'Pull image'),
     build: t('container.buildImage', 'Build image'),
     create: t('container.createContainer', 'Create container'),
-    'compose.create': t('container.task.operations.composeCreate', 'Create Compose'),
-    'compose.start': t('container.task.operations.composeStart', 'Start Compose'),
-    'compose.stop': t('container.task.operations.composeStop', 'Stop Compose'),
-    'compose.restart': t('container.task.operations.composeRestart', 'Restart Compose'),
-    'compose.update': t('container.task.operations.composeUpdate', 'Update Compose'),
-    'compose.delete': t('container.task.operations.composeDelete', 'Delete Compose'),
+    'compose.create': t('container.task.operations.composeCreate', 'Create and start Compose project'),
+    'compose.edit': t('container.task.operations.composeEdit', 'Save Compose configuration'),
+    'compose.start': t('container.task.operations.composeStart', 'Start Compose services'),
+    'compose.stop': t('container.task.operations.composeStop', 'Stop Compose services'),
+    'compose.restart': t('container.task.operations.composeRestart', 'Restart Compose services'),
+    'compose.update': t('container.task.operations.composeUpdate', 'Update Compose project'),
+    'compose.delete': t('container.task.operations.composeDelete', 'Delete Compose project'),
     'network.connect': t('container.connectNetwork', 'Connect network'),
     'network.reconnect': t('container.reconnectNetwork', 'Reconnect network'),
     'network.disconnect': t('container.networks', 'Networks')
   }
-  return labels[task.value?.operation || ''] || t('container.task.containerTask', 'Container task')
+  return labels[operation] || (isComposeOperation(operation)
+    ? t('container.task.composeTask', 'Compose task')
+    : t('container.task.containerTask', 'Container task'))
 })
 
+const phaseLabel = (phase: string) => {
+  const composePhase = ['creating', 'editing', 'updating', 'starting', 'stopping', 'restarting', 'deleting'].includes(phase)
+  if (isComposeOperation(task.value?.operation) && composePhase) return operationLabel.value
+  return ({
+    queued: t('container.task.phase.queued', 'Task queued'),
+    resolving: t('container.task.phase.resolving', 'Parameter check'),
+    pulling: t('container.task.phase.pulling', 'Pull image'),
+    building: t('container.task.phase.building', 'Build image'),
+    creating: t('container.task.phase.creating', 'Create container'),
+    editing: t('container.task.phase.editing', 'Save Compose configuration'),
+    updating: t('container.task.phase.updating', 'Update Compose project'),
+    starting: t('container.task.phase.starting', 'Start Compose services'),
+    stopping: t('container.task.phase.stopping', 'Stop Compose services'),
+    restarting: t('container.task.phase.restarting', 'Restart Compose services'),
+    deleting: t('container.task.phase.deleting', 'Delete Compose resources'),
+    canceling: t('container.task.status.canceling', 'Canceling'),
+    verifying: t('container.task.phase.verifying', 'Verify result')
+  }[phase] || phase)
+}
+
 const statusText = computed(() => {
+  if (terminal.value && (task.value?.errorMessage || task.value?.message)) {
+    return task.value.errorMessage || task.value.message
+  }
+  if (isComposeOperation(task.value?.operation) && !terminal.value) {
+    return phaseLabel(task.value?.phase || task.value?.status || '')
+  }
   const labels: Record<string, string> = {
     queued: t('container.task.status.queued', 'Queued'),
     resolving: t('container.task.status.resolving', 'Resolving parameters'),
     pulling: t('container.task.status.pulling', 'Pulling image'),
     building: t('container.task.status.building', 'Building image'),
-    creating: task.value?.operation?.startsWith('compose.')
-      ? operationLabel.value
-      : t('container.task.status.creating', 'Creating container'),
+    creating: t('container.task.status.creating', 'Creating container'),
+    editing: t('container.task.status.editing', 'Saving Compose configuration'),
+    updating: t('container.task.status.updating', 'Updating Compose project'),
+    starting: t('container.task.status.starting', 'Starting Compose services'),
+    stopping: t('container.task.status.stopping', 'Stopping Compose services'),
+    restarting: t('container.task.status.restarting', 'Restarting Compose services'),
+    deleting: t('container.task.status.deleting', 'Deleting Compose resources'),
     verifying: t('container.task.status.verifying', 'Verifying result'),
     canceling: t('container.task.status.canceling', 'Canceling'),
     succeeded: t('container.task.status.succeeded', '{operation} succeeded', { operation: operationLabel.value }),
@@ -81,25 +116,42 @@ const progressStatus = computed(() => {
   return undefined
 })
 
-const phaseLabel = (phase: string) => ({
-  queued: t('container.task.phase.queued', 'Task queued'),
-  resolving: t('container.task.phase.resolving', 'Parameter check'),
-  pulling: t('container.task.phase.pulling', 'Pull image'),
-  building: t('container.task.phase.building', 'Build image'),
-  creating: task.value?.operation?.startsWith('compose.')
-    ? operationLabel.value
-    : t('container.task.phase.creating', 'Create container'),
-  verifying: t('container.task.phase.verifying', 'Verify result')
-}[phase] || phase)
-
 const stageDefinitions = computed(() => {
-  if (String(task.value?.operation || '').startsWith('compose.')) {
-    return [
+  const composeStages: Record<string, Array<{ key: string; name: string }>> = {
+    'compose.create': [
       { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
       { key: 'creating', name: operationLabel.value },
       { key: 'verifying', name: t('container.task.stages.verifyComposeResult', 'Verify Compose result') }
+    ],
+    'compose.edit': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'editing', name: operationLabel.value }
+    ],
+    'compose.start': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'starting', name: operationLabel.value },
+      { key: 'verifying', name: t('container.task.stages.verifyComposeResult', 'Verify Compose result') }
+    ],
+    'compose.stop': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'stopping', name: operationLabel.value }
+    ],
+    'compose.restart': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'restarting', name: operationLabel.value },
+      { key: 'verifying', name: t('container.task.stages.verifyComposeResult', 'Verify Compose result') }
+    ],
+    'compose.update': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'updating', name: operationLabel.value },
+      { key: 'verifying', name: t('container.task.stages.verifyComposeResult', 'Verify Compose result') }
+    ],
+    'compose.delete': [
+      { key: 'resolving', name: t('container.task.stages.checkComposeParams', 'Check Compose parameters') },
+      { key: 'deleting', name: operationLabel.value }
     ]
   }
+  if (composeStages[task.value?.operation || '']) return composeStages[task.value?.operation || '']
   if (task.value?.operation === 'pull') {
     return [
       { key: 'resolving', name: t('container.task.stages.resolveImageParams', 'Resolve image parameters') },

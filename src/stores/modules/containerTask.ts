@@ -39,6 +39,7 @@ interface ContainerTaskEvent {
   details?: Array<Record<string, any>>;
   log?: string;
   code?: string;
+  errorMessage?: string;
   createdAt?: string;
 }
 
@@ -361,6 +362,7 @@ export const useContainerTaskStore = defineStore("containerTask", {
           message: event.message,
           details: event.details || current.details,
           errorCode: event.code || current.errorCode,
+          errorMessage: event.errorMessage || current.errorMessage,
           eventSeq: event.seq,
           updatedAt: event.createdAt || new Date().toISOString(),
         });

@@ -53,7 +53,7 @@ const userState = reactive({
     { prop: 'username', label: t('userManagement.account', 'Account'), minWidth: 160 },
     { prop: 'roles', label: t('userManagement.role', 'Role'), minWidth: 240 },
     { prop: 'scope', label: t('userManagement.scope', 'Permission scope'), minWidth: 140 },
-    { prop: 'mustChangePassword', label: t('common.status', 'Status'), minWidth: 120 },
+    { prop: 'mustChangePassword', label: t('common.status', 'Status'), minWidth: 220, className: 'user-status-column' },
     { prop: 'createdAt', label: t('userManagement.createdAt', 'Created at'), minWidth: 180 },
     { prop: 'action', label: t('common.action', 'Action'), width: 300, fixed: 'right' }
   ])
@@ -491,7 +491,12 @@ onMounted(async () => {
             </el-tag>
           </template>
           <template #mustChangePassword="{ row }">
-            <el-tag :type="row.mustChangePassword ? 'warning' : 'success'" effect="light" round>
+            <el-tag
+              class="user-status-tag"
+              :type="row.mustChangePassword ? 'warning' : 'success'"
+              effect="light"
+              round
+            >
               {{ passwordStatusLabel(row) }}
             </el-tag>
           </template>
@@ -963,6 +968,26 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   min-height: 44px;
+}
+
+:deep(.user-status-column) {
+  .cell {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+
+.user-status-tag {
+  height: auto;
+  min-height: 28px;
+  max-width: 100%;
+  padding: 4px 10px;
+  line-height: 18px;
+  text-align: center;
+  white-space: normal;
 }
 
 .tag-list--roles {
