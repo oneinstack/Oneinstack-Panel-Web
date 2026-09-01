@@ -26,6 +26,7 @@ export default {
     operations: 'Operations',
     securityAudit: 'Security & audit',
     systemPanel: 'System settings',
+    navigationFailed: 'Unable to open this page. Please try again.',
     website: 'Websites',
     database: 'Databases',
     monitoring: 'Monitoring',

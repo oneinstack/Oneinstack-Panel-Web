@@ -26,6 +26,7 @@ export default {
     operations: '运维工具',
     securityAudit: '安全与审计',
     systemPanel: '系统设置',
+    navigationFailed: '页面打开失败，请稍后重试',
     website: '网站',
     database: '数据库',
     monitoring: '监控告警',

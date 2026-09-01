@@ -21,13 +21,21 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
 const goAfterLogin = async (routePath: string) => {
   const normalizedRoute = routePath.startsWith('/') ? routePath : `/${routePath}`
-  const currentPathname = window.location.pathname || '/'
-  if (currentPathname !== '/') {
-    const hashURL = `${window.location.origin}${currentPathname}#${normalizedRoute}`
-    window.location.replace(hashURL)
-    return
+  const router = System.router
+
+  if (router) {
+    try {
+      await router.isReady()
+      await router.replace(normalizedRoute)
+      if (router.currentRoute.value.path !== '/login') return
+    } catch {
+      // Fall back to a full hash navigation below when a guard rejects the navigation.
+    }
   }
-  await System.router.replace(normalizedRoute)
+
+  // Keep the deployed panel entry path when the app is served below a sub-path.
+  const baseURL = `${window.location.pathname || '/'}${window.location.search}`
+  window.location.replace(`${baseURL}#${normalizedRoute}`)
 }
 
 const loginRules = computed<FormRules>(() => ({
@@ -350,6 +358,8 @@ const conf = reactive({
 }
 
 .form-options {
+  position: relative;
+  z-index: 2;
   margin-top: -3px;
   display: flex;
   align-items: center;
@@ -360,7 +370,14 @@ const conf = reactive({
     flex: 0 1 auto;
     min-width: 0;
     cursor: pointer;
+    pointer-events: auto;
     user-select: none;
+
+    :deep(.el-checkbox__input),
+    :deep(.el-checkbox__original),
+    :deep(.el-checkbox__label) {
+      pointer-events: auto;
+    }
 
     :deep(.el-checkbox__label) {
       padding-left: 8px;

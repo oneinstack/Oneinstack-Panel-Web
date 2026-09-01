@@ -18,6 +18,7 @@ interface AccessUser {
   isAdmin?: boolean
   isSuperAdmin?: boolean
   mustChangePassword?: boolean
+  passwordChangeReason?: 'initial' | 'admin_reset' | string
   createdAt?: string
   roles?: AccessRole[]
 }
@@ -161,6 +162,16 @@ const currentLoginUsername = computed(() =>
 const isCurrentLoginUser = (row: AccessUser) =>
   Boolean((currentLoginUserId.value && row.id === currentLoginUserId.value) || (currentLoginUsername.value && row.username === currentLoginUsername.value))
 const isSuperAdminUser = (row?: AccessUser | null) => Boolean(row?.isSuperAdmin || row?.isAdmin)
+const passwordStatusLabel = (row: AccessUser) => {
+  if (!row.mustChangePassword) return t('userManagement.healthy', 'Normal')
+  if (row.passwordChangeReason === 'admin_reset') {
+    return t('userManagement.mustChangePasswordAfterReset', 'Password change required after admin reset')
+  }
+  if (row.passwordChangeReason === 'initial') {
+    return t('userManagement.mustChangePasswordInitial', 'Initial password change required')
+  }
+  return t('userManagement.mustChangePassword', 'Password change required')
+}
 
 const loadBootstrap = async () => {
   loading.bootstrap = true
@@ -270,7 +281,12 @@ const submitPasswordReset = async () => {
     await Api.resetAccessUserPassword(passwordDialog.user.id, {
       password: passwordDialog.password
     })
-    ElMessage.success(t('userManagement.resetPasswordSuccess', 'Password reset'))
+    passwordDialog.user.mustChangePassword = true
+    passwordDialog.user.passwordChangeReason = 'admin_reset'
+    ElMessage.success(t(
+      'userManagement.resetPasswordSuccess',
+      'Password reset. The user must change it at the next login.'
+    ))
     passwordDialog.show = false
     await loadUsers()
   } catch (error: any) {
@@ -476,7 +492,7 @@ onMounted(async () => {
           </template>
           <template #mustChangePassword="{ row }">
             <el-tag :type="row.mustChangePassword ? 'warning' : 'success'" effect="light" round>
-              {{ row.mustChangePassword ? $t('userManagement.mustChangePassword') : $t('userManagement.healthy') }}
+              {{ passwordStatusLabel(row) }}
             </el-tag>
           </template>
           <template #createdAt="{ row }">

@@ -166,6 +166,7 @@ import {
   WarningFilled
 } from '@element-plus/icons-vue'
 import { Terminal } from 'xterm'
+import { CanvasAddon } from '@xterm/addon-canvas'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import { Api } from '@/api/modules'
@@ -210,6 +211,7 @@ const terminalIdentity = ref('root@panel')
 const currentPath = ref('/root')
 const isFullscreen = ref(false)
 let terminal: Terminal | undefined
+let canvasAddon: CanvasAddon | undefined
 let fitAddon: FitAddon | undefined
 let socket: WebSocket | undefined
 let resizeObserver: ResizeObserver | undefined
@@ -425,6 +427,7 @@ const destroyTerminal = () => {
   resizeObserver = undefined
   terminal?.dispose()
   terminal = undefined
+  canvasAddon = undefined
   fitAddon = undefined
   if (terminalDiv.value) terminalDiv.value.innerHTML = ''
   resetTerminalState()
@@ -536,6 +539,8 @@ const initializeTerminal = async () => {
     }
   })
   disableXtermTextareaSync(terminal)
+  canvasAddon = new CanvasAddon()
+  terminal.loadAddon(canvasAddon)
   fitAddon = new FitAddon()
   terminal.loadAddon(fitAddon)
   terminal.open(terminalDiv.value)

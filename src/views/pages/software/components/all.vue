@@ -44,7 +44,11 @@ const props = withDefaults(defineProps<ChildProps>(), {
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
-  return value && value !== key ? value : fallback || key
+  const message = value && value !== key ? value : fallback || key
+  return String(message).replace(/\{(\w+)\}/g, (_, name) => {
+    const param = params?.[name]
+    return param === undefined || param === null ? `{${name}}` : String(param)
+  })
 }
 
 const softwareTagKeys: Record<string, string> = {
@@ -1120,7 +1124,11 @@ watch(
 }
 
 .item-inner {
+  display: flex;
+  height: 100%;
   padding: 22px;
+  box-sizing: border-box;
+  flex-direction: column;
 }
 
 .sundry {
@@ -1249,8 +1257,10 @@ watch(
 }
 
 .below {
+  align-items: flex-start;
   gap: 14px;
-  margin-top: 20px;
+  margin-top: auto;
+  padding-top: 20px;
   color: var(--text-tertiary);
   font-size: 11px;
 }
@@ -1258,9 +1268,8 @@ watch(
 .version-info {
   min-width: 0;
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 
 .software-card-actions {

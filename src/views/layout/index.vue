@@ -12,6 +12,7 @@ import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwa
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
 import { hasTerminalAccess } from '@/utils/access'
+import { isDynamicImportError, reloadOnceForChunkFailure } from '@/utils/chunk-reload'
 import approvalCenterIcon from '../../../public/static/menu/approval-center.svg?raw'
 import approvalCenterActiveIcon from '../../../public/static/menu/approval-center-active.svg?raw'
 import auditLogIcon from '../../../public/static/menu/audit-log.svg?raw'
@@ -244,7 +245,15 @@ const activeGroupIndexes = computed(() =>
 const navigateNavItem = async (item: NavItem) => {
   if (item.path && route.path !== item.path) {
     const currentPath = route.path
-    await router.push(item.path).catch(() => undefined)
+    try {
+      await router.push(item.path)
+    } catch (error) {
+      if (isDynamicImportError(error)) {
+        reloadOnceForChunkFailure()
+      } else {
+        ElMessage.error(translateWithFallback('layout.navigationFailed', 'Unable to open this page'))
+      }
+    }
     if (route.path === currentPath) {
       menuRenderSeed.value += 1
     }

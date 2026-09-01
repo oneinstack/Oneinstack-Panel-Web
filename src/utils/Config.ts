@@ -6,6 +6,7 @@ import { useAppStore } from "@/stores/modules/app";
 import { App } from "vue";
 import System from "./System";
 import Components from "@/components";
+import { clearChunkReloadFlag } from "./chunk-reload";
 export default class Config {
   /**
    * 初始化
@@ -39,6 +40,7 @@ export default class Config {
     router.isReady().then(async () => {
       // 初始化完成
       app.mount("#app");
+      clearChunkReloadFlag();
     });
   }
 }
