@@ -10,6 +10,7 @@ import { ElMessage } from 'element-plus'
 import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
 import { getPanelEntryStatus, isPanelEntryPathAllowed } from '@/utils/panel-entry'
 import i18n from '@/lang'
+import { isDynamicImportError, reloadOnceForChunkFailure } from '@/utils/chunk-reload'
 
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -96,12 +97,23 @@ export const initRouter = () => {
     next()
   })
 
+  // Route components are lazy-loaded. A deployment can briefly serve an old
+  // index with chunks from a newer build, so recover at the router boundary
+  // instead of leaving navigation on the previous page.
+  router.onError((error) => {
+    if (isDynamicImportError(error)) {
+      reloadOnceForChunkFailure()
+    }
+  })
+
   router.afterEach((guard) => {
     const _arr = prefetchRouteData[guard.path]
     if (_arr) {
       _arr.forEach((v: string) => {
         if (_routesMap[v]) {
-          _routesMap[v].component()
+          void _routesMap[v].component().catch((error: unknown) => {
+            if (isDynamicImportError(error)) reloadOnceForChunkFailure()
+          })
         }
       })
     }
