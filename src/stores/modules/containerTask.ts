@@ -366,10 +366,9 @@ export const useContainerTaskStore = defineStore("containerTask", {
           eventSeq: event.seq,
           updatedAt: event.createdAt || new Date().toISOString(),
         });
-        if (event.log) {
-          this.logs[taskId] =
-            (this.logs[taskId] || "") + event.log;
-        }
+        // The log endpoint is the single source of truth for output. The SSE
+        // event may carry the same bytes, so appending both streams duplicates
+        // Docker lines (for example, "StartedStarted").
         void this.fetchLog(taskId).catch(() => undefined);
         if (this.isTerminal(event.status)) {
           this.close(taskId);
