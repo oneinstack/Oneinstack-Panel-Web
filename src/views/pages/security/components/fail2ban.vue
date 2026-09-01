@@ -95,6 +95,7 @@ interface ActiveBan {
   ip: string
   managed: true
   banTimeSeconds: number
+  expiresAt?: string
 }
 
 interface Fail2banTask {
@@ -213,7 +214,9 @@ const manualBanIpInputRef = ref<any>()
 const manualBanForm = reactive({
   policyId: '',
   ip: '',
-  reason: ''
+  reason: '',
+  durationValue: 1,
+  durationUnit: 'days' as 'minutes' | 'hours' | 'days'
 })
 
 const installTaskVisible = ref(false)
@@ -232,6 +235,9 @@ const reconnectDelays = [2000, 4000, 8000, 15000]
 let refreshAfterTaskPromise: Promise<void> | null = null
 let isUnmounted = false
 let cooldownTimer: number | null = null
+let banRefreshTimer: number | null = null
+let banClockTimer: number | null = null
+const banClock = ref(Date.now())
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('fail2ban'))
 const canOperate = computed(() => status.value.installed && status.value.serviceActive)
@@ -260,6 +266,35 @@ const secondsToText = (value: number) => {
   if (value < 3600) return `${Math.floor(value / 60)}m`
   if (value < 86400) return `${Math.floor(value / 3600)}h`
   return `${Math.floor(value / 86400)}d`
+}
+
+const durationMultipliers = {
+  minutes: 60,
+  hours: 3600,
+  days: 86400
+} as const
+
+const manualBanTimeSeconds = computed(() => {
+  const value = Number(manualBanForm.durationValue)
+  const multiplier = durationMultipliers[manualBanForm.durationUnit]
+  return Number.isFinite(value) ? Math.round(value * multiplier) : 0
+})
+
+const validateManualBanDuration = (_rule: unknown, value: number, callback: (error?: Error) => void) => {
+  const seconds = Number(value) * durationMultipliers[manualBanForm.durationUnit]
+  if (!Number.isInteger(Number(value)) || seconds < 300 || seconds > 31536000) {
+    callback(new Error(t('security.fail2ban.ban.durationInvalid', '封禁时长必须在 5 分钟到 365 天之间')))
+    return
+  }
+  callback()
+}
+
+const remainingBanText = (expiresAt?: string) => {
+  if (!expiresAt) return t('security.fail2ban.ban.expirationUnknown', '到期时间未知')
+  const remaining = Math.ceil((new Date(expiresAt).getTime() - banClock.value) / 1000)
+  return remaining > 0
+    ? t('security.fail2ban.ban.remaining', '剩余 {duration}', { duration: secondsToText(remaining) })
+    : t('security.fail2ban.ban.expiredPendingSync', '已到期，等待后台同步')
 }
 
 const getErrorCode = (error: unknown) =>
@@ -364,7 +399,8 @@ const validateManualBanIp = (_rule: unknown, value: string, callback: (error?: E
 const manualBanRules = computed<FormRules>(() => ({
   policyId: [{ required: true, message: t('security.fail2ban.ban.policyRequired', '请选择策略'), trigger: 'change' }],
   ip: [{ validator: validateManualBanIp, trigger: ['blur', 'change'] }],
-  reason: [{ required: true, message: t('security.fail2ban.ban.reasonRequired', '请输入原因'), trigger: 'blur' }]
+  reason: [{ required: true, message: t('security.fail2ban.ban.reasonRequired', '请输入原因'), trigger: 'blur' }],
+  durationValue: [{ validator: validateManualBanDuration, trigger: ['blur', 'change'] }]
 }))
 
 const policyColumns = computed<ColumnItem<Fail2banPolicy>[]>(() => [
@@ -393,6 +429,7 @@ const banColumns = computed<ColumnItem<ActiveBan>[]>(() => [
   { prop: 'policy', label: t('security.fail2ban.ban.policy', '策略'), minWidth: 180 },
   { prop: 'jail', label: t('security.fail2ban.ban.jail', 'Jail'), minWidth: 180 },
   { prop: 'banTimeSeconds', label: t('security.fail2ban.ban.duration', '封禁时长'), minWidth: 120, slot: 'banTimeSeconds' },
+  { prop: 'expiresAt', label: t('security.fail2ban.ban.expiresAt', '到期时间'), minWidth: 190, slot: 'expiresAt' },
   { prop: 'actionColumn', label: t('common.action', '操作'), width: 120, fixed: 'right', slot: 'actionColumn' }
 ])
 
@@ -834,6 +871,8 @@ const openManualBan = () => {
   manualBanForm.policyId = policies.value[0]?.id || ''
   manualBanForm.ip = ''
   manualBanForm.reason = ''
+  manualBanForm.durationValue = 1
+  manualBanForm.durationUnit = 'days'
   manualBanVisible.value = true
 }
 
@@ -845,7 +884,8 @@ const submitManualBan = async () => {
     await submitTaskOperation('fail2ban.ban', {
       policyId: manualBanForm.policyId,
       ip: manualBanForm.ip.trim(),
-      reason: manualBanForm.reason.trim()
+      reason: manualBanForm.reason.trim(),
+      banTimeSeconds: manualBanTimeSeconds.value
     })
     ElMessage.success(t('security.fail2ban.ban.queued', '封禁任务已进入队列'))
     manualBanVisible.value = false
@@ -950,6 +990,13 @@ watch(
 )
 
 onMounted(() => {
+  banClockTimer = window.setInterval(() => {
+    banClock.value = Date.now()
+  }, 1000)
+  banRefreshTimer = window.setInterval(() => {
+    // The backend performs automatic unban asynchronously; refresh instead of assuming it succeeded locally.
+    void Promise.all([loadBans(), loadTasks()])
+  }, 15000)
   void softwareTaskStore.loadActive().catch(() => undefined)
   void loadAll().catch((error) => {
     System.er(getErrorMessage(error, t('security.fail2ban.loadFailed', '入侵防御数据加载失败')), {
@@ -962,6 +1009,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
   isUnmounted = true
   if (cooldownTimer) window.clearInterval(cooldownTimer)
+  if (banClockTimer) window.clearInterval(banClockTimer)
+  if (banRefreshTimer) window.clearInterval(banRefreshTimer)
   Array.from(taskSources.keys()).forEach(stopMonitor)
   Array.from(taskReconnectTimers.keys()).forEach(clearReconnectTimer)
 })
@@ -1257,6 +1306,10 @@ onBeforeUnmount(() => {
         <template #banTimeSeconds="{ row }">
           {{ secondsToText(row.banTimeSeconds) }}
         </template>
+        <template #expiresAt="{ row }">
+          <div>{{ row.expiresAt ? formatDateTime(row.expiresAt) : '—' }}</div>
+          <small v-if="row.expiresAt" class="ban-expiration-countdown">{{ remainingBanText(row.expiresAt) }}</small>
+        </template>
         <template #actionColumn="{ row }">
           <el-button
             link
@@ -1385,6 +1438,17 @@ onBeforeUnmount(() => {
             :placeholder="$t('security.fail2ban.ban.ipPlaceholder', '请输入 IPv4 地址或 IPv4/CIDR')"
           />
         </el-form-item>
+        <el-form-item :label="$t('security.fail2ban.ban.duration')" prop="durationValue">
+          <div class="ban-duration-input">
+            <el-input-number v-model="manualBanForm.durationValue" :min="1" :controls="false" />
+            <el-select v-model="manualBanForm.durationUnit" @change="manualBanFormRef?.validateField('durationValue')">
+              <el-option :label="$t('security.fail2ban.ban.unitMinutes')" value="minutes" />
+              <el-option :label="$t('security.fail2ban.ban.unitHours')" value="hours" />
+              <el-option :label="$t('security.fail2ban.ban.unitDays')" value="days" />
+            </el-select>
+          </div>
+          <div class="field-help">{{ t('security.fail2ban.ban.durationHint', '将按所选单位换算后提交，范围为 5 分钟到 365 天') }}</div>
+        </el-form-item>
         <el-form-item :label="$t('security.fail2ban.ban.reason')" prop="reason">
           <el-input
             v-model="manualBanForm.reason"
@@ -1414,6 +1478,24 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+
+.ban-duration-input {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.ban-duration-input .el-input-number {
+  flex: 1;
+}
+
+.ban-duration-input .el-select {
+  width: 140px;
+}
+
+.ban-expiration-countdown {
+  color: var(--text-secondary);
 }
 
 .hero-card,
