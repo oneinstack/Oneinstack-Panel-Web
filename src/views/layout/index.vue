@@ -561,7 +561,8 @@ const BindButton = () => {
               <el-sub-menu
                 v-if="item.children?.length"
                 :index="item.path"
-                :popper-offset="-110"
+                popper-class="collapsed-navigation-popper"
+                :popper-offset="8"
                 @mouseenter="setHoveredMenuItem(item)"
                 @mouseleave="setHoveredMenuItem()"
               >
@@ -1022,6 +1023,23 @@ const BindButton = () => {
         justify-content: center;
         padding: 0 !important;
       }
+
+      :deep(.el-menu-item > .menu-icon),
+      :deep(.el-sub-menu__title > .menu-icon) {
+        display: inline-flex !important;
+        visibility: visible !important;
+        width: 22px;
+        height: 22px;
+        overflow: visible;
+      }
+
+      :deep(.menu-item-name),
+      :deep(.menu-expand-arrow) {
+        display: none !important;
+        visibility: hidden !important;
+        width: 0;
+        margin: 0;
+      }
     }
   }
 
@@ -1194,6 +1212,70 @@ const BindButton = () => {
 </style>
 
 <style lang="less">
+.collapsed-navigation-popper {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent;
+  box-shadow: none;
+
+  .el-menu--popup {
+    min-width: 190px;
+    padding: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: var(--surface-raised);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .el-menu-item {
+    display: flex;
+    align-items: center;
+    height: 42px;
+    margin: 2px 0;
+    padding: 0 12px !important;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    background: transparent;
+    font-size: 13px;
+    transition: background 0.18s ease, color 0.18s ease;
+
+    &:hover,
+    &.is-active {
+      color: rgb(var(--primary-color));
+      background: rgba(var(--primary-color), 0.1);
+    }
+  }
+
+  .menu-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    vertical-align: middle;
+    transform: translateY(-1px);
+  }
+
+  .menu-icon svg {
+    width: 22px;
+    height: 22px;
+    display: block;
+  }
+
+  .menu-item-name {
+    margin-left: 10px;
+    display: inline-flex;
+    align-items: center;
+    min-height: 22px;
+    color: inherit;
+    line-height: 22px;
+    font-weight: 600;
+  }
+}
+
 .global-task-popover.el-popper {
   padding: 0 !important;
   overflow: hidden;
