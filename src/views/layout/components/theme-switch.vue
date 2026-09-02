@@ -19,11 +19,44 @@ const colors = {
   }
 }
 
+interface ScrollPosition {
+  element: HTMLElement
+  top: number
+  left: number
+}
+
+const captureScrollPositions = () => {
+  const elements = [
+    document.scrollingElement,
+    ...Array.from(document.querySelectorAll<HTMLElement>('.route-stage, .el-scrollbar__wrap'))
+  ].filter((element): element is HTMLElement => Boolean(element))
+
+  return elements.map<ScrollPosition>(element => ({
+    element,
+    top: element.scrollTop,
+    left: element.scrollLeft
+  }))
+}
+
+const restoreScrollPositions = (positions: ScrollPosition[]) => {
+  positions.forEach(({ element, top, left }) => {
+    element.scrollTop = top
+    element.scrollLeft = left
+  })
+}
+
+const restoreScrollPositionsOnNextFrame = (positions: ScrollPosition[]) => {
+  restoreScrollPositions(positions)
+  requestAnimationFrame(() => restoreScrollPositions(positions))
+}
+
 const toggleTheme = (event: MouseEvent) => {
   event.preventDefault()
+  const scrollPositions = captureScrollPositions()
   // @ts-ignore
   if (!document.startViewTransition) {
     sapp.setTheme(theme.value === 'light' ? 'dark' : 'light')
+    restoreScrollPositionsOnNextFrame(scrollPositions)
     scheduleInteractionRecovery()
     return
   }
@@ -63,6 +96,7 @@ const toggleTheme = (event: MouseEvent) => {
   })
 
   transition.finished.finally(() => {
+    restoreScrollPositionsOnNextFrame(scrollPositions)
     scheduleInteractionRecovery()
   })
 }

@@ -1028,6 +1028,7 @@ const BindButton = () => {
   .route-stage {
     width: 100%;
     height: 100%;
+    scrollbar-gutter: stable;
     overflow-x: hidden;
     overflow-y: auto;
   }
