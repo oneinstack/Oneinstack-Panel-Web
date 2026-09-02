@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
-import { Api } from '@/api/modules'
+import { Api, type AccessMenuNode, type AccessPermission, type AccessRole as ApiAccessRole } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CircleCheck, CollectionTag, Delete, Key, User } from '@element-plus/icons-vue'
+import { CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
 
 interface AccessRole {
-  code: string
+  code?: string
+  key: string
   name: string
+  description?: string
+  builtin?: boolean
+  permissions?: string[]
+  menuTree?: AccessMenuNode[]
 }
 
 interface AccessUser {
@@ -21,6 +26,13 @@ interface AccessUser {
   passwordChangeReason?: 'initial' | 'admin_reset' | string
   createdAt?: string
   roles?: AccessRole[]
+}
+
+interface RoleEditorForm {
+  key: string
+  name: string
+  description: string
+  permissionCodes: string[]
 }
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -38,7 +50,8 @@ const loading = reactive({
 })
 
 const currentUser = ref<any>(null)
-const roles = ref<AccessRole[]>([])
+const roles = ref<ApiAccessRole[]>([])
+const permissions = ref<AccessPermission[]>([])
 
 const userState = reactive({
   keyword: '',
@@ -58,6 +71,15 @@ const userState = reactive({
     { prop: 'action', label: t('common.action', 'Action'), width: 300, fixed: 'right' }
   ])
 })
+
+const roleColumns = computed<ColumnItem[]>(() => [
+  { prop: 'key', label: t('userManagement.roleKey', 'Role key'), minWidth: 180 },
+  { prop: 'name', label: t('userManagement.roleName', 'Role name'), minWidth: 180 },
+  { prop: 'description', label: t('userManagement.roleDescription', 'Description'), minWidth: 240, showOverflowTooltip: true },
+  { prop: 'permissionCount', label: t('userManagement.permissionCount', 'Permissions'), width: 140, slot: 'permissionCount', align: 'center' },
+  { prop: 'status', label: t('common.status', 'Status'), width: 140, slot: 'status', align: 'center' },
+  { prop: 'action', label: t('common.action', 'Action'), width: 220, fixed: 'right', slot: 'action' }
+])
 
 const createUserDialog = reactive({
   show: false,
@@ -82,8 +104,42 @@ const roleDialog = reactive({
   roleCodes: [] as string[],
   open: (user: AccessUser) => {
     roleDialog.user = user
-    roleDialog.roleCodes = (user.roles || []).map((item) => item.code)
+    roleDialog.roleCodes = (user.roles || []).map((item) => item.key || item.code || '').filter(Boolean)
     roleDialog.show = true
+  }
+})
+
+const roleEditorDialog = reactive({
+  show: false,
+  loading: false,
+  mode: 'create' as 'create' | 'edit',
+  detailLoading: false,
+  detail: null as (AccessRole & { menuTree?: AccessMenuNode[] }) | null,
+  form: {
+    key: '',
+    name: '',
+    description: '',
+    permissionCodes: [] as string[]
+  } as RoleEditorForm,
+  open: async (role?: AccessRole | null) => {
+    roleEditorDialog.mode = role ? 'edit' : 'create'
+    roleEditorDialog.form.key = String(role?.key || role?.code || '').trim()
+    roleEditorDialog.form.name = role?.name || ''
+    roleEditorDialog.form.description = role?.description || ''
+    roleEditorDialog.form.permissionCodes = [...(role?.permissions || [])]
+    roleEditorDialog.detail = role ? role : null
+    roleEditorDialog.show = true
+    if (!role?.key) return
+    roleEditorDialog.detailLoading = true
+    try {
+      const response = await Api.getAccessRoleDetail(role.key)
+      roleEditorDialog.detail = response.data || roleEditorDialog.detail
+      roleEditorDialog.form.permissionCodes = [...(response.data?.permissions || roleEditorDialog.form.permissionCodes)]
+    } catch {
+      roleEditorDialog.detail = roleEditorDialog.detail || role
+    } finally {
+      roleEditorDialog.detailLoading = false
+    }
   }
 })
 
@@ -98,13 +154,12 @@ const passwordDialog = reactive({
   }
 })
 
-const canManageUsers = computed(
-  () => Boolean(currentUser.value?.isSuperAdmin || currentUser.value?.isAdmin)
-)
+const canManageUsers = computed(() => Boolean(currentUser.value?.isSuperAdmin))
+const canManageRoles = computed(() => Boolean(currentUser.value?.isSuperAdmin))
 const roleTagList = computed(() => currentUser.value?.roles || [])
 const totalAssignedUsers = computed(() => userState.list.filter((item) => (item.roles || []).length > 0).length)
 const totalPendingUsers = computed(() => userState.list.filter((item) => item.mustChangePassword).length)
-const allRoleCodes = computed(() => roles.value.map((item) => item.code))
+const allRoleCodes = computed(() => roles.value.map((item) => item.key || item.code || '').filter(Boolean))
 const createRoleAllChecked = computed(
   () => allRoleCodes.value.length > 0 && createUserDialog.form.roleCodes.length === allRoleCodes.value.length
 )
@@ -117,6 +172,28 @@ const roleAllChecked = computed(
 const roleIndeterminate = computed(
   () => roleDialog.roleCodes.length > 0 && roleDialog.roleCodes.length < allRoleCodes.value.length
 )
+const permissionGroups = computed(() => {
+  const grouped = permissions.value.reduce<Record<string, AccessPermission[]>>((acc, permission) => {
+    const groupKey = permission.module || 'misc'
+    if (!acc[groupKey]) acc[groupKey] = []
+    acc[groupKey].push(permission)
+    return acc
+  }, {})
+  return Object.entries(grouped).map(([module, items]) => ({
+    module,
+    label: module,
+    items: items.sort((left, right) => left.code.localeCompare(right.code))
+  }))
+})
+
+const flattenMenuTree = (nodes: AccessMenuNode[] = []): string[] =>
+  nodes.flatMap((node) => {
+    const current = node?.name ? [node.name] : []
+    const children = node?.children?.length ? flattenMenuTree(node.children) : []
+    return [...current, ...children]
+  })
+
+const roleMenuPreview = computed(() => flattenMenuTree(roleEditorDialog.detail?.menuTree || []))
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const roleKeyByCode: Record<string, string> = {
@@ -145,11 +222,11 @@ const roleKeyByName: Record<string, string> = {
 const normalizeRoleCode = (value?: string) => String(value || '').trim().replace(/-/g, '_').toLowerCase()
 const roleLabel = (role: AccessRole) => {
   const roleKey = roleKeyByCode[normalizeRoleCode(role.code)] || roleKeyByName[role.name]
-  if (roleKey) return t(`userManagement.roles.${roleKey}`, role.name || role.code)
-  return role.name || role.code
+  if (roleKey) return t(`userManagement.roles.${roleKey}`, role.name || role.code || role.key)
+  return role.name || role.code || role.key
 }
 const userScopeLabel = (row: AccessUser) => {
-  if (row.isSuperAdmin || row.isAdmin) return t('userManagement.superAdmin', 'Super administrator')
+  if (row.isSuperAdmin) return t('userManagement.superAdmin', 'Super administrator')
   if (!(row.roles || []).length) return t('userManagement.unauthorized', 'Unauthorized')
   return t('userManagement.roleAuthorized', 'Role authorized')
 }
@@ -161,7 +238,7 @@ const currentLoginUsername = computed(() =>
 )
 const isCurrentLoginUser = (row: AccessUser) =>
   Boolean((currentLoginUserId.value && row.id === currentLoginUserId.value) || (currentLoginUsername.value && row.username === currentLoginUsername.value))
-const isSuperAdminUser = (row?: AccessUser | null) => Boolean(row?.isSuperAdmin || row?.isAdmin)
+const isSuperAdminUser = (row?: AccessUser | null) => Boolean(row?.isSuperAdmin)
 const passwordStatusLabel = (row: AccessUser) => {
   if (!row.mustChangePassword) return t('userManagement.healthy', 'Normal')
   if (row.passwordChangeReason === 'admin_reset') {
@@ -182,6 +259,16 @@ const loadBootstrap = async () => {
     ])
     currentUser.value = userRes.data
     roles.value = roleRes.data || []
+    try {
+      const permissionRes = await Api.getAccessPermissions()
+      permissions.value = Array.isArray(permissionRes)
+        ? permissionRes
+        : Array.isArray(permissionRes?.data)
+          ? permissionRes.data
+          : []
+    } catch {
+      permissions.value = []
+    }
   } finally {
     loading.bootstrap = false
   }
@@ -195,6 +282,85 @@ const loadUsers = async () => {
     userState.total = response.data?.total || 0
   } finally {
     loading.users = false
+  }
+}
+
+const openRoleEditor = async (role?: AccessRole | null) => {
+  await roleEditorDialog.open(role || null)
+}
+
+const submitRoleEditor = async () => {
+  const key = roleEditorDialog.form.key.trim()
+  const name = roleEditorDialog.form.name.trim()
+  const description = roleEditorDialog.form.description.trim()
+
+  if (roleEditorDialog.mode === 'create') {
+    if (!key) {
+      ElMessage.warning(t('userManagement.inputRoleKey', 'Enter a role key'))
+      return
+    }
+    if (!/^[a-z][a-z0-9._-]{0,63}$/.test(key)) {
+      ElMessage.warning(t('userManagement.roleKeyError', 'Role key must start with a lowercase letter and may contain lowercase letters, numbers, ".", "_" or "-"'))
+      return
+    }
+  }
+
+  if (!name) {
+    ElMessage.warning(t('userManagement.inputRoleName', 'Enter a role name'))
+    return
+  }
+
+  roleEditorDialog.loading = true
+  try {
+    const payload = {
+      key,
+      code: key,
+      name,
+      description,
+      permissionCodes: [...roleEditorDialog.form.permissionCodes],
+      permissions: [...roleEditorDialog.form.permissionCodes]
+    }
+    if (roleEditorDialog.mode === 'create') {
+      await Api.createAccessRole(payload)
+      ElMessage.success(t('userManagement.createRoleSuccess', 'Role created'))
+    } else {
+      await Api.updateAccessRole(key, payload)
+      ElMessage.success(t('userManagement.updateRoleSuccess', 'Role updated'))
+    }
+    roleEditorDialog.show = false
+    await loadBootstrap()
+  } catch (error: any) {
+    // ElMessage.error(error?.message || t('userManagement.updateRoleFailed', 'Failed to save role'))
+  } finally {
+    roleEditorDialog.loading = false
+  }
+}
+
+const deleteRole = async (role: AccessRole) => {
+  const key = role.key || role.code || ''
+  if (!key) {
+    ElMessage.warning(t('userManagement.invalidRoleKey', 'Invalid role key'))
+    return
+  }
+  if (role.builtin || key === 'super_admin') {
+    ElMessage.warning(t('userManagement.cannotDeleteBuiltinRole', 'Built-in roles cannot be deleted'))
+    return
+  }
+  await ElMessageBox.confirm(
+    t('userManagement.deleteRoleConfirm', 'Delete role "{name}"? This will remove the role from all users.', { name: role.name || key }),
+    t('userManagement.deleteRole', 'Delete role'),
+    {
+      type: 'warning',
+      confirmButtonText: t('common.delete', 'Delete'),
+      cancelButtonText: t('common.cancel', 'Cancel')
+    }
+  )
+  try {
+    await Api.deleteAccessRole(key)
+    ElMessage.success(t('userManagement.deleteRoleSuccess', 'Role deleted'))
+    await loadBootstrap()
+  } catch (error: any) {
+    // ElMessage.error(error?.message || t('userManagement.deleteRoleFailed', 'Failed to delete role'))
   }
 }
 
@@ -376,13 +542,13 @@ onMounted(async () => {
         <div class="role-tags">
           <el-tag
             v-for="item in roleTagList"
-            :key="item.code"
+            :key="item.key || item.code"
             effect="plain"
             round
           >
             {{ roleLabel(item) }}
           </el-tag>
-          <el-tag v-if="currentUser?.isSuperAdmin || currentUser?.isAdmin" type="danger" round>
+          <el-tag v-if="currentUser?.isSuperAdmin" type="danger" round>
             {{ $t('userManagement.superAdmin') }}
           </el-tag>
         </div>
@@ -474,7 +640,7 @@ onMounted(async () => {
               <div v-if="(row.roles || []).length" class="tag-list tag-list--roles">
                 <el-tag
                   v-for="item in row.roles || []"
-                  :key="item.code"
+                  :key="item.key || item.code"
                   effect="plain"
                   size="small"
                   class="role-pill"
@@ -486,7 +652,7 @@ onMounted(async () => {
             </div>
           </template>
           <template #scope="{ row }">
-            <el-tag :type="row.isSuperAdmin || row.isAdmin ? 'danger' : 'info'" effect="light" round>
+            <el-tag :type="row.isSuperAdmin ? 'danger' : 'info'" effect="light" round>
               {{ userScopeLabel(row) }}
             </el-tag>
           </template>
@@ -523,6 +689,70 @@ onMounted(async () => {
       </div>
     </section>
 
+    <section class="panel-card">
+      <div class="panel-head">
+        <div>
+          <h3>{{ t('userManagement.roleRepositoryTitle', 'Role repository') }}</h3>
+        </div>
+        <div class="panel-head__actions">
+          <div class="panel-summary">
+            <span>{{ t('userManagement.roleRepositoryHint', 'Manage role permissions and the menus derived from them') }}</span>
+          </div>
+          <el-button
+            type="primary"
+            :icon="Plus"
+            :disabled="!canManageRoles"
+            @click="openRoleEditor()"
+          >
+            {{ t('userManagement.createRole', 'Create role') }}
+          </el-button>
+        </div>
+      </div>
+
+      <custom-table
+        :data="roles"
+        :columns="roleColumns"
+        :pagination="false"
+        :auto-pagination="false"
+        border
+        class="role-table"
+        :empty-text="t('common.noData', 'No roles')"
+      >
+        <template #permissionCount="{ row }">
+          <el-tag class="permission-count-tag" type="primary" effect="light" round>
+            {{ (row.permissions || []).length }}
+          </el-tag>
+        </template>
+        <template #status="{ row }">
+          <el-tag :type="row.builtin ? 'info' : 'success'" effect="light" round>
+            {{ row.builtin ? t('userManagement.builtinRole', 'Built-in') : t('userManagement.customRole', 'Custom') }}
+          </el-tag>
+        </template>
+        <template #action="{ row }">
+          <div class="table-row-actions">
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              :disabled="!canManageRoles || row.builtin"
+              @click="openRoleEditor(row)"
+            >
+              {{ t('common.edit', 'Edit') }}
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :disabled="!canManageRoles || row.builtin"
+              @click="deleteRole(row)"
+            >
+              {{ t('common.delete', 'Delete') }}
+            </el-button>
+          </div>
+        </template>
+      </custom-table>
+    </section>
+
     <custom-drawer
       :visible="createUserDialog.show"
       :title="$t('userManagement.createUser')"
@@ -556,7 +786,7 @@ onMounted(async () => {
                 <span class="role-dialog-count">{{ $t('userManagement.selectedCount', { selected: createUserDialog.form.roleCodes.length, total: allRoleCodes.length }) }}</span>
               </div>
               <el-checkbox-group v-model="createUserDialog.form.roleCodes" class="checkbox-grid">
-                <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
+                <el-checkbox v-for="item in roles" :key="item.key || item.code" :value="item.key || item.code">
                   {{ roleLabel(item) }}
                 </el-checkbox>
               </el-checkbox-group>
@@ -594,10 +824,103 @@ onMounted(async () => {
           <span class="role-dialog-count">{{ $t('userManagement.selectedCount', { selected: roleDialog.roleCodes.length, total: allRoleCodes.length }) }}</span>
         </div>
         <el-checkbox-group v-model="roleDialog.roleCodes" class="checkbox-grid">
-          <el-checkbox v-for="item in roles" :key="item.code" :value="item.code">
+          <el-checkbox v-for="item in roles" :key="item.key || item.code" :value="item.key || item.code">
             {{ roleLabel(item) }}
           </el-checkbox>
         </el-checkbox-group>
+      </div>
+    </custom-drawer>
+
+    <custom-drawer
+      :visible="roleEditorDialog.show"
+      :title="roleEditorDialog.mode === 'create' ? t('userManagement.createRole', 'Create role') : t('userManagement.editRole', 'Edit role')"
+      size="980px"
+      :confirm-text="$t('common.save')"
+      :loading="roleEditorDialog.loading"
+      :on-close="() => { roleEditorDialog.show = false }"
+      :on-confirm="submitRoleEditor"
+    >
+      <div class="dialog-form">
+        <el-alert
+          :title="t('userManagement.rolePermissionTip', 'Role menus are computed from permission codes. Save the role to refresh its menuTree.')"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 16px"
+        />
+        <el-form label-position="top" class="role-editor-form">
+          <el-form-item
+            v-if="roleEditorDialog.mode === 'create'"
+            :label="$t('userManagement.roleKey', 'Role key')"
+            required
+          >
+            <el-input
+              v-model="roleEditorDialog.form.key"
+              :placeholder="t('userManagement.inputRoleKey', 'Enter a role key')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.roleName', 'Role name')" required>
+            <el-input
+              v-model="roleEditorDialog.form.name"
+              :placeholder="t('userManagement.inputRoleName', 'Enter a role name')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.roleDescription', 'Description')">
+            <el-input
+              v-model="roleEditorDialog.form.description"
+              type="textarea"
+              :rows="3"
+              :placeholder="t('userManagement.roleDescriptionPlaceholder', 'Describe what this role can access')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.permissionSelection', 'Permission codes')">
+            <div class="permission-panel">
+              <div class="permission-panel__summary">
+                <span>{{ t('userManagement.permissionSelectionHint', 'Select the backend permission codes that define this role.') }}</span>
+                <strong>{{ t('userManagement.selectedCount', '{selected} / {total} selected', { selected: roleEditorDialog.form.permissionCodes.length, total: permissions.length }) }}</strong>
+              </div>
+              <el-scrollbar class="permission-panel__scroll">
+                <div v-for="group in permissionGroups" :key="group.module" class="permission-group">
+                  <div class="permission-group__head">
+                    <strong>{{ group.label }}</strong>
+                    <span>{{ group.items.length }}</span>
+                  </div>
+                  <el-checkbox-group v-model="roleEditorDialog.form.permissionCodes" class="permission-grid">
+                    <el-checkbox
+                      v-for="permission in group.items"
+                      :key="permission.code"
+                      :value="permission.code"
+                      class="permission-item"
+                    >
+                      <span class="permission-item__name">{{ permission.name }}</span>
+                      <span class="permission-item__code">{{ permission.code }}</span>
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
+              </el-scrollbar>
+            </div>
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuPreview', 'Menu preview')">
+            <div class="menu-preview">
+              <template v-if="roleEditorDialog.detailLoading">
+                <el-skeleton :rows="2" animated />
+              </template>
+              <template v-else-if="roleMenuPreview.length">
+                <el-tag
+                  v-for="name in roleMenuPreview"
+                  :key="name"
+                  effect="plain"
+                  round
+                >
+                  {{ name }}
+                </el-tag>
+              </template>
+              <span v-else class="menu-preview__empty">
+                {{ t('userManagement.menuPreviewEmpty', 'The backend will calculate menuTree from the saved permissions.') }}
+              </span>
+            </div>
+          </el-form-item>
+        </el-form>
       </div>
     </custom-drawer>
 
@@ -919,6 +1242,14 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
+.panel-head__actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .panel-head h3 {
   margin: 0;
   color: var(--text-primary);
@@ -1089,6 +1420,237 @@ onMounted(async () => {
   .role-dialog-toolbar {
     margin-bottom: 12px;
   }
+}
+
+.role-table {
+  width: 100%;
+  margin-top: 4px;
+
+  :deep(.el-table__inner-wrapper) {
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: 18px;
+    background: var(--surface-card);
+  }
+
+  :deep(.el-table__header-wrapper th.el-table__cell) {
+    height: 52px;
+    padding: 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: var(--surface-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  :deep(.el-table__body-wrapper td.el-table__cell) {
+    height: 64px;
+    padding: 0;
+    color: var(--text-secondary);
+    background: var(--surface-card);
+    border-bottom: 1px solid var(--border-subtle);
+    transition: background 0.2s ease;
+  }
+
+  :deep(.el-table__body tr:last-child td.el-table__cell) {
+    border-bottom: none;
+  }
+
+  :deep(.el-table__body tr:hover > td.el-table__cell) {
+    background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  }
+
+  :deep(.el-table__body tr:hover > td.el-table-fixed-column--right) {
+    background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  }
+
+  :deep(.el-table__fixed-right-patch) {
+    background: var(--surface-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  :deep(.el-table__fixed-right) {
+    background: var(--surface-card);
+  }
+
+  :deep(.cell) {
+    padding: 0 18px;
+    line-height: 1.45;
+  }
+
+  :deep(.el-table__empty-block) {
+    min-height: 150px;
+    background: var(--surface-card);
+  }
+}
+
+.role-table :deep(.el-table__body td:first-child .cell) {
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.role-table :deep(.el-table__body td:nth-child(2) .cell) {
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.role-table :deep(.el-table__body td:nth-child(3) .cell) {
+  color: var(--text-secondary);
+}
+
+.role-table :deep(.el-table__body td:nth-child(4) .cell) {
+  display: flex;
+  align-items: center;
+}
+
+.role-table :deep(.permission-count-tag) {
+  min-width: 38px;
+  justify-content: center;
+  --el-tag-bg-color: rgba(var(--primary-color), 0.12);
+  --el-tag-border-color: rgba(var(--primary-color), 0.32);
+  --el-tag-text-color: rgb(var(--primary-color));
+  font-weight: 700;
+}
+
+.role-table :deep(.el-table__body td:nth-child(5) .el-tag) {
+  font-weight: 650;
+}
+
+.role-table :deep(.table-row-actions) {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
+.role-table :deep(.table-row-actions .el-button) {
+  min-height: 30px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-weight: 650;
+}
+
+.role-table :deep(.table-row-actions .el-button:hover:not(.is-disabled)) {
+  background: rgba(var(--primary-color), 0.1);
+}
+
+.role-table :deep(.table-row-actions .el-button--danger:hover:not(.is-disabled)) {
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.role-editor-form {
+  display: grid;
+  gap: 4px;
+}
+
+.permission-panel {
+  width: 100%;
+  display: grid;
+  gap: 14px;
+}
+
+.permission-panel__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-secondary);
+  font-size: 12px;
+
+  strong {
+    color: var(--text-primary);
+    font-weight: 700;
+  }
+}
+
+.permission-panel__scroll {
+  max-height: 420px;
+  padding-right: 6px;
+}
+
+.permission-group {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 16px 16px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-hover) 80%, transparent);
+}
+
+.permission-group__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  strong {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+
+  :deep(.el-checkbox) {
+    min-width: 0;
+    width: 100%;
+    margin-right: 0;
+    align-items: flex-start;
+    white-space: normal;
+  }
+
+  :deep(.el-checkbox__label) {
+    width: 100%;
+    min-width: 0;
+    white-space: normal;
+  }
+}
+
+.permission-item {
+  display: grid;
+  gap: 4px;
+}
+
+.permission-item__name {
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.permission-item__code {
+  color: var(--text-tertiary);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+.menu-preview {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 14px 16px;
+  border: 1px dashed var(--border-subtle);
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--surface-hover) 76%, transparent);
+}
+
+.menu-preview__empty {
+  color: var(--text-tertiary);
+  font-size: 12px;
 }
 
 .dialog-form {

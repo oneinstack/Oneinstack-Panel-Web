@@ -8,11 +8,20 @@ interface PanelEntryAccess {
   path: string;
 }
 
+interface AccessMenuNode {
+  key: string;
+  type?: string;
+  enabled?: boolean;
+  children?: AccessMenuNode[];
+}
+
 interface ConfigState {
   userInfo: any;
   menuAccess: Record<string, boolean>;
   scopeAccess: Record<string, Record<string, boolean>>;
   actionAccess: Record<string, boolean>;
+  menuTree: AccessMenuNode[];
+  firstAccessibleMenu: string;
   panelEntryAccess: PanelEntryAccess | null;
   panelTitle: string;
   hiddenMenuPathsByUser: Record<string, string[]>;
@@ -26,10 +35,25 @@ const createState = (): ConfigState => ({
   menuAccess: {},
   scopeAccess: {},
   actionAccess: {},
+  menuTree: [],
+  firstAccessibleMenu: "",
   panelEntryAccess: null,
   panelTitle: "",
   hiddenMenuPathsByUser: {},
 });
+
+const flattenMenuAccess = (nodes: AccessMenuNode[] = [], target: Record<string, boolean> = {}) => {
+  nodes.forEach((node) => {
+    if (!node?.key) return;
+    if (node.enabled !== false) {
+      target[node.key] = true;
+    }
+    if (node.children?.length) {
+      flattenMenuAccess(node.children, target);
+    }
+  });
+  return target;
+};
 
 export const useConfigStore = defineStore("config", {
   state: createState,
@@ -70,14 +94,25 @@ export const useConfigStore = defineStore("config", {
     },
 
     setAccessMatrix(matrix: any) {
-      this.setMenuAccess(matrix?.menu || {});
+      const menuTree = Array.isArray(matrix?.menuTree) ? matrix.menuTree : [];
+      this.menuTree = menuTree;
+      this.firstAccessibleMenu = String(matrix?.firstAccessibleMenu || "").trim();
+      this.setMenuAccess(Object.keys(matrix?.menu || {}).length ? matrix.menu : flattenMenuAccess(menuTree));
       this.setScopeAccess(matrix?.scopes || {});
       this.setActionAccess(matrix?.actions || {});
     },
 
     hasMenuAccess(key?: string) {
       if (!key || this.isAdministrator()) return true;
-      return Boolean(this.menuAccess?.[key]);
+      if (Boolean(this.menuAccess?.[key])) return true;
+      const stack = [...(this.menuTree || [])];
+      while (stack.length) {
+        const node = stack.shift();
+        if (!node) continue;
+        if (node.key === key) return node.enabled !== false;
+        if (node.children?.length) stack.unshift(...node.children);
+      }
+      return false;
     },
 
     hasScopeAccess(scope?: string, action?: string) {
@@ -132,6 +167,8 @@ export const useConfigStore = defineStore("config", {
       this.menuAccess = {};
       this.scopeAccess = {};
       this.actionAccess = {};
+      this.menuTree = [];
+      this.firstAccessibleMenu = "";
 
       if (toLogin) {
         setTimeout(() => {

@@ -17,6 +17,7 @@ import { runtimeLogApi } from "./runtimeLog";
 import { certificateApi } from "./certificate";
 
 export * from "../types";
+export * from "./access";
 
 export const Api = {
   ...authApi,

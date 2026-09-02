@@ -46,6 +46,11 @@ export const menuPathKeyMap: Array<{ path: string; key: string }> = [
   { path: '/certificate', key: 'certificate' }
 ]
 
+const menuKeyPathMap = menuPathKeyMap.reduce<Record<string, string>>((acc, item) => {
+  acc[item.key] = item.path
+  return acc
+}, {})
+
 export const resolveMenuKeyByPath = (path: string) => {
   const matched = menuPathKeyMap.find((item) => path === item.path || path.startsWith(`${item.path}/`))
   return matched?.key || ''
@@ -101,6 +106,11 @@ export const canAccessPath = (path: string) => {
 }
 
 export const getFirstAccessiblePath = () => {
+  const sconfig = useConfigStore()
+  const firstAccessibleKey = String(sconfig.firstAccessibleMenu || '').trim()
+  if (firstAccessibleKey && menuKeyPathMap[firstAccessibleKey]) {
+    return menuKeyPathMap[firstAccessibleKey]
+  }
   const firstAccessible = menuPathKeyMap.find((item) => canAccessPath(item.path))
   return firstAccessible?.path || '/home'
 }
