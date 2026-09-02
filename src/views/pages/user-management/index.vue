@@ -36,6 +36,12 @@ interface RoleEditorForm {
   permissionCodes: string[]
 }
 
+interface PermissionGroup {
+  module: string
+  label: string
+  items: AccessPermission[]
+}
+
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
@@ -178,7 +184,7 @@ const roleAllChecked = computed(
 const roleIndeterminate = computed(
   () => roleDialog.roleCodes.length > 0 && roleDialog.roleCodes.length < allRoleCodes.value.length
 )
-const permissionGroups = computed(() => {
+const permissionGroups = computed<PermissionGroup[]>(() => {
   const grouped = permissions.value.reduce<Record<string, AccessPermission[]>>((acc, permission) => {
     const groupKey = permission.module || 'misc'
     if (!acc[groupKey]) acc[groupKey] = []
@@ -191,6 +197,22 @@ const permissionGroups = computed(() => {
     items: items.sort((left, right) => left.code.localeCompare(right.code))
   }))
 })
+
+const permissionGroupAllChecked = (group: PermissionGroup) =>
+  group.items.length > 0 && group.items.every((item) => roleEditorDialog.form.permissionCodes.includes(item.code))
+
+const permissionGroupIndeterminate = (group: PermissionGroup) => {
+  const selectedCount = group.items.filter((item) => roleEditorDialog.form.permissionCodes.includes(item.code)).length
+  return selectedCount > 0 && selectedCount < group.items.length
+}
+
+const togglePermissionGroup = (group: PermissionGroup, value: string | number | boolean) => {
+  const groupCodes = new Set(group.items.map((item) => item.code))
+  const remainingCodes = roleEditorDialog.form.permissionCodes.filter((code) => !groupCodes.has(code))
+  roleEditorDialog.form.permissionCodes = Boolean(value)
+    ? [...remainingCodes, ...group.items.map((item) => item.code)]
+    : remainingCodes
+}
 
 const flattenMenuTree = (nodes: AccessMenuNode[] = []): string[] =>
   nodes.flatMap((node) => {
@@ -894,7 +916,16 @@ onMounted(async () => {
               <el-scrollbar class="permission-panel__scroll">
                 <div v-for="group in permissionGroups" :key="group.module" class="permission-group">
                   <div class="permission-group__head">
-                    <strong>{{ group.label }}</strong>
+                    <div class="permission-group__title">
+                      <strong>{{ group.label }}</strong>
+                      <el-checkbox
+                        :model-value="permissionGroupAllChecked(group)"
+                        :indeterminate="permissionGroupIndeterminate(group)"
+                        @change="togglePermissionGroup(group, $event)"
+                      >
+                        {{ $t('userManagement.selectAll') }}
+                      </el-checkbox>
+                    </div>
                     <span>{{ group.items.length }}</span>
                   </div>
                   <el-checkbox-group v-model="roleEditorDialog.form.permissionCodes" class="permission-grid">
@@ -1601,6 +1632,13 @@ onMounted(async () => {
   justify-content: space-between;
   gap: 12px;
 
+  .permission-group__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
   strong {
     color: var(--text-primary);
     font-size: 14px;
@@ -1617,6 +1655,18 @@ onMounted(async () => {
     line-height: 18px;
     text-align: center;
     background: var(--surface-card);
+  }
+
+  :deep(.el-checkbox) {
+    height: auto;
+    margin-right: 0;
+  }
+
+  :deep(.el-checkbox__label) {
+    padding-left: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 600;
   }
 }
 
