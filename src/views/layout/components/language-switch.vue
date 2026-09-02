@@ -19,6 +19,8 @@ const activeLanguage = computed(
 const setLanguage = async (lang: SupportedLocale) => {
   if (lang === currentLanguage.value) return
   await i18n.setLang(lang)
+  // Reload so every page recalculates translated content and layout dimensions.
+  window.location.reload()
 }
 
 const handleCommand = async (command: string | number | object) => {
