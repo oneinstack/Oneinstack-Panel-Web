@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   computed,
+  defineComponent,
   h,
   onBeforeUnmount,
   onMounted,
@@ -3073,37 +3074,43 @@ const pickReconnectTargetNetwork = async (row: ContainerItem) => {
       ? expectedNetwork
       : connectedNetworks[0] || networks.value[0]?.Name || "";
   const selected = ref(defaultNetwork);
-  await ElMessageBox.confirm(
-    h("div", { class: "container-create-preview" }, [
-      h("div", { class: "container-create-preview__notice" }, t("container.confirmations.containerNetworkDialogNotice")),
-      h(
-        "div",
-        { class: "container-network-picker" },
-        [
-          h("label", { class: "container-network-picker__label" }, t("container.confirmations.containerNetworkDialogLabel")),
+  const NetworkPicker = defineComponent({
+    setup() {
+      return () =>
+        h("div", { class: "container-create-preview" }, [
+          h("div", { class: "container-create-preview__notice" }, t("container.confirmations.containerNetworkDialogNotice")),
           h(
-            ElSelect,
-            {
-              modelValue: selected.value,
-              "onUpdate:modelValue": (value: string) => {
-                selected.value = value;
-              },
-              placeholder: t("container.confirmations.containerNetworkDialogLabel"),
-              style: "width:100%;",
-              filterable: true,
-            },
-            () =>
-              networks.value.map((network) =>
-                h(ElOption, {
-                  key: network.ID || network.Name,
-                  label: network.Name,
-                  value: network.Name,
-                }),
+            "div",
+            { class: "container-network-picker" },
+            [
+              h("label", { class: "container-network-picker__label" }, t("container.confirmations.containerNetworkDialogLabel")),
+              h(
+                ElSelect,
+                {
+                  modelValue: selected.value,
+                  "onUpdate:modelValue": (value: string) => {
+                    selected.value = value;
+                  },
+                  placeholder: t("container.confirmations.containerNetworkDialogLabel"),
+                  style: "width:100%;",
+                  filterable: true,
+                },
+                () =>
+                  networks.value.map((network) =>
+                    h(ElOption, {
+                      key: network.ID || network.Name,
+                      label: network.Name,
+                      value: network.Name,
+                    }),
+                  ),
               ),
+            ],
           ),
-        ],
-      ),
-    ]),
+        ]);
+    },
+  });
+  await ElMessageBox.confirm(
+    h(NetworkPicker),
     isCustomDockerNetworkMode(expectedNetwork)
       ? t("container.confirmations.containerNetworkReconnectTitle")
       : t("container.confirmations.containerNetworkConnectTitle"),
