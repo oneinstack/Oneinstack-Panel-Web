@@ -412,9 +412,7 @@ const conf = reactive({
               width: 22,
               itemStyle: {
                 borderWidth: 0,
-                color: conf.themeColor[sapp.theme][0],
-                shadowBlur: 6,
-                shadowColor: conf.themeColor[sapp.theme][0]
+                color: conf.themeColor[sapp.theme][0]
               }
             },
             axisLine: {
