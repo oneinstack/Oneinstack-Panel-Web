@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
+import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
 import { Api, type AccessMenuNode, type AccessPermission, type AccessRole as ApiAccessRole } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -52,6 +53,11 @@ const loading = reactive({
 const currentUser = ref<any>(null)
 const roles = ref<ApiAccessRole[]>([])
 const permissions = ref<AccessPermission[]>([])
+const activeTab = ref('users')
+const accessTabItems = [
+  { key: 'users', label: '用户管理', labelKey: 'userManagement.userTab' },
+  { key: 'permissions', label: '权限管理', labelKey: 'userManagement.permissionTab' }
+]
 
 const userState = reactive({
   keyword: '',
@@ -597,7 +603,13 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="panel-card">
+    <SystemManagementTabs
+      :items="accessTabItems"
+      :active-key="activeTab"
+      @update:active-key="activeTab = $event"
+    />
+
+    <section v-if="activeTab === 'users'" class="panel-card">
       <div class="panel-head">
         <div>
           <!-- <span class="panel-kicker">{{ $t('userManagement.accountDirectory') }}</span> -->
@@ -689,7 +701,7 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section class="panel-card">
+    <section v-else class="panel-card">
       <div class="panel-head">
         <div>
           <h3>{{ t('userManagement.roleRepositoryTitle', 'Role repository') }}</h3>
@@ -1579,7 +1591,8 @@ onMounted(async () => {
   padding: 16px 16px 18px;
   border: 1px solid var(--border-subtle);
   border-radius: 18px;
-  background: color-mix(in srgb, var(--surface-hover) 80%, transparent);
+  background: color-mix(in srgb, var(--surface-hover) 72%, var(--surface-card));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .permission-group__head {
@@ -1595,8 +1608,15 @@ onMounted(async () => {
   }
 
   span {
+    min-width: 28px;
+    padding: 3px 8px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
     color: var(--text-tertiary);
     font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    background: var(--surface-card);
   }
 }
 
@@ -1608,32 +1628,64 @@ onMounted(async () => {
   :deep(.el-checkbox) {
     min-width: 0;
     width: 100%;
+    height: auto;
+    min-height: 60px;
     margin-right: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--surface-card) 88%, var(--surface-hover));
     align-items: flex-start;
     white-space: normal;
+    transition: border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
   }
 
   :deep(.el-checkbox__label) {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
     width: 100%;
     min-width: 0;
+    padding-left: 0;
     white-space: normal;
+  }
+
+  :deep(.el-checkbox__input) {
+    flex: 0 0 auto;
+    margin-top: 2px;
+  }
+
+  :deep(.el-checkbox:hover) {
+    border-color: rgba(var(--primary-color), 0.36);
+    background: rgba(var(--primary-color), 0.06);
+  }
+
+  :deep(.el-checkbox.is-checked) {
+    border-color: rgba(var(--primary-color), 0.46);
+    background: rgba(var(--primary-color), 0.1);
+    box-shadow: inset 3px 0 0 rgb(var(--primary-color));
   }
 }
 
 .permission-item {
-  display: grid;
-  gap: 4px;
+  display: flex !important;
+  align-items: flex-start;
+  gap: 10px;
+  box-sizing: border-box;
 }
 
 .permission-item__name {
   color: var(--text-primary);
   font-size: 13px;
   font-weight: 600;
+  line-height: 18px;
 }
 
 .permission-item__code {
   color: var(--text-tertiary);
   font-size: 12px;
+  line-height: 16px;
   word-break: break-all;
 }
 
