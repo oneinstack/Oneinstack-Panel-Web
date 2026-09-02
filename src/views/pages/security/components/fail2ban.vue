@@ -205,13 +205,13 @@ const taskTotal = ref(0)
 
 const incidentFilters = reactive({
   page: 1,
-  pageSize: 20,
+  pageSize: 10,
   status: '',
   remoteIp: ''
 })
 const taskPagination = reactive({
   page: 1,
-  pageSize: 20
+  pageSize: 10
 })
 const unbanRecordPagination = reactive({
   page: 1,
@@ -1289,6 +1289,8 @@ onBeforeUnmount(() => {
         :columns="incidentColumns"
         :data="incidents"
         :pagination="false"
+        :auto-pagination="false"
+        fixed-header
         :empty-text="$t('security.fail2ban.incident.empty')"
       >
         <template #severity="{ row }">
@@ -1413,6 +1415,8 @@ onBeforeUnmount(() => {
         :columns="taskColumns"
         :data="tasks"
         :pagination="false"
+        :auto-pagination="false"
+        fixed-header
         :empty-text="$t('security.fail2ban.task.empty')"
       >
         <template #createdAt="{ row }">

@@ -43,6 +43,8 @@ interface Props {
   pageSizes?: number[]
   pagination?: boolean
   autoPagination?: boolean
+  fixedHeader?: boolean
+  fixedHeaderHeight?: string | number
   total?: number
   emptyText?: string
   columns?: ColumnItem[]
@@ -64,6 +66,8 @@ const props = withDefaults(defineProps<Props>(), {
   pagination: true,
   total: 0,
   autoPagination: true,
+  fixedHeader: false,
+  fixedHeaderHeight: 520,
   data: () => [],
   columns: () => []
 })
@@ -148,6 +152,7 @@ defineExpose({
       :data="visibleData"
       class="smart-table"
       style="width: 100%"
+      :max-height="props.fixedHeader ? props.fixedHeaderHeight : undefined"
       @selection-change="handleSelectionChange"
       :empty-text="props.emptyText || t('common.noData', 'No data')"
     >
