@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import memo from './components/memo.vue'
-import { markRaw, onMounted, reactive } from 'vue'
+import { markRaw, onMounted, reactive, watch } from 'vue'
 import { useAppStore } from '@/stores/modules/app';
 import { Api } from '@/api/modules'
 import sutil from '@/utils/sutil'
@@ -409,15 +409,18 @@ const conf = reactive({
               overlap: false,
               roundCap: true,
               clip: false,
+              width: 22,
               itemStyle: {
                 borderWidth: 0,
-                color: conf.themeColor[sapp.theme][0]
+                color: conf.themeColor[sapp.theme][0],
+                shadowBlur: 6,
+                shadowColor: conf.themeColor[sapp.theme][0]
               }
             },
             axisLine: {
               lineStyle: {
-                width: 20,
-                color: [[1, `rgba(${sutil.getCssVariable('--category-item-bg-color')}, 0.88)`]]
+                width: 22,
+                color: [[1, `rgb(${sutil.getCssVariable('--status-chart-track-color')})`]]
               }
             },
             splitLine: {
@@ -464,7 +467,7 @@ const conf = reactive({
           },
           {
             animationType: 'scale',
-            color: `rgba(${sutil.getCssVariable('--category-item-bg-color')}, 0.88)`,
+            color: `rgb(${sutil.getCssVariable('--status-chart-track-color')})`,
             name: 'Access From',
             type: 'pie',
             radius: '75%',
@@ -598,6 +601,11 @@ const conf = reactive({
 })
 
 const timer = Scope.Timer()
+watch(
+  () => sapp.theme,
+  () => conf.statusData.draw()
+)
+
 onMounted(() => {
   timer.on(
     () => {

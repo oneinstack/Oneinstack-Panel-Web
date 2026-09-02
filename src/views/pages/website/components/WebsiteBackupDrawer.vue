@@ -250,7 +250,7 @@ onBeforeUnmount(() => {
       <el-button @click="loadData()">{{ t('website.backupDrawer.refresh') }}</el-button>
     </div>
 
-    <el-tabs>
+    <el-tabs class="backup-tabs">
       <el-tab-pane :label="t('website.backupDrawer.backupFiles')">
         <custom-table v-loading="state.loading" :data="state.backups" :columns="backupColumns" :pagination="false" :empty-text="t('website.backupDrawer.noBackups')">
           <template #source="{ row }">{{ sourceLabel(row.source) }}</template>
@@ -319,6 +319,66 @@ onBeforeUnmount(() => {
   color: var(--el-text-color-secondary);
 }
 
+.backup-tabs {
+  margin-top: 18px;
+
+  :deep(.el-tabs__header) {
+    margin: 0;
+  }
+
+  :deep(.el-tabs__nav-wrap::after) {
+    display: none;
+  }
+
+  :deep(.el-tabs__nav) {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    background: var(--surface-muted);
+    box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+  }
+
+  :deep(.el-tabs__item) {
+    min-width: 96px;
+    height: 38px;
+    padding: 0 20px;
+    border-radius: 9px;
+    color: var(--text-tertiary);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 38px;
+    transition: color 0.18s ease, background-color 0.18s ease;
+  }
+
+  :deep(.el-tabs__item:hover) {
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--surface-card) 72%, transparent);
+  }
+
+  :deep(.el-tabs__item.is-active) {
+    color: rgb(var(--primary-color));
+    background: color-mix(in srgb, rgb(var(--primary-color)) 22%, var(--surface-card));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, rgb(var(--primary-color)) 28%, transparent),
+      0 3px 10px color-mix(in srgb, rgb(var(--primary-color)) 12%, transparent);
+  }
+
+  :deep(.el-tabs__item:focus-visible) {
+    outline: 2px solid color-mix(in srgb, rgb(var(--primary-color)) 45%, transparent);
+    outline-offset: -2px;
+  }
+
+  :deep(.el-tabs__active-bar) {
+    display: none;
+  }
+
+  :deep(.el-tabs__content) {
+    padding-top: 14px;
+  }
+}
+
 .task-message {
   margin-top: 4px;
   color: var(--el-text-color-secondary);
@@ -337,5 +397,16 @@ onBeforeUnmount(() => {
   color: #d1fae5;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .backup-tabs {
+    :deep(.el-tabs__item) {
+      flex: 1;
+      min-width: 0;
+      padding: 0 12px;
+      text-align: center;
+    }
+  }
 }
 </style>
