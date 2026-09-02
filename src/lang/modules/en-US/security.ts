@@ -286,6 +286,24 @@ export default {
       unbanReasonPlaceholder: 'Explain why this ban is being removed',
       unbanQueued: 'Unban task queued'
     },
+    unbanRecord: {
+      title: 'Unban records',
+      description: 'Review manual and automatic unban history for active bans, separate from security incidents.',
+      open: 'View unban records',
+      empty: 'No unban records',
+      targetIp: 'Target IP',
+      policy: 'Policy',
+      triggeredBy: 'Unban method',
+      triggeredByUser: 'Manual unban',
+      triggeredBySystem: 'Automatic unban',
+      status: 'Status',
+      statusProcessing: 'Processing',
+      statusSucceeded: 'Unbanned',
+      statusFailed: 'Unban failed',
+      startedAt: 'Started at',
+      finishedAt: 'Finished at',
+      failureReason: 'Failure reason'
+    },
     task: {
       monitorRetryLimit: 'Failed to retrieve task status. Refresh manually.',
       title: 'Security tasks',

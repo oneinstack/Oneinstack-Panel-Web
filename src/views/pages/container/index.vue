@@ -10,6 +10,7 @@ import {
   watch,
 } from "vue";
 import {
+  ArrowDown,
   Delete,
   Document,
   Download,
@@ -17,6 +18,7 @@ import {
   Connection,
   CollectionTag,
   Monitor,
+  MoreFilled,
   Plus,
   Refresh,
   SwitchButton,
@@ -741,6 +743,27 @@ const shortId = (id?: string) =>
     .replace(/^sha256:/, "")
     .slice(0, 12) || "--";
 
+const actionTextWidth = (value: string) =>
+  Array.from(value).reduce(
+    (width, character) => width + (/[^\u0000-\u00ff]/.test(character) ? 14 : 7),
+    0,
+  );
+
+// Keep the fixed right column compact while accommodating translated labels.
+const containerActionColumnWidth = computed(() => {
+  const labels = [
+    t("container.detail", "Details"),
+    t("container.logs", "Logs"),
+    t("container.terminal.entry", "Terminal"),
+    t("container.more", "More"),
+  ];
+  const buttonWidth = labels.reduce(
+    (width, label, index) => width + actionTextWidth(label) + (index === 3 ? 58 : 36),
+    0,
+  );
+  return Math.max(300, Math.ceil(buttonWidth + 48));
+});
+
 const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
   { type: "selection", width: 44 },
   {
@@ -782,10 +805,11 @@ const containerColumns = computed<ColumnItem<ContainerItem>[]>(() => [
   {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
-    width: 640,
+    width: containerActionColumnWidth.value,
     fixed: "right",
+    align: "right",
     slot: "containerAction",
-    className: "table-action-column",
+    className: "table-action-column container-action-column",
   },
 ]);
 const imageColumns = computed<ColumnItem<ImageItem>[]>(() => [
@@ -2568,6 +2592,14 @@ const runContainerAction = async (
   }
 };
 
+const handleContainerMoreAction = (command: string, row: ContainerItem) => {
+  if (command === "connectNetwork") {
+    void reconnectContainerNetwork(row);
+    return;
+  }
+  void runContainerAction(row, command as ContainerAction);
+};
+
 const showBatchResult = async (
   data: any,
   fallbackMessage: string,
@@ -4026,85 +4058,81 @@ onBeforeUnmount(() => {
             >
               {{ t("container.terminal.entry", "Terminal") }}
             </el-button>
-            <el-button
-              link
-              type="warning"
-              :icon="Connection"
-              :disabled="!runtimeAvailable || !canNetworkWrite"
-              @click="reconnectContainerNetwork(row)"
+            <el-dropdown
+              trigger="click"
+              popper-class="table-action-popper"
+              @command="(command: string) => handleContainerMoreAction(command, row)"
             >
-              {{
-                isCustomDockerNetworkMode(row.NetworkMode)
-                  ? t("container.reconnectNetwork", "Reconnect network")
-                  : t("container.connectNetwork", "Connect network")
-              }}
-            </el-button>
-            <el-button
-              v-if="canStartContainer(row)"
-              link
-              type="primary"
-              :icon="VideoPlay"
-              :loading="actionLoading === `${row.ID}:start`"
-              :disabled="!runtimeAvailable || !canWrite"
-              @click="runContainerAction(row, 'start')"
-            >
-              {{ t("container.start", "Start") }}
-            </el-button>
-            <el-button
-              v-if="canStopContainer(row)"
-              link
-              type="primary"
-              :icon="SwitchButton"
-              :loading="actionLoading === `${row.ID}:stop`"
-              :disabled="!runtimeAvailable || !canWrite"
-              @click="runContainerAction(row, 'stop')"
-            >
-              {{ t("container.stop", "Stop") }}
-            </el-button>
-            <el-button
-              v-if="canPauseContainer(row)"
-              link
-              type="primary"
-              :icon="VideoPause"
-              :loading="actionLoading === `${row.ID}:pause`"
-              :disabled="!runtimeAvailable || !canWrite"
-              @click="runContainerAction(row, 'pause')"
-            >
-              {{ t("container.pause", "Pause") }}
-            </el-button>
-            <el-button
-              v-if="canUnpauseContainer(row)"
-              link
-              type="primary"
-              :icon="VideoPlay"
-              :loading="actionLoading === `${row.ID}:unpause`"
-              :disabled="!runtimeAvailable || !canWrite"
-              @click="runContainerAction(row, 'unpause')"
-            >
-              {{ t("container.resume", "Resume") }}
-            </el-button>
-            <el-button
-              v-if="canRestartContainer(row)"
-              link
-              type="primary"
-              :icon="Refresh"
-              :loading="actionLoading === `${row.ID}:restart`"
-              :disabled="!runtimeAvailable || !canWrite"
-              @click="runContainerAction(row, 'restart')"
-            >
-              {{ t("container.restart", "Restart") }}
-            </el-button>
-            <el-button
-              v-if="canDeleteContainer(row)"
-              link
-              type="danger"
-              :icon="Delete"
-              :loading="actionLoading === `${row.ID}:rm`"
-              :disabled="!runtimeAvailable || !canDelete"
-              @click="runContainerAction(row, 'rm')"
-            >
-              {{ t("container.delete", "Delete") }}
-            </el-button>
+              <el-button class="action-more-trigger" type="primary" link :icon="MoreFilled">
+                {{ t("container.more", "More") }}
+                <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+              </el-button>
+              <template #dropdown>
+                <el-dropdown-menu class="table-action-menu">
+                  <el-dropdown-item
+                    command="connectNetwork"
+                    :disabled="!runtimeAvailable || !canNetworkWrite"
+                  >
+                    <el-icon><Connection /></el-icon>
+                    {{
+                      isCustomDockerNetworkMode(row.NetworkMode)
+                        ? t("container.reconnectNetwork", "Reconnect network")
+                        : t("container.connectNetwork", "Connect network")
+                    }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canStartContainer(row)"
+                    command="start"
+                    :disabled="!runtimeAvailable || !canWrite"
+                  >
+                    <el-icon><VideoPlay /></el-icon>
+                    {{ t("container.start", "Start") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canStopContainer(row)"
+                    command="stop"
+                    :disabled="!runtimeAvailable || !canWrite"
+                  >
+                    <el-icon><SwitchButton /></el-icon>
+                    {{ t("container.stop", "Stop") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canPauseContainer(row)"
+                    command="pause"
+                    :disabled="!runtimeAvailable || !canWrite"
+                  >
+                    <el-icon><VideoPause /></el-icon>
+                    {{ t("container.pause", "Pause") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canUnpauseContainer(row)"
+                    command="unpause"
+                    :disabled="!runtimeAvailable || !canWrite"
+                  >
+                    <el-icon><VideoPlay /></el-icon>
+                    {{ t("container.resume", "Resume") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canRestartContainer(row)"
+                    command="restart"
+                    :disabled="!runtimeAvailable || !canWrite"
+                  >
+                    <el-icon><Refresh /></el-icon>
+                    {{ t("container.restart", "Restart") }}
+                  </el-dropdown-item>
+                  <el-dropdown-item
+                    v-if="canDeleteContainer(row)"
+                    class="table-action-menu__danger"
+                    command="rm"
+                    divided
+                    :disabled="!runtimeAvailable || !canDelete"
+                  >
+                    <el-icon><Delete /></el-icon>
+                    {{ t("container.delete", "Delete") }}
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
           </div>
         </template>
       </custom-table>

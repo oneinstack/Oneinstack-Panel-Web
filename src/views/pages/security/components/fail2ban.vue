@@ -7,6 +7,7 @@ import { Api } from '@/api/modules'
 import { HttpRequestError } from '@/api'
 import i18n from '@/lang'
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
+import CustomDrawer from '@/components/custom-drawer.vue'
 import { submitOperation, isOperationCancelled } from '@/utils/operationPreview'
 import { useSoftwareTaskStore } from '@/stores/modules/softwareTask'
 import InstallTaskDrawer from '../../software/components/InstallTaskDrawer.vue'
@@ -98,6 +99,23 @@ interface ActiveBan {
   expiresAt?: string
 }
 
+interface UnbanRecord {
+  id: string
+  operation: 'unban_ip'
+  policyId: string
+  targetIp: string
+  status: TaskStatus
+  message?: string
+  errorCode?: string
+  errorMessage?: string
+  requestedBy?: number
+  triggeredBy: 'user' | 'system'
+  startedAt?: string
+  finishedAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
 interface Fail2banTask {
   id: string
   operation: 'apply_policy' | 'delete_policy' | 'ban_ip' | 'unban_ip'
@@ -158,6 +176,7 @@ const loading = reactive({
   policies: false,
   incidents: false,
   bans: false,
+  unbanRecords: false,
   tasks: false,
   install: false,
   policySubmit: false,
@@ -178,8 +197,10 @@ const templates = ref<Fail2banTemplate[]>([])
 const policies = ref<Fail2banPolicy[]>([])
 const incidents = ref<SecurityIncident[]>([])
 const bans = ref<ActiveBan[]>([])
+const unbanRecords = ref<UnbanRecord[]>([])
 const tasks = ref<Fail2banTask[]>([])
 const incidentTotal = ref(0)
+const unbanRecordTotal = ref(0)
 const taskTotal = ref(0)
 
 const incidentFilters = reactive({
@@ -189,6 +210,10 @@ const incidentFilters = reactive({
   remoteIp: ''
 })
 const taskPagination = reactive({
+  page: 1,
+  pageSize: 20
+})
+const unbanRecordPagination = reactive({
   page: 1,
   pageSize: 20
 })
@@ -209,6 +234,7 @@ const policyForm = reactive({
 })
 
 const manualBanVisible = ref(false)
+const unbanRecordVisible = ref(false)
 const manualBanFormRef = ref<FormInstance>()
 const manualBanIpInputRef = ref<any>()
 const manualBanForm = reactive({
@@ -374,6 +400,23 @@ const unbanActionLabel = (target: string) => {
     : t('security.fail2ban.ban.unban', '解除封禁')
 }
 
+const unbanRecordPolicyName = (policyId: string) =>
+  policies.value.find(item => String(item.id) === String(policyId))?.name || policyId || '—'
+
+const unbanRecordStatusLabel = (statusValue: UnbanRecord['status']) => {
+  if (statusValue === 'queued' || statusValue === 'running') {
+    return t('security.fail2ban.unbanRecord.statusProcessing', '处理中')
+  }
+  if (statusValue === 'succeeded') return t('security.fail2ban.unbanRecord.statusSucceeded', '已解封')
+  return t('security.fail2ban.unbanRecord.statusFailed', '解封失败')
+}
+
+const unbanRecordStatusType = (statusValue: UnbanRecord['status']) =>
+  statusValue === 'succeeded' ? 'success' : statusValue === 'failed' || statusValue === 'interrupted' ? 'danger' : 'info'
+
+const unbanRecordFailureReason = (record: UnbanRecord) =>
+  record.errorMessage || (record.status === 'failed' || record.status === 'interrupted' ? record.message : '') || '—'
+
 const manualBanDisabled = computed(() => {
   const target = manualBanForm.ip.trim()
   if (!target) return false
@@ -431,6 +474,16 @@ const banColumns = computed<ColumnItem<ActiveBan>[]>(() => [
   { prop: 'banTimeSeconds', label: t('security.fail2ban.ban.duration', '封禁时长'), minWidth: 120, slot: 'banTimeSeconds' },
   { prop: 'expiresAt', label: t('security.fail2ban.ban.expiresAt', '到期时间'), minWidth: 190, slot: 'expiresAt' },
   { prop: 'actionColumn', label: t('common.action', '操作'), width: 120, fixed: 'right', slot: 'actionColumn' }
+])
+
+const unbanRecordColumns = computed<ColumnItem<UnbanRecord>[]>(() => [
+  { prop: 'targetIp', label: t('security.fail2ban.unbanRecord.targetIp', '目标 IP'), minWidth: 145 },
+  { prop: 'policyId', label: t('security.fail2ban.unbanRecord.policy', '策略'), minWidth: 180, slot: 'policy' },
+  { prop: 'triggeredBy', label: t('security.fail2ban.unbanRecord.triggeredBy', '解封方式'), width: 120, slot: 'triggeredBy' },
+  { prop: 'status', label: t('security.fail2ban.unbanRecord.status', '状态'), width: 110, slot: 'status' },
+  { prop: 'startedAt', label: t('security.fail2ban.unbanRecord.startedAt', '发起时间'), minWidth: 170, slot: 'startedAt' },
+  { prop: 'finishedAt', label: t('security.fail2ban.unbanRecord.finishedAt', '完成时间'), minWidth: 170, slot: 'finishedAt' },
+  { prop: 'errorMessage', label: t('security.fail2ban.unbanRecord.failureReason', '失败原因'), minWidth: 220, slot: 'failureReason', showOverflowTooltip: true }
 ])
 
 const taskColumns = computed<ColumnItem<Fail2banTask>[]>(() => [
@@ -563,9 +616,23 @@ const loadBans = async () => {
   }
 }
 
+const loadUnbanRecords = async () => {
+  loading.unbanRecords = true
+  try {
+    const response = await Api.getFail2banUnbanRecords({
+      page: unbanRecordPagination.page,
+      pageSize: unbanRecordPagination.pageSize
+    }, requestLanguage.value)
+    unbanRecords.value = (response?.data?.data || []) as UnbanRecord[]
+    unbanRecordTotal.value = response?.data?.total || unbanRecords.value.length
+  } finally {
+    loading.unbanRecords = false
+  }
+}
+
 const refreshAfterTask = async () => {
   if (!refreshAfterTaskPromise) {
-    refreshAfterTaskPromise = Promise.allSettled([loadStatus(), loadPolicies(), loadIncidents(), loadBans(), loadTasks()])
+    refreshAfterTaskPromise = Promise.allSettled([loadStatus(), loadPolicies(), loadIncidents(), loadBans(), loadUnbanRecords(), loadTasks()])
       .then(() => undefined)
       .finally(() => {
         refreshAfterTaskPromise = null
@@ -725,7 +792,7 @@ const loadTasks = async () => {
 }
 
 const loadAll = async () => {
-  await Promise.all([loadStatus(), loadTemplates(), loadPolicies(), loadIncidents(), loadBans(), loadTasks()])
+  await Promise.all([loadStatus(), loadTemplates(), loadPolicies(), loadIncidents(), loadBans(), loadUnbanRecords(), loadTasks()])
 }
 
 const submitTaskOperation = async (operation: string, payload: unknown) => {
@@ -919,6 +986,11 @@ const unban = async (row: ActiveBan) => {
   }
 }
 
+const openUnbanRecordDrawer = () => {
+  unbanRecordVisible.value = true
+  void loadUnbanRecords()
+}
+
 const installFail2ban = async () => {
   loading.install = true
   try {
@@ -995,7 +1067,7 @@ onMounted(() => {
   }, 1000)
   banRefreshTimer = window.setInterval(() => {
     // The backend performs automatic unban asynchronously; refresh instead of assuming it succeeded locally.
-    void Promise.all([loadBans(), loadTasks()])
+    void Promise.all([loadBans(), loadUnbanRecords(), loadTasks()])
   }, 15000)
   void softwareTaskStore.loadActive().catch(() => undefined)
   void loadAll().catch((error) => {
@@ -1284,6 +1356,10 @@ onBeforeUnmount(() => {
           <h3>{{ $t('security.fail2ban.ban.title') }}</h3>
           <p>{{ $t('security.fail2ban.ban.description') }}</p>
         </div>
+        <div class="section-actions">
+          <el-button plain :icon="DocumentAdd" @click="openUnbanRecordDrawer">
+            {{ $t('security.fail2ban.unbanRecord.open') }}
+          </el-button>
           <el-button
             v-if="props.capabilities.canBan"
             type="primary"
@@ -1292,8 +1368,9 @@ onBeforeUnmount(() => {
             :disabled="!canOperate || !policies.length || manualBanDisabled"
             @click="openManualBan"
           >
-          {{ $t('security.fail2ban.ban.manual') }}
-        </el-button>
+            {{ $t('security.fail2ban.ban.manual') }}
+          </el-button>
+        </div>
       </div>
 
       <custom-table
@@ -1366,6 +1443,64 @@ onBeforeUnmount(() => {
         />
       </div>
     </section>
+
+    <custom-drawer
+      :visible="unbanRecordVisible"
+      :title="$t('security.fail2ban.unbanRecord.title')"
+      size="min(1100px, 92vw)"
+      destroy-on-close
+      :show-footer="false"
+      append-to-body
+      :on-close="() => { unbanRecordVisible = false }"
+    >
+      <div class="unban-record-drawer">
+        <p class="drawer-description">{{ $t('security.fail2ban.unbanRecord.description') }}</p>
+        <custom-table
+          :loading="loading.unbanRecords"
+          :columns="unbanRecordColumns"
+          :data="unbanRecords"
+          :pagination="false"
+          :empty-text="$t('security.fail2ban.unbanRecord.empty')"
+        >
+          <template #policy="{ row }">
+            {{ unbanRecordPolicyName(row.policyId) }}
+          </template>
+          <template #triggeredBy="{ row }">
+            {{ row.triggeredBy === 'system'
+              ? $t('security.fail2ban.unbanRecord.triggeredBySystem')
+              : $t('security.fail2ban.unbanRecord.triggeredByUser') }}
+          </template>
+          <template #status="{ row }">
+            <el-tag :type="unbanRecordStatusType(row.status)" effect="light">
+              {{ unbanRecordStatusLabel(row.status) }}
+            </el-tag>
+          </template>
+          <template #startedAt="{ row }">
+            {{ formatDateTime(row.startedAt || row.createdAt) }}
+          </template>
+          <template #finishedAt="{ row }">
+            {{ formatDateTime(row.finishedAt) }}
+          </template>
+          <template #failureReason="{ row }">
+            <span :class="{ 'failure-reason': Boolean(row.errorMessage || row.status === 'failed' || row.status === 'interrupted') }">
+              {{ unbanRecordFailureReason(row) }}
+            </span>
+          </template>
+        </custom-table>
+        <div class="pagination-wrap">
+          <el-pagination
+            v-model:current-page="unbanRecordPagination.page"
+            v-model:page-size="unbanRecordPagination.pageSize"
+            background
+            layout="total, sizes, prev, pager, next"
+            :total="unbanRecordTotal"
+            :page-sizes="[10, 20, 50, 100]"
+            @current-change="loadUnbanRecords"
+            @size-change="unbanRecordPagination.page = 1; loadUnbanRecords()"
+          />
+        </div>
+      </div>
+    </custom-drawer>
 
     <el-dialog
       v-model="policyDialogVisible"
@@ -1555,6 +1690,7 @@ onBeforeUnmount(() => {
 
 .hero-card__chips,
 .hero-card__actions,
+.section-actions,
 .section-filters,
 .table-actions {
   display: flex;
@@ -1711,6 +1847,11 @@ onBeforeUnmount(() => {
   padding-top: 16px;
   display: flex;
   justify-content: flex-end;
+}
+
+.drawer-description {
+  margin-bottom: 18px;
+  color: var(--text-secondary);
 }
 
 @media (max-width: 900px) {

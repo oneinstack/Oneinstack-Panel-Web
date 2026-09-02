@@ -163,6 +163,7 @@ export default {
   forceStop: '强制停止',
   detail: '详情',
   logs: '日志',
+  more: '更多',
   update: '更新',
   reconnectNetwork: '重连网络',
   connectNetwork: '连接网络',

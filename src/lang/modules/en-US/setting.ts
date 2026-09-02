@@ -8,6 +8,7 @@ export default {
     accountSecurity: 'Security',
     backup: 'Backup and restore',
     update: 'Panel update',
+    navigation: 'Navigation',
     security: 'Security settings',
     alarm: 'Alarm notifications',
     message: 'Message notifications'
@@ -93,6 +94,17 @@ export default {
     saveConfig: 'Save configuration',
     copyAccessAddress: 'Copy access address',
     rotateEntry: 'Rotate secure entry'
+  },
+  navigation: {
+    title: 'Navigation display',
+    description: 'Choose which entries appear in the left navigation for this browser.',
+    tip: 'Hiding an entry only changes the left navigation. It does not remove the route or change permissions.',
+    summary: '{count} entries hidden',
+    localOnly: 'Saved in this browser',
+    reset: 'Restore all',
+    resetSuccess: 'All navigation entries restored',
+    shown: 'Navigation entry shown',
+    hidden: 'Navigation entry hidden'
   },
   update: {
     title: 'Panel update',

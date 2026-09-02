@@ -129,6 +129,20 @@ export const securityApi = {
       withLanguage(language),
     );
   },
+  /** 获取 Fail2ban 解封记录 */
+  getFail2banUnbanRecords: (
+    params?: {
+      page?: number;
+      pageSize?: number;
+    },
+    language?: string,
+  ) => {
+    return http.get(
+      "/security/fail2ban/unban-records",
+      params,
+      withLanguage(language),
+    );
+  },
   /** 获取 Fail2ban 异常事件 */
   getFail2banIncidents: (
     params?: {

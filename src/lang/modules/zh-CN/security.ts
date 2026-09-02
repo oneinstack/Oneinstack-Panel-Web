@@ -286,6 +286,24 @@ export default {
       unbanReasonPlaceholder: '说明为什么解除该封禁',
       unbanQueued: '解封任务已进入队列'
     },
+    unbanRecord: {
+      title: '解封记录',
+      description: '展示实时封禁的手动和自动解封历史，不包含安全事件记录。',
+      open: '查看解封记录',
+      empty: '暂无解封记录',
+      targetIp: '目标 IP',
+      policy: '策略',
+      triggeredBy: '解封方式',
+      triggeredByUser: '手动解封',
+      triggeredBySystem: '自动解封',
+      status: '状态',
+      statusProcessing: '处理中',
+      statusSucceeded: '已解封',
+      statusFailed: '解封失败',
+      startedAt: '发起时间',
+      finishedAt: '完成时间',
+      failureReason: '失败原因'
+    },
     task: {
       monitorRetryLimit: '任务状态获取失败，可手动刷新',
       title: '安全任务',

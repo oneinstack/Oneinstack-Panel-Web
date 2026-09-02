@@ -8,6 +8,7 @@ export default {
     accountSecurity: '安全设置',
     backup: '备份还原',
     update: '面板更新',
+    navigation: '导航显示',
     security: '安全设置',
     alarm: '告警通知',
     message: '消息通知'
@@ -93,6 +94,17 @@ export default {
     saveConfig: '保存配置',
     copyAccessAddress: '复制访问地址',
     rotateEntry: '轮换安全入口'
+  },
+  navigation: {
+    title: '导航显示',
+    description: '选择当前浏览器左侧导航中需要显示的入口。',
+    tip: '隐藏入口只影响左侧导航，不会删除路由，也不会改变权限。',
+    summary: '已隐藏 {count} 个入口',
+    localOnly: '仅保存在当前浏览器',
+    reset: '恢复全部',
+    resetSuccess: '导航入口已全部恢复',
+    shown: '导航入口已显示',
+    hidden: '导航入口已隐藏'
   },
   update: {
     title: '面板更新',

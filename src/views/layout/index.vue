@@ -203,6 +203,7 @@ const filterVisibleNavItems = (items: NavItem[]): NavItem[] => items.flatMap((it
     return children.length ? [{ ...item, children }] : []
   }
   if (item.adminOnly && !item.matrixKeys?.length && !isPrivilegedUser.value) return []
+  if (item.path.startsWith('/') && sconfig.isMenuHidden(item.path)) return []
   return hasMenuPermission(item) ? [item] : []
 })
 const visibleNavList = computed(() => filterVisibleNavItems(conf.navList))

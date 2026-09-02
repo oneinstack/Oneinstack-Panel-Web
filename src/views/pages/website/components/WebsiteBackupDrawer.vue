@@ -332,15 +332,26 @@ onBeforeUnmount(() => {
 
   :deep(.el-tabs__nav) {
     display: flex;
+    align-items: center;
+    max-width: 100%;
     gap: 4px;
     padding: 4px;
     border: 1px solid var(--border-subtle);
     border-radius: 12px;
     background: var(--surface-muted);
     box-shadow: inset 0 1px 0 color-mix(in srgb, white 5%, transparent);
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  :deep(.el-tabs__nav::-webkit-scrollbar) {
+    display: none;
   }
 
   :deep(.el-tabs__item) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     min-width: 96px;
     height: 38px;
     padding: 0 20px;
@@ -348,7 +359,8 @@ onBeforeUnmount(() => {
     color: var(--text-tertiary);
     font-size: 13px;
     font-weight: 650;
-    line-height: 38px;
+    line-height: normal;
+    white-space: nowrap;
     transition: color 0.18s ease, background-color 0.18s ease;
   }
 

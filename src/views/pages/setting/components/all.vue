@@ -6,6 +6,7 @@ import PanelUpdate from './panel-update.vue'
 import PanelBackup from './panel-backup.vue'
 import AccountSecurity from './account-security.vue'
 import AppearanceSetting from './appearance-setting.vue'
+import NavigationSetting from './navigation-setting.vue'
 import SettingSectionTabs from './setting-section-tabs.vue'
 import { Api } from '@/api/modules'
 import { ElMessage } from 'element-plus'
@@ -27,6 +28,12 @@ const tabItems = markRaw([
     label: 'Panel settings',
     labelKey: 'setting.tabs.panel',
     component: panelSetting
+  },
+  {
+    key: 'navigation',
+    label: 'Navigation',
+    labelKey: 'setting.tabs.navigation',
+    component: NavigationSetting
   },
   {
     key: 'network',

@@ -169,6 +169,7 @@ export default {
   forceStop: 'Force stop',
   detail: 'Details',
   logs: 'Logs',
+  more: 'More',
   update: 'Update',
   reconnectNetwork: 'Reconnect network',
   connectNetwork: 'Connect network',
