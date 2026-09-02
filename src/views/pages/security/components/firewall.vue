@@ -1562,7 +1562,6 @@ onMounted(() => {
         <template #strategy="{ row }">
           <el-tag
             :type="row.strategy === 'allow' ? 'success' : 'danger'"
-            effect="plain"
           >
             {{ strategyLabel(row.strategy) }}
           </el-tag>

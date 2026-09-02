@@ -386,18 +386,18 @@ const ipv4CidrPattern = /^(25[0-5]|2[0-4]\d|1\d{2}|[1-9]?\d)(\.(25[0-5]|2[0-4]\d
 const validateManualBanIp = (_rule: unknown, value: string, callback: (error?: Error) => void) => {
   const target = value.trim()
   if (!target) {
-    callback(new Error(t('security.fail2ban.ban.ipRequired', '请输入 IP 地址')))
+    callback(new Error(t('security.fail2ban.ban.ipRequired')))
     return
   }
   if (!ipv4Pattern.test(target) && !ipv4CidrPattern.test(target)) {
-    callback(new Error(t('security.fail2ban.ban.ipInvalid', '请输入有效的 IPv4 地址或 IPv4/CIDR')))
+    callback(new Error(t('security.fail2ban.ban.ipInvalid')))
     return
   }
   callback()
 }
 
 const manualBanRules = computed<FormRules>(() => ({
-  policyId: [{ required: true, message: t('security.fail2ban.ban.policyRequired', '请选择策略'), trigger: 'change' }],
+  policyId: [{ required: true, message: t('security.fail2ban.ban.policyRequired'), trigger: 'change' }],
   ip: [{ validator: validateManualBanIp, trigger: ['blur', 'change'] }],
   reason: [{ required: true, message: t('security.fail2ban.ban.reasonRequired', '请输入原因'), trigger: 'blur' }],
   durationValue: [{ validator: validateManualBanDuration, trigger: ['blur', 'change'] }]
@@ -1435,7 +1435,7 @@ onBeforeUnmount(() => {
             ref="manualBanIpInputRef"
             v-model="manualBanForm.ip"
             clearable
-            :placeholder="$t('security.fail2ban.ban.ipPlaceholder', '请输入 IPv4 地址或 IPv4/CIDR')"
+            :placeholder="$t('security.fail2ban.ban.ipPlaceholder')"
           />
         </el-form-item>
         <el-form-item :label="$t('security.fail2ban.ban.duration')" prop="durationValue">
@@ -1447,14 +1447,14 @@ onBeforeUnmount(() => {
               <el-option :label="$t('security.fail2ban.ban.unitDays')" value="days" />
             </el-select>
           </div>
-          <div class="field-help">{{ t('security.fail2ban.ban.durationHint', '将按所选单位换算后提交，范围为 5 分钟到 365 天') }}</div>
+          <div class="field-help">{{ t('security.fail2ban.ban.durationHint') }}</div>
         </el-form-item>
         <el-form-item :label="$t('security.fail2ban.ban.reason')" prop="reason">
           <el-input
             v-model="manualBanForm.reason"
             type="textarea"
             :rows="4"
-            :placeholder="$t('security.fail2ban.ban.reasonPlaceholder', '说明为什么确认该来源需要封禁')"
+            :placeholder="$t('security.fail2ban.ban.reasonPlaceholder')"
           />
         </el-form-item>
       </el-form>

@@ -36,21 +36,6 @@ const buildCategoryQuery = () => {
   return undefined
 }
 
-const categoryNameKeys: Record<string, string> = {
-  全部: 'software.category.all',
-  建站: 'software.category.website',
-  数据库: 'software.category.database',
-  Web服务器: 'software.category.webServer',
-  运行环境: 'software.category.runtime',
-  缓存: 'software.category.cache',
-  实用工具: 'software.category.utility',
-  容器: 'software.category.container',
-  安全: 'software.category.security',
-  云存储: 'software.category.cloudStorage',
-  'AI / 大模型': 'software.category.ai',
-  其他: 'software.category.other'
-}
-
 const conf = reactive({
   dataTypelist: markRaw([
     {
@@ -78,9 +63,7 @@ const conf = reactive({
     selected: '',
     list: [] as SoftwareCategory[],
     getLabel: (item: SoftwareCategory) => {
-      const key = categoryNameKeys[item.name]
-      const label = key ? t(key, item.name) : item.name
-      return `${label}${typeof item.count === 'number' ? ` (${item.count})` : ''}`
+      return `${item.name}${typeof item.count === 'number' ? ` (${item.count})` : ''}`
     },
     handleClick: async ({ props }: TabsPaneContext) => {
       const tab = conf.tabs.list.find((item) => item.value === String(props.name))

@@ -1262,10 +1262,23 @@ onMounted(() => {
   }
 
   .status-right {
+    display: flex;
+    align-items: center;
     height: 36px;
     border: 1px solid var(--border-subtle);
     border-radius: 9px;
     background: var(--surface-subtle);
+
+    :deep(.el-select),
+    :deep(.el-select__wrapper) {
+      height: 100%;
+      min-height: 0;
+    }
+
+    :deep(.el-select__wrapper) {
+      display: flex;
+      align-items: center;
+    }
   }
 
   .norule {
