@@ -558,6 +558,18 @@ const resetMenuEditorForm = () => {
   menuEditorDialog.form.permissionCodes = []
 }
 
+const handleMenuTypeChange = (value: MenuEditorForm['type']) => {
+  if (value === 'directory') {
+    menuEditorDialog.form.targetType = ''
+    menuEditorDialog.form.targetKey = ''
+    menuEditorDialog.form.permissionCodes = []
+    return
+  }
+
+  menuEditorDialog.form.targetType = value === 'button' ? 'action' : 'route'
+  menuEditorDialog.form.targetKey = ''
+}
+
 const openMenuEditor = async (menu?: AccessMenuNode | null) => {
   resetMenuEditorForm()
   await menuEditorDialog.open(menu || null)
@@ -577,10 +589,6 @@ const submitMenuEditor = async () => {
   if (menuEditorDialog.mode === 'create') {
     if (!key) {
       ElMessage.warning(t('userManagement.inputMenuKey', 'Enter a menu key'))
-      return
-    }
-    if (!/^[a-z][a-z0-9._-]{0,94}$/.test(key)) {
-      ElMessage.warning(t('userManagement.menuKeyError', 'Menu key must start with a lowercase letter and may contain lowercase letters, numbers, ".", "_" or "-"'))
       return
     }
   }
@@ -610,7 +618,6 @@ const submitMenuEditor = async () => {
   try {
     const payload = {
       key,
-      code: key,
       parentKey: parentKey || undefined,
       type,
       name,
@@ -622,7 +629,7 @@ const submitMenuEditor = async () => {
       enabled: menuEditorDialog.form.enabled,
       superAdminOnly: menuEditorDialog.form.superAdminOnly,
       featureKey: menuEditorDialog.form.featureKey || undefined,
-      permissionCodes
+      permissionCodes: type === 'directory' ? undefined : permissionCodes
     }
     if (menuEditorDialog.mode === 'create') {
       await Api.createAccessMenu(payload as any)
@@ -1384,7 +1391,7 @@ onMounted(async () => {
     >
       <div class="dialog-form">
         <el-alert
-          :title="t('userManagement.menuFormTip', 'Menu key, target type, and target key are validated against the backend contract.')"
+          :title="t('userManagement.menuFormTip', 'Target type and target key are validated against the backend contract.')"
           type="info"
           :closable="false"
           show-icon
@@ -1428,6 +1435,7 @@ onMounted(async () => {
             <el-segmented
               v-model="menuEditorDialog.form.type"
               class="menu-type-segmented"
+              @change="handleMenuTypeChange"
               :options="[
                 { label: t('userManagement.menuTypes.directory', 'Directory'), value: 'directory' },
                 { label: t('userManagement.menuTypes.page', 'Page'), value: 'page' },
@@ -1484,7 +1492,10 @@ onMounted(async () => {
               <el-option :label="t('userManagement.featureKeys.bastion', 'Bastion')" value="bastion" />
             </el-select>
           </el-form-item>
-          <el-form-item :label="$t('userManagement.permissionSelection', 'Permission codes')">
+          <el-form-item
+            v-if="menuEditorDialog.form.type !== 'directory'"
+            :label="$t('userManagement.permissionSelection', 'Permission codes')"
+          >
             <div class="permission-panel">
               <div class="permission-panel__summary">
                 <span>{{ t('userManagement.menuPermissionSelectionHint', 'Select the backend permission codes bound to this menu.') }}</span>

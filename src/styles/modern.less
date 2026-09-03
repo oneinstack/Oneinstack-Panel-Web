@@ -127,6 +127,9 @@ html {
 :root:root.dark .el-button:disabled,
 :root:root.dark .el-button:disabled:hover,
 :root:root.dark .el-button:disabled:focus-visible {
+  --el-button-disabled-text-color: var(--text-tertiary) !important;
+  --el-button-disabled-border-color: rgba(71, 84, 103, 0.7) !important;
+  --el-button-disabled-bg-color: rgba(29, 41, 57, 0.92) !important;
   color: var(--text-tertiary) !important;
   border-color: rgba(71, 84, 103, 0.7) !important;
   background: rgba(29, 41, 57, 0.92) !important;
@@ -140,27 +143,149 @@ html {
 :root:root.dark .el-button--primary.is-disabled:hover,
 :root:root.dark .el-button--primary:disabled,
 :root:root.dark .el-button--primary:disabled:hover {
-  color: var(--text-tertiary) !important;
-  border-color: rgb(var(--primary-color)) !important;
-  background: rgba(var(--primary-color), 0.52) !important;
+  --el-button-disabled-text-color: var(--table-action-color) !important;
+  --el-button-disabled-border-color: rgba(var(--primary-color), 0.42) !important;
+  --el-button-disabled-bg-color: rgba(var(--primary-color), 0.18) !important;
+  color: var(--table-action-color) !important;
+  border-color: rgba(var(--primary-color), 0.42) !important;
+  background: rgba(var(--primary-color), 0.18) !important;
+}
+
+:root:root.dark .el-button--success.is-disabled,
+:root:root.dark .el-button--success.is-disabled:hover,
+:root:root.dark .el-button--success:disabled,
+:root:root.dark .el-button--success:disabled:hover {
+  --el-button-disabled-text-color: #6ee7b7 !important;
+  --el-button-disabled-border-color: rgba(var(--success-color), 0.42) !important;
+  --el-button-disabled-bg-color: rgba(var(--success-color), 0.16) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(var(--success-color), 0.42) !important;
+  background: rgba(var(--success-color), 0.16) !important;
 }
 
 :root:root.dark .el-button--warning.is-disabled,
 :root:root.dark .el-button--warning.is-disabled:hover,
 :root:root.dark .el-button--warning:disabled,
 :root:root.dark .el-button--warning:disabled:hover {
+  --el-button-disabled-text-color: #fcd34d !important;
+  --el-button-disabled-border-color: rgba(var(--warning-color), 0.42) !important;
+  --el-button-disabled-bg-color: rgba(var(--warning-color), 0.16) !important;
   color: #fcd34d !important;
-  border-color: rgba(180, 131, 19, 0.4) !important;
-  background: rgba(120, 82, 12, 0.42) !important;
+  border-color: rgba(var(--warning-color), 0.42) !important;
+  background: rgba(var(--warning-color), 0.16) !important;
+}
+
+:root:root.dark .el-button--danger.is-disabled,
+:root:root.dark .el-button--danger.is-disabled:hover,
+:root:root.dark .el-button--danger:disabled,
+:root:root.dark .el-button--danger:disabled:hover {
+  --el-button-disabled-text-color: var(--table-action-danger-color) !important;
+  --el-button-disabled-border-color: rgba(var(--error-color), 0.42) !important;
+  --el-button-disabled-bg-color: rgba(var(--error-color), 0.16) !important;
+  color: var(--table-action-danger-color) !important;
+  border-color: rgba(var(--error-color), 0.42) !important;
+  background: rgba(var(--error-color), 0.16) !important;
+}
+
+:root:root.dark .el-button--info.is-disabled,
+:root:root.dark .el-button--info.is-disabled:hover,
+:root:root.dark .el-button--info:disabled,
+:root:root.dark .el-button--info:disabled:hover {
+  --el-button-disabled-text-color: var(--text-placeholder) !important;
+  --el-button-disabled-border-color: rgba(148, 163, 184, 0.38) !important;
+  --el-button-disabled-bg-color: rgba(148, 163, 184, 0.14) !important;
+  color: var(--text-placeholder) !important;
+  border-color: rgba(148, 163, 184, 0.38) !important;
+  background: rgba(148, 163, 184, 0.14) !important;
 }
 
 :root:root.dark .el-button.is-link.is-disabled,
 :root:root.dark .el-button.is-link.is-disabled:hover,
+:root:root.dark .el-button.is-link.is-disabled:focus-visible,
 :root:root.dark .el-button.is-link:disabled,
-:root:root.dark .el-button.is-link:disabled:hover {
+:root:root.dark .el-button.is-link:disabled:hover,
+:root:root.dark .el-button.is-link:disabled:focus-visible,
+:root:root.dark .el-button.is-text.is-disabled,
+:root:root.dark .el-button.is-text.is-disabled:hover,
+:root:root.dark .el-button.is-text.is-disabled:focus-visible,
+:root:root.dark .el-button.is-text:disabled,
+:root:root.dark .el-button.is-text:disabled:hover,
+:root:root.dark .el-button.is-text:disabled:focus-visible {
+  --el-button-disabled-bg-color: transparent !important;
+  --el-button-disabled-border-color: transparent !important;
   color: var(--text-placeholder) !important;
   border-color: transparent !important;
   background: transparent !important;
+}
+
+:root:root.dark .el-button--primary.is-link.is-disabled,
+:root:root.dark .el-button--primary.is-link.is-disabled:hover,
+:root:root.dark .el-button--primary.is-link:disabled,
+:root:root.dark .el-button--primary.is-link:disabled:hover,
+:root:root.dark .el-button--primary.is-text.is-disabled,
+:root:root.dark .el-button--primary.is-text.is-disabled:hover,
+:root:root.dark .el-button--primary.is-text:disabled,
+:root:root.dark .el-button--primary.is-text:disabled:hover {
+  color: var(--table-action-color) !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .el-button--success.is-link.is-disabled,
+:root:root.dark .el-button--success.is-link.is-disabled:hover,
+:root:root.dark .el-button--success.is-link:disabled,
+:root:root.dark .el-button--success.is-link:disabled:hover,
+:root:root.dark .el-button--success.is-text.is-disabled,
+:root:root.dark .el-button--success.is-text.is-disabled:hover,
+:root:root.dark .el-button--success.is-text:disabled,
+:root:root.dark .el-button--success.is-text:disabled:hover {
+  color: #6ee7b7 !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .el-button--warning.is-link.is-disabled,
+:root:root.dark .el-button--warning.is-link.is-disabled:hover,
+:root:root.dark .el-button--warning.is-link:disabled,
+:root:root.dark .el-button--warning.is-link:disabled:hover,
+:root:root.dark .el-button--warning.is-text.is-disabled,
+:root:root.dark .el-button--warning.is-text.is-disabled:hover,
+:root:root.dark .el-button--warning.is-text:disabled,
+:root:root.dark .el-button--warning.is-text:disabled:hover {
+  color: #fcd34d !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .el-button--danger.is-link.is-disabled,
+:root:root.dark .el-button--danger.is-link.is-disabled:hover,
+:root:root.dark .el-button--danger.is-link:disabled,
+:root:root.dark .el-button--danger.is-link:disabled:hover,
+:root:root.dark .el-button--danger.is-text.is-disabled,
+:root:root.dark .el-button--danger.is-text.is-disabled:hover,
+:root:root.dark .el-button--danger.is-text:disabled,
+:root:root.dark .el-button--danger.is-text:disabled:hover {
+  color: var(--table-action-danger-color) !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .el-button--info.is-link.is-disabled,
+:root:root.dark .el-button--info.is-link.is-disabled:hover,
+:root:root.dark .el-button--info.is-link:disabled,
+:root:root.dark .el-button--info.is-link:disabled:hover,
+:root:root.dark .el-button--info.is-text.is-disabled,
+:root:root.dark .el-button--info.is-text.is-disabled:hover,
+:root:root.dark .el-button--info.is-text:disabled,
+:root:root.dark .el-button--info.is-text:disabled:hover {
+  color: var(--text-placeholder) !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .el-button.is-disabled > span,
+:root:root.dark .el-button.is-disabled .el-icon,
+:root:root.dark .el-button.is-disabled .el-icon *,
+:root:root.dark .el-button:disabled > span,
+:root:root.dark .el-button:disabled .el-icon,
+:root:root.dark .el-button:disabled .el-icon * {
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
 }
 
 /* Preserve semantic colors for disabled role-table actions in dark mode. */
