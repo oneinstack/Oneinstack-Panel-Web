@@ -98,6 +98,7 @@ interface MonitorRule {
   consecutiveSamples: number
   cooldownMinutes: number
   severity: 'info' | 'warning' | 'critical'
+  severityName?: string
   enabled: boolean
   silencedUntil?: string
   state: 'normal' | 'pending' | 'firing'
@@ -513,6 +514,8 @@ const severityType = (severity: string) => ({
   warning: 'warning',
   critical: 'danger'
 }[severity] || 'info') as 'info' | 'warning' | 'danger'
+const severityLabel = (rule: MonitorRule) =>
+  rule.severityName || t(`monitor.severities.${rule.severity}`, rule.severity)
 const eventTypeLabel = (type: string) => ({
   triggered: t('monitor.eventTypes.triggered', 'Triggered'),
   reminder: t('monitor.eventTypes.reminder', 'Reminder'),
@@ -1065,7 +1068,7 @@ onUnmounted(() => {
                 {{ $t('monitor.strategyValue', { samples: row.consecutiveSamples, minutes: row.cooldownMinutes }) }}
             </template>
             <template #severity="{ row }">
-                <el-tag :type="severityType(row.severity)" size="small">{{ row.severity }}</el-tag>
+                <el-tag :type="severityType(row.severity)" size="small">{{ severityLabel(row) }}</el-tag>
             </template>
             <template #silencedUntil="{ row }">
                 <span v-if="isSilenced(row)">{{ $t('monitor.untilTime', { time: formatTime(row.silencedUntil) }) }}</span>
