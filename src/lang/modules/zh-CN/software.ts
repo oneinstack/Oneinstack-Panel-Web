@@ -53,6 +53,8 @@ export default {
   versionSelect: '版本选择',
   version: '版本',
   selectVersion: '请选择版本',
+  versionLimitHint: '最大支持版本线：{versions}',
+  versionLimitError: '软件版本必须属于以下版本线：{versions}',
   installPaused: 'Center 当前已暂停该软件的安装',
   inputField: '请输入{field}',
   installTitle: '安装 {name} {version}',

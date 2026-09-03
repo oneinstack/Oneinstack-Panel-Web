@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue'
 import type { EChartsOption } from 'echarts'
 import { Delete, Edit, InfoFilled, Plus, Refresh } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
@@ -83,6 +83,9 @@ const formLoading = ref(false)
 const testResult = ref<ConnectionTestResult | null>(null)
 const groupFilter = ref('')
 const statusFilter = ref<BastionStatus | ''>('')
+const BASTION_REFRESH_INTERVAL = 60_000
+let refreshTimer: number | null = null
+let realtimeRefreshing = false
 
 const form = reactive({
   name: '',
@@ -430,6 +433,39 @@ const refreshDetailMetrics = async () => {
   await loadMetrics(selectedServer.value.id)
 }
 
+const refreshRealtimeData = async () => {
+  if (realtimeRefreshing || loading.value || metricsLoading.value) return
+  realtimeRefreshing = true
+  const selectedId = detailVisible.value ? selectedServer.value?.id : undefined
+  try {
+    await fetchServers()
+    if (!selectedId || !detailVisible.value || selectedServer.value?.id !== selectedId) return
+
+    const latestServer = servers.value.find((server) => server.id === selectedId)
+    if (latestServer) {
+      selectedServer.value = { ...selectedServer.value, ...latestServer }
+    }
+    await refreshDetailMetrics()
+  } catch {
+    // 自动刷新失败时保留当前页面数据，等待下一轮重试。
+  } finally {
+    realtimeRefreshing = false
+  }
+}
+
+const startRealtimeRefresh = () => {
+  if (refreshTimer !== null) return
+  refreshTimer = window.setInterval(() => {
+    void refreshRealtimeData()
+  }, BASTION_REFRESH_INTERVAL)
+}
+
+const stopRealtimeRefresh = () => {
+  if (refreshTimer === null) return
+  window.clearInterval(refreshTimer)
+  refreshTimer = null
+}
+
 const statusLabel = (status?: BastionStatus) => ({
   online: t('bastion.status.online', '在线'),
   offline: t('bastion.status.offline', '离线'),
@@ -490,7 +526,12 @@ const formatUptime = (seconds?: number) => {
 
 onMounted(() => {
   void fetchServers()
+  startRealtimeRefresh()
 })
+
+onActivated(startRealtimeRefresh)
+onDeactivated(stopRealtimeRefresh)
+onUnmounted(stopRealtimeRefresh)
 </script>
 
 <template>

@@ -83,14 +83,14 @@ const filters = reactive({
   sensitive: "",
 });
 const columns = computed<ColumnItem<AuditEvent>[]>(() => [
-  { prop: "sequence", label: t("audit.sequence"), width: 92, slot: "sequence" },
+  { prop: "sequence", label: t("audit.sequence"), minWidth: 92, slot: "sequence" },
   {
     prop: "createdAt",
     label: t("common.time"),
     minWidth: 170,
     slot: "createdAt",
   },
-  { prop: "username", label: t("common.user"), width: 120, slot: "username" },
+  { prop: "username", label: t("common.user"), minWidth: 120, slot: "username" },
   {
     prop: "action",
     label: t("approvalCenter.action"),
@@ -100,7 +100,7 @@ const columns = computed<ColumnItem<AuditEvent>[]>(() => [
   {
     prop: "message",
     label: t("audit.messageCommand"),
-    minWidth: 300,
+    minWidth: 220,
     showOverflowTooltip: true,
     slot: "message",
   },
@@ -113,28 +113,28 @@ const columns = computed<ColumnItem<AuditEvent>[]>(() => [
   {
     prop: "result",
     label: t("audit.result"),
-    width: 100,
+    minWidth: 108,
     align: "center",
     slot: "result",
   },
   {
     prop: "level",
     label: t("audit.level"),
-    width: 90,
+    minWidth: 108,
     align: "center",
     slot: "level",
   },
   {
     prop: "durationMs",
     label: t("audit.duration"),
-    width: 90,
+    minWidth: 90,
     align: "right",
     slot: "durationMs",
   },
   {
     prop: "actionColumn",
     label: t("common.action"),
-    width: 110,
+    minWidth: 110,
     fixed: "right",
     slot: "actionColumn",
     className: "table-action-column",
@@ -386,6 +386,7 @@ onMounted(async () => {
         v-loading="loading"
         :data="events"
         :columns="columns"
+        table-layout="auto"
         :pagination="false"
         :auto-pagination="false"
         border
@@ -403,8 +404,10 @@ onMounted(async () => {
         <template #remoteIp="{ row }">{{ row.remoteIp || "—" }}</template>
         <template #result="{ row }">
           <el-tag
+            class="audit-result-tag"
             :type="row.outcome === 'success' ? 'success' : 'danger'"
             size="small"
+            effect="light"
           >
             {{ row.status }}
             {{
@@ -415,10 +418,12 @@ onMounted(async () => {
           </el-tag>
         </template>
         <template #level="{ row }">
-          <el-tag v-if="row.sensitive" type="warning" size="small">{{
+          <el-tag v-if="row.sensitive" class="audit-level-tag" type="warning" size="small" effect="light">{{
             $t("common.sensitive")
           }}</el-tag>
-          <span v-else>{{ $t("common.normal") }}</span>
+          <el-tag v-else class="audit-level-tag audit-level-tag--normal" type="success" size="small" effect="light">
+            {{ $t("common.normal") }}
+          </el-tag>
         </template>
         <template #durationMs="{ row }">{{ row.durationMs }} ms</template>
         <template #actionColumn="{ row }">
@@ -723,6 +728,19 @@ onMounted(async () => {
   color: var(--text-tertiary);
   font-size: 13px;
   text-align: right;
+}
+
+.audit-result-tag,
+.audit-level-tag {
+  min-width: 76px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.audit-level-tag--normal {
+  --el-tag-bg-color: rgba(34, 197, 94, 0.1);
+  --el-tag-border-color: rgba(34, 197, 94, 0.2);
+  --el-tag-text-color: #238b57;
 }
 
 code {

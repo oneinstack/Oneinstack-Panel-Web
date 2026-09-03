@@ -53,6 +53,8 @@ export default {
   versionSelect: 'Version select',
   version: 'Version',
   selectVersion: 'Select version',
+  versionLimitHint: 'Maximum supported version line: {versions}',
+  versionLimitError: 'Software version must match one of these version lines: {versions}',
   installPaused: 'Center has paused installation for this software',
   inputField: 'Enter {field}',
   installTitle: 'Install {name} {version}',

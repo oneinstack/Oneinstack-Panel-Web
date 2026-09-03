@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, FormInstance } from 'element-plus'
+import { Warning } from '@element-plus/icons-vue'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
@@ -99,7 +100,6 @@ const formRef = ref<FormInstance | null>(null)
 const submitting = ref(false)
 const serviceLoading = ref(false)
 const serviceStatuses = ref<Record<string, ComponentServiceStatus>>({})
-const selectedItem = ref<any>()
 const taskPopoverVisible = ref(false)
 const taskDrawer = reactive({
   show: false,
@@ -117,6 +117,10 @@ const installForm = reactive<FormProps['data']>({
   },
   items: []
 })
+const installVersionLines = ref<string[]>([])
+const maxInstallVersionLine = computed(() =>
+  installVersionLines.value[installVersionLines.value.length - 1] || ''
+)
 
 const drawer = reactive({
   show: false,
@@ -130,20 +134,6 @@ const drawer = reactive({
       if (!valid) return
       await handleInstall()
     })
-  }
-})
-
-const versionDialog = reactive({
-  show: false,
-  currentItem: null as any,
-  onClose: () => {
-    versionDialog.show = false
-    versionDialog.currentItem = null
-  },
-  onConfirm: () => {
-    const item = versionDialog.currentItem
-    versionDialog.show = false
-    openInstallForm(item)
   }
 })
 
@@ -443,14 +433,6 @@ const handleInstallClick = (item: any) => {
     ElMessage.warning(t('software.installPaused', 'Center has paused installation for this software'))
     return
   }
-  selectedItem.value = item
-  installForm.value.key = item.key
-  installForm.value.version = item.install_version || recommendedVersion(item)
-  if (item.versions?.length > 1) {
-    versionDialog.currentItem = item
-    versionDialog.show = true
-    return
-  }
   openInstallForm(item)
 }
 
@@ -462,6 +444,32 @@ const parseParams = (params: any): any[] => {
   } catch {
     return []
   }
+}
+
+const getVersionLines = (item: any) => {
+  const lines = item?.versionLines ?? item?.version_lines
+  if (Array.isArray(lines)) {
+    return lines.map((line) => String(line || '').trim()).filter(Boolean)
+  }
+  if (lines) return String(lines).split(/[,，]/).map((line) => line.trim()).filter(Boolean)
+  return []
+}
+
+const isSoftwareVersionField = (field: any) => {
+  const key = String(field?.key || '').toLowerCase()
+  return key === 'software-version' || key === 'software_version' || key === 'softwareversion'
+}
+
+const isValidVersionSegment = (segment: string) => segment.toLowerCase() === 'x' || /^\d+$/.test(segment)
+
+const matchesVersionLine = (version: string, line: string) => {
+  const versionParts = version.trim().split('.')
+  const lineParts = line.trim().split('.')
+  if (versionParts.length < lineParts.length || !versionParts.every(isValidVersionSegment)) return false
+
+  return lineParts.every((part, index) =>
+    part.toLowerCase() === 'x' || versionParts[index] === part
+  )
 }
 
 const isPasswordInstallField = (field: any) => {
@@ -532,20 +540,56 @@ const buildInstallFieldRules = (field: any) => {
   return rules
 }
 
-const openInstallForm = (item: any) => {
+const buildVersionFieldRules = (versionLines: string[]) => {
+  if (!versionLines.length) return []
+  return [{
+    validator: (_rule: any, value: unknown, callback: (error?: Error) => void) => {
+      const version = String(value || '').trim()
+      if (!version || versionLines.some((line) => matchesVersionLine(version, line))) {
+        callback()
+        return
+      }
+      callback(new Error(t('software.versionLimitError', 'Software version must match: {versions}', {
+        versions: versionLines.join(', ')
+      })))
+    },
+    trigger: 'blur'
+  }]
+}
+
+const defaultInstallFieldValue = (field: any) => {
+  const value = field?.default ?? field?.defaultValue ?? field?.default_value
+  if (value === undefined || value === null) return ''
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
+}
+
+const openInstallForm = (item: any, requestedVersion = '') => {
   if (!item) return
-  selectedItem.value = item
+  const version = requestedVersion || item.install_version || recommendedVersion(item)
+  installVersionLines.value = getVersionLines(item)
+  Object.keys(installForm.value).forEach((key) => {
+    delete installForm.value[key]
+  })
   installForm.value.key = item.key
-  installForm.value.version = installForm.value.version || item.versions?.[0] || ''
+  installForm.value.version = version
   // MySQL uses fixed local defaults (root / 3306) and a server-generated
   // password. Never render legacy catalog fields for those secrets.
   const config = item.key === 'db' ? [] : parseParams(item.params)
-  installForm.items = config.map<FormItem>((field: any) => ({
-    label: field.value || field.name || field.key,
-    type: isPasswordInstallField(field) ? 'password' : 'input',
-    prop: field.key,
-    rules: buildInstallFieldRules(field)
-  }))
+  installForm.items = config
+    .filter((field: any) => field?.key)
+    .map<FormItem>((field: any) => {
+      installForm.value[field.key] = defaultInstallFieldValue(field)
+      return {
+        label: field.value || field.name || field.key,
+        type: isSoftwareVersionField(field) ? 'custom' : isPasswordInstallField(field) ? 'password' : 'input',
+        prop: field.key,
+        rules: [
+          ...buildInstallFieldRules(field),
+          ...(isSoftwareVersionField(field) ? buildVersionFieldRules(installVersionLines.value) : [])
+        ]
+      }
+    })
   if (installForm.items.length === 0) {
     void handleInstall()
     return
@@ -593,8 +637,7 @@ const retryTask = (taskId: string) => {
   taskDrawer.show = false
   const item = props.list.find((candidate: any) => candidate.key === task?.softwareKey)
   if (item) {
-    installForm.value.version = task.requestedVersion
-    openInstallForm(item)
+    openInstallForm(item, task.requestedVersion)
   }
 }
 
@@ -623,10 +666,7 @@ const handleUpgrade = (item: any) => {
     showTask(task.id)
     return
   }
-  selectedItem.value = item
-  installForm.value.key = item.key
-  installForm.value.version = recommendedVersion(item)
-  openInstallForm(item)
+  openInstallForm(item, recommendedVersion(item))
 }
 
 watch(
@@ -888,30 +928,18 @@ watch(
       :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm"
     >
-      <custom-form :data="installForm" :on-init="(el) => (formRef = el)" />
+      <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
+        <template #software-version="{ row }">
+          <div class="software-version-control">
+            <el-input v-model="installForm.value[row.prop]" clearable />
+            <span v-if="installVersionLines.length" class="software-version-hint">
+              <el-icon aria-hidden="true"><Warning /></el-icon>
+              {{ t('software.versionLimitHint', 'Maximum supported version line: {versions}', { versions: maxInstallVersionLine }) }}
+            </span>
+          </div>
+        </template>
+      </custom-form>
     </custom-drawer>
-
-    <custom-dialog
-      v-model:show="versionDialog.show"
-      :title="t('software.versionSelect', 'Version select')"
-      :on-close="versionDialog.onClose"
-    >
-      <div class="version-select-container">
-        <div class="version-label">{{ t('software.version', 'Version') }}</div>
-        <el-select v-model="installForm.value.version" :placeholder="t('software.selectVersion', 'Select version')" style="width: 100%">
-          <el-option
-            v-for="version in versionDialog.currentItem?.versions"
-            :key="version"
-            :label="version"
-            :value="version"
-          />
-        </el-select>
-      </div>
-      <template #footer>
-        <el-button @click="versionDialog.onClose">{{ t('common.cancel', 'Cancel') }}</el-button>
-        <el-button type="primary" @click="versionDialog.onConfirm">{{ t('software.install', 'Install') }}</el-button>
-      </template>
-    </custom-dialog>
 
     <install-task-drawer
       v-model="taskDrawer.show"
@@ -1340,18 +1368,24 @@ watch(
   color: var(--font-color-gray-light);
 }
 
-.version-select-container {
-  display: flex;
-  min-width: 300px;
-  padding: 20px;
-  align-items: center;
-  gap: 12px;
+.software-version-control {
+  width: 100%;
 }
 
-.version-label {
-  color: var(--font-color-black);
-  font-size: 14px;
-  white-space: nowrap;
+.software-version-hint {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.45;
+
+  .el-icon {
+    flex: none;
+    color: var(--el-color-warning);
+    font-size: 14px;
+  }
 }
 
 @media (max-width: 1200px) {
@@ -1491,11 +1525,5 @@ watch(
     padding: 0 10px;
   }
 
-  .version-select-container {
-    min-width: 0;
-    padding: 0;
-    align-items: stretch;
-    flex-direction: column;
-  }
 }
 </style>

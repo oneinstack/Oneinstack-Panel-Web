@@ -303,14 +303,14 @@ const catalogDetail = computed(() => {
   // border-radius: 12px;
   // background: color-mix(in srgb, var(--el-color-success) 5%, var(--surface-card));
 
-  &.warning {
-    border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--border-subtle));
-    background: color-mix(in srgb, var(--el-color-warning) 6%, var(--surface-card));
+  // &.warning {
+  //   border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--border-subtle));
+  //   background: color-mix(in srgb, var(--el-color-warning) 6%, var(--surface-card));
 
-    .source-dot {
-      background: var(--el-color-warning);
-    }
-  }
+  //   .source-dot {
+  //     background: var(--el-color-warning);
+  //   }
+  // }
 }
 
 .catalog-source-copy {
