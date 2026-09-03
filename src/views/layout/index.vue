@@ -386,6 +386,7 @@ onMounted(() => {
     })
     .catch(() => {
       sconfig.setAccessMatrix({})
+      sconfig.setUserAccessSnapshot(sconfig.userInfo)
     })
 })
 

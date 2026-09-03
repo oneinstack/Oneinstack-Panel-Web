@@ -74,6 +74,7 @@ const conf = reactive({
       }
 
       sconfig.login(res)
+      sconfig.setUserAccessSnapshot(res)
       if (res.mustChangePassword) {
         sconfig.setAccessMatrix({})
       } else {
@@ -82,6 +83,7 @@ const conf = reactive({
           sconfig.setAccessMatrix(matrixResponse?.data || {})
         } catch {
           sconfig.setAccessMatrix({})
+          sconfig.setUserAccessSnapshot(res)
         }
       }
 

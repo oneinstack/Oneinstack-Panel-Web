@@ -5,8 +5,9 @@ import SystemManagementTabs from '@/views/pages/system-management/components/sys
 import { Api, type AccessMenuNode, type AccessPermission, type AccessRole as ApiAccessRole } from '@/api/modules'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
+import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
+import { menuPathKeyMap } from '@/utils/access'
 
 interface AccessRole {
   code?: string
@@ -36,6 +37,22 @@ interface RoleEditorForm {
   permissionCodes: string[]
 }
 
+interface MenuEditorForm {
+  key: string
+  parentKey: string
+  type: 'directory' | 'page' | 'button'
+  name: string
+  nameEn: string
+  targetType: 'route' | 'action' | ''
+  targetKey: string
+  iconKey: string
+  sort: number
+  enabled: boolean
+  superAdminOnly: boolean
+  featureKey: 'terminal' | 'bastion' | ''
+  permissionCodes: string[]
+}
+
 interface PermissionGroup {
   module: string
   label: string
@@ -59,10 +76,13 @@ const loading = reactive({
 const currentUser = ref<any>(null)
 const roles = ref<ApiAccessRole[]>([])
 const permissions = ref<AccessPermission[]>([])
+const menus = ref<AccessMenuNode[]>([])
+const expandedMenuKey = ref<string | null>(null)
 const activeTab = ref('users')
 const accessTabItems = [
   { key: 'users', label: '用户管理', labelKey: 'userManagement.userTab' },
-  { key: 'permissions', label: '权限管理', labelKey: 'userManagement.permissionTab' }
+  { key: 'permissions', label: '权限管理', labelKey: 'userManagement.permissionTab' },
+  { key: 'menus', label: '菜单管理', labelKey: 'userManagement.menuTab' }
 ]
 
 const userState = reactive({
@@ -155,6 +175,55 @@ const roleEditorDialog = reactive({
   }
 })
 
+const menuEditorDialog = reactive({
+  show: false,
+  loading: false,
+  mode: 'create' as 'create' | 'edit',
+  detailLoading: false,
+  detail: null as AccessMenuNode | null,
+  form: {
+    key: '',
+    parentKey: '',
+    type: 'page' as 'directory' | 'page' | 'button',
+    name: '',
+    nameEn: '',
+    targetType: 'route' as 'route' | 'action' | '',
+    targetKey: '',
+    iconKey: '',
+    sort: 0,
+    enabled: true,
+    superAdminOnly: false,
+    featureKey: '' as 'terminal' | 'bastion' | '',
+    permissionCodes: [] as string[]
+  } as MenuEditorForm,
+  open: async (menu?: AccessMenuNode | null) => {
+    menuEditorDialog.mode = menu ? 'edit' : 'create'
+    menuEditorDialog.form.key = String(menu?.key || '').trim()
+    menuEditorDialog.form.parentKey = String(menu?.parentKey || '').trim()
+    menuEditorDialog.form.type = (menu?.type as 'directory' | 'page' | 'button') || 'page'
+    menuEditorDialog.form.name = menu?.name || ''
+    menuEditorDialog.form.nameEn = menu?.nameEn || ''
+    menuEditorDialog.form.targetType = (menu?.targetType as 'route' | 'action' | '') || ''
+    menuEditorDialog.form.targetKey = menu?.targetKey || ''
+    menuEditorDialog.form.iconKey = menu?.iconKey || ''
+    menuEditorDialog.form.sort = typeof menu?.sort === 'number' ? menu.sort : Number(menu?.sort || 0)
+    menuEditorDialog.form.enabled = menu?.enabled !== false
+    menuEditorDialog.form.superAdminOnly = Boolean(menu?.superAdminOnly)
+    menuEditorDialog.form.featureKey = (menu?.featureKey as 'terminal' | 'bastion' | '') || ''
+    menuEditorDialog.form.permissionCodes = [...(menu?.permissionCodes || menu?.permissions?.map((item) => item.code) || [])]
+    menuEditorDialog.detail = menu || null
+    menuEditorDialog.show = true
+    if (!menu?.key) return
+    menuEditorDialog.detailLoading = true
+    try {
+      const response = await Api.getAccessMenus()
+      menuEditorDialog.detail = findMenuByKey(Array.isArray(response.data) ? response.data : [], menu.key) || menuEditorDialog.detail
+    } finally {
+      menuEditorDialog.detailLoading = false
+    }
+  }
+})
+
 const passwordDialog = reactive({
   show: false,
   user: null as AccessUser | null,
@@ -168,6 +237,7 @@ const passwordDialog = reactive({
 
 const canManageUsers = computed(() => Boolean(currentUser.value?.isSuperAdmin))
 const canManageRoles = computed(() => Boolean(currentUser.value?.isSuperAdmin))
+const canManageMenus = computed(() => Boolean(currentUser.value?.isSuperAdmin))
 const roleTagList = computed(() => currentUser.value?.roles || [])
 const totalAssignedUsers = computed(() => userState.list.filter((item) => (item.roles || []).length > 0).length)
 const totalPendingUsers = computed(() => userState.list.filter((item) => item.mustChangePassword).length)
@@ -220,6 +290,113 @@ const flattenMenuTree = (nodes: AccessMenuNode[] = []): string[] =>
     const children = node?.children?.length ? flattenMenuTree(node.children) : []
     return [...current, ...children]
   })
+
+const flattenMenuNodes = (nodes: AccessMenuNode[] = [], depth = 0): Array<AccessMenuNode & { depth: number }> =>
+  nodes.flatMap((node) => {
+    if (!node) return []
+    const current = { ...node, depth }
+    const children = node.children?.length ? flattenMenuNodes(node.children, depth + 1) : []
+    return [current, ...children]
+  })
+
+const findMenuByKey = (nodes: AccessMenuNode[], key: string): AccessMenuNode | null => {
+  for (const node of nodes || []) {
+    if (node.key === key) return node
+    if (node.children?.length) {
+      const child = findMenuByKey(node.children, key)
+      if (child) return child
+    }
+  }
+  return null
+}
+
+const buildMenuTree = (nodes: AccessMenuNode[]) => {
+  const flatNodes: AccessMenuNode[] = []
+  const collectNodes = (items: AccessMenuNode[], inheritedParentKey?: string) => {
+    items.forEach((node) => {
+      if (!node?.key) return
+      const { children, ...menu } = node
+      flatNodes.push({
+        ...menu,
+        parentKey: menu.parentKey || inheritedParentKey,
+        children: []
+      })
+      if (children?.length) collectNodes(children, node.key)
+    })
+  }
+  collectNodes(nodes)
+
+  const nodeMap = new Map(flatNodes.map((node) => [node.key, node]))
+  const roots: AccessMenuNode[] = []
+  flatNodes.forEach((node) => {
+    const parent = node.parentKey && node.parentKey !== node.key ? nodeMap.get(node.parentKey) : undefined
+    if (parent) parent.children!.push(node)
+    else roots.push(node)
+  })
+  return roots
+}
+
+const menuTree = computed(() => buildMenuTree(menus.value || []))
+const menuRows = computed(() => flattenMenuNodes(menuTree.value))
+const visibleMenuRows = computed(() => {
+  const rows: Array<AccessMenuNode & { depth: number; hasChildren: boolean }> = []
+  const appendVisibleRows = (nodes: AccessMenuNode[], depth = 0) => {
+    nodes.forEach((node) => {
+      if (!node) return
+      const hasChildren = Boolean(node.children?.length)
+      const { children, ...menu } = node
+      rows.push({ ...menu, depth, hasChildren })
+      if (node.children?.length && expandedMenuKey.value === node.key) {
+        appendVisibleRows(node.children, depth + 1)
+      }
+    })
+  }
+  appendVisibleRows(menuTree.value)
+  return rows
+})
+const toggleMenuExpanded = (key: string) => {
+  expandedMenuKey.value = expandedMenuKey.value === key ? null : key
+}
+const handleMenuKeyClick = (row: AccessMenuNode & { hasChildren?: boolean }) => {
+  if (row.hasChildren) toggleMenuExpanded(row.key)
+}
+const menuPermissionCount = (row: AccessMenuNode) => (row.permissionCodes?.length || row.permissions?.length || 0)
+const menuTypeTagType = (type?: AccessMenuNode['type']) => {
+  if (type === 'directory') return 'warning'
+  if (type === 'button') return 'info'
+  return 'primary'
+}
+const menuCellStyle = ({ column }: { column?: { property?: string } }) => {
+  if (column?.property !== 'action') return undefined
+  return {
+    background: 'var(--surface-card)',
+    backgroundColor: 'var(--surface-card)'
+  }
+}
+const menuParentOptions = computed(() =>
+  menuRows.value
+    .filter((item) => item.type !== 'button' && item.key !== menuEditorDialog.form.key)
+    .map((item) => ({
+      label: `${'　'.repeat(item.depth)}${item.name}`,
+      value: item.key,
+      disabled: Boolean(item.type === 'button')
+    }))
+)
+const routeTargetOptions = computed(() =>
+  menuPathKeyMap.map((item) => ({
+    label: `${item.path} · ${item.key}`,
+    value: item.path
+  }))
+)
+const menuColumns = computed<ColumnItem[]>(() => [
+  { prop: 'key', label: t('userManagement.menuKey', 'Menu key'), minWidth: 240, className: 'menu-key-column' },
+  { prop: 'name', label: t('userManagement.menuName', 'Menu name'), minWidth: 210, className: 'menu-name-column' },
+  { prop: 'type', label: t('userManagement.menuType', 'Type'), width: 126, slot: 'type', align: 'center', className: 'menu-type-column' },
+  { prop: 'target', label: t('userManagement.menuTarget', 'Target'), minWidth: 220, slot: 'target', className: 'menu-target-column' },
+  { prop: 'permissionCodes', label: t('userManagement.menuPermissions', 'Permissions'), width: 140, slot: 'permissionCount', align: 'center' },
+  { prop: 'enabled', label: t('common.status', 'Status'), width: 120, slot: 'enabled', align: 'center' },
+  { prop: 'action', label: t('common.action', 'Action'), width: 230, fixed: 'right', slot: 'action' }
+])
 
 const roleMenuPreview = computed(() => flattenMenuTree(roleEditorDialog.detail?.menuTree || []))
 
@@ -281,12 +458,14 @@ const passwordStatusLabel = (row: AccessUser) => {
 const loadBootstrap = async () => {
   loading.bootstrap = true
   try {
-    const [userRes, roleRes] = await Promise.all([
+    const [userRes, roleRes, menuRes] = await Promise.all([
       Api.getCurrentUserAccess(),
-      Api.getAccessRoles()
+      Api.getAccessRoles(),
+      Api.getAccessMenus().catch(() => ({ data: [] }))
     ])
     currentUser.value = userRes.data
     roles.value = roleRes.data || []
+    menus.value = Array.isArray(menuRes?.data) ? menuRes.data : []
     try {
       const permissionRes = await Api.getAccessPermissions()
       permissions.value = Array.isArray(permissionRes)
@@ -345,8 +524,7 @@ const submitRoleEditor = async () => {
       code: key,
       name,
       description,
-      permissionCodes: [...roleEditorDialog.form.permissionCodes],
-      permissions: [...roleEditorDialog.form.permissionCodes]
+      permissionCodes: [...roleEditorDialog.form.permissionCodes]
     }
     if (roleEditorDialog.mode === 'create') {
       await Api.createAccessRole(payload)
@@ -362,6 +540,130 @@ const submitRoleEditor = async () => {
   } finally {
     roleEditorDialog.loading = false
   }
+}
+
+const resetMenuEditorForm = () => {
+  menuEditorDialog.form.key = ''
+  menuEditorDialog.form.parentKey = ''
+  menuEditorDialog.form.type = 'page'
+  menuEditorDialog.form.name = ''
+  menuEditorDialog.form.nameEn = ''
+  menuEditorDialog.form.targetType = 'route'
+  menuEditorDialog.form.targetKey = ''
+  menuEditorDialog.form.iconKey = ''
+  menuEditorDialog.form.sort = 0
+  menuEditorDialog.form.enabled = true
+  menuEditorDialog.form.superAdminOnly = false
+  menuEditorDialog.form.featureKey = ''
+  menuEditorDialog.form.permissionCodes = []
+}
+
+const openMenuEditor = async (menu?: AccessMenuNode | null) => {
+  resetMenuEditorForm()
+  await menuEditorDialog.open(menu || null)
+}
+
+const submitMenuEditor = async () => {
+  const key = menuEditorDialog.form.key.trim()
+  const name = menuEditorDialog.form.name.trim()
+  const nameEn = menuEditorDialog.form.nameEn.trim()
+  const targetKey = menuEditorDialog.form.targetKey.trim()
+  const iconKey = menuEditorDialog.form.iconKey.trim()
+  const parentKey = menuEditorDialog.form.parentKey.trim()
+  const type = menuEditorDialog.form.type
+  const targetType = menuEditorDialog.form.targetType
+  const permissionCodes = [...new Set(menuEditorDialog.form.permissionCodes.map((item) => String(item).trim()).filter(Boolean))]
+
+  if (menuEditorDialog.mode === 'create') {
+    if (!key) {
+      ElMessage.warning(t('userManagement.inputMenuKey', 'Enter a menu key'))
+      return
+    }
+    if (!/^[a-z][a-z0-9._-]{0,94}$/.test(key)) {
+      ElMessage.warning(t('userManagement.menuKeyError', 'Menu key must start with a lowercase letter and may contain lowercase letters, numbers, ".", "_" or "-"'))
+      return
+    }
+  }
+
+  if (!name) {
+    ElMessage.warning(t('userManagement.inputMenuName', 'Enter a menu name'))
+    return
+  }
+
+  if (type !== 'directory') {
+    if (!targetType) {
+      ElMessage.warning(t('userManagement.inputMenuTargetType', 'Select a target type'))
+      return
+    }
+    if (!targetKey) {
+      ElMessage.warning(t('userManagement.inputMenuTargetKey', 'Enter a target key'))
+      return
+    }
+  }
+
+  if (type === 'button' && parentKey && findMenuByKey(menus.value, parentKey)?.type === 'button') {
+    ElMessage.warning(t('userManagement.buttonParentError', 'Buttons cannot be used as parent nodes'))
+    return
+  }
+
+  menuEditorDialog.loading = true
+  try {
+    const payload = {
+      key,
+      code: key,
+      parentKey: parentKey || undefined,
+      type,
+      name,
+      nameEn: nameEn || undefined,
+      targetType: type === 'directory' ? undefined : targetType,
+      targetKey: type === 'directory' ? undefined : targetKey,
+      iconKey: iconKey || undefined,
+      sort: Number(menuEditorDialog.form.sort || 0),
+      enabled: menuEditorDialog.form.enabled,
+      superAdminOnly: menuEditorDialog.form.superAdminOnly,
+      featureKey: menuEditorDialog.form.featureKey || undefined,
+      permissionCodes
+    }
+    if (menuEditorDialog.mode === 'create') {
+      await Api.createAccessMenu(payload as any)
+      ElMessage.success(t('userManagement.createMenuSuccess', 'Menu created'))
+    } else {
+      await Api.updateAccessMenu(key, payload as any)
+      ElMessage.success(t('userManagement.updateMenuSuccess', 'Menu updated'))
+    }
+    menuEditorDialog.show = false
+    await loadBootstrap()
+  } finally {
+    menuEditorDialog.loading = false
+  }
+}
+
+const deleteMenu = async (menu: AccessMenuNode) => {
+  const key = menu.key
+  if (!key) {
+    ElMessage.warning(t('userManagement.invalidMenuKey', 'Invalid menu key'))
+    return
+  }
+  if (menu.builtin) {
+    ElMessage.warning(t('userManagement.cannotDeleteBuiltinMenu', 'Built-in menus cannot be deleted'))
+    return
+  }
+  if (menu.children?.length) {
+    ElMessage.warning(t('userManagement.menuHasChildren', 'Menus with children cannot be edited directly here'))
+    return
+  }
+  await ElMessageBox.confirm(
+    t('userManagement.deleteMenuConfirm', 'Delete menu "{name}"? This action cannot be undone.', { name: menu.name || key }),
+    t('userManagement.deleteMenu', 'Delete menu'),
+    {
+      type: 'warning',
+      confirmButtonText: t('common.delete', 'Delete'),
+      cancelButtonText: t('common.cancel', 'Cancel')
+    }
+  )
+  await Api.deleteAccessMenu(key)
+  ElMessage.success(t('userManagement.deleteMenuSuccess', 'Menu deleted'))
+  await loadBootstrap()
 }
 
 const deleteRole = async (role: AccessRole) => {
@@ -576,9 +878,6 @@ onMounted(async () => {
           >
             {{ roleLabel(item) }}
           </el-tag>
-          <el-tag v-if="currentUser?.isSuperAdmin" type="danger" round>
-            {{ $t('userManagement.superAdmin') }}
-          </el-tag>
         </div>
         <div class="hero-metrics">
           <div class="metric-chip metric-chip--total">
@@ -723,7 +1022,7 @@ onMounted(async () => {
       </div>
     </section>
 
-    <section v-else class="panel-card">
+    <section v-else-if="activeTab === 'permissions'" class="panel-card">
       <div class="panel-head">
         <div>
           <h3>{{ t('userManagement.roleRepositoryTitle', 'Role repository') }}</h3>
@@ -779,6 +1078,112 @@ onMounted(async () => {
               :icon="Delete"
               :disabled="!canManageRoles || row.builtin"
               @click="deleteRole(row)"
+            >
+              {{ t('common.delete', 'Delete') }}
+            </el-button>
+          </div>
+        </template>
+      </custom-table>
+    </section>
+
+    <section v-else class="panel-card">
+      <div class="panel-head">
+        <div>
+          <h3>{{ t('userManagement.menuRepositoryTitle', 'Menu repository') }}</h3>
+        </div>
+        <div class="panel-head__actions">
+          <div class="panel-summary">
+            <span>{{ t('userManagement.menuRepositoryHint', 'Manage backend menu nodes and the permissions attached to them') }}</span>
+          </div>
+          <el-button
+            type="primary"
+            :icon="Plus"
+            :disabled="!canManageMenus"
+            @click="openMenuEditor()"
+          >
+            {{ t('userManagement.createMenu', 'Create menu') }}
+          </el-button>
+        </div>
+      </div>
+
+      <custom-table
+        :data="visibleMenuRows"
+        :columns="menuColumns"
+        :pagination="false"
+        :auto-pagination="false"
+        border
+        row-key="key"
+        :tree-props="{ children: '__menuChildren__' }"
+        :cell-style="menuCellStyle"
+        class="menu-table"
+        :empty-text="t('common.noData', 'No menus')"
+      >
+        <template #key="{ row }">
+          <div
+            class="menu-key-cell"
+            :class="{ 'is-expandable': row.hasChildren }"
+            :style="{ paddingLeft: `${row.depth * 24}px` }"
+            @click.stop="handleMenuKeyClick(row)"
+            >
+            <span class="menu-key-value">
+              <span class="menu-key-text">{{ row.key }}</span>
+              <button
+                v-if="row.hasChildren"
+                class="menu-expand-button"
+                :class="{ 'is-expanded': expandedMenuKey === row.key }"
+                :style="{ marginLeft: '12px' }"
+                type="button"
+                :aria-label="expandedMenuKey === row.key ? 'Collapse menu' : 'Expand menu'"
+                :aria-expanded="expandedMenuKey === row.key"
+                @click.stop="handleMenuKeyClick(row)"
+              >
+              <el-icon
+                class="menu-expand-icon"
+                aria-hidden="true"
+                :style="{ transform: expandedMenuKey === row.key ? 'rotate(90deg)' : 'rotate(0deg)' }"
+              ><ArrowRight /></el-icon>
+            </button>
+            </span>
+          </div>
+        </template>
+        <template #type="{ row }">
+          <el-tag class="menu-type-tag" :type="menuTypeTagType(row.type)" effect="light" round>
+            {{ t(`userManagement.menuTypes.${row.type}`, row.type) }}
+          </el-tag>
+        </template>
+        <template #target="{ row }">
+          <div class="menu-target">
+            <span>{{ row.targetKey || '—' }}</span>
+            <small v-if="row.targetType">{{ row.targetType }}</small>
+          </div>
+        </template>
+        <template #permissionCount="{ row }">
+          <el-tag class="permission-count-tag" type="primary" effect="light" round>
+            {{ menuPermissionCount(row) }}
+          </el-tag>
+        </template>
+        <template #enabled="{ row }">
+          <el-tag :type="row.enabled === false ? 'info' : 'success'" effect="light" round>
+            {{ row.enabled === false ? t('common.disabled', 'Disabled') : t('common.enabled', 'Enabled') }}
+          </el-tag>
+        </template>
+        <template #action="{ row }">
+          <div class="table-row-actions">
+            <el-button
+              link
+              type="primary"
+              :icon="Edit"
+              :disabled="!canManageMenus || row.builtin"
+              @click="openMenuEditor(row)"
+            >
+              {{ t('common.edit', 'Edit') }}
+            </el-button>
+            <el-button
+              link
+              type="danger"
+              :icon="Delete"
+              :disabled="!canManageMenus || row.builtin || Boolean(row.children?.length)"
+              @click="deleteMenu(row)"
             >
               {{ t('common.delete', 'Delete') }}
             </el-button>
@@ -961,6 +1366,146 @@ onMounted(async () => {
               <span v-else class="menu-preview__empty">
                 {{ t('userManagement.menuPreviewEmpty', 'The backend will calculate menuTree from the saved permissions.') }}
               </span>
+            </div>
+          </el-form-item>
+        </el-form>
+      </div>
+    </custom-drawer>
+
+    <custom-drawer
+      :visible="menuEditorDialog.show"
+      :title="menuEditorDialog.mode === 'create' ? t('userManagement.createMenu', 'Create menu') : t('userManagement.editMenu', 'Edit menu')"
+      size="980px"
+      :confirm-text="$t('common.save')"
+      :loading="menuEditorDialog.loading"
+      :on-close="() => { menuEditorDialog.show = false }"
+      :on-confirm="submitMenuEditor"
+    >
+      <div class="dialog-form">
+        <el-alert
+          :title="t('userManagement.menuFormTip', 'Menu key, target type, and target key are validated against the backend contract.')"
+          type="info"
+          :closable="false"
+          show-icon
+          style="margin-bottom: 16px"
+        />
+        <el-form label-position="top" class="role-editor-form">
+          <el-form-item
+            v-if="menuEditorDialog.mode === 'create'"
+            :label="$t('userManagement.menuKey', 'Menu key')"
+            required
+          >
+            <el-input
+              v-model="menuEditorDialog.form.key"
+              :placeholder="t('userManagement.inputMenuKey', 'Enter a menu key')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuName', 'Menu name')" required>
+            <el-input
+              v-model="menuEditorDialog.form.name"
+              :placeholder="t('userManagement.inputMenuName', 'Enter a menu name')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuNameEn', 'English name')">
+            <el-input
+              v-model="menuEditorDialog.form.nameEn"
+              :placeholder="t('userManagement.inputMenuNameEn', 'Enter an English name')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuParent', 'Parent menu')">
+            <el-select v-model="menuEditorDialog.form.parentKey" filterable clearable :placeholder="$t('common.select', 'Select')">
+              <el-option
+                v-for="option in menuParentOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+                :disabled="option.disabled"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuType', 'Type')" required>
+            <el-radio-group v-model="menuEditorDialog.form.type">
+              <el-radio-button label="directory">{{ t('userManagement.menuTypes.directory', 'Directory') }}</el-radio-button>
+              <el-radio-button label="page">{{ t('userManagement.menuTypes.page', 'Page') }}</el-radio-button>
+              <el-radio-button label="button">{{ t('userManagement.menuTypes.button', 'Button') }}</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetType', 'Target type')" required>
+            <el-select v-model="menuEditorDialog.form.targetType" :placeholder="$t('common.select', 'Select')">
+              <el-option :label="t('userManagement.targetTypes.route', 'Route')" value="route" />
+              <el-option :label="t('userManagement.targetTypes.action', 'Action')" value="action" />
+            </el-select>
+          </el-form-item>
+          <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetKey', 'Target key')" required>
+            <el-input
+              v-if="menuEditorDialog.form.targetType === 'action'"
+              v-model="menuEditorDialog.form.targetKey"
+              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
+            />
+            <el-select
+              v-else
+              v-model="menuEditorDialog.form.targetKey"
+              filterable
+              allow-create
+              default-first-option
+              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
+            >
+              <el-option
+                v-for="option in routeTargetOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuIconKey', 'Icon key')">
+            <el-input
+              v-model="menuEditorDialog.form.iconKey"
+              :placeholder="t('userManagement.inputMenuIconKey', 'Enter an icon key')"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.menuSort', 'Sort')">
+            <el-input-number v-model="menuEditorDialog.form.sort" :min="0" :step="10" />
+          </el-form-item>
+          <el-form-item :label="$t('common.status', 'Status')">
+            <el-switch v-model="menuEditorDialog.form.enabled" />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.superAdminOnly', 'Super admin only')">
+            <el-switch v-model="menuEditorDialog.form.superAdminOnly" />
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.featureKey', 'Feature key')">
+            <el-select v-model="menuEditorDialog.form.featureKey" clearable :placeholder="$t('common.select', 'Select')">
+              <el-option :label="t('userManagement.featureKeys.terminal', 'Terminal')" value="terminal" />
+              <el-option :label="t('userManagement.featureKeys.bastion', 'Bastion')" value="bastion" />
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('userManagement.permissionSelection', 'Permission codes')">
+            <div class="permission-panel">
+              <div class="permission-panel__summary">
+                <span>{{ t('userManagement.menuPermissionSelectionHint', 'Select the backend permission codes bound to this menu.') }}</span>
+                <strong>{{ t('userManagement.selectedCount', '{selected} / {total} selected', { selected: menuEditorDialog.form.permissionCodes.length, total: permissions.length }) }}</strong>
+              </div>
+              <el-scrollbar class="permission-panel__scroll">
+                <div v-for="group in permissionGroups" :key="group.module" class="permission-group">
+                  <div class="permission-group__head">
+                    <div class="permission-group__title">
+                      <strong>{{ group.label }}</strong>
+                    </div>
+                    <span>{{ group.items.length }}</span>
+                  </div>
+                  <el-checkbox-group v-model="menuEditorDialog.form.permissionCodes" class="permission-grid">
+                    <el-checkbox
+                      v-for="permission in group.items"
+                      :key="permission.code"
+                      :value="permission.code"
+                      class="permission-item"
+                    >
+                      <span class="permission-item__name">{{ permission.name }}</span>
+                      <span class="permission-item__code">{{ permission.code }}</span>
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
+              </el-scrollbar>
             </div>
           </el-form-item>
         </el-form>
@@ -1514,8 +2059,28 @@ onMounted(async () => {
   }
 
   :deep(.el-table__fixed-right) {
-    background: var(--surface-card);
+    position: relative;
+    z-index: 4;
+    background: var(--surface-card) !important;
   }
+
+  :deep(.el-table__fixed-right .el-table__fixed-body-wrapper),
+  :deep(.el-table__fixed-right .el-table__body-wrapper),
+  :deep(.el-table__fixed-right .el-table__body),
+  :deep(.el-table__fixed-right .el-table__body tr),
+  :deep(.el-table__fixed-right .el-table__body td.el-table__cell) {
+    background: var(--surface-card) !important;
+    background-color: var(--surface-card) !important;
+    background-image: none !important;
+  }
+
+  // :deep(.el-table__fixed-right .el-table__body tr:hover > td.el-table__cell),
+  // :deep(.el-table__fixed-right .el-table__body tr.hover-row:hover > td.el-table__cell),
+  // :deep(.el-table__fixed-right .el-table__body tr.current-row:hover > td.el-table__cell) {
+  //   background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  //   background-color: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  //   background-image: none !important;
+  // }
 
   :deep(.cell) {
     padding: 0 18px;
@@ -1548,6 +2113,284 @@ onMounted(async () => {
 .role-table :deep(.el-table__body td:nth-child(4) .cell) {
   display: flex;
   align-items: center;
+}
+
+.menu-table {
+  width: 100%;
+  margin-top: 4px;
+  --el-table-bg-color: var(--surface-card);
+  --el-table-tr-bg-color: var(--surface-card);
+  --el-table-row-hover-bg-color: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card));
+  --el-table-current-row-bg-color: var(--surface-card);
+
+  :deep(.el-table__inner-wrapper) {
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--border-subtle) 88%, rgba(var(--primary-color), 0.12));
+    border-radius: 18px;
+    background: var(--surface-card);
+  }
+
+  :deep(.el-table__header-wrapper th.el-table__cell) {
+    height: 54px;
+    padding: 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    background: color-mix(in srgb, var(--surface-subtle) 86%, rgba(var(--primary-color), 0.04));
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  :deep(.el-table__body-wrapper td.el-table__cell) {
+    height: 62px;
+    padding: 0;
+    color: var(--text-secondary);
+    background: var(--surface-card);
+    background-color: var(--surface-card) !important;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 82%, transparent);
+    transition: none;
+  }
+
+  :deep(.el-table__body tr),
+  :deep(.el-table__body tr > td.el-table__cell) {
+    background-color: var(--surface-card) !important;
+    background-image: none !important;
+  }
+
+  :deep(.el-table__body tr:hover > td.el-table__cell) {
+    background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+    background-color: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  }
+
+  // :deep(.el-table__body tr.current-row > td.el-table__cell),
+  // :deep(.el-table__body tr.hover-row > td.el-table__cell),
+  // :deep(.el-table__body tr.el-table__row--striped > td.el-table__cell) {
+  //   background: var(--surface-card) !important;
+  // }
+
+  // :deep(.el-table__body tr.current-row:hover > td.el-table__cell),
+  // :deep(.el-table__body tr.hover-row:hover > td.el-table__cell) {
+  //   background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  //   background-color: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card)) !important;
+  // }
+
+  :deep(.el-table__body tr:last-child td.el-table__cell) {
+    border-bottom: none;
+  }
+
+  :deep(.cell) {
+    padding: 0 18px;
+    line-height: 1.45;
+  }
+
+  :deep(.menu-key-column .cell) {
+    display: flex !important;
+    align-items: center;
+    color: var(--text-primary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  :deep(.menu-key-cell) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  :deep(.menu-key-cell.is-expandable) {
+    cursor: pointer;
+  }
+
+  :deep(.menu-expand-button) {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    order: 3;
+    position: relative;
+    width: 18px;
+    height: 24px;
+    flex: 0 0 18px;
+    margin-left: 0 !important;
+    padding: 0;
+    border: 0;
+    color: var(--text-tertiary);
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.18s ease;
+  }
+
+  :deep(.menu-expand-icon) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 14px;
+    height: 14px;
+    color: var(--text-tertiary) !important;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 1;
+    visibility: visible;
+    transition: transform 0.2s ease;
+  }
+
+  :deep(.menu-expand-button.is-expanded .menu-expand-icon) {
+    transform: rotate(90deg);
+  }
+
+  :deep(.menu-expand-button:hover) {
+    color: rgb(var(--primary-color));
+  }
+
+  :deep(.menu-key-value) {
+    display: inline-flex;
+    align-items: center;
+    order: 1;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  :deep(.menu-key-text) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :deep(.menu-key-column .cell > .menu-expand-button) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :deep(.menu-key-column .cell > .menu-key-value) {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* Keep the tree column aligned with the navigation: text first, chevron last. */
+  :deep(.menu-key-column .el-table__expand-icon) {
+    display: none !important;
+  }
+
+  :deep(.menu-key-column .cell .menu-expand-button) {
+    order: 3 !important;
+    flex: 0 0 auto;
+  }
+
+  :deep(.menu-name-column .cell) {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 650;
+  }
+
+  :deep(.menu-type-column .cell) {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  :deep(.menu-type-tag) {
+    min-width: 58px;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  :deep(.menu-target-column .cell) {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+  }
+}
+
+/* Keep accordion redraws from reusing a stale hover-row background. Element
+   Plus keeps the class on the old row, so only a physically hovered row may
+   use the hover color. */
+.access-page :deep(.smart-table) {
+  --el-table-row-hover-bg-color: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card));
+  --el-table-current-row-bg-color: var(--surface-card);
+}
+
+.access-page :deep(.smart-table .el-table__body tr.hover-row:not(:hover) > td.el-table__cell),
+.access-page :deep(.smart-table .el-table__body tr.current-row:not(:hover) > td.el-table__cell) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+
+.access-page :deep(.smart-table .el-table__body tr:hover > td.el-table__cell) {
+  background: var(--el-table-row-hover-bg-color) !important;
+  background-color: var(--el-table-row-hover-bg-color) !important;
+  background-image: none !important;
+}
+
+/* Element Plus implements fixed columns with sticky cells. Keep the right
+   action cells opaque so scrolling content cannot show through or overlap
+   their buttons. */
+.access-page :deep(.smart-table .el-table__body-wrapper tr > td.el-table-fixed-column--right) {
+  position: sticky !important;
+  z-index: 4 !important;
+  // background: var(--surface-card) !important;
+  // background-color: var(--surface-card) !important;
+  background-image: none !important;
+  box-shadow: -10px 0 18px -18px rgba(0, 0, 0, 0.9);
+}
+
+.access-page :deep(.smart-table .el-table__header-wrapper tr > th.el-table-fixed-column--right) {
+  position: sticky !important;
+  z-index: 4 !important;
+  // background: var(--surface-subtle) !important;
+  // background-color: var(--surface-subtle) !important;
+  background-image: none !important;
+}
+
+.access-page :deep(.smart-table .el-table__body-wrapper tr.hover-row:not(:hover) > td.el-table-fixed-column--right),
+.access-page :deep(.smart-table .el-table__body-wrapper tr.current-row:not(:hover) > td.el-table-fixed-column--right) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+}
+
+.access-page :deep(.smart-table .el-table__body-wrapper tr:hover > td.el-table-fixed-column--right) {
+  background: var(--el-table-row-hover-bg-color) !important;
+  background-color: var(--el-table-row-hover-bg-color) !important;
+}
+
+.access-page :deep(.smart-table td.el-table-fixed-column--right .cell) {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.menu-target {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  min-width: 0;
+  gap: 3px;
+}
+
+.menu-target span,
+.menu-target small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu-target span {
+  color: var(--text-primary);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
+}
+
+.menu-target small {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
 .role-table :deep(.permission-count-tag) {

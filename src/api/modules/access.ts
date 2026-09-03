@@ -11,6 +11,8 @@ export interface AccessPermission {
 export interface AccessMenuNode {
   id?: number;
   key: string;
+  code?: string;
+  parentKey?: string;
   type: "directory" | "page" | "button" | string;
   name: string;
   nameEn?: string;
@@ -22,6 +24,7 @@ export interface AccessMenuNode {
   builtin?: boolean;
   superAdminOnly?: boolean;
   featureKey?: string;
+  permissionCodes?: string[];
   permissions?: AccessPermission[];
   children?: AccessMenuNode[];
 }
@@ -52,6 +55,18 @@ export const accessApi = {
   /** 获取完整菜单树 */
   getAccessMenus: () => {
     return http.get("/access/menus");
+  },
+  /** 创建菜单 */
+  createAccessMenu: (obj: Partial<AccessMenuNode> & { key: string; type: AccessMenuNode["type"]; name: string }) => {
+    return http.post("/access/menus", obj);
+  },
+  /** 更新菜单 */
+  updateAccessMenu: (key: string, obj: Partial<AccessMenuNode> & { key?: string; code?: string }) => {
+    return http.put(`/access/menus/${encodeURIComponent(key)}`, obj);
+  },
+  /** 删除菜单 */
+  deleteAccessMenu: (key: string) => {
+    return http.delete(`/access/menus/${encodeURIComponent(key)}`);
   },
   /** 获取用户列表 */
   getAccessUsers: (obj?: any) => {

@@ -30,6 +30,17 @@ interface ConfigState {
 const getUserKey = (info: any) =>
   String(info?.user?.username || info?.username || "").trim();
 
+const normalizeUserInfo = (info: any) => {
+  if (!info || typeof info !== "object") return info;
+  if (info.user) return info;
+  return {
+    ...info,
+    user: {
+      ...info,
+    },
+  };
+};
+
 const createState = (): ConfigState => ({
   userInfo: null,
   menuAccess: {},
@@ -78,7 +89,7 @@ export const useConfigStore = defineStore("config", {
   actions: {
     /** 保存登录用户。 */
     login(info: any) {
-      this.userInfo = info;
+      this.userInfo = normalizeUserInfo(info);
     },
 
     setMenuAccess(menu: Record<string, boolean>) {
@@ -100,6 +111,28 @@ export const useConfigStore = defineStore("config", {
       this.setMenuAccess(Object.keys(matrix?.menu || {}).length ? matrix.menu : flattenMenuAccess(menuTree));
       this.setScopeAccess(matrix?.scopes || {});
       this.setActionAccess(matrix?.actions || {});
+    },
+
+    setUserAccessSnapshot(snapshot: any) {
+      const menuTree = Array.isArray(snapshot?.menuTree)
+        ? snapshot.menuTree
+        : Array.isArray(snapshot?.user?.menuTree)
+          ? snapshot.user.menuTree
+          : [];
+      const scopes = snapshot?.scopes || snapshot?.user?.scopes || {};
+      const firstAccessibleMenu = String(
+        snapshot?.firstAccessibleMenu || snapshot?.user?.firstAccessibleMenu || "",
+      ).trim();
+      if (menuTree.length) {
+        this.menuTree = menuTree;
+        this.setMenuAccess(flattenMenuAccess(menuTree));
+      }
+      if (firstAccessibleMenu) {
+        this.firstAccessibleMenu = firstAccessibleMenu;
+      }
+      if (Object.keys(scopes).length) {
+        this.setScopeAccess(scopes);
+      }
     },
 
     hasMenuAccess(key?: string) {

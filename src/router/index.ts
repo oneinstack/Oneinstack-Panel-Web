@@ -87,6 +87,7 @@ export const initRouter = () => {
         sconfig.setAccessMatrix(matrixResponse?.data || {})
       } catch {
         sconfig.setAccessMatrix({})
+        sconfig.setUserAccessSnapshot(sconfig.userInfo)
       }
     }
     const menuKey = resolveMenuKeyByPath(to.path)
