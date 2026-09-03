@@ -217,6 +217,8 @@ const rules = ref<MonitorRule[]>([])
 const events = ref<AlertEvent[]>([])
 const channels = ref<NotificationChannel[]>([])
 const deliveries = ref<NotificationDelivery[]>([])
+const ruleCount = computed(() => rules.value.length)
+const enabledRuleCount = computed(() => rules.value.filter((rule) => rule.enabled).length)
 const dashboardLoading = ref(false)
 const serviceChecking = ref(false)
 const tableLoading = ref(false)
@@ -1042,7 +1044,7 @@ onUnmounted(() => {
     <div class="management-panel">
       <el-tabs v-model="activeTab" @tab-change="refreshCurrentTab">
         <el-tab-pane name="rules">
-          <template #label>{{ $t('monitor.rulesTabLabel', { enabled: summary.enabledRules, total: summary.ruleCount }) }}</template>
+          <template #label>{{ $t('monitor.rulesTabLabel', { enabled: enabledRuleCount, total: ruleCount }) }}</template>
           <div class="toolbar">
             <span>{{ $t('monitor.ruleResetHint') }}</span>
             <el-button type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>

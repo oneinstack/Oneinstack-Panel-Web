@@ -163,6 +163,36 @@ html {
   background: transparent !important;
 }
 
+/* Preserve semantic colors for disabled role-table actions in dark mode. */
+:root:root.dark .role-table .table-row-actions .el-button--primary.is-link.is-disabled,
+:root:root.dark .role-table .table-row-actions .el-button--primary.is-link.is-disabled:hover,
+:root:root.dark .role-table .table-row-actions .el-button--primary.is-link:disabled,
+:root:root.dark .role-table .table-row-actions .el-button--primary.is-link:disabled:hover {
+  color: var(--table-action-color) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .role-table .table-row-actions .el-button--danger.is-link.is-disabled,
+:root:root.dark .role-table .table-row-actions .el-button--danger.is-link.is-disabled:hover,
+:root:root.dark .role-table .table-row-actions .el-button--danger.is-link:disabled,
+:root:root.dark .role-table .table-row-actions .el-button--danger.is-link:disabled:hover {
+  color: var(--table-action-danger-color) !important;
+  -webkit-text-fill-color: currentColor !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  opacity: 0.52 !important;
+}
+
+:root:root.dark .role-table .table-row-actions .el-button.is-link.is-disabled > span,
+:root:root.dark .role-table .table-row-actions .el-button.is-link.is-disabled .el-icon,
+:root:root.dark .role-table .table-row-actions .el-button.is-link.is-disabled .el-icon * {
+  color: currentColor !important;
+  -webkit-text-fill-color: currentColor !important;
+}
+
 .el-input,
 .el-select,
 .el-date-editor,

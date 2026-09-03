@@ -42,6 +42,7 @@ export default {
   diskManagement: '磁盘管理',
   diskDescription: '展示已挂载分区、容量、挂载点与 fstab 持久化状态。',
   refreshDisks: '刷新磁盘',
+  totalDisks: '共 {count} 个挂载点',
   protectedMounts: '保护性挂载点',
   noKeyMounts: '暂无重点挂载点',
   protectedMountsHint: '根分区、Panel 数据目录相关挂载点仅展示，不提供危险写操作。',

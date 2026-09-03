@@ -736,6 +736,7 @@ onMounted(() => {
         <el-form-item :label="$t('bastion.authMethod')" prop="authMethod">
           <el-segmented
             v-model="form.authMethod"
+            class="bastion-segmented"
             :options="[
               { label: $t('bastion.password'), value: 'password' },
               { label: $t('bastion.privateKey'), value: 'key' }
@@ -832,6 +833,7 @@ onMounted(() => {
         <div class="detail-toolbar">
           <el-segmented
             v-model="timeRange"
+            class="bastion-segmented"
             :options="timeRangeOptions.map((item) => ({ label: item.label, value: item.value }))"
             @change="refreshDetailMetrics"
           />
@@ -921,6 +923,20 @@ onMounted(() => {
 <style scoped lang="less">
 .bastion-page {
   min-height: 100%;
+
+  :deep(.bastion-segmented) {
+    --el-segmented-color: var(--text-secondary);
+    --el-segmented-bg-color: var(--surface-subtle);
+    --el-segmented-item-selected-color: var(--primary-button-text);
+    --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+    --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+    --el-segmented-item-hover-color: var(--text-primary);
+    --el-segmented-item-hover-bg-color: var(--surface-hover);
+    --el-segmented-item-active-bg-color: var(--surface-muted);
+    --el-segmented-item-disabled-color: var(--text-placeholder);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-xs);
+  }
 }
 
 .bastion-toolbar,

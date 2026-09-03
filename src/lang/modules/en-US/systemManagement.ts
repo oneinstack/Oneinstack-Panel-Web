@@ -42,6 +42,7 @@ export default {
   diskManagement: 'Disk management',
   diskDescription: 'Shows mounted partitions, capacity, mount points, and fstab persistence.',
   refreshDisks: 'Refresh disks',
+  totalDisks: '{count} mount points',
   protectedMounts: 'Protected mount points',
   noKeyMounts: 'No key mount points',
   protectedMountsHint: 'Root partition and panel data directory mount points are display-only. Dangerous write operations are not provided.',

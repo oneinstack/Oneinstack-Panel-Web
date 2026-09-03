@@ -873,6 +873,7 @@ onMounted(async () => {
           <el-tag
             v-for="item in roleTagList"
             :key="item.key || item.code"
+            class="hero-role-tag"
             effect="plain"
             round
           >
@@ -985,7 +986,7 @@ onMounted(async () => {
             </div>
           </template>
           <template #scope="{ row }">
-            <el-tag :type="row.isSuperAdmin ? 'danger' : 'info'" effect="light" round>
+            <el-tag class="scope-pill" :type="row.isSuperAdmin ? 'danger' : 'info'" effect="light" round>
               {{ userScopeLabel(row) }}
             </el-tag>
           </template>
@@ -1389,7 +1390,7 @@ onMounted(async () => {
           show-icon
           style="margin-bottom: 16px"
         />
-        <el-form label-position="top" class="role-editor-form">
+        <el-form label-position="top" class="role-editor-form menu-editor-form">
           <el-form-item
             v-if="menuEditorDialog.mode === 'create'"
             :label="$t('userManagement.menuKey', 'Menu key')"
@@ -1424,11 +1425,15 @@ onMounted(async () => {
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('userManagement.menuType', 'Type')" required>
-            <el-radio-group v-model="menuEditorDialog.form.type">
-              <el-radio-button label="directory">{{ t('userManagement.menuTypes.directory', 'Directory') }}</el-radio-button>
-              <el-radio-button label="page">{{ t('userManagement.menuTypes.page', 'Page') }}</el-radio-button>
-              <el-radio-button label="button">{{ t('userManagement.menuTypes.button', 'Button') }}</el-radio-button>
-            </el-radio-group>
+            <el-segmented
+              v-model="menuEditorDialog.form.type"
+              class="menu-type-segmented"
+              :options="[
+                { label: t('userManagement.menuTypes.directory', 'Directory'), value: 'directory' },
+                { label: t('userManagement.menuTypes.page', 'Page'), value: 'page' },
+                { label: t('userManagement.menuTypes.button', 'Button'), value: 'button' }
+              ]"
+            />
           </el-form-item>
           <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetType', 'Target type')" required>
             <el-select v-model="menuEditorDialog.form.targetType" :placeholder="$t('common.select', 'Select')">
@@ -1804,6 +1809,20 @@ onMounted(async () => {
   gap: 10px;
 }
 
+.hero-role-tag {
+  min-height: 30px;
+  padding: 3px 12px;
+  border: 1px solid color-mix(in srgb, rgb(var(--primary-color)) 42%, var(--border-subtle));
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-card) 82%, rgb(var(--primary-color)) 18%) !important;
+  background-color: color-mix(in srgb, var(--surface-card) 82%, rgb(var(--primary-color)) 18%) !important;
+  color: color-mix(in srgb, rgb(var(--primary-color)) 72%, var(--text-primary)) !important;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
 .toolbar {
   justify-content: space-between;
   flex-wrap: wrap;
@@ -1909,6 +1928,28 @@ onMounted(async () => {
   white-space: normal;
 }
 
+.scope-pill {
+  min-height: 30px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+}
+
+.scope-pill.el-tag--info {
+  --el-tag-bg-color: color-mix(in srgb, var(--surface-muted) 76%, var(--surface-card));
+  --el-tag-border-color: color-mix(in srgb, var(--border-strong) 72%, transparent);
+  --el-tag-text-color: var(--text-primary);
+}
+
+.scope-pill.el-tag--danger {
+  --el-tag-bg-color: color-mix(in srgb, #ef4444 18%, var(--surface-card));
+  --el-tag-border-color: color-mix(in srgb, #f87171 60%, var(--border-subtle));
+  --el-tag-text-color: #fca5a5;
+}
+
 .tag-list--roles {
   display: flex;
   flex-wrap: wrap;
@@ -1920,12 +1961,12 @@ onMounted(async () => {
   --el-tag-bg-color: rgba(var(--primary-color), 0.08);
   --el-tag-border-color: rgba(var(--primary-color), 0.18);
   --el-tag-text-color: rgb(var(--primary-color));
-  height: 28px;
+  min-height: 30px;
   border-radius: 999px;
-  padding: 0 4px;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 26px;
+  padding: 3px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
 }
 
 .placeholder-text,
@@ -1937,13 +1978,14 @@ onMounted(async () => {
 .role-empty {
   display: inline-flex;
   align-items: center;
-  height: 30px;
+  min-height: 30px;
   padding: 0 12px;
+  border: 1px solid color-mix(in srgb, var(--border-strong) 70%, transparent);
   border-radius: 999px;
-  background: rgba(148, 163, 184, 0.08);
-  color: #7c8597;
-  font-size: 12px;
-  font-weight: 600;
+  background: color-mix(in srgb, var(--surface-muted) 82%, var(--surface-card));
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .action-wrap--compact {
@@ -2337,7 +2379,7 @@ onMounted(async () => {
   // background: var(--surface-card) !important;
   // background-color: var(--surface-card) !important;
   background-image: none !important;
-  box-shadow: -10px 0 18px -18px rgba(0, 0, 0, 0.9);
+  // box-shadow: -10px 0 18px -18px rgba(0, 0, 0, 0.9);
 }
 
 .access-page :deep(.smart-table .el-table__header-wrapper tr > th.el-table-fixed-column--right) {
@@ -2428,9 +2470,46 @@ onMounted(async () => {
   background: rgba(248, 113, 113, 0.1);
 }
 
+/* Keep disabled action buttons semantically colored in dark mode instead of
+   inheriting the global neutral disabled-button treatment. */
+.role-table :deep(.table-row-actions .el-button.is-link.is-disabled) {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  opacity: 0.52 !important;
+}
+
+.role-table :deep(.table-row-actions .el-button--primary.is-link.is-disabled),
+.role-table :deep(.table-row-actions .el-button--primary.is-link.is-disabled > span),
+.role-table :deep(.table-row-actions .el-button--primary.is-link.is-disabled .el-icon) {
+  --el-button-disabled-text-color: var(--table-action-color);
+  color: var(--table-action-color) !important;
+}
+
+.role-table :deep(.table-row-actions .el-button--danger.is-link.is-disabled),
+.role-table :deep(.table-row-actions .el-button--danger.is-link.is-disabled > span),
+.role-table :deep(.table-row-actions .el-button--danger.is-link.is-disabled .el-icon) {
+  --el-button-disabled-text-color: var(--table-action-danger-color);
+  color: var(--table-action-danger-color) !important;
+}
+
 .role-editor-form {
   display: grid;
   gap: 4px;
+}
+
+.menu-editor-form :deep(.menu-type-segmented) {
+  --el-segmented-color: var(--text-secondary);
+  --el-segmented-bg-color: var(--surface-subtle);
+  --el-segmented-item-selected-color: var(--primary-button-text);
+  --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+  --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+  --el-segmented-item-hover-color: var(--text-primary);
+  --el-segmented-item-hover-bg-color: var(--surface-hover);
+  --el-segmented-item-active-bg-color: var(--surface-muted);
+  --el-segmented-item-disabled-color: var(--text-placeholder);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-xs);
 }
 
 .permission-panel {

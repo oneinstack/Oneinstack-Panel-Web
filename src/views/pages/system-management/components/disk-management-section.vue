@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue'
 import { Refresh, View } from '@element-plus/icons-vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import type { SystemDiskDevice } from '@/api/modules'
@@ -15,7 +16,29 @@ interface Props {
   formatBytes: (value?: number) => string
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
+
+const diskPage = ref(1)
+const diskPageSize = ref(10)
+
+const pagedDisks = computed(() => {
+  const start = (diskPage.value - 1) * diskPageSize.value
+  return props.disks.slice(start, start + diskPageSize.value)
+})
+
+const handleDiskPageSizeChange = (size: number) => {
+  diskPageSize.value = size
+  diskPage.value = 1
+}
+
+const handleDiskPageChange = (page: number) => {
+  diskPage.value = page
+}
+
+const handleDiskRefresh = () => {
+  diskPage.value = 1
+  props.onRefresh()
+}
 </script>
 
 <template>
@@ -25,7 +48,7 @@ defineProps<Props>()
         <h2>{{ $t('systemManagement.diskManagement') }}</h2>
         <p>{{ $t('systemManagement.diskDescription') }}</p>
       </div>
-      <el-button :icon="Refresh" @click="onRefresh">{{ $t('systemManagement.refreshDisks') }}</el-button>
+      <el-button :icon="Refresh" @click="handleDiskRefresh">{{ $t('systemManagement.refreshDisks') }}</el-button>
     </div>
 
     <el-alert v-if="diskError" type="error" :closable="false" show-icon>
@@ -45,9 +68,10 @@ defineProps<Props>()
 
     <custom-table
       v-loading="diskLoading"
-      :data="disks"
+      :data="pagedDisks"
       :columns="diskColumns"
       :pagination="false"
+      :auto-pagination="false"
       class="data-table"
       :empty-text="$t('systemManagement.noDiskData')"
     >
@@ -66,6 +90,19 @@ defineProps<Props>()
         <el-button link type="primary" :icon="View" @click="onOpenDetail(row)">{{ $t('common.detail') }}</el-button>
       </template>
     </custom-table>
+
+    <div v-if="disks.length" class="table-footer">
+      <span>{{ $t('systemManagement.totalDisks', { count: disks.length }) }}</span>
+      <el-pagination
+        v-model:current-page="diskPage"
+        v-model:page-size="diskPageSize"
+        layout="total, sizes, prev, pager, next"
+        :total="disks.length"
+        :page-sizes="[10, 20, 50]"
+        @current-change="handleDiskPageChange"
+        @size-change="handleDiskPageSizeChange"
+      />
+    </div>
   </article>
 </template>
 
@@ -138,6 +175,22 @@ defineProps<Props>()
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
+}
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  min-height: 34px;
+}
+
+.table-footer :deep(.el-pagination) {
+  --el-pagination-bg-color: transparent;
+  --el-pagination-button-bg-color: rgba(255, 255, 255, 0.03);
+  --el-pagination-button-disabled-bg-color: rgba(255, 255, 255, 0.02);
+  --el-pagination-hover-color: rgb(var(--primary-color));
+  --el-pagination-text-color: var(--text-secondary);
 }
 
 .usage-cell {
