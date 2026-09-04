@@ -7,6 +7,7 @@ import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import { hasOperationAccess } from '@/utils/access'
+import { formatFileTime } from '@/utils/fileTime'
 
 interface TrashEntry {
   id: string
@@ -105,10 +106,7 @@ const state = reactive({
   }
 })
 
-const formatTime = (value: string) => {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', { hour12: false })
-}
+const formatTime = (value: string) => formatFileTime(value)
 
 const columns = computed<ColumnItem[]>(() => [
   { prop: 'name', label: t('common.name', 'Name'), minWidth: 180, slot: 'name' },

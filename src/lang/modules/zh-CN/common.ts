@@ -94,6 +94,18 @@ export default {
     summaryDetails: '执行明细',
     affectedFiles: '受影响文件',
     executionActions: '执行动作',
+    effectiveValues: '最终使用值',
+    effectiveValueCount: '{count} 个最终值',
+    sensitiveValue: '敏感值已隐藏',
+    emptyValue: '未提供',
+    valueSources: {
+      request: '用户提供',
+      serverDefault: '服务端默认值',
+      manifestDefault: '组件清单默认值',
+      derived: '服务端推导',
+      backendNormalized: '服务端规范化',
+      serverResolved: '服务端解析'
+    },
     expiresAt: '预览有效期至',
     noDetails: '本次预览未返回详细变更项，请确认目标操作无误后再继续。',
     riskLevels: {

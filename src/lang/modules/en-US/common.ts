@@ -94,6 +94,18 @@ export default {
     summaryDetails: 'Execution details',
     affectedFiles: 'Affected files',
     executionActions: 'Execution actions',
+    effectiveValues: 'Effective values',
+    effectiveValueCount: '{count} effective values',
+    sensitiveValue: 'Sensitive value hidden',
+    emptyValue: 'Not provided',
+    valueSources: {
+      request: 'User-provided',
+      serverDefault: 'Server default',
+      manifestDefault: 'Manifest default',
+      derived: 'Derived by server',
+      backendNormalized: 'Backend normalized',
+      serverResolved: 'Resolved by server'
+    },
     expiresAt: 'Preview valid until',
     noDetails: 'No detailed changes were returned for this preview. Confirm the target operation before continuing.',
     riskLevels: {

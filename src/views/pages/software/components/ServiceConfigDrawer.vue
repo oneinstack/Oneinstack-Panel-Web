@@ -17,6 +17,8 @@ interface ConfigurationField {
   key: string
   label: string
   type: string
+  default?: unknown
+  sensitive?: boolean
   unit?: string
   description?: string
   min?: number
@@ -31,7 +33,7 @@ interface ComponentConfiguration {
   revision: string
   applyMode: 'reload' | 'restart'
   fields: ConfigurationField[]
-  values: Record<string, string>
+  values: Record<string, unknown>
   packageSource: string
 }
 
@@ -128,6 +130,24 @@ const historyChangeCount = (entry: ConfigurationHistoryEntry) => Object.keys(ent
   .filter((key) => entry.before[key] !== entry.after[key])
   .length
 
+const hasFieldValue = (value: unknown) => {
+  if (value === undefined || value === null) return false
+  return typeof value === 'string' ? value.trim() !== '' : true
+}
+
+const fieldDefaultValue = (field: ConfigurationField) =>
+  field.sensitive ? undefined : field.default
+
+const fieldPlaceholder = (field: ConfigurationField) => {
+  const defaultValue = fieldDefaultValue(field)
+  if (hasFieldValue(defaultValue)) {
+    return t('software.recommendedValue', 'Recommended: {value}', {
+      value: String(defaultValue)
+    })
+  }
+  return t('software.config.inputConfigValue', 'Enter configuration value')
+}
+
 const toPayload = () => Object.fromEntries(
   (configuration.value?.fields || []).map((field) => [
     field.key,
@@ -141,13 +161,16 @@ const hydrateValues = (current: ComponentConfiguration) => {
   hydrating = true
   Object.keys(values).forEach((key) => delete values[key])
   current.fields.forEach((field) => {
-    const value = current.values[field.key]
+    const currentValue = current.values?.[field.key]
+    const value = hasFieldValue(currentValue)
+      ? currentValue
+      : fieldDefaultValue(field)
     if (field.type === 'integer') {
-      values[field.key] = Number(value)
+      values[field.key] = hasFieldValue(value) ? Number(value) : undefined
     } else if (field.type === 'boolean') {
-      values[field.key] = value === 'true'
+      values[field.key] = value === true || String(value).toLowerCase() === 'true'
     } else {
-      values[field.key] = value
+      values[field.key] = value ?? ''
     }
   })
   preview.value = undefined
@@ -352,6 +375,7 @@ watch(values, () => {
                 :min="field.min"
                 :max="field.max"
                 :step="1"
+                :placeholder="fieldPlaceholder(field)"
                 controls-position="right"
               />
               <el-select
@@ -371,7 +395,7 @@ watch(values, () => {
                 v-else
                 :id="`config-${field.key}`"
                 v-model="values[field.key]"
-                :placeholder="$t('software.config.inputConfigValue')"
+                :placeholder="fieldPlaceholder(field)"
               />
               <p v-if="field.description" class="field-description">
                 {{ field.description }}

@@ -3,11 +3,27 @@ const dateTimeWithoutZone = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)
 
 const parseFileTime = (value: string) => {
   const normalized = value.trim().replace(' ', 'T')
-  // File APIs historically return timezone-less timestamps in UTC.
-  const source = dateTimeWithoutZone.test(normalized) && !timezoneSuffix.test(normalized)
-    ? `${normalized}Z`
-    : normalized
-  return new Date(source)
+  if (dateTimeWithoutZone.test(normalized) && !timezoneSuffix.test(normalized)) {
+    const [datePart, timePart = '00:00:00'] = normalized.split('T')
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hour = '0', minute = '0', secondPart = '0'] = timePart.split(':')
+    const [second = '0', fraction = '0'] = secondPart.split('.')
+    const milliseconds = Number(fraction.slice(0, 3).padEnd(3, '0'))
+
+    // File APIs return timezone-less timestamps as server wall-clock time.
+    // Keep the displayed clock value unchanged instead of applying a guessed offset.
+    return new Date(
+      year,
+      month - 1,
+      day,
+      Number(hour),
+      Number(minute),
+      Number(second),
+      milliseconds
+    )
+  }
+
+  return new Date(normalized)
 }
 
 export const formatFileTime = (value?: string | null) => {

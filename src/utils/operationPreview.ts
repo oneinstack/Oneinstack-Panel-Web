@@ -42,6 +42,12 @@ export interface OperationPreview {
     summary?: string
     unrecoverable?: string[]
   }
+  effectiveValues?: Array<{
+    key: string
+    value?: unknown
+    sensitive?: boolean
+    source?: string
+  }>
   expiresAt?: string
 }
 
@@ -52,6 +58,12 @@ export const normalizeOperationPreview = (response: any): OperationPreview => {
   const review = preview?.review ?? {}
   const impact = preview?.impact ?? plan?.impact ?? {}
   const rollback = preview?.rollback ?? plan?.rollback
+  const effectiveValues =
+    preview?.effectiveValues ??
+    preview?.effective_values ??
+    plan?.effectiveValues ??
+    plan?.effective_values ??
+    []
 
   return {
     ...preview,
@@ -82,6 +94,7 @@ export const normalizeOperationPreview = (response: any): OperationPreview => {
           unrecoverable: rollback?.unrecoverable ?? rollback?.unrecoverable_changes
         }
       : undefined,
+    effectiveValues: normalizeEffectiveValues(effectiveValues),
     expiresAt: preview?.expiresAt ?? preview?.expires_at
   }
 }
@@ -89,6 +102,27 @@ export const normalizeOperationPreview = (response: any): OperationPreview => {
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
+}
+
+const normalizeEffectiveValues = (values: unknown) => {
+  if (!Array.isArray(values)) return []
+  return values.map((item) => {
+    const raw = item && typeof item === 'object' ? item as Record<string, any> : {}
+    const key = String(raw.key || '')
+    const sensitive = raw.sensitive === true || raw.source === 'server_resolved' ||
+      /password|passwd|secret|token|credential|private.?key/i.test(key)
+    if (sensitive) {
+      return {
+        key,
+        sensitive: true,
+        source: raw.source
+      }
+    }
+    return {
+      ...raw,
+      key
+    }
+  })
 }
 
 const operationTitleKeys: Record<string, string> = {
@@ -169,7 +203,7 @@ export const executeOperationPreview = async (
 export const submitOperation = async <T = any>(
   operation: string,
   payload: unknown,
-  options: { confirmPreview?: boolean } = {},
+  options: { confirmPreview?: boolean; forceConfirm?: boolean } = {},
 ) => {
   const preview = await createOperationPreview(operation, payload)
   return await executeOperationPreview(preview, options) as T

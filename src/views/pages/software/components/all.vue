@@ -462,6 +462,7 @@ const isSoftwareVersionField = (field: any) => {
 
 const installFieldType = (field: any): FormItem['type'] => {
   if (isSoftwareVersionField(field)) return 'custom'
+  if (String(field?.type || '').toLowerCase() === 'boolean') return 'checkbox'
   if (String(field?.type || '').toLowerCase() === 'password' || isPasswordInstallField(field)) {
     return 'password'
   }
@@ -566,10 +567,24 @@ const buildVersionFieldRules = (versionLines: string[]) => {
 }
 
 const defaultInstallFieldValue = (field: any) => {
+  if (isPasswordInstallField(field)) return ''
   const value = field?.default ?? field?.defaultValue ?? field?.default_value
   if (value === undefined || value === null) return ''
+  if (String(field?.type || '').toLowerCase() === 'boolean') {
+    return value === true || String(value).toLowerCase() === 'true'
+  }
   if (typeof value === 'object') return JSON.stringify(value)
   return String(value)
+}
+
+const installFieldPlaceholder = (field: any) => {
+  const defaultValue = defaultInstallFieldValue(field)
+  if (defaultValue !== '' && !isPasswordInstallField(field)) {
+    return t('software.recommendedValue', 'Recommended: {value}', { value: defaultValue })
+  }
+  return t('software.inputField', 'Enter {field}', {
+    field: field?.name || field?.value || field?.key
+  })
 }
 
 const openInstallForm = (item: any, requestedVersion = '') => {
@@ -589,9 +604,10 @@ const openInstallForm = (item: any, requestedVersion = '') => {
     .map<FormItem>((field: any) => {
       installForm.value[field.key] = defaultInstallFieldValue(field)
       return {
-        label: field.value || field.name || field.key,
+        label: field.name || field.value || field.key,
         type: installFieldType(field),
         prop: field.key,
+        placeholder: installFieldPlaceholder(field),
         rules: [
           ...buildInstallFieldRules(field),
           ...(isSoftwareVersionField(field) ? buildVersionFieldRules(installVersionLines.value) : [])
@@ -606,6 +622,14 @@ const openInstallForm = (item: any, requestedVersion = '') => {
   drawer.show = true
 }
 
+const buildInstallPayload = (request: Record<string, any>) => {
+  const { key, version, ...rawParameters } = request
+  const parameters = Object.fromEntries(
+    Object.entries(rawParameters).filter(([fieldKey]) => !isSoftwareVersionField({ key: fieldKey }))
+  )
+  return { key, version, parameters }
+}
+
 const handleInstall = async () => {
   if (submitting.value || !canWriteSoftware.value) return
   submitting.value = true
@@ -614,9 +638,12 @@ const handleInstall = async () => {
   if (versionField) {
     request.version = String(request[versionField.prop] ?? '').trim()
   }
+  const payload = buildInstallPayload(request)
   try {
-    const { data: result } = await submitOperation('software.install', request)
-    softwareTaskStore.acceptCreated(result, request)
+    const { data: result } = await submitOperation('software.install', payload, {
+      forceConfirm: true
+    })
+    softwareTaskStore.acceptCreated(result, payload)
     taskDrawer.taskId = result.taskId
     taskDrawer.show = true
     drawer.show = false
@@ -944,7 +971,11 @@ watch(
         <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
           <template #software-version="{ row }">
             <div class="software-version-control">
-              <el-input v-model="installForm.value[row.prop]" clearable />
+              <el-input
+                v-model="installForm.value[row.prop]"
+                :placeholder="row.placeholder"
+                clearable
+              />
               <span v-if="installVersionLines.length" class="software-version-hint">
                 <el-icon aria-hidden="true"><Warning /></el-icon>
                 {{ t('software.versionLimitHint', 'Maximum supported version line: {versions}', { versions: maxInstallVersionLine }) }}

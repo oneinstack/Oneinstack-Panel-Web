@@ -86,6 +86,41 @@ const fileCount = computed(() => props.preview.files?.length || 0)
 
 const actionCount = computed(() => props.preview.actions?.length || 0)
 
+const effectiveValues = computed(() => props.preview.effectiveValues || [])
+
+const effectiveValueSourceKeys: Record<string, string> = {
+  request: 'request',
+  server_default: 'serverDefault',
+  manifest_default: 'manifestDefault',
+  derived: 'derived',
+  backend_normalized: 'backendNormalized',
+  server_resolved: 'serverResolved'
+}
+
+const isSensitiveEffectiveValue = (item: NonNullable<OperationPreview['effectiveValues']>[number]) => {
+  if (item.sensitive === true || item.source === 'server_resolved') return true
+  return /password|passwd|secret|token|credential|private.?key/i.test(item.key)
+}
+
+const effectiveValueText = (item: NonNullable<OperationPreview['effectiveValues']>[number]) => {
+  if (isSensitiveEffectiveValue(item)) {
+    return t('common.operationPreview.sensitiveValue', 'Sensitive value hidden')
+  }
+  if (item.value === undefined || item.value === null || item.value === '') {
+    return t('common.operationPreview.emptyValue', 'Not provided')
+  }
+  if (typeof item.value === 'object') return JSON.stringify(item.value)
+  return String(item.value)
+}
+
+const effectiveValueSource = (source?: string) => {
+  if (!source) return ''
+  const sourceKey = effectiveValueSourceKeys[source] || ''
+  return sourceKey
+    ? t(`common.operationPreview.valueSources.${sourceKey}`, source)
+    : source
+}
+
 const formattedExpiresAt = computed(() => {
   if (!props.preview.expiresAt) return ''
   const date = new Date(props.preview.expiresAt)
@@ -140,6 +175,26 @@ const rollbackSummary = computed(() => {
         >
           {{ label }}
         </el-tag>
+      </div>
+    </section>
+
+    <section v-if="effectiveValues.length" class="preview-section effective-values-section">
+      <div class="preview-section__title">
+        <h4>{{ t('common.operationPreview.effectiveValues', 'Effective values') }}</h4>
+        <span>{{ t('common.operationPreview.effectiveValueCount', '{count} values', { count: effectiveValues.length }) }}</span>
+      </div>
+      <div class="effective-values-list">
+        <div v-for="item in effectiveValues" :key="item.key" class="effective-value-item">
+          <div class="effective-value-item__meta">
+            <code>{{ item.key }}</code>
+            <el-tag v-if="effectiveValueSource(item.source)" size="small" effect="plain">
+              {{ effectiveValueSource(item.source) }}
+            </el-tag>
+          </div>
+          <strong :class="{ 'is-sensitive': isSensitiveEffectiveValue(item) }">
+            {{ effectiveValueText(item) }}
+          </strong>
+        </div>
       </div>
     </section>
 
@@ -497,6 +552,51 @@ const rollbackSummary = computed(() => {
   gap: 10px;
 }
 
+.effective-values-list {
+  display: grid;
+  gap: 8px;
+}
+
+.effective-value-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--surface-card) 95%, rgba(var(--primary-color), 0.04));
+
+  strong {
+    min-width: 0;
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+    text-align: right;
+  }
+
+  strong.is-sensitive {
+    color: var(--text-tertiary);
+    font-weight: 500;
+  }
+}
+
+.effective-value-item__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 6px;
+
+  code {
+    max-width: 100%;
+    color: var(--text-secondary);
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    overflow-wrap: anywhere;
+  }
+}
+
 .preview-metric {
   padding: 12px 14px;
   border: 1px solid var(--border-subtle);
@@ -661,6 +761,16 @@ const rollbackSummary = computed(() => {
 
   .preview-metrics {
     grid-template-columns: 1fr;
+  }
+
+  .effective-value-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+
+    strong {
+      text-align: left;
+    }
   }
 
   .safety-item > div {
