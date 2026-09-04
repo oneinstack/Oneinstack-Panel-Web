@@ -5,6 +5,7 @@ import { Delete, Download, RefreshLeft } from "@element-plus/icons-vue";
 import { Api } from "@/api/modules";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
+import { hasOperationAccess } from '@/utils/access'
 
 interface DatabaseLibrary {
   id: number;
@@ -54,6 +55,9 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
   return value && value !== key ? value : fallback;
 };
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
+const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
+const canBackupDatabase = computed(() => hasOperationAccess('database', 'backup', { actions: ['database.write'] }))
 
 const state = reactive({
   activeTab: "backups",
@@ -102,7 +106,7 @@ const backupColumns = computed<ColumnItem[]>(() => [
 ]);
 
 const loadData = async (quiet = false) => {
-  if (!props.library) return;
+  if (!props.library || !canReadDatabase.value) return;
   if (!quiet) state.loading = true;
   try {
     const [backupResponse, taskResponse] = await Promise.all([
@@ -139,7 +143,7 @@ const close = () => {
 };
 
 const createBackup = async () => {
-  if (!props.library || state.submitting) return;
+  if (!props.library || !canBackupDatabase.value || state.submitting) return;
   try {
     await ElMessageBox.confirm(
       t(
@@ -173,7 +177,7 @@ const createBackup = async () => {
 };
 
 const restoreBackup = async (backup: DatabaseBackup) => {
-  if (!props.library) return;
+  if (!props.library || !canWriteDatabase.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
       t(
@@ -215,7 +219,7 @@ const restoreBackup = async (backup: DatabaseBackup) => {
 };
 
 const deleteBackup = async (backup: DatabaseBackup) => {
-  if (!props.library) return;
+  if (!props.library || !canWriteDatabase.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
       t(
@@ -247,6 +251,7 @@ const deleteBackup = async (backup: DatabaseBackup) => {
 };
 
 const cancelTask = async (task: DatabaseTask) => {
+  if (!canWriteDatabase.value) return;
   await Api.cancelDatabaseTask(task.id);
   ElMessage.success(
     t("database.backup.cancelSubmitted", "Cancel request submitted"),
@@ -255,6 +260,7 @@ const cancelTask = async (task: DatabaseTask) => {
 };
 
 const downloadBackup = async (backup: DatabaseBackup) => {
+  if (!canReadDatabase.value) return;
   await Api.downloadDatabaseBackup(backup.id, backup.fileName);
 };
 
@@ -332,12 +338,12 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
       <el-button
         type="primary"
         :loading="state.submitting"
-        :disabled="hasActiveTask"
+        :disabled="hasActiveTask || !canBackupDatabase"
         @click="createBackup"
       >
         {{ t("database.backup.backupNow", "立即备份") }}
       </el-button>
-      <el-button :loading="state.loading" @click="loadData()">{{
+      <el-button :loading="state.loading" :disabled="!canReadDatabase" @click="loadData()">{{
         t("common.refresh", "刷新")
       }}</el-button>
       <span v-if="hasActiveTask" class="active-hint">{{
@@ -387,7 +393,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
                 type="primary"
                 link
                 :icon="RefreshLeft"
-                :disabled="hasActiveTask"
+                :disabled="hasActiveTask || !canWriteDatabase"
                 @click="restoreBackup(row)"
                 >{{ t("database.backup.restore", "恢复") }}</el-button
               >
@@ -395,7 +401,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
                 type="danger"
                 link
                 :icon="Delete"
-                :disabled="hasActiveTask"
+                :disabled="hasActiveTask || !canWriteDatabase"
                 @click="deleteBackup(row)"
                 >{{ t("common.delete", "删除") }}</el-button
               >
@@ -449,7 +455,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
             </div>
             <div class="task-actions">
               <el-button
-                v-if="!terminalStatuses.has(task.status)"
+                v-if="!terminalStatuses.has(task.status) && canWriteDatabase"
                 type="danger"
                 link
                 @click="cancelTask(task)"

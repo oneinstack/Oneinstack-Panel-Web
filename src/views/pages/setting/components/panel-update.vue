@@ -5,6 +5,14 @@ import { CopyDocument } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
+
+const canReadPanelSettings = computed(() => hasOperationAccess('panelSettings', 'read', {
+  actions: ['panelSettings.read', 'system.settings.read']
+}))
+const canWritePanelSettings = computed(() => hasOperationAccess('panelSettings', 'write', {
+  actions: ['panelSettings.write', 'system.settings.write']
+}))
 
 interface VersionInfo {
   version: string
@@ -156,6 +164,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 }
 
 const loadBaseState = async () => {
+  if (!canReadPanelSettings.value) return
   const [versionResponse, statusResponse] = await Promise.all([
     Api.getPanelVersion({ silentError: true }),
     Api.getPanelUpdateStatus({ silentError: true })
@@ -165,6 +174,7 @@ const loadBaseState = async () => {
 }
 
 const checkForUpdate = async () => {
+  if (!canReadPanelSettings.value) return
   loading.value = true
   errorMessage.value = ''
   try {
@@ -189,6 +199,7 @@ const checkForUpdate = async () => {
 }
 
 const applyUpdate = async () => {
+  if (!canWritePanelSettings.value) return
   if (!canApplyUpdate.value || applying.value) return
   try {
     const targetVersion = latestVersionText.value || t('setting.update.newVersion', 'new version')
@@ -348,9 +359,9 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="update-actions">
-      <el-button :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
+      <el-button v-if="canReadPanelSettings" :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
       <el-button
-        v-if="!check || canApplyUpdate"
+        v-if="canWritePanelSettings && (!check || canApplyUpdate)"
         type="primary"
         :loading="applying"
         :disabled="!canApplyUpdate || isRunning"

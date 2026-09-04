@@ -50,7 +50,7 @@
           {{ connectionLabel }}
         </span>
         <el-button
-          v-if="connectionState !== 'connected'"
+          v-if="canUseTerminal && connectionState !== 'connected'"
           type="primary"
           :loading="connecting"
           :disabled="!status?.enabled || !terminalAvailable"
@@ -58,7 +58,7 @@
         >
           {{ $t('terminal.startRootSession') }}
         </el-button>
-        <el-button v-else type="danger" plain @click="disconnectTerminal">
+        <el-button v-else-if="canUseTerminal" type="danger" plain @click="disconnectTerminal">
           {{ $t('terminal.disconnectSession') }}
         </el-button>
       </div>
@@ -172,9 +172,13 @@ import 'xterm/css/xterm.css'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import { useAppStore } from '@/stores/modules/app';
+import { hasOperationAccess } from '@/utils/access'
 import i18n from '@/lang'
 
 const sapp = useAppStore()
+const canUseTerminal = computed(() => hasOperationAccess('terminal', 'access', {
+  actions: ['terminal.access', 'terminal.read']
+}))
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -216,6 +220,7 @@ let fitAddon: FitAddon | undefined
 let socket: WebSocket | undefined
 let resizeObserver: ResizeObserver | undefined
 let statusTimer: number | undefined
+let connectionBannerLocalized = false
 
 const disableXtermTextareaSync = (instance: Terminal) => {
   // xterm keeps the style-writing routine on its internal core, not the public Terminal prototype.
@@ -231,6 +236,7 @@ const disableXtermTextareaSync = (instance: Terminal) => {
 const resetTerminalState = () => {
   terminalIdentity.value = 'root@panel'
   currentPath.value = '/root'
+  connectionBannerLocalized = false
 }
 
 const terminalAvailable = computed(() =>
@@ -267,6 +273,25 @@ const decodeOutput = (value: string) => {
     bytes[index] = binary.charCodeAt(index)
   }
   return new TextDecoder().decode(bytes)
+}
+
+const localizeConnectionBanner = (value: string) => {
+  if (connectionBannerLocalized) return value
+  const localized = t(
+    'terminal.rootConnectedBanner',
+    'Root terminal connected · This session has full system permissions. Operation events will be written to the audit log.',
+  )
+  const result = value
+    .replace(
+      /Root\s*终端已连接\s*[·•]\s*当前会话拥有完整系统权限[，,]\s*操作事件将写入审计日志[。.]?/g,
+      localized,
+    )
+    .replace(
+      /Root\s*terminal\s*connected\s*[·•]\s*This session has full system permissions?[.;]\s*Operation events will be written to the audit log[.]?/gi,
+      localized,
+    )
+  if (result !== value) connectionBannerLocalized = true
+  return result
 }
 
 const terminalFileTypeColors = {
@@ -330,6 +355,7 @@ const colorizeTerminalOutput = (value: string) =>
   value.replace(/[^\r\n]+/g, line => colorizeTerminalListingLine(line))
 
 const loadStatus = async (quiet = false) => {
+  if (!canUseTerminal.value) return
   try {
     const { data } = await Api.getTerminalStatus()
     status.value = data
@@ -436,6 +462,7 @@ const destroyTerminal = () => {
 }
 
 const connectTerminal = async () => {
+  if (!canUseTerminal.value) return
   if (connecting.value || connectionState.value === 'connected') return
   connecting.value = true
   connectionState.value = 'connecting'
@@ -473,7 +500,8 @@ const connectTerminal = async () => {
     }
     socket.onmessage = event => {
       try {
-        terminal?.write(colorizeTerminalOutput(decodeOutput(String(event.data))))
+        const output = localizeConnectionBanner(decodeOutput(String(event.data)))
+        terminal?.write(colorizeTerminalOutput(output))
       } catch {
         terminal?.write(`\r\n\x1b[31m${t('terminal.outputDecodeFailed', 'Failed to decode terminal output.')}\x1b[0m\r\n`)
       }
@@ -496,6 +524,7 @@ const connectTerminal = async () => {
 }
 
 const disconnectTerminal = () => {
+  if (!canUseTerminal.value) return
   socket?.close(1000, 'user closed terminal')
 }
 

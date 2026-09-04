@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import memo from './components/memo.vue'
-import { markRaw, onMounted, reactive, watch } from 'vue'
+import { computed, markRaw, onMounted, reactive, watch } from 'vue'
 import { useAppStore } from '@/stores/modules/app';
 import { Api } from '@/api/modules'
 import sutil from '@/utils/sutil'
@@ -11,11 +11,22 @@ import basicChart from '@/components/echarts/basic-chart.vue'
 import { ElMessage } from 'element-plus'
 import System from '@/utils/System'
 import { useConfigStore } from '@/stores/modules/config';
-import { resolveMenuLabelByKey } from '@/utils/access'
+import { hasOperationAccess, resolveMenuLabelByKey } from '@/utils/access'
 import i18n from '@/lang'
 
 const sapp = useAppStore()
 const sconfig = useConfigStore()
+const canReadDashboard = computed(() => hasOperationAccess('dashboard', 'read'))
+const canReadWebsite = computed(() => hasOperationAccess('website', 'read'))
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
+const canReadMonitor = computed(() => hasOperationAccess('monitoring', 'read', {
+  scopes: ['monitor'],
+  actions: ['monitor.read']
+}))
+const canWriteMemo = computed(() => hasOperationAccess('dashboard', 'write', {
+  scopes: ['panelSettings'],
+  actions: ['dashboard.write', 'panelSettings.write', 'system.settings.write']
+}))
 
 type MonitorType = 'network' | 'disk'
 
@@ -114,10 +125,12 @@ const conf = reactive({
     item.linkFn?.()
   },
   getSysCount: async () => {
-    const { data: wbsiteCount } = await Api.getWebsiteCount()
-    const { data: databaseCount } = await Api.getDatabaseCount()
-    conf.category[0].value = wbsiteCount
-    conf.category[1].value = databaseCount
+    const [websiteCount, databaseCount] = await Promise.all([
+      canReadWebsite.value ? Api.getWebsiteCount() : Promise.resolve({ data: '--' }),
+      canReadDatabase.value ? Api.getDatabaseCount() : Promise.resolve({ data: '--' })
+    ])
+    conf.category[0].value = websiteCount.data
+    conf.category[1].value = databaseCount.data
   },
   monitorData: {
     selectedType: 'network' as MonitorType,
@@ -326,6 +339,7 @@ const conf = reactive({
       }
     },
     update: async (isCardChange = false) => {
+      if (!canReadMonitor.value) return
       const { data: res } = await Api.getSysMonitor()
       if (!conf.monitorData.options.length || isCardChange) {
         conf.monitorData.options = (res[conf.monitorData.selectedType] as any[])
@@ -516,6 +530,7 @@ const conf = reactive({
     getStatusLabel: (item: Options) => item.labelKey ? t(item.labelKey, item.label) : item.label,
     handleStatusChange: () => conf.statusData.update(),
     update: async () => {
+      if (!canReadDashboard.value) return
       const { data: res } = await Api.getSysinfo()
       switch (conf.statusData.selected.value) {
         case 1:
@@ -580,16 +595,19 @@ const conf = reactive({
     },
     show: false,
     open: async () => {
+      if (!canReadDashboard.value) return
       await conf.memo.getData()
       conf.memo.show = true
     },
     close: () => (conf.memo.show = false),
     getData: async () => {
+      if (!canReadDashboard.value) return
       const { data: res } = await Api.getSysRemark()
       conf.memo.data = res
       conf.category[3].value = res.content
     },
     update: async () => {
+      if (!canWriteMemo.value) return
       await Api.updateSysRemark(conf.memo.data)
       ElMessage.success(t('home.saveSuccess', '保存成功'))
       conf.memo.getData()

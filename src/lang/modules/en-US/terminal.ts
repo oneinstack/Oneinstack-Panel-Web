@@ -39,6 +39,7 @@ export default {
   auditEnabledDescription: 'Records sessions, command submit time, and operator. Command content, arguments, interactive input, and terminal output are not saved.',
   notConnected: 'Terminal not connected',
   waitingAuthenticationBanner: 'Waiting for authentication',
+  rootConnectedBanner: 'Root terminal connected · This session has full system permissions. Operation events will be written to the audit log.',
   closed: 'Terminal closed',
   passwordRequiredTip: 'Enter the current administrator password again when connecting.',
   connection: {

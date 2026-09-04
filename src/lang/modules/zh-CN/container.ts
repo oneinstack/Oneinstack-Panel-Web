@@ -500,6 +500,11 @@ export default {
   },
   task: {
     noTask: '暂无容器任务',
+    listTitle: '容器任务',
+    listHint: '选择任务查看详情和实时日志',
+    filterActive: '进行中',
+    filterAll: '全部',
+    noActiveTasks: '暂无进行中的任务',
     operations: {
       composeCreate: '创建并启动 Compose 项目',
       composeEdit: '保存 Compose 配置',

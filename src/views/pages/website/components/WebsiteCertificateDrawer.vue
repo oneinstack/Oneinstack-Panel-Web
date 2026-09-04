@@ -9,6 +9,8 @@ import i18n from '@/lang'
 const props = defineProps<{
   modelValue: boolean
   website: Record<string, any>
+  canRead?: boolean
+  canWrite?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -19,6 +21,8 @@ const emit = defineEmits<{
 const loading = ref(false)
 const submitting = ref(false)
 const t = i18n.t as any
+const canReadWebsite = computed(() => props.canRead !== false)
+const canWriteWebsite = computed(() => props.canWrite === true)
 const certificate = ref<Record<string, any> | null>(null)
 const tasks = ref<Record<string, any>[]>([])
 const logDialog = reactive({
@@ -65,7 +69,7 @@ const formatTime = (value?: string) => {
 }
 
 const loadData = async (quiet = false) => {
-  if (!props.website?.id) return
+  if (!props.website?.id || !canReadWebsite.value) return
   if (!quiet) loading.value = true
   try {
     const [certificateResponse, taskResponse] = await Promise.all([
@@ -104,6 +108,7 @@ const updatePolling = () => {
 }
 
 const issue = async () => {
+  if (!canWriteWebsite.value) return
   const email = form.email.trim()
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     ElMessage.warning(i18n.t('website.notifications.invalidAcmeEmail'))
@@ -135,7 +140,7 @@ const issue = async () => {
 }
 
 const renew = async () => {
-  if (!certificate.value?.id) return
+  if (!canWriteWebsite.value || !certificate.value?.id) return
   try {
     await Api.renewWebsiteCertificate(certificate.value.id)
     ElMessage.success(i18n.t('website.notifications.renewalTaskCreated'))
@@ -146,7 +151,7 @@ const renew = async () => {
 }
 
 const disable = async () => {
-  if (!certificate.value?.id) return
+  if (!canWriteWebsite.value || !certificate.value?.id) return
   try {
     const result = await ElMessageBox.prompt(
       t('website.certificateDrawer.disableConfirm', { domain: props.website.name }),
@@ -169,6 +174,7 @@ const disable = async () => {
 }
 
 const cancelTask = async (task: Record<string, any>) => {
+  if (!canWriteWebsite.value) return
   try {
     await Api.cancelCertificateTask(task.id)
     ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
@@ -179,6 +185,7 @@ const cancelTask = async (task: Record<string, any>) => {
 }
 
 const showLog = async (task: Record<string, any>) => {
+  if (!canReadWebsite.value) return
   logDialog.show = true
   logDialog.title = `${task.websiteName} · ${t(`website.certificateDrawer.${task.operation === 'renew' ? 'renew' : 'issue'}`)}${t('website.certificateDrawer.logSuffix')}`
   logDialog.loading = true
@@ -253,24 +260,24 @@ onBeforeUnmount(() => {
 
       <el-form class="certificate-form" label-width="110px" style="max-width: 620px">
         <el-form-item :label="t('website.certificateDrawer.accountEmail')" required>
-          <el-input v-model="form.email" placeholder="admin@example.com" :disabled="!!activeTask" />
+          <el-input v-model="form.email" placeholder="admin@example.com" :disabled="!canWriteWebsite || !!activeTask" />
         </el-form-item>
         <el-form-item :label="t('website.certificateDrawer.autoRenew')">
-          <el-switch v-model="form.autoRenew" :disabled="!!activeTask" />
+          <el-switch v-model="form.autoRenew" :disabled="!canWriteWebsite || !!activeTask" />
         </el-form-item>
         <el-form-item :label="t('website.certificateDrawer.renewEarly')">
-          <el-input-number v-model="form.renewBeforeDays" :min="1" :max="90" :disabled="!!activeTask" />
+          <el-input-number v-model="form.renewBeforeDays" :min="1" :max="90" :disabled="!canWriteWebsite || !!activeTask" />
           <span class="form-tip">{{ t('website.certificateDrawer.days') }}</span>
         </el-form-item>
         <el-form-item :label="t('website.certificateDrawer.forceHttps')">
-          <el-switch v-model="form.forceHttps" :disabled="!!activeTask" />
+          <el-switch v-model="form.forceHttps" :disabled="!canWriteWebsite || !!activeTask" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="submitting" :disabled="!!activeTask" @click="issue">
+          <el-button v-if="canWriteWebsite" type="primary" :loading="submitting" :disabled="!!activeTask" @click="issue">
             {{ certificateEnabled ? t('website.certificateDrawer.reissueApply') : t('website.certificateDrawer.issueDeploy') }}
           </el-button>
-          <el-button v-if="certificateEnabled" :disabled="!!activeTask" @click="renew">{{ t('website.certificateDrawer.renewNow') }}</el-button>
-          <el-button v-if="certificateEnabled" type="danger" plain :disabled="!!activeTask" @click="disable">
+          <el-button v-if="certificateEnabled && canWriteWebsite" :disabled="!!activeTask" @click="renew">{{ t('website.certificateDrawer.renewNow') }}</el-button>
+          <el-button v-if="certificateEnabled && canWriteWebsite" type="danger" plain :disabled="!!activeTask" @click="disable">
             {{ t('website.certificateDrawer.disableSsl') }}
           </el-button>
         </el-form-item>
@@ -291,9 +298,9 @@ onBeforeUnmount(() => {
           <template #createdAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #actionColumn="{ row }">
               <div class="table-row-actions">
-                <el-button link type="primary" :icon="Document" @click="showLog(row)">{{ t('website.certificateDrawer.log') }}</el-button>
+                <el-button v-if="canReadWebsite" link type="primary" :icon="Document" @click="showLog(row)">{{ t('website.certificateDrawer.log') }}</el-button>
                 <el-button
-                  v-if="activeStatuses.includes(row.status)"
+                  v-if="activeStatuses.includes(row.status) && canWriteWebsite"
                   link
                   type="danger"
                   :icon="CircleClose"

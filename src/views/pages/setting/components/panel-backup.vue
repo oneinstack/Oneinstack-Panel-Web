@@ -5,8 +5,15 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { Api } from "@/api/modules";
 import { useConfigStore } from "@/stores/modules/config";
 import i18n from "@/lang";
+import { hasOperationAccess } from "@/utils/access";
 
 const sconfig = useConfigStore()
+const canReadPanelSettings = computed(() => hasOperationAccess("panelSettings", "read", {
+  actions: ["panelSettings.read", "system.settings.read"],
+}));
+const canWritePanelSettings = computed(() => hasOperationAccess("panelSettings", "write", {
+  actions: ["panelSettings.write", "system.settings.write"],
+}));
 
 interface BackupInfo {
   id: string;
@@ -123,6 +130,7 @@ const formatDate = (value?: string) => {
 };
 
 const loadData = async (quiet = false) => {
+  if (!canReadPanelSettings.value) return;
   if (!quiet) loading.value = true;
   try {
     const [backupResponse, statusResponse] = await Promise.all([
@@ -146,6 +154,7 @@ const resetDialog = () => {
 };
 
 const openDialog = (mode: DialogMode, backup?: BackupInfo) => {
+  if (!canWritePanelSettings.value) return;
   resetDialog();
   dialogMode.value = mode;
   selectedBackup.value = backup;
@@ -207,6 +216,7 @@ const importBackup = async () => {
 };
 
 const submitDialog = async () => {
+  if (!canWritePanelSettings.value) return;
   if (!validatePassphrase() || submitting.value) return;
   if (
     dialogMode.value === "create" &&
@@ -277,10 +287,12 @@ const submitDialog = async () => {
 };
 
 const downloadBackup = async (backup: BackupInfo) => {
+  if (!canReadPanelSettings.value) return;
   await Api.downloadPanelBackup(backup.id, backup.fileName);
 };
 
 const deleteBackup = async (backup: BackupInfo) => {
+  if (!canWritePanelSettings.value) return;
   try {
     await ElMessageBox.confirm(
       t(
@@ -374,6 +386,7 @@ onBeforeUnmount(() => {
           $t("setting.backup.mediumRisk")
         }}</el-tag>
         <el-button
+          v-if="canWritePanelSettings"
           type="primary"
           plain
           :disabled="restoreRunning"
@@ -381,6 +394,7 @@ onBeforeUnmount(() => {
           >{{ $t("setting.backup.importBackup") }}</el-button
         >
         <el-button
+          v-if="canWritePanelSettings"
           type="primary"
           :disabled="restoreRunning"
           @click="openDialog('create')"
@@ -433,10 +447,11 @@ onBeforeUnmount(() => {
           </div>
         </div>
         <div class="backup-item__actions">
-          <el-button link @click="downloadBackup(backup)">{{
+          <el-button v-if="canReadPanelSettings" link @click="downloadBackup(backup)">{{
             $t("common.download")
           }}</el-button>
           <el-button
+            v-if="canWritePanelSettings"
             link
             type="primary"
             :disabled="restoreRunning"
@@ -445,6 +460,7 @@ onBeforeUnmount(() => {
             {{ $t("setting.backup.restore") }}
           </el-button>
           <el-button
+            v-if="canWritePanelSettings"
             link
             type="danger"
             :disabled="restoreRunning"

@@ -1,6 +1,69 @@
 import { useConfigStore } from '@/stores/modules/config'
 import i18n from '@/lang'
 
+type AccessAliases = {
+  scopes?: string[]
+  actions?: string[]
+}
+
+/**
+ * Resolve an operation against the access matrix without treating menu visibility
+ * as write permission. Aliases keep the UI compatible with old matrix key names.
+ */
+export const hasOperationAccess = (
+  scope: string,
+  action: string,
+  aliases: AccessAliases = {}
+) => {
+  const sconfig = useConfigStore()
+  if (sconfig.isAdministrator()) return true
+
+  const scopes = sconfig.scopeAccess as Record<string, any>
+  const actions = sconfig.actionAccess as Record<string, boolean>
+  const hasOwn = (value: unknown, key: string) =>
+    Boolean(value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, key))
+  const readScopeValue = (scopeKey: string, actionKey: string) => {
+    const scopeValue = scopes?.[scopeKey]
+    if (hasOwn(scopeValue, actionKey)) return { found: true, value: Boolean(scopeValue[actionKey]) }
+
+    const flatKey = `${scopeKey}.${actionKey}`
+    if (hasOwn(scopes, flatKey)) return { found: true, value: Boolean(scopes[flatKey]) }
+
+    const nestedScope = scopeKey.split('.').reduce<any>((value, part) => value?.[part], scopes)
+    if (hasOwn(nestedScope, actionKey)) return { found: true, value: Boolean(nestedScope[actionKey]) }
+    return { found: false, value: false }
+  }
+  const readActionValue = (key: string) =>
+    hasOwn(actions, key) ? { found: true, value: Boolean(actions[key]) } : { found: false, value: false }
+
+  const primaryScopeValue = readScopeValue(scope, action)
+  if (primaryScopeValue.found) return primaryScopeValue.value
+  const primaryActionValue = readActionValue(`${scope}.${action}`)
+  if (primaryActionValue.found) return primaryActionValue.value
+
+  const aliasScopeKeys = [
+    ...(aliases.scopes || []),
+    ...(aliases.actions || []).map((key) => key.split('.').slice(0, -1).join('.')).filter(Boolean)
+  ]
+  const aliasActionKeys = [...(aliases.actions || [])]
+  for (const aliasScope of aliasScopeKeys) {
+    const aliasScopeAction = aliasActionKeys
+      .map((key) => key.split('.').pop() || key)
+      .find((key) => readScopeValue(aliasScope, key).found)
+    if (aliasScopeAction) return readScopeValue(aliasScope, aliasScopeAction).value
+
+    const aliasScopeValue = readScopeValue(aliasScope, action)
+    if (aliasScopeValue.found) return aliasScopeValue.value
+  }
+
+  for (const aliasAction of aliasActionKeys) {
+    const aliasActionValue = readActionValue(aliasAction)
+    if (aliasActionValue.found) return aliasActionValue.value
+  }
+
+  return false
+}
+
 export const menuKeyLabelMap: Record<string, string> = {
   dashboard: 'Home',
   website: 'Websites',

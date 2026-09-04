@@ -39,6 +39,7 @@ export default {
   auditEnabledDescription: '记录会话、命令提交时间和操作者；命令内容、参数、交互输入和终端输出均不保存。',
   notConnected: '终端尚未连接',
   waitingAuthenticationBanner: '等待身份认证',
+  rootConnectedBanner: 'Root 终端已连接 · 当前会话拥有完整系统权限，操作事件将写入审计日志。',
   closed: '终端已关闭',
   passwordRequiredTip: '连接时需要再次输入当前管理员密码。',
   connection: {

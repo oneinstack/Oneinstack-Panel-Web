@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 interface RuntimeLogEntry {
   id: number
@@ -65,6 +66,9 @@ let statsTimer: ReturnType<typeof setInterval> | undefined
 
 const historicalMode = computed(() => Boolean(dateRange.value?.length))
 const canLoadOlder = computed(() => hasOlder.value && Boolean(oldestID.value) && entries.value.length < MAX_VISIBLE_LOGS)
+const canReadRuntimeLog = computed(() => hasOperationAccess('runtimeLog', 'read', {
+  actions: ['runtimeLog.read', 'runtime.log.read']
+}))
 const streamLabel = computed(() => ({
   connecting: t('runtimeLog.connecting', '正在连接'),
   live: t('runtimeLog.live', '实时连接'),
@@ -90,6 +94,7 @@ const queryParams = (extra: Record<string, any> = {}) => ({
 })
 
 const loadStats = async () => {
+  if (!canReadRuntimeLog.value) return
   const { data } = await Api.getRuntimeLogStats()
   stats.value = data
 }
@@ -121,6 +126,10 @@ const mergeResult = (result: RuntimeLogResult, prepend = false) => {
 }
 
 const loadInitial = async () => {
+  if (!canReadRuntimeLog.value) {
+    entries.value = []
+    return
+  }
   disconnectStream()
   loading.value = true
   try {
@@ -140,7 +149,7 @@ const loadInitial = async () => {
 }
 
 const loadOlder = async () => {
-  if (!canLoadOlder.value || loadingOlder.value) return
+  if (!canReadRuntimeLog.value || !canLoadOlder.value || loadingOlder.value) return
   loadingOlder.value = true
   try {
     const remaining = MAX_VISIBLE_LOGS - entries.value.length
@@ -155,6 +164,7 @@ const loadOlder = async () => {
 }
 
 const catchUp = async () => {
+  if (!canReadRuntimeLog.value) return
   let cursor = latestID.value
   for (let page = 0; page < 10; page++) {
     const { data } = await Api.getRuntimeLogs(queryParams({ afterId: cursor, limit: 1000 }))
@@ -202,6 +212,7 @@ const disconnectStream = (markPaused = false) => {
 }
 
 const toggleStream = async () => {
+  if (!canReadRuntimeLog.value) return
   if (streamState.value === 'paused') {
     streamState.value = 'connecting'
     await catchUp()
@@ -212,11 +223,13 @@ const toggleStream = async () => {
 }
 
 const applyFilters = async () => {
+  if (!canReadRuntimeLog.value) return
   appliedKeyword.value = keyword.value.trim()
   await loadInitial()
 }
 
 const resetFilters = async () => {
+  if (!canReadRuntimeLog.value) return
   level.value = ''
   source.value = ''
   keyword.value = ''
@@ -233,6 +246,7 @@ const clearView = () => {
 }
 
 const exportVisible = () => {
+  if (!canReadRuntimeLog.value) return
   if (!entries.value.length) {
     ElMessage.warning(t('runtimeLog.noExportLogs', '当前没有可导出的日志'))
     return
@@ -250,6 +264,7 @@ const exportVisible = () => {
 }
 
 const copyVisible = async () => {
+  if (!canReadRuntimeLog.value) return
   if (!entries.value.length) {
     ElMessage.warning(t('runtimeLog.noCopyLogs', '当前没有可复制的日志'))
     return
@@ -318,10 +333,10 @@ onUnmounted(() => {
       </div>
       <div class="heading-actions">
         <el-tag :type="streamType" effect="dark">{{ streamLabel }}</el-tag>
-        <el-button v-if="!historicalMode" @click="toggleStream">
+        <el-button v-if="canReadRuntimeLog && !historicalMode" @click="toggleStream">
           {{ streamState === 'paused' ? $t('runtimeLog.resumeLive') : $t('runtimeLog.pauseLive') }}
         </el-button>
-        <el-button type="primary" :loading="loading" @click="applyFilters">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canReadRuntimeLog" type="primary" :loading="loading" @click="applyFilters">{{ $t('common.refresh') }}</el-button>
       </div>
     </div>
 
@@ -375,23 +390,23 @@ onUnmounted(() => {
           />
         </div>
         <div class="filter-actions">
-          <el-button type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
-          <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
+          <el-button v-if="canReadRuntimeLog" type="primary" @click="applyFilters">{{ $t('common.query') }}</el-button>
+          <el-button v-if="canReadRuntimeLog" @click="resetFilters">{{ $t('common.reset') }}</el-button>
         </div>
       </div>
 
       <div class="console-toolbar">
         <div>
-          <el-button :disabled="!canLoadOlder" :loading="loadingOlder" @click="loadOlder">
+          <el-button v-if="canReadRuntimeLog" :disabled="!canLoadOlder" :loading="loadingOlder" @click="loadOlder">
             {{ $t('runtimeLog.loadOlder') }}
           </el-button>
           <span>{{ $t('runtimeLog.visibleCount', { count: entries.length, max: MAX_VISIBLE_LOGS }) }}</span>
         </div>
         <div>
           <el-switch v-model="autoScroll" :active-text="$t('runtimeLog.autoScroll')" />
-          <el-button link type="primary" @click="scrollToBottom">{{ $t('runtimeLog.scrollBottom') }}</el-button>
-          <el-button link type="primary" @click="copyVisible">{{ $t('common.copy') }}</el-button>
-          <el-button link type="primary" @click="exportVisible">{{ $t('runtimeLog.exportVisible') }}</el-button>
+          <el-button v-if="canReadRuntimeLog" link type="primary" @click="scrollToBottom">{{ $t('runtimeLog.scrollBottom') }}</el-button>
+          <el-button v-if="canReadRuntimeLog" link type="primary" @click="copyVisible">{{ $t('common.copy') }}</el-button>
+          <el-button v-if="canReadRuntimeLog" link type="primary" @click="exportVisible">{{ $t('runtimeLog.exportVisible') }}</el-button>
           <el-button link @click="clearView">{{ $t('runtimeLog.clearView') }}</el-button>
         </div>
       </div>

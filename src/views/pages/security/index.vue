@@ -94,8 +94,12 @@ const conf = reactive({
 
 })
 
+const visibleList = computed(() =>
+  conf.list.filter((item: any) => item.index !== 5 || conf.fail2banCapabilities.showFail2banTab)
+)
+
 const activeTab = computed(
-  () => conf.list.find((item: any) => item.index === conf.activeIndex) || conf.list[0]
+  () => visibleList.value.find((item: any) => item.index === conf.activeIndex) || visibleList.value[0]
 )
 
 const loadAccessMatrix = async () => {
@@ -117,6 +121,9 @@ const loadAccessMatrix = async () => {
       canInstall: Boolean(matrix?.actions?.['software.install']),
       canReadAuditEvidence: Boolean(matrix?.scopes?.audit?.read)
     }
+    if (!conf.fail2banCapabilities.showFail2banTab && conf.activeIndex === 5) {
+      conf.activeIndex = 0
+    }
   } catch {
     conf.fail2banCapabilities = defaultCapabilities()
   }
@@ -131,7 +138,7 @@ onMounted(async () => {
 
 <template>
   <div v-if="conf.fail2banCapabilities.showSecurityMenu" class="security-container">
-    <card-tabs :list="conf.list" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
+    <card-tabs :list="visibleList" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
     <Firewall
       v-if="activeTab?.index === 0"
       :capabilities="conf.fail2banCapabilities"

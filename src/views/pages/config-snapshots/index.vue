@@ -9,11 +9,9 @@ import type {
   SnapshotResourceType,
   SnapshotStatus
 } from '@/api/modules'
-import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
-
-const sconfig = useConfigStore()
+import { hasOperationAccess } from '@/utils/access'
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot
@@ -95,16 +93,14 @@ const statusOptions = computed(() => [
   { label: t('configSnapshots.status.rollbackFailed', 'Rollback failed'), value: 'rollback_failed' }
 ])
 
-const canRead = computed(() =>
-  sconfig.hasActionAccess('config.snapshot.read') ||
-  Boolean((sconfig.scopeAccess as any)?.config?.snapshot?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['config.snapshot']?.read)
-)
-const canWrite = computed(() =>
-  sconfig.hasActionAccess('config.snapshot.write') ||
-  Boolean((sconfig.scopeAccess as any)?.config?.snapshot?.write) ||
-  Boolean((sconfig.scopeAccess as any)?.['config.snapshot']?.write)
-)
+const canRead = computed(() => hasOperationAccess('configSnapshots', 'read', {
+  scopes: ['config.snapshot'],
+  actions: ['config.snapshot.read']
+}))
+const canWrite = computed(() => hasOperationAccess('configSnapshots', 'write', {
+  scopes: ['config.snapshot'],
+  actions: ['config.snapshot.write']
+}))
 
 const succeededCount = computed(() => snapshots.value.filter((item) => item.status === 'succeeded').length)
 const failedCount = computed(() =>
@@ -368,6 +364,7 @@ const resetCreateForm = () => {
 }
 
 const openCreateSnapshot = () => {
+  if (!canWrite.value) return
   resetCreateForm()
   createVisible.value = true
   void loadCreateResourceOptions()
@@ -387,6 +384,7 @@ const syncCreateResourceId = () => {
 }
 
 const submitCreateSnapshot = async () => {
+  if (!canWrite.value) return
   if (!createForm.resourceType || !createForm.resourceId.trim()) {
     ElMessage.warning(useResourceSelect.value ? t('configSnapshots.messages.selectResourceIdentifier', 'Select a resource identifier') : t('configSnapshots.messages.selectTypeAndIdentifier', 'Select a resource type and enter a resource identifier'))
     return
@@ -413,6 +411,7 @@ const submitCreateSnapshot = async () => {
 }
 
 const openDetail = async (row: ConfigurationSnapshot) => {
+  if (!canRead.value) return
   detailVisible.value = true
   selectedSnapshot.value = row
   detail.value = null
@@ -434,6 +433,7 @@ const openDetail = async (row: ConfigurationSnapshot) => {
 }
 
 const openRestore = async (row: ConfigurationSnapshot) => {
+  if (!canWrite.value) return
   selectedSnapshot.value = row
   restoreVisible.value = true
   restorePreview.value = null
@@ -450,6 +450,7 @@ const openRestore = async (row: ConfigurationSnapshot) => {
 }
 
 const executeRestore = async () => {
+  if (!canWrite.value) return
   if (!selectedSnapshot.value || !restorePreview.value) return
   const force = restoreRequiresForce.value && forceRestoreConfirmed.value
   if (restoreRequiresForce.value && !forceRestoreConfirmed.value) {
@@ -478,6 +479,7 @@ const executeRestore = async () => {
 }
 
 const deleteSnapshot = async (row: ConfigurationSnapshot) => {
+  if (!canWrite.value) return
   await ElMessageBox.confirm(t('configSnapshots.deleteConfirmMessage', 'Delete snapshot {id}? Active snapshots cannot be deleted.', { id: row.id }), t('configSnapshots.deleteSnapshot', 'Delete configuration snapshot'), {
     type: 'warning',
     confirmButtonText: t('common.delete', 'Delete'),
@@ -509,7 +511,7 @@ onMounted(() => {
       </div>
       <div class="toolbar-actions">
         <el-button type="primary" :icon="Plus" :disabled="!canWrite" @click="openCreateSnapshot">{{ $t('configSnapshots.createSnapshot') }}</el-button>
-        <el-button :icon="Refresh" :loading="loading" @click="loadSnapshots">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canRead" :icon="Refresh" :loading="loading" @click="loadSnapshots">{{ $t('common.refresh') }}</el-button>
       </div>
     </section>
 
@@ -564,8 +566,8 @@ onMounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-button type="primary" @click="filters.page = 1; loadSnapshots()">{{ $t('common.query') }}</el-button>
-        <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
+        <el-button v-if="canRead" type="primary" @click="filters.page = 1; loadSnapshots()">{{ $t('common.query') }}</el-button>
+        <el-button v-if="canRead" @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
       <custom-table v-loading="loading" :data="snapshots" :columns="columns" :pagination="false" :auto-pagination="false" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
@@ -646,7 +648,7 @@ onMounted(() => {
         </template>
         <template #actionColumn="{ row }">
             <div class="action-group">
-              <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+              <el-button v-if="canRead" link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
               <el-button
                 link
                 type="warning"

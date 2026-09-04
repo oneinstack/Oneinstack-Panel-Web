@@ -13,6 +13,7 @@ import { getWebsiteEngineLabel, getWebsiteEngineTagStyle } from '@/utils/website
 interface Props {
   modelValue: boolean
   website: Record<string, any> | null
+  canWrite?: boolean
 }
 
 const props = defineProps<Props>()
@@ -40,6 +41,7 @@ const statusLoading = ref(false)
 const currentWebsite = computed(() => state.document?.website || props.website || {})
 const certificate = reactive({ show: false, website: {} as Record<string, any> })
 const t = i18n.t as any
+const canWrite = computed(() => props.canWrite === true)
 
 const menus = computed(() => [
   { key: 'domain', label: t('website.settingsDrawer.menus.domain') },
@@ -139,6 +141,7 @@ const selectMenu = (key: string) => {
   if (key === 'logs') void loadLog()
 }
 const saveSettings = async (success = i18n.t('website.notifications.settingsPublished')) => {
+  if (!canWrite.value) return
   const websiteId = Number(currentWebsite.value.id || 0)
   if (!websiteId) return
   state.saving = true
@@ -156,6 +159,7 @@ const saveSettings = async (success = i18n.t('website.notifications.settingsPubl
   } finally { state.saving = false }
 }
 const saveWebsiteProfile = async (domainOnly = false) => {
+  if (!canWrite.value) return
   const domains = domainLines.value.split(/[,\n\r]+/).map((item) => item.trim()).filter(Boolean)
   if (!domains.length) { ElMessage.warning(i18n.t('website.notifications.domainRequired')); return }
   state.saving = true
@@ -172,6 +176,7 @@ const saveWebsiteProfile = async (domainOnly = false) => {
   } finally { state.saving = false }
 }
 const toggleStatus = async (enabled: boolean) => {
+  if (!canWrite.value) return
   statusLoading.value = true
   try {
     await submitOperation('website.toggle', {
@@ -199,6 +204,7 @@ const loadConfig = async () => {
   } finally { state.config.loading = false }
 }
 const saveConfig = async () => {
+  if (!canWrite.value) return
   state.config.saving = true
   try {
     await submitOperation('website.config.update', {
@@ -222,10 +228,10 @@ const loadLog = async () => {
     state.logs.path = data.path || ''
   } finally { state.logs.loading = false }
 }
-const addBinding = () => state.settings.bindings.push({ path: '', directory: '', enabled: true })
-const addRedirect = () => state.settings.redirects.push({ source: '', target: '', status: 301, enabled: true })
-const addProxy = () => state.settings.proxy_rules.push({ path: '', target: '', host: '$host', enabled: true })
-const removeAt = (list: any[], index: number) => list.splice(index, 1)
+const addBinding = () => { if (canWrite.value) state.settings.bindings.push({ path: '', directory: '', enabled: true }) }
+const addRedirect = () => { if (canWrite.value) state.settings.redirects.push({ source: '', target: '', status: 301, enabled: true }) }
+const addProxy = () => { if (canWrite.value) state.settings.proxy_rules.push({ path: '', target: '', host: '$host', enabled: true }) }
+const removeAt = (list: any[], index: number) => { if (canWrite.value) list.splice(index, 1) }
 const openRoot = () => {
   const path = String(currentWebsite.value.root_dir || '')
   if (path) System.router.push({ path: '/file', query: { path } })
@@ -267,7 +273,7 @@ const openCertificate = () => {
               {{ getWebsiteEngineLabel(currentWebsite.engine) }}
             </el-tag>
           </div>
-          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
+          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" :disabled="!canWrite" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
         </div>
       </header>
       <div class="settings-body">
@@ -277,52 +283,52 @@ const openCertificate = () => {
         <main class="settings-content">
           <section v-if="activeMenu === 'domain'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.domain') }}</h3><p>{{ t('website.settingsDrawer.domainDescription') }}</p></div></div>
-            <el-input v-model="domainLines" type="textarea" :rows="7" placeholder="example.com&#10;www.example.com" />
+            <el-input v-model="domainLines" type="textarea" :rows="7" :disabled="!canWrite" placeholder="example.com&#10;www.example.com" />
             <div class="domain-preview"><span v-for="domain in domainLines.split(/[,\n\r]+/).filter(Boolean)" :key="domain">{{ domain.trim() }}</span></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(true)">{{ t('website.settingsDrawer.saveDomain') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveWebsiteProfile(true)">{{ t('website.settingsDrawer.saveDomain') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'binding'" class="setting-panel">
-            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.binding') }}</h3><p>{{ t('website.settingsDrawer.bindingDescription') }}</p></div><el-button type="primary" plain @click="addBinding">{{ t('website.settingsDrawer.addBinding') }}</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.binding') }}</h3><p>{{ t('website.settingsDrawer.bindingDescription') }}</p></div><el-button type="primary" plain :disabled="!canWrite" @click="addBinding">{{ t('website.settingsDrawer.addBinding') }}</el-button></div>
             <div v-for="(item, index) in state.settings.bindings" :key="index" class="rule-row rule-row--binding">
-              <el-switch v-model="item.enabled" /><el-input v-model="item.path" :placeholder="t('website.settingsDrawer.bindingPath')" /><el-input v-model="item.directory" :placeholder="t('website.settingsDrawer.bindingDirectory')" /><el-button type="danger" link @click="removeAt(state.settings.bindings, index)">{{ t('website.settingsDrawer.delete') }}</el-button>
+              <el-switch v-model="item.enabled" :disabled="!canWrite" /><el-input v-model="item.path" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.bindingPath')" /><el-input v-model="item.directory" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.bindingDirectory')" /><el-button type="danger" link :disabled="!canWrite" @click="removeAt(state.settings.bindings, index)">{{ t('website.settingsDrawer.delete') }}</el-button>
             </div>
             <el-empty v-if="!state.settings.bindings?.length" :description="t('website.settingsDrawer.noBindings')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.binding'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.binding'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'directory'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.directory') }}</h3><p>{{ t('website.settingsDrawer.directoryDescription') }}</p></div></div>
             <el-form label-position="top" class="settings-form">
               <el-form-item :label="t('website.settingsDrawer.websiteRoot')"><el-input :model-value="currentWebsite.root_dir" readonly><template #append><el-button :icon="FolderOpened" @click="openRoot">{{ t('website.settingsDrawer.fileManager') }}</el-button></template></el-input></el-form-item>
-              <el-form-item :label="t('website.settingsDrawer.runningDirectory')"><el-input v-model="state.settings.running_directory" :placeholder="t('website.settingsDrawer.runningDirectoryPlaceholder')" /></el-form-item>
-              <el-form-item :label="t('website.settingsDrawer.directoryListing')"><el-switch v-model="state.settings.directory_listing" :active-text="t('website.settingsDrawer.allowDirectoryListing')" :inactive-text="t('website.settingsDrawer.denyDirectoryListing')" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.runningDirectory')"><el-input v-model="state.settings.running_directory" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.runningDirectoryPlaceholder')" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.directoryListing')"><el-switch v-model="state.settings.directory_listing" :disabled="!canWrite" :active-text="t('website.settingsDrawer.allowDirectoryListing')" :inactive-text="t('website.settingsDrawer.denyDirectoryListing')" /></el-form-item>
             </el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.directory'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.directory'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'access'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.access') }}</h3><p>{{ t('website.settingsDrawer.accessDescription') }}</p></div></div>
-            <div class="form-grid"><el-form-item :label="t('website.settingsDrawer.allowlist')"><el-input v-model="state.settings.allowed_ips" type="textarea" :rows="10" placeholder="192.168.1.0/24&#10;2001:db8::/32" /></el-form-item><el-form-item :label="t('website.settingsDrawer.denylist')"><el-input v-model="state.settings.denied_ips" type="textarea" :rows="10" placeholder="203.0.113.8" /></el-form-item></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.access'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="form-grid"><el-form-item :label="t('website.settingsDrawer.allowlist')"><el-input v-model="state.settings.allowed_ips" type="textarea" :rows="10" :disabled="!canWrite" placeholder="192.168.1.0/24&#10;2001:db8::/32" /></el-form-item><el-form-item :label="t('website.settingsDrawer.denylist')"><el-input v-model="state.settings.denied_ips" type="textarea" :rows="10" :disabled="!canWrite" placeholder="203.0.113.8" /></el-form-item></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.access'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'traffic'" class="setting-panel">
             <div class="metric-strip"><div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div><div><span>{{ t('website.settingsDrawer.todayRequests') }}</span><strong>{{ Number(props.website?.today_requests || 0).toLocaleString() }}</strong></div><div><span>{{ t('website.settingsDrawer.metricSource') }}</span><strong>{{ t('website.settingsDrawer.accessLog') }}</strong></div></div>
-            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.requestRate')"><el-input-number v-model="state.settings.rate_limit_kb" :min="0" :max="10485760" controls-position="right" /><small>{{ t('website.settingsDrawer.unlimitedTip') }}</small></el-form-item><el-form-item :label="t('website.settingsDrawer.rateAfter')"><el-input-number v-model="state.settings.rate_limit_after_kb" :min="0" :max="10485760" controls-position="right" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.traffic'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.requestRate')"><el-input-number v-model="state.settings.rate_limit_kb" :min="0" :max="10485760" :disabled="!canWrite" controls-position="right" /><small>{{ t('website.settingsDrawer.unlimitedTip') }}</small></el-form-item><el-form-item :label="t('website.settingsDrawer.rateAfter')"><el-input-number v-model="state.settings.rate_limit_after_kb" :min="0" :max="10485760" :disabled="!canWrite" controls-position="right" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.traffic'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'rewrite'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.rewrite') }}</h3><p>{{ t('website.settingsDrawer.rewriteDescription') }}</p></div></div>
-            <el-input v-model="state.settings.rewrite_rules" type="textarea" :rows="16" class="code-input" placeholder="rewrite ^/article/(\d+)$ /index.php?id=$1 last;" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.rewrite'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <el-input v-model="state.settings.rewrite_rules" type="textarea" :rows="16" :disabled="!canWrite" class="code-input" placeholder="rewrite ^/article/(\d+)$ /index.php?id=$1 last;" />
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.rewrite'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'documents'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.documents') }}</h3><p>{{ t('website.settingsDrawer.documentsDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.defaultDocuments')"><el-input v-model="state.settings.default_documents" placeholder="index.php index.html index.htm" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.documents'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.defaultDocuments')"><el-input v-model="state.settings.default_documents" :disabled="!canWrite" placeholder="index.php index.html index.htm" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.documents'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'config'" v-loading="state.config.loading" class="setting-panel setting-panel--fill">
@@ -331,51 +337,51 @@ const openCertificate = () => {
             <el-alert :title="t('website.settingsDrawer.configWarning')" type="warning" show-icon :closable="false" />
             <el-input v-if="state.config.loaded" v-model="state.config.content" type="textarea" class="code-input config-editor" />
             <el-empty v-else-if="!state.config.loading && !state.config.error" :description="t('website.settingsDrawer.configUnread')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!canWrite || !currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'ssl'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.ssl') }}</h3><p>{{ t('website.settingsDrawer.sslDescription') }}</p></div></div>
-            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? t('website.settingsDrawer.sslEnabled') : t('website.settingsDrawer.sslDisabled') }}</strong><p>{{ currentWebsite.certificate_expires_at ? t('website.settingsDrawer.certificateExpires', { time: formatTime(currentWebsite.certificate_expires_at) }) : t('website.settingsDrawer.certificateAvailable') }}</p></div><el-button type="primary" @click="openCertificate">{{ t('website.settingsDrawer.manageSsl') }}</el-button></div>
+            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? t('website.settingsDrawer.sslEnabled') : t('website.settingsDrawer.sslDisabled') }}</strong><p>{{ currentWebsite.certificate_expires_at ? t('website.settingsDrawer.certificateExpires', { time: formatTime(currentWebsite.certificate_expires_at) }) : t('website.settingsDrawer.certificateAvailable') }}</p></div><el-button type="primary" :disabled="!canWrite" @click="openCertificate">{{ t('website.settingsDrawer.manageSsl') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'php'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.php') }}</h3><p>{{ t('website.settingsDrawer.phpDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.fastcgiBackend')"><el-input v-model="state.settings.php_backend" placeholder="unix:/dev/shm/php-cgi.sock" /></el-form-item></el-form>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.fastcgiBackend')"><el-input v-model="state.settings.php_backend" :disabled="!canWrite" placeholder="unix:/dev/shm/php-cgi.sock" /></el-form-item></el-form>
             <el-alert :title="t('website.settingsDrawer.phpWarning')" type="info" :closable="false" show-icon />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.php'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.php'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'redirect'" class="setting-panel">
-            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.redirect') }}</h3><p>{{ t('website.settingsDrawer.redirectDescription') }}</p></div><el-button type="primary" plain @click="addRedirect">{{ t('website.settingsDrawer.addRedirect') }}</el-button></div>
-            <div v-for="(item, index) in state.settings.redirects" :key="index" class="rule-row rule-row--redirect"><el-switch v-model="item.enabled" /><el-input v-model="item.source" :placeholder="t('website.settingsDrawer.redirectSource')" /><el-select v-model="item.status"><el-option v-for="status in [301,302,307,308]" :key="status" :value="status" :label="status" /></el-select><el-input v-model="item.target" :placeholder="t('website.settingsDrawer.redirectTarget')" /><el-button type="danger" link @click="removeAt(state.settings.redirects, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.redirect') }}</h3><p>{{ t('website.settingsDrawer.redirectDescription') }}</p></div><el-button type="primary" plain :disabled="!canWrite" @click="addRedirect">{{ t('website.settingsDrawer.addRedirect') }}</el-button></div>
+            <div v-for="(item, index) in state.settings.redirects" :key="index" class="rule-row rule-row--redirect"><el-switch v-model="item.enabled" :disabled="!canWrite" /><el-input v-model="item.source" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.redirectSource')" /><el-select v-model="item.status" :disabled="!canWrite"><el-option v-for="status in [301,302,307,308]" :key="status" :value="status" :label="status" /></el-select><el-input v-model="item.target" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.redirectTarget')" /><el-button type="danger" link :disabled="!canWrite" @click="removeAt(state.settings.redirects, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
             <el-empty v-if="!state.settings.redirects?.length" :description="t('website.settingsDrawer.noRedirects')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.redirect'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.redirect'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'proxy'" class="setting-panel">
-            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.proxy') }}</h3><p>{{ t('website.settingsDrawer.proxyDescription') }}</p></div><el-button type="primary" plain @click="addProxy">{{ t('website.settingsDrawer.addProxy') }}</el-button></div>
-            <div v-for="(item, index) in state.settings.proxy_rules" :key="index" class="rule-row rule-row--proxy"><el-switch v-model="item.enabled" /><el-input v-model="item.path" :placeholder="t('website.settingsDrawer.proxyPath')" /><el-input v-model="item.target" placeholder="http://127.0.0.1:9000" /><el-input v-model="item.host" placeholder="$host" /><el-button type="danger" link @click="removeAt(state.settings.proxy_rules, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.proxy') }}</h3><p>{{ t('website.settingsDrawer.proxyDescription') }}</p></div><el-button type="primary" plain :disabled="!canWrite" @click="addProxy">{{ t('website.settingsDrawer.addProxy') }}</el-button></div>
+            <div v-for="(item, index) in state.settings.proxy_rules" :key="index" class="rule-row rule-row--proxy"><el-switch v-model="item.enabled" :disabled="!canWrite" /><el-input v-model="item.path" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.proxyPath')" /><el-input v-model="item.target" :disabled="!canWrite" placeholder="http://127.0.0.1:9000" /><el-input v-model="item.host" :disabled="!canWrite" placeholder="$host" /><el-button type="danger" link :disabled="!canWrite" @click="removeAt(state.settings.proxy_rules, index)">{{ t('website.settingsDrawer.delete') }}</el-button></div>
             <el-empty v-if="!state.settings.proxy_rules?.length" :description="t('website.settingsDrawer.noProxies')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.proxy'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.proxy'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'hotlink'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.hotlink') }}</h3><p>{{ t('website.settingsDrawer.hotlinkDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.enableHotlink')"><el-switch v-model="state.settings.hotlink_enabled" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowEmptyReferer')"><el-switch v-model="state.settings.hotlink_allow_empty" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowedDomains')"><el-input v-model="state.settings.hotlink_domains" type="textarea" :rows="5" placeholder="cdn.example.com&#10;*.example.com" /></el-form-item><el-form-item :label="t('website.settingsDrawer.protectedExtensions')"><el-input v-model="state.settings.hotlink_extensions" placeholder="jpg jpeg png gif webp svg css js mp4 mp3" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.hotlink'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.enableHotlink')"><el-switch v-model="state.settings.hotlink_enabled" :disabled="!canWrite" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowEmptyReferer')"><el-switch v-model="state.settings.hotlink_allow_empty" :disabled="!canWrite" /></el-form-item><el-form-item :label="t('website.settingsDrawer.allowedDomains')"><el-input v-model="state.settings.hotlink_domains" type="textarea" :rows="5" :disabled="!canWrite" placeholder="cdn.example.com&#10;*.example.com" /></el-form-item><el-form-item :label="t('website.settingsDrawer.protectedExtensions')"><el-input v-model="state.settings.hotlink_extensions" :disabled="!canWrite" placeholder="jpg jpeg png gif webp svg css js mp4 mp3" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.hotlink'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'tamper'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.tamperTitle') }}</h3><p>{{ t('website.settingsDrawer.tamperDescription') }}</p></div></div>
-            <div class="feature-card"><el-icon><SwitchButton /></el-icon><div><strong>{{ t('website.settingsDrawer.managedProtection') }}</strong><p>{{ t('website.settingsDrawer.managedProtectionTip') }}</p></div><el-switch v-model="state.settings.tamper_protection" /></div>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.tamper'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
+            <div class="feature-card"><el-icon><SwitchButton /></el-icon><div><strong>{{ t('website.settingsDrawer.managedProtection') }}</strong><p>{{ t('website.settingsDrawer.managedProtectionTip') }}</p></div><el-switch v-model="state.settings.tamper_protection" :disabled="!canWrite" /></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.tamper'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'security'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.security') }}</h3><p>{{ t('website.settingsDrawer.securityDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.securityHeaders')"><el-switch v-model="state.settings.security_headers" :active-text="t('website.settingsDrawer.enable')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.deniedPaths')"><el-input v-model="state.settings.denied_paths" type="textarea" :rows="9" placeholder="/.git&#10;/.env&#10;/backup" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.security'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.settingsDrawer.securityHeaders')"><el-switch v-model="state.settings.security_headers" :disabled="!canWrite" :active-text="t('website.settingsDrawer.enable')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.deniedPaths')"><el-input v-model="state.settings.denied_paths" type="textarea" :rows="9" :disabled="!canWrite" placeholder="/.git&#10;/.env&#10;/backup" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.security'))">{{ t('website.settingsDrawer.savePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'logs'" class="setting-panel setting-panel--fill">
@@ -385,19 +391,19 @@ const openCertificate = () => {
 
           <section v-else-if="activeMenu === 'alerts'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.alerts') }}</h3><p>{{ t('website.settingsDrawer.alertsDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.enableTrafficAlert')"><el-switch v-model="state.settings.traffic_alert" /></el-form-item><el-form-item :label="t('website.settingsDrawer.alertThreshold')"><el-input-number v-model="state.settings.traffic_alert_bytes" :min="0" :step="1073741824" controls-position="right" /></el-form-item></el-form>
-            <div class="panel-actions"><el-button type="primary" :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.alerts'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
+            <el-form label-position="top" class="settings-form form-grid"><el-form-item :label="t('website.settingsDrawer.enableTrafficAlert')"><el-switch v-model="state.settings.traffic_alert" :disabled="!canWrite" /></el-form-item><el-form-item :label="t('website.settingsDrawer.alertThreshold')"><el-input-number v-model="state.settings.traffic_alert_bytes" :min="0" :step="1073741824" :disabled="!canWrite" controls-position="right" /></el-form-item></el-form>
+            <div class="panel-actions"><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.alerts'))">{{ t('website.settingsDrawer.saveSettings') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'other'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.other') }}</h3><p>{{ t('website.settingsDrawer.otherDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.expiration')"><el-date-picker v-model="expiresAt" type="datetime" :placeholder="t('website.settingsDrawer.expirationPlaceholder')" clearable /></el-form-item><el-form-item :label="t('website.settingsDrawer.remark')"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" /></el-form-item><el-form-item :label="t('website.settingsDrawer.accessLogLabel')"><el-switch v-model="state.settings.access_log_enabled" :active-text="t('website.settingsDrawer.recordAccessLog')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.errorLogLabel')"><el-switch v-model="state.settings.error_log_enabled" :active-text="t('website.settingsDrawer.recordErrorLog')" /></el-form-item></el-form>
-            <div class="panel-actions panel-actions--split"><el-button :loading="state.saving" @click="saveSettings(t('website.settingsDrawer.published.logs'))">{{ t('website.settingsDrawer.saveLogs') }}</el-button><el-button type="primary" :loading="state.saving" @click="saveWebsiteProfile(false)">{{ t('website.settingsDrawer.saveProfile') }}</el-button></div>
+            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.expiration')"><el-date-picker v-model="expiresAt" type="datetime" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.expirationPlaceholder')" clearable /></el-form-item><el-form-item :label="t('website.settingsDrawer.remark')"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" :disabled="!canWrite" /></el-form-item><el-form-item :label="t('website.settingsDrawer.accessLogLabel')"><el-switch v-model="state.settings.access_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordAccessLog')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.errorLogLabel')"><el-switch v-model="state.settings.error_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordErrorLog')" /></el-form-item></el-form>
+            <div class="panel-actions panel-actions--split"><el-button :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.logs'))">{{ t('website.settingsDrawer.saveLogs') }}</el-button><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveWebsiteProfile(false)">{{ t('website.settingsDrawer.saveProfile') }}</el-button></div>
           </section>
         </main>
       </div>
     </div>
-    <website-certificate-drawer v-model="certificate.show" :website="certificate.website" @changed="load(); emit('changed')" />
+    <website-certificate-drawer v-model="certificate.show" :website="certificate.website" :can-read="true" :can-write="canWrite" @changed="load(); emit('changed')" />
   </custom-drawer>
 </template>
 

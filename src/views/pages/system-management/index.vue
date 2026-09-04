@@ -10,16 +10,14 @@ import {
   type SystemProcessItem,
   type SystemSshConfig
 } from '@/api/modules'
-import { useConfigStore } from '@/stores/modules/config'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import { hasOperationAccess } from '@/utils/access'
 import SystemManagementTabs from './components/system-management-tabs.vue'
 import ProcessManagementSection from './components/process-management-section.vue'
 import SshConfigSection from './components/ssh-config-section.vue'
 import DiskManagementSection from './components/disk-management-section.vue'
-
-const sconfig = useConfigStore()
 
 type ProcessSort = 'pid' | 'cpu' | 'memory' | 'name'
 type SortOrder = 'asc' | 'desc'
@@ -80,11 +78,10 @@ const orderOptions = computed<Array<{ label: string; value: SortOrder }>>(() => 
   { label: t('systemManagement.asc', '升序'), value: 'asc' }
 ])
 
-const canRead = computed(() =>
-  sconfig.hasActionAccess('system.settings.read') ||
-  Boolean((sconfig.scopeAccess as any)?.system?.settings?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['system.settings']?.read)
-)
+const canRead = computed(() => hasOperationAccess('systemManagement', 'read', {
+  scopes: ['system.settings'],
+  actions: ['system.settings.read']
+}))
 
 const processOffset = computed(() => Math.max((processFilters.page - 1) * processFilters.pageSize, 0))
 const highCpuCount = computed(() => processes.value.filter((item) => Number(item.cpuPercent) >= 20).length)

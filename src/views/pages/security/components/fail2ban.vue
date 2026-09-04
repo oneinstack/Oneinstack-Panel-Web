@@ -266,6 +266,7 @@ let banClockTimer: number | null = null
 const banClock = ref(Date.now())
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('fail2ban'))
+const canReadFail2ban = computed(() => props.capabilities.showFail2banTab)
 const canOperate = computed(() => status.value.installed && status.value.serviceActive)
 
 const cooldownKey = (code: number, operation: string, target: string) =>
@@ -560,6 +561,7 @@ const stopMonitor = (taskId: string) => {
 }
 
 const loadStatus = async () => {
+  if (!canReadFail2ban.value) return
   loading.status = true
   try {
     const response = await Api.getFail2banStatus(requestLanguage.value)
@@ -570,6 +572,7 @@ const loadStatus = async () => {
 }
 
 const loadTemplates = async () => {
+  if (!canReadFail2ban.value) return
   loading.templates = true
   try {
     const response = await Api.getFail2banTemplates(requestLanguage.value)
@@ -581,6 +584,7 @@ const loadTemplates = async () => {
 }
 
 const loadPolicies = async () => {
+  if (!canReadFail2ban.value) return
   loading.policies = true
   try {
     const response = await Api.getFail2banPolicies(requestLanguage.value)
@@ -591,6 +595,7 @@ const loadPolicies = async () => {
 }
 
 const loadIncidents = async () => {
+  if (!canReadFail2ban.value) return
   loading.incidents = true
   try {
     const response = await Api.getFail2banIncidents({
@@ -607,6 +612,7 @@ const loadIncidents = async () => {
 }
 
 const loadBans = async () => {
+  if (!canReadFail2ban.value) return
   loading.bans = true
   try {
     const response = await Api.getFail2banBans(requestLanguage.value)
@@ -617,6 +623,7 @@ const loadBans = async () => {
 }
 
 const loadUnbanRecords = async () => {
+  if (!canReadFail2ban.value) return
   loading.unbanRecords = true
   try {
     const response = await Api.getFail2banUnbanRecords({
@@ -763,6 +770,7 @@ const connectTaskStream = async (taskId: string) => {
 }
 
 const loadTasks = async () => {
+  if (!canReadFail2ban.value) return
   loading.tasks = true
   try {
     const [response, activeResponse] = await Promise.all([
@@ -792,10 +800,19 @@ const loadTasks = async () => {
 }
 
 const loadAll = async () => {
+  if (!canReadFail2ban.value) return
   await Promise.all([loadStatus(), loadTemplates(), loadPolicies(), loadIncidents(), loadBans(), loadUnbanRecords(), loadTasks()])
 }
 
 const submitTaskOperation = async (operation: string, payload: unknown) => {
+  const allowed = operation === 'fail2ban.policy_change'
+    ? props.capabilities.canChangePolicy
+    : operation === 'fail2ban.ban'
+      ? props.capabilities.canBan
+      : operation === 'fail2ban.unban'
+        ? props.capabilities.canUnban
+        : false
+  if (!canReadFail2ban.value || !allowed) return null
   const response: any = await submitOperation(operation, payload)
   const result = response?.data || response
   if (result?.taskId) {
@@ -826,6 +843,7 @@ const submitTaskOperation = async (operation: string, payload: unknown) => {
 }
 
 const openCreatePolicy = (templateKey?: PolicyTemplate) => {
+  if (!props.capabilities.canChangePolicy || !canOperate.value) return
   policyDialogMode.value = 'create'
   resetPolicyForm()
   if (templateKey) {
@@ -836,6 +854,7 @@ const openCreatePolicy = (templateKey?: PolicyTemplate) => {
 }
 
 const openEditPolicy = (row: Fail2banPolicy) => {
+  if (!props.capabilities.canChangePolicy || !canOperate.value) return
   policyDialogMode.value = 'edit'
   policyForm.id = row.id
   policyForm.baseRevision = row.revision
@@ -851,6 +870,7 @@ const openEditPolicy = (row: Fail2banPolicy) => {
 }
 
 const submitPolicy = async () => {
+  if (!props.capabilities.canChangePolicy || !canOperate.value) return
   loading.policySubmit = true
   try {
     await submitTaskOperation('fail2ban.policy_change', {
@@ -885,6 +905,7 @@ const submitPolicy = async () => {
 }
 
 const deletePolicy = async (row: Fail2banPolicy) => {
+  if (!props.capabilities.canChangePolicy || !canOperate.value) return
   try {
     await ElMessageBox.confirm(
       t('security.fail2ban.policy.deleteConfirm', '确定删除这条策略吗？'),
@@ -902,6 +923,7 @@ const deletePolicy = async (row: Fail2banPolicy) => {
 }
 
 const dismissIncident = async (row: SecurityIncident) => {
+  if (!props.capabilities.canChangePolicy || !canOperate.value) return
   try {
     await Api.dismissFail2banIncident(row.id, requestLanguage.value)
     ElMessage.success(t('security.fail2ban.incident.dismissed', '异常事件已标记为误报'))
@@ -912,6 +934,7 @@ const dismissIncident = async (row: SecurityIncident) => {
 }
 
 const banIncident = async (row: SecurityIncident) => {
+  if (!props.capabilities.canBan || !canOperate.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('security.fail2ban.ban.reasonPrompt', '请输入封禁原因'),
@@ -935,6 +958,7 @@ const banIncident = async (row: SecurityIncident) => {
 }
 
 const openManualBan = () => {
+  if (!props.capabilities.canBan || !canOperate.value) return
   manualBanForm.policyId = policies.value[0]?.id || ''
   manualBanForm.ip = ''
   manualBanForm.reason = ''
@@ -944,6 +968,7 @@ const openManualBan = () => {
 }
 
 const submitManualBan = async () => {
+  if (!props.capabilities.canBan || !canOperate.value) return
   const valid = await manualBanFormRef.value?.validate().catch(() => false)
   if (valid === false) return
   loading.manualBanSubmit = true
@@ -964,6 +989,7 @@ const submitManualBan = async () => {
 }
 
 const unban = async (row: ActiveBan) => {
+  if (!props.capabilities.canUnban || !canOperate.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('security.fail2ban.ban.unbanReasonPrompt', '请输入解除封禁原因'),
@@ -987,11 +1013,13 @@ const unban = async (row: ActiveBan) => {
 }
 
 const openUnbanRecordDrawer = () => {
+  if (!canReadFail2ban.value) return
   unbanRecordVisible.value = true
   void loadUnbanRecords()
 }
 
 const installFail2ban = async () => {
+  if (!props.capabilities.canInstall) return
   loading.install = true
   try {
     const response: any = await Api.installSoft({ key: 'fail2ban', version: 'system' })
@@ -1010,12 +1038,14 @@ const installFail2ban = async () => {
 }
 
 const openInstallTask = () => {
+  if (!canReadFail2ban.value) return
   installTaskId.value = activeInstallTask.value?.id || installTaskId.value
   if (!installTaskId.value) return
   installTaskVisible.value = true
 }
 
 const openAudit = (row: SecurityIncident) => {
+  if (!props.capabilities.canReadAuditEvidence) return
   System.router.push({
     path: '/log',
     query: {
@@ -1110,9 +1140,9 @@ onBeforeUnmount(() => {
         </div>
       </div>
       <div class="hero-card__actions">
-        <el-button :icon="Refresh" @click="loadAll">{{ $t('common.refresh', '刷新') }}</el-button>
+        <el-button v-if="canReadFail2ban" :icon="Refresh" @click="loadAll">{{ $t('common.refresh', '刷新') }}</el-button>
         <el-button
-          v-if="status.installed && activeInstallTask"
+          v-if="canReadFail2ban && status.installed && activeInstallTask"
           type="primary"
           @click="openInstallTask"
         >
@@ -1280,7 +1310,7 @@ onBeforeUnmount(() => {
             @keyup.enter="incidentFilters.page = 1; loadIncidents()"
             @clear="incidentFilters.page = 1; loadIncidents()"
           />
-          <el-button :icon="Refresh" @click="incidentFilters.page = 1; loadIncidents()">{{ $t('common.search', '搜索') }}</el-button>
+          <el-button v-if="canReadFail2ban" :icon="Refresh" @click="incidentFilters.page = 1; loadIncidents()">{{ $t('common.search', '搜索') }}</el-button>
         </div>
       </div>
 
@@ -1359,7 +1389,7 @@ onBeforeUnmount(() => {
           <p>{{ $t('security.fail2ban.ban.description') }}</p>
         </div>
         <div class="section-actions">
-          <el-button plain :icon="DocumentAdd" @click="openUnbanRecordDrawer">
+          <el-button v-if="canReadFail2ban" plain :icon="DocumentAdd" @click="openUnbanRecordDrawer">
             {{ $t('security.fail2ban.unbanRecord.open') }}
           </el-button>
           <el-button
@@ -1550,7 +1580,7 @@ onBeforeUnmount(() => {
       </el-form>
       <template #footer>
         <el-button @click="policyDialogVisible = false">{{ $t('common.cancel', '取消') }}</el-button>
-        <el-button type="primary" :loading="loading.policySubmit" @click="submitPolicy">
+        <el-button type="primary" :loading="loading.policySubmit" :disabled="!props.capabilities.canChangePolicy || !canOperate" @click="submitPolicy">
           {{ $t('common.confirm', '确认') }}
         </el-button>
       </template>
@@ -1599,7 +1629,7 @@ onBeforeUnmount(() => {
       </el-form>
       <template #footer>
         <el-button @click="manualBanVisible = false">{{ $t('common.cancel', '取消') }}</el-button>
-        <el-button type="primary" :loading="loading.manualBanSubmit" :disabled="manualBanDisabled" @click="submitManualBan">
+        <el-button type="primary" :loading="loading.manualBanSubmit" :disabled="!props.capabilities.canBan || manualBanDisabled" @click="submitManualBan">
           {{ manualBanForm.ip.trim() && cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) > 0
             ? t('security.fail2ban.retryAfter', '{seconds} 秒后重试', { seconds: cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) })
             : $t('common.confirm', '确认') }}

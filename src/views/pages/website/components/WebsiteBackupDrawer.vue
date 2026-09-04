@@ -5,10 +5,13 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { CircleClose, Delete, Document, Download, RefreshLeft } from '@element-plus/icons-vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 const props = defineProps<{
   modelValue: boolean
   website?: Record<string, any> | null
+  canRead?: boolean
+  canWrite?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -33,6 +36,9 @@ let timer: number | undefined
 
 const activeStatuses = new Set(['queued', 'running', 'canceling'])
 const selectedWebsiteId = computed(() => Number(props.website?.id || 0))
+const canReadWebsite = computed(() => props.canRead === true)
+const canWriteWebsite = computed(() => props.canWrite === true)
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
 const title = computed(() =>
   selectedWebsiteId.value
     ? t('website.backupDrawer.title', { name: props.website?.name || '' })
@@ -80,6 +86,7 @@ const formatBytes = (value: number) => {
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '-'
 
 const loadDatabases = async () => {
+  if (!canReadDatabase.value) return
   const { data } = await Api.getDatabaseList({
     type: 'mysql',
     page: 1,
@@ -89,7 +96,7 @@ const loadDatabases = async () => {
 }
 
 const loadData = async (silent = false) => {
-  if (!props.modelValue) return
+  if (!props.modelValue || !canReadWebsite.value) return
   if (!silent) state.loading = true
   try {
     const params: Record<string, any> = { page: 1, pageSize: 100 }
@@ -116,7 +123,7 @@ const startPolling = () => {
 }
 
 const createBackup = async () => {
-  if (!selectedWebsiteId.value) return
+  if (!selectedWebsiteId.value || !canWriteWebsite.value) return
   state.submitting = true
   try {
     await Api.createWebsiteBackup({
@@ -131,6 +138,7 @@ const createBackup = async () => {
 }
 
 const restoreBackup = async (backup: Record<string, any>) => {
+  if (!canWriteWebsite.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('website.backupDrawer.restorePrompt', { database: backup.databaseId ? t('website.backupDrawer.restoreDatabase') : '', name: backup.websiteName }),
@@ -153,6 +161,7 @@ const restoreBackup = async (backup: Record<string, any>) => {
 }
 
 const deleteBackup = async (backup: Record<string, any>) => {
+  if (!canWriteWebsite.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('website.backupDrawer.deletePrompt', { file: backup.fileName, name: backup.websiteName }),
@@ -175,16 +184,19 @@ const deleteBackup = async (backup: Record<string, any>) => {
 }
 
 const downloadBackup = (backup: Record<string, any>) => {
+  if (!canReadWebsite.value) return
   window.location.assign(`/v1/website/backups/${encodeURIComponent(backup.id)}/download`)
 }
 
 const cancelTask = async (task: Record<string, any>) => {
+  if (!canWriteWebsite.value) return
   await Api.cancelWebsiteTask(task.id)
   ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
   await loadData()
 }
 
 const showLog = async (task: Record<string, any>) => {
+  if (!canReadWebsite.value) return
   const { data } = await Api.getWebsiteTaskLog(task.id, { cursor: 0, limit: 65536 })
   state.logTitle = `${task.websiteName} · ${operationLabel(task.operation)}${t('website.backupDrawer.logSuffix')}`
   state.logContent = data?.content || t('website.backupDrawer.noLog')
@@ -233,7 +245,7 @@ onBeforeUnmount(() => {
 
     <div class="toolbar">
       <template v-if="selectedWebsiteId">
-        <el-select v-model="state.databaseId" style="width: 260px" :placeholder="t('website.backupDrawer.databasePlaceholder')">
+        <el-select v-model="state.databaseId" style="width: 260px" :disabled="!canWriteWebsite || !canReadDatabase" :placeholder="t('website.backupDrawer.databasePlaceholder')">
           <el-option :label="t('website.backupDrawer.excludeDatabase')" :value="0" />
           <el-option
             v-for="database in state.databases"
@@ -242,12 +254,12 @@ onBeforeUnmount(() => {
             :value="database.id"
           />
         </el-select>
-        <el-button type="primary" :loading="state.submitting" @click="createBackup">
+        <el-button v-if="canWriteWebsite" type="primary" :loading="state.submitting" @click="createBackup">
           {{ t('website.backupDrawer.backupNow') }}
         </el-button>
       </template>
       <span v-else class="toolbar-note">{{ t('website.backupDrawer.deletedSiteTip') }}</span>
-      <el-button @click="loadData()">{{ t('website.backupDrawer.refresh') }}</el-button>
+      <el-button v-if="canReadWebsite" @click="loadData()">{{ t('website.backupDrawer.refresh') }}</el-button>
     </div>
 
     <el-tabs class="backup-tabs">
@@ -259,9 +271,9 @@ onBeforeUnmount(() => {
           <template #backupCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #backupAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" link :icon="Download" @click="downloadBackup(row)">{{ t('website.backupDrawer.download') }}</el-button>
-                <el-button type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">{{ t('website.backupDrawer.restore') }}</el-button>
-                <el-button type="danger" link :icon="Delete" @click="deleteBackup(row)">{{ t('website.backupDrawer.delete') }}</el-button>
+                <el-button v-if="canReadWebsite" type="primary" link :icon="Download" @click="downloadBackup(row)">{{ t('website.backupDrawer.download') }}</el-button>
+                <el-button v-if="canWriteWebsite" type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">{{ t('website.backupDrawer.restore') }}</el-button>
+                <el-button v-if="canWriteWebsite" type="danger" link :icon="Delete" @click="deleteBackup(row)">{{ t('website.backupDrawer.delete') }}</el-button>
               </div>
           </template>
         </custom-table>
@@ -280,9 +292,9 @@ onBeforeUnmount(() => {
           <template #taskCreatedAt="{ row }">{{ formatTime(row.createdAt) }}</template>
           <template #taskAction="{ row }">
               <div class="table-row-actions">
-                <el-button type="primary" link :icon="Document" @click="showLog(row)">{{ t('website.backupDrawer.log') }}</el-button>
+                <el-button v-if="canReadWebsite" type="primary" link :icon="Document" @click="showLog(row)">{{ t('website.backupDrawer.log') }}</el-button>
                 <el-button
-                  v-if="activeStatuses.has(row.status)"
+                  v-if="activeStatuses.has(row.status) && canWriteWebsite"
                   type="danger"
                   link
                   :icon="CircleClose"

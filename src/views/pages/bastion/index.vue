@@ -6,6 +6,7 @@ import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'elem
 import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import { useConfigStore } from '@/stores/modules/config';
+import { hasOperationAccess } from '@/utils/access'
 import i18n from '@/lang'
 
 const sconfig = useConfigStore()
@@ -100,17 +101,11 @@ const form = reactive({
   enabled: true
 })
 
-const canWrite = computed(() =>
-  {
-    if (sconfig.userInfo?.user?.isAdmin || sconfig.userInfo?.user?.isSuperAdmin) return true
-    const bastionScope = sconfig.scopeAccess?.bastion as any
-    return Boolean(
-      bastionScope?.write ||
-      (sconfig.scopeAccess as any)?.['bastion.write'] ||
-      sconfig.actionAccess?.['bastion.write']
-    )
-  }
-)
+const canRead = computed(() => hasOperationAccess('bastion', 'read'))
+const canTestConnection = computed(() => hasOperationAccess('bastion', 'identityRead', {
+  actions: ['bastion.identityRead', 'bastion.test']
+}))
+const canWrite = computed(() => hasOperationAccess('bastion', 'write'))
 
 const rules = computed<FormRules>(() => ({
   name: [{ required: true, message: t('bastion.serverNameRequired', '请输入服务器名称'), trigger: 'blur' }],
@@ -260,6 +255,10 @@ const loadChartOption = computed<EChartsOption>(() => ({
 }))
 
 const fetchServers = async () => {
+  if (!canRead.value) {
+    servers.value = []
+    return
+  }
   loading.value = true
   try {
     const { data } = await Api.getBastionOverview()
@@ -270,6 +269,7 @@ const fetchServers = async () => {
 }
 
 const loadMetrics = async (serverId: number) => {
+  if (!canRead.value) return
   metricsLoading.value = true
   try {
     const option = timeRangeOptions.value.find((item) => item.value === timeRange.value)!
@@ -287,6 +287,7 @@ const loadMetrics = async (serverId: number) => {
 }
 
 const openDetail = async (server: BastionServer) => {
+  if (!canRead.value) return
   selectedServer.value = server
   detailVisible.value = true
   metrics.value = []
@@ -318,6 +319,7 @@ const fillForm = (server?: BastionServer) => {
 }
 
 const openForm = async (server?: BastionServer) => {
+  if (!canWrite.value) return
   if (!server) {
     formLoading.value = false
     fillForm()
@@ -398,6 +400,7 @@ const deleteServer = async (server: BastionServer) => {
 }
 
 const testConnection = async (server: BastionServer) => {
+  if (!canTestConnection.value) return
   try {
     let payload: { password?: string } = {}
     if (server.authMethod === 'password') {
@@ -429,7 +432,7 @@ const testConnection = async (server: BastionServer) => {
 }
 
 const refreshDetailMetrics = async () => {
-  if (!selectedServer.value) return
+  if (!canRead.value || !selectedServer.value) return
   await loadMetrics(selectedServer.value.id)
 }
 
@@ -719,7 +722,7 @@ onUnmounted(stopRealtimeRefresh)
           </button>
 
           <div class="server-actions">
-            <el-button link type="primary" :loading="testingId === server.id" @click="testConnection(server)">
+            <el-button v-if="canTestConnection" link type="primary" :loading="testingId === server.id" @click="testConnection(server)">
               {{ $t('bastion.testConnection') }}
             </el-button>
             <template v-if="canWrite">
@@ -878,7 +881,7 @@ onUnmounted(stopRealtimeRefresh)
             :options="timeRangeOptions.map((item) => ({ label: item.label, value: item.value }))"
             @change="refreshDetailMetrics"
           />
-          <el-button :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">{{ $t('bastion.refreshMetrics') }}</el-button>
+          <el-button v-if="canRead" :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">{{ $t('bastion.refreshMetrics') }}</el-button>
         </div>
 
         <div v-loading="metricsLoading" class="chart-grid">

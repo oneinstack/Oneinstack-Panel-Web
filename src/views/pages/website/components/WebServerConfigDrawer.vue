@@ -35,6 +35,8 @@ type ConfigFile = {
 
 const props = defineProps<{
   modelValue: boolean
+  canRead?: boolean
+  canWrite?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -64,6 +66,8 @@ const state = reactive({
   modifiedAt: ''
 })
 const t = i18n.t as any
+const canReadConfig = computed(() => props.canRead === true)
+const canWriteConfig = computed(() => props.canWrite === true)
 
 const dirty = computed(() => state.content !== state.originalContent)
 const selectedFile = computed(() =>
@@ -108,7 +112,7 @@ const formatTime = (value: string) => {
 }
 
 const readFile = async (path: string, confirmDiscard = true) => {
-  if (!path || state.reading) return
+  if (!path || state.reading || !canReadConfig.value) return
   if (confirmDiscard && dirty.value) {
     try {
       await ElMessageBox.confirm(
@@ -138,6 +142,7 @@ const readFile = async (path: string, confirmDiscard = true) => {
 }
 
 const load = async (preserveSelection = false) => {
+  if (!canReadConfig.value) return
   state.loading = true
   try {
     const { data } = await Api.getWebsiteWebServerConfigs()
@@ -163,7 +168,7 @@ const load = async (preserveSelection = false) => {
 }
 
 const reloadCurrent = async () => {
-  if (!state.selectedPath) return
+  if (!state.selectedPath || !canReadConfig.value) return
   if (dirty.value) {
     try {
       await ElMessageBox.confirm(
@@ -183,7 +188,7 @@ const reloadCurrent = async () => {
 }
 
 const save = async () => {
-  if (!state.selectedPath || !dirty.value || state.saving) return
+  if (!state.selectedPath || !dirty.value || state.saving || !canWriteConfig.value) return
   state.saving = true
   try {
     const currentPath = state.selectedPath
@@ -269,7 +274,7 @@ watch(
             <p>{{ state.server.version || t('website.webConfigDrawer.versionUnknown') }} · {{ state.server.binaryPath || '-' }}</p>
           </div>
         </div>
-        <el-button :icon="Refresh" @click="load(true)">{{ t('website.webConfigDrawer.refreshFiles') }}</el-button>
+        <el-button v-if="canReadConfig" :icon="Refresh" @click="load(true)">{{ t('website.webConfigDrawer.refreshFiles') }}</el-button>
       </section>
 
       <section class="config-workspace">
@@ -309,7 +314,7 @@ watch(
                 <i v-if="dirty">{{ t('website.webConfigDrawer.unsaved') }}</i>
               </span>
             </div>
-            <el-button :icon="Refresh" :disabled="!state.selectedPath" @click="reloadCurrent">
+            <el-button :icon="Refresh" :disabled="!state.selectedPath || !canReadConfig" @click="reloadCurrent">
               {{ t('website.webConfigDrawer.reread') }}
             </el-button>
           </div>
@@ -333,7 +338,7 @@ watch(
               <el-button
                 type="primary"
                 :loading="state.saving"
-                :disabled="!state.selectedPath || !dirty"
+                :disabled="!canWriteConfig || !state.selectedPath || !dirty"
                 @click="save"
               >
                 {{ t('website.webConfigDrawer.saveApply') }}

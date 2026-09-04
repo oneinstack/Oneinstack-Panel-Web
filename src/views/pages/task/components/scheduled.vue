@@ -8,6 +8,7 @@ import formatCron from '@/utils/cronutils'
 import System from '@/utils/System'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import { hasOperationAccess } from '@/utils/access'
 
 const tableRef = ref<InstanceType<typeof import('element-plus')['ElTable']>>()
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -42,8 +43,18 @@ let refreshTimer: ReturnType<typeof setInterval> | undefined
 let refreshing = false
 
 const hasRunningExecutions = computed(() => Object.keys(runningByTask.value).length > 0)
+const canRead = computed(() => hasOperationAccess('cron', 'read'))
+const canWrite = computed(() => hasOperationAccess('cron', 'write'))
+const canExecute = computed(() => hasOperationAccess('cron', 'execute', {
+  actions: ['cron.run', 'cron.write']
+}))
 
 const getData = async () => {
+  if (!canRead.value) {
+    tableData.value = []
+    pagination.total = 0
+    return
+  }
   if (refreshing) return
   refreshing = true
   multipleSelection.value = []
@@ -132,6 +143,7 @@ const formatDate = (dateStr: string) => {
 
 const addTaskVisible = ref(false)
 const addTask = () => {
+  if (!canWrite.value) return
   action_type.value = true
   addTaskVisible.value = true
   rulesForm.value = {
@@ -166,6 +178,7 @@ const handleSelectionChange = (val: any[]) => {
 
 // 批量删除方法
 const batchDelete = async () => {
+  if (!canWrite.value) return
   if (multipleSelection.value.length === 0) {
     ElMessage.warning(t('task.selectDeleteTasks', 'Select tasks to delete'))
     return
@@ -190,6 +203,7 @@ const batchDelete = async () => {
 
 // 批量禁止方法
 const batchDisable = async () => {
+  if (!canWrite.value) return
   const validSelection = multipleSelection.value.filter(item => item.enabled === true)
   if (validSelection.length === 0) {
     ElMessage.warning(t('task.selectRunningTasks', 'Select enabled tasks to disable'))
@@ -216,6 +230,7 @@ const batchDisable = async () => {
 
 // 批量开启方法
 const batchEnable = async () => {
+  if (!canWrite.value) return
   const validSelection = multipleSelection.value.filter(item => item.enabled === false)
   if (validSelection.length === 0) {
     ElMessage.warning(t('task.selectStoppedTasks', 'Select stopped tasks to enable'))
@@ -242,6 +257,7 @@ const batchEnable = async () => {
 
 // 单条数据删除方法
 const deleteSingleTask = async (row: any) => {
+  if (!canWrite.value) return
   ElMessageBox.confirm(t('task.singleDeleteConfirm', 'Delete this task?'), t('task.confirmTitle', 'Prompt'), {
     confirmButtonText: t('task.confirm', 'Confirm'),
     cancelButtonText: t('task.cancel', 'Cancel'),
@@ -262,6 +278,7 @@ const deleteSingleTask = async (row: any) => {
 
 // 单条数据禁用方法
 const disableSingleTask = async (row: any) => {
+  if (!canWrite.value) return
   if (row.enabled === false) {
     ElMessage.warning(t('task.alreadyDisabled', 'This task is already disabled'))
     return
@@ -285,6 +302,7 @@ const disableSingleTask = async (row: any) => {
 
 // 单条数据开启方法
 const enableSingleTask = async (row: any) => {
+  if (!canWrite.value) return
   if (row.enabled === true) {
     ElMessage.warning(t('task.alreadyEnabled', 'This task is already running'))
     return
@@ -308,6 +326,7 @@ const enableSingleTask = async (row: any) => {
 
 // 更新单条数据方法
 const updateSingleTask = async (row: any) => {
+  if (!canWrite.value) return
   action_type.value = false
   addTaskVisible.value = true
   rulesForm.value = {
@@ -329,10 +348,12 @@ const updateSingleTask = async (row: any) => {
 }
 // 查看单条数据日志方法
 const updateSingleTaskLog = async (row: any) => {
+  if (!canRead.value) return
   System.router.push(`/task/log?id=${row.id}`)
 }
 
 const runSingleTask = async (row: any) => {
+  if (!canExecute.value) return
   const { data } = await Api.runPlanTask({ id: row.id })
   if (data.status === 'skipped') {
     ElMessage.warning(t('task.skippedRunning', 'The previous execution is still running. This run was skipped.'))
@@ -345,6 +366,7 @@ const runSingleTask = async (row: any) => {
 }
 
 const cancelRunningTask = async (row: any) => {
+  if (!canExecute.value) return
   const executionID = runningByTask.value[row.id]
   if (!executionID) return
   await ElMessageBox.confirm(t('task.cancelRunConfirm', 'Terminate this running task?'), t('task.cancelRunTitle', 'Cancel execution'), {
@@ -358,7 +380,8 @@ const cancelRunningTask = async (row: any) => {
 }
 // 选择过滤函数，控制选择逻辑
 const selectFilter = (row: any) => {
-  return true
+  void row
+  return canWrite.value
 }
 
 const columns = computed<ColumnItem[]>(() => [
@@ -430,11 +453,11 @@ watch(hasRunningExecutions, (running) => {
       <el-card>
       <div class="task-toolbar">
         <el-space class="task-toolbar__actions">
-          <el-button class="task-toolbar__button" type="primary" @click="addTask">{{ t('task.addTask', 'Add task') }}</el-button>
+          <el-button v-if="canWrite" class="task-toolbar__button" type="primary" @click="addTask">{{ t('task.addTask', 'Add task') }}</el-button>
           <!-- <el-button type="primary">执行任务</el-button> -->
-          <el-button class="task-toolbar__button" type="primary" @click="batchEnable">{{ t('task.startTask', 'Start task') }}</el-button>
-          <el-button class="task-toolbar__button" type="primary" @click="batchDisable">{{ t('task.stopTask', 'Stop task') }}</el-button>
-          <el-button class="task-toolbar__button" type="primary" @click="batchDelete">{{ t('task.deleteTask', 'Delete task') }}</el-button>
+          <el-button v-if="canWrite" class="task-toolbar__button" type="primary" @click="batchEnable">{{ t('task.startTask', 'Start task') }}</el-button>
+          <el-button v-if="canWrite" class="task-toolbar__button" type="primary" @click="batchDisable">{{ t('task.stopTask', 'Stop task') }}</el-button>
+          <el-button v-if="canWrite" class="task-toolbar__button" type="primary" @click="batchDelete">{{ t('task.deleteTask', 'Delete task') }}</el-button>
         </el-space>
         <div class="task-toolbar__search">
           <!-- <el-dropdown>
@@ -451,7 +474,7 @@ watch(hasRunningExecutions, (running) => {
           </template>
 </el-dropdown> --> <search-input class="task-search-input" :placeholder="t('task.searchPlaceholder', 'Enter domain or remark')" v-model="searchValue"
             @search="getData()" />
-          <el-button class="task-refresh-button" :icon="Refresh" type="primary" @click="onSubmit" />
+          <el-button v-if="canRead" class="task-refresh-button" :icon="Refresh" type="primary" @click="onSubmit" />
           <!-- <el-button :icon="Setting" type="primary" @click="onSubmit" /> -->
         </div>
       </div>
@@ -464,12 +487,12 @@ watch(hasRunningExecutions, (running) => {
         <template #enabled="scope">
             <div class="status-cell">
               <el-tag v-if="runningByTask[scope.row.id]" class="status-tag" type="warning">{{ t('task.running', 'Running') }}</el-tag>
-              <a class="status-link status-link--enabled"
-                v-else-if="scope.row.enabled" @click="disableSingleTask(scope.row)"> {{ t('task.enabled', 'Enabled') }} <el-icon>
+              <a v-if="canWrite && scope.row.enabled" class="status-link status-link--enabled"
+                @click="disableSingleTask(scope.row)"> {{ t('task.enabled', 'Enabled') }} <el-icon>
                   <VideoPlay />
                 </el-icon>
               </a>
-              <a class="status-link status-link--disabled" v-else-if="!scope.row.enabled"
+              <a v-if="canWrite && !scope.row.enabled" class="status-link status-link--disabled"
                 @click="enableSingleTask(scope.row)">
                 <el-icon>
                   <VideoPause />
@@ -500,23 +523,23 @@ watch(hasRunningExecutions, (running) => {
         </template>
         <template #actionColumn="scope">
             <div class="row-actions table-row-actions">
-            <el-button link type="primary" :icon="VideoPlay" size="small" @click="enableSingleTask(scope.row)" v-if="!scope.row.enabled">
+            <el-button v-if="canWrite && !scope.row.enabled" link type="primary" :icon="VideoPlay" size="small" @click="enableSingleTask(scope.row)">
               {{ t('task.enable', 'Enable') }} </el-button>
-            <el-button link type="primary" :icon="VideoPause" size="small" @click="disableSingleTask(scope.row)" v-if="scope.row.enabled">
+            <el-button v-if="canWrite && scope.row.enabled" link type="primary" :icon="VideoPause" size="small" @click="disableSingleTask(scope.row)">
               {{ t('task.disable', 'Disable') }} </el-button>
-            <el-button link type="primary" :icon="EditPen" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
-            <el-button link type="primary" :icon="VideoPlay" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>
+            <el-button v-if="canWrite" link type="primary" :icon="EditPen" size="small" @click="updateSingleTask(scope.row)"> {{ t('task.update', 'Update') }} </el-button>
+            <el-button v-if="canExecute" link type="primary" :icon="VideoPlay" size="small" @click="runSingleTask(scope.row)"> {{ t('task.runNow', 'Run now') }} </el-button>
             <el-button
-              v-if="runningByTask[scope.row.id]"
+              v-if="canExecute && runningByTask[scope.row.id]"
               link type="danger" :icon="CircleClose" size="small"
               @click="cancelRunningTask(scope.row)"
             >
               {{ t('task.cancelRun', 'Cancel run') }}
             </el-button>
-            <el-button link type="primary" :icon="Document" size="small" @click="updateSingleTaskLog(scope.row)">
+            <el-button v-if="canRead" link type="primary" :icon="Document" size="small" @click="updateSingleTaskLog(scope.row)">
               {{ t('task.viewLogs', 'View logs') }}
             </el-button>
-            <el-button link type="danger" :icon="Delete" size="small" @click="deleteSingleTask(scope.row)"> {{ t('task.delete', 'Delete') }} </el-button>
+            <el-button v-if="canWrite" link type="danger" :icon="Delete" size="small" @click="deleteSingleTask(scope.row)"> {{ t('task.delete', 'Delete') }} </el-button>
             </div>
         </template>
         <!-- 自定义表格底部栏用于分页 -->

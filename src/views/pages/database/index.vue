@@ -7,6 +7,7 @@ import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 export interface ConfProps {
   conf: typeof conf
@@ -16,6 +17,9 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
+const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
 
 const conf = reactive({
   themeColor: {
@@ -28,6 +32,10 @@ const conf = reactive({
     mysql: false,
     redis: false,
     getData: async () => {
+      if (!canReadDatabase.value) {
+        conf.environment.loading = false
+        return
+      }
       conf.environment.loading = true
       try {
         const { data } = await Api.getStorageInfo()
@@ -44,6 +52,7 @@ const conf = reactive({
     username: '',
     password: '',
     open: (value: any) => {
+      if (!canReadDatabase.value) return
       conf.credential.database = value.database || ''
       conf.credential.username = value.username || ''
       conf.credential.password = value.password || ''
@@ -79,6 +88,7 @@ const conf = reactive({
       // }
     ],
     clickActive: (item: any) => {
+      if (!canReadDatabase.value) return
       if (conf.tabs.activeIndex === item.index) return
       conf.list.params = {
         page: 1,
@@ -126,6 +136,12 @@ const conf = reactive({
       }
     }),
     getData: async () => {
+      if (!canReadDatabase.value) {
+        conf.list.data = []
+        conf.list.total = 0
+        conf.list.loading = false
+        return
+      }
       conf.list.loading = true
       const api = conf.list.params.type === 'redis' ? Api.getRedisList : Api.getDatabaseList
       const { data: res } = await api(conf.list.params)
@@ -140,6 +156,7 @@ const conf = reactive({
     type: 'add',
     loading: false,
     open: (type: 'add') => {
+      if (!canWriteDatabase.value) return
       conf.drawer.type = type
       conf.drawer.show = true
       conf.drawer.title = t('database.addDatabase', 'Add database')
@@ -150,6 +167,7 @@ const conf = reactive({
       conf.drawer.show = false
     },
     onConfirm: () => {
+      if (!canWriteDatabase.value) return
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
         conf.drawer.loading = true
@@ -220,6 +238,7 @@ conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)!
 conf.list.params.type = routeName
 
 const copyCredential = async () => {
+  if (!canReadDatabase.value) return
   const text = `${t('database.database', 'Database')}: ${conf.credential.database}\n${t('common.username', 'Username')}: ${conf.credential.username}\n${t('common.password', 'Password')}: ${conf.credential.password}`
   try {
     let copied = false
@@ -310,7 +329,7 @@ const copyCredential = async () => {
       </el-form>
       <template #footer>
         <el-button @click="conf.credential.show = false">{{ t('common.close', '关闭') }}</el-button>
-        <el-button type="primary" @click="copyCredential">{{ t('database.copyCredential', '复制账号密码') }}</el-button>
+        <el-button v-if="canReadDatabase" type="primary" @click="copyCredential">{{ t('database.copyCredential', '复制账号密码') }}</el-button>
       </template>
     </custom-dialog>
   </div>

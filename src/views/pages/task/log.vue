@@ -6,6 +6,7 @@ import System from "@/utils/System";
 import { ElMessage, ElMessageBox } from "element-plus";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
+import { hasOperationAccess } from "@/utils/access";
 
 const taskID = Number(System.getRouterParams().id || 0);
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -20,6 +21,11 @@ const pagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const status = ref("");
 const dateRange = ref<[Date, Date] | undefined>();
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
+const canReadTask = computed(() => hasOperationAccess("cron", "read"));
+const canWriteTask = computed(() => hasOperationAccess("cron", "write"));
+const canExecuteTask = computed(() => hasOperationAccess("cron", "execute", {
+  actions: ["cron.run", "cron.write"],
+}));
 
 const filterParams = () => ({
   status: status.value || undefined,
@@ -28,7 +34,7 @@ const filterParams = () => ({
 });
 
 const getData = async () => {
-  if (!taskID) return;
+  if (!taskID || !canReadTask.value) return;
   loading.value = true;
   try {
     const { data } = await Api.getPlanTaskLog({
@@ -56,6 +62,7 @@ const reset = () => {
 };
 
 const cancelExecution = async (execution: any) => {
+  if (!canExecuteTask.value) return;
   await ElMessageBox.confirm(
     t("task.log.cancelConfirm", "Cancel this execution?"),
     t("task.log.cancelTitle", "Cancel task execution"),
@@ -71,6 +78,7 @@ const cancelExecution = async (execution: any) => {
 };
 
 const cleanupLogs = async () => {
+  if (!canWriteTask.value) return;
   await ElMessageBox.confirm(
     t(
       "task.log.cleanupConfirm",
@@ -98,6 +106,7 @@ const cleanupLogs = async () => {
 };
 
 const exportLogs = async () => {
+  if (!canReadTask.value) return;
   exporting.value = true;
   try {
     await Api.exportPlanTaskLogs(
@@ -207,13 +216,13 @@ onUnmounted(() => {
         <strong>{{
           t("task.log.title", "Task #{id} execution logs", { id: taskID })
         }}</strong>
-        <el-button :icon="Download" :loading="exporting" @click="exportLogs">{{
+        <el-button v-if="canReadTask" :icon="Download" :loading="exporting" @click="exportLogs">{{
           t("task.log.exportCsv", "Export CSV")
         }}</el-button>
-        <el-button :loading="cleaning" @click="cleanupLogs">{{
+        <el-button v-if="canWriteTask" :loading="cleaning" @click="cleanupLogs">{{
           t("task.log.cleanupExpired", "Clean expired logs")
         }}</el-button>
-        <el-button :icon="Refresh" :loading="loading" @click="getData">{{
+        <el-button v-if="canReadTask" :icon="Refresh" :loading="loading" @click="getData">{{
           t("task.log.refresh", "Refresh")
         }}</el-button>
       </div>
@@ -258,10 +267,10 @@ onUnmounted(() => {
           :range-separator="t('task.log.rangeSeparator', 'to')"
           />
         </div>
-        <el-button type="primary" @click="search">{{
+        <el-button v-if="canReadTask" type="primary" @click="search">{{
           t("task.log.search", "Search")
         }}</el-button>
-        <el-button @click="reset">{{ t("task.log.reset", "Reset") }}</el-button>
+        <el-button v-if="canReadTask" @click="reset">{{ t("task.log.reset", "Reset") }}</el-button>
       </div>
       <custom-table
         v-loading="loading"
@@ -308,7 +317,7 @@ onUnmounted(() => {
         </template>
         <template #actionColumn="{ row }">
           <el-button
-            v-if="row.status === 'running'"
+            v-if="canExecuteTask && row.status === 'running'"
             link
             type="danger"
             :icon="CircleClose"

@@ -506,6 +506,11 @@ export default {
   },
   task: {
     noTask: 'No container tasks',
+    listTitle: 'Container tasks',
+    listHint: 'Select a task to view details and live logs',
+    filterActive: 'In progress',
+    filterAll: 'All',
+    noActiveTasks: 'No tasks in progress',
     operations: {
       composeCreate: 'Create and start Compose project',
       composeEdit: 'Save Compose configuration',

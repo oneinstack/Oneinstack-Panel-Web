@@ -27,6 +27,7 @@ import i18n from '@/lang'
 import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
 import System from '@/utils/System'
 import { useConfigStore } from '@/stores/modules/config'
+import { hasOperationAccess } from '@/utils/access'
 import { getWebsiteEngineLabel, getWebsiteEngineTagStyle } from '@/utils/websiteEngine'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -34,11 +35,12 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 const sconfig = useConfigStore()
+const canReadWebsite = computed(() => hasOperationAccess('website', 'read'))
+const canWriteWebsite = computed(() => hasOperationAccess('website', 'write'))
+const canDeleteWebsite = computed(() => hasOperationAccess('website', 'delete', { actions: ['website.write'] }))
+const canBackupWebsite = computed(() => hasOperationAccess('website', 'backup', { actions: ['website.write'] }))
 const canReadDatabase = () =>
-  sconfig.hasMenuAccess('database') ||
-  sconfig.hasActionAccess('database.read') ||
-  Boolean((sconfig.scopeAccess as any)?.database?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['database.read'])
+  hasOperationAccess('database', 'read')
 
 const websiteRootDirPattern = /^(?!\.)(?!.*(?:^|\/)\.\.(?:\/|$))[A-Za-z0-9][A-Za-z0-9._/-]*$/
 const rootDirForbiddenCharacters = /[\0\r\n\t ;{}"'$]/
@@ -168,6 +170,7 @@ const extractWebsiteApprovalId = (payload: any): string => {
 }
 
 const openWebsiteRoot = (rootDir: unknown) => {
+  if (!canReadWebsite.value) return
   const path = typeof rootDir === 'string' ? rootDir.trim() : ''
   if (!path) {
     ElMessage.warning(t('website.noManagedRoot', 'The current website has no manageable root directory'))
@@ -497,11 +500,13 @@ const runWebServerAction = (action: ServiceAction) => {
 }
 
 const openWebServerConfig = () => {
+  if (!canManageCurrentWebServer.value) return
   webServer.menuVisible = false
   webServer.configVisible = true
 }
 
 const handleWebsitePageRefresh = () => {
+  if (!canReadWebsite.value) return
   conf.website.getData()
   webServer.load()
   loadServiceStatuses()
@@ -521,6 +526,7 @@ const certificateDrawer = reactive({
   show: false,
   website: {} as Record<string, any>,
   open: (website: Record<string, any>) => {
+    if (!canReadWebsite.value) return
     certificateDrawer.website = website
     certificateDrawer.show = true
   }
@@ -530,6 +536,7 @@ const backupDrawer = reactive({
   show: false,
   website: null as Record<string, any> | null,
   open: (website?: Record<string, any>) => {
+    if (!canBackupWebsite.value) return
     backupDrawer.website = website || null
     backupDrawer.show = true
   }
@@ -539,6 +546,7 @@ const settingsDrawer = reactive({
   show: false,
   website: null as Record<string, any> | null,
   open: (website: Record<string, any>) => {
+    if (!canWriteWebsite.value) return
     settingsDrawer.website = website
     settingsDrawer.show = true
   }
@@ -546,6 +554,7 @@ const settingsDrawer = reactive({
 
 const statusLoading = reactive(new Set<number>())
 const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
+  if (!canWriteWebsite.value) return
   statusLoading.add(row.id)
   try {
     await submitOperation('website.toggle', {
@@ -650,6 +659,12 @@ const conf = reactive({
     } as any,
     loading: true,
     getData: async () => {
+      if (!canReadWebsite.value) {
+        conf.website.data = []
+        conf.website.total = 0
+        conf.website.loading = false
+        return
+      }
       conf.website.loading = true
       const { data: res } = await Api.getWebsiteList(conf.website.params)
       conf.website.loading = false
@@ -657,6 +672,7 @@ const conf = reactive({
       conf.website.data = res.data
     },
     handleAdd: () => {
+      if (!canWriteWebsite.value) return
       conf.drawer.open('add')
       conf.form.data.value = { type: conf.website.params.type, expires_at: null }
     }
@@ -667,6 +683,7 @@ const conf = reactive({
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
+      if (!canWriteWebsite.value) return
       conf.drawer.title = t('website.createWebsite', '创建网站')
       conf.drawer.type = type
       if (type === 'edit') {
@@ -681,6 +698,7 @@ const conf = reactive({
       conf.drawer.show = true
     },
     onConfirm: () => {
+      if (!canWriteWebsite.value) return
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
         conf.form.data.value.hostDomain = typeof conf.form.data.value.hostDomain === 'string'
@@ -845,6 +863,7 @@ const conf = reactive({
     deleteFiles: false,
     databases: [] as any[],
     open: (type: 'delete', row?: any) => {
+      if (!canDeleteWebsite.value) return
       conf.dialog.type = type
       conf.dialog.row = row
       conf.dialog.confirmName = ''
@@ -871,6 +890,7 @@ const conf = reactive({
       conf.dialog.show = false
     },
     confirm: async () => {
+      if (!canDeleteWebsite.value) return
       if (conf.dialog.confirmName !== conf.dialog.row.name) {
         ElMessage.error(t('website.websiteNameMismatch', '网站名不匹配'))
         return
@@ -934,7 +954,7 @@ loadServiceStatuses()
           <div class="action-with-reason">
             <el-tooltip :content="addSiteDisabledReason" :disabled="!addSiteDisabledReason">
               <span class="disabled-action-wrapper">
-                <el-button type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
+                <el-button type="primary" :disabled="!webServer.data.available || !canWriteWebsite" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
               </span>
             </el-tooltip>
             <!-- <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
@@ -950,13 +970,13 @@ loadServiceStatuses()
             </el-button>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item @click="backupDrawer.open()">
+                <el-dropdown-item v-if="canBackupWebsite" @click="backupDrawer.open()">
                   {{ $t('website.fullBackupManagement') }}
                 </el-dropdown-item>
-                <el-dropdown-item :disabled="!webServer.data.configurationAvailable" @click="webServer.configVisible = true">
+                <el-dropdown-item v-if="canManageCurrentWebServer" :disabled="!webServer.data.configurationAvailable" @click="openWebServerConfig">
                   {{ $t('website.manageConfigFiles') }}
                 </el-dropdown-item>
-                <el-dropdown-item @click="handleWebsitePageRefresh">
+                <el-dropdown-item v-if="canReadWebsite" @click="handleWebsitePageRefresh">
                   {{ $t('website.refreshStatus') }}
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -1061,8 +1081,8 @@ loadServiceStatuses()
             :placeholder="$t('website.searchPlaceholder', '请输入域名或备注')"
             @search="conf.website.getData()"
           />
-          <el-button class="website-search-panel__refresh" :icon="Refresh" @click="handleWebsitePageRefresh" />
-          <el-button class="website-search-panel__refresh" :icon="Setting" @click="webServer.configVisible = true" />
+          <el-button v-if="canReadWebsite" class="website-search-panel__refresh" :icon="Refresh" @click="handleWebsitePageRefresh" />
+          <el-button v-if="canManageCurrentWebServer" class="website-search-panel__refresh" :icon="Setting" @click="openWebServerConfig" />
         </div>
       </div>
     </section>
@@ -1103,6 +1123,7 @@ loadServiceStatuses()
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
+              v-if="canReadWebsite"
               class="website-action-btn website-action-btn--ssl"
               type="primary"
               link
@@ -1112,6 +1133,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">SSL</span>
             </el-button>
             <el-button
+              v-if="canBackupWebsite"
               class="website-action-btn website-action-btn--backup"
               type="primary"
               link
@@ -1121,6 +1143,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">{{ $t('website.backup') }}</span>
             </el-button>
             <el-button
+              v-if="canWriteWebsite"
               class="website-action-btn website-action-btn--settings"
               type="primary"
               link
@@ -1130,6 +1153,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">{{ $t('website.settings') }}</span>
             </el-button>
             <el-button
+              v-if="canDeleteWebsite"
               class="website-action-btn website-action-btn--danger"
               type="danger"
               link
@@ -1144,6 +1168,7 @@ loadServiceStatuses()
           <div class="website-status">
             <el-switch
               :model-value="Boolean(row.enabled)"
+              :disabled="!canWriteWebsite"
               :loading="statusLoading.has(row.id)"
               @change="toggleWebsiteStatus(row, Boolean($event))"
             />
@@ -1236,7 +1261,7 @@ loadServiceStatuses()
         <el-button
           type="danger"
           :loading="conf.dialog.loading"
-          :disabled="conf.dialog.confirmName !== conf.dialog.row.name"
+          :disabled="!canDeleteWebsite || conf.dialog.confirmName !== conf.dialog.row.name"
           @click="conf.dialog.confirm"
         >
           {{ $t('website.createSnapshotAndDelete') }}
@@ -1247,20 +1272,27 @@ loadServiceStatuses()
     <website-certificate-drawer
       v-model="certificateDrawer.show"
       :website="certificateDrawer.website"
+      :can-read="canReadWebsite"
+      :can-write="canWriteWebsite"
       @changed="conf.website.getData()"
     />
     <website-backup-drawer
       v-model="backupDrawer.show"
       :website="backupDrawer.website"
+      :can-read="canReadWebsite"
+      :can-write="canBackupWebsite"
       @changed="conf.website.getData()"
     />
     <web-server-config-drawer
       v-model="webServer.configVisible"
+      :can-read="canReadSoftwareService"
+      :can-write="canManageCurrentWebServer"
       @changed="webServer.load"
     />
     <website-settings-drawer
       v-model="settingsDrawer.show"
       :website="settingsDrawer.website"
+      :can-write="canWriteWebsite"
       @changed="conf.website.getData()"
     />
   </div>

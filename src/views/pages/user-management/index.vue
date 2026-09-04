@@ -8,7 +8,7 @@ import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
-import { menuPathKeyMap } from '@/utils/access'
+import { hasOperationAccess, menuPathKeyMap } from '@/utils/access'
 
 interface AccessRole {
   code?: string
@@ -244,9 +244,18 @@ const passwordDialog = reactive({
   }
 })
 
-const canManageUsers = computed(() => Boolean(currentUser.value?.isSuperAdmin))
-const canManageRoles = computed(() => Boolean(currentUser.value?.isSuperAdmin))
-const canManageMenus = computed(() => Boolean(currentUser.value?.isSuperAdmin))
+const canReadAccess = computed(() => hasOperationAccess('userManagement', 'read', {
+  actions: ['userManagement.read', 'user.read']
+}))
+const canManageUsers = computed(() => hasOperationAccess('userManagement', 'write', {
+  actions: ['userManagement.write', 'user.write']
+}))
+const canManageRoles = computed(() => hasOperationAccess('userManagement', 'write', {
+  actions: ['userManagement.write', 'role.write']
+}))
+const canManageMenus = computed(() => hasOperationAccess('userManagement', 'write', {
+  actions: ['userManagement.write', 'menu.write', 'menu.status.write']
+}))
 const roleTagList = computed(() => currentUser.value?.roles || [])
 const totalAssignedUsers = computed(() => userState.list.filter((item) => (item.roles || []).length > 0).length)
 const totalPendingUsers = computed(() => userState.list.filter((item) => item.mustChangePassword).length)
@@ -628,6 +637,11 @@ const loadBootstrap = async () => {
 }
 
 const loadUsers = async () => {
+  if (!canReadAccess.value) {
+    userState.list = []
+    userState.total = 0
+    return
+  }
   loading.users = true
   try {
     const response = await Api.getAccessUsers(userState.filters)
@@ -643,6 +657,7 @@ const openRoleEditor = async (role?: AccessRole | null) => {
 }
 
 const submitRoleEditor = async () => {
+  if (!canManageRoles.value) return
   const key = roleEditorDialog.form.key.trim()
   const name = roleEditorDialog.form.name.trim()
   const description = roleEditorDialog.form.description.trim()
@@ -721,6 +736,7 @@ const openMenuEditor = async (menu?: AccessMenuNode | null) => {
 }
 
 const submitMenuEditor = async () => {
+  if (!canManageMenus.value) return
   const key = menuEditorDialog.form.key.trim()
   const name = menuEditorDialog.form.name.trim()
   const nameEn = menuEditorDialog.form.nameEn.trim()
@@ -819,6 +835,7 @@ const deleteMenu = async (menu: AccessMenuNode) => {
 }
 
 const deleteRole = async (role: AccessRole) => {
+  if (!canManageRoles.value) return
   const key = role.key || role.code || ''
   if (!key) {
     ElMessage.warning(t('userManagement.invalidRoleKey', 'Invalid role key'))
@@ -860,6 +877,7 @@ const resetUsers = () => {
 }
 
 const submitCreateUser = async () => {
+  if (!canManageUsers.value) return
   const username = createUserDialog.form.username.trim()
   if (!username) {
     ElMessage.warning(t('userManagement.inputUsername', 'Enter an account name'))
@@ -893,6 +911,7 @@ const submitCreateUser = async () => {
 }
 
 const submitRoleUpdate = async () => {
+  if (!canManageUsers.value) return
   if (!roleDialog.user) return
   loading.updateRoles = true
   try {
@@ -918,6 +937,7 @@ const toggleCreateAllRoles = (value: string | number | boolean) => {
 }
 
 const submitPasswordReset = async () => {
+  if (!canManageUsers.value) return
   if (!passwordDialog.user) return
   if (!passwordDialog.password.trim()) {
     ElMessage.warning(t('userManagement.inputNewPassword', 'Enter a new password'))
@@ -955,6 +975,7 @@ const getSuperAdminCount = async () => {
 }
 
 const deleteUser = async (row: AccessUser) => {
+  if (!canManageUsers.value) return
   if (!row?.id) {
     ElMessage.warning(t('userManagement.invalidUserId', 'Invalid user ID'))
     return

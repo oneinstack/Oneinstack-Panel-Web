@@ -18,6 +18,7 @@ import type { ColumnItem } from "@/components/custom-table.vue";
 interface SecurityCapabilities {
   canReadSecurity: boolean;
   canWriteSecurity: boolean;
+  canInstall: boolean;
   canChangeFirewallRules: boolean;
   canChangePortForward: boolean;
   canToggleFirewall: boolean;
@@ -379,13 +380,19 @@ const pingDisabledReason = computed(() => {
   return baseActionDisabledReason.value;
 });
 const canRunAutoBlock = computed(
-  () => canWrite.value && autoConfig.enabled === true && !autoRunning.value,
+  () =>
+    canWrite.value &&
+    autoConfig.enabled === true &&
+    !autoRunning.value &&
+    !autoSaving.value,
 );
 const autoRunDisabledReason = computed(() => {
   if (!canWrite.value)
     return t("security.autoBlockRunWriteDenied", "当前账号没有安全配置修改权限");
   if (!autoConfig.enabled)
     return t("security.autoBlockRunDisabled", "请先启用自动封禁");
+  if (autoSaving.value)
+    return t("security.autoBlockSaving", "正在保存配置，请稍候");
   if (autoRunning.value)
     return t("security.autoBlockRunning", "正在检测，请稍候");
   return "";
@@ -579,6 +586,7 @@ const backendLabel = (backend: string) =>
     : backendNames[backend] || backend;
 
 const getFirewallInfo = async () => {
+  if (!props.capabilities?.canReadSecurity) return;
   statusLoading.value = true;
   try {
     const { data } = await Api.getFirewallInfo({});
@@ -595,6 +603,7 @@ const getFirewallInfo = async () => {
 };
 
 const loadFirewallSummary = async () => {
+  if (!props.capabilities?.canReadSecurity) return;
   const [portRes, ipRes, regionRes, forwardRes] = await Promise.allSettled([
     Api.getFirewallRule({ page: 1, pageSize: 500, ruleType: "port", q: "" }),
     Api.getFirewallRule({ page: 1, pageSize: 500, ruleType: "ip", q: "" }),
@@ -611,6 +620,7 @@ const loadFirewallSummary = async () => {
 };
 
 const getData = async () => {
+  if (!props.capabilities?.canReadSecurity) return;
   tableLoading.value = true;
   selectedRows.value = [];
   try {
@@ -642,6 +652,7 @@ const getData = async () => {
 };
 
 const refreshAll = async () => {
+  if (!props.capabilities?.canReadSecurity) return;
   await getFirewallInfo();
   await Promise.all([loadFirewallSummary(), getData()]);
 };
@@ -652,6 +663,7 @@ defineExpose({
 });
 
 const handleFirewallChange = async (value: string | number | boolean) => {
+  if (!props.capabilities?.canToggleFirewall) return;
   const enabled = Boolean(value);
   const previous = !enabled;
   firewallChanging.value = true;
@@ -694,6 +706,7 @@ const handleFirewallChange = async (value: string | number | boolean) => {
 };
 
 const handlePingChange = async (value: string | number | boolean) => {
+  if (!props.capabilities?.canTogglePing) return;
   const blocked = Boolean(value);
   const previous = !blocked;
   pingChanging.value = true;
@@ -719,6 +732,7 @@ const handlePingChange = async (value: string | number | boolean) => {
 };
 
 const handleCleanup = async () => {
+  if (!canWrite.value) return;
   cleanupLoading.value = true;
   try {
     const { data } = await Api.cleanupFirewallRules();
@@ -734,6 +748,7 @@ const handleCleanup = async () => {
 };
 
 const handleInstallFirewall = async () => {
+  if (!props.capabilities?.canInstall) return;
   if (activeInstallTask.value) {
     installTaskId.value = activeInstallTask.value.id;
     installTaskVisible.value = true;
@@ -794,6 +809,8 @@ const switchTab = (tab: RuleTab) => {
 };
 
 const openAddDialog = () => {
+  if (activeTab.value === "forward" && !props.capabilities?.canChangePortForward) return;
+  if (activeTab.value !== "forward" && !props.capabilities?.canChangeFirewallRules) return;
   if (activeTab.value === "port") {
     portDialogIsAdd.value = true;
     currentPortRule.value = {};
@@ -830,7 +847,7 @@ const openAddDialog = () => {
 };
 
 const editRule = (row: FirewallRule) => {
-  if (row.protected) return;
+  if (row.protected || !props.capabilities?.canChangeFirewallRules) return;
   if (row.ruleType === "port") {
     portDialogIsAdd.value = false;
     currentPortRule.value = { ...row };
@@ -851,6 +868,7 @@ const editRule = (row: FirewallRule) => {
 };
 
 const saveIPRule = async () => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
   const ips = ipForm.ips
     .split(/[\n,]+/)
     .map((item) => item.trim())
@@ -905,6 +923,7 @@ const saveIPRule = async () => {
 };
 
 const editForward = (row: PortForward) => {
+  if (!props.capabilities?.canChangePortForward) return;
   forwardDialogIsAdd.value = false;
   Object.assign(forwardForm, {
     id: row.id,
@@ -919,6 +938,7 @@ const editForward = (row: PortForward) => {
 };
 
 const saveForward = async () => {
+  if (!props.capabilities?.canChangePortForward) return;
   if (
     forwardForm.sourcePort < 1 ||
     forwardForm.sourcePort > 65535 ||
@@ -965,6 +985,7 @@ const saveForward = async () => {
 };
 
 const setRuleState = async (row: FirewallRule, enabled: boolean) => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
   try {
     await Api.setFirewallRuleState({ id: row.id, enabled });
     ElMessage.success(
@@ -978,6 +999,7 @@ const setRuleState = async (row: FirewallRule, enabled: boolean) => {
 };
 
 const setForwardState = async (row: PortForward, enabled: boolean) => {
+  if (!props.capabilities?.canChangePortForward) return;
   try {
     await Api.setFirewallForwardState({ id: row.id, enabled });
     ElMessage.success(
@@ -991,6 +1013,7 @@ const setForwardState = async (row: PortForward, enabled: boolean) => {
 };
 
 const deleteRule = async (row: FirewallRule) => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
   if (row.protected) {
     ElMessage.warning(
       t("security.protectedRuleDeleteDenied", "系统保护规则不能删除"),
@@ -1012,6 +1035,7 @@ const deleteRule = async (row: FirewallRule) => {
 };
 
 const deleteForward = async (row: PortForward) => {
+  if (!props.capabilities?.canChangePortForward) return;
   try {
     await ElMessageBox.confirm(
       t("security.deleteForwardConfirm", "确定删除这条端口转发吗？"),
@@ -1031,6 +1055,7 @@ const deleteForward = async (row: PortForward) => {
 };
 
 const handleBatch = async () => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
   if (!batchAction.value || !selectedRows.value.length) {
     ElMessage.warning(t("security.batchRequired", "请选择规则和批量操作"));
     return;
@@ -1066,7 +1091,7 @@ const handleBatch = async () => {
 };
 
 const exportRules = async () => {
-  if (!isRuleTab.value) return;
+  if (!props.capabilities?.canReadSecurity || !isRuleTab.value) return;
   await Api.exportFirewallRules(activeTab.value);
   ElMessage.success(t("security.ruleExported", "规则已导出"));
 };
@@ -1104,9 +1129,13 @@ const downloadAutoBlockTemplate = () => {
   window.setTimeout(() => window.URL.revokeObjectURL(objectURL), 1000);
 };
 
-const chooseImport = () => importInput.value?.click();
+const chooseImport = () => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
+  importInput.value?.click();
+};
 
 const importRules = async (event: Event) => {
+  if (!props.capabilities?.canChangeFirewallRules) return;
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   input.value = "";
@@ -1130,6 +1159,7 @@ const importRules = async (event: Event) => {
 };
 
 const loadAutoConfig = async () => {
+  if (!props.capabilities?.canReadSecurity) return;
   try {
     const { data } = await Api.getFirewallAutoBlock();
     Object.assign(autoConfig, data?.config || {});
@@ -1138,27 +1168,63 @@ const loadAutoConfig = async () => {
   }
 };
 
-const saveAutoConfig = async () => {
+const getAutoConfigPayload = () => ({
+  enabled: autoConfig.enabled,
+  threshold: Number(autoConfig.threshold),
+  windowMinutes: Number(autoConfig.windowMinutes),
+  banMinutes: Number(autoConfig.banMinutes),
+});
+
+const persistAutoConfig = async () => {
   autoSaving.value = true;
   try {
-    const { data } = await Api.saveFirewallAutoBlock({
-      enabled: autoConfig.enabled,
-      threshold: Number(autoConfig.threshold),
-      windowMinutes: Number(autoConfig.windowMinutes),
-      banMinutes: Number(autoConfig.banMinutes),
-    });
+    const { data } = await Api.saveFirewallAutoBlock(getAutoConfigPayload());
     Object.assign(autoConfig, data?.config || {});
-    ElMessage.success(
-      autoConfig.enabled
-        ? t("security.autoBlockEnabled", "自动封禁已启用")
-        : t("security.autoBlockDisabled", "自动封禁已关闭"),
-    );
   } finally {
     autoSaving.value = false;
   }
 };
 
+const showAutoConfigSavedMessage = () => {
+  ElMessage.success(
+    autoConfig.enabled
+      ? t("security.autoBlockEnabled", "自动封禁已启用")
+      : t("security.autoBlockDisabled", "自动封禁已关闭"),
+  );
+};
+
+const saveAutoConfig = async () => {
+  if (!canWrite.value) return;
+  try {
+    await persistAutoConfig();
+    showAutoConfigSavedMessage();
+  } catch {
+    ElMessage.error(
+      t("security.autoBlockSaveFailed", "自动封禁配置保存失败"),
+    );
+  }
+};
+
+const handleAutoBlockToggle = async (value: boolean | string | number) => {
+  if (!canWrite.value) return;
+  const nextEnabled = Boolean(value);
+  const previousEnabled = !nextEnabled;
+  try {
+    await persistAutoConfig();
+    showAutoConfigSavedMessage();
+  } catch {
+    autoConfig.enabled = previousEnabled;
+    ElMessage.error(
+      t(
+        "security.autoBlockToggleFailed",
+        "自动封禁开关保存失败，已恢复原状态",
+      ),
+    );
+  }
+};
+
 const runAutoBlock = async () => {
+  if (!canRunAutoBlock.value) return;
   autoRunning.value = true;
   try {
     const { data } = await Api.runFirewallAutoBlock();
@@ -1316,7 +1382,11 @@ onMounted(() => {
           </el-tooltip>
         </div>
         <span class="divider" />
-        <el-button :loading="cleanupLoading" @click="handleCleanup">{{
+        <el-button
+          :loading="cleanupLoading"
+          :disabled="!canWrite"
+          @click="handleCleanup"
+        >{{
           t("security.cleanupCache", "清理缓存")
         }}</el-button>
         <div class="status-summary">
@@ -1372,6 +1442,7 @@ onMounted(() => {
       <el-button
         type="primary"
         :loading="installSubmitting"
+        :disabled="!props.capabilities?.canInstall"
         @click="handleInstallFirewall"
       >
         {{ installButtonText }}
@@ -1425,15 +1496,21 @@ onMounted(() => {
         </div>
         <el-switch
           v-model="autoConfig.enabled"
-          :disabled="!canWrite"
+          :disabled="!canWrite || autoSaving"
           :active-text="t('common.enable', '启用')"
           :inactive-text="t('common.disable', '关闭')"
+          @change="handleAutoBlockToggle"
         />
       </div>
       <div class="auto-fields">
         <label>
           <span>{{ t("security.triggerCount", "触发次数") }}</span>
-          <el-input-number v-model="autoConfig.threshold" :min="3" :max="100" />
+          <el-input-number
+            v-model="autoConfig.threshold"
+            :min="3"
+            :max="100"
+            :disabled="!canWrite"
+          />
         </label>
         <label>
           <span>{{ t("security.windowMinutes", "统计周期（分钟）") }}</span>
@@ -1441,6 +1518,7 @@ onMounted(() => {
             v-model="autoConfig.windowMinutes"
             :min="1"
             :max="1440"
+            :disabled="!canWrite"
           />
         </label>
         <label>
@@ -1449,6 +1527,7 @@ onMounted(() => {
             v-model="autoConfig.banMinutes"
             :min="5"
             :max="525600"
+            :disabled="!canWrite"
           />
         </label>
         <div class="auto-actions">
@@ -1466,7 +1545,7 @@ onMounted(() => {
           <el-button
             type="primary"
             :loading="autoSaving"
-            :disabled="!canWrite"
+            :disabled="!canWrite || autoSaving"
             @click="saveAutoConfig"
             >{{ t("common.saveConfig", "保存配置") }}</el-button
           >
@@ -1512,13 +1591,16 @@ onMounted(() => {
           <template v-if="isRuleTab">
             <el-tooltip :content="actionReason()" :disabled="!actionReason()">
               <span class="disabled-action-wrapper">
-                <el-button :disabled="Boolean(actionReason())" @click="chooseImport">{{
+                <el-button
+                  :disabled="Boolean(actionReason()) || !canWrite"
+                  @click="chooseImport"
+                >{{
                   importButtonText
                 }}</el-button>
               </span>
             </el-tooltip>
-            <el-button @click="exportRules">{{ exportButtonText }}</el-button>
-            <el-button v-if="showAutoBlockTemplateButton" @click="downloadAutoBlockTemplate">{{
+            <el-button v-if="props.capabilities?.canReadSecurity" @click="exportRules">{{ exportButtonText }}</el-button>
+            <el-button v-if="showAutoBlockTemplateButton && props.capabilities?.canReadSecurity" @click="downloadAutoBlockTemplate">{{
               t("security.downloadBlockedIpTemplate", "下载 JSON 模板")
             }}</el-button>
           </template>
@@ -1826,7 +1908,12 @@ onMounted(() => {
         <el-button @click="ipDialogVisible = false">{{
           t("common.cancel", "取消")
         }}</el-button>
-        <el-button type="primary" :loading="ipSubmitting" @click="saveIPRule">{{
+        <el-button
+          type="primary"
+          :loading="ipSubmitting"
+          :disabled="!canWrite"
+          @click="saveIPRule"
+        >{{
           t("security.saveRule", "保存规则")
         }}</el-button>
       </template>
@@ -1910,6 +1997,7 @@ onMounted(() => {
         <el-button
           type="primary"
           :loading="forwardSubmitting"
+          :disabled="!canWrite"
           @click="saveForward"
           >{{ t("security.saveForward", "保存转发") }}</el-button
         >

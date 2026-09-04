@@ -5,6 +5,7 @@ import { ElMessage } from "element-plus";
 import { View } from "@element-plus/icons-vue";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
+import { hasOperationAccess } from '@/utils/access'
 
 interface AuditEvent {
   id: number;
@@ -54,6 +55,9 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 const loading = ref(false);
 const verifying = ref(false);
 const exporting = ref(false);
+const canReadAudit = computed(() => hasOperationAccess('audit', 'read', {
+  actions: ['audit.read', 'audit.log.read']
+}))
 const events = ref<AuditEvent[]>([]);
 const total = ref(0);
 const detail = ref<AuditEvent | null>(null);
@@ -159,6 +163,11 @@ const queryParams = (includePage = true) => {
 };
 
 const loadEvents = async () => {
+  if (!canReadAudit.value) {
+    events.value = [];
+    total.value = 0;
+    return;
+  }
   loading.value = true;
   try {
     const { data } = await Api.getAuditEvents(queryParams());
@@ -170,6 +179,7 @@ const loadEvents = async () => {
 };
 
 const loadStats = async () => {
+  if (!canReadAudit.value) return
   const { data } = await Api.getAuditStats();
   stats.value = data;
 };
@@ -194,12 +204,14 @@ const reset = () => {
 };
 
 const showDetail = async (row: AuditEvent) => {
+  if (!canReadAudit.value) return
   const { data } = await Api.getAuditEvent(row.id);
   detail.value = data;
   detailVisible.value = true;
 };
 
 const verifyChain = async () => {
+  if (!canReadAudit.value) return
   verifying.value = true;
   try {
     const { data } = await Api.verifyAuditChain();
@@ -227,6 +239,7 @@ const verifyChain = async () => {
 };
 
 const exportEvents = async () => {
+  if (!canReadAudit.value) return
   exporting.value = true;
   try {
     await Api.exportAuditEvents(
@@ -260,10 +273,10 @@ onMounted(async () => {
         <p>{{ $t("audit.fullDescription") }}</p>
       </div>
       <div class="heading-actions">
-        <el-button :loading="verifying" @click="verifyChain">{{
+        <el-button v-if="canReadAudit" :loading="verifying" @click="verifyChain">{{
           $t("audit.verifyIntegrity")
         }}</el-button>
-        <el-button type="primary" :loading="exporting" @click="exportEvents">{{
+        <el-button v-if="canReadAudit" type="primary" :loading="exporting" @click="exportEvents">{{
           $t("audit.exportCsv")
         }}</el-button>
       </div>
@@ -428,6 +441,7 @@ onMounted(async () => {
         <template #durationMs="{ row }">{{ row.durationMs }} ms</template>
         <template #actionColumn="{ row }">
           <el-button
+            v-if="canReadAudit"
             link
             type="primary"
             :icon="View"

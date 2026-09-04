@@ -6,12 +6,15 @@ import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 const { conf: parentConf } = defineProps<ConfProps>()
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
+const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
 
 const conf = reactive({
   ...parentConf,
@@ -19,6 +22,7 @@ const conf = reactive({
     loading: true,
     options: [] as { label: string; value: number }[],
     getOptions: async () => {
+      if (!canReadDatabase.value) return
       conf.server.loading = true
       try {
         const { data } = await Api.getConnlist(conf.list.params)
@@ -59,6 +63,7 @@ const conf = reactive({
     },
     data: [] as any[],
     getData: async () => {
+      if (!canReadDatabase.value) return
       const { data: res } = await Api.getDatabaseList(conf.dbList.params)
       conf.dbList.data = res.data
     }
@@ -68,6 +73,7 @@ const conf = reactive({
 conf.list.loading = false
 
 const handleTabClick = async ({ paneName }: { paneName: string | number | undefined }) => {
+  if (!canReadDatabase.value) return
   const database = Number(paneName ?? 0)
   if (!Number.isInteger(database) || database < 0) return
   conf.list.params.r_db = database
@@ -86,7 +92,7 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
   <div class="container">
     <div class="tool-bar">
       <el-space class="btn-group">
-        <el-button type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteDatabase', '远程数据库') }}</el-button>
+        <el-button v-if="canWriteDatabase" type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteDatabase', '远程数据库') }}</el-button>
       </el-space>
       <div class="demo-form-inline flex" style="gap: 16px">
         <span class="flex items-center" style="color: var(--el-color-primary); gap: 8px">

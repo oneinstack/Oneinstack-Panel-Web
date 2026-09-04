@@ -6,6 +6,7 @@ import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import { hasOperationAccess } from '@/utils/access'
 
 interface TrashEntry {
   id: string
@@ -42,6 +43,14 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+const canReadFile = computed(() => hasOperationAccess('file', 'read'))
+const canRestoreTrash = computed(() => hasOperationAccess('file', 'restore'))
+const canDeleteTrash = computed(() => hasOperationAccess('file', 'delete_permanently', {
+  actions: ['file.delete']
+}))
+const canEmptyTrash = computed(() => hasOperationAccess('file', 'empty_trash', {
+  actions: ['file.delete']
+}))
 
 const state = reactive({
   loading: false,
@@ -49,6 +58,7 @@ const state = reactive({
   capacity: null as CapacityStatus | null,
   retentionDays: 0,
   load: async () => {
+    if (!canReadFile.value) return
     state.loading = true
     try {
       const [{ data: trash }, { data: storage }] = await Promise.all([Api.getTrashList(), Api.getFileCapacity()])
@@ -60,6 +70,7 @@ const state = reactive({
     }
   },
   restore: async (row: TrashEntry) => {
+    if (!canRestoreTrash.value) return
     await ElMessageBox.confirm(t('file.trashDialog.restoreConfirm', 'Restore to {path}? If a file with the same name already exists there, the system will refuse to overwrite it.', { path: row.originalPath }), t('file.trashDialog.restoreTitle', 'Restore file'), {
       type: 'info',
       confirmButtonText: t('file.trashDialog.restore', 'Restore'),
@@ -71,6 +82,7 @@ const state = reactive({
     await state.load()
   },
   remove: async (row: TrashEntry) => {
+    if (!canDeleteTrash.value) return
     await ElMessageBox.confirm(t('file.trashDialog.deleteConfirm', 'Permanently delete "{name}"? This action cannot be undone.', { name: row.name }), t('file.trashDialog.deleteTitle', 'Permanently delete'), {
       type: 'warning',
       confirmButtonText: t('file.trashDialog.deletePermanently', 'Permanently delete'),
@@ -81,6 +93,7 @@ const state = reactive({
     await state.load()
   },
   empty: async () => {
+    if (!canEmptyTrash.value) return
     await ElMessageBox.confirm(t('file.trashDialog.emptyConfirm', 'Empty the trash? All files in it will be unrecoverable.'), t('file.trashDialog.emptyTitle', 'Empty trash'), {
       type: 'error',
       confirmButtonText: t('file.trashDialog.emptyConfirmButton', 'Empty trash'),
@@ -151,7 +164,7 @@ watch(
       />
       <div class="toolbar-actions">
         <el-button :icon="Refresh" :loading="state.loading" @click="state.load">{{ t('common.refresh', 'Refresh') }}</el-button>
-        <el-button type="danger" plain :icon="Delete" :disabled="state.items.length === 0" @click="state.empty">
+        <el-button v-if="canEmptyTrash" type="danger" plain :icon="Delete" :disabled="state.items.length === 0" @click="state.empty">
           {{ t('file.trashDialog.emptyTrash', 'Empty trash') }}
         </el-button>
       </div>
@@ -169,8 +182,8 @@ watch(
       <template #deletedBy="{ row }">{{ row.deletedBy || '-' }}</template>
       <template #action="{ row }">
         <div class="table-row-actions">
-          <el-button type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
-          <el-button type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
+          <el-button v-if="canRestoreTrash" type="primary" link :icon="RefreshLeft" @click="state.restore(row)">{{ t('file.trashDialog.restore', 'Restore') }}</el-button>
+          <el-button v-if="canDeleteTrash" type="danger" link :icon="Delete" @click="state.remove(row)">{{ t('file.trashDialog.deletePermanently', 'Permanently delete') }}</el-button>
         </div>
       </template>
     </custom-table>

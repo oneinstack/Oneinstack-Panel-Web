@@ -6,6 +6,7 @@ import i18n from '@/lang'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import { formatFileTime } from '@/utils/fileTime'
+import { hasOperationAccess } from '@/utils/access'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: boolean): void }>()
@@ -18,6 +19,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+const canReadFile = computed(() => hasOperationAccess('file', 'read'))
 
 const actionKeys = [
   'file.create',
@@ -69,6 +71,7 @@ const resetTableScrollTop = async () => {
 }
 
 const load = async (resetScroll = false) => {
+  if (!canReadFile.value) return
   state.loading = true
   try {
     const { data } = await Api.getFileOperations({

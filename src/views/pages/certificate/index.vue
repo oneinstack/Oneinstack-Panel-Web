@@ -171,21 +171,26 @@ const refreshCurrent = () => {
 }
 
 const openCreate = (mode: 'upload' | 'self-signed') => {
+  if (!canWrite.value) return
   formDrawer.mode = mode
   formDrawer.visible = true
 }
 const openIssue = () => {
+  if (!canWrite.value) return
   issueDrawer.visible = true
 }
 const openDetail = (certificate: ManagedCertificate) => {
+  if (!canRead.value) return
   detailDrawer.certificateId = certificate.id
   detailDrawer.visible = true
 }
 const openBind = (certificate: ManagedCertificate) => {
+  if (!canWrite.value) return
   bindDrawer.certificateId = certificate.id
   bindDrawer.visible = true
 }
 const openTask = (task: CertificateTask) => {
+  if (!canRead.value) return
   taskDrawer.taskId = task.id
   taskDrawer.visible = true
 }
@@ -301,6 +306,7 @@ const handleIssueSubmitted = (payload: {
 }
 
 const deleteCertificate = async (certificate: ManagedCertificate) => {
+  if (!canWrite.value) return
   const detailResponse = await Api.getCertificateDetail(certificate.id)
   const activeBindings = (detailResponse.data?.bindings || []).filter((item: any) => item.status === 'active')
   if (activeBindings.length) {
@@ -327,6 +333,7 @@ const deleteCertificate = async (certificate: ManagedCertificate) => {
 }
 
 const cancelTask = async (task: CertificateTask) => {
+  if (!canWrite.value) return
   try {
     await ElMessageBox.confirm(t('certificate.confirm.cancelTask'), t('certificate.confirm.cancelTaskTitle'), {
       type: 'warning',
@@ -342,15 +349,18 @@ const cancelTask = async (task: CertificateTask) => {
 }
 
 const editDnsAccount = (account?: DnsAccount) => {
+  if (!canWrite.value) return
   dnsDrawer.account = account || null
   dnsDrawer.visible = true
 }
 const openDnsManagerFromIssue = () => {
+  if (!canWrite.value) return
   issueDrawer.visible = false
   activeTab.value = 'dnsAccounts'
   editDnsAccount()
 }
 const deleteDnsAccount = async (account: DnsAccount) => {
+  if (!canWrite.value) return
   try {
     await ElMessageBox.confirm(
       t('certificate.confirm.deleteDns', '', { name: account.name }),
@@ -403,7 +413,7 @@ onBeforeUnmount(() => {
         <p>{{ $t('certificate.pageDescription') }}</p>
       </div>
       <div class="toolbar-actions">
-        <el-button :icon="Refresh" @click="refreshCurrent">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canRead" :icon="Refresh" @click="refreshCurrent">{{ $t('common.refresh') }}</el-button>
         <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openIssue">
           {{ $t('certificate.actions.issue') }}
         </el-button>
@@ -453,7 +463,7 @@ onBeforeUnmount(() => {
               <div class="table-row-actions">
                 <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
                 <el-button v-if="canWrite" link type="primary" :icon="Link" @click="openBind(row)">{{ $t('certificate.actions.bind') }}</el-button>
-                <el-button link type="primary" :icon="Download" @click="Api.downloadCertificate(row.id)">{{ $t('common.download') }}</el-button>
+                <el-button v-if="canRead" link type="primary" :icon="Download" @click="Api.downloadCertificate(row.id)">{{ $t('common.download') }}</el-button>
                 <el-button v-if="canWrite" link type="danger" :icon="Delete" @click="deleteCertificate(row)">{{ $t('common.delete') }}</el-button>
               </div>
             </template>
@@ -489,7 +499,7 @@ onBeforeUnmount(() => {
             <template #createdAt="{ row }">{{ certificateTime(row.createdAt) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
-                <el-button link type="primary" :icon="Document" @click="openTask(row)">{{ $t('common.detail') }}</el-button>
+                <el-button v-if="canRead" link type="primary" :icon="Document" @click="openTask(row)">{{ $t('common.detail') }}</el-button>
                 <el-button v-if="canWrite && activeStatuses.has(row.status)" link type="danger" :icon="CircleClose" @click="cancelTask(row)">
                   {{ $t('certificate.actions.cancelTask') }}
                 </el-button>

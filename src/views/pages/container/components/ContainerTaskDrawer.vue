@@ -3,7 +3,7 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
 import CustomDrawer from '@/components/custom-drawer.vue'
-import { useContainerTaskStore } from '@/stores/modules/containerTask';
+import { useContainerTaskStore, type ContainerTask } from '@/stores/modules/containerTask';
 import i18n from '@/lang'
 
 const containerTaskStore = useContainerTaskStore()
@@ -37,10 +37,18 @@ const logElement = ref<HTMLElement>()
 const downloading = ref(false)
 const bootstrapping = ref(false)
 const requestSequence = ref(0)
+type TaskFilter = 'active' | 'all'
+const taskFilter = ref<TaskFilter>('active')
+const taskListIds = ref<string[]>([])
+const taskListTotal = ref(0)
+const taskListLoading = ref(false)
+const taskListPage = ref(1)
+const taskListPageSize = 20
+const taskListRequestSequence = ref(0)
 const isComposeOperation = (operation?: string) => String(operation || '').startsWith('compose.')
 
-const operationLabel = computed(() => {
-  const operation = task.value?.operation || ''
+const operationLabelFor = (operation?: string) => {
+  const normalizedOperation = operation || ''
   const labels: Record<string, string> = {
     pull: t('container.pullImage', 'Pull image'),
     build: t('container.buildImage', 'Build image'),
@@ -56,10 +64,57 @@ const operationLabel = computed(() => {
     'network.reconnect': t('container.reconnectNetwork', 'Reconnect network'),
     'network.disconnect': t('container.networks', 'Networks')
   }
-  return labels[operation] || (isComposeOperation(operation)
+  return labels[normalizedOperation] || (isComposeOperation(normalizedOperation)
     ? t('container.task.composeTask', 'Compose task')
     : t('container.task.containerTask', 'Container task'))
-})
+}
+
+const operationLabel = computed(() => operationLabelFor(task.value?.operation))
+
+const taskList = computed(() =>
+  taskListIds.value
+    .map((id) => containerTaskStore.tasks[id])
+    .filter((item): item is ContainerTask => Boolean(item)),
+)
+
+const taskListStatusLabel = (item: ContainerTask) => {
+  const labels: Record<string, string> = {
+    queued: t('container.task.status.queued', 'Queued'),
+    resolving: t('container.task.status.resolving', 'Resolving parameters'),
+    pulling: t('container.task.status.pulling', 'Pulling image'),
+    building: t('container.task.status.building', 'Building image'),
+    creating: t('container.task.status.creating', 'Creating container'),
+    editing: t('container.task.status.editing', 'Saving Compose configuration'),
+    updating: t('container.task.status.updating', 'Updating Compose project'),
+    starting: t('container.task.status.starting', 'Starting Compose services'),
+    stopping: t('container.task.status.stopping', 'Stopping Compose services'),
+    restarting: t('container.task.status.restarting', 'Restarting Compose services'),
+    deleting: t('container.task.status.deleting', 'Deleting Compose resources'),
+    verifying: t('container.task.status.verifying', 'Verifying result'),
+    succeeded: t('container.task.status.succeeded', '{operation} succeeded', {
+      operation: operationLabelFor(item.operation),
+    }),
+    failed: t('container.task.status.failed', '{operation} failed', {
+      operation: operationLabelFor(item.operation),
+    }),
+    canceled: t('container.task.status.canceled', 'Canceled'),
+    interrupted: t('container.task.status.interrupted', 'Task interrupted'),
+  }
+  return labels[item.status] || item.status || t('common.loading', 'Loading')
+}
+
+const statusTagType = (status?: string) => {
+  if (status === 'succeeded') return 'success' as const
+  if (['failed', 'interrupted'].includes(status || '')) return 'danger' as const
+  if (status === 'canceled') return 'warning' as const
+  return 'primary' as const
+}
+
+const formatTaskTime = (value?: string) => {
+  if (!value) return '-'
+  const date = new Date(value)
+  return Number.isNaN(date.getTime()) ? value : date.toLocaleString()
+}
 
 const phaseLabel = (phase: string) => {
   const composePhase = ['creating', 'editing', 'updating', 'starting', 'stopping', 'restarting', 'deleting'].includes(phase)
@@ -220,24 +275,59 @@ const resetTaskSelection = (closeSubscription = true) => {
   autoScroll.value = true
   bootstrapping.value = false
   requestSequence.value += 1
+  taskListRequestSequence.value += 1
   if (previousTaskId && closeSubscription) {
     containerTaskStore.close(previousTaskId)
   }
 }
 
-const loadTasksByPriority = async () => {
-  const { data: activeResult } = await Api.getContainerTasks({
-    active: true,
-    page: 1,
-    pageSize: 20
-  })
-  const activeTasks = Array.isArray(activeResult)
-    ? activeResult
-    : Array.isArray(activeResult?.data)
-      ? activeResult.data
-      : activeResult?.items || []
-  containerTaskStore.ingest(activeTasks)
-  return pickLatestTaskId(activeTasks)
+const extractTaskList = (result: any): { items: ContainerTask[]; total: number } => {
+  const payload = Array.isArray(result) ? result : result?.data ?? result
+  const items = Array.isArray(payload)
+    ? payload
+    : Array.isArray(payload?.items)
+      ? payload.items
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : []
+  const total = Number(payload?.total ?? result?.total ?? result?.data?.total ?? items.length)
+  return {
+    items: items as ContainerTask[],
+    total: Number.isFinite(total) ? total : items.length,
+  }
+}
+
+const loadTaskList = async (selectLatest = false) => {
+  if (!props.modelValue) return ''
+  const sequence = ++taskListRequestSequence.value
+  taskListLoading.value = true
+  try {
+    const params: { page: number; pageSize: number; active?: boolean } = {
+      page: taskListPage.value,
+      pageSize: taskListPageSize,
+    }
+    if (taskFilter.value === 'active') {
+      params.active = true
+    }
+
+    const { data: result } = await Api.getContainerTasks(params)
+    const { items, total } = extractTaskList(result)
+    if (sequence !== taskListRequestSequence.value || !props.modelValue) return ''
+
+    containerTaskStore.ingest(items)
+    items.forEach((item) => {
+      if (item.id && !containerTaskStore.isTerminal(item.status)) {
+        containerTaskStore.connect(item.id)
+      }
+    })
+    taskListIds.value = items.map((item) => item.id).filter(Boolean)
+    taskListTotal.value = total
+    return selectLatest ? pickLatestTaskId(items) : ''
+  } finally {
+    if (sequence === taskListRequestSequence.value) {
+      taskListLoading.value = false
+    }
+  }
 }
 
 const ensureTaskLoaded = async (preferredTaskId?: string) => {
@@ -247,7 +337,7 @@ const ensureTaskLoaded = async (preferredTaskId?: string) => {
   try {
     let taskId = preferredTaskId || props.taskId || ''
     if (!taskId) {
-      taskId = await loadTasksByPriority()
+      taskId = await loadTaskList(taskFilter.value === 'active')
     }
     if (sequence !== requestSequence.value || !props.modelValue) return
     if (currentTaskId.value && currentTaskId.value !== taskId) {
@@ -291,6 +381,26 @@ watch(
   },
   { immediate: true }
 )
+
+watch(taskFilter, async (value, previousValue) => {
+  if (value === previousValue || !props.modelValue || props.taskId) return
+  resetTaskSelection(true)
+  taskListPage.value = 1
+  await loadTaskList(value === 'active')
+})
+
+const selectTask = async (taskId: string) => {
+  if (!taskId || taskId === currentTaskId.value || bootstrapping.value) return
+  resetTaskSelection(true)
+  await ensureTaskLoaded(taskId)
+}
+
+const handleTaskPageChange = async (page: number) => {
+  if (props.taskId) return
+  taskListPage.value = page
+  resetTaskSelection(true)
+  await loadTaskList(false)
+}
 
 watch(logs, async () => {
   if (!autoScroll.value) return
@@ -359,10 +469,59 @@ onBeforeUnmount(() => {
       </div>
     </template>
     <template #header-extra>
-      <el-tag class="task-status" :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'" effect="plain" round>
+      <el-tag v-if="task" class="task-status" :type="statusTagType(task.status)" effect="plain" round>
         {{ statusLabel }}
       </el-tag>
     </template>
+
+    <div v-if="!props.taskId" class="task-list-panel">
+      <div class="task-list-toolbar">
+        <div>
+          <strong>{{ t('container.task.listTitle', 'Container tasks') }}</strong>
+          <span>{{ t('container.task.listHint', 'Select a task to view details and live logs') }}</span>
+        </div>
+        <el-radio-group v-model="taskFilter" size="small">
+          <el-radio-button label="active">{{ t('container.task.filterActive', 'In progress') }}</el-radio-button>
+          <el-radio-button label="all">{{ t('container.task.filterAll', 'All') }}</el-radio-button>
+        </el-radio-group>
+      </div>
+      <div v-loading="taskListLoading" class="task-list">
+        <button
+          v-for="item in taskList"
+          :key="item.id"
+          type="button"
+          class="task-list-item"
+          :class="{ selected: item.id === currentTaskId }"
+          @click="selectTask(item.id)"
+        >
+          <el-tag :type="statusTagType(item.status)" effect="plain" size="small">{{ taskListStatusLabel(item) }}</el-tag>
+          <div class="task-list-item__body">
+            <div class="task-list-item__title">
+              <strong>{{ item.resourceName || operationLabelFor(item.operation) }}</strong>
+              <span>{{ operationLabelFor(item.operation) }}</span>
+            </div>
+            <p>{{ item.message || t('container.task.createdWaitingDockerOutput', 'Waiting for Docker output...') }}</p>
+          </div>
+          <time>{{ formatTaskTime(item.updatedAt || item.createdAt) }}</time>
+        </button>
+        <el-empty
+          v-if="!taskListLoading && !taskList.length"
+          class="task-list-empty"
+          :description="taskFilter === 'active'
+            ? t('container.task.noActiveTasks', 'No tasks in progress')
+            : t('container.task.noTask', 'No container tasks')"
+        />
+      </div>
+      <el-pagination
+        v-if="taskListTotal > taskListPageSize"
+        class="task-list-pagination"
+        :current-page="taskListPage"
+        :page-size="taskListPageSize"
+        :total="taskListTotal"
+        layout="prev, pager, next"
+        @current-change="handleTaskPageChange"
+      />
+    </div>
 
     <div v-if="task" class="task-content">
       <section class="overview">
@@ -450,12 +609,12 @@ onBeforeUnmount(() => {
         </aside>
       </section>
     </div>
-    <el-skeleton v-else-if="bootstrapping" :rows="8" animated />
-    <el-empty v-else :description="$t('container.task.noTask', 'No container tasks')" />
+    <el-skeleton v-else-if="bootstrapping && props.taskId" :rows="8" animated />
+    <el-empty v-else-if="props.taskId" :description="$t('container.task.noTask', 'No container tasks')" />
 
     <template #footer>
       <div class="task-actions">
-        <el-button :loading="downloading" @click="downloadLog">{{ $t('container.task.downloadFullLog') }}</el-button>
+        <el-button :disabled="!currentTaskId || !task" :loading="downloading" @click="downloadLog">{{ $t('container.task.downloadFullLog') }}</el-button>
         <div>
           <el-button v-if="cancelable" type="danger" plain @click="cancelTask">{{ $t('container.task.cancelTask') }}</el-button>
           <el-button :type="failed && !cancelable ? 'info' : 'primary'" :plain="failed && !cancelable" @click="visible = false">
@@ -486,6 +645,117 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.task-list-panel {
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  background: var(--surface-card);
+}
+
+.task-list-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  strong,
+  span {
+    display: block;
+  }
+
+  span {
+    margin-top: 4px;
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.task-list {
+  min-height: 120px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.task-list-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 0;
+  border-bottom: 1px solid var(--border-subtle);
+  color: inherit;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover,
+  &.selected {
+    background: rgba(var(--primary-color), 0.06);
+  }
+
+  time {
+    flex: 0 0 auto;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+.task-list-item__body {
+  min-width: 0;
+  flex: 1;
+
+  p {
+    margin: 5px 0 0;
+    overflow: hidden;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.task-list-item__title {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: var(--text-primary);
+  }
+
+  span {
+    color: var(--text-tertiary);
+    font-size: 12px;
+  }
+}
+
+.task-list-empty {
+  padding: 20px 0;
+}
+
+.task-list-pagination {
+  justify-content: flex-end;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border-subtle);
 }
 
 .task-title {
@@ -751,6 +1021,20 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 900px) {
+  .task-list-toolbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .task-list-item {
+    align-items: flex-start;
+    flex-wrap: wrap;
+
+    time {
+      margin-left: auto;
+    }
+  }
+
   .stage-list,
   .task-grid {
     grid-template-columns: 1fr;

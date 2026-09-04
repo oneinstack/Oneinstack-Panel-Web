@@ -6,13 +6,11 @@ import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import { useAppStore } from '@/stores/modules/app'
-import { useConfigStore } from '@/stores/modules/config';
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import { hasOperationAccess } from '@/utils/access'
 
 const sapp = useAppStore()
-const sconfig = useConfigStore()
-
 interface MetricSample {
   id: number
   capturedAt: string
@@ -370,11 +368,21 @@ const groupedHistorySeries = computed(() => {
   return groups
 })
 
-const canReadMonitorHistory = computed(() =>
-  sconfig.hasScopeAccess('monitoring', 'read') ||
-  Boolean((sconfig.scopeAccess as any)?.['monitoring.read']) ||
-  sconfig.hasActionAccess('monitoring.read')
-)
+const monitorAccessAliases = { scopes: ['monitor'], actions: ['monitor.read'] }
+const canReadMonitor = computed(() => hasOperationAccess('monitoring', 'read', monitorAccessAliases))
+const canReadMonitorHistory = computed(() => canReadMonitor.value)
+const canWriteMonitor = computed(() => hasOperationAccess('monitoring', 'write', {
+  scopes: ['monitor'],
+  actions: ['monitor.write']
+}))
+const canSilenceMonitor = computed(() => hasOperationAccess('monitoring', 'silence', {
+  scopes: ['monitor'],
+  actions: ['monitor.silence', 'monitor.write']
+}))
+const canManageChannels = computed(() => hasOperationAccess('monitoring', 'channelsWrite', {
+  scopes: ['monitor'],
+  actions: ['monitor.channelsWrite', 'monitor.write']
+}))
 
 const historyChartOptions = computed<Record<MonitorHistoryGroup, EChartsOption>>(() => {
   return Object.fromEntries(historyGroups.value.map((group) => {
@@ -558,6 +566,7 @@ const serviceSilenced = (service: ComponentHealthState) =>
   Boolean(service.silencedUntil && new Date(service.silencedUntil).getTime() > Date.now())
 
 const loadDashboard = async () => {
+  if (!canReadMonitor.value) return
   dashboardLoading.value = true
   try {
     const from = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -610,6 +619,7 @@ const applyHistoryPreset = (hours: number) => {
 }
 
 const checkServiceHealth = async () => {
+  if (!canReadMonitor.value) return
   serviceChecking.value = true
   try {
     const { data } = await Api.checkMonitorServiceHealth()
@@ -623,6 +633,7 @@ const checkServiceHealth = async () => {
 }
 
 const silenceServiceHealth = async (service: ComponentHealthState, minutes: number) => {
+  if (!canSilenceMonitor.value) return
   await Api.silenceMonitorServiceHealth(service.component, minutes)
   ElMessage.success(minutes ? t('monitor.messages.serviceSilenced', '{name} alerts silenced for 1 hour', { name: service.displayName }) : t('monitor.messages.serviceSilenceCleared', 'Component alert silence cleared'))
   const { data } = await Api.getMonitorServiceHealth()
@@ -630,6 +641,7 @@ const silenceServiceHealth = async (service: ComponentHealthState, minutes: numb
 }
 
 const loadRules = async () => {
+  if (!canReadMonitor.value) return
   tableLoading.value = true
   try {
     const { data } = await Api.getMonitorRules()
@@ -640,6 +652,7 @@ const loadRules = async () => {
 }
 
 const loadEvents = async () => {
+  if (!canReadMonitor.value) return
   tableLoading.value = true
   try {
     const { data } = await Api.getMonitorEvents({
@@ -667,6 +680,7 @@ watch(
 )
 
 const loadChannels = async () => {
+  if (!canReadMonitor.value) return
   tableLoading.value = true
   try {
     const { data } = await Api.getMonitorChannels()
@@ -677,6 +691,7 @@ const loadChannels = async () => {
 }
 
 const loadDeliveries = async () => {
+  if (!canReadMonitor.value) return
   tableLoading.value = true
   try {
     const { data } = await Api.getMonitorDeliveries(deliveryFilters)
@@ -699,6 +714,7 @@ const refreshAll = async () => {
 }
 
 const openCreateRule = () => {
+  if (!canWriteMonitor.value) return
   editingRuleID.value = null
   Object.assign(ruleForm, {
     name: '',
@@ -715,6 +731,7 @@ const openCreateRule = () => {
 }
 
 const openEditRule = (rule: MonitorRule) => {
+  if (!canWriteMonitor.value) return
   editingRuleID.value = rule.id
   Object.assign(ruleForm, {
     name: rule.name,
@@ -731,6 +748,7 @@ const openEditRule = (rule: MonitorRule) => {
 }
 
 const saveRule = async () => {
+  if (!canWriteMonitor.value) return
   if (!ruleForm.name.trim()) {
     ElMessage.warning(t('monitor.messages.inputRuleName', 'Enter a rule name'))
     return
@@ -758,6 +776,7 @@ const saveRule = async () => {
 }
 
 const deleteRule = async (rule: MonitorRule) => {
+  if (!canWriteMonitor.value) return
   await ElMessageBox.confirm(
     t('monitor.deleteRuleConfirmMessage', 'Delete rule "{name}"? Historical alert events will be retained.', { name: rule.name }),
     t('monitor.deleteRule', 'Delete alert rule'),
@@ -769,12 +788,14 @@ const deleteRule = async (rule: MonitorRule) => {
 }
 
 const silenceRule = async (rule: MonitorRule, minutes: number) => {
+  if (!canSilenceMonitor.value) return
   await Api.silenceMonitorRule(rule.id, minutes)
   ElMessage.success(minutes ? t('monitor.messages.ruleSilenced', 'Rule silenced for 1 hour') : t('monitor.messages.ruleSilenceCleared', 'Rule silence cleared'))
   await loadRules()
 }
 
 const openCreateChannel = () => {
+  if (!canManageChannels.value) return
   editingChannelID.value = ''
   editingChannelHasSecret.value = false
   Object.assign(channelForm, {
@@ -789,6 +810,7 @@ const openCreateChannel = () => {
 }
 
 const openEditChannel = (channel: NotificationChannel) => {
+  if (!canManageChannels.value) return
   editingChannelID.value = channel.id
   editingChannelHasSecret.value = channel.hasSecret
   Object.assign(channelForm, {
@@ -803,6 +825,7 @@ const openEditChannel = (channel: NotificationChannel) => {
 }
 
 const saveChannel = async () => {
+  if (!canManageChannels.value) return
   if (!channelForm.name.trim()) {
     ElMessage.warning(t('monitor.messages.inputChannelName', 'Enter a channel name'))
     return
@@ -827,11 +850,13 @@ const saveChannel = async () => {
 }
 
 const testChannel = async (channel: NotificationChannel) => {
+  if (!canManageChannels.value) return
   await Api.testMonitorChannel(channel.id)
   ElMessage.success(t('monitor.messages.testSent', 'Test notification sent'))
 }
 
 const deleteChannel = async (channel: NotificationChannel) => {
+  if (!canManageChannels.value) return
   await ElMessageBox.confirm(
     t('monitor.deleteChannelConfirmMessage', 'Delete notification channel "{name}"?', { name: channel.name }),
     t('monitor.deleteChannel', 'Delete notification channel'),
@@ -859,7 +884,7 @@ onUnmounted(() => {
         <h2>{{ $t('monitor.title') }}</h2>
         <p>{{ $t('monitor.pageDescription') }}</p>
       </div>
-      <el-button class="page-heading__action" type="primary" :loading="dashboardLoading" @click="refreshAll">{{ $t('monitor.refreshData') }}</el-button>
+      <el-button v-if="canReadMonitor" class="page-heading__action" type="primary" :loading="dashboardLoading" @click="refreshAll">{{ $t('monitor.refreshData') }}</el-button>
     </div>
 
     <div class="stats-grid" v-loading="dashboardLoading">
@@ -891,7 +916,7 @@ onUnmounted(() => {
           <h3>{{ $t('monitor.serviceHealth') }}</h3>
           <span>{{ $t('monitor.serviceHealthDescription') }}</span>
         </div>
-        <el-button :loading="serviceChecking" @click="checkServiceHealth">{{ $t('monitor.checkNow') }}</el-button>
+        <el-button v-if="canReadMonitor" :loading="serviceChecking" @click="checkServiceHealth">{{ $t('monitor.checkNow') }}</el-button>
       </div>
       <div v-if="serviceHealth.length" class="service-health-grid">
         <article
@@ -935,7 +960,7 @@ onUnmounted(() => {
             </span>
             <span v-else>{{ $t('monitor.autoCheckEnabled') }}</span>
             <el-button
-              v-if="!serviceSilenced(service)"
+              v-if="!serviceSilenced(service) && canSilenceMonitor"
               link
               type="warning"
               @click="silenceServiceHealth(service, 60)"
@@ -943,7 +968,7 @@ onUnmounted(() => {
               {{ $t('monitor.silenceOneHour') }}
             </el-button>
             <el-button
-              v-else
+              v-else-if="canSilenceMonitor"
               link
               type="success"
               @click="silenceServiceHealth(service, 0)"
@@ -1050,7 +1075,7 @@ onUnmounted(() => {
           <template #label>{{ $t('monitor.rulesTabLabel', { enabled: enabledRuleCount, total: ruleCount }) }}</template>
           <div class="toolbar">
             <span>{{ $t('monitor.ruleResetHint') }}</span>
-            <el-button type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
+            <el-button v-if="canWriteMonitor" type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
           </div>
           <custom-table v-loading="tableLoading" :data="rules" :columns="ruleColumns" :pagination="false" border row-key="id">
             <template #metricThreshold="{ row }">
@@ -1076,10 +1101,10 @@ onUnmounted(() => {
             </template>
             <template #actionColumn="{ row }">
                 <div class="table-row-actions">
-                  <el-button link type="primary" :icon="EditPen" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
-                  <el-button v-if="!isSilenced(row)" link type="warning" :icon="Bell" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
-                  <el-button v-else link type="success" :icon="Bell" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
-                  <el-button link type="danger" :icon="Delete" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
+                  <el-button v-if="canWriteMonitor" link type="primary" :icon="EditPen" @click="openEditRule(row)">{{ $t('common.edit') }}</el-button>
+                  <el-button v-if="!isSilenced(row) && canSilenceMonitor" link type="warning" :icon="Bell" @click="silenceRule(row, 60)">{{ $t('monitor.silenceOneHour') }}</el-button>
+                  <el-button v-else-if="canSilenceMonitor" link type="success" :icon="Bell" @click="silenceRule(row, 0)">{{ $t('monitor.unsilence') }}</el-button>
+                  <el-button v-if="canWriteMonitor" link type="danger" :icon="Delete" @click="deleteRule(row)">{{ $t('common.delete') }}</el-button>
                 </div>
             </template>
             <template #empty><el-empty :description="$t('monitor.noRules')" /></template>
@@ -1105,7 +1130,7 @@ onUnmounted(() => {
               <el-option :label="$t('monitor.severities.warning')" value="warning" />
               <el-option :label="$t('monitor.severities.critical')" value="critical" />
             </el-select>
-            <el-button @click="loadEvents">{{ $t('common.refresh') }}</el-button>
+            <el-button v-if="canReadMonitor" @click="loadEvents">{{ $t('common.refresh') }}</el-button>
           </div>
           <custom-table v-loading="tableLoading" :data="events" :columns="eventColumns" :pagination="false" :auto-pagination="false" border row-key="id">
             <template #occurredAt="{ row }">{{ formatTime(row.occurredAt) }}</template>
@@ -1137,7 +1162,7 @@ onUnmounted(() => {
         <el-tab-pane name="channels" :label="$t('monitor.channels')">
           <div class="toolbar">
             <span>{{ $t('monitor.channelSecurityHint') }}</span>
-            <el-button type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
+            <el-button v-if="canManageChannels" type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
           </div>
           <custom-table v-loading="tableLoading" :data="channels" :columns="channelColumns" :pagination="false" border row-key="id">
             <template #hasSecret="{ row }">{{ row.hasSecret ? $t('common.enabled') : $t('common.disabled') }}</template>
@@ -1147,9 +1172,9 @@ onUnmounted(() => {
             <template #updatedAt="{ row }">{{ formatTime(row.updatedAt) }}</template>
             <template #actionColumn="{ row }">
                 <div class="table-row-actions">
-                  <el-button link type="primary" :icon="Bell" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
-                  <el-button link type="primary" :icon="EditPen" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
-                  <el-button link type="danger" :icon="Delete" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
+                  <el-button v-if="canManageChannels" link type="primary" :icon="Bell" @click="testChannel(row)">{{ $t('monitor.test') }}</el-button>
+                  <el-button v-if="canManageChannels" link type="primary" :icon="EditPen" @click="openEditChannel(row)">{{ $t('common.edit') }}</el-button>
+                  <el-button v-if="canManageChannels" link type="danger" :icon="Delete" @click="deleteChannel(row)">{{ $t('common.delete') }}</el-button>
                 </div>
             </template>
             <template #empty><el-empty :description="$t('monitor.noChannels')" /></template>
@@ -1162,7 +1187,7 @@ onUnmounted(() => {
               <el-option :label="$t('common.success')" value="success" />
               <el-option :label="$t('common.failed')" value="failed" />
             </el-select>
-            <el-button @click="loadDeliveries">{{ $t('common.refresh') }}</el-button>
+            <el-button v-if="canReadMonitor" @click="loadDeliveries">{{ $t('common.refresh') }}</el-button>
           </div>
           <custom-table v-loading="tableLoading" :data="deliveries" :columns="deliveryColumns" :pagination="false" :auto-pagination="false" border row-key="id">
             <template #attemptedAt="{ row }">{{ formatTime(row.attemptedAt) }}</template>

@@ -12,6 +12,7 @@ import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 import { useSoftwareTaskStore } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '../software/components/InstallTaskDrawer.vue'
 import PhpMyAdminDrawer from './components/PhpMyAdminDrawer.vue'
+import { hasOperationAccess } from '@/utils/access'
 
 const sapp = useAppStore()
 const softwareTaskStore = useSoftwareTaskStore()
@@ -21,6 +22,11 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
+const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
+const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
+const canDeleteDatabase = computed(() => hasOperationAccess('database', 'delete', { actions: ['database.write'] }))
+const canBackupDatabase = computed(() => hasOperationAccess('database', 'backup', { actions: ['database.write'] }))
+const canManagePhpMyAdmin = computed(() => hasOperationAccess('software', 'install', { actions: ['software.install'] }))
 
 const phpMyAdminCatalog = reactive({
   loading: true,
@@ -96,6 +102,7 @@ const phpMyAdminStatus = computed(() => {
 })
 
 const openPhpMyAdminPanel = async () => {
+  if (!canReadDatabase.value) return
   phpMyAdminPanel.visible = true
   await Promise.allSettled([
     phpMyAdminCatalog.getData(),
@@ -128,6 +135,7 @@ const routeToPrerequisite = async (name: string, component: string) => {
 }
 
 const installPhpMyAdmin = async () => {
+  if (!canManagePhpMyAdmin.value) return
   if (phpMyAdminTask.value) {
     showPhpMyAdminTask(phpMyAdminTask.value.id)
     return
@@ -257,6 +265,7 @@ const openBackupPanel = (row: any) => {
 }
 
 const createBackup = async (row: any) => {
+  if (!canBackupDatabase.value) return
   const databaseName = row.name || row.databaseName || row.id || t('database.database', '数据库')
 
   try {
@@ -356,6 +365,7 @@ const requestCredentialPassword = async (title: string) => {
 }
 
 const viewCredential = async (row: any) => {
+  if (!canReadDatabase.value) return
   try {
     const panelPassword = await verifyPanelPassword(t('database.security.viewDatabaseAccount', 'View database account'))
     const { data } = await Api.revealDatabaseCredential(row.id, { panelPassword })
@@ -371,6 +381,7 @@ const viewCredential = async (row: any) => {
 }
 
 const updateCredential = async (row: any) => {
+  if (!canWriteDatabase.value) return
   try {
     const panelPassword = await verifyPanelPassword(t('database.security.modifyDatabasePassword', 'Modify database password'))
     const password = await requestCredentialPassword(t('database.security.modifyAccountPasswordTitle', 'Modify account password for {name}', { name: row.name }))
@@ -391,6 +402,7 @@ const updateCredential = async (row: any) => {
 }
 
 const deleteDatabase = async (row: any) => {
+  if (!canDeleteDatabase.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('database.deleteConfirmMessage', 'This permanently deletes database "{name}" and its dedicated user, but does not delete existing backups. Enter the database name to confirm:', { name: row.name }),
@@ -442,9 +454,9 @@ const handleMoreAction = async (command: string, row: any) => {
   <div class="container">
     <div class="tool-bar">
       <el-space class="btn-group" :size="14">
-        <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
-        <el-button type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ t('database.remoteDatabase', '远程数据库') }}</el-button>
-        <el-button :icon="DataAnalysis" @click="openPhpMyAdminPanel">
+        <el-button v-if="canWriteDatabase" type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
+        <el-button v-if="canWriteDatabase" type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ t('database.remoteDatabase', '远程数据库') }}</el-button>
+        <el-button v-if="canReadDatabase" :icon="DataAnalysis" @click="openPhpMyAdminPanel">
           phpMyAdmin
           <span
             class="phpmyadmin-button__status"
@@ -499,10 +511,10 @@ const handleMoreAction = async (command: string, row: any) => {
               type="primary"
               link
               :icon="Link"
-              @click="openPhpMyAdmin(row.name)"
+                @click="openPhpMyAdmin(row.name)"
             >{{ t('database.quickManage', '快捷管理') }}</el-button>
-            <el-button type="primary" link :icon="Key" @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
-            <el-button type="primary" link :icon="Lock" @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
+            <el-button v-if="canReadDatabase" type="primary" link :icon="Key" @click="viewCredential(row)">{{ t('database.viewAccount', '查看账号') }}</el-button>
+            <el-button v-if="canWriteDatabase" type="primary" link :icon="Lock" @click="updateCredential(row)">{{ t('database.modifyPassword', '修改密码') }}</el-button>
             <el-dropdown trigger="click" popper-class="table-action-popper" @command="(command: string) => handleMoreAction(command, row)">
               <el-button type="primary" link :icon="MoreFilled">
                 {{ t('database.more', '更多') }}
@@ -510,9 +522,9 @@ const handleMoreAction = async (command: string, row: any) => {
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu class="table-action-menu">
-                  <el-dropdown-item command="backup"><el-icon><FolderAdd /></el-icon>{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
-                  <el-dropdown-item command="backup-manager"><el-icon><Files /></el-icon>{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
-                  <el-dropdown-item class="table-action-menu__danger" command="delete" divided>
+                  <el-dropdown-item v-if="canBackupDatabase" command="backup"><el-icon><FolderAdd /></el-icon>{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
+                  <el-dropdown-item v-if="canReadDatabase" command="backup-manager"><el-icon><Files /></el-icon>{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
+                  <el-dropdown-item v-if="canDeleteDatabase" class="table-action-menu__danger" command="delete" divided>
                     <el-icon><Delete /></el-icon>{{ t('database.deleteDatabase', '删除数据库') }}
                   </el-dropdown-item>
                 </el-dropdown-menu>

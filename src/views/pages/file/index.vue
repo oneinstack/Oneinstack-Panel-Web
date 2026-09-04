@@ -9,8 +9,11 @@ import { Api } from '@/api/modules'
 import CustomForm from '@/components/custom-form.vue'
 import TrashList from './components/trash-list.vue'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 const sapp = useAppStore()
+const canCreateFile = computed(() => hasOperationAccess('file', 'create'))
+const canModifyFile = computed(() => hasOperationAccess('file', 'modify', { actions: ['file.edit'] }))
 
 
 export type DrawerType = 'file' | 'dir'
@@ -86,6 +89,7 @@ const conf = reactive({
     type: 'file' as DrawerType,
     title: t('file.create', 'Create'),
     open: (openType: DrawerOpenType, type: DrawerType, row?: any) => {
+      if (openType === 'create' ? !canCreateFile.value : !canModifyFile.value) return
       conf.drawer.openType = openType
       switch (openType) {
         case 'create':
@@ -115,6 +119,7 @@ const conf = reactive({
       conf.form.instance?.clearValidate()
     },
     confirm: () => {
+      if (conf.drawer.openType === 'create' ? !canCreateFile.value : !canModifyFile.value) return
       conf.form.instance?.validate(async (valid: boolean) => {
         if (!valid) return
         const currentTab = conf.tab.list.find((item) => item.active)

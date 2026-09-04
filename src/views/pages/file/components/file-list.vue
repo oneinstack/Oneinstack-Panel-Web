@@ -3,7 +3,6 @@ import { Api } from "@/api/modules";
 import CustomDialog from "@/components/custom-dialog.vue";
 import CustomDrawer from "@/components/custom-drawer.vue";
 import CustomTable from "@/components/custom-table.vue";
-import { useConfigStore } from "@/stores/modules/config";
 import sutil from "@/utils/sutil";
 import {
   Refresh,
@@ -60,10 +59,8 @@ import FileSearchDialog from "./FileSearchDialog.vue";
 import FileOperationDrawer from "./FileOperationDrawer.vue";
 import FileEditorDrawer from "./FileEditorDrawer.vue";
 import i18n from "@/lang";
-import { hasTerminalAccess } from "@/utils/access";
+import { hasOperationAccess, hasTerminalAccess } from "@/utils/access";
 import { HttpRequestError } from "@/api";
-
-const sconfig = useConfigStore()
 
 interface Emits {
   (e: "update:path", value: string[]): void;
@@ -110,7 +107,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 const filePermissionLabel = (permission: FilePermission) =>
   t(`file.permissionLabels.${permission}`, permission);
 const canFilePermission = (permission: FilePermission) =>
-  sconfig.hasScopeAccess("file", permission);
+  hasOperationAccess("file", permission, { actions: [`file.${permission}`] });
 const requireFilePermission = (permission: FilePermission) => {
   if (canFilePermission(permission)) return true;
   ElMessage.warning(
@@ -1601,7 +1598,7 @@ const archiveTaskRunningCount = computed(
             t('file.filterCurrentDirectory', 'Filter current directory')
           "
         />
-        <el-button :icon="Search" :aria-label="t('file.deepSearch', 'Deep search')" :title="t('file.deepSearch', 'Deep search')" @click="conf.searchVisible = true">
+        <el-button v-if="canFilePermission('read')" :icon="Search" :aria-label="t('file.deepSearch', 'Deep search')" :title="t('file.deepSearch', 'Deep search')" @click="conf.searchVisible = true">
           <span class="deep-search-label">{{ t('file.deepSearch', 'Deep search') }}</span>
         </el-button>
       </div>
@@ -3034,6 +3031,7 @@ const archiveTaskRunningCount = computed(
       v-model="conf.editorVisible"
       :path="conf.editorPath"
       :initial-detail="conf.editorDetail"
+      :can-edit="canFilePermission('edit')"
       @saved="conf.refresh"
     />
   </div>

@@ -6,6 +6,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck, CircleClose, CopyDocument, View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
+import { hasOperationAccess } from '@/utils/access'
 
 interface ApprovalRequest {
   id: string
@@ -98,6 +99,7 @@ const approvalDialog = reactive({
   comment: '',
   mode: 'detail' as 'detail' | 'approve' | 'reject',
   open: async (row: ApprovalRequest, mode: 'detail' | 'approve' | 'reject') => {
+    if (mode === 'detail' ? !canReadApproval.value : !canReviewApproval.value) return
     approvalDialog.mode = mode
     approvalDialog.comment = mode === 'detail' ? '' : row.reviewComment || ''
     approvalDialog.show = true
@@ -129,16 +131,12 @@ const closeApprovalDrawer = () => {
   approvalDialog.show = false
 }
 
-const canReviewApproval = computed(
-  () =>
-    Boolean(
-      currentUser.value?.isSuperAdmin ||
-      currentUser.value?.isAdmin ||
-      currentUser.value?.canApprove ||
-      currentUser.value?.scopes?.approval?.review ||
-      currentUser.value?.scopes?.approval?.execute
-    )
-)
+const canReadApproval = computed(() => hasOperationAccess('approval', 'read', {
+  actions: ['approval.read', 'approval.review']
+}))
+const canReviewApproval = computed(() => hasOperationAccess('approval', 'review', {
+  actions: ['approval.review', 'approval.execute']
+}))
 
 const normalizeAccountName = (value: unknown) => typeof value === 'string' ? value.trim().toLowerCase() : ''
 
@@ -270,6 +268,11 @@ const loadBootstrap = async () => {
 }
 
 const loadApprovals = async () => {
+  if (!canReadApproval.value) {
+    approvalState.list = []
+    approvalState.total = 0
+    return
+  }
   loading.approvals = true
   try {
     const response = await Api.getApprovals(approvalState.filters)
@@ -298,7 +301,7 @@ const resetApprovals = () => {
 }
 
 const submitApprovalAction = async () => {
-  if (!approvalDialog.data) return
+  if (!canReviewApproval.value || !approvalDialog.data) return
   if (isSelfApproval(approvalDialog.data)) {
     ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
     return
@@ -337,7 +340,7 @@ onMounted(async () => {
 
 <template>
   <div v-loading="loading.bootstrap" class="approval-page">
-    <section class="panel-card">
+    <section v-if="canReadApproval" class="panel-card">
       <div class="toolbar">
         <div class="toolbar-left">
           <search-input v-model:model-value="approvalState.keyword" :placeholder="$t('approvalCenter.searchPlaceholder')" @search="searchApprovals" />
@@ -436,7 +439,7 @@ onMounted(async () => {
             >
               {{ $t('approvalCenter.reject') }}
             </el-button>
-            <el-button link type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
+            <el-button v-if="canReadApproval" link type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
           </div>
         </template>
       </custom-table>

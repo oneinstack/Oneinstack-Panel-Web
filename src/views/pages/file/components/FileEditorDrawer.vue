@@ -6,11 +6,13 @@ import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import CustomDrawer from '@/components/custom-drawer.vue'
+import { hasOperationAccess } from '@/utils/access'
 
 const props = defineProps<{
   modelValue: boolean
   path: string
   initialDetail?: any
+  canEdit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,7 +40,8 @@ const state = reactive({
 })
 const editorRef = ref<HTMLTextAreaElement>()
 const dirty = computed(() => state.content !== state.original)
-const canEdit = computed(() => !state.loadError && !state.readOnlyReason)
+const canEdit = computed(() => Boolean(props.canEdit) && !state.loadError && !state.readOnlyReason)
+const canRead = computed(() => hasOperationAccess('file', 'read'))
 const textPreviewExtensions = new Set([
   '.txt',
   '.md',
@@ -123,7 +126,7 @@ const applyFileDetail = async (data: any) => {
 }
 
 const load = async ({ preferInitial = false }: { preferInitial?: boolean } = {}) => {
-  if (!props.path) return
+  if (!props.path || !canRead.value) return
   state.loading = true
   resetEditor()
   try {

@@ -33,9 +33,12 @@ export interface FormItem {
 
 interface Props {
   data: FormItem[]
+  readonly?: boolean
 }
 
-const props = defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  readonly: false
+})
 </script>
 
 <template>
@@ -49,10 +52,10 @@ const props = defineProps<Props>()
               v-model="item.value"
               :type="item.type === 'password' ? 'password' : 'text'"
               clearable
-              :disabled="item.disabled"
+              :disabled="props.readonly || item.disabled"
             />
-            <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="item.disabled" />
-            <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="item.disabled">
+            <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="props.readonly || item.disabled" />
+            <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="props.readonly || item.disabled">
               <template #append>
                 <v-s-icon name="folders" />
               </template>
@@ -64,7 +67,7 @@ const props = defineProps<Props>()
               v-for="action in item.action"
               :type="action.type || 'default'"
               :loading="action.loading"
-              :disabled="action.disabled"
+              :disabled="props.readonly || action.disabled"
               class="setting-form-item__button"
               @click="action.click"
             >
@@ -74,7 +77,7 @@ const props = defineProps<Props>()
               v-else
               :type="item.action?.type || 'default'"
               :loading="item.action?.loading"
-              :disabled="item.action?.disabled"
+              :disabled="props.readonly || item.action?.disabled"
               class="setting-form-item__button"
               @click="item.action.click"
             >
