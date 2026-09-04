@@ -1143,8 +1143,8 @@ const ensureNetworksLoaded = async () => {
   }
 };
 
-const ensureRegistriesLoaded = async () => {
-  if (registries.value.length || loadedTabs.registries) return;
+const ensureRegistriesLoaded = async (force = false) => {
+  if (!force && (registries.value.length || loadedTabs.registries)) return;
   try {
     const { data } = await Api.getContainerRegistries({
       page: 1,
@@ -1204,7 +1204,8 @@ const openDialog = (type: DialogType, target?: any) => {
     void ensureNetworksLoaded();
     void ensureVolumesLoaded();
   }
-  if (["image", "image-push"].includes(type)) void ensureRegistriesLoaded();
+  if (type === "image-push") void ensureRegistriesLoaded(true);
+  else if (type === "image") void ensureRegistriesLoaded();
   if (type === "compose-template-deploy") void ensureTemplatesLoaded();
 };
 
@@ -1587,10 +1588,51 @@ const buildImagePullPayload = () => {
   return { reference: imageActionForm.reference.trim() };
 };
 
+const imageRepositorySegments = (value: string, stripDockerHubHost = false) => {
+  const segments = String(value || '')
+    .trim()
+    .split('@', 1)[0]
+    .split('/')
+    .filter(Boolean);
+  if (stripDockerHubHost && ['docker.io', 'index.docker.io'].includes(segments[0]?.toLowerCase())) {
+    segments.shift();
+  }
+  return segments;
+};
+
+const hasDockerHubPushNamespace = (reference: string) => {
+  const segments = imageRepositorySegments(reference, true);
+  return segments.length >= 2 && segments[0] !== 'library';
+};
+
+const hasRegistryPushNamespace = (imageName: string) =>
+  imageRepositorySegments(imageName).length >= 2;
+
+const resolveImagePushErrorMessage = (error: any) => {
+  const data = error?.data || error?.response?.data;
+  const detail = data?.error && typeof data.error === 'object' ? data.error : undefined;
+  return [
+    detail?.message,
+    detail?.detail,
+    data?.message,
+    error?.message,
+    t("container.notifications.operationFailed"),
+  ].find((message) => typeof message === 'string' && message.trim()) as string;
+};
+
 const buildImagePushPayload = () => {
   if (imageActionForm.pushMode === "registry") {
     if (!imageActionForm.registryId || !imageActionForm.pushImageName.trim()) {
       throw new Error(t("container.validation.registryImageRequired"));
+    }
+    const registry = registries.value.find(
+      (item) => String(item.id) === String(imageActionForm.registryId),
+    );
+    if (registry?.authEnabled === false) {
+      throw new Error(t("container.resourceDialog.registryPushAuthRequired"));
+    }
+    if (!hasRegistryPushNamespace(imageActionForm.pushImageName)) {
+      throw new Error(t("container.validation.registryPushNamespaceRequired"));
     }
     return {
       registryId: Number(imageActionForm.registryId),
@@ -1599,6 +1641,9 @@ const buildImagePushPayload = () => {
   }
   if (!imageActionForm.pushReference.trim())
     throw new Error(t("container.validation.imageReferenceRequired"));
+  if (!hasDockerHubPushNamespace(imageActionForm.pushReference)) {
+    throw new Error(t("container.validation.dockerHubPushNamespaceRequired"));
+  }
   return { reference: imageActionForm.pushReference.trim() };
 };
 
@@ -2043,6 +2088,7 @@ const submitDialog = async () => {
       activeTab.value = "images";
     }
     if (dialogType.value === "image-push") {
+      const payload = buildImagePushPayload();
       await ElMessageBox.confirm(
         t("container.confirmations.pushNotice"),
         t("container.confirmations.pushTitle"),
@@ -2052,7 +2098,7 @@ const submitDialog = async () => {
           cancelButtonText: t("common.cancel"),
         },
       );
-      await Api.pushContainerImage(buildImagePushPayload());
+      await Api.pushContainerImage(payload);
       ElMessage.success(t("container.notifications.imagePushSuccess"));
       activeTab.value = "images";
     }
@@ -2158,10 +2204,13 @@ const submitDialog = async () => {
       error === "cancel" ||
       error?.message === "cancel" ||
       error?.name === "CanceledError";
-    if (!isCancel)
+    if (!isCancel) {
       ElMessage.error(
-        error?.message || t("container.notifications.operationFailed"),
+        dialogType.value === "image-push"
+          ? resolveImagePushErrorMessage(error)
+          : error?.message || t("container.notifications.operationFailed"),
       );
+    }
   } finally {
     saving.value = false;
   }

@@ -64,6 +64,10 @@ export const accessApi = {
   updateAccessMenu: (key: string, obj: Partial<AccessMenuNode> & { key?: string; code?: string }) => {
     return http.put(`/access/menus/${encodeURIComponent(key)}`, obj);
   },
+  /** 独立启用或禁用菜单 */
+  setAccessMenuStatus: (key: string, enabled: boolean) => {
+    return http.post(`/access/menus/${encodeURIComponent(key)}/status`, { enabled });
+  },
   /** 删除菜单 */
   deleteAccessMenu: (key: string) => {
     return http.delete(`/access/menus/${encodeURIComponent(key)}`);

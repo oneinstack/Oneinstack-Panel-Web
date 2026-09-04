@@ -57,7 +57,7 @@ export default {
   versionLimitError: '软件版本必须属于以下版本线：{versions}',
   installPaused: 'Center 当前已暂停该软件的安装',
   inputField: '请输入{field}',
-  installTitle: '安装 {name} {version}',
+  installTitle: '安装 {name}',
   componentTags: {
     runtime: '运行环境',
     database: '数据库',

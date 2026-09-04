@@ -120,6 +120,7 @@ export interface RegistryItem {
   authEnabled?: boolean
   username?: string
   status?: string
+  statusMessage?: string
   createdAt?: string
   updatedAt?: string
 }

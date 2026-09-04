@@ -57,7 +57,7 @@ export default {
   versionLimitError: 'Software version must match one of these version lines: {versions}',
   installPaused: 'Center has paused installation for this software',
   inputField: 'Enter {field}',
-  installTitle: 'Install {name} {version}',
+  installTitle: 'Install {name}',
   componentTags: {
     runtime: 'Runtime',
     database: 'Database',

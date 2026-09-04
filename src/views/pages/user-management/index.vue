@@ -2,8 +2,9 @@
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
 import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
+import RoleMenuTreeNode from './components/role-menu-tree-node.vue'
 import { Api, type AccessMenuNode, type AccessPermission, type AccessRole as ApiAccessRole } from '@/api/modules'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
@@ -70,7 +71,8 @@ const loading = reactive({
   createUser: false,
   updateRoles: false,
   resetPassword: false,
-  deleteUserId: 0
+  deleteUserId: 0,
+  menuStatusKey: ''
 })
 
 const currentUser = ref<any>(null)
@@ -78,6 +80,9 @@ const roles = ref<ApiAccessRole[]>([])
 const permissions = ref<AccessPermission[]>([])
 const menus = ref<AccessMenuNode[]>([])
 const expandedMenuKey = ref<string | null>(null)
+const roleMenuTreeRef = ref<HTMLElement | null>(null)
+const expandedRoleMenuKeys = ref<Set<string>>(new Set())
+const roleAdvancedOpen = ref(false)
 const activeTab = ref('users')
 const accessTabItems = [
   { key: 'users', label: '用户管理', labelKey: 'userManagement.userTab' },
@@ -158,15 +163,19 @@ const roleEditorDialog = reactive({
     roleEditorDialog.form.key = String(role?.key || role?.code || '').trim()
     roleEditorDialog.form.name = role?.name || ''
     roleEditorDialog.form.description = role?.description || ''
-    roleEditorDialog.form.permissionCodes = [...(role?.permissions || [])]
+    roleEditorDialog.form.permissionCodes = normalizeRolePermissionCodes(role?.permissions || [])
     roleEditorDialog.detail = role ? role : null
+    expandedRoleMenuKeys.value = new Set(roleMenuExpandableKeys.value)
+    roleAdvancedOpen.value = false
     roleEditorDialog.show = true
     if (!role?.key) return
     roleEditorDialog.detailLoading = true
     try {
       const response = await Api.getAccessRoleDetail(role.key)
       roleEditorDialog.detail = response.data || roleEditorDialog.detail
-      roleEditorDialog.form.permissionCodes = [...(response.data?.permissions || roleEditorDialog.form.permissionCodes)]
+      roleEditorDialog.form.permissionCodes = normalizeRolePermissionCodes(
+        response.data?.permissions || roleEditorDialog.form.permissionCodes
+      )
     } catch {
       roleEditorDialog.detail = roleEditorDialog.detail || role
     } finally {
@@ -284,13 +293,6 @@ const togglePermissionGroup = (group: PermissionGroup, value: string | number | 
     : remainingCodes
 }
 
-const flattenMenuTree = (nodes: AccessMenuNode[] = []): string[] =>
-  nodes.flatMap((node) => {
-    const current = node?.name ? [node.name] : []
-    const children = node?.children?.length ? flattenMenuTree(node.children) : []
-    return [...current, ...children]
-  })
-
 const flattenMenuNodes = (nodes: AccessMenuNode[] = [], depth = 0): Array<AccessMenuNode & { depth: number }> =>
   nodes.flatMap((node) => {
     if (!node) return []
@@ -338,6 +340,131 @@ const buildMenuTree = (nodes: AccessMenuNode[]) => {
 
 const menuTree = computed(() => buildMenuTree(menus.value || []))
 const menuRows = computed(() => flattenMenuNodes(menuTree.value))
+const registeredPermissionCodeSet = computed(() => new Set(permissions.value.map((permission) => permission.code)))
+const normalizeRolePermissionCodes = (codes: string[] = []) => Array.from(new Set(
+  codes.map((code) => String(code).trim()).filter((code) => registeredPermissionCodeSet.value.has(code))
+))
+const menuNodePermissionCodes = (node: AccessMenuNode) => {
+  const buttonCode = node.type === 'button' && node.key.startsWith('button.')
+    ? node.key.slice('button.'.length)
+    : ''
+  if (buttonCode && registeredPermissionCodeSet.value.has(buttonCode)) return [buttonCode]
+
+  return Array.from(new Set([
+    ...(node.permissionCodes || []),
+    ...(node.permissions || []).map((permission) => permission.code)
+  ].filter((code) => Boolean(code) && registeredPermissionCodeSet.value.has(code))))
+}
+const roleMenuTree = computed(() => {
+  const build = (nodes: AccessMenuNode[]): AccessMenuNode[] => nodes
+    .filter((node) => node.type !== 'button')
+    .map((node) => {
+      const menu = { ...node, children: [] as AccessMenuNode[] }
+      const childMenus = build(node.children || [])
+      // Use the menu's registered permission records so labels and codes match the summary.
+      const permissionNodes = menuNodePermissionCodes(menu).map((code) => ({
+        key: `${menu.key}::${code}`,
+        name: permissions.value.find((permission) => permission.code === code)?.name || code,
+        type: 'button' as const,
+        parentKey: menu.key,
+        permissionCodes: [code],
+        children: []
+      }))
+
+      return { ...menu, children: [...childMenus, ...permissionNodes] }
+    })
+
+  return build(menuTree.value)
+})
+const roleMenuExpandableKeys = computed(() => {
+  const keys: string[] = []
+  const collect = (nodes: AccessMenuNode[]) => {
+    nodes.forEach((node) => {
+      if (node.children?.length) {
+        keys.push(node.key)
+        collect(node.children)
+      }
+    })
+  }
+  collect(roleMenuTree.value)
+  return keys
+})
+const descendantPermissionCodes = (node: AccessMenuNode): string[] => Array.from(new Set([
+  ...menuNodePermissionCodes(node),
+  ...(node.children || []).flatMap((child) => descendantPermissionCodes(child))
+]))
+const roleMenuSelectionCodes = (node: AccessMenuNode) => node.type === 'directory'
+  ? descendantPermissionCodes(node)
+  : menuNodePermissionCodes(node)
+const toggleRoleMenuNode = (node: AccessMenuNode) => {
+  const codes = roleMenuSelectionCodes(node).filter((code) => registeredPermissionCodeSet.value.has(code))
+  if (!codes.length) return
+
+  const selectedCodes = new Set(normalizeRolePermissionCodes(roleEditorDialog.form.permissionCodes))
+  const shouldSelect = codes.some((code) => !selectedCodes.has(code))
+  codes.forEach((code) => {
+    if (shouldSelect) selectedCodes.add(code)
+    else selectedCodes.delete(code)
+  })
+  roleEditorDialog.form.permissionCodes = Array.from(selectedCodes)
+}
+const toggleRoleMenuExpand = (key: string) => {
+  const nextKeys = new Set(expandedRoleMenuKeys.value)
+  if (nextKeys.has(key)) nextKeys.delete(key)
+  else nextKeys.add(key)
+  expandedRoleMenuKeys.value = nextKeys
+}
+const roleMenuNodes = computed(() => flattenMenuNodes(roleMenuTree.value))
+const roleSelectedPermissionCodes = computed(() => permissions.value
+  .filter((permission) => roleEditorDialog.form.permissionCodes.includes(permission.code))
+  .map((permission) => permission.code))
+const roleSelectedMenuNodes = computed(() => roleMenuNodes.value.filter((node) =>
+  node.type !== 'button' && roleMenuSelectionCodes(node).some((code) => roleSelectedPermissionCodes.value.includes(code))
+))
+const rolePermissionSummary = computed(() => roleSelectedPermissionCodes.value.map((code) => {
+  const permission = permissions.value.find((item) => item.code === code)
+  return {
+    code,
+    name: permission?.name || code
+  }
+}))
+const findMenuPath = (nodes: AccessMenuNode[], key: string, parents: string[] = []): string[] => {
+  for (const node of nodes) {
+    if (node.key === key) return parents
+    if (node.children?.length) {
+      const path = findMenuPath(node.children, key, [...parents, node.key])
+      if (path.length) return path
+    }
+  }
+  return []
+}
+const findMenuKeyByPermission = (code: string, nodes: AccessMenuNode[] = roleMenuTree.value): string | null => {
+  for (const node of nodes) {
+    if (menuNodePermissionCodes(node).includes(code)) return node.key
+    if (node.children?.length) {
+      const key = findMenuKeyByPermission(code, node.children)
+      if (key) return key
+    }
+  }
+  return null
+}
+const locateRoleMenu = async (key: string) => {
+  const nextKeys = new Set(expandedRoleMenuKeys.value)
+  findMenuPath(roleMenuTree.value, key).forEach((parentKey) => nextKeys.add(parentKey))
+  expandedRoleMenuKeys.value = nextKeys
+  await nextTick()
+
+  const target = Array.from(roleMenuTreeRef.value?.querySelectorAll<HTMLElement>('[data-menu-key]') || [])
+    .find((element) => element.dataset.menuKey === key)
+  if (!target) return
+  target.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  target.classList.add('is-located')
+  window.setTimeout(() => target.classList.remove('is-located'), 1200)
+}
+const locateRolePermission = (code: string) => {
+  const key = findMenuKeyByPermission(code)
+  if (key) locateRoleMenu(key)
+}
 const visibleMenuRows = computed(() => {
   const rows: Array<AccessMenuNode & { depth: number; hasChildren: boolean }> = []
   const appendVisibleRows = (nodes: AccessMenuNode[], depth = 0) => {
@@ -365,6 +492,27 @@ const menuTypeTagType = (type?: AccessMenuNode['type']) => {
   if (type === 'directory') return 'warning'
   if (type === 'button') return 'info'
   return 'primary'
+}
+const updateMenuStatus = async (menu: AccessMenuNode, value: boolean | string | number) => {
+  const key = String(menu?.key || '').trim()
+  if (!key || !canManageMenus.value || loading.menuStatusKey) return
+
+  const enabled = value === true || value === 'true' || value === 1 || value === '1'
+  loading.menuStatusKey = key
+  try {
+    await Api.setAccessMenuStatus(key, enabled)
+    ElMessage.success(
+      enabled
+        ? t('userManagement.enableMenuSuccess', 'Menu enabled')
+        : t('userManagement.disableMenuSuccess', 'Menu disabled')
+    )
+    const response = await Api.getAccessMenus()
+    menus.value = Array.isArray(response.data) ? response.data : []
+  } catch (error: any) {
+    // ElMessage.error(error?.message || t('userManagement.updateMenuStatusFailed', 'Failed to update menu status'))
+  } finally {
+    loading.menuStatusKey = ''
+  }
 }
 const menuCellStyle = ({ column }: { column?: { property?: string } }) => {
   if (column?.property !== 'action') return undefined
@@ -394,11 +542,9 @@ const menuColumns = computed<ColumnItem[]>(() => [
   { prop: 'type', label: t('userManagement.menuType', 'Type'), width: 126, slot: 'type', align: 'center', className: 'menu-type-column' },
   { prop: 'target', label: t('userManagement.menuTarget', 'Target'), minWidth: 220, slot: 'target', className: 'menu-target-column' },
   { prop: 'permissionCodes', label: t('userManagement.menuPermissions', 'Permissions'), width: 140, slot: 'permissionCount', align: 'center' },
-  { prop: 'enabled', label: t('common.status', 'Status'), width: 120, slot: 'enabled', align: 'center' },
+  { prop: 'enabled', label: t('common.status', 'Status'), width: 150, slot: 'enabled', align: 'center' },
   { prop: 'action', label: t('common.action', 'Action'), width: 230, fixed: 'right', slot: 'action' }
 ])
-
-const roleMenuPreview = computed(() => flattenMenuTree(roleEditorDialog.detail?.menuTree || []))
 
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '—'
 const roleKeyByCode: Record<string, string> = {
@@ -519,15 +665,14 @@ const submitRoleEditor = async () => {
 
   roleEditorDialog.loading = true
   try {
+    const permissionCodes = normalizeRolePermissionCodes(roleEditorDialog.form.permissionCodes)
     const payload = {
-      key,
-      code: key,
       name,
       description,
-      permissionCodes: [...roleEditorDialog.form.permissionCodes]
+      permissionCodes
     }
     if (roleEditorDialog.mode === 'create') {
-      await Api.createAccessRole(payload)
+      await Api.createAccessRole({ key, code: key, ...payload })
       ElMessage.success(t('userManagement.createRoleSuccess', 'Role created'))
     } else {
       await Api.updateAccessRole(key, payload)
@@ -1171,9 +1316,18 @@ onMounted(async () => {
           </el-tag>
         </template>
         <template #enabled="{ row }">
-          <el-tag :type="row.enabled === false ? 'info' : 'success'" effect="light" round>
+          <div class="menu-status-control">
+            <el-switch
+              :model-value="row.enabled !== false"
+              :loading="loading.menuStatusKey === row.key"
+              :disabled="!canManageMenus || Boolean(loading.menuStatusKey && loading.menuStatusKey !== row.key)"
+              :aria-label="row.enabled === false ? t('userManagement.enableMenu', 'Enable menu') : t('userManagement.disableMenu', 'Disable menu')"
+              @change="updateMenuStatus(row, $event)"
+            />
+            <span class="menu-status-label" :class="{ 'is-disabled': row.enabled === false }">
             {{ row.enabled === false ? t('common.disabled', 'Disabled') : t('common.enabled', 'Enabled') }}
-          </el-tag>
+            </span>
+          </div>
         </template>
         <template #action="{ row }">
           <div class="table-row-actions">
@@ -1281,102 +1435,131 @@ onMounted(async () => {
     <custom-drawer
       :visible="roleEditorDialog.show"
       :title="roleEditorDialog.mode === 'create' ? t('userManagement.createRole', 'Create role') : t('userManagement.editRole', 'Edit role')"
-      size="980px"
+      size="1180px"
       :confirm-text="$t('common.save')"
       :loading="roleEditorDialog.loading"
       :on-close="() => { roleEditorDialog.show = false }"
       :on-confirm="submitRoleEditor"
     >
-      <div class="dialog-form">
-        <el-alert
-          :title="t('userManagement.rolePermissionTip', 'Role menus are computed from permission codes. Save the role to refresh its menuTree.')"
-          type="info"
-          :closable="false"
-          show-icon
-          style="margin-bottom: 16px"
-        />
-        <el-form label-position="top" class="role-editor-form">
-          <el-form-item
-            v-if="roleEditorDialog.mode === 'create'"
-            :label="$t('userManagement.roleKey', 'Role key')"
-            required
-          >
-            <el-input
-              v-model="roleEditorDialog.form.key"
-              :placeholder="t('userManagement.inputRoleKey', 'Enter a role key')"
-            />
-          </el-form-item>
-          <el-form-item :label="$t('userManagement.roleName', 'Role name')" required>
-            <el-input
-              v-model="roleEditorDialog.form.name"
-              :placeholder="t('userManagement.inputRoleName', 'Enter a role name')"
-            />
-          </el-form-item>
-          <el-form-item :label="$t('userManagement.roleDescription', 'Description')">
-            <el-input
-              v-model="roleEditorDialog.form.description"
-              type="textarea"
-              :rows="3"
-              :placeholder="t('userManagement.roleDescriptionPlaceholder', 'Describe what this role can access')"
-            />
-          </el-form-item>
-          <el-form-item :label="$t('userManagement.permissionSelection', 'Permission codes')">
-            <div class="permission-panel">
-              <div class="permission-panel__summary">
-                <span>{{ t('userManagement.permissionSelectionHint', 'Select the backend permission codes that define this role.') }}</span>
-                <strong>{{ t('userManagement.selectedCount', '{selected} / {total} selected', { selected: roleEditorDialog.form.permissionCodes.length, total: permissions.length }) }}</strong>
+      <div class="dialog-form role-editor-dialog-body">
+        <div v-loading="roleEditorDialog.detailLoading" class="role-editor-layout">
+          <div class="role-editor-main">
+            <section class="role-info-panel">
+              <div class="role-editor-section-head">
+                <h3>{{ t('userManagement.roleInfo', 'Role information') }}</h3>
               </div>
-              <el-scrollbar class="permission-panel__scroll">
-                <div v-for="group in permissionGroups" :key="group.module" class="permission-group">
-                  <div class="permission-group__head">
-                    <div class="permission-group__title">
-                      <strong>{{ group.label }}</strong>
-                      <el-checkbox
-                        :model-value="permissionGroupAllChecked(group)"
-                        :indeterminate="permissionGroupIndeterminate(group)"
-                        @change="togglePermissionGroup(group, $event)"
-                      >
-                        {{ $t('userManagement.selectAll') }}
-                      </el-checkbox>
-                    </div>
-                    <span>{{ group.items.length }}</span>
-                  </div>
-                  <el-checkbox-group v-model="roleEditorDialog.form.permissionCodes" class="permission-grid">
-                    <el-checkbox
-                      v-for="permission in group.items"
-                      :key="permission.code"
-                      :value="permission.code"
-                      class="permission-item"
-                    >
-                      <span class="permission-item__name">{{ permission.name }}</span>
-                      <span class="permission-item__code">{{ permission.code }}</span>
-                    </el-checkbox>
-                  </el-checkbox-group>
+              <el-form label-position="left" label-width="108px" class="role-info-form">
+                <el-form-item :label="$t('userManagement.roleKey', 'Role key')" required>
+                  <el-input
+                    v-model="roleEditorDialog.form.key"
+                    :readonly="roleEditorDialog.mode === 'edit'"
+                    :placeholder="t('userManagement.inputRoleKey', 'Enter a role key')"
+                  />
+                </el-form-item>
+                <el-form-item :label="$t('userManagement.roleName', 'Role name')" required>
+                  <el-input
+                    v-model="roleEditorDialog.form.name"
+                    :placeholder="t('userManagement.inputRoleName', 'Enter a role name')"
+                  />
+                </el-form-item>
+                <el-form-item :label="$t('userManagement.roleDescription', 'Description')">
+                  <el-input
+                    v-model="roleEditorDialog.form.description"
+                    type="textarea"
+                    :rows="3"
+                    :placeholder="t('userManagement.roleDescriptionPlaceholder', 'Describe what this role can access')"
+                  />
+                </el-form-item>
+              </el-form>
+            </section>
+
+            <section class="role-menu-panel">
+              <div class="role-editor-section-head">
+                <div>
+                  <h3>{{ t('userManagement.menuPermissionTitle', 'Menu permissions') }}</h3>
+                  <p>{{ t('userManagement.rolePermissionTip', 'Select menus first. Page and button permissions can be adjusted independently.') }}</p>
                 </div>
-              </el-scrollbar>
+                <span class="role-menu-count">
+                  {{ t('userManagement.permissionCountSummary', '{selected} / {total} permission codes', { selected: roleSelectedPermissionCodes.length, total: permissions.length }) }}
+                </span>
+              </div>
+              <div ref="roleMenuTreeRef" class="role-menu-tree-scroll">
+                <role-menu-tree-node
+                  v-if="roleMenuTree.length"
+                  :nodes="roleMenuTree"
+                  :selected-codes="roleSelectedPermissionCodes"
+                  :available-codes="registeredPermissionCodeSet"
+                  :expanded-keys="expandedRoleMenuKeys"
+                  @toggle="toggleRoleMenuNode"
+                  @toggle-expand="toggleRoleMenuExpand"
+                />
+                <el-empty v-else :description="t('common.noData', 'No data')" />
+              </div>
+            </section>
+
+            <section class="role-advanced-panel">
+              <button
+                type="button"
+                class="role-advanced-toggle"
+                :aria-expanded="roleAdvancedOpen"
+                @click="roleAdvancedOpen = !roleAdvancedOpen"
+              >
+                <span>
+                  <strong>{{ t('userManagement.advancedPermissionCodes', 'Advanced: view permission codes') }}</strong>
+                  <small>{{ t('userManagement.advancedPermissionCodesHint', 'Only permissionCodes will be submitted; menus are calculated from permissions.') }}</small>
+                </span>
+                <el-icon :class="{ 'is-expanded': roleAdvancedOpen }"><ArrowRight /></el-icon>
+              </button>
+              <div v-if="roleAdvancedOpen" class="role-advanced-content">
+                <code v-for="code in roleSelectedPermissionCodes" :key="code">{{ code }}</code>
+                <span v-if="!roleSelectedPermissionCodes.length" class="menu-preview__empty">
+                  {{ t('userManagement.noPermissionCodes', 'No permission codes selected') }}
+                </span>
+              </div>
+            </section>
+          </div>
+
+          <aside class="role-summary-panel">
+            <div class="role-summary-head">
+              <h3>{{ t('userManagement.roleSelectionSummary', 'Selected {menus} menus / {permissions} permission codes', { menus: roleSelectedMenuNodes.length, permissions: roleSelectedPermissionCodes.length }) }}</h3>
             </div>
-          </el-form-item>
-          <el-form-item :label="$t('userManagement.menuPreview', 'Menu preview')">
-            <div class="menu-preview">
-              <template v-if="roleEditorDialog.detailLoading">
-                <el-skeleton :rows="2" animated />
-              </template>
-              <template v-else-if="roleMenuPreview.length">
-                <el-tag
-                  v-for="name in roleMenuPreview"
-                  :key="name"
-                  effect="plain"
-                  round
+            <div class="role-summary-section">
+              <strong>{{ t('userManagement.selectedMenus', 'Selected menus') }}</strong>
+              <div v-if="roleSelectedMenuNodes.length" class="role-summary-chip-list">
+                <button
+                  v-for="menu in roleSelectedMenuNodes"
+                  :key="menu.key"
+                  type="button"
+                  class="role-summary-chip"
+                  @click="locateRoleMenu(menu.key)"
                 >
-                  {{ name }}
-                </el-tag>
-              </template>
-              <span v-else class="menu-preview__empty">
-                {{ t('userManagement.menuPreviewEmpty', 'The backend will calculate menuTree from the saved permissions.') }}
+                  <span>{{ menu.name }}</span>
+                </button>
+              </div>
+              <span v-else class="role-summary-empty">
+                {{ t('userManagement.noMenusSelected', 'No menus selected') }}
               </span>
             </div>
-          </el-form-item>
-        </el-form>
+            <div class="role-summary-section">
+              <strong>{{ t('userManagement.selectedPermissionCodes', 'Selected permission codes') }}</strong>
+              <div v-if="rolePermissionSummary.length" class="role-summary-permission-list">
+                <button
+                  v-for="permission in rolePermissionSummary"
+                  :key="permission.code"
+                  type="button"
+                  class="role-summary-permission"
+                  @click="locateRolePermission(permission.code)"
+                >
+                  <code>{{ permission.code }}</code>
+                  <span>{{ permission.name }}</span>
+                </button>
+              </div>
+              <span v-else class="role-summary-empty">
+                {{ t('userManagement.noPermissionCodes', 'No permission codes selected') }}
+              </span>
+            </div>
+          </aside>
+        </div>
       </div>
     </custom-drawer>
 
@@ -2352,6 +2535,24 @@ onMounted(async () => {
     font-weight: 700;
   }
 
+  :deep(.menu-status-control) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+
+  :deep(.menu-status-label) {
+    color: rgb(var(--success-color));
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  :deep(.menu-status-label.is-disabled) {
+    color: var(--text-tertiary);
+  }
+
   :deep(.menu-target-column .cell) {
     display: flex;
     align-items: center;
@@ -2507,6 +2708,259 @@ onMounted(async () => {
 .role-editor-form {
   display: grid;
   gap: 4px;
+}
+
+.role-editor-dialog-body {
+  padding-top: 0;
+}
+
+.role-editor-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+  align-items: start;
+  gap: 18px;
+}
+
+.role-editor-main {
+  display: grid;
+  min-width: 0;
+  gap: 16px;
+}
+
+.role-info-panel,
+.role-menu-panel,
+.role-advanced-panel,
+.role-summary-panel {
+  min-width: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  background: color-mix(in srgb, var(--surface-card) 94%, var(--surface-hover));
+  box-shadow: var(--shadow-xs);
+}
+
+.role-info-panel,
+.role-menu-panel,
+.role-advanced-panel {
+  padding: 20px;
+}
+
+.role-editor-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 750;
+  }
+
+  p {
+    margin: 6px 0 0;
+    color: var(--text-tertiary);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+}
+
+.role-info-form {
+  display: grid;
+  gap: 2px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 14px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-form-item__label) {
+    color: var(--text-secondary);
+    font-weight: 650;
+  }
+}
+
+.role-menu-count {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border: 1px solid rgba(var(--primary-color), 0.22);
+  border-radius: 999px;
+  color: rgb(var(--primary-color));
+  background: rgba(var(--primary-color), 0.08);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.role-menu-tree-scroll {
+  max-height: 470px;
+  padding: 2px 6px 2px 0;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.role-summary-panel {
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+}
+
+.role-summary-head {
+  padding: 20px 18px 16px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: color-mix(in srgb, var(--surface-hover) 78%, var(--surface-card));
+
+  h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    line-height: 1.4;
+  }
+}
+
+.role-summary-section {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+}
+
+.role-summary-section + .role-summary-section {
+  padding-top: 0;
+}
+
+.role-summary-section > strong {
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.role-summary-chip-list,
+.role-summary-permission-list {
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.role-summary-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-summary-permission-list {
+  display: grid;
+  gap: 8px;
+}
+
+.role-summary-chip,
+.role-summary-permission {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--surface-hover) 82%, rgba(var(--primary-color), 0.08));
+  text-align: left;
+  cursor: pointer;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.role-summary-chip:hover,
+.role-summary-permission:hover {
+  border-color: rgba(var(--primary-color), 0.26);
+  background: rgba(var(--primary-color), 0.1);
+}
+
+.role-summary-chip span,
+.role-summary-permission span,
+.role-summary-permission code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-summary-chip span,
+.role-summary-permission span {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+
+.role-summary-permission code {
+  color: rgb(var(--primary-color));
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+}
+
+.role-summary-empty {
+  color: var(--text-tertiary);
+  font-size: 12px;
+}
+
+.role-advanced-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 14px;
+  padding: 0;
+  border: 0;
+  color: var(--text-primary);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+
+  > span {
+    display: grid;
+    min-width: 0;
+    gap: 5px;
+  }
+
+  strong {
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  small {
+    color: var(--text-tertiary);
+    font-size: 11px;
+    line-height: 1.5;
+  }
+
+  > .el-icon {
+    flex: 0 0 auto;
+    color: var(--text-tertiary);
+    transition: transform 0.18s ease;
+  }
+
+  > .el-icon.is-expanded {
+    transform: rotate(90deg);
+  }
+}
+
+.role-advanced-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+
+  code {
+    padding: 5px 8px;
+    border: 1px solid rgba(var(--primary-color), 0.2);
+    border-radius: 7px;
+    color: rgb(var(--primary-color));
+    background: rgba(var(--primary-color), 0.07);
+    font-size: 11px;
+  }
 }
 
 .menu-editor-form :deep(.menu-type-segmented) {
@@ -2712,6 +3166,14 @@ onMounted(async () => {
   .toolbar-shell,
   .table-shell {
     padding: 12px;
+  }
+
+  .role-editor-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .role-summary-panel {
+    position: static;
   }
 }
 

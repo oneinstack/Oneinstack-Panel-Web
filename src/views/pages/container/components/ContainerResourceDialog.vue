@@ -58,6 +58,15 @@ const title = computed<string>(() => {
   }
 })
 
+const selectedPushRegistry = computed(() => props.registries.find(
+  (item) => String(item.id) === String(props.imageActionForm.registryId ?? '')
+))
+const pushRegistryAuthMissing = computed(() =>
+  props.dialogType === 'image-push'
+  && props.imageActionForm.pushMode === 'registry'
+  && selectedPushRegistry.value?.authEnabled === false
+)
+
 defineExpose({
   validate: () => formRef.value?.validate(),
   clearValidate: () => formRef.value?.clearValidate()
@@ -72,6 +81,7 @@ defineExpose({
     size="720px"
     :confirm-text="t('container.resourceDialog.confirm')"
     :loading="saving"
+    :confirm-disabled="pushRegistryAuthMissing"
     :on-close="() => emit('update:visible', false)"
     :on-confirm="() => emit('confirm')"
   >
@@ -247,6 +257,21 @@ defineExpose({
               <el-option v-for="item in registries" :key="item.id" :label="`${item.name}（${registryLabel(item)}）`" :value="item.id" />
             </el-select>
           </el-form-item>
+          <el-alert
+            v-if="pushRegistryAuthMissing"
+            class="push-registry-alert"
+            type="warning"
+            show-icon
+            :closable="false"
+            :title="t('container.resourceDialog.registryPushAuthRequired')"
+          >
+            <template v-if="selectedPushRegistry?.statusMessage" #default>
+              {{ t('container.resourceDialog.registryStatusMessage', { message: selectedPushRegistry.statusMessage }) }}
+            </template>
+          </el-alert>
+          <div v-else-if="selectedPushRegistry?.statusMessage" class="field-help push-registry-status">
+            {{ t('container.resourceDialog.registryStatusMessage', { message: selectedPushRegistry.statusMessage }) }}
+          </div>
           <el-form-item :label="t('container.resourceDialog.imageName')">
             <el-input v-model.trim="imageActionForm.pushImageName" :placeholder="t('container.resourceDialog.pushImageNamePlaceholder')" />
           </el-form-item>
@@ -430,6 +455,14 @@ defineExpose({
   color: var(--text-tertiary);
   font-size: 13px;
   line-height: 1.5;
+}
+
+.push-registry-alert {
+  margin: -4px 0 20px 112px;
+}
+
+.push-registry-status {
+  margin: -12px 0 20px 112px;
 }
 
 .sensitive-config-actions {

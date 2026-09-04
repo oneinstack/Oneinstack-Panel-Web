@@ -456,8 +456,16 @@ const getVersionLines = (item: any) => {
 }
 
 const isSoftwareVersionField = (field: any) => {
-  const key = String(field?.key || '').toLowerCase()
+  const key = String(field?.key || field?.prop || '').toLowerCase()
   return key === 'software-version' || key === 'software_version' || key === 'softwareversion'
+}
+
+const installFieldType = (field: any): FormItem['type'] => {
+  if (isSoftwareVersionField(field)) return 'custom'
+  if (String(field?.type || '').toLowerCase() === 'password' || isPasswordInstallField(field)) {
+    return 'password'
+  }
+  return 'input'
 }
 
 const isValidVersionSegment = (segment: string) => segment.toLowerCase() === 'x' || /^\d+$/.test(segment)
@@ -582,7 +590,7 @@ const openInstallForm = (item: any, requestedVersion = '') => {
       installForm.value[field.key] = defaultInstallFieldValue(field)
       return {
         label: field.value || field.name || field.key,
-        type: isSoftwareVersionField(field) ? 'custom' : isPasswordInstallField(field) ? 'password' : 'input',
+        type: installFieldType(field),
         prop: field.key,
         rules: [
           ...buildInstallFieldRules(field),
@@ -594,7 +602,7 @@ const openInstallForm = (item: any, requestedVersion = '') => {
     void handleInstall()
     return
   }
-  drawer.title = t('software.installTitle', 'Install {name} {version}', { name: item.name, version: installForm.value.version })
+  drawer.title = t('software.installTitle', 'Install {name}', { name: item.name })
   drawer.show = true
 }
 
@@ -602,6 +610,10 @@ const handleInstall = async () => {
   if (submitting.value || !canWriteSoftware.value) return
   submitting.value = true
   const request = { ...installForm.value }
+  const versionField = installForm.items.find((field) => isSoftwareVersionField(field))
+  if (versionField) {
+    request.version = String(request[versionField.prop] ?? '').trim()
+  }
   try {
     const { data: result } = await submitOperation('software.install', request)
     softwareTaskStore.acceptCreated(result, request)
@@ -928,17 +940,19 @@ watch(
       :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm"
     >
-      <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
-        <template #software-version="{ row }">
-          <div class="software-version-control">
-            <el-input v-model="installForm.value[row.prop]" clearable />
-            <span v-if="installVersionLines.length" class="software-version-hint">
-              <el-icon aria-hidden="true"><Warning /></el-icon>
-              {{ t('software.versionLimitHint', 'Maximum supported version line: {versions}', { versions: maxInstallVersionLine }) }}
-            </span>
-          </div>
-        </template>
-      </custom-form>
+      <div class="software-install-panel">
+        <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
+          <template #software-version="{ row }">
+            <div class="software-version-control">
+              <el-input v-model="installForm.value[row.prop]" clearable />
+              <span v-if="installVersionLines.length" class="software-version-hint">
+                <el-icon aria-hidden="true"><Warning /></el-icon>
+                {{ t('software.versionLimitHint', 'Maximum supported version line: {versions}', { versions: maxInstallVersionLine }) }}
+              </span>
+            </div>
+          </template>
+        </custom-form>
+      </div>
     </custom-drawer>
 
     <install-task-drawer
@@ -1368,6 +1382,31 @@ watch(
   color: var(--font-color-gray-light);
 }
 
+.software-install-panel {
+
+
+  :deep(.custom-form) {
+    padding: 0;
+  }
+
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-form-item__label) {
+    min-width: 112px;
+    padding-right: 16px;
+  }
+
+  :deep(.el-form-item__content) {
+    min-width: 0;
+  }
+}
+
 .software-version-control {
   width: 100%;
 }
@@ -1406,6 +1445,7 @@ watch(
     }
   }
 }
+
 
 @media (max-width: 900px) {
   .section-header {

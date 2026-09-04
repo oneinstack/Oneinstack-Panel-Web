@@ -78,6 +78,8 @@ onMounted(() => {
           <el-input
             v-model="data.value[item.prop]"
             :type="item.type === 'input' ? 'text' : 'password'"
+            :show-password="item.type === 'password'"
+            :autocomplete="item.type === 'password' ? 'new-password' : undefined"
             :placeholder="item.placeholder"
             clearable
             @input="item.change"
