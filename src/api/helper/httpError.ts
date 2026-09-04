@@ -81,7 +81,7 @@ const resolveRequestErrorMessage = (
 ) => {
   if (data && typeof data === "object") {
     const detail =
-      typeof data.error === "object" ? data.error.message : data.message;
+      typeof data.error === "object" ? data.error.detail : data.detail;
     if (detail) return detail;
 
     const codeMessage = localizedCodeMessage(getErrorCode(data));

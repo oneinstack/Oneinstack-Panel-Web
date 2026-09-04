@@ -4,6 +4,7 @@ import { Search, FolderOpened, Document } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
+import { formatFileTime } from '@/utils/fileTime'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -53,6 +54,26 @@ watch(
 
 const searchPath = computed(() => (state.scope === 'server' ? '/' : props.currentPath || '/'))
 
+const isDirectory = (item: any) =>
+  item?.isDir === true ||
+  item?.isDir === 1 ||
+  item?.isDir === 'true' ||
+  item?.type === 'dir' ||
+  item?.type === 'directory'
+
+// Apply the selected category locally as well, so switching filters always updates
+// the visible results even if an older server does not apply the type parameter.
+const visibleItems = computed(() => {
+  if (state.type === 'all') return state.result.items
+  return state.result.items.filter((item) =>
+    state.type === 'dir' ? isDirectory(item) : !isDirectory(item)
+  )
+})
+
+const visibleTotal = computed(() =>
+  state.type === 'all' ? state.result.total : visibleItems.value.length
+)
+
 const runSearch = async () => {
   const query = state.query.trim()
   if (!query) {
@@ -83,7 +104,7 @@ const runSearch = async () => {
 }
 
 const openResult = (row: any) => {
-  const path = row.isDir ? row.path : parentPath(row.path)
+  const path = isDirectory(row) ? row.path : parentPath(row.path)
   emit('navigate', path)
   visible.value = false
 }
@@ -94,10 +115,7 @@ const parentPath = (path: string) => {
   return parts.length ? `/${parts.join('/')}` : '/'
 }
 
-const displayTime = (value: string) => {
-  if (!value) return '-'
-  return new Date(value).toLocaleString('zh-CN', { hour12: false })
-}
+const displayTime = (value: string) => formatFileTime(value)
 </script>
 
 <template>
@@ -144,30 +162,30 @@ const displayTime = (value: string) => {
 
     <div v-loading="state.loading" class="result-panel">
       <div v-if="state.searched" class="result-summary">
-        <span>{{ t('file.searchDialog.resultFound', 'Found {total} items', { total: state.result.total }) }}</span>
+        <span>{{ t('file.searchDialog.resultFound', 'Found {total} items', { total: visibleTotal }) }}</span>
         <span class="summary-muted">
           {{ t('file.searchDialog.scanned', 'Scanned {visited} items', { visited: state.result.visited }) }}
           <template v-if="state.result.skipped"> · {{ t('file.searchDialog.skipped', 'Skipped {skipped} restricted directories', { skipped: state.result.skipped }) }}</template>
         </span>
         <el-tag v-if="state.result.truncated" type="warning" effect="plain">{{ t('file.searchDialog.truncated', 'Results truncated') }}</el-tag>
       </div>
-      <el-scrollbar v-if="state.result.items.length" height="430px">
+      <el-scrollbar v-if="visibleItems.length" height="430px">
         <button
-          v-for="item in state.result.items"
+          v-for="item in visibleItems"
           :key="item.path"
           type="button"
           class="result-row"
           @dblclick="openResult(item)"
         >
-          <div class="result-icon" :class="{ directory: item.isDir }">
-            <el-icon><FolderOpened v-if="item.isDir" /><Document v-else /></el-icon>
+          <div class="result-icon" :class="{ directory: isDirectory(item) }">
+            <el-icon><FolderOpened v-if="isDirectory(item)" /><Document v-else /></el-icon>
           </div>
           <div class="result-main">
             <strong>{{ item.name }}</strong>
             <span>{{ item.path }}</span>
           </div>
           <div class="result-meta">
-            <span>{{ item.isDir ? t('file.directory', 'Directory') : formatBytes(item.size) }}</span>
+            <span>{{ isDirectory(item) ? t('file.directory', 'Directory') : formatBytes(item.size) }}</span>
             <span>{{ displayTime(item.modTime) }}</span>
           </div>
           <el-button type="primary" link @click.stop="openResult(item)">{{ t('file.searchDialog.locate', 'Locate') }}</el-button>

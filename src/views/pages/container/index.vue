@@ -976,7 +976,7 @@ const templateColumns = computed<ColumnItem<TemplateItem>[]>(() => [
   {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
-    width: 160,
+    width: 240,
     fixed: "right",
     slot: "templateAction",
     className: "table-action-column",

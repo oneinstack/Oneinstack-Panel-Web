@@ -117,7 +117,7 @@ const columns = computed<ColumnItem<ConfigurationSnapshot>[]>(() => [
   { prop: 'resourceType', label: t('configSnapshots.resource'), minWidth: 320, slot: 'resource' },
   { prop: 'version', label: t('configSnapshots.versionBackupAccount'), minWidth: 220, slot: 'versionBackupAccount' },
   { prop: 'sizeBytes', label: t('common.size'), width: 110, slot: 'sizeBytes' },
-  { prop: 'operation', label: t('configSnapshots.action'), width: 140, slot: 'operation' },
+  { prop: 'operation', label: t('configSnapshots.action'), minWidth: 240, slot: 'operation' },
   { prop: 'status', label: t('common.status'), width: 120, slot: 'status' },
   { prop: 'revision', label: t('configSnapshots.revisionChange', 'Before / after revision'), minWidth: 240, slot: 'revision' },
   { prop: 'artifactSha256', label: t('configSnapshots.artifactHash'), width: 150, slot: 'artifactSha256' },

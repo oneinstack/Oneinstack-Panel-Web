@@ -81,10 +81,7 @@ const phaseLabel = (phase: string) => {
   }[phase] || phase)
 }
 
-const statusText = computed(() => {
-  if (terminal.value && (task.value?.errorMessage || task.value?.message)) {
-    return task.value.errorMessage || task.value.message
-  }
+const statusLabel = computed(() => {
   if (isComposeOperation(task.value?.operation) && !terminal.value) {
     return phaseLabel(task.value?.phase || task.value?.status || '')
   }
@@ -108,6 +105,13 @@ const statusText = computed(() => {
     interrupted: t('container.task.status.interrupted', 'Task interrupted')
   }
   return labels[task.value?.status || ''] || task.value?.status || t('common.loading', 'Loading')
+})
+
+const statusText = computed(() => {
+  if (terminal.value && (task.value?.errorMessage || task.value?.message)) {
+    return task.value.errorMessage || task.value.message
+  }
+  return statusLabel.value
 })
 
 const progressStatus = computed(() => {
@@ -355,8 +359,8 @@ onBeforeUnmount(() => {
       </div>
     </template>
     <template #header-extra>
-      <el-tag :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'" effect="plain" round>
-        {{ statusText }}
+      <el-tag class="task-status" :type="task?.status === 'succeeded' ? 'success' : failed ? 'danger' : 'primary'" effect="plain" round>
+        {{ statusLabel }}
       </el-tag>
     </template>
 
@@ -475,6 +479,13 @@ onBeforeUnmount(() => {
 .task-heading {
   min-width: 0;
   flex: 1;
+}
+
+.task-status {
+  max-width: min(240px, 34vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .task-title {

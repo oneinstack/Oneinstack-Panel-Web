@@ -4,14 +4,19 @@ import { ElMessage } from 'element-plus'
 import { Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import CustomDrawer from '@/components/custom-drawer.vue'
-import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
+import OperationPreviewContent from '@/components/operation-preview-content.vue'
+import {
+  createOperationPreview,
+  executeOperationPreview,
+  isOperationCancelled,
+  type OperationPreview
+} from '@/utils/operationPreview'
 import i18n from '@/lang'
-import type { ColumnItem } from '@/components/custom-table.vue'
 
 interface ConfigurationField {
   key: string
   label: string
-  type: 'integer' | 'boolean' | 'select' | 'worker_processes'
+  type: string
   unit?: string
   description?: string
   min?: number
@@ -28,23 +33,6 @@ interface ComponentConfiguration {
   fields: ConfigurationField[]
   values: Record<string, string>
   packageSource: string
-}
-
-interface ConfigurationChange {
-  key: string
-  label: string
-  before: string
-  after: string
-  unit?: string
-}
-
-interface ConfigurationPreview {
-  component: string
-  revision: string
-  applyMode: 'reload' | 'restart'
-  values: Record<string, string>
-  changes: ConfigurationChange[]
-  hasChanges: boolean
 }
 
 interface ConfigurationHistoryEntry {
@@ -79,7 +67,8 @@ const applying = ref(false)
 const historyLoading = ref(false)
 const restoringId = ref('')
 const configuration = ref<ComponentConfiguration>()
-const preview = ref<ConfigurationPreview>()
+const preview = ref<OperationPreview>()
+const previewOrigin = ref<'update' | 'restore'>('update')
 const history = ref<ConfigurationHistoryEntry[]>([])
 const values = reactive<Record<string, any>>({})
 let hydrating = false
@@ -106,12 +95,9 @@ const applyModeLabel = computed(() =>
   configuration.value?.applyMode === 'reload' ? t('layout.operation.reload', 'Reload') : t('layout.operation.restart', 'Restart')
 )
 
-const changeCount = computed(() => preview.value?.changes.length || 0)
-const previewColumns = computed<ColumnItem[]>(() => [
-  { prop: 'label', label: t('software.config.configItem', 'Configuration item'), minWidth: 145 },
-  { prop: 'before', label: t('software.config.currentValue', 'Current value'), minWidth: 130, slot: 'before' },
-  { prop: 'after', label: t('software.config.newValue', 'New value'), minWidth: 130, slot: 'after' }
-])
+const changeCount = computed(() =>
+  (preview.value?.files?.length || 0) + (preview.value?.actions?.length || 0)
+)
 
 const historyStatus = (status: ConfigurationHistoryEntry['status']) => {
   const labels = {
@@ -199,33 +185,36 @@ const buildPreview = async () => {
   if (!configuration.value || previewing.value) return
   previewing.value = true
   try {
-    const { data } = await Api.previewComponentServiceConfiguration(props.component, {
+    preview.value = await createOperationPreview('software.configure', {
+      component: props.component,
       revision: configuration.value.revision,
       values: toPayload()
     })
-    preview.value = data as ConfigurationPreview
-    if (!preview.value.hasChanges) {
+    previewOrigin.value = 'update'
+    if (!changeCount.value) {
       ElMessage.info(t('software.config.noChanges', 'Configuration has no changes'))
     }
+  } catch (error: any) {
+    handleOperationError(error)
   } finally {
     previewing.value = false
   }
 }
 
 const apply = async () => {
-  if (!configuration.value || !preview.value?.hasChanges || applying.value) return
+  if (!preview.value?.previewId || applying.value) return
   applying.value = true
+  const currentPreview = preview.value
+  // A preview can be consumed even when execution fails, so never offer it again.
+  preview.value = undefined
   try {
-    const { data } = await submitOperation('software.configure', {
-      component: props.component,
-      revision: configuration.value.revision,
-      values: preview.value.values
-    })
-    emit('task-created', data)
+    const { data } = await executeOperationPreview(currentPreview, { forceConfirm: true })
+    const task = data?.task || data
+    if (!task?.taskId) throw new Error(t('software.config.taskCreateFailed', 'Configuration task was not created'))
+    emit('task-created', task)
     visible.value = false
-    ElMessage.success(t('software.config.publishTaskCreated', 'Configuration publish task created and can continue in the background'))
-  } catch (error) {
-    if (!isOperationCancelled(error)) throw error
+  } catch (error: any) {
+    if (!isOperationCancelled(error)) handleOperationError(error)
   } finally {
     applying.value = false
   }
@@ -235,28 +224,36 @@ const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
   if (entry.status !== 'succeeded' || restoringId.value) return
   restoringId.value = entry.id
   try {
-    const { data } = await Api.previewComponentServiceConfigurationRestore(
-      props.component,
-      entry.id
-    )
-    const restorePreview = data?.preview as ConfigurationPreview
-    if (!restorePreview?.hasChanges) {
-      ElMessage.info(t('software.config.sameAsHistory', 'Current configuration already matches this history version'))
-      return
-    }
-    const { data: result } = await submitOperation('software.configure', {
+    preview.value = await createOperationPreview('software.configure', {
       component: props.component,
-      restoreFromHistoryId: entry.id,
-      changes: restorePreview.changes
+      restoreFromHistoryId: entry.id
     })
-    emit('task-created', result)
-    visible.value = false
-    ElMessage.success(t('software.config.restoreTaskCreated', 'Configuration restore task created. Check progress in the background.'))
+    previewOrigin.value = 'restore'
+    if (!changeCount.value) {
+      ElMessage.info(t('software.config.sameAsHistory', 'Current configuration already matches this history version'))
+    }
   } catch (error: any) {
-    if (!isOperationCancelled(error)) throw error
+    if (!isOperationCancelled(error)) handleOperationError(error)
   } finally {
     restoringId.value = ''
   }
+}
+
+const errorMessage = (error: any) => {
+  const data = error?.response?.data || error?.data || {}
+  const detail = data?.error && typeof data.error === 'object' ? data.error : {}
+  return detail.message || detail.detail || data.message || error?.message || t('common.operationFailed', 'Operation failed')
+}
+
+const handleOperationError = async (error: any) => {
+  const status = Number(error?.response?.status || error?.status || error?.data?.status)
+  if (status === 409) {
+    preview.value = undefined
+    await Promise.all([load(), loadHistory()])
+    ElMessage.warning(t('software.config.previewExpired', 'Configuration changed or the preview expired. The latest configuration has been loaded; please preview again.'))
+    return
+  }
+  ElMessage.error(errorMessage(error))
 }
 
 watch(
@@ -441,21 +438,15 @@ watch(values, () => {
         <div class="preview-title">
           <div>
             <h3>{{ $t('software.config.changePreview') }}</h3>
-            <p>{{ $t('software.config.changePreviewDescription') }}</p>
+            <p>
+              {{ previewOrigin === 'restore'
+                ? $t('software.config.restorePreviewDescription', 'Review the restore plan before execution.')
+                : $t('software.config.changePreviewDescription') }}
+            </p>
           </div>
-          <span v-if="preview.hasChanges">{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
+          <span>{{ $t('software.config.pendingPublishCount', { count: changeCount }) }}</span>
         </div>
-        <div v-if="preview.hasChanges" class="preview-table-wrap">
-          <custom-table :data="preview.changes" :columns="previewColumns" :pagination="false" size="small">
-          <template #before="{ row }">
-              <span class="value-chip value-before">{{ row.before }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
-          </template>
-          <template #after="{ row }">
-              <span class="value-chip value-after">{{ row.after }}{{ row.unit ? ` ${row.unit}` : '' }}</span>
-          </template>
-          </custom-table>
-        </div>
-        <el-empty v-else :description="$t('software.config.noChanges')" :image-size="64" />
+        <operation-preview-content :preview="preview" />
       </section>
     </div>
     <el-result
@@ -471,7 +462,7 @@ watch(values, () => {
 
     <template #footer>
       <div class="drawer-footer">
-        <span v-if="preview?.hasChanges">{{ $t('software.config.previewedChangeCount', { count: changeCount }) }}</span>
+        <span v-if="preview">{{ $t('software.config.previewedChangeCount', { count: changeCount }) }}</span>
         <span v-else>{{ $t('software.config.previewFirstHint') }}</span>
         <div class="drawer-actions">
           <el-button :disabled="applying" @click="visible = false">{{ $t('common.cancel') }}</el-button>
@@ -486,10 +477,12 @@ watch(values, () => {
           <el-button
             type="primary"
             :loading="applying"
-            :disabled="!preview?.hasChanges || previewing"
+            :disabled="!preview?.previewId || previewing"
             @click="apply"
           >
-            {{ $t('software.config.publishConfig') }}
+            {{ previewOrigin === 'restore'
+              ? $t('software.config.confirmRestore', 'Confirm restore')
+              : $t('software.config.publishConfig') }}
           </el-button>
         </div>
       </div>

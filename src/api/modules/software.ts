@@ -50,44 +50,12 @@ export const softwareApi = {
   getComponentServiceConfiguration: (component: string) => {
     return http.get(`/soft/services/${component}/config`);
   },
-  /** 校验组件配置并返回字段级变更预览 */
-  previewComponentServiceConfiguration: (
-    component: string,
-    obj: { revision: string; values: Record<string, string> },
-  ) => {
-    return http.post(`/soft/services/${component}/config/preview`, obj);
-  },
-  /** 创建组件配置安全发布任务 */
-  applyComponentServiceConfiguration: (
-    component: string,
-    obj: { revision: string; values: Record<string, string> },
-  ) => {
-    return http.post(`/soft/services/${component}/config/apply`, obj);
-  },
   /** 获取组件配置发布历史 */
   getComponentServiceConfigurationHistory: (
     component: string,
     obj?: { page?: number; pageSize?: number },
   ) => {
     return http.get(`/soft/services/${component}/config/history`, obj);
-  },
-  /** 预览恢复到一次历史发布前的配置 */
-  previewComponentServiceConfigurationRestore: (
-    component: string,
-    historyId: string,
-  ) => {
-    return http.post(
-      `/soft/services/${component}/config/history/${historyId}/preview`,
-    );
-  },
-  /** 创建组件配置历史恢复任务 */
-  restoreComponentServiceConfiguration: (
-    component: string,
-    historyId: string,
-  ) => {
-    return http.post(
-      `/soft/services/${component}/config/history/${historyId}/restore`,
-    );
   },
   /** 获取安装日志 */
   getInstallLog: (obj: any) => {

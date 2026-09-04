@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import { View } from '@element-plus/icons-vue'
 import type { DialogType, ImageItem, RegistryItem, TemplateItem } from '../types'
 import i18n from '@/lang'
 
@@ -167,15 +168,20 @@ defineExpose({
             type="warning"
             show-icon
             :closable="false"
-            :title="t('container.resourceDialog.sensitiveConfigWarning')"
+            class="sensitive-config-alert"
           >
-            <template #default>
+            <template #title>
               <div class="sensitive-config-actions">
-                <span>{{ composeForm.contentMode === 'plaintext' ? t('container.resourceDialog.sensitiveConfigPlaintextActive') : t('container.resourceDialog.sensitiveConfigRedacted') }}</span>
+                <div class="sensitive-config-copy">
+                  <strong>{{ t('container.resourceDialog.sensitiveConfigWarning') }}</strong>
+                  <span>{{ composeForm.contentMode === 'plaintext' ? t('container.resourceDialog.sensitiveConfigPlaintextActive') : t('container.resourceDialog.sensitiveConfigRedacted') }}</span>
+                </div>
                 <el-button
                   v-if="composeForm.contentMode !== 'plaintext'"
-                  link
+                  class="sensitive-config-reveal"
                   type="warning"
+                  plain
+                  :icon="View"
                   @click="revealComposeConfig"
                 >
                   {{ t('container.resourceDialog.revealSensitiveConfig') }}
@@ -466,14 +472,63 @@ defineExpose({
 }
 
 .sensitive-config-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 12px;
+}
+
+.sensitive-config-alert {
+  margin-bottom: 12px;
+
+  :deep(.el-alert__content),
+  :deep(.el-alert__title) {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.sensitive-config-copy {
+  min-width: 0;
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: var(--el-color-warning-dark-2);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  span {
+    margin-top: 3px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.55;
+  }
+}
+
+.sensitive-config-reveal {
+  justify-self: start;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .sensitive-config-reason {
   color: var(--el-color-warning);
+}
+
+@media (max-width: 560px) {
+  .sensitive-config-actions {
+    gap: 10px;
+  }
 }
 
 :deep(.readonly-field .el-input.is-disabled .el-input__wrapper) {

@@ -55,6 +55,7 @@ import {
 import type { DrawerType, DrawerOpenType } from "../index.vue";
 import System from "@/utils/System";
 import { formatBytes } from "@/utils/fileSize";
+import { formatFileTime } from "@/utils/fileTime";
 import FileSearchDialog from "./FileSearchDialog.vue";
 import FileOperationDrawer from "./FileOperationDrawer.vue";
 import FileEditorDrawer from "./FileEditorDrawer.vue";
@@ -585,6 +586,7 @@ const conf = reactive({
       });
       ElMessage.success(t("file.copyDone", "Copied"));
       conf.copyDialog.close();
+      conf.clearClipboard();
       conf.refresh();
     },
   },
@@ -605,7 +607,10 @@ const conf = reactive({
     let failed = false;
     try {
       const { data: res } = await Api.getFileList({ path });
-      conf.fileList = res.files ?? [];
+      conf.fileList = (res.files ?? []).map((file: any) => ({
+        ...file,
+        modTime: formatFileTime(file.modTime),
+      }));
     } catch {
       failed = true;
     } finally {

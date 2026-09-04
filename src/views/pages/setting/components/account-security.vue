@@ -36,6 +36,8 @@ const status = reactive<SecurityStatus>({
   mustChangePassword: false
 })
 const sessions = ref<SessionItem[]>([])
+const sessionPage = ref(1)
+const sessionPageSize = ref(10)
 const setupVisible = ref(false)
 const setupLoading = ref(false)
 const setup = reactive({ secret: '', otpauthUri: '', password: '', code: '' })
@@ -50,7 +52,26 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback
 }
 
+const extractSessions = (value: unknown): SessionItem[] => {
+  if (Array.isArray(value)) return value as SessionItem[]
+  if (!value || typeof value !== 'object') return []
+
+  const payload = value as Record<string, any>
+  const candidates = [
+    payload.items,
+    payload.sessions,
+    payload.data?.items,
+    payload.data?.sessions,
+    payload.data
+  ]
+  return (candidates.find(Array.isArray) || []) as SessionItem[]
+}
+
 const otherSessionCount = computed(() => sessions.value.filter(item => !item.current).length)
+const normalizeSessionPage = () => {
+  const lastPage = Math.max(1, Math.ceil(sessions.value.length / sessionPageSize.value))
+  sessionPage.value = Math.min(sessionPage.value, lastPage)
+}
 const totpStateLabel = computed(() => {
   if (status.totpEnabled) return t('setting.accountSecurity.enabled', 'Enabled')
   if (status.totpSetupPending) return t('setting.accountSecurity.pendingVerification', 'Pending verification')
@@ -87,7 +108,8 @@ const load = async (notify = false) => {
       Api.getSessions()
     ])
     Object.assign(status, statusResponse.data)
-    sessions.value = sessionsResponse.data || []
+    sessions.value = extractSessions(sessionsResponse.data)
+    normalizeSessionPage()
     if (notify) ElMessage.success(t('setting.accountSecurity.statusRefreshed', 'Account and session status refreshed'))
   } catch (error) {
     const message = error instanceof Error && error.message ? error.message : t('setting.accountSecurity.statusLoadFailed', 'Failed to load account and session status')
@@ -255,7 +277,15 @@ onMounted(() => load())
         {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
-    <custom-table :data="sessions" :columns="sessionColumns" :pagination="false" :empty-text="$t('setting.accountSecurity.noActiveSessions')">
+    <custom-table
+      v-model:page="sessionPage"
+      v-model:page-size="sessionPageSize"
+      :data="sessions"
+      :columns="sessionColumns"
+      :page-sizes="[10, 20, 50, 100]"
+      :empty-text="$t('setting.accountSecurity.noActiveSessions')"
+      @update:page-size="sessionPage = 1"
+    >
       <template #remoteIp="{ row }">
           <el-popover
             placement="top-start"

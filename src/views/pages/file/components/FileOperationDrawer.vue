@@ -5,6 +5,7 @@ import { Api } from '@/api/modules'
 import i18n from '@/lang'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import { formatFileTime } from '@/utils/fileTime'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{ (event: 'update:modelValue', value: boolean): void }>()
@@ -101,8 +102,7 @@ const handlePageChange = () => {
   load(true)
 }
 
-const displayTime = (value: string) =>
-  value ? new Date(value).toLocaleString('zh-CN', { hour12: false }) : '-'
+const displayTime = (value: string) => formatFileTime(value)
 const columns = computed<ColumnItem[]>(() => [
   { prop: 'createdAt', label: t('common.time', 'Time'), minWidth: 158, slot: 'createdAt' },
   { prop: 'action', label: t('common.action', 'Action'), minWidth: 170, slot: 'action', className: 'operation-action-column' },

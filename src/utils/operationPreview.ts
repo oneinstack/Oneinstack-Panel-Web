@@ -45,7 +45,7 @@ export interface OperationPreview {
   expiresAt?: string
 }
 
-const normalizeOperationPreview = (response: any): OperationPreview => {
+export const normalizeOperationPreview = (response: any): OperationPreview => {
   const payload = response?.data ?? response
   const preview = payload?.preview ?? payload
   const plan = preview?.plan ?? {}
@@ -126,8 +126,8 @@ const createOperationCancelledError = () => {
   return error
 }
 
-const confirmOperationPreview = async (preview: OperationPreview) => {
-  if (!preview.review?.required) return
+const confirmOperationPreview = async (preview: OperationPreview, forceConfirm = false) => {
+  if (!forceConfirm && !preview.review?.required) return
   try {
     await ElMessageBox.confirm(
       h(OperationPreviewContent, { preview }),
@@ -151,15 +151,26 @@ const confirmOperationPreview = async (preview: OperationPreview) => {
   }
 }
 
+export const createOperationPreview = async (operation: string, payload: unknown) => {
+  const response = await Api.previewOperation({ operation, payload })
+  return normalizeOperationPreview(response)
+}
+
+export const executeOperationPreview = async (
+  preview: OperationPreview,
+  options: { confirmPreview?: boolean; forceConfirm?: boolean } = {},
+) => {
+  if (options.confirmPreview !== false) {
+    await confirmOperationPreview(preview, options.forceConfirm)
+  }
+  return Api.executeOperation(preview.previewId)
+}
+
 export const submitOperation = async <T = any>(
   operation: string,
   payload: unknown,
   options: { confirmPreview?: boolean } = {},
 ) => {
-  const response = await Api.previewOperation({ operation, payload })
-  const preview = normalizeOperationPreview(response)
-  if (options.confirmPreview !== false) {
-    await confirmOperationPreview(preview)
-  }
-  return await Api.executeOperation(preview.previewId) as T
+  const preview = await createOperationPreview(operation, payload)
+  return await executeOperationPreview(preview, options) as T
 }
