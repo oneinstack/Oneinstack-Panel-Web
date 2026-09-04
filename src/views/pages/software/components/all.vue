@@ -596,9 +596,7 @@ const openInstallForm = (item: any, requestedVersion = '') => {
   })
   installForm.value.key = item.key
   installForm.value.version = version
-  // MySQL uses fixed local defaults (root / 3306) and a server-generated
-  // password. Never render legacy catalog fields for those secrets.
-  const config = item.key === 'db' ? [] : parseParams(item.params)
+  const config = parseParams(item.params)
   installForm.items = config
     .filter((field: any) => field?.key)
     .map<FormItem>((field: any) => {
