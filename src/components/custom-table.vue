@@ -42,6 +42,7 @@ interface Props {
   pageSize?: number
   pageSizes?: number[]
   pagination?: boolean
+  paginationBackground?: boolean
   autoPagination?: boolean
   fixedHeader?: boolean
   fixedHeaderHeight?: string | number
@@ -64,6 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
   pageSize: 10,
   pageSizes: () => [10, 20, 50, 100],
   pagination: true,
+  paginationBackground: true,
   total: 0,
   autoPagination: true,
   fixedHeader: false,
@@ -188,7 +190,7 @@ defineExpose({
       <el-pagination
         v-model:current-page="pageModel"
         v-model:page-size="pageSizeModel"
-        background
+        :background="paginationBackground"
         layout="total, sizes, prev, pager, next"
         :total="paginationTotal"
         :page-sizes="pageSizes"

@@ -1785,6 +1785,7 @@ const archiveTaskRunningCount = computed(
         :data="filteredFileList"
         :columns="conf.columns"
         :loading="conf.loading"
+        :pagination-background="false"
       >
         <template #name="{ row }">
           <div class="file-name-cell">
@@ -3315,12 +3316,8 @@ const archiveTaskRunningCount = computed(
   border-top: 1px solid var(--border-subtle);
 }
 
-:deep(.file-data-table .pagination .el-pagination.is-background .btn-next),
-:deep(.file-data-table .pagination .el-pagination.is-background .btn-prev),
-:deep(.file-data-table .pagination .el-pagination.is-background .el-pager li) {
-  min-width: 30px;
-  height: 30px;
-  border-radius: 7px;
+:deep(.file-data-table .pagination .el-pagination) {
+  min-height: 38px;
 }
 
 .file-summary {
