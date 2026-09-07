@@ -1,21 +1,21 @@
 const timezoneSuffix = /(Z|[+-]\d{2}:?\d{2})$/i
-const dateTimeWithoutZone = /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?$/
+const dateTimeWithoutZone = /^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2})(?:\.(\d+))?)?)?$/
+const browserTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
 const parseFileTime = (value: string) => {
   const normalized = value.trim().replace(' ', 'T')
-  if (dateTimeWithoutZone.test(normalized) && !timezoneSuffix.test(normalized)) {
-    const [datePart, timePart = '00:00:00'] = normalized.split('T')
-    const [year, month, day] = datePart.split('-').map(Number)
-    const [hour = '0', minute = '0', secondPart = '0'] = timePart.split(':')
-    const [second = '0', fraction = '0'] = secondPart.split('.')
+  const match = normalized.match(dateTimeWithoutZone)
+
+  if (match && !timezoneSuffix.test(normalized)) {
+    const [, year, month, day, hour = '0', minute = '0', second = '0', fraction = ''] = match
     const milliseconds = Number(fraction.slice(0, 3).padEnd(3, '0'))
 
-    // File APIs return timezone-less timestamps as server wall-clock time.
-    // Keep the displayed clock value unchanged instead of applying a guessed offset.
+    // Legacy file endpoints omit the zone and return server wall-clock time.
+    // Preserve that clock value instead of applying the browser offset a second time.
     return new Date(
-      year,
-      month - 1,
-      day,
+      Number(year),
+      Number(month) - 1,
+      Number(day),
       Number(hour),
       Number(minute),
       Number(second),
@@ -39,7 +39,8 @@ export const formatFileTime = (value?: string | null) => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hourCycle: 'h23'
+    hourCycle: 'h23',
+    timeZone: browserTimeZone
   }).formatToParts(date)
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((item) => item.type === type)?.value || ''

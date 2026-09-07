@@ -456,7 +456,7 @@ onBeforeUnmount(() => {
     :title="task?.resourceName || operationLabel"
     class="container-task-drawer"
     size="840px"
-    :close-on-click-modal="terminal"
+    :close-on-click-modal="true"
     :destroy-on-close="false"
     body-mode="compact"
   >
@@ -648,6 +648,10 @@ onBeforeUnmount(() => {
 }
 
 .task-list-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   border: 1px solid var(--border-subtle);
   border-radius: 8px;
@@ -675,8 +679,8 @@ onBeforeUnmount(() => {
 }
 
 .task-list {
-  min-height: 120px;
-  max-height: 300px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 
@@ -783,9 +787,17 @@ onBeforeUnmount(() => {
 }
 
 .task-content {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+:global(.container-task-drawer .drawerBody) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .overview,

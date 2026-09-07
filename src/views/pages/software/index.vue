@@ -245,8 +245,8 @@ const catalogDetail = computed(() => {
             {{ $t('software.syncNow') }}
           </el-button>
         </div>
-        <div class="category flex justify-between items-center" >
-          <el-tabs v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
+        <div class="category">
+          <el-tabs class="category-tabs" v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
             <el-tab-pane
               v-for="item in conf.tabs.list"
               :key="item.value || item.name"
@@ -355,9 +355,10 @@ const catalogDetail = computed(() => {
 }
 
 .category {
-  display: flex;
-  min-height: 58px;
-  padding: 0 10px 0 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
+  min-height: 64px;
+  padding: 8px 12px;
   align-items: center;
   gap: 16px;
   min-width: 0;
@@ -370,13 +371,16 @@ const catalogDetail = computed(() => {
 
 .category :deep(.el-tabs) {
   min-width: 0;
-  flex: 1 1 auto;
+}
+
+.category :deep(.el-tabs__content) {
+  display: none;
 }
 
 .search-wrap {
-  flex: 0 0 auto;
-  width: min(320px, 100%);
-  padding: 6px 0 6px 16px;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
 }
 
 .pagination {
@@ -447,15 +451,40 @@ const catalogDetail = computed(() => {
   flex-wrap: nowrap;
   gap: 0;
   min-width: max-content;
+  padding: 0;
 }
 
 :deep(.el-tabs__active-bar) {
-  max-width: none;
+  display: none;
 }
 
 :deep(.el-tabs__item) {
   flex: 0 0 auto;
+  height: 40px;
+  margin: 0 2px;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: var(--text-secondary) !important;
+  font-size: 13px;
+  font-weight: 600;
   white-space: nowrap;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover {
+    color: var(--text-primary) !important;
+    background: rgba(var(--primary-color), 0.06);
+  }
+}
+
+:deep(.el-tabs__item.is-active) {
+  border-color: rgba(var(--primary-color), 0.32);
+  background: rgba(var(--primary-color), 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  color: rgb(var(--primary-color)) !important;
 }
 
 @media (max-width: 960px) {
@@ -469,6 +498,7 @@ const catalogDetail = computed(() => {
   }
 
   .category {
+    display: flex;
     align-items: stretch;
     flex-direction: column;
     gap: 10px;

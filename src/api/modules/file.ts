@@ -1,7 +1,7 @@
 import http from "@/api";
 
 export const fileApi = {
-  /** 获取文件列表 */
+  /** 获取文件列表。无时区时间按服务端墙上时间返回，带时区时间由前端转换。 */
   getFileList: (obj: any) => {
     return http.post("/ftp/list", obj);
   },
@@ -21,7 +21,7 @@ export const fileApi = {
   getFileTree: (obj: { path?: string } = {}) => {
     return http.post("/ftp/tree", obj);
   },
-  /** 搜索服务器文件或目录 */
+  /** 搜索服务器文件或目录。时间字段与文件列表使用同一时间规则。 */
   searchFiles: (obj: {
     path: string;
     query: string;
@@ -31,7 +31,7 @@ export const fileApi = {
   }) => {
     return http.post("/ftp/search", obj);
   },
-  /** 获取文件操作记录 */
+  /** 获取文件操作记录。无时区 createdAt 按服务端墙上时间处理。 */
   getFileOperations: (obj?: {
     page?: number;
     pageSize?: number;

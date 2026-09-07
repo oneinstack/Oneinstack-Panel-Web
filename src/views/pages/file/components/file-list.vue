@@ -431,17 +431,7 @@ const archiveTaskProgressText = (task: ArchiveTask) => {
   return taskProgressHint(task);
 };
 const formatArchiveTaskTime = (value?: string) => {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat(i18n.locale === "en-US" ? "en-US" : "zh-CN", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  }).format(date);
+  return value ? formatFileTime(value) : "—";
 };
 const archiveTaskFileName = (path?: string) =>
   String(path || "")
@@ -539,6 +529,7 @@ const conf = reactive({
       label: t("file.columns.modTime", "Modified time"),
       width: "170",
       sortable: true,
+      slot: "modTime",
     },
     {
       prop: "action",
@@ -604,10 +595,7 @@ const conf = reactive({
     let failed = false;
     try {
       const { data: res } = await Api.getFileList({ path });
-      conf.fileList = (res.files ?? []).map((file: any) => ({
-        ...file,
-        modTime: formatFileTime(file.modTime),
-      }));
+      conf.fileList = res.files ?? [];
     } catch {
       failed = true;
     } finally {
@@ -1860,6 +1848,9 @@ const archiveTaskRunningCount = computed(
             <span v-else class="identity-owner">{{ row.user }}</span>
           </div>
         </template>
+        <template #modTime="{ row }">
+          {{ formatFileTime(row.modTime) }}
+        </template>
         <template #action="{ row }">
           <div class="row-actions table-row-actions">
     <el-button
@@ -2103,7 +2094,7 @@ const archiveTaskRunningCount = computed(
             <span
               >{{ fileTypeLabel(row) }} · {{ row.isDir ? "—" : row.size }}</span
             >
-            <small>{{ row.modTime }}</small>
+            <small>{{ formatFileTime(row.modTime) }}</small>
           </div>
           <el-dropdown
             trigger="click"
@@ -2749,7 +2740,7 @@ const archiveTaskRunningCount = computed(
             </div>
             <div class="properties-row">
               <span>{{ t("file.columns.modTime", "Modified time") }}</span>
-              <strong>{{ conf.operationDialog.properties.modTime }}</strong>
+              <strong>{{ formatFileTime(conf.operationDialog.properties.modTime) }}</strong>
             </div>
           </div>
           <div class="properties-actions">
