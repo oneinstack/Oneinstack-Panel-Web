@@ -6,6 +6,7 @@ import { Bell, Delete, EditPen } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
 import { useAppStore } from '@/stores/modules/app'
+import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import { hasOperationAccess } from '@/utils/access'
@@ -222,6 +223,18 @@ const dashboardLoading = ref(false)
 const serviceChecking = ref(false)
 const tableLoading = ref(false)
 const activeTab = ref('rules')
+const monitorTabItems = computed(() => [
+  {
+    key: 'rules',
+    label: t('monitor.rulesTabLabel', `Alert rules (${enabledRuleCount.value}/${ruleCount.value})`, {
+      enabled: enabledRuleCount.value,
+      total: ruleCount.value
+    })
+  },
+  { key: 'events', label: t('monitor.events', 'Alert events') },
+  { key: 'channels', label: t('monitor.channels', 'Notification channels') },
+  { key: 'deliveries', label: t('monitor.deliveries', 'Deliveries') }
+])
 const eventTotal = ref(0)
 const deliveryTotal = ref(0)
 const eventFilters = reactive({
@@ -702,7 +715,8 @@ const loadDeliveries = async () => {
   }
 }
 
-const refreshCurrentTab = () => {
+const refreshCurrentTab = (value?: string) => {
+  if (value) activeTab.value = value
   if (activeTab.value === 'rules') return loadRules()
   if (activeTab.value === 'events') return loadEvents()
   if (activeTab.value === 'channels') return loadChannels()
@@ -1069,10 +1083,14 @@ onUnmounted(() => {
       <el-empty v-else :description="$t('monitor.noHistorySamples')" />
     </div>
 
+    <SystemManagementTabs
+      :items="monitorTabItems"
+      :active-key="activeTab"
+      @update:active-key="refreshCurrentTab"
+    />
+
     <div class="management-panel">
-      <el-tabs v-model="activeTab" @tab-change="refreshCurrentTab">
-        <el-tab-pane name="rules">
-          <template #label>{{ $t('monitor.rulesTabLabel', { enabled: enabledRuleCount, total: ruleCount }) }}</template>
+      <div v-if="activeTab === 'rules'" class="monitor-tab-content">
           <div class="toolbar">
             <span>{{ $t('monitor.ruleResetHint') }}</span>
             <el-button v-if="canWriteMonitor" type="primary" @click="openCreateRule">{{ $t('monitor.createRuleShort') }}</el-button>
@@ -1109,9 +1127,9 @@ onUnmounted(() => {
             </template>
             <template #empty><el-empty :description="$t('monitor.noRules')" /></template>
           </custom-table>
-        </el-tab-pane>
+      </div>
 
-        <el-tab-pane name="events" :label="$t('monitor.events')">
+      <div v-else-if="activeTab === 'events'" class="monitor-tab-content">
           <div class="filters">
             <el-select v-model="eventFilters.eventType" clearable :placeholder="$t('monitor.eventType')">
               <el-option :label="$t('monitor.eventTypes.triggered')" value="triggered" />
@@ -1157,9 +1175,9 @@ onUnmounted(() => {
               @size-change="eventFilters.page = 1; loadEvents()"
             />
           </div>
-        </el-tab-pane>
+      </div>
 
-        <el-tab-pane name="channels" :label="$t('monitor.channels')">
+      <div v-else-if="activeTab === 'channels'" class="monitor-tab-content">
           <div class="toolbar">
             <span>{{ $t('monitor.channelSecurityHint') }}</span>
             <el-button v-if="canManageChannels" type="primary" @click="openCreateChannel">{{ $t('monitor.createChannelShort') }}</el-button>
@@ -1179,9 +1197,9 @@ onUnmounted(() => {
             </template>
             <template #empty><el-empty :description="$t('monitor.noChannels')" /></template>
           </custom-table>
-        </el-tab-pane>
+      </div>
 
-        <el-tab-pane name="deliveries" :label="$t('monitor.deliveries')">
+      <div v-else-if="activeTab === 'deliveries'" class="monitor-tab-content">
           <div class="filters">
             <el-select v-model="deliveryFilters.status" clearable :placeholder="$t('monitor.deliveryResult')" @change="deliveryFilters.page = 1; loadDeliveries()">
               <el-option :label="$t('common.success')" value="success" />
@@ -1211,8 +1229,7 @@ onUnmounted(() => {
               @size-change="deliveryFilters.page = 1; loadDeliveries()"
             />
           </div>
-        </el-tab-pane>
-      </el-tabs>
+      </div>
     </div>
 
     <custom-drawer
@@ -1311,6 +1328,14 @@ onUnmounted(() => {
 .monitor-page {
   min-height: 100%;
   padding-bottom: 28px;
+}
+
+.monitor-page > :deep(.system-management-tabs) {
+  margin-bottom: 18px;
+}
+
+.monitor-tab-content {
+  min-width: 0;
 }
 
 .page-heading, .panel-heading, .toolbar {

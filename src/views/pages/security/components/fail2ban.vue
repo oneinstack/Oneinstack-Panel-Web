@@ -490,7 +490,7 @@ const unbanRecordColumns = computed<ColumnItem<UnbanRecord>[]>(() => [
 const taskColumns = computed<ColumnItem<Fail2banTask>[]>(() => [
   { prop: 'createdAt', label: t('common.time', '时间'), minWidth: 170, slot: 'createdAt' },
   { prop: 'operation', label: t('security.fail2ban.task.operation', '操作'), minWidth: 120, slot: 'operation' },
-  { prop: 'status', label: t('security.fail2ban.task.status', '状态'), width: 100, slot: 'status' },
+  { prop: 'status', label: t('security.fail2ban.task.status', '状态'), width: 120, slot: 'status' },
   { prop: 'phase', label: t('security.fail2ban.task.phase', '阶段'), minWidth: 120 },
   { prop: 'progress', label: t('security.fail2ban.task.progress', '进度'), minWidth: 140, slot: 'progress' },
   { prop: 'message', label: t('security.fail2ban.task.message', '消息'), minWidth: 220, showOverflowTooltip: true }

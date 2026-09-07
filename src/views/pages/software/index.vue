@@ -357,8 +357,8 @@ const catalogDetail = computed(() => {
 .category {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(220px, 300px);
-  min-height: 64px;
-  padding: 8px 12px;
+  min-height: 62px;
+  padding: 0 12px;
   align-items: center;
   gap: 16px;
   min-width: 0;
@@ -405,6 +405,7 @@ const catalogDetail = computed(() => {
 
 :deep(.el-tabs__header) {
   margin: 0;
+  height: 62px;
   min-width: 0;
 }
 
@@ -412,8 +413,18 @@ const catalogDetail = computed(() => {
   min-width: 0;
 }
 
-:deep(.el-tabs__nav-prev),
-:deep(.el-tabs__nav-next) {
+:deep(.el-tabs__nav-wrap) {
+  height: 62px;
+  margin-bottom: 0;
+}
+
+.category :deep(.el-tabs__nav-wrap.is-scrollable) {
+  box-sizing: border-box;
+  padding: 0 44px !important;
+}
+
+.category :deep(.el-tabs__nav-prev),
+.category :deep(.el-tabs__nav-next) {
   width: 30px !important;
   height: 30px !important;
   top: 50% !important;
@@ -424,7 +435,9 @@ const catalogDetail = computed(() => {
   transform: translateY(-50%) !important;
   border-radius: 9px;
   color: var(--text-tertiary);
+  background: var(--surface-subtle);
   line-height: 30px !important;
+  z-index: 2;
   transition:
     color 0.18s ease,
     background-color 0.18s ease,
@@ -455,35 +468,31 @@ const catalogDetail = computed(() => {
 }
 
 :deep(.el-tabs__active-bar) {
-  display: none;
+  display: block;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: rgb(var(--primary-color));
 }
 
 :deep(.el-tabs__item) {
   flex: 0 0 auto;
-  height: 40px;
-  margin: 0 2px;
-  padding: 0 13px;
-  border: 1px solid transparent;
-  border-radius: 8px;
+  height: 62px;
+  margin: 0;
+  padding: 0 16px;
   color: var(--text-secondary) !important;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   white-space: nowrap;
   transition:
-    color 0.18s ease,
-    background-color 0.18s ease,
-    border-color 0.18s ease;
+    color 0.18s ease;
 
   &:hover {
     color: var(--text-primary) !important;
-    background: rgba(var(--primary-color), 0.06);
   }
 }
 
 :deep(.el-tabs__item.is-active) {
-  border-color: rgba(var(--primary-color), 0.32);
-  background: rgba(var(--primary-color), 0.12);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   color: rgb(var(--primary-color)) !important;
 }
 

@@ -527,7 +527,7 @@ const conf = reactive({
     {
       prop: "modTime",
       label: t("file.columns.modTime", "Modified time"),
-      width: "170",
+      width: "190",
       sortable: true,
       slot: "modTime",
     },
@@ -1849,7 +1849,7 @@ const archiveTaskRunningCount = computed(
           </div>
         </template>
         <template #modTime="{ row }">
-          {{ formatFileTime(row.modTime) }}
+          <span class="file-mod-time">{{ formatFileTime(row.modTime) }}</span>
         </template>
         <template #action="{ row }">
           <div class="row-actions table-row-actions">
@@ -3302,6 +3302,10 @@ const archiveTaskRunningCount = computed(
 
 :deep(.file-data-table .smart-table .cell) {
   padding: 0 11px;
+}
+
+.file-mod-time {
+  white-space: nowrap;
 }
 
 :deep(.file-data-table .pagination) {

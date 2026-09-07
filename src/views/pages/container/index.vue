@@ -38,6 +38,7 @@ import ContainerDetailDrawer from "./components/ContainerDetailDrawer.vue";
 import ContainerLogsDialog from "./components/ContainerLogsDialog.vue";
 import ContainerTerminalDrawer from "./components/ContainerTerminalDrawer.vue";
 import ContainerTaskDrawer from "./components/ContainerTaskDrawer.vue";
+import SystemManagementTabs from "@/views/pages/system-management/components/system-management-tabs.vue";
 import { useContainerTaskStore } from "@/stores/modules/containerTask";
 import type {
   ComposeProjectItem,
@@ -73,6 +74,16 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 };
 
 const activeTab = ref<ResourceTab>("containers");
+const resourceTabItems = [
+  { key: "containers", label: "Containers", labelKey: "container.containers" },
+  { key: "images", label: "Images", labelKey: "container.images" },
+  { key: "networks", label: "Networks", labelKey: "container.networks" },
+  { key: "volumes", label: "Volumes", labelKey: "container.volumes" },
+  { key: "compose", label: "Compose", labelKey: "container.composeRuntime" },
+  { key: "templates", label: "Templates", labelKey: "container.templates" },
+  { key: "registries", label: "Registries", labelKey: "container.registries" },
+  { key: "config", label: "Docker config", labelKey: "container.dockerConfig" },
+];
 const runtime = ref<RuntimeInfo | null>(null);
 const runtimeLoading = ref(false);
 const listLoading = ref(false);
@@ -3455,7 +3466,8 @@ const runRuntimeAction = async (action: "stop" | "restart") => {
   }
 };
 
-const handleTabChange = () => {
+const handleTabChange = (value?: string) => {
+  if (value) activeTab.value = value as ResourceTab;
   void loadActiveTab();
 };
 
@@ -3604,37 +3616,12 @@ onBeforeUnmount(() => {
 
     <section class="resource-panel">
       <div class="panel-top">
-        <el-tabs v-model="activeTab" @tab-change="handleTabChange">
-          <el-tab-pane
-            :label="t('container.containers', 'Containers')"
-            name="containers"
-          />
-          <el-tab-pane :label="t('container.images', 'Images')" name="images" />
-          <el-tab-pane
-            :label="t('container.networks', 'Networks')"
-            name="networks"
-          />
-          <el-tab-pane
-            :label="t('container.volumes', 'Volumes')"
-            name="volumes"
-          />
-          <el-tab-pane
-            :label="t('container.composeRuntime', 'Compose')"
-            name="compose"
-          />
-          <el-tab-pane
-            :label="t('container.templates', 'Templates')"
-            name="templates"
-          />
-          <el-tab-pane
-            :label="t('container.registries', 'Registries')"
-            name="registries"
-          />
-          <el-tab-pane
-            :label="t('container.dockerConfig', 'Docker config')"
-            name="config"
-          />
-        </el-tabs>
+        <SystemManagementTabs
+          class="resource-tabs"
+          :items="resourceTabItems"
+          :active-key="activeTab"
+          @update:active-key="handleTabChange"
+        />
         <div class="panel-actions">
           <el-button
             v-if="activeTab === 'containers'"
@@ -4866,26 +4853,16 @@ onBeforeUnmount(() => {
 
 .panel-top {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
-  min-height: 52px;
+  min-height: 62px;
   margin-bottom: 14px;
-  border-bottom: 1px solid var(--border-subtle);
 }
 
-.panel-top :deep(.el-tabs__header) {
-  margin: 0;
-}
-
-.panel-top :deep(.el-tabs__nav-wrap::after) {
-  display: none;
-}
-
-.panel-top :deep(.el-tabs__item) {
-  height: 48px;
-  padding: 0 18px;
-  font-weight: 700;
+.panel-top :deep(.resource-tabs) {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .panel-actions {
@@ -5252,6 +5229,10 @@ onBeforeUnmount(() => {
   .panel-top {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .panel-top :deep(.resource-tabs) {
+    width: 100%;
   }
 }
 

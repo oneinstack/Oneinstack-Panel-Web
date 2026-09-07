@@ -29,6 +29,7 @@ import CertificateBindDrawer from './components/CertificateBindDrawer.vue'
 import CertificateTaskDrawer from './components/CertificateTaskDrawer.vue'
 import DnsAccountDrawer from './components/DnsAccountDrawer.vue'
 import CertificateIssueDrawer from './components/CertificateIssueDrawer.vue'
+import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
 import {
   certificateDnsProviderLabel,
   certificateOperationLabel,
@@ -67,6 +68,12 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
+
+const certificateTabItems = computed(() => [
+  { key: 'certificates', label: t('certificate.tabs.certificates', 'Certificates'), labelKey: 'certificate.tabs.certificates' },
+  { key: 'tasks', label: t('certificate.tabs.tasks', 'Tasks'), labelKey: 'certificate.tabs.tasks' },
+  { key: 'dnsAccounts', label: t('certificate.tabs.dnsAccounts', 'DNS accounts'), labelKey: 'certificate.tabs.dnsAccounts' }
+])
 
 const canRead = computed(() =>
   sconfig.hasActionAccess('certificate.read') || sconfig.hasScopeAccess('certificate', 'read')
@@ -168,6 +175,12 @@ const refreshCurrent = () => {
   if (activeTab.value === 'tasks') return loadTasks()
   if (activeTab.value === 'dnsAccounts') return loadDnsAccounts()
   return loadCertificates()
+}
+
+const handleTabChange = (value: string) => {
+  if (!certificateTabItems.value.some((item) => item.key === value)) return
+  activeTab.value = value
+  void refreshCurrent()
 }
 
 const openCreate = (mode: 'upload' | 'self-signed') => {
@@ -434,9 +447,14 @@ onBeforeUnmount(() => {
       :closable="false"
     />
 
-    <section v-else class="certificate-panel">
-      <el-tabs v-model="activeTab" class="certificate-tabs">
-        <el-tab-pane :label="$t('certificate.tabs.certificates')" name="certificates">
+    <section v-else class="certificate-content">
+      <SystemManagementTabs
+        :items="certificateTabItems"
+        :active-key="activeTab"
+        @update:active-key="handleTabChange"
+      />
+      <section class="certificate-panel">
+        <div v-if="activeTab === 'certificates'" class="certificate-tab-content">
           <custom-table
             v-model:page="certificateQuery.page"
             v-model:page-size="certificateQuery.pageSize"
@@ -468,9 +486,9 @@ onBeforeUnmount(() => {
               </div>
             </template>
           </custom-table>
-        </el-tab-pane>
+        </div>
 
-        <el-tab-pane :label="$t('certificate.tabs.tasks')" name="tasks">
+        <div v-else-if="activeTab === 'tasks'" class="certificate-tab-content">
           <div class="tab-tools">
             <el-select v-model="taskQuery.status" clearable style="width: 180px" :placeholder="$t('certificate.status.all')" @change="taskQuery.page = 1; loadTasks()">
               <el-option v-for="status in ['queued', 'running', 'canceling', 'succeeded', 'failed', 'canceled', 'interrupted']" :key="status" :label="certificateStatusLabel(status)" :value="status" />
@@ -506,9 +524,9 @@ onBeforeUnmount(() => {
               </div>
             </template>
           </custom-table>
-        </el-tab-pane>
+        </div>
 
-        <el-tab-pane :label="$t('certificate.tabs.dnsAccounts')" name="dnsAccounts">
+        <div v-else-if="activeTab === 'dnsAccounts'" class="certificate-tab-content">
           <div class="tab-tools tab-tools--right">
             <el-button v-if="canWrite" type="primary" :icon="Plus" @click="editDnsAccount()">
               {{ $t('certificate.actions.addDnsAccount') }}
@@ -534,8 +552,8 @@ onBeforeUnmount(() => {
               </div>
             </template>
           </custom-table>
-        </el-tab-pane>
-      </el-tabs>
+        </div>
+      </section>
     </section>
 
     <certificate-form-drawer
@@ -582,6 +600,16 @@ onBeforeUnmount(() => {
   min-height: 100%;
 }
 
+.certificate-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.certificate-tab-content {
+  min-width: 0;
+}
+
 .page-toolbar,
 .toolbar-actions,
 .tab-tools {
@@ -613,18 +641,6 @@ onBeforeUnmount(() => {
   border-radius: 14px;
   background: var(--surface-card);
   box-shadow: var(--shadow-xs);
-}
-
-.certificate-tabs {
-  :deep(.el-tabs__header) {
-    margin-bottom: 18px;
-  }
-
-  :deep(.el-tabs__item) {
-    height: 54px;
-    padding: 0 24px;
-    font-weight: 650;
-  }
 }
 
 .tab-tools {

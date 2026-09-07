@@ -45,5 +45,6 @@ export const formatFileTime = (value?: string | null) => {
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((item) => item.type === type)?.value || ''
 
-  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}:${part('second')}`
+  // Keep the date and time glued together so table cells do not wrap them onto two lines.
+  return `${part('year')}-${part('month')}-${part('day')}\u00A0${part('hour')}:${part('minute')}:${part('second')}`
 }

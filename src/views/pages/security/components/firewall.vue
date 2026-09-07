@@ -13,6 +13,7 @@ import {
 } from "@/utils/operationPreview";
 import InstallTaskDrawer from "../../software/components/InstallTaskDrawer.vue";
 import Addfirewall from "./addfirewall.vue";
+import SystemManagementTabs from "@/views/pages/system-management/components/system-management-tabs.vue";
 import type { ColumnItem } from "@/components/custom-table.vue";
 
 interface SecurityCapabilities {
@@ -276,6 +277,12 @@ const buildUnifiedStatus = (
 };
 
 const status = ref<FirewallStatus>(defaultStatus());
+const ruleTabItems = computed(() =>
+  tabs.map((tab) => ({
+    key: tab.key,
+    label: `${t(tab.labelKey, tab.fallback)} ${status.value.counts[tab.countKey]}`,
+  }))
+);
 const activeTab = ref<RuleTab>("port");
 const ruleRows = ref<FirewallRule[]>([]);
 const forwardRows = ref<PortForward[]>([]);
@@ -806,6 +813,11 @@ const switchTab = (tab: RuleTab) => {
   activeTab.value = tab;
   pagination.currentPage = 1;
   searchValue.value = "";
+};
+
+const handleRuleTabChange = (value: string) => {
+  const tab = tabs.find((item) => item.key === value)?.key;
+  if (tab) switchTab(tab);
 };
 
 const openAddDialog = () => {
@@ -1467,19 +1479,11 @@ onMounted(() => {
       show-icon
     />
 
-    <nav class="rule-tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        type="button"
-        class="rule-tab"
-        :class="{ active: activeTab === tab.key }"
-        @click="switchTab(tab.key)"
-      >
-        <span>{{ t(tab.labelKey, tab.fallback) }}</span>
-        <strong>{{ status.counts[tab.countKey] }}</strong>
-      </button>
-    </nav>
+    <SystemManagementTabs
+      :items="ruleTabItems"
+      :active-key="activeTab"
+      @update:active-key="handleRuleTabChange"
+    />
 
     <section v-if="activeTab === 'auto_block'" class="auto-card">
       <div class="auto-heading">
@@ -2110,52 +2114,6 @@ onMounted(() => {
   }
 }
 
-.rule-tabs {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  overflow: hidden;
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  background: var(--surface-card);
-}
-
-.rule-tab {
-  min-height: 62px;
-  padding: 12px 16px;
-  border: 0;
-  border-right: 1px solid var(--border-color);
-  color: var(--text-secondary);
-  background: transparent;
-  cursor: pointer;
-  transition:
-    background 0.2s,
-    color 0.2s;
-
-  &:last-child {
-    border-right: 0;
-  }
-
-  span,
-  strong {
-    display: inline-block;
-  }
-
-  strong {
-    margin-left: 7px;
-    color: var(--text-primary);
-  }
-
-  &.active {
-    color: rgb(var(--primary-color));
-    background: rgba(var(--primary-color), 0.08);
-    box-shadow: inset 0 -2px 0 rgb(var(--primary-color));
-
-    strong {
-      color: rgb(var(--primary-color));
-    }
-  }
-}
-
 .rules-card {
   overflow: hidden;
 }
@@ -2334,14 +2292,6 @@ onMounted(() => {
 }
 
 @media (max-width: 1100px) {
-  .rule-tabs {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .rule-tab {
-    border-bottom: 1px solid var(--border-color);
-  }
-
   .auto-fields {
     grid-template-columns: repeat(2, minmax(160px, 1fr));
   }
@@ -2369,7 +2319,6 @@ onMounted(() => {
     margin-left: 0;
   }
 
-  .rule-tabs,
   .auto-fields,
   .form-grid {
     grid-template-columns: 1fr;
