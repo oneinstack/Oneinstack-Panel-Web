@@ -182,6 +182,7 @@ const conf = reactive({
       children: [
         { name: 'System management', path: '/system-management', icon: systemManagementIcon, activeIcon: systemManagementActiveIcon, actionKeys: ['system.settings.read'], activeColor: navActiveColor },
         { name: 'User management', path: '/user-management', icon: userManagementIcon, activeIcon: userManagementActiveIcon, matrixKeys: ['userManagement'], activeColor: navActiveColor },
+        { name: 'Menu management', path: '/menu-management', icon: systemManagementIcon, activeIcon: systemManagementActiveIcon, actionKeys: ['userManagement.write', 'menu.write', 'menu.status.write'], activeColor: navActiveColor },
         { name: 'Panel settings', path: '/setting', icon: panelSettingsIcon, activeIcon: panelSettingsActiveIcon, matrixKeys: ['panelSettings'], activeColor: navActiveColor }
       ]
     }
@@ -281,6 +282,7 @@ const menuPathLocaleKey: Record<string, string> = {
   '/config-snapshots': 'configSnapshots',
   '/system-management': 'systemManagement',
   '/user-management': 'userManagement',
+  '/menu-management': 'menuManagement',
   '/approval-center': 'approval'
 }
 const translateWithFallback = (key: string, fallback: string, params?: Record<string, any>) => {

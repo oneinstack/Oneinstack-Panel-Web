@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, FormInstance } from 'element-plus'
-import { Warning } from '@element-plus/icons-vue'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
@@ -117,10 +116,8 @@ const installForm = reactive<FormProps['data']>({
   },
   items: []
 })
-const installVersionLines = ref<string[]>([])
-const maxInstallVersionLine = computed(() =>
-  installVersionLines.value[installVersionLines.value.length - 1] || ''
-)
+const installVersions = ref<string[]>([])
+const installRecommendedVersion = ref('')
 
 const drawer = reactive({
   show: false,
@@ -446,14 +443,11 @@ const parseParams = (params: any): any[] => {
   }
 }
 
-const getVersionLines = (item: any) => {
-  const lines = item?.versionLines ?? item?.version_lines
-  if (Array.isArray(lines)) {
-    return lines.map((line) => String(line || '').trim()).filter(Boolean)
-  }
-  if (lines) return String(lines).split(/[,，]/).map((line) => line.trim()).filter(Boolean)
-  return []
-}
+const getInstallVersions = (item: any): string[] => Array.from(new Set<string>(
+  ((Array.isArray(item?.versions) ? item.versions : []) as unknown[])
+    .map((version: unknown) => String(version || '').trim())
+    .filter(Boolean)
+))
 
 const isSoftwareVersionField = (field: any) => {
   const key = String(field?.key || field?.prop || '').toLowerCase()
@@ -467,18 +461,6 @@ const installFieldType = (field: any): FormItem['type'] => {
     return 'password'
   }
   return 'input'
-}
-
-const isValidVersionSegment = (segment: string) => segment.toLowerCase() === 'x' || /^\d+$/.test(segment)
-
-const matchesVersionLine = (version: string, line: string) => {
-  const versionParts = version.trim().split('.')
-  const lineParts = line.trim().split('.')
-  if (versionParts.length < lineParts.length || !versionParts.every(isValidVersionSegment)) return false
-
-  return lineParts.every((part, index) =>
-    part.toLowerCase() === 'x' || versionParts[index] === part
-  )
 }
 
 const isPasswordInstallField = (field: any) => {
@@ -549,23 +531,6 @@ const buildInstallFieldRules = (field: any) => {
   return rules
 }
 
-const buildVersionFieldRules = (versionLines: string[]) => {
-  if (!versionLines.length) return []
-  return [{
-    validator: (_rule: any, value: unknown, callback: (error?: Error) => void) => {
-      const version = String(value || '').trim()
-      if (!version || versionLines.some((line) => matchesVersionLine(version, line))) {
-        callback()
-        return
-      }
-      callback(new Error(t('software.versionLimitError', 'Software version must match: {versions}', {
-        versions: versionLines.join(', ')
-      })))
-    },
-    trigger: 'blur'
-  }]
-}
-
 const defaultInstallFieldValue = (field: any) => {
   if (isPasswordInstallField(field)) return ''
   const value = field?.default ?? field?.defaultValue ?? field?.default_value
@@ -589,8 +554,12 @@ const installFieldPlaceholder = (field: any) => {
 
 const openInstallForm = (item: any, requestedVersion = '') => {
   if (!item) return
-  const version = requestedVersion || item.install_version || recommendedVersion(item)
-  installVersionLines.value = getVersionLines(item)
+  installVersions.value = getInstallVersions(item)
+  installRecommendedVersion.value = String(recommendedVersion(item) || '').trim()
+  const preferredVersion = requestedVersion || item.install_version || recommendedVersion(item)
+  const version = installVersions.value.includes(preferredVersion)
+    ? preferredVersion
+    : installVersions.value[0] || ''
   Object.keys(installForm.value).forEach((key) => {
     delete installForm.value[key]
   })
@@ -600,16 +569,15 @@ const openInstallForm = (item: any, requestedVersion = '') => {
   installForm.items = config
     .filter((field: any) => field?.key)
     .map<FormItem>((field: any) => {
-      installForm.value[field.key] = defaultInstallFieldValue(field)
+      installForm.value[field.key] = isSoftwareVersionField(field)
+        ? version
+        : defaultInstallFieldValue(field)
       return {
         label: field.name || field.value || field.key,
         type: installFieldType(field),
         prop: field.key,
         placeholder: installFieldPlaceholder(field),
-        rules: [
-          ...buildInstallFieldRules(field),
-          ...(isSoftwareVersionField(field) ? buildVersionFieldRules(installVersionLines.value) : [])
-        ]
+        rules: buildInstallFieldRules(field)
       }
     })
   if (installForm.items.length === 0) {
@@ -630,12 +598,16 @@ const buildInstallPayload = (request: Record<string, any>) => {
 
 const handleInstall = async () => {
   if (submitting.value || !canWriteSoftware.value) return
-  submitting.value = true
   const request = { ...installForm.value }
   const versionField = installForm.items.find((field) => isSoftwareVersionField(field))
   if (versionField) {
     request.version = String(request[versionField.prop] ?? '').trim()
+    if (!installVersions.value.includes(request.version)) {
+      ElMessage.warning(t('software.selectVersion', 'Select an available software version'))
+      return
+    }
   }
+  submitting.value = true
   const payload = buildInstallPayload(request)
   try {
     const { data: result } = await submitOperation('software.install', payload, {
@@ -969,15 +941,19 @@ watch(
         <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
           <template #software-version="{ row }">
             <div class="software-version-control">
-              <el-input
+              <el-select
                 v-model="installForm.value[row.prop]"
                 :placeholder="row.placeholder"
-                clearable
-              />
-              <span v-if="installVersionLines.length" class="software-version-hint">
-                <el-icon aria-hidden="true"><Warning /></el-icon>
-                {{ t('software.versionLimitHint', 'Maximum supported version line: {versions}', { versions: maxInstallVersionLine }) }}
-              </span>
+                :disabled="installVersions.length === 0"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="version in installVersions"
+                  :key="version"
+                  :label="version === installRecommendedVersion ? `${version} (${t('software.recommended', 'Recommended')})` : version"
+                  :value="version"
+                />
+              </el-select>
             </div>
           </template>
         </custom-form>
@@ -1437,21 +1413,6 @@ watch(
   width: 100%;
 }
 
-.software-version-hint {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
-  color: var(--text-tertiary);
-  font-size: 12px;
-  line-height: 1.45;
-
-  .el-icon {
-    flex: none;
-    color: var(--el-color-warning);
-    font-size: 14px;
-  }
-}
 
 @media (max-width: 900px) {
   .section-header {

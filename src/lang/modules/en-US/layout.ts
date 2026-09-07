@@ -45,6 +45,7 @@ export default {
     configSnapshots: 'Config snapshots',
     systemManagement: 'System management',
     userManagement: 'User management',
+    menuManagement: 'Menu management',
     approval: 'Approval center',
     logout: 'Sign out'
   },
@@ -69,6 +70,7 @@ export default {
     configSnapshots: 'View config snapshots, diffs, and safe rollback',
     systemManagement: 'View processes, effective SSH config, and mounted disks',
     userManagement: 'Manage user accounts, permissions, and roles',
+    menuManagement: 'Manage system menu nodes, status, and permission links',
     approval: 'Review approvals and handle high-risk operation requests',
     fallback: 'OneinStack server management center'
   },

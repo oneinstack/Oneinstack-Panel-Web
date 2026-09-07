@@ -45,6 +45,7 @@ export default {
     configSnapshots: '配置快照',
     systemManagement: '系统管理',
     userManagement: '用户管理',
+    menuManagement: '菜单管理',
     approval: '审批中心',
     logout: '退出'
   },
@@ -69,6 +70,7 @@ export default {
     configSnapshots: '查看配置快照、差异并执行安全回滚',
     systemManagement: '查看系统进程、SSH 生效配置与磁盘挂载状态',
     userManagement: '管理用户账号、权限与角色',
+    menuManagement: '管理系统菜单节点、状态与权限关联',
     approval: '查看审批记录、处理高风险操作申请',
     fallback: 'OneinStack 服务器管理中心'
   },
