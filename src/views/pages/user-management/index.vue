@@ -3,7 +3,16 @@ import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
 import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
 import RoleMenuTreeNode from './components/role-menu-tree-node.vue'
-import { Api, type AccessMenuNode, type AccessPermission, type AccessRole as ApiAccessRole } from '@/api/modules'
+import {
+  Api,
+  type AccessMenuFeatureKey,
+  type AccessMenuNode,
+  type AccessMenuPayload,
+  type AccessMenuTargetType,
+  type AccessMenuType,
+  type AccessPermission,
+  type AccessRole as ApiAccessRole
+} from '@/api/modules'
 import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
@@ -41,17 +50,22 @@ interface RoleEditorForm {
 interface MenuEditorForm {
   key: string
   parentKey: string
-  type: 'directory' | 'page' | 'button'
+  type: AccessMenuType
   name: string
   nameEn: string
-  targetType: 'route' | 'action' | ''
+  targetType: AccessMenuTargetType | ''
   targetKey: string
   iconKey: string
   sort: number
   enabled: boolean
   superAdminOnly: boolean
-  featureKey: 'terminal' | 'bastion' | ''
+  featureKey: AccessMenuFeatureKey | ''
   permissionCodes: string[]
+}
+
+interface MenuTargetOption {
+  label: string
+  value: string
 }
 
 interface PermissionGroup {
@@ -502,6 +516,33 @@ const menuTypeTagType = (type?: AccessMenuNode['type']) => {
   if (type === 'button') return 'info'
   return 'primary'
 }
+const confirmMenuStatusChange = async (menu: AccessMenuNode) => {
+  const key = String(menu?.key || '').trim()
+  if (!key || !canManageMenus.value || loading.menuStatusKey) return false
+
+  const enabled = menu.enabled === false
+  try {
+    await ElMessageBox.confirm(
+      t(
+        enabled ? 'userManagement.enableMenuConfirm' : 'userManagement.disableMenuConfirm',
+        enabled ? 'Enable menu "{name}"?' : 'Disable menu "{name}"?',
+        { name: menu.name || key }
+      ),
+      t(
+        enabled ? 'userManagement.enableMenu' : 'userManagement.disableMenu',
+        enabled ? 'Enable menu' : 'Disable menu'
+      ),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm', 'Confirm'),
+        cancelButtonText: t('common.cancel', 'Cancel')
+      }
+    )
+    return true
+  } catch {
+    return false
+  }
+}
 const updateMenuStatus = async (menu: AccessMenuNode, value: boolean | string | number) => {
   const key = String(menu?.key || '').trim()
   if (!key || !canManageMenus.value || loading.menuStatusKey) return
@@ -539,12 +580,52 @@ const menuParentOptions = computed(() =>
       disabled: Boolean(item.type === 'button')
     }))
 )
-const routeTargetOptions = computed(() =>
+const menuTargetTypeOptions = computed<MenuTargetOption[]>(() => {
+  if (menuEditorDialog.form.type === 'page') {
+    return [{ label: t('userManagement.targetTypes.route', 'Route'), value: 'route' }]
+  }
+  if (menuEditorDialog.form.type === 'button') {
+    return [{ label: t('userManagement.targetTypes.action', 'Action'), value: 'action' }]
+  }
+  return []
+})
+const routeTargetOptions = computed<MenuTargetOption[]>(() =>
   menuPathKeyMap.map((item) => ({
     label: `${item.path} · ${item.key}`,
     value: item.path
   }))
 )
+const actionTargetOptions = computed<MenuTargetOption[]>(() => {
+  const parentKey = menuEditorDialog.form.parentKey.trim()
+  const parent = parentKey ? findMenuByKey(menus.value, parentKey) : null
+  const seen = new Set<string>()
+  const options: MenuTargetOption[] = []
+  const parentPermissions = parent?.permissions || []
+  parentPermissions.forEach((permission) => {
+    const value = String(permission.code || permission.action || '').trim()
+    if (!value || seen.has(value)) return
+    seen.add(value)
+    options.push({
+      label: `${value} · ${permission.name || value}`,
+      value
+    })
+  })
+  return options.sort((left, right) => left.value.localeCompare(right.value))
+})
+const currentTargetOptions = computed(() => {
+  const options = menuEditorDialog.form.targetType === 'route'
+    ? routeTargetOptions.value
+    : actionTargetOptions.value
+  const current = menuEditorDialog.form.targetKey.trim()
+  if (!current || options.some((option) => option.value === current)) return options
+  return [
+    {
+      label: `${current} · ${t('userManagement.currentTarget', 'Current value')}`,
+      value: current
+    },
+    ...options
+  ]
+})
 const menuColumns = computed<ColumnItem[]>(() => [
   { prop: 'key', label: t('userManagement.menuKey', 'Menu key'), minWidth: 240, className: 'menu-key-column' },
   { prop: 'name', label: t('userManagement.menuName', 'Menu name'), minWidth: 210, className: 'menu-name-column' },
@@ -718,6 +799,8 @@ const resetMenuEditorForm = () => {
   menuEditorDialog.form.permissionCodes = []
 }
 
+const menuKeyPattern = /^[a-z][a-z0-9._-]*$/
+
 const handleMenuTypeChange = (value: MenuEditorForm['type']) => {
   if (value === 'directory') {
     menuEditorDialog.form.targetType = ''
@@ -728,6 +811,11 @@ const handleMenuTypeChange = (value: MenuEditorForm['type']) => {
 
   menuEditorDialog.form.targetType = value === 'button' ? 'action' : 'route'
   menuEditorDialog.form.targetKey = ''
+}
+const handleMenuParentChange = () => {
+  if (menuEditorDialog.form.type === 'button') {
+    menuEditorDialog.form.targetKey = ''
+  }
 }
 
 const openMenuEditor = async (menu?: AccessMenuNode | null) => {
@@ -741,7 +829,6 @@ const submitMenuEditor = async () => {
   const name = menuEditorDialog.form.name.trim()
   const nameEn = menuEditorDialog.form.nameEn.trim()
   const targetKey = menuEditorDialog.form.targetKey.trim()
-  const iconKey = menuEditorDialog.form.iconKey.trim()
   const parentKey = menuEditorDialog.form.parentKey.trim()
   const type = menuEditorDialog.form.type
   const targetType = menuEditorDialog.form.targetType
@@ -754,49 +841,85 @@ const submitMenuEditor = async () => {
     }
   }
 
+  if (key && !menuKeyPattern.test(key)) {
+    ElMessage.warning(t('userManagement.menuKeyFormatError', 'Menu key must start with a lowercase letter and may contain lowercase letters, numbers, ".", "_" or "-"'))
+    return
+  }
+
   if (!name) {
     ElMessage.warning(t('userManagement.inputMenuName', 'Enter a menu name'))
     return
   }
+  if (name.length > 96) {
+    ElMessage.warning(t('userManagement.menuNameMaxLength', 'Menu name cannot exceed 96 characters'))
+    return
+  }
+  if (nameEn.length > 96) {
+    ElMessage.warning(t('userManagement.menuNameEnMaxLength', 'English name cannot exceed 96 characters'))
+    return
+  }
+
+  const parentNode = parentKey ? findMenuByKey(menus.value, parentKey) : null
+  if (type === 'button' && !parentKey) {
+    ElMessage.warning(t('userManagement.buttonParentRequired', 'Button nodes must be attached to a parent menu'))
+    return
+  }
+  if (parentKey && (!parentNode || !['directory', 'page'].includes(parentNode.type))) {
+    ElMessage.warning(t('userManagement.invalidMenuParent', 'Parent menu must be an existing directory or page'))
+    return
+  }
 
   if (type !== 'directory') {
+    const expectedTargetType: AccessMenuTargetType = type === 'page' ? 'route' : 'action'
     if (!targetType) {
       ElMessage.warning(t('userManagement.inputMenuTargetType', 'Select a target type'))
+      return
+    }
+    if (targetType !== expectedTargetType) {
+      ElMessage.warning(t('userManagement.menuTargetTypeMismatch', 'Page menus must use route targets and button menus must use action targets'))
       return
     }
     if (!targetKey) {
       ElMessage.warning(t('userManagement.inputMenuTargetKey', 'Enter a target key'))
       return
     }
-  }
-
-  if (type === 'button' && parentKey && findMenuByKey(menus.value, parentKey)?.type === 'button') {
-    ElMessage.warning(t('userManagement.buttonParentError', 'Buttons cannot be used as parent nodes'))
-    return
+    if (targetType === 'route' && !routeTargetOptions.value.some((option) => option.value === targetKey)) {
+      ElMessage.warning(t('userManagement.menuTargetNotRegistered', 'Target must be selected from the backend registered targets'))
+      return
+    }
+    if (targetType === 'action' && !actionTargetOptions.value.some((option) => option.value === targetKey)) {
+      ElMessage.warning(t('userManagement.menuTargetNotRegistered', 'Target must be selected from the backend registered targets'))
+      return
+    }
   }
 
   menuEditorDialog.loading = true
   try {
-    const payload = {
+    const normalizedTargetType: AccessMenuTargetType | undefined = type === 'directory'
+      ? undefined
+      : targetType === 'route' || targetType === 'action'
+        ? targetType
+        : undefined
+    const payload: AccessMenuPayload = {
       key,
       parentKey: parentKey || undefined,
       type,
       name,
       nameEn: nameEn || undefined,
-      targetType: type === 'directory' ? undefined : targetType,
+      targetType: normalizedTargetType,
       targetKey: type === 'directory' ? undefined : targetKey,
-      iconKey: iconKey || undefined,
+      iconKey: menuEditorDialog.form.iconKey || undefined,
       sort: Number(menuEditorDialog.form.sort || 0),
       enabled: menuEditorDialog.form.enabled,
       superAdminOnly: menuEditorDialog.form.superAdminOnly,
       featureKey: menuEditorDialog.form.featureKey || undefined,
-      permissionCodes: type === 'directory' ? undefined : permissionCodes
+      permissionCodes: type === 'directory' || !permissionCodes.length ? undefined : permissionCodes
     }
     if (menuEditorDialog.mode === 'create') {
-      await Api.createAccessMenu(payload as any)
+      await Api.createAccessMenu(payload as AccessMenuPayload & { key: string })
       ElMessage.success(t('userManagement.createMenuSuccess', 'Menu created'))
     } else {
-      await Api.updateAccessMenu(key, payload as any)
+      await Api.updateAccessMenu(key, payload)
       ElMessage.success(t('userManagement.updateMenuSuccess', 'Menu updated'))
     }
     menuEditorDialog.show = false
@@ -1342,12 +1465,13 @@ onMounted(async () => {
               :model-value="row.enabled !== false"
               :loading="loading.menuStatusKey === row.key"
               :disabled="!canManageMenus || Boolean(loading.menuStatusKey && loading.menuStatusKey !== row.key)"
+              :before-change="() => confirmMenuStatusChange(row)"
               :aria-label="row.enabled === false ? t('userManagement.enableMenu', 'Enable menu') : t('userManagement.disableMenu', 'Disable menu')"
               @change="updateMenuStatus(row, $event)"
             />
-            <span class="menu-status-label" :class="{ 'is-disabled': row.enabled === false }">
+            <!-- <span class="menu-status-label" :class="{ 'is-disabled': row.enabled === false }">
             {{ row.enabled === false ? t('common.disabled', 'Disabled') : t('common.enabled', 'Enabled') }}
-            </span>
+            </span> -->
           </div>
         </template>
         <template #action="{ row }">
@@ -1615,17 +1739,30 @@ onMounted(async () => {
           <el-form-item :label="$t('userManagement.menuName', 'Menu name')" required>
             <el-input
               v-model="menuEditorDialog.form.name"
+              maxlength="96"
+              show-word-limit
               :placeholder="t('userManagement.inputMenuName', 'Enter a menu name')"
             />
           </el-form-item>
           <el-form-item :label="$t('userManagement.menuNameEn', 'English name')">
             <el-input
               v-model="menuEditorDialog.form.nameEn"
+              maxlength="96"
+              show-word-limit
               :placeholder="t('userManagement.inputMenuNameEn', 'Enter an English name')"
             />
           </el-form-item>
-          <el-form-item :label="$t('userManagement.menuParent', 'Parent menu')">
-            <el-select v-model="menuEditorDialog.form.parentKey" filterable clearable :placeholder="$t('common.select', 'Select')">
+          <el-form-item
+            :label="$t('userManagement.menuParent', 'Parent menu')"
+            :required="menuEditorDialog.form.type === 'button'"
+          >
+            <el-select
+              v-model="menuEditorDialog.form.parentKey"
+              filterable
+              clearable
+              :placeholder="$t('common.select', 'Select')"
+              @change="handleMenuParentChange"
+            >
               <el-option
                 v-for="option in menuParentOptions"
                 :key="option.value"
@@ -1649,37 +1786,41 @@ onMounted(async () => {
           </el-form-item>
           <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetType', 'Target type')" required>
             <el-select v-model="menuEditorDialog.form.targetType" :placeholder="$t('common.select', 'Select')">
-              <el-option :label="t('userManagement.targetTypes.route', 'Route')" value="route" />
-              <el-option :label="t('userManagement.targetTypes.action', 'Action')" value="action" />
-            </el-select>
-          </el-form-item>
-          <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetKey', 'Target key')" required>
-            <el-input
-              v-if="menuEditorDialog.form.targetType === 'action'"
-              v-model="menuEditorDialog.form.targetKey"
-              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
-            />
-            <el-select
-              v-else
-              v-model="menuEditorDialog.form.targetKey"
-              filterable
-              allow-create
-              default-first-option
-              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
-            >
               <el-option
-                v-for="option in routeTargetOptions"
+                v-for="option in menuTargetTypeOptions"
                 :key="option.value"
                 :label="option.label"
                 :value="option.value"
               />
             </el-select>
           </el-form-item>
-          <el-form-item :label="$t('userManagement.menuIconKey', 'Icon key')">
-            <el-input
-              v-model="menuEditorDialog.form.iconKey"
-              :placeholder="t('userManagement.inputMenuIconKey', 'Enter an icon key')"
-            />
+          <el-form-item v-if="menuEditorDialog.form.type !== 'directory'" :label="$t('userManagement.menuTargetKey', 'Target key')" required>
+            <el-select
+              v-if="menuEditorDialog.form.targetType === 'route'"
+              v-model="menuEditorDialog.form.targetKey"
+              filterable
+              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
+            >
+              <el-option
+                v-for="option in currentTargetOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
+            <el-select
+              v-else
+              v-model="menuEditorDialog.form.targetKey"
+              filterable
+              :placeholder="t('userManagement.inputMenuTargetKey', 'Enter a target key')"
+            >
+              <el-option
+                v-for="option in currentTargetOptions"
+                :key="option.value"
+                :label="option.label"
+                :value="option.value"
+              />
+            </el-select>
           </el-form-item>
           <el-form-item :label="$t('userManagement.menuSort', 'Sort')">
             <el-input-number v-model="menuEditorDialog.form.sort" :min="0" :step="10" />
@@ -1689,44 +1830,6 @@ onMounted(async () => {
           </el-form-item>
           <el-form-item :label="$t('userManagement.superAdminOnly', 'Super admin only')">
             <el-switch v-model="menuEditorDialog.form.superAdminOnly" />
-          </el-form-item>
-          <el-form-item :label="$t('userManagement.featureKey', 'Feature key')">
-            <el-select v-model="menuEditorDialog.form.featureKey" clearable :placeholder="$t('common.select', 'Select')">
-              <el-option :label="t('userManagement.featureKeys.terminal', 'Terminal')" value="terminal" />
-              <el-option :label="t('userManagement.featureKeys.bastion', 'Bastion')" value="bastion" />
-            </el-select>
-          </el-form-item>
-          <el-form-item
-            v-if="menuEditorDialog.form.type !== 'directory'"
-            :label="$t('userManagement.permissionSelection', 'Permission codes')"
-          >
-            <div class="permission-panel">
-              <div class="permission-panel__summary">
-                <span>{{ t('userManagement.menuPermissionSelectionHint', 'Select the backend permission codes bound to this menu.') }}</span>
-                <strong>{{ t('userManagement.selectedCount', '{selected} / {total} selected', { selected: menuEditorDialog.form.permissionCodes.length, total: permissions.length }) }}</strong>
-              </div>
-              <el-scrollbar class="permission-panel__scroll">
-                <div v-for="group in permissionGroups" :key="group.module" class="permission-group">
-                  <div class="permission-group__head">
-                    <div class="permission-group__title">
-                      <strong>{{ group.label }}</strong>
-                    </div>
-                    <span>{{ group.items.length }}</span>
-                  </div>
-                  <el-checkbox-group v-model="menuEditorDialog.form.permissionCodes" class="permission-grid">
-                    <el-checkbox
-                      v-for="permission in group.items"
-                      :key="permission.code"
-                      :value="permission.code"
-                      class="permission-item"
-                    >
-                      <span class="permission-item__name">{{ permission.name }}</span>
-                      <span class="permission-item__code">{{ permission.code }}</span>
-                    </el-checkbox>
-                  </el-checkbox-group>
-                </div>
-              </el-scrollbar>
-            </div>
           </el-form-item>
         </el-form>
       </div>

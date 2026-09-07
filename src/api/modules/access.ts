@@ -8,12 +8,33 @@ export interface AccessPermission {
   action?: string;
 }
 
+export type AccessMenuType = "directory" | "page" | "button";
+export type AccessMenuTargetType = "route" | "action";
+export type AccessMenuFeatureKey = "terminal" | "bastion";
+
+export interface AccessMenuPayload {
+  key?: string;
+  parentKey?: string;
+  type: AccessMenuType;
+  name: string;
+  nameEn?: string;
+  targetType?: AccessMenuTargetType;
+  targetKey?: string;
+  iconKey?: string;
+  sort?: number;
+  enabled?: boolean;
+  superAdminOnly?: boolean;
+  featureKey?: AccessMenuFeatureKey;
+  permissionCodes?: string[];
+  permissions?: string[];
+}
+
 export interface AccessMenuNode {
   id?: number;
   key: string;
   code?: string;
   parentKey?: string;
-  type: "directory" | "page" | "button" | string;
+  type: AccessMenuType | string;
   name: string;
   nameEn?: string;
   targetType?: "route" | "action" | string;
@@ -57,11 +78,11 @@ export const accessApi = {
     return http.get("/access/menus");
   },
   /** 创建菜单 */
-  createAccessMenu: (obj: Partial<AccessMenuNode> & { key: string; type: AccessMenuNode["type"]; name: string }) => {
+  createAccessMenu: (obj: AccessMenuPayload & { key: string }) => {
     return http.post("/access/menus", obj);
   },
   /** 更新菜单 */
-  updateAccessMenu: (key: string, obj: Partial<AccessMenuNode> & { key?: string; code?: string }) => {
+  updateAccessMenu: (key: string, obj: AccessMenuPayload) => {
     return http.put(`/access/menus/${encodeURIComponent(key)}`, obj);
   },
   /** 独立启用或禁用菜单 */
