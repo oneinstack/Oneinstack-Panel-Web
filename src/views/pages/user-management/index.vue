@@ -17,6 +17,7 @@ import { computed, nextTick, onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
+import { useConfigStore } from '@/stores/modules/config'
 import { hasOperationAccess, menuPathKeyMap } from '@/utils/access'
 
 interface AccessRole {
@@ -79,6 +80,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
+const sconfig = useConfigStore()
 const loading = reactive({
   bootstrap: false,
   users: false,
@@ -558,6 +560,12 @@ const updateMenuStatus = async (menu: AccessMenuNode, value: boolean | string | 
     )
     const response = await Api.getAccessMenus()
     menus.value = Array.isArray(response.data) ? response.data : []
+    try {
+      const matrixResponse = await Api.getAccessMatrix()
+      sconfig.setAccessMatrix(matrixResponse?.data || {})
+    } catch {
+      // Keep the current navigation matrix when it cannot be refreshed here.
+    }
   } catch (error: any) {
     // ElMessage.error(error?.message || t('userManagement.updateMenuStatusFailed', 'Failed to update menu status'))
   } finally {

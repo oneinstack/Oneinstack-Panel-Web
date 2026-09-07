@@ -24,11 +24,7 @@ interface ConfigState {
   firstAccessibleMenu: string;
   panelEntryAccess: PanelEntryAccess | null;
   panelTitle: string;
-  hiddenMenuPathsByUser: Record<string, string[]>;
 }
-
-const getUserKey = (info: any) =>
-  String(info?.user?.username || info?.username || "").trim();
 
 const normalizeUserInfo = (info: any) => {
   if (!info || typeof info !== "object") return info;
@@ -50,7 +46,6 @@ const createState = (): ConfigState => ({
   firstAccessibleMenu: "",
   panelEntryAccess: null,
   panelTitle: "",
-  hiddenMenuPathsByUser: {},
 });
 
 const flattenMenuAccess = (nodes: AccessMenuNode[] = [], target: Record<string, boolean> = {}) => {
@@ -68,12 +63,6 @@ const flattenMenuAccess = (nodes: AccessMenuNode[] = [], target: Record<string, 
 
 export const useConfigStore = defineStore("config", {
   state: createState,
-  getters: {
-    hiddenMenuPaths: (state) => {
-      const userKey = getUserKey(state.userInfo);
-      return userKey ? state.hiddenMenuPathsByUser[userKey] || [] : [];
-    },
-  },
   persist: [
     piniaPersistConfig<ConfigState>(
       "oneinstack_config_session",
@@ -83,7 +72,7 @@ export const useConfigStore = defineStore("config", {
     piniaPersistConfig<ConfigState>(
       "oneinstack_panel_entry_access",
       localStorage,
-      ["panelEntryAccess", "panelTitle", "hiddenMenuPathsByUser"],
+      ["panelEntryAccess", "panelTitle"],
     ),
   ],
   actions: {
@@ -148,6 +137,18 @@ export const useConfigStore = defineStore("config", {
       return false;
     },
 
+    isMenuEnabled(key?: string) {
+      if (!key) return true;
+      const stack = [...(this.menuTree || [])];
+      while (stack.length) {
+        const node = stack.shift();
+        if (!node) continue;
+        if (node.key === key) return node.enabled !== false;
+        if (node.children?.length) stack.unshift(...node.children);
+      }
+      return true;
+    },
+
     hasScopeAccess(scope?: string, action?: string) {
       if (!scope || !action || this.isAdministrator()) return true;
       return Boolean(this.scopeAccess?.[scope]?.[action]);
@@ -167,30 +168,6 @@ export const useConfigStore = defineStore("config", {
 
     setPanelTitle(title?: string | null) {
       this.panelTitle = String(title || "").trim();
-    },
-
-    isMenuHidden(path?: string) {
-      return Boolean(path && this.hiddenMenuPaths.includes(path));
-    },
-
-    setMenuHidden(path: string, hidden: boolean) {
-      const userKey = getUserKey(this.userInfo);
-      if (!path || !userKey) return;
-      const paths = new Set(this.hiddenMenuPaths);
-      if (hidden) paths.add(path);
-      else paths.delete(path);
-      this.hiddenMenuPathsByUser = {
-        ...this.hiddenMenuPathsByUser,
-        [userKey]: Array.from(paths),
-      };
-    },
-
-    clearHiddenMenus() {
-      const userKey = getUserKey(this.userInfo);
-      if (!userKey) return;
-      const pathsByUser = { ...this.hiddenMenuPathsByUser };
-      delete pathsByUser[userKey];
-      this.hiddenMenuPathsByUser = pathsByUser;
     },
 
     /** 清理当前会话状态并按需返回登录页。 */

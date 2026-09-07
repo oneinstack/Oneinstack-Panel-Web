@@ -191,6 +191,7 @@ const isPrivilegedUser = computed(() =>
   Boolean(sconfig.userInfo?.user?.isAdmin || sconfig.userInfo?.user?.isSuperAdmin)
 )
 const hasMenuPermission = (item: NavItem) => {
+  if (item.matrixKeys?.some((key) => !sconfig.isMenuEnabled(key))) return false
   if (isPrivilegedUser.value) return true
   if (item.path === '/terminal') return hasTerminalAccess()
   if (item.matrixKeys?.some((key) => sconfig.hasMenuAccess(key))) return true
@@ -203,7 +204,6 @@ const filterVisibleNavItems = (items: NavItem[]): NavItem[] => items.flatMap((it
     return children.length ? [{ ...item, children }] : []
   }
   if (item.adminOnly && !item.matrixKeys?.length && !isPrivilegedUser.value) return []
-  if (item.path.startsWith('/') && sconfig.isMenuHidden(item.path)) return []
   return hasMenuPermission(item) ? [item] : []
 })
 const visibleNavList = computed(() => filterVisibleNavItems(conf.navList))
