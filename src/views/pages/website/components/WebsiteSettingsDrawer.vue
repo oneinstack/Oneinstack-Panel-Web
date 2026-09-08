@@ -397,7 +397,23 @@ const openCertificate = () => {
 
           <section v-else-if="activeMenu === 'other'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.other') }}</h3><p>{{ t('website.settingsDrawer.otherDescription') }}</p></div></div>
-            <el-form label-position="top" class="settings-form"><el-form-item :label="t('website.expiration')"><el-date-picker v-model="expiresAt" type="datetime" :disabled="!canWrite" :placeholder="t('website.settingsDrawer.expirationPlaceholder')" clearable /></el-form-item><el-form-item :label="t('website.settingsDrawer.remark')"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" :disabled="!canWrite" /></el-form-item><el-form-item :label="t('website.settingsDrawer.accessLogLabel')"><el-switch v-model="state.settings.access_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordAccessLog')" /></el-form-item><el-form-item :label="t('website.settingsDrawer.errorLogLabel')"><el-switch v-model="state.settings.error_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordErrorLog')" /></el-form-item></el-form>
+            <el-form label-position="top" class="settings-form">
+              <el-form-item :label="t('website.expiration')">
+                <el-date-picker
+                  v-model="expiresAt"
+                  type="datetime"
+                  :disabled="!canWrite"
+                  :placeholder="t('website.settingsDrawer.expirationPlaceholder')"
+                  clearable
+                  :teleported="true"
+                  placement="left-start"
+                  popper-class="website-expiration-popper"
+                />
+              </el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.remark')"><el-input v-model="currentWebsite.remark" type="textarea" :rows="4" :disabled="!canWrite" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.accessLogLabel')"><el-switch v-model="state.settings.access_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordAccessLog')" /></el-form-item>
+              <el-form-item :label="t('website.settingsDrawer.errorLogLabel')"><el-switch v-model="state.settings.error_log_enabled" :disabled="!canWrite" :active-text="t('website.settingsDrawer.recordErrorLog')" /></el-form-item>
+            </el-form>
             <div class="panel-actions panel-actions--split"><el-button :loading="state.saving" :disabled="!canWrite" @click="saveSettings(t('website.settingsDrawer.published.logs'))">{{ t('website.settingsDrawer.saveLogs') }}</el-button><el-button type="primary" :loading="state.saving" :disabled="!canWrite" @click="saveWebsiteProfile(false)">{{ t('website.settingsDrawer.saveProfile') }}</el-button></div>
           </section>
         </main>
@@ -479,5 +495,22 @@ const openCertificate = () => {
     align-items: stretch;
     flex-direction: column;
   }
+}
+
+.website-expiration-popper {
+  min-width: 332px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--surface-card);
+  box-shadow: 0 18px 48px rgba(10, 18, 36, 0.32);
+}
+
+.website-expiration-popper .el-picker-panel__body {
+  background: transparent;
+}
+
+.website-expiration-popper .el-date-range-picker__content {
+  padding-bottom: 10px;
 }
 </style>

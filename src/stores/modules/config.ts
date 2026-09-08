@@ -48,17 +48,38 @@ const createState = (): ConfigState => ({
   panelTitle: "",
 });
 
-const flattenMenuAccess = (nodes: AccessMenuNode[] = [], target: Record<string, boolean> = {}) => {
+const flattenMenuAccess = (
+  nodes: AccessMenuNode[] = [],
+  target: Record<string, boolean> = {},
+  parentEnabled = true
+) => {
   nodes.forEach((node) => {
     if (!node?.key) return;
-    if (node.enabled !== false) {
+    const enabled = parentEnabled && node.enabled !== false;
+    if (enabled) {
       target[node.key] = true;
     }
     if (node.children?.length) {
-      flattenMenuAccess(node.children, target);
+      flattenMenuAccess(node.children, target, enabled);
     }
   });
   return target;
+};
+
+const findMenuPath = (
+  nodes: AccessMenuNode[] = [],
+  key: string,
+  parents: AccessMenuNode[] = []
+): { node: AccessMenuNode; parents: AccessMenuNode[] } | null => {
+  for (const node of nodes) {
+    if (!node) continue;
+    if (node.key === key) return { node, parents };
+    if (node.children?.length) {
+      const match = findMenuPath(node.children, key, [...parents, node]);
+      if (match) return match;
+    }
+  }
+  return null;
 };
 
 export const useConfigStore = defineStore("config", {
@@ -126,25 +147,23 @@ export const useConfigStore = defineStore("config", {
 
     hasMenuAccess(key?: string) {
       if (!key || this.isAdministrator()) return true;
-      if (Boolean(this.menuAccess?.[key])) return true;
-      const stack = [...(this.menuTree || [])];
-      while (stack.length) {
-        const node = stack.shift();
-        if (!node) continue;
-        if (node.key === key) return node.enabled !== false;
-        if (node.children?.length) stack.unshift(...node.children);
+      if (this.menuTree?.length) {
+        const match = findMenuPath(this.menuTree, key);
+        if (match) {
+          return match.node.enabled !== false && match.parents.every((parent) => parent.enabled !== false);
+        }
       }
-      return false;
+      return Boolean(this.menuAccess?.[key]);
     },
 
     isMenuEnabled(key?: string) {
       if (!key) return true;
-      const stack = [...(this.menuTree || [])];
-      while (stack.length) {
-        const node = stack.shift();
-        if (!node) continue;
-        if (node.key === key) return node.enabled !== false;
-        if (node.children?.length) stack.unshift(...node.children);
+      const match = findMenuPath(this.menuTree, key);
+      if (match) {
+        return match.node.enabled !== false && match.parents.every((parent) => parent.enabled !== false);
+      }
+      if (Object.prototype.hasOwnProperty.call(this.menuAccess, key)) {
+        return this.menuAccess[key] !== false;
       }
       return true;
     },

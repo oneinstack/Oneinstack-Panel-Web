@@ -208,6 +208,8 @@ const menuTypeTagType = (type?: AccessMenuNode['type']) => {
   return 'primary'
 }
 const menuPermissionCount = (row: AccessMenuNode) => row.permissionCodes?.length || row.permissions?.length || 0
+const canToggleMenuStatus = (menu?: AccessMenuNode | null) =>
+  menu?.type === 'page' || menu?.type === 'directory'
 const menuCellStyle = ({ column }: { column?: { property?: string } }) => {
   if (column?.property !== 'action') return undefined
   return { background: 'var(--surface-card)', backgroundColor: 'var(--surface-card)' }
@@ -245,7 +247,7 @@ const refreshAccessMatrix = async () => {
 
 const confirmMenuStatusChange = async (menu: AccessMenuNode) => {
   const key = String(menu?.key || '').trim()
-  if (!key || !canManageMenus.value || loading.menuStatusKey) return false
+  if (!key || !canToggleMenuStatus(menu) || !canManageMenus.value || loading.menuStatusKey) return false
 
   const enabled = menu.enabled === false
   try {
@@ -269,7 +271,7 @@ const confirmMenuStatusChange = async (menu: AccessMenuNode) => {
 }
 const updateMenuStatus = async (menu: AccessMenuNode, value: boolean | string | number) => {
   const key = String(menu?.key || '').trim()
-  if (!key || !canManageMenus.value || loading.menuStatusKey) return
+  if (!key || !canToggleMenuStatus(menu) || !canManageMenus.value || loading.menuStatusKey) return
 
   const enabled = value === true || value === 'true' || value === 1 || value === '1'
   loading.menuStatusKey = key
@@ -280,7 +282,7 @@ const updateMenuStatus = async (menu: AccessMenuNode, value: boolean | string | 
       : t('userManagement.disableMenuSuccess', 'Menu disabled'))
     await Promise.all([loadMenus(), refreshAccessMatrix()])
   } catch (error: any) {
-    ElMessage.error(error?.message || t('userManagement.updateMenuStatusFailed', 'Failed to update menu status'))
+    // ElMessage.error(error?.message || t('userManagement.updateMenuStatusFailed', 'Failed to update menu status'))
     await loadMenus()
   } finally {
     loading.menuStatusKey = ''
@@ -400,7 +402,7 @@ const submitMenuEditor = async () => {
       targetKey: type === 'directory' ? undefined : targetKey,
       iconKey: menuEditorDialog.form.iconKey || undefined,
       sort: Number(menuEditorDialog.form.sort || 0),
-      enabled: menuEditorDialog.form.enabled,
+      enabled: type === 'button' ? true : menuEditorDialog.form.enabled,
       superAdminOnly: menuEditorDialog.form.superAdminOnly,
       featureKey: menuEditorDialog.form.featureKey || undefined,
       permissionCodes: type === 'directory' || !permissionCodes.length ? undefined : permissionCodes
@@ -485,11 +487,11 @@ onMounted(() => {
           <div
             class="menu-key-cell"
             :class="{ 'is-expandable': row.hasChildren }"
-            :style="{ paddingLeft: `${row.depth * 24}px` }"
+            :style="{ paddingLeft: `${row.depth * 24}px`, cursor: row.hasChildren ? 'pointer' : 'default' }"
             @click.stop="row.hasChildren && toggleMenuExpanded(row.key)"
           >
-            <span class="menu-key-value">
-              <span class="menu-key-text">{{ row.key }}</span>
+            <span class="menu-key-value" style="display: inline-flex; align-items: center; line-height: 24px;">
+              <span class="menu-key-text" style="display: inline-flex; align-items: center; line-height: 24px;">{{ row.key }}</span>
               <button
                 v-if="row.hasChildren"
                 class="menu-expand-button"
@@ -497,9 +499,13 @@ onMounted(() => {
                 type="button"
                 :aria-label="isMenuExpanded(row.key) ? 'Collapse menu' : 'Expand menu'"
                 :aria-expanded="isMenuExpanded(row.key)"
+                style="display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 24px; margin-left: 14px; padding: 0; line-height: 0;"
                 @click.stop="toggleMenuExpanded(row.key)"
               >
-                <el-icon class="menu-expand-icon"><ArrowRight /></el-icon>
+                <el-icon
+                  class="menu-expand-icon"
+                  :style="{ transform: isMenuExpanded(row.key) ? 'rotate(90deg)' : 'rotate(0deg)' }"
+                ><ArrowRight /></el-icon>
               </button>
             </span>
           </div>
@@ -522,6 +528,7 @@ onMounted(() => {
         </template>
         <template #enabled="{ row }">
           <el-switch
+            v-if="canToggleMenuStatus(row)"
             :model-value="row.enabled !== false"
             :loading="loading.menuStatusKey === row.key"
             :disabled="!canManageMenus || Boolean(loading.menuStatusKey && loading.menuStatusKey !== row.key)"
@@ -529,6 +536,8 @@ onMounted(() => {
             :aria-label="row.enabled === false ? t('userManagement.enableMenu', 'Enable menu') : t('userManagement.disableMenu', 'Disable menu')"
             @change="updateMenuStatus(row, $event)"
           />
+          <span v-else class="menu-status-hint">-</span>
+          <!-- <span v-else class="menu-status-hint">{{ t('userManagement.buttonStatusInherited', 'Inherited') }}</span> -->
         </template>
         <template #action="{ row }">
           <div class="table-row-actions">
@@ -601,7 +610,8 @@ onMounted(() => {
             <el-input-number v-model="menuEditorDialog.form.sort" :min="0" :step="10" />
           </el-form-item>
           <el-form-item :label="$t('common.status', 'Status')">
-            <el-switch v-model="menuEditorDialog.form.enabled" />
+            <el-switch v-if="menuEditorDialog.form.type !== 'button'" v-model="menuEditorDialog.form.enabled" />
+            <span v-else class="menu-status-hint">-</span>
           </el-form-item>
           <el-form-item :label="$t('userManagement.superAdminOnly', 'Super admin only')">
             <el-switch v-model="menuEditorDialog.form.superAdminOnly" />
@@ -707,18 +717,32 @@ onMounted(() => {
     cursor: pointer;
   }
 
+  :deep(.menu-key-cell.is-expandable .menu-key-value),
+  :deep(.menu-key-cell.is-expandable .menu-key-text),
+  :deep(.menu-key-cell.is-expandable .menu-expand-button),
+  :deep(.menu-key-cell.is-expandable .menu-expand-icon) {
+    cursor: pointer;
+  }
+
   :deep(.menu-key-value) {
-    display: inline-flex;
-    align-items: center;
+    display: inline-flex !important;
+    align-items: center !important;
+    height: 24px;
     min-width: 0;
     max-width: 100%;
     overflow: hidden;
+    line-height: 24px;
     white-space: nowrap;
   }
 
   :deep(.menu-key-text) {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
+    line-height: 24px;
     white-space: nowrap;
   }
 
@@ -726,22 +750,30 @@ onMounted(() => {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: 0 0 18px;
     width: 18px;
     height: 24px;
-    margin-left: 10px;
+    margin-left: 14px !important;
     padding: 0;
     border: 0;
+    align-self: center;
+    line-height: 0;
     color: var(--text-tertiary);
     background: transparent;
     cursor: pointer;
   }
 
   :deep(.menu-expand-icon) {
+    display: inline-flex;
+    width: 14px;
+    height: 14px;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    margin: 0;
+    vertical-align: middle;
+    transform-origin: center;
     transition: transform 0.2s ease;
-  }
-
-  :deep(.menu-expand-button.is-expanded .menu-expand-icon) {
-    transform: rotate(90deg);
   }
 
   :deep(.menu-name-column .cell) {
@@ -798,6 +830,12 @@ onMounted(() => {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  white-space: nowrap;
+}
+
+.menu-status-hint {
+  color: var(--text-tertiary);
+  font-size: 12px;
   white-space: nowrap;
 }
 

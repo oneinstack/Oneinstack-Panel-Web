@@ -45,6 +45,7 @@ export default {
   roleDescriptionPlaceholder: '描述这个角色可以访问什么',
   permissionSelection: '权限码',
   permissionSelectionHint: '选择定义此角色的后端权限码',
+  buttonStatusInherited: '按钮状态跟随所属菜单',
   permissionCount: '权限数',
   builtinRole: '内置',
   customRole: '自定义',

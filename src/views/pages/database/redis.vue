@@ -7,6 +7,7 @@ import System from '@/utils/System'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 import i18n from '@/lang'
 import { hasOperationAccess } from '@/utils/access'
+import SectionTabs from '@/components/section-tabs.vue'
 
 const { conf: parentConf } = defineProps<ConfProps>()
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -48,7 +49,7 @@ const conf = reactive({
       await conf.dbList.getData()
       const firstDatabase = conf.dbList.data[0]
       if (firstDatabase) {
-        await handleTabClick({ paneName: firstDatabase.name })
+        await handleTabClick(firstDatabase.name)
       } else {
         conf.list.data = []
       }
@@ -72,9 +73,16 @@ const conf = reactive({
 
 conf.list.loading = false
 
-const handleTabClick = async ({ paneName }: { paneName: string | number | undefined }) => {
+const redisDatabaseTabs = computed(() =>
+  conf.dbList.data.map((item: any) => ({
+    key: String(item.name),
+    label: `DB${item.name}`
+  }))
+)
+
+const handleTabClick = async (key: string | number | undefined) => {
   if (!canReadDatabase.value) return
-  const database = Number(paneName ?? 0)
+  const database = Number(key ?? 0)
   if (!Number.isInteger(database) || database < 0) return
   conf.list.params.r_db = database
   conf.list.params.page = 1
@@ -112,14 +120,14 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
       </div>
     </div>
     <div class="box2">
-      <el-tabs v-if="conf.dbList.data.length" v-model="conf.list.params.r_db" @tab-click="handleTabClick">
-        <el-tab-pane
-          v-for="item in conf.dbList.data"
-          :key="item.name"
-          :label="`DB${item.name}`"
-          :name="Number(item.name)"
-        />
-      </el-tabs>
+      <section-tabs
+        v-if="conf.dbList.data.length"
+        :active-key="String(conf.list.params.r_db ?? 0)"
+        :items="redisDatabaseTabs"
+        :aria-label="t('database.redisPanel.databaseTabsLabel', 'Redis 数据库选择')"
+        class="redis-database-tabs"
+        @update:active-key="handleTabClick"
+      />
       <custom-table
         v-model:page="conf.list.params.page"
         v-model:page-size="conf.list.params.pageSize"
@@ -155,5 +163,9 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
   justify-content: center;
   align-items: center;
   color: var(--font-color-gray-light);
+}
+
+.redis-database-tabs {
+  margin-bottom: 16px;
 }
 </style>

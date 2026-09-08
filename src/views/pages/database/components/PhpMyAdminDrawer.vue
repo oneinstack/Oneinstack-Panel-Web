@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { CircleCheck, DataAnalysis, Download, Link, Lock, Warning } from '@element-plus/icons-vue'
+import { ArrowRight, CircleCheck, DataAnalysis, Download, Link, Lock, Warning } from '@element-plus/icons-vue'
 import { computed } from 'vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
+import SectionTabs from '@/components/section-tabs.vue'
 import i18n from '@/lang'
 
 interface Props {
@@ -46,6 +47,12 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback
 }
 
+const tabItems = computed(() => [
+  { key: 'service', label: t('database.phpMyAdmin.serviceTab', '服务') },
+  { key: 'version', label: t('database.phpMyAdmin.phpVersionTab', 'PHP 版本') },
+  { key: 'security', label: t('database.phpMyAdmin.securityTab', '安全设置') }
+])
+
 const status = computed(() => {
   if (props.taskId) return 'installing'
   return props.installed ? 'installed' : 'not-installed'
@@ -84,8 +91,14 @@ const statusLabel = computed(() => {
         </div>
       </section>
 
-      <el-tabs v-model="activeTab" class="phpmyadmin-tabs">
-        <el-tab-pane :label="t('database.phpMyAdmin.serviceTab', '服务')" name="service">
+      <section-tabs
+        :items="tabItems"
+        :active-key="activeTab"
+        :aria-label="t('database.phpMyAdmin.drawerTitle', 'phpMyAdmin 管理')"
+        @update:active-key="activeTab = $event"
+      />
+
+      <template v-if="activeTab === 'service'">
           <div class="phpmyadmin-section">
             <div class="phpmyadmin-section__heading">
               <h3>{{ t('database.phpMyAdmin.serviceTitle', '服务状态') }}</h3>
@@ -113,9 +126,9 @@ const statusLabel = computed(() => {
               show-icon
             />
           </div>
-        </el-tab-pane>
+      </template>
 
-        <el-tab-pane :label="t('database.phpMyAdmin.phpVersionTab', 'PHP 版本')" name="version">
+      <template v-else-if="activeTab === 'version'">
           <div class="phpmyadmin-section">
             <div class="phpmyadmin-section__heading">
               <h3>{{ t('database.phpMyAdmin.runtimeCompatibility', '运行环境与版本') }}</h3>
@@ -154,9 +167,9 @@ const statusLabel = computed(() => {
               <span>{{ t('database.phpMyAdmin.versionSelectionHint', '已安装时版本由软件商城统一维护。') }}</span>
             </div>
           </div>
-        </el-tab-pane>
+      </template>
 
-        <el-tab-pane :label="t('database.phpMyAdmin.securityTab', '安全设置')" name="security">
+      <template v-else-if="activeTab === 'security'">
           <div class="phpmyadmin-section">
             <div class="phpmyadmin-security">
               <div class="phpmyadmin-security__icon"><el-icon><Lock /></el-icon></div>
@@ -170,12 +183,11 @@ const statusLabel = computed(() => {
               <li>{{ t('database.phpMyAdmin.securityNotePublic', '不建议将 phpMyAdmin 直接暴露到公网。') }}</li>
               <li>{{ t('database.phpMyAdmin.securityNoteDatabase', '可从数据库列表直接进入对应数据库。') }}</li>
             </ul>
-            <el-button link type="primary" @click="emit('go-detail')">
+            <el-button class="phpmyadmin-detail-link" type="primary" :icon="ArrowRight" @click="emit('go-detail')">
               {{ t('database.phpMyAdmin.versionDetail', '版本与详情') }}
             </el-button>
           </div>
-        </el-tab-pane>
-      </el-tabs>
+      </template>
     </div>
 
     <template #footer="{ close }">
@@ -269,19 +281,8 @@ const statusLabel = computed(() => {
   }
 }
 
-.phpmyadmin-tabs {
-  :deep(.el-tabs__header) {
-    margin-bottom: 22px;
-  }
-
-  :deep(.el-tabs__item) {
-    height: 42px;
-    padding-inline: 18px;
-    font-weight: 600;
-  }
-}
-
 .phpmyadmin-section {
+  margin-top: 22px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -488,6 +489,26 @@ const statusLabel = computed(() => {
   color: var(--text-secondary);
   font-size: 13px;
   line-height: 2;
+}
+
+.phpmyadmin-detail-link {
+  align-self: flex-start;
+  margin-top: 18px;
+  padding: 9px 13px;
+  border: 1px solid rgba(var(--primary-color), 0.34);
+  border-radius: 9px;
+  color: rgb(var(--primary-color));
+  background: rgba(var(--primary-color), 0.1);
+  font-weight: 650;
+  transition: all 0.18s ease;
+}
+
+.phpmyadmin-detail-link:hover,
+.phpmyadmin-detail-link:focus-visible {
+  border-color: rgba(var(--primary-color), 0.58);
+  color: var(--primary-button-text);
+  background: rgb(var(--primary-color));
+  box-shadow: 0 8px 20px rgba(var(--primary-color), 0.2);
 }
 
 @media (max-width: 640px) {

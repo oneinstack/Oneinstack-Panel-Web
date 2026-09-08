@@ -431,6 +431,42 @@
   color: var(--text-placeholder) !important;
 }
 
+:root:root.dark .el-time-panel,
+:root:root.dark .el-time-panel__content,
+:root:root.dark .el-time-spinner__wrapper {
+  background: var(--surface-raised) !important;
+}
+
+:root:root.dark .el-time-panel {
+  border-color: var(--border-subtle) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+:root:root.dark .el-time-spinner__wrapper {
+  border-left-color: var(--border-subtle) !important;
+}
+
+:root:root.dark .el-time-spinner__item {
+  color: var(--text-secondary) !important;
+  border-radius: 8px;
+}
+
+:root:root.dark .el-time-spinner__item:hover:not(.disabled):not(.active) {
+  color: var(--text-secondary) !important;
+  background: var(--surface-card) !important;
+}
+
+:root:root.dark .el-time-spinner__item.active:not(.disabled) {
+  color: var(--text-primary) !important;
+  background: var(--surface-card) !important;
+  font-weight: 700;
+}
+
+:root:root.dark .el-time-panel__footer {
+  border-top-color: var(--border-subtle) !important;
+  background: var(--surface-raised) !important;
+}
+
 .el-message-box{
  background: linear-gradient(180deg, 
 color-mix(in srgb, var(--surface-card) 94%, white 6%) 0%, var(--surface-card) 100%) !important;

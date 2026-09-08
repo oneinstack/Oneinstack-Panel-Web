@@ -45,6 +45,7 @@ export default {
   roleDescriptionPlaceholder: 'Describe what this role can access',
   permissionSelection: 'Permission codes',
   permissionSelectionHint: 'Select the backend permission codes that define this role',
+  buttonStatusInherited: 'Button status follows its parent menu',
   permissionCount: 'Permissions',
   builtinRole: 'Built-in',
   customRole: 'Custom',

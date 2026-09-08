@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, markRaw, reactive, watch } from 'vue'
+import { computed, markRaw, reactive, ref, watch } from 'vue'
 import AllSoft from './components/all.vue'
 import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
@@ -29,6 +29,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 }
 
 const showCatalogSyncButton = !import.meta.env.PROD
+const pageLoading = ref(true)
 
 const buildCategoryQuery = () => {
   if (conf.activeIndex === 1) return { installed: true }
@@ -175,11 +176,16 @@ const conf = reactive({
 })
 
 const reloadSoftwarePageData = async () => {
-  await Promise.all([
-    conf.catalog.getStatus(),
-    conf.tabs.getData(buildCategoryQuery()),
-    conf.list.getData()
-  ])
+  pageLoading.value = true
+  try {
+    await Promise.all([
+      conf.catalog.getStatus(),
+      conf.tabs.getData(buildCategoryQuery()),
+      conf.list.getData()
+    ])
+  } finally {
+    pageLoading.value = false
+  }
 }
 
 const requestedComponent = String(System.getRouterParams().component || '').toLowerCase()
@@ -230,7 +236,12 @@ const catalogDetail = computed(() => {
   <div class="software-container relative" >
     <div class="absolute fit-width software-content">
       <card-tabs :list="conf.dataTypelist" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
-      <div v-loading="conf.list.loading" class="box2 software-box">
+      <div
+        v-loading="pageLoading || conf.list.loading"
+        :element-loading-text="t('software.loading', '正在加载软件数据...')"
+        class="box2 software-box"
+        :aria-busy="pageLoading || conf.list.loading"
+      >
         <div
           class="catalog-source"
           :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"

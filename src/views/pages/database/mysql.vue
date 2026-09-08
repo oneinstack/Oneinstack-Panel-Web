@@ -524,8 +524,9 @@ const handleMoreAction = async (command: string, row: any) => {
                 <el-dropdown-menu class="table-action-menu">
                   <el-dropdown-item v-if="canBackupDatabase" command="backup"><el-icon><FolderAdd /></el-icon>{{ t('database.backup.backupNow', '立即备份') }}</el-dropdown-item>
                   <el-dropdown-item v-if="canReadDatabase" command="backup-manager"><el-icon><Files /></el-icon>{{ t('database.backup.manageBackups', '备份管理') }}</el-dropdown-item>
-                  <el-dropdown-item v-if="canDeleteDatabase" class="table-action-menu__danger" command="delete" divided>
-                    <el-icon><Delete /></el-icon>{{ t('database.deleteDatabase', '删除数据库') }}
+                  <el-dropdown-item v-if="canDeleteDatabase" class="table-action-menu__danger database-delete-action" command="delete" divided>
+                    <el-icon class="database-delete-action__icon"><Delete /></el-icon>
+                    <span class="database-delete-action__label">{{ t('database.deleteDatabase', '删除数据库') }}</span>
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </template>
@@ -707,5 +708,19 @@ const handleMoreAction = async (command: string, row: any) => {
     font-size: 13px;
     line-height: 1.6;
   }
+}
+
+:global(.table-action-menu .database-delete-action),
+:global(.table-action-menu .database-delete-action .el-icon),
+:global(.table-action-menu .database-delete-action__icon),
+:global(.table-action-menu .database-delete-action__label),
+:global(.table-action-menu .database-delete-action:not(.is-disabled):hover),
+:global(.table-action-menu .database-delete-action:not(.is-disabled):focus) {
+  color: var(--el-color-danger) !important;
+}
+
+:global(.table-action-menu .database-delete-action:not(.is-disabled):hover),
+:global(.table-action-menu .database-delete-action:not(.is-disabled):focus) {
+  background: rgba(var(--error-color), 0.12) !important;
 }
 </style>

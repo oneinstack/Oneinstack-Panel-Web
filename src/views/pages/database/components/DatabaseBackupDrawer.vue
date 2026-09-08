@@ -5,6 +5,7 @@ import { Delete, Download, RefreshLeft } from "@element-plus/icons-vue";
 import { Api } from "@/api/modules";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
+import SectionTabs from "@/components/section-tabs.vue";
 import { hasOperationAccess } from '@/utils/access'
 
 interface DatabaseLibrary {
@@ -66,6 +67,11 @@ const state = reactive({
   backups: [] as DatabaseBackup[],
   tasks: [] as DatabaseTask[],
 });
+
+const backupTabs = computed(() => [
+  { key: "backups", label: t("database.backup.backupFiles", "备份文件") },
+  { key: "tasks", label: t("database.backup.taskProgress", "任务进度") },
+]);
 
 const hasActiveTask = computed(() =>
   state.tasks.some((task) => !terminalStatuses.has(task.status)),
@@ -351,11 +357,14 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
       }}</span>
     </div>
 
-    <el-tabs v-model="state.activeTab">
-      <el-tab-pane
-        :label="t('database.backup.backupFiles', '备份文件')"
-        name="backups"
-      >
+    <section-tabs
+      v-model:active-key="state.activeTab"
+      :items="backupTabs"
+      :aria-label="t('database.backup.tabsLabel', '备份管理内容')"
+      class="backup-tabs"
+    />
+
+    <div v-if="state.activeTab === 'backups'" class="backup-panel">
         <custom-table
           v-loading="state.loading"
           :data="state.backups"
@@ -411,12 +420,9 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
             t("database.backup.noBackups", "暂无备份文件")
           }}</template>
         </custom-table>
-      </el-tab-pane>
+    </div>
 
-      <el-tab-pane
-        :label="t('database.backup.taskProgress', '任务进度')"
-        name="tasks"
-      >
+    <div v-else class="backup-panel">
         <div v-loading="state.loading" class="task-list">
           <div v-for="task in state.tasks" :key="task.id" class="task-card">
             <div class="task-header">
@@ -472,8 +478,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
             :description="t('database.backup.noTasks', '暂无任务')"
           />
         </div>
-      </el-tab-pane>
-    </el-tabs>
+    </div>
   </custom-drawer>
 </template>
 
@@ -483,6 +488,10 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.backup-tabs {
+  margin-bottom: 16px;
 }
 
 .active-hint {

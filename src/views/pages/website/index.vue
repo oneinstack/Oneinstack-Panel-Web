@@ -645,11 +645,11 @@ const conf = reactive({
       { prop: 'name', label: t('website.websiteName', 'Website name'), width: 180 },
       { prop: 'domain', label: t('website.domain', 'Domain'), width: 180 },
       { prop: 'engine', label: t('website.webServerOwner', '归属 Web Server'), width: 170 },
-      { prop: 'root_dir', label: t('website.rootDir', '根目录') },
+      { prop: 'root_dir', label: t('website.rootDir', '根目录'), minWidth: 128 },
       { prop: 'status', label: t('website.status', 'Status'), width: 130 },
       { prop: 'traffic', label: t('website.todayTraffic', 'Today traffic'), width: 120 },
       { prop: 'expiration', label: t('website.expiration', 'Expiration'), width: 180 },
-      { prop: 'ssl', label: 'SSL', width: 100 },
+      { prop: 'ssl', label: 'SSL', width: 120 },
       { prop: 'action', label: t('common.action', 'Action'), width: 320, fixed: 'right' as const }
     ]),
     params: {
@@ -1220,6 +1220,9 @@ loadServiceStatuses()
             type="datetime"
             :placeholder="t('website.settingsDrawer.expirationPlaceholder')"
             clearable
+            :teleported="true"
+            placement="left-start"
+            popper-class="website-expiration-popper"
             style="width: 100%"
           />
         </template>

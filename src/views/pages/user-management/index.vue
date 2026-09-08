@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
-import SystemManagementTabs from '@/views/pages/system-management/components/system-management-tabs.vue'
+import SectionTabs from '@/components/section-tabs.vue'
 import RoleMenuTreeNode from './components/role-menu-tree-node.vue'
 import {
   Api,
@@ -71,10 +71,10 @@ const roleMenuTreeRef = ref<HTMLElement | null>(null)
 const expandedRoleMenuKeys = ref<Set<string>>(new Set())
 const roleAdvancedOpen = ref(false)
 const activeTab = ref('users')
-const accessTabItems = [
-  { key: 'users', label: '用户管理', labelKey: 'userManagement.userTab' },
-  { key: 'permissions', label: '权限管理', labelKey: 'userManagement.permissionTab' }
-]
+const accessTabItems = computed(() => [
+  { key: 'users', label: t('userManagement.userTab', '用户管理') },
+  { key: 'permissions', label: t('userManagement.permissionTab', '权限管理') }
+])
 
 const userState = reactive({
   keyword: '',
@@ -808,9 +808,10 @@ onMounted(async () => {
       </div>
     </section>
 
-    <SystemManagementTabs
+    <section-tabs
       :items="accessTabItems"
       :active-key="activeTab"
+      :aria-label="t('userManagement.title', '用户管理')"
       @update:active-key="activeTab = $event"
     />
 

@@ -1138,7 +1138,7 @@ watch(
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
   gap: 16px;
   width: 100%;
   margin-top: 20px;
@@ -1412,7 +1412,6 @@ watch(
 .software-version-control {
   width: 100%;
 }
-
 
 @media (max-width: 900px) {
   .section-header {
