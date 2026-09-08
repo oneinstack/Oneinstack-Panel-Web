@@ -155,6 +155,17 @@ defineExpose({
   border: 1px solid var(--border-subtle);
   border-radius: 10px;
   background: var(--surface-subtle);
+
+  :deep(.el-button) {
+    flex: 0 0 auto;
+    color: var(--text-tertiary);
+    font-weight: 600;
+
+    &:hover,
+    &:focus-visible {
+      color: rgb(var(--primary-color));
+    }
+  }
 }
 
 .file-tree-panel__path {
@@ -174,33 +185,87 @@ defineExpose({
   padding: 8px;
   border: 1px solid var(--border-subtle);
   border-radius: 12px;
+  background: var(--surface-card);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  :deep(.el-tree) {
+    --el-fill-color-blank: transparent;
+    --el-tree-node-hover-bg-color: rgba(var(--primary-color), 0.08);
+    --el-tree-text-color: var(--text-secondary);
+    --el-tree-expand-icon-color: var(--text-placeholder);
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-loading-mask) {
+    background: color-mix(in srgb, var(--surface-card) 86%, transparent);
+  }
+
+  :deep(.el-loading-spinner .circular) {
+    stroke: rgb(var(--primary-color));
+  }
 }
 
 .file-tree-panel__node {
+  min-height: 34px;
   min-width: 0;
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 9px;
+  padding-right: 10px;
   color: var(--text-secondary);
+
+  .el-icon {
+    flex: 0 0 auto;
+    color: rgb(var(--primary-color));
+    font-size: 15px;
+  }
 
   span {
     overflow: hidden;
+    font-size: 13px;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   &.is-file {
     color: var(--text-tertiary);
+
+    .el-icon {
+      color: var(--text-tertiary);
+    }
   }
 }
 
 :deep(.el-tree-node__content) {
   height: 34px;
   border-radius: 8px;
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+:deep(.el-tree-node__expand-icon) {
+  padding: 7px 5px;
+  color: var(--text-placeholder);
+  font-size: 13px;
+  transition: color 0.18s ease, transform 0.18s ease;
+}
+
+:deep(.el-tree-node__content:hover .el-tree-node__expand-icon) {
+  color: rgb(var(--primary-color));
 }
 
 :deep(.el-tree-node.is-current > .el-tree-node__content) {
   color: rgb(var(--primary-color));
-  background: rgba(var(--primary-color), 0.08);
+  background: rgba(var(--primary-color), 0.12) !important;
+  box-shadow: inset 2px 0 0 rgb(var(--primary-color));
+}
+
+:deep(.el-tree-node.is-current > .el-tree-node__content .file-tree-panel__node) {
+  color: rgb(var(--primary-color));
+}
+
+:deep(.el-tree-node.is-current > .el-tree-node__content .file-tree-panel__node .el-icon) {
+  color: rgb(var(--primary-color));
 }
 </style>

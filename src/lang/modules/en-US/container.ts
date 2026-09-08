@@ -10,6 +10,7 @@ export default {
   templates: 'Templates',
   registries: 'Registries',
   createContainer: 'Create container',
+  createDisabledPermission: 'This account does not have permission to create containers',
   pullImage: 'Pull image',
   buildImage: 'Build image',
   resourceLimits: 'Resource limits',
@@ -64,6 +65,7 @@ export default {
   },
   resourceDialog: {
     confirm: 'Confirm',
+    lines: 'lines',
     titles: {
       image: 'Pull image', imageImport: 'Import image', imageBuild: 'Build image', imageTag: 'Edit image tag', imagePush: 'Push image',
       composeCreate: 'Create Compose project', composeEdit: 'Edit Compose project', composeTemplateDeploy: 'Deploy Compose from template',

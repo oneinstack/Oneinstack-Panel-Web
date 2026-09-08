@@ -132,6 +132,7 @@ export default {
   redisPanel: {
     currentServerHint: 'All current operations are associated with',
     selectServer: 'Select a server',
+    databaseTabsLabel: 'Redis database selection',
     emptyKeys: 'No keys in the current database'
   },
   backup: {
@@ -141,6 +142,7 @@ export default {
     backupNow: 'Back up now',
     activeTaskHint: 'This database has a task running',
     backupFiles: 'Backup files',
+    tabsLabel: 'Backup management content',
     file: 'File',
     preRestoreBackup: 'Pre-restore safety backup',
     manualBackup: 'Manual backup',

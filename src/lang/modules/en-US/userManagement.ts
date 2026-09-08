@@ -81,6 +81,7 @@ export default {
   menuType: 'Menu type',
   menuTargetType: 'Target type',
   menuTargetKey: 'Target key',
+  menuTarget: 'Target',
   menuIconKey: 'Icon key',
   menuSort: 'Sort order',
   menuPermissions: 'Permissions',

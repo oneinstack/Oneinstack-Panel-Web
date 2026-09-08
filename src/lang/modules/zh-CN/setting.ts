@@ -1,5 +1,6 @@
 export default {
   systemInfoLoadFailed: '获取系统信息失败',
+  sectionTabsLabel: '设置分区',
   tabs: {
     all: '全部设置',
     panel: '面板设置',

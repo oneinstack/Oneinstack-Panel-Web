@@ -768,7 +768,8 @@ code {
 .audit-detail {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
+  padding-bottom: 24px;
 }
 
 .audit-detail__hero {
@@ -866,56 +867,57 @@ code {
 
 .audit-detail-descriptions {
   :deep(.el-descriptions) {
-    border-radius: 18px;
+    border: 1px solid var(--border-subtle);
+    border-radius: 16px;
     overflow: hidden;
-    background: #f8fafc;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-xs);
   }
 
   :deep(.el-descriptions__table) {
     border-collapse: separate;
+    background: var(--surface-card);
   }
 
   :deep(.el-descriptions__body),
   :deep(.el-descriptions__table.is-bordered),
   :deep(.el-descriptions__cell) {
-    border-color: rgba(148, 163, 184, 0.18) !important;
+    border-color: var(--border-subtle) !important;
   }
 
   :deep(.el-descriptions__label) {
     width: 104px;
-    color: #475569;
-    font-weight: 700;
-    background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: var(--text-secondary);
+    font-weight: 650;
+    background: var(--surface-subtle);
   }
 
   :deep(.el-descriptions__content) {
-    color: #0f172a;
+    color: var(--text-primary);
     line-height: 1.65;
     word-break: break-word;
-    background: rgba(255, 255, 255, 0.96);
+    overflow-wrap: anywhere;
+    background: var(--surface-card);
   }
 
   :deep(.el-descriptions__cell) {
-    padding-top: 16px;
-    padding-bottom: 16px;
+    padding: 14px 16px;
   }
 }
 
 .detail-code {
   display: block;
+  max-width: 100%;
   padding: 10px 12px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  border-radius: 12px;
-  color: #0f172a;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid var(--border-subtle);
+  border-radius: 10px;
+  color: var(--text-secondary);
   font-size: 12px;
   line-height: 1.7;
-  background:
-    linear-gradient(
-      180deg,
-      #f8fafc 0%,
-      #eff6ff 100%
-    );
+  background: var(--surface-subtle);
 }
 
 @media (max-width: 1350px) {
@@ -963,6 +965,14 @@ code {
   .audit-detail-descriptions {
     :deep(.el-descriptions) {
       display: block;
+    }
+
+    :deep(.el-descriptions__label) {
+      width: 88px;
+    }
+
+    :deep(.el-descriptions__cell) {
+      padding: 12px;
     }
   }
 }

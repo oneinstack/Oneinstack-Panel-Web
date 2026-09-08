@@ -81,6 +81,7 @@ export default {
   menuType: '菜单类型',
   menuTargetType: '目标类型',
   menuTargetKey: '目标标识',
+  menuTarget: '目标',
   menuIconKey: '图标标识',
   menuSort: '排序值',
   menuPermissions: '权限数',

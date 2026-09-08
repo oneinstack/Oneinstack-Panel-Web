@@ -53,6 +53,7 @@ export default {
   noData: '暂无数据',
   noDataDescription: '当前筛选条件下还没有记录，试试调整搜索或筛选项。',
   selectPlaceholder: '请选择',
+  select: '请选择',
   selectFolder: '选择文件夹',
   inputPlaceholder: '请输入',
   searchKeywordPlaceholder: '请输入搜索关键字',
@@ -69,6 +70,9 @@ export default {
     networkError: '网络异常，请稍后再试',
     initialPasswordRequired: '首次登录必须先修改初始密码'
   },
+  yes: '是',
+  no: '否',
+  noPermission: '暂无权限',
   noMenuPermission: '当前账号暂无{menu}菜单权限',
   operationPreview: {
     title: '操作预览',
@@ -79,6 +83,7 @@ export default {
     changeCount: '共 {count} 项',
     fileChange: '文件',
     actionChange: '命令',
+    service: '服务',
     prechecks: '执行前检查',
     prechecksPassed: '{count} 项检查已通过',
     prechecksDeferred: '{count} 项检查将在执行时完成',

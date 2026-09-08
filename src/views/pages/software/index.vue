@@ -238,7 +238,7 @@ const catalogDetail = computed(() => {
       <card-tabs :list="conf.dataTypelist" :activeIndex="conf.activeIndex" :clickActive="conf.clickActive" />
       <div
         v-loading="pageLoading || conf.list.loading"
-        :element-loading-text="t('software.loading', '正在加载软件数据...')"
+        :element-loading-text="t('software.loading', 'Loading software data...')"
         class="box2 software-box"
         :aria-busy="pageLoading || conf.list.loading"
       >

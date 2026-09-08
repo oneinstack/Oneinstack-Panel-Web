@@ -100,6 +100,7 @@ export default {
   createSnapshotAndDelete: '创建快照并删除',
   settingsDrawer: {
     title: '网站设置',
+    sectionLabel: '站点配置',
     addedAt: '添加时间 {time}',
     permanent: '永久有效',
     enabled: '运行',

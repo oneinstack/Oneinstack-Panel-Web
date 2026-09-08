@@ -1305,7 +1305,7 @@ onUnmounted(() => {
         <el-form-item :label="$t('monitor.channelName')" required>
           <el-input v-model="channelForm.name" maxlength="120" show-word-limit />
         </el-form-item>
-        <el-form-item label="Webhook URL" :required="!editingChannelID">
+        <el-form-item :label="$t('monitor.webhookUrl')" :required="!editingChannelID">
           <el-input v-model="channelForm.webhookUrl" type="password" show-password autocomplete="new-password"
             :placeholder="editingChannelID ? $t('monitor.keepCurrentUrl') : 'https://alerts.example.com/hooks/...'" />
         </el-form-item>
@@ -1808,6 +1808,17 @@ onUnmounted(() => {
     color: var(--text-primary);
   }
 
+  :deep(.el-select:not(.is-disabled) .el-select__wrapper) {
+    cursor: pointer;
+  }
+
+  :deep(.el-select:not(.is-disabled) .el-select__wrapper:hover) {
+    border-color: rgba(var(--primary-color), 0.5);
+    box-shadow:
+      inset 0 0 0 1px rgba(var(--primary-color), 0.34),
+      0 4px 12px rgba(var(--primary-color), 0.08);
+  }
+
   :deep(.el-input__inner::placeholder),
   :deep(.el-textarea__inner::placeholder) {
     color: var(--text-placeholder);
@@ -1933,6 +1944,20 @@ onUnmounted(() => {
     :deep(.el-input-number__input),
     :deep(.el-textarea__inner) {
       color: rgba(244, 247, 255, 0.96);
+    }
+
+    :deep(.el-select:not(.is-disabled) .el-select__selected-item),
+    :deep(.el-select:not(.is-disabled) .el-select__selected-item > span) {
+      color: rgba(244, 247, 255, 0.96) !important;
+      -webkit-text-fill-color: rgba(244, 247, 255, 0.96) !important;
+    }
+
+    :deep(.el-select:not(.is-disabled) .el-select__caret) {
+      color: rgba(194, 205, 229, 0.9) !important;
+    }
+
+    :deep(.el-select:not(.is-disabled) .el-select__wrapper:hover .el-select__caret) {
+      color: rgb(var(--primary-color)) !important;
     }
 
     :deep(.el-input__inner::placeholder),

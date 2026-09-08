@@ -101,6 +101,7 @@ export default {
   enableRule: 'Enable rule',
   channelFormTip: 'Supports custom alert gateways. Target must be a public HTTPS address. Redirects and private network addresses are rejected.',
   channelName: 'Channel name',
+  webhookUrl: 'Webhook URL',
   keepCurrentUrl: 'Leave blank to keep the current URL',
   hmacSecretOptional: 'HMAC-SHA256 signing secret (optional)',
   keepCurrentSecret: 'Leave blank to keep the current secret',

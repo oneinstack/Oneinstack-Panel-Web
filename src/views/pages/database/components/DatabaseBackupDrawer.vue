@@ -80,13 +80,13 @@ const backupColumns = computed<ColumnItem[]>(() => [
   {
     prop: "fileName",
     label: t("database.backup.file", "文件"),
-    minWidth: 220,
+    minWidth: 180,
     showOverflowTooltip: true,
   },
   {
     prop: "source",
     label: t("common.type", "类型"),
-    width: 110,
+    width: 150,
     slot: "source",
   },
   {
@@ -371,9 +371,11 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
           :columns="backupColumns"
           :pagination="false"
           height="calc(100vh - 260px)"
+          class="backup-table"
         >
           <template #source="{ row }">
             <el-tag
+              class="backup-source-tag"
               :type="row.source === 'pre_restore' ? 'warning' : 'success'"
             >
               {{
@@ -488,6 +490,21 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
   align-items: center;
   gap: 10px;
   margin-bottom: 10px;
+}
+
+.backup-panel {
+  min-width: 0;
+}
+
+.backup-source-tag {
+  white-space: nowrap;
+}
+
+.backup-table {
+  :deep(.table-row-actions) {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+  }
 }
 
 .backup-tabs {

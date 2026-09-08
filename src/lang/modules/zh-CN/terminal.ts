@@ -1,7 +1,7 @@
 export default {
   title: '安全终端',
   subtitle: '以独立低权限用户运行，命令参数不会写入审计日志。',
-  rootEyebrow: 'ROOT WEB SHELL',
+  rootEyebrow: 'ROOT 网页终端',
   rootTitle: '服务器终端',
   rootSubtitle: '以 root 用户运行，可直接执行完整的服务器管理操作。',
   rootPermission: 'Root 权限',

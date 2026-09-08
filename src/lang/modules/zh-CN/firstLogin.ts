@@ -1,4 +1,7 @@
 export default {
+  brandSubtitle: '服务器安全控制台',
+  protectionEyebrow: '首次登录保护',
+  footer: 'OneinStack Panel · 服务器安全控制台',
   heroTitleLine1: '只差一步，完成您的',
   heroTitleLine2: '面板安全初始化',
   heroDescription: '初始凭据仅用于首次登录。设置独立强密码后，即可进入服务器管理控制台。',

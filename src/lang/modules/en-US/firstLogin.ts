@@ -1,4 +1,7 @@
 export default {
+  brandSubtitle: 'Secure Server Console',
+  protectionEyebrow: 'FIRST LOGIN PROTECTION',
+  footer: 'OneinStack Panel · Secure Server Console',
   heroTitleLine1: 'One step left to finish',
   heroTitleLine2: 'panel security setup',
   heroDescription: 'Initial credentials are only for first sign-in. Set an independent strong password to enter the server console.',

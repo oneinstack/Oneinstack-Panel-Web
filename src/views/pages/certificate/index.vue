@@ -636,7 +636,7 @@ onBeforeUnmount(() => {
 }
 
 .certificate-panel {
-  padding: 0 18px 18px;
+  padding: 18px;
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
   background: var(--surface-card);
@@ -644,11 +644,21 @@ onBeforeUnmount(() => {
 }
 
 .tab-tools {
+  min-height: 58px;
   margin-bottom: 14px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+  box-shadow: var(--shadow-xs);
 }
 
 .tab-tools--right {
   justify-content: flex-end;
+}
+
+.tab-tools .el-select {
+  max-width: 100%;
 }
 
 .dns-note {
@@ -696,6 +706,23 @@ onBeforeUnmount(() => {
   .toolbar-actions {
     width: 100%;
     flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 560px) {
+  .certificate-panel {
+    padding: 12px;
+  }
+
+  .tab-tools {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 10px;
+  }
+
+  .tab-tools .el-select,
+  .tab-tools--right .el-button {
+    width: 100% !important;
   }
 }
 </style>

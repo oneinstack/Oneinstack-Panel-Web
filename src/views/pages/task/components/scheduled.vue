@@ -114,6 +114,8 @@ let rulesForm = ref({
   template_id: 'disk-usage-report',
   template_params: {} as Record<string, string>,
   schedule: '',
+  timeout_seconds: 1800,
+  concurrency_policy: 'forbid',
   created_at: '',
   deleted_at: '',
   id: '',
@@ -152,6 +154,8 @@ const addTask = () => {
     template_id: 'disk-usage-report',
     template_params: {},
     schedule: '',
+    timeout_seconds: 1800,
+    concurrency_policy: 'forbid',
     created_at: '',
     deleted_at: '',
     id: '',
@@ -335,6 +339,8 @@ const updateSingleTask = async (row: any) => {
     template_id: row.template_id || '',
     template_params: row.template_params || {},
     schedule: row.schedule,
+    timeout_seconds: row.timeout_seconds ?? 1800,
+    concurrency_policy: row.concurrency_policy || 'forbid',
     created_at: row.created_at,
     deleted_at: row.deleted_at,
     id: row.id,
@@ -387,7 +393,7 @@ const selectFilter = (row: any) => {
 const columns = computed<ColumnItem[]>(() => [
   { type: 'selection', width: 48, reserveSelection: true, selectable: selectFilter },
   { prop: 'name', label: t('task.taskName', 'Task name'), minWidth: 180, showOverflowTooltip: true },
-  { prop: 'enabled', label: t('task.status', 'Status'), minWidth: 130, slot: 'enabled' },
+  { prop: 'enabled', label: t('task.status', 'Status'), minWidth: 190, slot: 'enabled' },
   { prop: 'taskType', label: t('task.type', 'Type'), minWidth: 150, slot: 'taskType' },
   { prop: 'schedule', label: t('task.schedule', 'Schedule'), minWidth: 220, slot: 'schedule' },
   { prop: 'last_run_at', label: t('task.lastRunAt', 'Last run time'), minWidth: 190, slot: 'lastRunAt' },
@@ -652,9 +658,16 @@ watch(hasRunningExecutions, (running) => {
   min-width: 0;
 }
 
+.status-cell {
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
 .status-link {
   display: inline-flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 4px;
   min-height: 28px;
   padding: 3px 9px;
@@ -662,6 +675,7 @@ watch(hasRunningExecutions, (running) => {
   font-weight: 650;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
   transition: all 0.18s ease;
 }
 
@@ -681,6 +695,10 @@ watch(hasRunningExecutions, (running) => {
 }
 
 .status-tag {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  white-space: nowrap;
   border-radius: 999px;
   font-weight: 650;
 }

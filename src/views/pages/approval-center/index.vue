@@ -607,30 +607,45 @@ onMounted(async () => {
 .mini-tabs {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   padding: 4px;
-  border-radius: 999px;
-  background: rgba(var(--primary-color), 0.05);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-subtle);
+  box-shadow: var(--shadow-xs);
 }
 
 .mini-tabs__item {
-  min-width: 64px;
-  height: 34px;
+  min-width: 66px;
+  height: 36px;
   padding: 0 16px;
   border: 0;
-  border-radius: 999px;
+  border-radius: 8px;
   background: transparent;
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.mini-tabs__item:hover:not(.is-active) {
+  color: var(--text-primary);
+  background: var(--surface-hover);
+}
+
+.mini-tabs__item:focus-visible {
+  outline: 2px solid rgba(var(--primary-color), 0.52);
+  outline-offset: -2px;
 }
 
 .mini-tabs__item.is-active {
-  color: rgb(var(--primary-color));
-  background: var(--surface-card);
-  box-shadow: 0 8px 20px rgba(var(--primary-color), 0.14);
+  color: var(--primary-button-text);
+  background: rgb(var(--primary-color));
+  box-shadow: 0 5px 12px rgba(var(--primary-color), 0.2);
 }
 
 .resource-cell {

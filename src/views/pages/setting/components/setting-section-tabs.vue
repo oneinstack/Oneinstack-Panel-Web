@@ -30,7 +30,7 @@ const activate = (key: string) => {
 </script>
 
 <template>
-  <div class="setting-section-tabs" role="tablist" aria-label="Setting sections">
+  <div class="setting-section-tabs" role="tablist" :aria-label="t('setting.sectionTabsLabel', 'Setting sections')">
     <button
       v-for="item in items"
       :key="item.key"

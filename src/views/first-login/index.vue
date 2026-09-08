@@ -73,14 +73,14 @@ const submit = async () => {
         <div class="brand-mark">1S</div>
         <div>
           <strong>OneinStack Panel</strong>
-          <span>Secure Server Console</span>
+          <span>{{ $t('firstLogin.brandSubtitle') }}</span>
         </div>
       </div>
       <div class="visual-content">
         <div class="shield">
           <span>✓</span>
         </div>
-        <div class="eyebrow">FIRST LOGIN PROTECTION</div>
+        <div class="eyebrow">{{ $t('firstLogin.protectionEyebrow') }}</div>
         <h1>{{ $t('firstLogin.heroTitleLine1') }}<br />{{ $t('firstLogin.heroTitleLine2') }}</h1>
         <p>{{ $t('firstLogin.heroDescription') }}</p>
         <div class="protection-list">
@@ -145,7 +145,7 @@ const submit = async () => {
           <div class="privacy-note">{{ $t('firstLogin.privacyNote') }}</div>
         </div>
       </div>
-      <div class="panel-footer">OneinStack Panel · Secure Server Console</div>
+      <div class="panel-footer">{{ $t('firstLogin.footer') }}</div>
     </main>
   </div>
 </template>

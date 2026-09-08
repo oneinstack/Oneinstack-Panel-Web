@@ -1138,7 +1138,7 @@ watch(
 
 .list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
   width: 100%;
   margin-top: 20px;
@@ -1305,6 +1305,7 @@ watch(
   gap: 14px;
   margin-top: auto;
   padding-top: 20px;
+  flex-wrap: wrap;
   color: var(--text-tertiary);
   font-size: 11px;
 }
@@ -1319,6 +1320,7 @@ watch(
 .software-card-actions {
   display: flex;
   flex: 0 0 auto;
+  min-width: 0;
   align-items: center;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -1332,6 +1334,8 @@ watch(
   padding: 0 14px;
   align-items: center;
   justify-content: center;
+  flex: 0 0 auto;
+  white-space: nowrap;
   color: var(--el-color-primary);
   border: 1px solid var(--el-color-primary);
   border-radius: 9px;
@@ -1445,6 +1449,12 @@ watch(
     gap: 10px;
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 1200px) {
+  .list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 

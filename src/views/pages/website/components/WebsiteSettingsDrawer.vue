@@ -258,7 +258,7 @@ const openCertificate = () => {
       <header class="settings-header">
         <div class="settings-header__title">
           <div class="settings-header__mark">W</div>
-          <div><span>SITE CONFIGURATION</span><h2>{{ currentWebsite.name || t('website.settingsDrawer.title') }}</h2><p>{{ t('website.settingsDrawer.addedAt', { time: formatTime(currentWebsite.create_time) }) }}</p></div>
+          <div><span>{{ t('website.settingsDrawer.sectionLabel') }}</span><h2>{{ currentWebsite.name || t('website.settingsDrawer.title') }}</h2><p>{{ t('website.settingsDrawer.addedAt', { time: formatTime(currentWebsite.create_time) }) }}</p></div>
         </div>
         <div class="settings-header__summary">
           <div><span>{{ t('website.todayTraffic') }}</span><strong>{{ formatBytes(props.website?.today_traffic_bytes) }}</strong></div>

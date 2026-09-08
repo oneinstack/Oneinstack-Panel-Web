@@ -2574,6 +2574,7 @@ const archiveTaskRunningCount = computed(
         <template v-else-if="conf.operationDialog.type === 'share'">
           <template v-if="!conf.operationDialog.shareUrl">
             <el-alert
+              class="share-notice"
               :title="
                 t(
                   'file.shareTip',
@@ -2585,22 +2586,24 @@ const archiveTaskRunningCount = computed(
               :closable="false"
             />
             <el-form label-position="top" class="share-form">
-              <el-form-item :label="t('file.shareFile', 'Shared file')">
+              <el-form-item class="share-form__file" :label="t('file.shareFile', 'Shared file')">
                 <el-input
                   :model-value="conf.operationDialog.row.path"
                   disabled
                 />
               </el-form-item>
-              <el-form-item :label="t('file.expiresIn', 'Expires in')">
-                <el-input-number
-                  v-model="conf.operationDialog.expiryHours"
-                  :min="1"
-                  :max="168"
-                  controls-position="right"
-                />
-                <span class="form-unit">{{
-                  t("file.hoursMaxDays", "hours (up to 7 days)")
-                }}</span>
+              <el-form-item class="share-form__expiry" :label="t('file.expiresIn', 'Expires in')">
+                <div class="share-expiry-control">
+                  <el-input-number
+                    v-model="conf.operationDialog.expiryHours"
+                    :min="1"
+                    :max="168"
+                    controls-position="right"
+                  />
+                  <span class="form-unit">{{
+                    t("file.hoursMaxDays", "hours (up to 7 days)")
+                  }}</span>
+                </div>
               </el-form-item>
             </el-form>
           </template>
@@ -3916,6 +3919,70 @@ const archiveTaskRunningCount = computed(
 
 .share-form {
   margin-top: 20px;
+
+  :deep(.el-form-item) {
+    margin-bottom: 20px;
+  }
+
+  :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
+  :deep(.el-form-item__label) {
+    margin-bottom: 8px;
+    padding: 0;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.5;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-input-number) {
+    border-radius: 9px;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 42px;
+    background: var(--surface-subtle);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+
+    &:hover {
+      box-shadow: 0 0 0 1px rgba(var(--primary-color), 0.42) inset;
+    }
+  }
+
+  :deep(.el-input.is-disabled .el-input__wrapper) {
+    background: var(--surface-subtle);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+  }
+
+  :deep(.el-input.is-disabled .el-input__inner),
+  :deep(.el-input.is-disabled .el-input__inner::placeholder) {
+    color: var(--text-secondary) !important;
+    -webkit-text-fill-color: var(--text-secondary) !important;
+    opacity: 1 !important;
+  }
+}
+
+.share-notice {
+  margin-bottom: 20px;
+}
+
+.share-expiry-control {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  :deep(.el-input-number) {
+    width: 180px;
+    flex: 0 0 180px;
+  }
+
+  .form-unit {
+    margin-left: 0;
+    line-height: 1.5;
+  }
 }
 
 .form-unit {
@@ -3928,7 +3995,10 @@ const archiveTaskRunningCount = computed(
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 8px 0 4px;
+  padding: 20px 18px 18px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  background: var(--surface-card);
   text-align: center;
 
   .share-result__icon {
@@ -3949,9 +4019,46 @@ const archiveTaskRunningCount = computed(
   }
 
   p {
+    max-width: 360px;
     margin: 8px 0 18px;
     color: var(--text-tertiary);
     font-size: 13px;
+    line-height: 1.55;
+  }
+
+  :deep(.el-input__wrapper) {
+    min-height: 42px;
+    border-radius: 9px 0 0 9px;
+    background: var(--surface-subtle);
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+  }
+
+  :deep(.el-input-group__append) {
+    border-color: var(--border-default);
+    background: var(--surface-subtle);
+  }
+
+  :deep(.el-input-group__append .el-button) {
+    min-height: 40px;
+    color: rgb(var(--primary-color));
+    font-weight: 650;
+  }
+}
+
+@media (max-width: 640px) {
+  .share-expiry-control {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+
+    :deep(.el-input-number) {
+      width: 100%;
+      flex-basis: auto;
+    }
+  }
+
+  .share-expiry-control .form-unit {
+    margin-top: 0;
   }
 }
 

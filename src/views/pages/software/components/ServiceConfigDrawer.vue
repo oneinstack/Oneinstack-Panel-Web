@@ -425,14 +425,21 @@ watch(values, () => {
           <div v-for="entry in history" :key="entry.id" class="history-item">
             <span class="history-marker" :class="`is-${entry.status}`" />
             <div class="history-copy">
-              <div>
-                <strong>{{ formatDate(entry.createdAt) }}</strong>
-                <el-tag size="small" effect="plain" :type="historyTagType(entry.status)">
-                  {{ historyStatus(entry.status) }}
-                </el-tag>
-                <el-tag v-if="entry.restoreFromId" size="small" effect="plain">
-                  {{ $t('software.config.restoreTask') }}
-                </el-tag>
+              <div class="history-item__heading">
+                <strong class="history-date">{{ formatDate(entry.createdAt) }}</strong>
+                <div class="history-tags">
+                  <el-tag
+                    class="history-status-tag"
+                    size="small"
+                    effect="plain"
+                    :type="historyTagType(entry.status)"
+                  >
+                    {{ historyStatus(entry.status) }}
+                  </el-tag>
+                  <el-tag v-if="entry.restoreFromId" class="history-restore-tag" size="small" effect="plain">
+                    {{ $t('software.config.restoreTask') }}
+                  </el-tag>
+                </div>
               </div>
               <p>
                 {{ entry.softwareVersion }} · {{ $t('software.config.changeCount', { count: historyChangeCount(entry) }) }} ·
@@ -440,6 +447,7 @@ watch(values, () => {
               </p>
             </div>
             <el-button
+              class="history-restore-button"
               link
               type="primary"
               :icon="RefreshLeft"
@@ -866,12 +874,18 @@ watch(values, () => {
 }
 
 .history-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
   min-height: 68px;
   align-items: center;
   gap: 12px;
   padding: 12px 18px;
   border-bottom: 1px solid var(--border-subtle);
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: var(--surface-subtle);
+  }
 
   &:last-child {
     border-bottom: 0;
@@ -902,12 +916,20 @@ watch(values, () => {
 
 .history-copy {
   min-width: 0;
-  flex: 1;
 
-  > div {
+  .history-item__heading {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 6px;
+  }
+
+  .history-date {
+    color: var(--text-secondary);
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 26px;
+    white-space: nowrap;
   }
 
   strong {
@@ -924,6 +946,120 @@ watch(values, () => {
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.history-tags {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.history-status-tag,
+.history-restore-tag {
+  min-height: 26px;
+  padding: 0 8px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 24px;
+}
+
+:deep(.history-status-tag.el-tag--success) {
+  --el-tag-bg-color: color-mix(in srgb, var(--el-color-success) 10%, transparent);
+  --el-tag-border-color: color-mix(in srgb, var(--el-color-success) 42%, var(--border-subtle));
+  --el-tag-text-color: var(--el-color-success);
+  border-color: color-mix(in srgb, var(--el-color-success) 42%, var(--border-subtle));
+  color: var(--el-color-success);
+  background-color: color-mix(in srgb, var(--el-color-success) 10%, transparent) !important;
+}
+
+:deep(.history-status-tag.el-tag--warning) {
+  --el-tag-bg-color: color-mix(in srgb, var(--el-color-warning) 10%, transparent);
+  --el-tag-border-color: color-mix(in srgb, var(--el-color-warning) 42%, var(--border-subtle));
+  --el-tag-text-color: var(--el-color-warning);
+  border-color: color-mix(in srgb, var(--el-color-warning) 42%, var(--border-subtle));
+  color: var(--el-color-warning);
+  background-color: color-mix(in srgb, var(--el-color-warning) 10%, transparent) !important;
+}
+
+:deep(.history-status-tag.el-tag--danger) {
+  --el-tag-bg-color: color-mix(in srgb, var(--el-color-danger) 10%, transparent);
+  --el-tag-border-color: color-mix(in srgb, var(--el-color-danger) 42%, var(--border-subtle));
+  --el-tag-text-color: var(--el-color-danger);
+  border-color: color-mix(in srgb, var(--el-color-danger) 42%, var(--border-subtle));
+  color: var(--el-color-danger);
+  background-color: color-mix(in srgb, var(--el-color-danger) 10%, transparent) !important;
+}
+
+:deep(.history-status-tag.el-tag--info) {
+  --el-tag-bg-color: color-mix(in srgb, var(--text-tertiary) 8%, transparent);
+  --el-tag-border-color: color-mix(in srgb, var(--text-tertiary) 34%, var(--border-subtle));
+  --el-tag-text-color: var(--text-tertiary);
+  border-color: color-mix(in srgb, var(--text-tertiary) 34%, var(--border-subtle));
+  color: var(--text-tertiary);
+  background-color: color-mix(in srgb, var(--text-tertiary) 8%, transparent) !important;
+}
+
+.history-restore-tag {
+  --el-tag-bg-color: rgba(var(--primary-color), 0.09);
+  --el-tag-border-color: rgba(var(--primary-color), 0.28);
+  --el-tag-text-color: rgb(var(--primary-color));
+  border-color: rgba(var(--primary-color), 0.28);
+  color: rgb(var(--primary-color));
+  background-color: rgba(var(--primary-color), 0.09) !important;
+}
+
+:global(html.dark) {
+  :deep(.history-status-tag),
+  :deep(.history-restore-tag) {
+    background-image: none !important;
+  }
+}
+
+.history-restore-button {
+  min-height: 32px;
+  margin-left: 8px;
+  padding: 0 10px !important;
+  border: 1px solid rgba(var(--primary-color), 0.24) !important;
+  border-radius: 8px !important;
+  color: rgb(var(--primary-color)) !important;
+  background: rgba(var(--primary-color), 0.07) !important;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+
+  &:hover:not(.is-disabled),
+  &:focus-visible:not(.is-disabled) {
+    border-color: rgba(var(--primary-color), 0.52) !important;
+    background: rgba(var(--primary-color), 0.15) !important;
+    transform: translateY(-1px);
+  }
+
+  &:active:not(.is-disabled) {
+    transform: translateY(0);
+  }
+}
+
+:deep(.history-restore-button .el-icon) {
+  margin-right: 5px;
+  color: inherit;
+}
+
+:deep(.history-restore-button .el-icon + span) {
+  margin-left: 0;
+}
+
+:deep(.history-restore-button .is-loading) {
+  color: inherit;
+}
+
+.history-restore-button.is-disabled,
+.history-restore-button.is-disabled:hover {
+  border-color: var(--border-subtle) !important;
+  color: var(--text-placeholder) !important;
+  background: var(--surface-subtle) !important;
 }
 
 .preview-title {
@@ -1122,6 +1258,18 @@ watch(values, () => {
 
   .settings-panel__header {
     align-items: flex-start;
+  }
+
+  .history-item {
+    grid-template-columns: 8px minmax(0, 1fr);
+    align-items: start;
+    row-gap: 5px;
+  }
+
+  .history-restore-button {
+    grid-column: 2;
+    justify-self: start;
+    margin: 0;
   }
 
   .drawer-footer {

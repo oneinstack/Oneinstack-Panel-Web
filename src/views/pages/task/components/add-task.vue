@@ -25,10 +25,14 @@
       </el-form-item>
 
       <el-form-item :label="i18n.t('task.editor.taskType')" required>
-        <el-radio-group v-model="ruleForm.task_type">
-          <el-radio-button value="template">{{ i18n.t('task.editor.templateType') }}</el-radio-button>
-          <el-radio-button value="shell">{{ i18n.t('task.editor.shellType') }}</el-radio-button>
-        </el-radio-group>
+        <el-segmented
+          v-model="ruleForm.task_type"
+          class="task-type-segmented"
+          :options="[
+            { label: i18n.t('task.editor.templateType'), value: 'template' },
+            { label: i18n.t('task.editor.shellType'), value: 'shell' }
+          ]"
+        />
       </el-form-item>
 
       <template v-if="ruleForm.task_type === 'template'">
@@ -615,6 +619,19 @@ const handleSubmit = async () => {
   })
 }
 
+const normalizeSchedule = (schedule: unknown): string[] => {
+  const values = Array.isArray(schedule) ? schedule : [schedule]
+  return values
+    .flatMap((value) => String(value ?? '').split(','))
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+const normalizeBoolean = (value: unknown) => {
+  if (typeof value === 'string') return ['true', '1', 'yes'].includes(value.toLowerCase())
+  return value === true || value === 1
+}
+
 // 监听父组件传值
 watch(() => props.modelValue, (val) => {
   drawer.value = val
@@ -623,19 +640,19 @@ watch(() => props.modelValue, (val) => {
 // 监听formData变化,用于修改时回填数据
 watch(() => props.formData, (val) => {
     if (val && !props.type) {
-        const cronTimes = val.schedule.split(',');
+        const cronTimes = normalizeSchedule(val.schedule);
         ruleForm.name = val.name;
         ruleForm.cycles = [];
         ruleForm.task_type = val.task_type || 'shell';
         ruleForm.template_id = val.template_id || 'disk-usage-report';
         ruleForm.template_params = { ...(val.template_params || {}) };
         ruleForm.command = val.command;
-        ruleForm.notify_on_failure = Boolean(val.notify_on_failure);
+        ruleForm.notify_on_failure = normalizeBoolean(val.notify_on_failure);
         confirmUnsafeShell.value = false;
-        ruleForm.timeout_seconds = val.timeout_seconds || 1800;
+        ruleForm.timeout_seconds = Number(val.timeout_seconds ?? 1800);
         ruleForm.concurrency_policy = val.concurrency_policy || 'forbid';
         ruleForm.name = val.name;
-      copy_content.value = val.command;
+        copy_content.value = val.command || '';
 
         cronTimes.forEach((cronTime: string) => {
             const [minutes, hours, dayOfMonth, month, dayOfWeek] = cronTime.split(' ');
@@ -748,6 +765,20 @@ const handleScriptInput = (event: Event) => {
 
 .task-drawer-form {
   max-width: 680px;
+
+  :deep(.task-type-segmented) {
+    --el-segmented-color: var(--text-secondary);
+    --el-segmented-bg-color: var(--surface-subtle);
+    --el-segmented-item-selected-color: var(--primary-button-text);
+    --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+    --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+    --el-segmented-item-hover-color: var(--text-primary);
+    --el-segmented-item-hover-bg-color: var(--surface-hover);
+    --el-segmented-item-active-bg-color: var(--surface-muted);
+    --el-segmented-item-disabled-color: var(--text-placeholder);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--shadow-xs);
+  }
 }
 
 .schedule-editor {

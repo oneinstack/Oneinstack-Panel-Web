@@ -10,6 +10,7 @@ export default {
   templates: '模板',
   registries: '镜像仓库',
   createContainer: '创建容器',
+  createDisabledPermission: '当前账号没有创建容器权限',
   pullImage: '拉取镜像',
   buildImage: '构建镜像',
   resourceLimits: '资源限制',
@@ -61,6 +62,7 @@ export default {
   },
   resourceDialog: {
     confirm: '确认',
+    lines: '行',
     titles: {
       image: '拉取镜像', imageImport: '导入镜像', imageBuild: '构建镜像', imageTag: '修改镜像标签', imagePush: '推送镜像',
       composeCreate: '创建 Compose 项目', composeEdit: '编辑 Compose 项目', composeTemplateDeploy: '从模板部署 Compose',

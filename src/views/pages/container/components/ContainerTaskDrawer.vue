@@ -480,10 +480,14 @@ onBeforeUnmount(() => {
           <strong>{{ t('container.task.listTitle', 'Container tasks') }}</strong>
           <span>{{ t('container.task.listHint', 'Select a task to view details and live logs') }}</span>
         </div>
-        <el-radio-group v-model="taskFilter" size="small">
-          <el-radio-button label="active">{{ t('container.task.filterActive', 'In progress') }}</el-radio-button>
-          <el-radio-button label="all">{{ t('container.task.filterAll', 'All') }}</el-radio-button>
-        </el-radio-group>
+        <el-segmented
+          v-model="taskFilter"
+          class="task-filter-segmented"
+          :options="[
+            { label: t('container.task.filterActive', 'In progress'), value: 'active' },
+            { label: t('container.task.filterAll', 'All'), value: 'all' }
+          ]"
+        />
       </div>
       <div v-loading="taskListLoading" class="task-list">
         <button
@@ -676,6 +680,21 @@ onBeforeUnmount(() => {
     color: var(--text-tertiary);
     font-size: 12px;
   }
+}
+
+.task-filter-segmented {
+  flex: 0 0 auto;
+  --el-segmented-color: var(--text-secondary);
+  --el-segmented-bg-color: var(--surface-subtle);
+  --el-segmented-item-selected-color: var(--primary-button-text);
+  --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+  --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+  --el-segmented-item-hover-color: var(--text-primary);
+  --el-segmented-item-hover-bg-color: var(--surface-hover);
+  --el-segmented-item-active-bg-color: var(--surface-muted);
+  --el-segmented-item-disabled-color: var(--text-placeholder);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-xs);
 }
 
 .task-list {

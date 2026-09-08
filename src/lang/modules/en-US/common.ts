@@ -53,6 +53,7 @@ export default {
   noData: 'No data',
   noDataDescription: 'No records match the current filters. Try adjusting search or filters.',
   selectPlaceholder: 'Select',
+  select: 'Select',
   selectFolder: 'Select folder',
   inputPlaceholder: 'Enter',
   searchKeywordPlaceholder: 'Enter search keyword',
@@ -69,6 +70,9 @@ export default {
     networkError: 'Network error. Please try again later.',
     initialPasswordRequired: 'Change the initial password before continuing.'
   },
+  yes: 'Yes',
+  no: 'No',
+  noPermission: 'No permission',
   noMenuPermission: 'This account does not have permission for the {menu} menu',
   operationPreview: {
     title: 'Operation preview',
@@ -79,6 +83,7 @@ export default {
     changeCount: '{count} items',
     fileChange: 'File',
     actionChange: 'Command',
+    service: 'Service',
     prechecks: 'Prechecks',
     prechecksPassed: '{count} checks passed',
     prechecksDeferred: '{count} checks will run during execution',

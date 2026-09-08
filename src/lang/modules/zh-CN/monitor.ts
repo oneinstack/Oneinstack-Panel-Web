@@ -101,6 +101,7 @@ export default {
   enableRule: '启用规则',
   channelFormTip: '支持接入自建告警网关；目标必须为公网 HTTPS 地址，重定向和内网地址会被拒绝。',
   channelName: '通道名称',
+  webhookUrl: 'Webhook 地址',
   keepCurrentUrl: '留空保留现有 URL',
   hmacSecretOptional: 'HMAC-SHA256 签名密钥（可选）',
   keepCurrentSecret: '留空保留现有密钥',

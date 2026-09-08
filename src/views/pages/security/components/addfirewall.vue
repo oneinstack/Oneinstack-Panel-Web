@@ -268,17 +268,25 @@ const submit = async () => {
       </el-form-item>
 
       <el-form-item :label="t('security.strategy', '策略')" prop="strategy">
-        <el-radio-group v-model="form.strategy">
-          <el-radio-button value="allow">{{ t('security.allow', '放行') }}</el-radio-button>
-          <el-radio-button value="deny">{{ t('security.reject', '拒绝') }}</el-radio-button>
-        </el-radio-group>
+        <el-segmented
+          v-model="form.strategy"
+          class="firewall-segmented"
+          :options="[
+            { label: t('security.allow', '放行'), value: 'allow' },
+            { label: t('security.reject', '拒绝'), value: 'deny' }
+          ]"
+        />
       </el-form-item>
 
       <el-form-item :label="t('security.direction', '方向')" prop="direction">
-        <el-radio-group v-model="form.direction">
-          <el-radio-button value="in">{{ t('security.inbound', '入站') }}</el-radio-button>
-          <el-radio-button value="out">{{ t('security.outbound', '出站') }}</el-radio-button>
-        </el-radio-group>
+        <el-segmented
+          v-model="form.direction"
+          class="firewall-segmented"
+          :options="[
+            { label: t('security.inbound', '入站'), value: 'in' },
+            { label: t('security.outbound', '出站'), value: 'out' }
+          ]"
+        />
       </el-form-item>
 
       <el-form-item :label="t('security.remark', '备注')" prop="remark">
@@ -319,5 +327,19 @@ const submit = async () => {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.firewall-segmented {
+  --el-segmented-color: var(--text-secondary);
+  --el-segmented-bg-color: var(--surface-subtle);
+  --el-segmented-item-selected-color: var(--primary-button-text);
+  --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+  --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+  --el-segmented-item-hover-color: var(--text-primary);
+  --el-segmented-item-hover-bg-color: var(--surface-hover);
+  --el-segmented-item-active-bg-color: var(--surface-muted);
+  --el-segmented-item-disabled-color: var(--text-placeholder);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-xs);
 }
 </style>

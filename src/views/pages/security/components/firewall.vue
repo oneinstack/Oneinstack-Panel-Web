@@ -5,6 +5,7 @@ import { Delete, EditPen, WarningFilled } from "@element-plus/icons-vue";
 
 import { Api } from "@/api/modules";
 import SearchInput from "@/components/search-input.vue";
+import CustomDrawer from "@/components/custom-drawer.vue";
 import i18n from "@/lang";
 import { useSoftwareTaskStore } from "@/stores/modules/softwareTask";
 import {
@@ -1823,13 +1824,19 @@ onMounted(() => {
       @saved="handleSavedPortRule"
     />
 
-    <el-dialog
-      v-model="ipDialogVisible"
-      width="600px"
-      :close-on-click-modal="false"
+    <CustomDrawer
+      :visible="ipDialogVisible"
+      size="640px"
       :title="ipDialogTitle"
+      :confirm-text="ipDialogIsAdd ? t('security.addRule', '添加规则') : t('common.saveChanges', '保存修改')"
+      :loading="ipSubmitting"
+      :confirm-disabled="!canWrite || ipSubmitting"
+      destroy-on-close
+      append-to-body
+      :on-close="() => { ipDialogVisible = false }"
+      :on-confirm="saveIPRule"
     >
-      <el-form label-position="top" class="dialog-form">
+      <el-form label-position="top" class="dialog-form firewall-ip-form">
         <el-form-item
           :label="
             activeTab === 'region'
@@ -1863,14 +1870,14 @@ onMounted(() => {
           />
         </el-form-item>
         <el-form-item :label="t('security.accessPolicy', '访问策略')">
-          <el-radio-group v-model="ipForm.strategy">
-            <el-radio-button value="allow">{{
-              t("security.allow", "放行")
-            }}</el-radio-button>
-            <el-radio-button value="deny">{{
-              t("security.reject", "拒绝")
-            }}</el-radio-button>
-          </el-radio-group>
+          <el-segmented
+            v-model="ipForm.strategy"
+            class="firewall-segmented"
+            :options="[
+              { label: t('security.allow', '放行'), value: 'allow' },
+              { label: t('security.reject', '拒绝'), value: 'deny' }
+            ]"
+          />
         </el-form-item>
         <el-form-item :label="t('security.expiresAt', '过期时间')">
           <el-date-picker
@@ -1908,28 +1915,25 @@ onMounted(() => {
           show-icon
         />
       </el-form>
-      <template #footer>
-        <el-button @click="ipDialogVisible = false">{{
-          t("common.cancel", "取消")
-        }}</el-button>
-        <el-button
-          type="primary"
-          :loading="ipSubmitting"
-          :disabled="!canWrite"
-          @click="saveIPRule"
-        >{{
-          t("security.saveRule", "保存规则")
-        }}</el-button>
-      </template>
-    </el-dialog>
+    </CustomDrawer>
 
-    <el-dialog
-      v-model="forwardDialogVisible"
-      width="560px"
-      :close-on-click-modal="false"
+    <CustomDrawer
+      :visible="forwardDialogVisible"
+      size="640px"
       :title="forwardDialogTitle"
+      :confirm-text="
+        forwardDialogIsAdd
+          ? t('security.saveForward', '保存转发')
+          : t('common.saveChanges', '保存修改')
+      "
+      :loading="forwardSubmitting"
+      :confirm-disabled="!canWrite || forwardSubmitting"
+      destroy-on-close
+      append-to-body
+      :on-close="() => { forwardDialogVisible = false }"
+      :on-confirm="saveForward"
     >
-      <el-form label-position="top" class="dialog-form">
+      <el-form label-position="top" class="dialog-form firewall-forward-form">
         <div class="form-grid">
           <el-form-item :label="t('security.protocol', '协议')">
             <el-select v-model="forwardForm.protocol" class="full-width">
@@ -1994,19 +1998,7 @@ onMounted(() => {
           show-icon
         />
       </el-form>
-      <template #footer>
-        <el-button @click="forwardDialogVisible = false">{{
-          t("common.cancel", "取消")
-        }}</el-button>
-        <el-button
-          type="primary"
-          :loading="forwardSubmitting"
-          :disabled="!canWrite"
-          @click="saveForward"
-          >{{ t("security.saveForward", "保存转发") }}</el-button
-        >
-      </template>
-    </el-dialog>
+    </CustomDrawer>
 
     <InstallTaskDrawer v-model="installTaskVisible" :task-id="installTaskId" />
   </div>
@@ -2251,6 +2243,24 @@ onMounted(() => {
 
 .dialog-form {
   padding: 4px 4px 0;
+}
+
+.firewall-ip-form {
+  max-width: 620px;
+}
+
+.firewall-segmented {
+  --el-segmented-color: var(--text-secondary);
+  --el-segmented-bg-color: var(--surface-subtle);
+  --el-segmented-item-selected-color: var(--primary-button-text);
+  --el-segmented-item-selected-bg-color: rgb(var(--primary-color));
+  --el-segmented-item-selected-disabled-bg-color: rgba(var(--primary-color), 0.46);
+  --el-segmented-item-hover-color: var(--text-primary);
+  --el-segmented-item-hover-bg-color: var(--surface-hover);
+  --el-segmented-item-active-bg-color: var(--surface-muted);
+  --el-segmented-item-disabled-color: var(--text-placeholder);
+  border: 1px solid var(--border-default);
+  box-shadow: var(--shadow-xs);
 }
 
 .form-grid {

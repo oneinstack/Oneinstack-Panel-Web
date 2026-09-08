@@ -132,6 +132,7 @@ export default {
   redisPanel: {
     currentServerHint: '当前所有操作都关联至',
     selectServer: '请选择一个服务器',
+    databaseTabsLabel: 'Redis 数据库选择',
     emptyKeys: '当前数据库暂无 Key'
   },
   backup: {
@@ -141,6 +142,7 @@ export default {
     backupNow: '立即备份',
     activeTaskHint: '当前数据库有任务执行中',
     backupFiles: '备份文件',
+    tabsLabel: '备份管理内容',
     file: '文件',
     preRestoreBackup: '恢复前安全备份',
     manualBackup: '手动备份',
