@@ -7,11 +7,18 @@ import i18n from '@/lang'
 
 const softwareTaskStore = useSoftwareTaskStore()
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   taskId: string
   closeOnClickModal?: boolean
-}>()
+  canCancel?: boolean
+  canRetry?: boolean
+  canLog?: boolean
+}>(), {
+  canCancel: true,
+  canRetry: true,
+  canLog: true
+})
 
 const emit = defineEmits<{
   (event: 'update:modelValue', value: boolean): void
@@ -186,10 +193,11 @@ const stages = computed(() => {
 const loadTask = async () => {
   if (!props.modelValue || !props.taskId) return
   await softwareTaskStore.track(props.taskId)
-  await softwareTaskStore.fetchLog(props.taskId)
+  if (props.canLog) await softwareTaskStore.fetchLog(props.taskId)
 }
 
 const cancelTask = async () => {
+  if (!props.canCancel) return
   const uninstall = isUninstall.value
   const serviceTask = isServiceTask.value
   const configurationTask = isConfigurationTask.value
@@ -238,6 +246,7 @@ const writeClipboardText = async (value: string) => {
 }
 
 const copyDiagnostics = async () => {
+  if (!props.canLog) return
   const value = [
     `Task: ${task.value?.id}`,
     `Component: ${task.value?.component}`,
@@ -256,7 +265,7 @@ const copyDiagnostics = async () => {
 }
 
 const downloadLog = async () => {
-  if (!props.taskId || downloading.value) return
+  if (!props.canLog || !props.taskId || downloading.value) return
   downloading.value = true
   try {
     await softwareTaskStore.downloadLog(props.taskId)
@@ -420,7 +429,7 @@ onBeforeUnmount(() => {
       </el-alert>
 
       <section class="diagnostic-grid">
-        <section class="log-section">
+        <section v-if="canLog" class="log-section">
           <div class="log-toolbar">
             <div class="log-toolbar__title">
               <span class="log-live-dot"></span>
@@ -460,13 +469,13 @@ onBeforeUnmount(() => {
     <template #footer>
       <div class="task-actions">
         <div class="task-actions__group task-actions__group--tools">
-          <el-button :loading="downloading" @click="downloadLog">{{ $t('software.task.downloadFullLog') }}</el-button>
-          <el-button v-if="failed" @click="copyDiagnostics">{{ $t('software.task.copyDiagnostics') }}</el-button>
+          <el-button v-if="canLog" :loading="downloading" @click="downloadLog">{{ $t('software.task.downloadFullLog') }}</el-button>
+          <el-button v-if="failed && canLog" @click="copyDiagnostics">{{ $t('software.task.copyDiagnostics') }}</el-button>
         </div>
         <div class="task-actions__group task-actions__group--main">
-          <el-button v-if="cancelable" type="danger" plain @click="cancelTask">{{ $t('software.task.cancelTask') }}</el-button>
+          <el-button v-if="cancelable && canCancel" type="danger" plain @click="cancelTask">{{ $t('software.task.cancelTask') }}</el-button>
           <el-button
-            v-if="failed && !isUninstall && !isServiceTask && !isConfigurationTask"
+            v-if="failed && canRetry && !isUninstall && !isServiceTask && !isConfigurationTask"
             type="primary"
             class="task-actions__retry"
             @click="emit('retry', taskId)"

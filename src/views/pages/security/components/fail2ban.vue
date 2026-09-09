@@ -12,20 +12,11 @@ import { submitOperation, isOperationCancelled } from '@/utils/operationPreview'
 import { useSoftwareTaskStore } from '@/stores/modules/softwareTask'
 import InstallTaskDrawer from '../../software/components/InstallTaskDrawer.vue'
 import System from '@/utils/System'
+import type { SecurityCapabilities } from '../access'
 
 type EnforcementMode = 'observe' | 'autoBan'
 type TaskStatus = 'queued' | 'running' | 'succeeded' | 'failed' | 'interrupted'
 type PolicyTemplate = 'sshd' | 'panel-login' | 'nginx-http-auth' | 'nginx-botsearch'
-
-interface Fail2banCapabilities {
-  showSecurityMenu: boolean
-  showFail2banTab: boolean
-  canChangePolicy: boolean
-  canBan: boolean
-  canUnban: boolean
-  canInstall: boolean
-  canReadAuditEvidence: boolean
-}
 
 interface Fail2banTemplate {
   key: PolicyTemplate
@@ -156,7 +147,7 @@ interface Fail2banStatus {
 }
 
 const props = defineProps<{
-  capabilities: Fail2banCapabilities
+  capabilities: SecurityCapabilities
 }>()
 
 const softwareTaskStore = useSoftwareTaskStore()
@@ -266,7 +257,7 @@ let banClockTimer: number | null = null
 const banClock = ref(Date.now())
 
 const activeInstallTask = computed(() => softwareTaskStore.activeForKey('fail2ban'))
-const canReadFail2ban = computed(() => props.capabilities.showFail2banTab)
+const canReadFail2ban = computed(() => props.capabilities.canReadIntrusion)
 const canOperate = computed(() => status.value.installed && status.value.serviceActive)
 
 const cooldownKey = (code: number, operation: string, target: string) =>
@@ -806,11 +797,11 @@ const loadAll = async () => {
 
 const submitTaskOperation = async (operation: string, payload: unknown) => {
   const allowed = operation === 'fail2ban.policy_change'
-    ? props.capabilities.canChangePolicy
+    ? props.capabilities.canManageIntrusion
     : operation === 'fail2ban.ban'
-      ? props.capabilities.canBan
+      ? props.capabilities.canManageIntrusion
       : operation === 'fail2ban.unban'
-        ? props.capabilities.canUnban
+        ? props.capabilities.canManageIntrusion
         : false
   if (!canReadFail2ban.value || !allowed) return null
   const response: any = await submitOperation(operation, payload)
@@ -843,7 +834,7 @@ const submitTaskOperation = async (operation: string, payload: unknown) => {
 }
 
 const openCreatePolicy = (templateKey?: PolicyTemplate) => {
-  if (!props.capabilities.canChangePolicy || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   policyDialogMode.value = 'create'
   resetPolicyForm()
   if (templateKey) {
@@ -854,7 +845,7 @@ const openCreatePolicy = (templateKey?: PolicyTemplate) => {
 }
 
 const openEditPolicy = (row: Fail2banPolicy) => {
-  if (!props.capabilities.canChangePolicy || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   policyDialogMode.value = 'edit'
   policyForm.id = row.id
   policyForm.baseRevision = row.revision
@@ -870,7 +861,7 @@ const openEditPolicy = (row: Fail2banPolicy) => {
 }
 
 const submitPolicy = async () => {
-  if (!props.capabilities.canChangePolicy || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   loading.policySubmit = true
   try {
     await submitTaskOperation('fail2ban.policy_change', {
@@ -905,7 +896,7 @@ const submitPolicy = async () => {
 }
 
 const deletePolicy = async (row: Fail2banPolicy) => {
-  if (!props.capabilities.canChangePolicy || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   try {
     await ElMessageBox.confirm(
       t('security.fail2ban.policy.deleteConfirm', '确定删除这条策略吗？'),
@@ -923,7 +914,7 @@ const deletePolicy = async (row: Fail2banPolicy) => {
 }
 
 const dismissIncident = async (row: SecurityIncident) => {
-  if (!props.capabilities.canChangePolicy || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   try {
     await Api.dismissFail2banIncident(row.id, requestLanguage.value)
     ElMessage.success(t('security.fail2ban.incident.dismissed', '异常事件已标记为误报'))
@@ -934,7 +925,7 @@ const dismissIncident = async (row: SecurityIncident) => {
 }
 
 const banIncident = async (row: SecurityIncident) => {
-  if (!props.capabilities.canBan || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('security.fail2ban.ban.reasonPrompt', '请输入封禁原因'),
@@ -958,7 +949,7 @@ const banIncident = async (row: SecurityIncident) => {
 }
 
 const openManualBan = () => {
-  if (!props.capabilities.canBan || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   manualBanForm.policyId = policies.value[0]?.id || ''
   manualBanForm.ip = ''
   manualBanForm.reason = ''
@@ -968,7 +959,7 @@ const openManualBan = () => {
 }
 
 const submitManualBan = async () => {
-  if (!props.capabilities.canBan || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   const valid = await manualBanFormRef.value?.validate().catch(() => false)
   if (valid === false) return
   loading.manualBanSubmit = true
@@ -989,7 +980,7 @@ const submitManualBan = async () => {
 }
 
 const unban = async (row: ActiveBan) => {
-  if (!props.capabilities.canUnban || !canOperate.value) return
+  if (!props.capabilities.canManageIntrusion || !canOperate.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('security.fail2ban.ban.unbanReasonPrompt', '请输入解除封禁原因'),
@@ -1019,7 +1010,7 @@ const openUnbanRecordDrawer = () => {
 }
 
 const installFail2ban = async () => {
-  if (!props.capabilities.canInstall) return
+  if (!props.capabilities.canManageIntrusion) return
   loading.install = true
   try {
     const response: any = await Api.installSoft({ key: 'fail2ban', version: 'system' })
@@ -1149,7 +1140,7 @@ onBeforeUnmount(() => {
           {{ $t('security.fail2ban.install.viewTask', '查看安装任务') }}
         </el-button>
         <el-button
-          v-else-if="!status.installed && props.capabilities.canInstall"
+          v-else-if="!status.installed && props.capabilities.canManageIntrusion"
           type="primary"
           :loading="loading.install"
           @click="installFail2ban"
@@ -1219,7 +1210,7 @@ onBeforeUnmount(() => {
             </div>
           </dl>
           <el-button
-            v-if="props.capabilities.canChangePolicy && canOperate"
+            v-if="props.capabilities.canManageIntrusion && canOperate"
             type="primary"
             plain
             :icon="DocumentAdd"
@@ -1238,7 +1229,7 @@ onBeforeUnmount(() => {
           <p>{{ $t('security.fail2ban.policy.description') }}</p>
         </div>
         <el-button
-          v-if="props.capabilities.canChangePolicy"
+          v-if="props.capabilities.canManageIntrusion"
           type="primary"
           :icon="Plus"
           @click="openCreatePolicy()"
@@ -1279,10 +1270,10 @@ onBeforeUnmount(() => {
         </template>
         <template #actionColumn="{ row }">
           <div class="table-actions">
-            <el-button link type="primary" :disabled="!props.capabilities.canChangePolicy || !canOperate" @click="openEditPolicy(row)">
+            <el-button v-if="props.capabilities.canManageIntrusion" link type="primary" :disabled="!canOperate" @click="openEditPolicy(row)">
               {{ $t('common.edit', '编辑') }}
             </el-button>
-            <el-button link type="danger" :disabled="!props.capabilities.canChangePolicy || !canOperate" @click="deletePolicy(row)">
+            <el-button v-if="props.capabilities.canManageIntrusion" link type="danger" :disabled="!canOperate" @click="deletePolicy(row)">
               {{ $t('common.delete', '删除') }}
             </el-button>
           </div>
@@ -1342,7 +1333,7 @@ onBeforeUnmount(() => {
         <template #actionColumn="{ row }">
           <div class="table-actions">
             <el-button
-              v-if="row.status === 'open' && props.capabilities.canBan"
+              v-if="row.status === 'open' && props.capabilities.canManageIntrusion"
               link
               type="danger"
               :disabled="!canOperate || actionBusy('fail2ban.ban', row.remoteIp)"
@@ -1351,7 +1342,7 @@ onBeforeUnmount(() => {
               {{ banActionLabel(row.remoteIp) }}
             </el-button>
             <el-button
-              v-if="row.status === 'open' && props.capabilities.canChangePolicy"
+              v-if="row.status === 'open' && props.capabilities.canManageIntrusion"
               link
               @click="dismissIncident(row)"
             >
@@ -1393,7 +1384,7 @@ onBeforeUnmount(() => {
             {{ $t('security.fail2ban.unbanRecord.open') }}
           </el-button>
           <el-button
-            v-if="props.capabilities.canBan"
+            v-if="props.capabilities.canManageIntrusion"
             type="primary"
             plain
             :icon="Warning"
@@ -1423,7 +1414,8 @@ onBeforeUnmount(() => {
           <el-button
             link
             type="primary"
-            :disabled="!props.capabilities.canUnban || !canOperate || actionBusy('fail2ban.unban', row.ip)"
+            v-if="props.capabilities.canManageIntrusion"
+            :disabled="!canOperate || actionBusy('fail2ban.unban', row.ip)"
             @click="unban(row)"
           >
             {{ unbanActionLabel(row.ip) }}
@@ -1580,7 +1572,7 @@ onBeforeUnmount(() => {
       </el-form>
       <template #footer>
         <el-button @click="policyDialogVisible = false">{{ $t('common.cancel', '取消') }}</el-button>
-        <el-button type="primary" :loading="loading.policySubmit" :disabled="!props.capabilities.canChangePolicy || !canOperate" @click="submitPolicy">
+        <el-button type="primary" :loading="loading.policySubmit" :disabled="!props.capabilities.canManageIntrusion || !canOperate" @click="submitPolicy">
           {{ $t('common.confirm', '确认') }}
         </el-button>
       </template>
@@ -1629,7 +1621,7 @@ onBeforeUnmount(() => {
       </el-form>
       <template #footer>
         <el-button @click="manualBanVisible = false">{{ $t('common.cancel', '取消') }}</el-button>
-        <el-button type="primary" :loading="loading.manualBanSubmit" :disabled="!props.capabilities.canBan || manualBanDisabled" @click="submitManualBan">
+        <el-button type="primary" :loading="loading.manualBanSubmit" :disabled="!props.capabilities.canManageIntrusion || manualBanDisabled" @click="submitManualBan">
           {{ manualBanForm.ip.trim() && cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) > 0
             ? t('security.fail2ban.retryAfter', '{seconds} 秒后重试', { seconds: cooldownSeconds('fail2ban.ban', manualBanForm.ip.trim()) })
             : $t('common.confirm', '确认') }}

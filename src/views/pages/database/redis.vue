@@ -6,7 +6,7 @@ import { WarningFilled } from '@element-plus/icons-vue'
 import System from '@/utils/System'
 import DatabaseEnvironmentEmpty from './components/DatabaseEnvironmentEmpty.vue'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { hasDatabaseButtonAccess } from './access'
 import SectionTabs from '@/components/section-tabs.vue'
 
 const { conf: parentConf } = defineProps<ConfProps>()
@@ -14,8 +14,8 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
-const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
-const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
+const canReadDatabase = computed(() => hasDatabaseButtonAccess('redis.read'))
+const canCreateRemoteDatabase = computed(() => hasDatabaseButtonAccess('remote.create'))
 
 const conf = reactive({
   ...parentConf,
@@ -100,7 +100,7 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
   <div class="container">
     <div class="tool-bar">
       <el-space class="btn-group">
-        <el-button v-if="canWriteDatabase" type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteDatabase', '远程数据库') }}</el-button>
+        <el-button v-if="canCreateRemoteDatabase" type="primary" @click="System.router.push('/database/remote?type=redis')">{{ t('database.remote.remoteDatabase', '远程数据库') }}</el-button>
       </el-space>
       <div class="demo-form-inline flex" style="gap: 16px">
         <span class="flex items-center" style="color: var(--el-color-primary); gap: 8px">
@@ -144,6 +144,7 @@ void Promise.allSettled([parentConf.environment.getData(), conf.server.getOption
             v-if="showEnvironmentEmpty"
             type="redis"
             :installed="parentConf.environment.redis"
+            :can-remote-create="canCreateRemoteDatabase"
           />
           <div v-else class="no-data">
             <img src="/static/images/empty.webp" alt="" />

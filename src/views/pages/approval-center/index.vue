@@ -2,11 +2,11 @@
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import SearchInput from '@/components/search-input.vue'
 import { Api } from '@/api/modules'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { CircleCheck, CircleClose, CopyDocument, View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { getApprovalCapabilities } from './access'
 
 interface ApprovalRequest {
   id: string
@@ -48,6 +48,15 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
+const approvalCapabilities = computed(() => getApprovalCapabilities())
+const canReadMine = computed(() => approvalCapabilities.value.canReadMine)
+const canReadAll = computed(() => approvalCapabilities.value.canReadAll)
+const canViewApprovalDetail = computed(() => approvalCapabilities.value.canViewDetail)
+const canReadApprovalPayload = computed(() => approvalCapabilities.value.canReadPayload)
+const canApproveApproval = computed(() => approvalCapabilities.value.canApprove)
+const canRejectApproval = computed(() => approvalCapabilities.value.canReject)
+const canReadApproval = computed(() => canReadMine.value || canReadAll.value)
+
 const loading = reactive({
   bootstrap: false,
   approvals: false,
@@ -65,6 +74,7 @@ const approvalState = reactive({
       { name: t('approvalCenter.mine', '我的'), nameKey: 'approvalCenter.mine', index: 1, value: true }
     ],
     clickActive: (item: { index: number; value: boolean }) => {
+      if (item.value ? !canReadMine.value : !canReadAll.value) return
       approvalState.mineTabs.activeIndex = item.index
       approvalState.filters.mine = item.value
       approvalState.filters.page = 1
@@ -99,7 +109,9 @@ const approvalDialog = reactive({
   comment: '',
   mode: 'detail' as 'detail' | 'approve' | 'reject',
   open: async (row: ApprovalRequest, mode: 'detail' | 'approve' | 'reject') => {
-    if (mode === 'detail' ? !canReadApproval.value : !canReviewApproval.value) return
+    if (mode === 'detail' && !canViewApprovalDetail.value) return
+    if (mode === 'approve' && !canApproveApproval.value) return
+    if (mode === 'reject' && !canRejectApproval.value) return
     approvalDialog.mode = mode
     approvalDialog.comment = mode === 'detail' ? '' : row.reviewComment || ''
     approvalDialog.show = true
@@ -131,12 +143,31 @@ const closeApprovalDrawer = () => {
   approvalDialog.show = false
 }
 
-const canReadApproval = computed(() => hasOperationAccess('approval', 'read', {
-  actions: ['approval.read', 'approval.review']
-}))
-const canReviewApproval = computed(() => hasOperationAccess('approval', 'review', {
-  actions: ['approval.review', 'approval.execute']
-}))
+const canReadCurrentApprovalList = computed(() =>
+  approvalState.filters.mine ? canReadMine.value : canReadAll.value
+)
+
+const syncApprovalScope = () => {
+  if (canReadCurrentApprovalList.value) {
+    approvalState.mineTabs.activeIndex = approvalState.filters.mine ? 1 : 0
+    return
+  }
+
+  if (canReadMine.value) {
+    approvalState.filters.mine = true
+    approvalState.mineTabs.activeIndex = 1
+    return
+  }
+
+  if (canReadAll.value) {
+    approvalState.filters.mine = false
+    approvalState.mineTabs.activeIndex = 0
+    return
+  }
+
+  approvalState.list = []
+  approvalState.total = 0
+}
 
 const normalizeAccountName = (value: unknown) => typeof value === 'string' ? value.trim().toLowerCase() : ''
 
@@ -268,7 +299,8 @@ const loadBootstrap = async () => {
 }
 
 const loadApprovals = async () => {
-  if (!canReadApproval.value) {
+  syncApprovalScope()
+  if (!canReadApproval.value || !canReadCurrentApprovalList.value) {
     approvalState.list = []
     approvalState.total = 0
     return
@@ -283,6 +315,13 @@ const loadApprovals = async () => {
   }
 }
 
+watch([canReadMine, canReadAll], ([mine, all], [previousMine, previousAll]) => {
+  syncApprovalScope()
+  if ((mine || all) && (mine !== previousMine || all !== previousAll)) {
+    void loadApprovals()
+  }
+})
+
 const searchApprovals = () => {
   approvalState.filters.page = 1
   approvalState.filters.keyword = approvalState.keyword.trim()
@@ -291,17 +330,19 @@ const searchApprovals = () => {
 
 const resetApprovals = () => {
   approvalState.keyword = ''
-  approvalState.mineTabs.activeIndex = 0
   approvalState.filters.page = 1
   approvalState.filters.keyword = ''
   approvalState.filters.status = ''
   approvalState.filters.module = ''
   approvalState.filters.mine = false
+  syncApprovalScope()
   void loadApprovals()
 }
 
 const submitApprovalAction = async () => {
-  if (!canReviewApproval.value || !approvalDialog.data) return
+  if (!approvalDialog.data) return
+  if (approvalDialog.mode === 'approve' && !canApproveApproval.value) return
+  if (approvalDialog.mode === 'reject' && !canRejectApproval.value) return
   if (isSelfApproval(approvalDialog.data)) {
     ElMessage.error(t('approvalCenter.selfApprovalForbidden', '申请人不能审批自己的申请'))
     return
@@ -331,6 +372,7 @@ const submitApprovalAction = async () => {
 onMounted(async () => {
   try {
     await loadBootstrap()
+    syncApprovalScope()
     await loadApprovals()
   } catch (error: any) {
     // ElMessage.error(error?.message || t('approvalCenter.initFailed', '页面初始化失败'))
@@ -360,16 +402,17 @@ onMounted(async () => {
             <el-option :label="$t('approvalCenter.moduleCertificate')" value="certificate" />
           </el-select>
           <div class="mini-tabs">
-            <button
-              v-for="item in approvalState.mineTabs.list"
-              :key="item.index"
-              type="button"
-              class="mini-tabs__item"
-              :class="{ 'is-active': approvalState.mineTabs.activeIndex === item.index }"
-              @click="approvalState.mineTabs.clickActive(item)"
-            >
-              {{ item.nameKey ? $t(item.nameKey) : item.name }}
-            </button>
+            <template v-for="item in approvalState.mineTabs.list" :key="item.index">
+              <button
+                v-if="item.value ? canReadMine : canReadAll"
+                type="button"
+                class="mini-tabs__item"
+                :class="{ 'is-active': approvalState.mineTabs.activeIndex === item.index }"
+                @click="approvalState.mineTabs.clickActive(item)"
+              >
+                {{ item.nameKey ? $t(item.nameKey) : item.name }}
+              </button>
+            </template>
           </div>
         </div>
         <div class="toolbar-right">
@@ -420,26 +463,24 @@ onMounted(async () => {
         <template #actionColumn="{ row }">
           <div class="action-wrap table-row-actions">
             <el-button
-              v-if="isPendingApproval(row)"
+              v-if="isPendingApproval(row) && canApproveApproval"
               link
               type="success"
               :icon="CircleCheck"
-              :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'approve')"
             >
               {{ $t('approvalCenter.approve') }}
             </el-button>
             <el-button
-              v-if="isPendingApproval(row)"
+              v-if="isPendingApproval(row) && canRejectApproval"
               link
               type="danger"
               :icon="CircleClose"
-              :disabled="!canReviewApproval"
               @click="approvalDialog.open(row, 'reject')"
             >
               {{ $t('approvalCenter.reject') }}
             </el-button>
-            <el-button v-if="canReadApproval" link type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
+            <el-button v-if="canViewApprovalDetail" link type="primary" :icon="View" @click="approvalDialog.open(row, 'detail')">{{ $t('common.detail') }}</el-button>
           </div>
         </template>
       </custom-table>
@@ -543,11 +584,11 @@ onMounted(async () => {
             <span>{{ $t('approvalCenter.reviewComment') }}</span>
             <p>{{ approvalDialog.data.reviewComment || '—' }}</p>
           </div>
-          <div class="detail-block" v-if="approvalDialog.data.payloadSnapshot">
+          <div class="detail-block" v-if="canReadApprovalPayload && approvalDialog.data.payloadSnapshot">
             <span>{{ $t('approvalCenter.payloadSnapshot') }}</span>
             <pre>{{ JSON.stringify(approvalDialog.data.payloadSnapshot, null, 2) }}</pre>
           </div>
-          <div class="detail-block" v-if="approvalDialog.data.result">
+          <div class="detail-block" v-if="canReadApprovalPayload && approvalDialog.data.result">
             <span>{{ $t('approvalCenter.result') }}</span>
             <pre>{{ JSON.stringify(approvalDialog.data.result, null, 2) }}</pre>
           </div>

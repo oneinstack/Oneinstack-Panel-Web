@@ -9,11 +9,11 @@ import { Api } from '@/api/modules'
 import CustomForm from '@/components/custom-form.vue'
 import TrashList from './components/trash-list.vue'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { hasFileButtonAccess } from './access'
 
 const sapp = useAppStore()
-const canCreateFile = computed(() => hasOperationAccess('file', 'create'))
-const canModifyFile = computed(() => hasOperationAccess('file', 'modify', { actions: ['file.edit'] }))
+const canCreateFile = computed(() => hasFileButtonAccess('create'))
+const canModifyFile = computed(() => hasFileButtonAccess('modify'))
 
 
 export type DrawerType = 'file' | 'dir'

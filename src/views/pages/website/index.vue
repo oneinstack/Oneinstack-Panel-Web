@@ -26,19 +26,28 @@ import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import WebsiteSettingsDrawer from './components/WebsiteSettingsDrawer.vue'
 import System from '@/utils/System'
-import { useConfigStore } from '@/stores/modules/config'
 import { hasOperationAccess } from '@/utils/access'
 import { getWebsiteEngineLabel, getWebsiteEngineTagStyle } from '@/utils/websiteEngine'
+import { hasWebsiteButtonAccess } from './access'
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
-const sconfig = useConfigStore()
-const canReadWebsite = computed(() => hasOperationAccess('website', 'read'))
-const canWriteWebsite = computed(() => hasOperationAccess('website', 'write'))
-const canDeleteWebsite = computed(() => hasOperationAccess('website', 'delete', { actions: ['website.write'] }))
-const canBackupWebsite = computed(() => hasOperationAccess('website', 'backup', { actions: ['website.write'] }))
+const canReadWebsite = computed(() => hasWebsiteButtonAccess('read'))
+const canCreateWebsite = computed(() => hasWebsiteButtonAccess('create'))
+const canUpdateWebsite = computed(() => hasWebsiteButtonAccess('update'))
+const canToggleWebsite = computed(() => hasWebsiteButtonAccess('toggle'))
+const canManageWebsiteSsl = computed(() => hasWebsiteButtonAccess('ssl'))
+const canBackupWebsite = computed(() => hasWebsiteButtonAccess('backup'))
+const canRestoreWebsite = computed(() => hasWebsiteButtonAccess('restore'))
+const canDeleteWebsite = computed(() => hasWebsiteButtonAccess('delete'))
+const canManageWebsiteSettings = computed(() => hasWebsiteButtonAccess('settings'))
+const canReadWebsiteConfig = computed(() => hasWebsiteButtonAccess('config'))
+const canWriteWebsiteConfig = computed(() => hasWebsiteButtonAccess('config'))
+const canReadWebServerConfig = computed(() => hasWebsiteButtonAccess('webserver.config.read'))
+const canWriteWebServerConfig = computed(() => hasWebsiteButtonAccess('webserver.config.write'))
+const canDeleteWebsiteBackup = computed(() => hasWebsiteButtonAccess('backup.delete'))
 const canReadDatabase = () =>
   hasOperationAccess('database', 'read')
 
@@ -170,7 +179,6 @@ const extractWebsiteApprovalId = (payload: any): string => {
 }
 
 const openWebsiteRoot = (rootDir: unknown) => {
-  if (!canReadWebsite.value) return
   const path = typeof rootDir === 'string' ? rootDir.trim() : ''
   if (!path) {
     ElMessage.warning(t('website.noManagedRoot', 'The current website has no manageable root directory'))
@@ -230,33 +238,8 @@ interface ComponentServiceStatus {
   probeError?: string
 }
 
-const canReadSoftwareService = computed(() =>
-  sconfig.hasActionAccess('software.service.read') ||
-  sconfig.hasScopeAccess('software.service', 'read') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.service?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service.read']) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service']?.read)
-)
-
-const canWriteSoftwareService = computed(() =>
-  sconfig.hasActionAccess('software.service.write') ||
-  sconfig.hasScopeAccess('software.service', 'write') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.service?.write) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service.write']) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service']?.write)
-)
-
-const allowedManageScopes = computed(() => {
-  if (sconfig.isAdministrator()) return new Set(['*'])
-  const scopes = new Set<string>()
-  const entries = Object.entries((sconfig.scopeAccess as any) || {})
-  for (const [scopeKey, value] of entries as Array<[string, any]>) {
-    if (value?.write === true || value === true) {
-      scopes.add(scopeKey)
-    }
-  }
-  return scopes
-})
+const canReadSoftwareService = computed(() => hasWebsiteButtonAccess('webserver.read'))
+const canWriteSoftwareService = computed(() => hasWebsiteButtonAccess('webserver.manage'))
 
 const serviceStatuses = ref<Record<string, ComponentServiceStatus>>({})
 const serviceLoading = ref(false)
@@ -330,24 +313,9 @@ const webServerServiceStatus = computed(() => {
   })
 })
 
-const getManageScopes = (status?: ComponentServiceStatus) => {
-  if (!status) return []
-  const scopes = (status.manageScopes || []).filter(Boolean)
-  if (scopes.length) return scopes
-  return [
-    `software.${status.softwareKey}`,
-    `software.service.${status.softwareKey}`,
-    `software.${status.component}`,
-    `software.service.${status.component}`
-  ].filter(Boolean)
-}
-
 const canManageService = (status?: ComponentServiceStatus) => {
   if (!status || !canReadSoftwareService.value || !canWriteSoftwareService.value) return false
-  if (allowedManageScopes.value.has('*')) return true
-  const scopes = getManageScopes(status)
-  if (!scopes.length) return true
-  return scopes.some((scope) => allowedManageScopes.value.has(scope))
+  return true
 }
 
 const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action: ServiceAction) =>
@@ -500,13 +468,12 @@ const runWebServerAction = (action: ServiceAction) => {
 }
 
 const openWebServerConfig = () => {
-  if (!canManageCurrentWebServer.value) return
+  if (!canReadWebServerConfig.value || !webServer.data.configurationAvailable) return
   webServer.menuVisible = false
   webServer.configVisible = true
 }
 
 const handleWebsitePageRefresh = () => {
-  if (!canReadWebsite.value) return
   conf.website.getData()
   webServer.load()
   loadServiceStatuses()
@@ -526,7 +493,7 @@ const certificateDrawer = reactive({
   show: false,
   website: {} as Record<string, any>,
   open: (website: Record<string, any>) => {
-    if (!canReadWebsite.value) return
+    if (!canManageWebsiteSsl.value) return
     certificateDrawer.website = website
     certificateDrawer.show = true
   }
@@ -546,7 +513,7 @@ const settingsDrawer = reactive({
   show: false,
   website: null as Record<string, any> | null,
   open: (website: Record<string, any>) => {
-    if (!canWriteWebsite.value) return
+    if (!canManageWebsiteSettings.value) return
     settingsDrawer.website = website
     settingsDrawer.show = true
   }
@@ -554,7 +521,7 @@ const settingsDrawer = reactive({
 
 const statusLoading = reactive(new Set<number>())
 const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
-  if (!canWriteWebsite.value) return
+  if (!canToggleWebsite.value) return
   statusLoading.add(row.id)
   try {
     await submitOperation('website.toggle', {
@@ -672,7 +639,7 @@ const conf = reactive({
       conf.website.data = res.data
     },
     handleAdd: () => {
-      if (!canWriteWebsite.value) return
+      if (!canCreateWebsite.value) return
       conf.drawer.open('add')
       conf.form.data.value = { type: conf.website.params.type, expires_at: null }
     }
@@ -683,7 +650,7 @@ const conf = reactive({
     type: 'add',
     loading: false,
     open: (type: 'add' | 'edit', row?: any) => {
-      if (!canWriteWebsite.value) return
+      if (type === 'add' ? !canCreateWebsite.value : !canUpdateWebsite.value) return
       conf.drawer.title = t('website.createWebsite', '创建网站')
       conf.drawer.type = type
       if (type === 'edit') {
@@ -698,7 +665,7 @@ const conf = reactive({
       conf.drawer.show = true
     },
     onConfirm: () => {
-      if (!canWriteWebsite.value) return
+      if (conf.drawer.type === 'add' ? !canCreateWebsite.value : !canUpdateWebsite.value) return
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
         conf.form.data.value.hostDomain = typeof conf.form.data.value.hostDomain === 'string'
@@ -954,7 +921,7 @@ loadServiceStatuses()
           <div class="action-with-reason">
             <el-tooltip :content="addSiteDisabledReason" :disabled="!addSiteDisabledReason">
               <span class="disabled-action-wrapper">
-                <el-button type="primary" :disabled="!webServer.data.available || !canWriteWebsite" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
+                <el-button v-if="canCreateWebsite" type="primary" :disabled="!webServer.data.available" @click="conf.website.handleAdd">{{ $t('website.addSite') }}</el-button>
               </span>
             </el-tooltip>
             <!-- <div v-if="addSiteDisabledReason" class="action-disabled-reason" role="note">
@@ -973,10 +940,10 @@ loadServiceStatuses()
                 <el-dropdown-item v-if="canBackupWebsite" @click="backupDrawer.open()">
                   {{ $t('website.fullBackupManagement') }}
                 </el-dropdown-item>
-                <el-dropdown-item v-if="canManageCurrentWebServer" :disabled="!webServer.data.configurationAvailable" @click="openWebServerConfig">
+                <el-dropdown-item v-if="canReadWebServerConfig" :disabled="!webServer.data.configurationAvailable" @click="openWebServerConfig">
                   {{ $t('website.manageConfigFiles') }}
                 </el-dropdown-item>
-                <el-dropdown-item v-if="canReadWebsite" @click="handleWebsitePageRefresh">
+                <el-dropdown-item @click="handleWebsitePageRefresh">
                   {{ $t('website.refreshStatus') }}
                 </el-dropdown-item>
               </el-dropdown-menu>
@@ -998,7 +965,7 @@ loadServiceStatuses()
               >
                 <div class="website-server-actions">
                   <el-button
-                    v-if="webServerState === 'running'"
+                    v-if="webServerState === 'running' && canWriteSoftwareService"
                     link
                     :icon="SwitchButton"
                     :loading="serviceSubmitting === 'stop'"
@@ -1006,7 +973,7 @@ loadServiceStatuses()
                     @click="runWebServerAction('stop')"
                   >{{ $t('website.stopService') }}</el-button>
                   <el-button
-                    v-else
+                    v-else-if="canWriteSoftwareService"
                     link
                     :icon="VideoPlay"
                     :loading="serviceSubmitting === 'start'"
@@ -1014,6 +981,7 @@ loadServiceStatuses()
                     @click="runWebServerAction('start')"
                   >{{ $t('website.startService') }}</el-button>
                   <el-button
+                    v-if="canWriteSoftwareService"
                     link
                     :icon="RefreshRight"
                     :loading="serviceSubmitting === 'restart'"
@@ -1021,6 +989,7 @@ loadServiceStatuses()
                     @click="runWebServerAction('restart')"
                   >{{ $t('website.restartService') }}</el-button>
                   <el-button
+                    v-if="canWriteSoftwareService"
                     link
                     :icon="Refresh"
                     :loading="serviceSubmitting === 'reload'"
@@ -1028,6 +997,7 @@ loadServiceStatuses()
                     @click="runWebServerAction('reload')"
                   >{{ $t('website.reloadService') }}</el-button>
                   <el-button
+                    v-if="canReadWebServerConfig"
                     link
                     :icon="Setting"
                     :disabled="!webServer.data.configurationAvailable"
@@ -1081,8 +1051,8 @@ loadServiceStatuses()
             :placeholder="$t('website.searchPlaceholder', '请输入域名或备注')"
             @search="conf.website.getData()"
           />
-          <el-button v-if="canReadWebsite" class="website-search-panel__refresh" :icon="Refresh" @click="handleWebsitePageRefresh" />
-          <el-button v-if="canManageCurrentWebServer" class="website-search-panel__refresh" :icon="Setting" @click="openWebServerConfig" />
+          <el-button class="website-search-panel__refresh" :icon="Refresh" @click="handleWebsitePageRefresh" />
+          <el-button v-if="canReadWebServerConfig" class="website-search-panel__refresh" :icon="Setting" @click="openWebServerConfig" />
         </div>
       </div>
     </section>
@@ -1123,7 +1093,7 @@ loadServiceStatuses()
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
-              v-if="canReadWebsite"
+              v-if="canManageWebsiteSsl"
               class="website-action-btn website-action-btn--ssl"
               type="primary"
               link
@@ -1143,7 +1113,7 @@ loadServiceStatuses()
               <span class="website-action-btn__label">{{ $t('website.backup') }}</span>
             </el-button>
             <el-button
-              v-if="canWriteWebsite"
+              v-if="canManageWebsiteSettings"
               class="website-action-btn website-action-btn--settings"
               type="primary"
               link
@@ -1168,7 +1138,7 @@ loadServiceStatuses()
           <div class="website-status">
             <el-switch
               :model-value="Boolean(row.enabled)"
-              :disabled="!canWriteWebsite"
+              :disabled="!canToggleWebsite"
               :loading="statusLoading.has(row.id)"
               @change="toggleWebsiteStatus(row, Boolean($event))"
             />
@@ -1275,27 +1245,33 @@ loadServiceStatuses()
     <website-certificate-drawer
       v-model="certificateDrawer.show"
       :website="certificateDrawer.website"
-      :can-read="canReadWebsite"
-      :can-write="canWriteWebsite"
+      :can-read="canManageWebsiteSsl"
+      :can-write="canManageWebsiteSsl"
       @changed="conf.website.getData()"
     />
     <website-backup-drawer
       v-model="backupDrawer.show"
       :website="backupDrawer.website"
-      :can-read="canReadWebsite"
+      :can-read="canBackupWebsite"
       :can-write="canBackupWebsite"
+      :can-restore="canRestoreWebsite"
+      :can-delete="canDeleteWebsiteBackup"
       @changed="conf.website.getData()"
     />
     <web-server-config-drawer
       v-model="webServer.configVisible"
-      :can-read="canReadSoftwareService"
-      :can-write="canManageCurrentWebServer"
+      :can-read="canReadWebServerConfig"
+      :can-write="canWriteWebServerConfig"
       @changed="webServer.load"
     />
     <website-settings-drawer
       v-model="settingsDrawer.show"
       :website="settingsDrawer.website"
-      :can-write="canWriteWebsite"
+      :can-write="canManageWebsiteSettings"
+      :can-toggle="canToggleWebsite"
+      :can-ssl="canManageWebsiteSsl"
+      :can-config-read="canReadWebsiteConfig"
+      :can-config-write="canWriteWebsiteConfig"
       @changed="conf.website.getData()"
     />
   </div>

@@ -9,11 +9,11 @@ import {
   type AccessPermission,
   type AccessRole as ApiAccessRole
 } from '@/api/modules'
-import { computed, nextTick, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { getUserManagementCapabilities } from './access'
 
 interface AccessRole {
   code?: string
@@ -71,10 +71,6 @@ const roleMenuTreeRef = ref<HTMLElement | null>(null)
 const expandedRoleMenuKeys = ref<Set<string>>(new Set())
 const roleAdvancedOpen = ref(false)
 const activeTab = ref('users')
-const accessTabItems = computed(() => [
-  { key: 'users', label: t('userManagement.userTab', '用户管理') },
-  { key: 'permissions', label: t('userManagement.permissionTab', '权限管理') }
-])
 
 const userState = reactive({
   keyword: '',
@@ -181,15 +177,31 @@ const passwordDialog = reactive({
   }
 })
 
-const canReadAccess = computed(() => hasOperationAccess('userManagement', 'read', {
-  actions: ['userManagement.read', 'user.read']
-}))
-const canManageUsers = computed(() => hasOperationAccess('userManagement', 'write', {
-  actions: ['userManagement.write', 'user.write']
-}))
-const canManageRoles = computed(() => hasOperationAccess('userManagement', 'write', {
-  actions: ['userManagement.write', 'role.write']
-}))
+const capabilities = computed(() => getUserManagementCapabilities())
+const canReadUsers = computed(() => capabilities.value.canReadUsers)
+const canCreateUser = computed(() => capabilities.value.canCreateUser)
+const canAssignUserRole = computed(() => capabilities.value.canAssignUserRole)
+const canResetUserPassword = computed(() => capabilities.value.canResetUserPassword)
+const canDeleteUser = computed(() => capabilities.value.canDeleteUser)
+const canReadPermissions = computed(() => capabilities.value.canReadPermissions)
+const canCreateRole = computed(() => capabilities.value.canCreateRole)
+const canUpdateRole = computed(() => capabilities.value.canUpdateRole)
+const canAssignRolePermissions = computed(() => capabilities.value.canAssignRolePermissions)
+const canDeleteRole = computed(() => capabilities.value.canDeleteRole)
+const roleCount = computed(() => canReadPermissions.value ? roles.value.length : 0)
+const accessTabItems = computed(() => [
+  ...(canReadUsers.value || canCreateUser.value || canAssignUserRole.value || canResetUserPassword.value || canDeleteUser.value
+    ? [{ key: 'users', label: t('userManagement.userTab', '用户管理') }]
+    : []),
+  ...(canReadPermissions.value || canCreateRole.value || canUpdateRole.value || canAssignRolePermissions.value || canDeleteRole.value
+    ? [{ key: 'permissions', label: t('userManagement.permissionTab', '权限管理') }]
+    : [])
+])
+watch(accessTabItems, (items) => {
+  if (items.length && !items.some((item) => item.key === activeTab.value)) {
+    activeTab.value = items[0].key
+  }
+}, { immediate: true })
 const roleTagList = computed(() => currentUser.value?.roles || [])
 const totalAssignedUsers = computed(() => userState.list.filter((item) => (item.roles || []).length > 0).length)
 const totalPendingUsers = computed(() => userState.list.filter((item) => item.mustChangePassword).length)
@@ -457,19 +469,27 @@ const loadBootstrap = async () => {
   try {
     const [userRes, roleRes, menuRes] = await Promise.all([
       Api.getCurrentUserAccess(),
-      Api.getAccessRoles(),
-      Api.getAccessMenus().catch(() => ({ data: [] }))
+      canReadPermissions.value || canAssignUserRole.value
+        ? Api.getAccessRoles()
+        : Promise.resolve({ data: [] }),
+      canAssignRolePermissions.value
+        ? Api.getAccessMenus().catch(() => ({ data: [] }))
+        : Promise.resolve({ data: [] })
     ])
     currentUser.value = userRes.data
     roles.value = roleRes.data || []
     menus.value = Array.isArray(menuRes?.data) ? menuRes.data : []
     try {
-      const permissionRes = await Api.getAccessPermissions()
-      permissions.value = Array.isArray(permissionRes)
-        ? permissionRes
-        : Array.isArray(permissionRes?.data)
-          ? permissionRes.data
-          : []
+      if (canAssignRolePermissions.value) {
+        const permissionRes = await Api.getAccessPermissions()
+        permissions.value = Array.isArray(permissionRes)
+          ? permissionRes
+          : Array.isArray(permissionRes?.data)
+            ? permissionRes.data
+            : []
+      } else {
+        permissions.value = []
+      }
     } catch {
       permissions.value = []
     }
@@ -479,7 +499,7 @@ const loadBootstrap = async () => {
 }
 
 const loadUsers = async () => {
-  if (!canReadAccess.value) {
+  if (!canReadUsers.value) {
     userState.list = []
     userState.total = 0
     return
@@ -495,11 +515,13 @@ const loadUsers = async () => {
 }
 
 const openRoleEditor = async (role?: AccessRole | null) => {
+  if (role ? !canUpdateRole.value : !canCreateRole.value) return
   await roleEditorDialog.open(role || null)
 }
 
 const submitRoleEditor = async () => {
-  if (!canManageRoles.value) return
+  const canSubmit = roleEditorDialog.mode === 'create' ? canCreateRole.value : canUpdateRole.value
+  if (!canSubmit) return
   const key = roleEditorDialog.form.key.trim()
   const name = roleEditorDialog.form.name.trim()
   const description = roleEditorDialog.form.description.trim()
@@ -522,11 +544,16 @@ const submitRoleEditor = async () => {
 
   roleEditorDialog.loading = true
   try {
-    const permissionCodes = normalizeRolePermissionCodes(roleEditorDialog.form.permissionCodes)
-    const payload = {
+    const payload: {
+      name: string
+      description: string
+      permissionCodes?: string[]
+    } = {
       name,
       description,
-      permissionCodes
+    }
+    if (canAssignRolePermissions.value) {
+      payload.permissionCodes = normalizeRolePermissionCodes(roleEditorDialog.form.permissionCodes)
     }
     if (roleEditorDialog.mode === 'create') {
       await Api.createAccessRole({ key, code: key, ...payload })
@@ -545,7 +572,7 @@ const submitRoleEditor = async () => {
 }
 
 const deleteRole = async (role: AccessRole) => {
-  if (!canManageRoles.value) return
+  if (!canDeleteRole.value) return
   const key = role.key || role.code || ''
   if (!key) {
     ElMessage.warning(t('userManagement.invalidRoleKey', 'Invalid role key'))
@@ -587,7 +614,7 @@ const resetUsers = () => {
 }
 
 const submitCreateUser = async () => {
-  if (!canManageUsers.value) return
+  if (!canCreateUser.value) return
   const username = createUserDialog.form.username.trim()
   if (!username) {
     ElMessage.warning(t('userManagement.inputUsername', 'Enter an account name'))
@@ -607,7 +634,7 @@ const submitCreateUser = async () => {
     await Api.createAccessUser({
       username,
       password: createUserDialog.form.password,
-      roleCodes: createUserDialog.form.isAdmin ? [] : createUserDialog.form.roleCodes,
+      roleCodes: createUserDialog.form.isAdmin || !canAssignUserRole.value ? [] : createUserDialog.form.roleCodes,
       isAdmin: createUserDialog.form.isAdmin
     })
     ElMessage.success(t('userManagement.createSuccess', 'User created'))
@@ -621,7 +648,7 @@ const submitCreateUser = async () => {
 }
 
 const submitRoleUpdate = async () => {
-  if (!canManageUsers.value) return
+  if (!canAssignUserRole.value) return
   if (!roleDialog.user) return
   loading.updateRoles = true
   try {
@@ -647,7 +674,7 @@ const toggleCreateAllRoles = (value: string | number | boolean) => {
 }
 
 const submitPasswordReset = async () => {
-  if (!canManageUsers.value) return
+  if (!canResetUserPassword.value) return
   if (!passwordDialog.user) return
   if (!passwordDialog.password.trim()) {
     ElMessage.warning(t('userManagement.inputNewPassword', 'Enter a new password'))
@@ -685,7 +712,7 @@ const getSuperAdminCount = async () => {
 }
 
 const deleteUser = async (row: AccessUser) => {
-  if (!canManageUsers.value) return
+  if (!canDeleteUser.value) return
   if (!row?.id) {
     ElMessage.warning(t('userManagement.invalidUserId', 'Invalid user ID'))
     return
@@ -801,7 +828,7 @@ onMounted(async () => {
             </div>
             <div class="metric-chip__content">
               <span>{{ $t('userManagement.roleRepository') }}</span>
-              <strong>{{ roles.length }}</strong>
+              <strong>{{ roleCount }}</strong>
             </div>
           </div>
         </div>
@@ -827,12 +854,12 @@ onMounted(async () => {
       </div>
       <div class="toolbar-shell">
         <div class="toolbar">
-          <div class="toolbar-left">
+          <div v-if="canReadUsers" class="toolbar-left">
             <search-input v-model:model-value="userState.keyword" :placeholder="$t('userManagement.searchPlaceholder')" @search="searchUsers" />
           </div>
           <div class="toolbar-right">
-            <el-button @click="resetUsers">{{ $t('common.reset') }}</el-button>
-            <el-button type="primary" :disabled="!canManageUsers" @click="createUserDialog.open()">{{ $t('userManagement.createUser') }}</el-button>
+            <el-button v-if="canReadUsers" @click="resetUsers">{{ $t('common.reset') }}</el-button>
+            <el-button v-if="canCreateUser" type="primary" @click="createUserDialog.open()">{{ $t('userManagement.createUser') }}</el-button>
           </div>
         </div>
         <div class="toolbar-note">
@@ -841,7 +868,7 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div class="table-shell">
+      <div v-if="canReadUsers" class="table-shell">
         <custom-table
           v-model:page="userState.filters.page"
           v-model:page-size="userState.filters.pageSize"
@@ -889,13 +916,14 @@ onMounted(async () => {
           </template>
           <template #action="{ row }">
             <div class="action-wrap action-wrap--compact table-row-actions">
-              <el-button link type="primary" :icon="CollectionTag" :disabled="!canManageUsers" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
-              <el-button link type="primary" :icon="Key" :disabled="!canManageUsers" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
+              <el-button v-if="canAssignUserRole" link type="primary" :icon="CollectionTag" @click="roleDialog.open(row)">{{ $t('userManagement.changeRole') }}</el-button>
+              <el-button v-if="canResetUserPassword" link type="primary" :icon="Key" @click="passwordDialog.open(row)">{{ $t('userManagement.resetPassword') }}</el-button>
               <el-button
+                v-if="canDeleteUser"
                 link
                 type="danger"
                 :icon="Delete"
-                :disabled="!canManageUsers || isCurrentLoginUser(row)"
+                :disabled="isCurrentLoginUser(row)"
                 :loading="loading.deleteUserId === row.id"
                 @click="deleteUser(row)"
               >
@@ -917,9 +945,9 @@ onMounted(async () => {
             <span>{{ t('userManagement.roleRepositoryHint', 'Manage role permissions and the menus derived from them') }}</span>
           </div>
           <el-button
+            v-if="canCreateRole"
             type="primary"
             :icon="Plus"
-            :disabled="!canManageRoles"
             @click="openRoleEditor()"
           >
             {{ t('userManagement.createRole', 'Create role') }}
@@ -928,6 +956,7 @@ onMounted(async () => {
       </div>
 
       <custom-table
+        v-if="canReadPermissions"
         :data="roles"
         :columns="roleColumns"
         :pagination="false"
@@ -949,19 +978,21 @@ onMounted(async () => {
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
+              v-if="canUpdateRole"
               link
               type="primary"
               :icon="Edit"
-              :disabled="!canManageRoles || row.builtin"
+              :disabled="row.builtin"
               @click="openRoleEditor(row)"
             >
               {{ t('common.edit', 'Edit') }}
             </el-button>
             <el-button
+              v-if="canDeleteRole"
               link
               type="danger"
               :icon="Delete"
-              :disabled="!canManageRoles || row.builtin"
+              :disabled="row.builtin"
               @click="deleteRole(row)"
             >
               {{ t('common.delete', 'Delete') }}
@@ -977,6 +1008,7 @@ onMounted(async () => {
       size="720px"
       :confirm-text="$t('userManagement.create')"
       :loading="loading.createUser"
+      :confirm-disabled="!canCreateUser"
       :on-close="() => { createUserDialog.show = false }"
       :on-confirm="submitCreateUser"
     >
@@ -991,7 +1023,7 @@ onMounted(async () => {
           <el-form-item :label="$t('userManagement.isSuperAdmin')">
             <el-switch v-model="createUserDialog.form.isAdmin" />
           </el-form-item>
-          <el-form-item v-if="!createUserDialog.form.isAdmin" :label="$t('userManagement.roleAssignment')">
+          <el-form-item v-if="!createUserDialog.form.isAdmin && canAssignUserRole" :label="$t('userManagement.roleAssignment')">
             <div class="role-select-panel">
               <div class="role-dialog-toolbar">
                 <el-checkbox
@@ -1020,6 +1052,7 @@ onMounted(async () => {
       size="720px"
       :confirm-text="$t('common.save')"
       :loading="loading.updateRoles"
+      :confirm-disabled="!canAssignUserRole"
       :on-close="() => { roleDialog.show = false }"
       :on-confirm="submitRoleUpdate"
     >
@@ -1055,6 +1088,7 @@ onMounted(async () => {
       size="1180px"
       :confirm-text="$t('common.save')"
       :loading="roleEditorDialog.loading"
+      :confirm-disabled="roleEditorDialog.mode === 'create' ? !canCreateRole : !canUpdateRole"
       :on-close="() => { roleEditorDialog.show = false }"
       :on-confirm="submitRoleEditor"
     >
@@ -1090,7 +1124,7 @@ onMounted(async () => {
               </el-form>
             </section>
 
-            <section class="role-menu-panel">
+            <section v-if="canAssignRolePermissions" class="role-menu-panel">
               <div class="role-editor-section-head">
                 <div>
                   <h3>{{ t('userManagement.menuPermissionTitle', 'Menu permissions') }}</h3>
@@ -1114,7 +1148,7 @@ onMounted(async () => {
               </div>
             </section>
 
-            <section class="role-advanced-panel">
+            <section v-if="canAssignRolePermissions" class="role-advanced-panel">
               <button
                 type="button"
                 class="role-advanced-toggle"
@@ -1140,7 +1174,7 @@ onMounted(async () => {
             <div class="role-summary-head">
               <h3>{{ t('userManagement.roleSelectionSummary', 'Selected {menus} menus / {permissions} permission codes', { menus: roleSelectedMenuNodes.length, permissions: roleSelectedPermissionCodes.length }) }}</h3>
             </div>
-            <div class="role-summary-section">
+            <div v-if="canAssignRolePermissions" class="role-summary-section">
               <strong>{{ t('userManagement.selectedMenus', 'Selected menus') }}</strong>
               <div v-if="roleSelectedMenuNodes.length" class="role-summary-chip-list">
                 <button
@@ -1157,7 +1191,7 @@ onMounted(async () => {
                 {{ t('userManagement.noMenusSelected', 'No menus selected') }}
               </span>
             </div>
-            <div class="role-summary-section">
+            <div v-if="canAssignRolePermissions" class="role-summary-section">
               <strong>{{ t('userManagement.selectedPermissionCodes', 'Selected permission codes') }}</strong>
               <div v-if="rolePermissionSummary.length" class="role-summary-permission-list">
                 <button
@@ -1186,6 +1220,7 @@ onMounted(async () => {
       size="640px"
       :confirm-text="$t('userManagement.confirmResetPassword')"
       :loading="loading.resetPassword"
+      :confirm-disabled="!canResetUserPassword"
       :on-close="() => { passwordDialog.show = false }"
       :on-confirm="submitPasswordReset"
     >

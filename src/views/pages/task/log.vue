@@ -6,7 +6,7 @@ import System from "@/utils/System";
 import { ElMessage, ElMessageBox } from "element-plus";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
-import { hasOperationAccess } from "@/utils/access";
+import { hasTaskButtonAccess } from "./access";
 
 const taskID = Number(System.getRouterParams().id || 0);
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
@@ -21,11 +21,9 @@ const pagination = reactive({ page: 1, pageSize: 20, total: 0 });
 const status = ref("");
 const dateRange = ref<[Date, Date] | undefined>();
 let refreshTimer: ReturnType<typeof setInterval> | undefined;
-const canReadTask = computed(() => hasOperationAccess("cron", "read"));
-const canWriteTask = computed(() => hasOperationAccess("cron", "write"));
-const canExecuteTask = computed(() => hasOperationAccess("cron", "execute", {
-  actions: ["cron.run", "cron.write"],
-}));
+const canReadTask = computed(() => hasTaskButtonAccess("log.read"));
+const canCleanupTask = computed(() => hasTaskButtonAccess("cleanup"));
+const canExecuteTask = computed(() => hasTaskButtonAccess("execute"));
 
 const filterParams = () => ({
   status: status.value || undefined,
@@ -72,13 +70,14 @@ const cancelExecution = async (execution: any) => {
       type: "warning",
     },
   );
+  if (!canExecuteTask.value) return;
   await Api.cancelPlanTaskExecution(execution.id);
   ElMessage.success(t("task.log.cancelSubmitted", "Cancel request submitted"));
   await getData();
 };
 
 const cleanupLogs = async () => {
-  if (!canWriteTask.value) return;
+  if (!canCleanupTask.value) return;
   await ElMessageBox.confirm(
     t(
       "task.log.cleanupConfirm",
@@ -91,6 +90,7 @@ const cleanupLogs = async () => {
       type: "warning",
     },
   );
+  if (!canCleanupTask.value) return;
   cleaning.value = true;
   try {
     const { data } = await Api.cleanupPlanTaskLogs();
@@ -219,7 +219,7 @@ onUnmounted(() => {
         <el-button v-if="canReadTask" :icon="Download" :loading="exporting" @click="exportLogs">{{
           t("task.log.exportCsv", "Export CSV")
         }}</el-button>
-        <el-button v-if="canWriteTask" :loading="cleaning" @click="cleanupLogs">{{
+        <el-button v-if="canCleanupTask" :loading="cleaning" @click="cleanupLogs">{{
           t("task.log.cleanupExpired", "Clean expired logs")
         }}</el-button>
         <el-button v-if="canReadTask" :icon="Refresh" :loading="loading" @click="getData">{{

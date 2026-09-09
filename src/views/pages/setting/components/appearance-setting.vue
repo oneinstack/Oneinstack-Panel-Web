@@ -9,8 +9,11 @@ import {
   type PageTheme
 } from '@/utils/theme'
 import i18n from '@/lang'
+import { getPanelSettingsCapabilities } from '../access'
 
 const sapp = useAppStore()
+const capabilities = computed(getPanelSettingsCapabilities)
+const canUpdateAppearance = computed(() => capabilities.value.canUpdateAppearance)
 
 const { theme, accentColor } = toRefs(sapp)
 const customColor = ref(accentColor.value)
@@ -30,10 +33,12 @@ watch(accentColor, value => {
 })
 
 const changeMode = (value: PageTheme) => {
+  if (!canUpdateAppearance.value) return
   if (value !== theme.value) sapp.setTheme(value)
 }
 
 const changeAccent = (value: string) => {
+  if (!canUpdateAppearance.value) return
   sapp.setAccentColor(value)
 }
 
@@ -43,6 +48,7 @@ const changeCustomAccent = (value: string | null) => {
 }
 
 const resetAppearance = () => {
+  if (!canUpdateAppearance.value) return
   sapp.resetAppearance()
   customColor.value = DEFAULT_THEME_ACCENT
   ElMessage.success(t('setting.appearance.resetSuccess', 'Default appearance restored'))
@@ -56,7 +62,7 @@ const resetAppearance = () => {
         <div class="appearance-setting__title">{{ $t('setting.appearance.title') }}</div>
         <p class="appearance-setting__subtitle">{{ $t('setting.appearance.description') }}</p>
       </div>
-      <el-button plain @click="resetAppearance">{{ $t('setting.appearance.resetDefault') }}</el-button>
+      <el-button v-if="canUpdateAppearance" plain @click="resetAppearance">{{ $t('setting.appearance.resetDefault') }}</el-button>
     </header>
 
     <div class="appearance-setting__content">
@@ -69,11 +75,12 @@ const resetAppearance = () => {
           <span>{{ theme === 'dark' ? $t('setting.appearance.currentDark') : $t('setting.appearance.currentLight') }}</span>
         </div>
 
-        <div class="mode-grid">
+        <div v-if="canUpdateAppearance" class="mode-grid">
           <button
             type="button"
             class="mode-card mode-card--light"
             :class="{ active: theme === 'light' }"
+            :disabled="!canUpdateAppearance"
             @click="changeMode('light')"
           >
             <span class="mode-card__preview">
@@ -92,6 +99,7 @@ const resetAppearance = () => {
             type="button"
             class="mode-card mode-card--dark"
             :class="{ active: theme === 'dark' }"
+            :disabled="!canUpdateAppearance"
             @click="changeMode('dark')"
           >
             <span class="mode-card__preview">
@@ -120,13 +128,14 @@ const resetAppearance = () => {
           </span>
         </div>
 
-        <div class="accent-grid">
+        <div v-if="canUpdateAppearance" class="accent-grid">
           <button
             v-for="item in THEME_ACCENT_PRESETS"
             :key="item.color"
             type="button"
             class="accent-card"
             :class="{ active: accentColor === item.color }"
+            :disabled="!canUpdateAppearance"
             @click="changeAccent(item.color)"
           >
             <span class="accent-card__color" :style="{ background: item.color }">
@@ -142,6 +151,7 @@ const resetAppearance = () => {
             <el-color-picker
               v-model="customColor"
               color-format="hex"
+              :disabled="!canUpdateAppearance"
               :predefine="THEME_ACCENT_PRESETS.map(item => item.color)"
               @change="changeCustomAccent"
             />

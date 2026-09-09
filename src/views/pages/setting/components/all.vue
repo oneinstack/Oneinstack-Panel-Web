@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, markRaw, onMounted, ref } from 'vue'
+import { computed, markRaw, onMounted, ref, watch } from 'vue'
 import panelSetting from './panel-setting.vue'
 import NetworkSetting from './network-setting.vue'
 import PanelUpdate from './panel-update.vue'
@@ -11,9 +11,11 @@ import { Api } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import i18n from '@/lang'
 import { useConfigStore } from '@/stores/modules/config'
+import { getPanelSettingsCapabilities } from '../access'
 
 const allinfo = ref<any>()
 const sconfig = useConfigStore()
+const capabilities = computed(getPanelSettingsCapabilities)
 
 const tabItems = markRaw([
   {
@@ -56,12 +58,25 @@ const tabItems = markRaw([
 
 const activeTabKey = ref('appearance')
 
+const visibleTabItems = computed(() => {
+  const access = capabilities.value
+  const tabVisible: Record<string, boolean> = {
+    appearance: access.canReadAppearance || access.canUpdateAppearance,
+    panel: access.canReadPanelSettings || access.canUpdatePanelAlias || access.canUpdatePanelUsername || access.canUpdatePanelPassword || access.canUpdatePanelEntry,
+    network: access.canReadPanelNetwork || access.canUpdatePanelNetwork,
+    'account-security': access.canReadAccountSecurity || access.canSetupTotp || access.canDisableTotp || access.canRegenerateRecoveryCodes || access.canRevokeSession,
+    backup: access.canReadPanelBackups || access.canCreatePanelBackup || access.canImportPanelBackup || access.canDownloadPanelBackup || access.canRestorePanelBackup || access.canDeletePanelBackup,
+    update: access.canReadPanelUpdate || access.canCheckPanelUpdate || access.canApplyPanelUpdate
+  }
+  return tabItems.filter(item => tabVisible[item.key])
+})
+
 const activeTab = computed(
-  () => tabItems.find(item => item.key === activeTabKey.value) || tabItems[0]
+  () => visibleTabItems.value.find(item => item.key === activeTabKey.value) || visibleTabItems.value[0]
 )
 
 const activeComponentProps = computed(() => {
-  if (activeTab.value.key === 'panel') {
+  if (activeTab.value?.key === 'panel') {
     return {
       isCard: false,
       allinfo: allinfo.value
@@ -70,7 +85,16 @@ const activeComponentProps = computed(() => {
   return {}
 })
 
+watch(visibleTabItems, items => {
+  if (!items.some(item => item.key === activeTabKey.value)) {
+    activeTabKey.value = items[0]?.key || ''
+  }
+}, { immediate: true })
+
 const getSystemInfo = async () => {
+  const access = capabilities.value
+  const canLoadPanelData = access.canReadPanelSettings || access.canUpdatePanelAlias || access.canUpdatePanelUsername || access.canUpdatePanelPassword
+  if (!canLoadPanelData) return
   try {
     const { data: res } = await Api.getSystemInfo()
     allinfo.value = res
@@ -88,19 +112,19 @@ onMounted(() => {
 <template>
   <div class="all-container">
     <SettingSectionTabs
-      :items="tabItems"
+      :items="visibleTabItems"
       :active-key="activeTabKey"
       @update:active-key="activeTabKey = $event"
     />
 
     <div class="all-container__panel">
       <component
+        v-if="activeTab"
         :is="activeTab.component"
         :key="activeTab.key"
-        v-if="activeTab.key !== 'panel' || allinfo"
         v-bind="activeComponentProps"
       />
-      <el-skeleton v-if="activeTab.key === 'panel' && !allinfo" :rows="5" animated />
+      <el-empty v-else :description="$t('setting.noAvailableOperations', 'No available operations')" />
     </div>
   </div>
 </template>

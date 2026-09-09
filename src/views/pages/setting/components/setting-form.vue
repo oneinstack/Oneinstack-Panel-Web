@@ -16,6 +16,7 @@ interface ActionBtn {
   text: string
   loading?: boolean
   disabled?: boolean
+  visible?: boolean
   click: () => void
 }
 
@@ -24,6 +25,7 @@ export interface FormItem {
   prop: string
   value: string | number
   type: FormItemType
+  visible?: boolean
   disabled?: boolean
   change?: (value: any) => void
   action?: ActionBtn | ActionBtn[]
@@ -43,51 +45,56 @@ const props = withDefaults(defineProps<Props>(), {
 
 <template>
   <el-form label-width="180px">
-    <el-form-item v-for="item in data" :key="item.prop" :label="item.label" label-position="left">
-      <div class="setting-form-item">
-        <div class="setting-form-item__controls">
-          <div class="setting-form-item__field">
-            <el-input
-              v-if="item.type === 'input' || item.type === 'password'"
-              v-model="item.value"
-              :type="item.type === 'password' ? 'password' : 'text'"
-              clearable
-              :disabled="props.readonly || item.disabled"
-            />
-            <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="props.readonly || item.disabled" />
-            <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="props.readonly || item.disabled">
-              <template #append>
-                <v-s-icon name="folders" />
+    <template v-for="item in data" :key="item.prop">
+      <el-form-item v-if="item.visible !== false" :label="item.label" label-position="left">
+        <div class="setting-form-item">
+          <div class="setting-form-item__controls">
+            <div class="setting-form-item__field">
+              <el-input
+                v-if="item.type === 'input' || item.type === 'password'"
+                v-model="item.value"
+                :type="item.type === 'password' ? 'password' : 'text'"
+                clearable
+                :disabled="props.readonly || item.disabled"
+              />
+              <el-switch v-else-if="item.type === 'switch'" v-model="item.value" :disabled="props.readonly || item.disabled" />
+              <el-input v-else-if="item.type === 'file'" v-model="item.value" :disabled="props.readonly || item.disabled">
+                <template #append>
+                  <v-s-icon name="folders" />
+                </template>
+              </el-input>
+            </div>
+            <template v-if="item.action">
+              <template v-if="Array.isArray(item.action)">
+                <template v-for="action in item.action" :key="action.text">
+                  <el-button
+                    v-if="action.visible !== false"
+                    :type="action.type || 'default'"
+                    :loading="action.loading"
+                    :disabled="props.readonly || action.disabled"
+                    class="setting-form-item__button"
+                    @click="action.click"
+                  >
+                    {{ action.text }}
+                  </el-button>
+                </template>
               </template>
-            </el-input>
+              <el-button
+                v-else-if="item.action.visible !== false"
+                :type="item.action?.type || 'default'"
+                :loading="item.action?.loading"
+                :disabled="props.readonly || item.action?.disabled"
+                class="setting-form-item__button"
+                @click="item.action.click"
+              >
+                {{ item.action.text }}
+              </el-button>
+            </template>
           </div>
-          <template v-if="item.action">
-            <el-button
-              v-if="Array.isArray(item.action)"
-              v-for="action in item.action"
-              :type="action.type || 'default'"
-              :loading="action.loading"
-              :disabled="props.readonly || action.disabled"
-              class="setting-form-item__button"
-              @click="action.click"
-            >
-              {{ action.text }}
-            </el-button>
-            <el-button
-              v-else
-              :type="item.action?.type || 'default'"
-              :loading="item.action?.loading"
-              :disabled="props.readonly || item.action?.disabled"
-              class="setting-form-item__button"
-              @click="item.action.click"
-            >
-              {{ item.action.text }}
-            </el-button>
-          </template>
+          <span v-if="item.tip" v-html="item.tip" class="tips-text"></span>
         </div>
-        <span v-if="item.tip" v-html="item.tip" class="tips-text"></span>
-      </div>
-    </el-form-item>
+      </el-form-item>
+    </template>
   </el-form>
 </template>
 

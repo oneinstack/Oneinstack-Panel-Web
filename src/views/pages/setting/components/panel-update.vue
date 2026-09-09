@@ -5,14 +5,12 @@ import { CopyDocument } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { getPanelSettingsCapabilities } from '../access'
 
-const canReadPanelSettings = computed(() => hasOperationAccess('panelSettings', 'read', {
-  actions: ['panelSettings.read', 'system.settings.read']
-}))
-const canWritePanelSettings = computed(() => hasOperationAccess('panelSettings', 'write', {
-  actions: ['panelSettings.write', 'system.settings.write']
-}))
+const capabilities = computed(getPanelSettingsCapabilities)
+const canReadPanelUpdate = computed(() => capabilities.value.canReadPanelUpdate)
+const canCheckPanelUpdate = computed(() => capabilities.value.canCheckPanelUpdate)
+const canApplyPanelUpdate = computed(() => capabilities.value.canApplyPanelUpdate)
 
 interface VersionInfo {
   version: string
@@ -164,7 +162,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 }
 
 const loadBaseState = async () => {
-  if (!canReadPanelSettings.value) return
+  if (!canReadPanelUpdate.value) return
   const [versionResponse, statusResponse] = await Promise.all([
     Api.getPanelVersion({ silentError: true }),
     Api.getPanelUpdateStatus({ silentError: true })
@@ -174,7 +172,7 @@ const loadBaseState = async () => {
 }
 
 const checkForUpdate = async () => {
-  if (!canReadPanelSettings.value) return
+  if (!canCheckPanelUpdate.value) return
   loading.value = true
   errorMessage.value = ''
   try {
@@ -199,7 +197,7 @@ const checkForUpdate = async () => {
 }
 
 const applyUpdate = async () => {
-  if (!canWritePanelSettings.value) return
+  if (!canApplyPanelUpdate.value) return
   if (!canApplyUpdate.value || applying.value) return
   try {
     const targetVersion = latestVersionText.value || t('setting.update.newVersion', 'new version')
@@ -297,6 +295,7 @@ onBeforeUnmount(() => {
           </el-tooltip>
           <el-tooltip :content="$t('setting.update.copyVersion', 'Copy version')" effect="dark" placement="top">
             <el-button
+              v-if="canReadPanelUpdate"
               class="version-copy-button"
               :icon="CopyDocument"
               text
@@ -359,9 +358,9 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="update-actions">
-      <el-button v-if="canReadPanelSettings" :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
+      <el-button v-if="canCheckPanelUpdate" :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
       <el-button
-        v-if="canWritePanelSettings && (!check || canApplyUpdate)"
+        v-if="canApplyPanelUpdate && (!check || canApplyUpdate)"
         type="primary"
         :loading="applying"
         :disabled="!canApplyUpdate || isRunning"

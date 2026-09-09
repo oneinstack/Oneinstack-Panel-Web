@@ -7,7 +7,7 @@ import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { hasDatabaseButtonAccess } from './access'
 
 const requestedConnectionType = String(System.getRouterParams().type || 'mysql')
 const connectionType = ['mysql', 'redis'].includes(requestedConnectionType)
@@ -17,8 +17,12 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
-const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
-const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
+const canReadRemote = computed(() => hasDatabaseButtonAccess('remote.read'))
+const canCreateRemote = computed(() => hasDatabaseButtonAccess('remote.create'))
+const canUpdateRemote = computed(() => hasDatabaseButtonAccess('remote.update'))
+const canTestRemote = computed(() => hasDatabaseButtonAccess('remote.test'))
+const canSyncRemote = computed(() => hasDatabaseButtonAccess('remote.sync'))
+const canDeleteRemote = computed(() => hasDatabaseButtonAccess('remote.delete'))
 
 const conf: Record<string, any> = reactive({
   themeColor: {
@@ -40,7 +44,7 @@ const conf: Record<string, any> = reactive({
       { prop: 'action', label: t('common.action', 'Action'), width: 360, fixed: 'right' }
     ]),
     getData: async () => {
-      if (!canReadDatabase.value) {
+      if (!canReadRemote.value) {
         conf.list.data = []
         conf.list.loading = false
         return
@@ -51,17 +55,17 @@ const conf: Record<string, any> = reactive({
       conf.list.data = data
     },
     syncData: async (id: number) => {
-      if (!canWriteDatabase.value) return
+      if (!canSyncRemote.value) return
       await Api.syncDatabaseConn({ id })
       ElMessage.success(t('database.remote.syncSuccess', 'Sync succeeded'))
     },
     testData: async (row: any) => {
-      if (!canReadDatabase.value) return
+      if (!canTestRemote.value) return
       await Api.testDatabaseConn({ ...row, password: '' })
       ElMessage.success(t('database.remote.testSuccess', 'Connection test succeeded'))
     },
     deleteData: async (row: any) => {
-      if (!canWriteDatabase.value) return
+      if (!canDeleteRemote.value) return
       try {
         await ElMessageBox.confirm(
           t('database.remote.removeConfirmMessage', 'Remove {address} from the panel? This only deletes the connection and synced records in the panel, not the remote database.', { address: `${row.addr}:${row.port}` }),
@@ -90,7 +94,7 @@ const conf: Record<string, any> = reactive({
     errorDetail: '',
     errorCode: '',
     open: (type: 'add' | 'edit', row?: any) => {
-      if (!canWriteDatabase.value) return
+      if (type === 'add' ? !canCreateRemote.value : !canUpdateRemote.value) return
       conf.drawer.title = t('database.remote.addRemoteDatabase', 'Add remote database')
       conf.drawer.errorMessage = ''
       conf.drawer.errorDetail = ''
@@ -126,7 +130,7 @@ const conf: Record<string, any> = reactive({
       conf.drawer.show = false
     },
     onConfirm: () => {
-      if (!canWriteDatabase.value) return
+      if (conf.drawer.type === 'add' ? !canCreateRemote.value : !canUpdateRemote.value) return
       conf.form.instance?.validate(async (valid: boolean) => {
         if (!valid) return
         conf.drawer.errorMessage = ''
@@ -239,7 +243,7 @@ conf.list.getData()
     <div class="container">
       <div class="tool-bar">
         <div class="btn-group">
-          <el-button v-if="canWriteDatabase" type="primary" @click="conf.drawer.open('add')">{{ t('database.remote.addRemoteDatabase', '添加远程数据库') }}</el-button>
+          <el-button v-if="canCreateRemote" type="primary" @click="conf.drawer.open('add')">{{ t('database.remote.addRemoteDatabase', '添加远程数据库') }}</el-button>
         </div>
       </div>
       <div class="box2">
@@ -253,16 +257,18 @@ conf.list.getData()
         <custom-table :loading="conf.list.loading" :data="conf.list.data" :columns="conf.list.columns">
           <template #empty>
             <div style="margin-top: 40px">
-              <span>
+              <span v-if="canCreateRemote">
                 {{ t('database.remote.emptyPrefix', '暂无远程数据库连接，您可以') }}
                 <a
                   class="cursor-pointer"
                   style="color: var(--el-color-primary); text-decoration: underline"
+                  v-if="canCreateRemote"
                   @click="conf.drawer.open('add')"
                 >
                   {{ t('database.remote.emptyAction', '添加远程数据库') }}
                 </a>
               </span>
+              <span v-else>{{ t('database.remote.emptyNoPermission', '暂无可显示的远程数据库连接') }}</span>
             </div>
           </template>
           <template #passwordConfigured="{ row }">
@@ -272,10 +278,10 @@ conf.list.getData()
           </template>
           <template #action="{ row }">
             <div class="table-row-actions">
-              <el-button v-if="canWriteDatabase" type="primary" link :icon="EditPen" @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
-              <el-button v-if="canReadDatabase" type="primary" link :icon="Connection" @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
-              <el-button v-if="canWriteDatabase" type="primary" link :icon="Refresh" @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
-              <el-button v-if="canWriteDatabase" type="danger" link :icon="Delete" @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
+              <el-button v-if="canUpdateRemote" type="primary" link :icon="EditPen" @click="conf.drawer.open('edit', row)">{{ t('common.edit', '编辑') }}</el-button>
+              <el-button v-if="canTestRemote" type="primary" link :icon="Connection" @click="conf.list.testData(row)">{{ t('database.remote.test', '测试') }}</el-button>
+              <el-button v-if="canSyncRemote" type="primary" link :icon="Refresh" @click="conf.list.syncData(row.id)">{{ t('common.sync', '同步') }}</el-button>
+              <el-button v-if="canDeleteRemote" type="danger" link :icon="Delete" @click="conf.list.deleteData(row)">{{ t('common.remove', '移除') }}</el-button>
             </div>
           </template>
         </custom-table>

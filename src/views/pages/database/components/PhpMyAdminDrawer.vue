@@ -16,6 +16,7 @@ interface Props {
   versions?: string[]
   recommendedVersion?: string
   description?: string
+  canManage?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -28,7 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
   webServer: undefined,
   versions: () => [],
   recommendedVersion: '',
-  description: ''
+  description: '',
+  canManage: true
 })
 
 const emit = defineEmits<{
@@ -183,7 +185,7 @@ const statusLabel = computed(() => {
               <li>{{ t('database.phpMyAdmin.securityNotePublic', '不建议将 phpMyAdmin 直接暴露到公网。') }}</li>
               <li>{{ t('database.phpMyAdmin.securityNoteDatabase', '可从数据库列表直接进入对应数据库。') }}</li>
             </ul>
-            <el-button class="phpmyadmin-detail-link" type="primary" :icon="ArrowRight" @click="emit('go-detail')">
+            <el-button v-if="canManage" class="phpmyadmin-detail-link" type="primary" :icon="ArrowRight" @click="emit('go-detail')">
               {{ t('database.phpMyAdmin.versionDetail', '版本与详情') }}
             </el-button>
           </div>
@@ -192,13 +194,13 @@ const statusLabel = computed(() => {
 
     <template #footer="{ close }">
       <el-button @click="close">{{ t('common.close', '关闭') }}</el-button>
-      <el-button v-if="taskId" type="primary" @click="emit('view-task', taskId)">
+      <el-button v-if="taskId && canManage" type="primary" @click="emit('view-task', taskId)">
         {{ t('database.phpMyAdmin.viewProgress', '查看安装进度') }}
       </el-button>
-      <el-button v-else-if="installed" type="primary" :icon="Link" @click="emit('open')">
+      <el-button v-else-if="installed && canManage" type="primary" :icon="Link" @click="emit('open')">
         {{ t('database.phpMyAdmin.open', '打开 phpMyAdmin') }}
       </el-button>
-      <el-button v-else type="primary" :icon="Download" :loading="installing" @click="emit('install')">
+      <el-button v-else-if="canManage" type="primary" :icon="Download" :loading="installing" @click="emit('install')">
         {{ t('database.phpMyAdmin.installNow', '立即安装') }}
       </el-button>
     </template>

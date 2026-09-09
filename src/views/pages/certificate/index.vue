@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import {
   CircleClose,
   Delete,
@@ -22,7 +22,6 @@ import type {
   ManagedCertificate
 } from '@/api/modules'
 import type { ColumnItem } from '@/components/custom-table.vue'
-import { useConfigStore } from '@/stores/modules/config'
 import CertificateDetailDrawer from './components/CertificateDetailDrawer.vue'
 import CertificateFormDrawer from './components/CertificateFormDrawer.vue'
 import CertificateBindDrawer from './components/CertificateBindDrawer.vue'
@@ -38,9 +37,9 @@ import {
   certificateTaskTarget,
   certificateTime
 } from './utils'
+import { getCertificateCapabilities } from './access'
 import i18n from '@/lang'
 
-const sconfig = useConfigStore()
 const activeTab = ref('certificates')
 const algorithms = ref<CertificateAlgorithm[]>([])
 const dnsProviders = ref<DnsProviderOption[]>([])
@@ -69,18 +68,31 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
-const certificateTabItems = computed(() => [
-  { key: 'certificates', label: t('certificate.tabs.certificates', 'Certificates'), labelKey: 'certificate.tabs.certificates' },
-  { key: 'tasks', label: t('certificate.tabs.tasks', 'Tasks'), labelKey: 'certificate.tabs.tasks' },
-  { key: 'dnsAccounts', label: t('certificate.tabs.dnsAccounts', 'DNS accounts'), labelKey: 'certificate.tabs.dnsAccounts' }
-])
+const certificateCapabilities = computed(() => getCertificateCapabilities())
+const canReadCertificate = computed(() => certificateCapabilities.value.canReadCertificate)
+const canViewCertificateDetail = computed(() => certificateCapabilities.value.canViewCertificateDetail)
+const canApplyCertificate = computed(() => certificateCapabilities.value.canApplyCertificate)
+const canUploadCertificate = computed(() => certificateCapabilities.value.canUploadCertificate)
+const canCreateSelfSigned = computed(() => certificateCapabilities.value.canCreateSelfSigned)
+const canBindWebsite = computed(() => certificateCapabilities.value.canBindWebsite)
+const canDownloadCertificate = computed(() => certificateCapabilities.value.canDownloadCertificate)
+const canDeleteCertificate = computed(() => certificateCapabilities.value.canDeleteCertificate)
+const canReadTask = computed(() => certificateCapabilities.value.canReadTask)
+const canManageTask = computed(() => certificateCapabilities.value.canManageTask)
+const canReadDnsAccount = computed(() => certificateCapabilities.value.canReadDnsAccount)
+const canManageDnsAccount = computed(() => certificateCapabilities.value.canManageDnsAccount)
 
-const canRead = computed(() =>
-  sconfig.hasActionAccess('certificate.read') || sconfig.hasScopeAccess('certificate', 'read')
-)
-const canWrite = computed(() =>
-  sconfig.hasActionAccess('certificate.write') || sconfig.hasScopeAccess('certificate', 'write')
-)
+const certificateTabItems = computed(() => [
+  { key: 'certificates', label: t('certificate.tabs.certificates', 'Certificates'), labelKey: 'certificate.tabs.certificates', visible: canReadCertificate.value },
+  { key: 'tasks', label: t('certificate.tabs.tasks', 'Tasks'), labelKey: 'certificate.tabs.tasks', visible: canReadTask.value },
+  { key: 'dnsAccounts', label: t('certificate.tabs.dnsAccounts', 'DNS accounts'), labelKey: 'certificate.tabs.dnsAccounts', visible: canReadDnsAccount.value }
+].filter((item) => item.visible))
+const canReadAnyTab = computed(() => certificateTabItems.value.length > 0)
+const canReadActiveTab = computed(() => {
+  if (activeTab.value === 'tasks') return canReadTask.value
+  if (activeTab.value === 'dnsAccounts') return canReadDnsAccount.value
+  return canReadCertificate.value
+})
 const activeStatuses = new Set(['queued', 'running', 'canceling'])
 const hasActiveTasks = computed(() => tasks.value.some((item) => activeStatuses.has(item.status)))
 
@@ -133,7 +145,7 @@ const loadMetadata = async () => {
 }
 
 const loadCertificates = async (quiet = false) => {
-  if (!canRead.value) return
+  if (!canReadCertificate.value) return
   if (!quiet) certificateLoading.value = true
   try {
     const response = await Api.getCertificates(certificateQuery)
@@ -145,7 +157,7 @@ const loadCertificates = async (quiet = false) => {
 }
 
 const loadTasks = async (quiet = false) => {
-  if (!canRead.value) return
+  if (!canReadTask.value) return
   if (!quiet) taskLoading.value = true
   try {
     const response = await Api.getCertificateCenterTasks({
@@ -161,7 +173,7 @@ const loadTasks = async (quiet = false) => {
 }
 
 const loadDnsAccounts = async () => {
-  if (!canRead.value) return
+  if (!canReadDnsAccount.value) return
   dnsLoading.value = true
   try {
     const response = await Api.getCertificateDnsAccounts()
@@ -172,9 +184,15 @@ const loadDnsAccounts = async () => {
 }
 
 const refreshCurrent = () => {
-  if (activeTab.value === 'tasks') return loadTasks()
-  if (activeTab.value === 'dnsAccounts') return loadDnsAccounts()
+  if (activeTab.value === 'tasks') return canReadTask.value ? loadTasks() : undefined
+  if (activeTab.value === 'dnsAccounts') return canReadDnsAccount.value ? loadDnsAccounts() : undefined
+  if (!canReadCertificate.value) return undefined
   return loadCertificates()
+}
+
+const ensureActiveTab = () => {
+  if (certificateTabItems.value.some((item) => item.key === activeTab.value)) return
+  activeTab.value = certificateTabItems.value[0]?.key || ''
 }
 
 const handleTabChange = (value: string) => {
@@ -183,34 +201,43 @@ const handleTabChange = (value: string) => {
   void refreshCurrent()
 }
 
+watch(certificateTabItems, ensureActiveTab)
+
 const openCreate = (mode: 'upload' | 'self-signed') => {
-  if (!canWrite.value) return
+  if (mode === 'upload' && !canUploadCertificate.value) return
+  if (mode === 'self-signed' && !canCreateSelfSigned.value) return
   formDrawer.mode = mode
   formDrawer.visible = true
 }
 const openIssue = () => {
-  if (!canWrite.value) return
+  if (!canApplyCertificate.value) return
   issueDrawer.visible = true
 }
 const openDetail = (certificate: ManagedCertificate) => {
-  if (!canRead.value) return
+  if (!canViewCertificateDetail.value) return
   detailDrawer.certificateId = certificate.id
   detailDrawer.visible = true
 }
 const openBind = (certificate: ManagedCertificate) => {
-  if (!canWrite.value) return
+  if (!canBindWebsite.value) return
   bindDrawer.certificateId = certificate.id
   bindDrawer.visible = true
 }
 const openTask = (task: CertificateTask) => {
-  if (!canRead.value) return
+  if (!canReadTask.value) return
   taskDrawer.taskId = task.id
   taskDrawer.visible = true
 }
+const downloadCertificate = (certificate: ManagedCertificate) => {
+  if (!canDownloadCertificate.value) return
+  void Api.downloadCertificate(certificate.id)
+}
 const handleTaskCreated = (task: CertificateTask) => {
   bindDrawer.visible = false
-  taskDrawer.taskId = task.id
-  taskDrawer.visible = true
+  if (canReadTask.value) {
+    taskDrawer.taskId = task.id
+    taskDrawer.visible = true
+  }
   void loadTasks(true)
   void loadCertificates(true)
 }
@@ -271,8 +298,10 @@ const ensureApprovalPolling = () => {
         const status = extractApprovalStatus(response)
         if (taskId) {
           pendingApprovalIds.value = pendingApprovalIds.value.filter((item) => item !== approvalId)
-          taskDrawer.taskId = taskId
-          taskDrawer.visible = true
+          if (canReadTask.value) {
+            taskDrawer.taskId = taskId
+            taskDrawer.visible = true
+          }
           void loadTasks(true)
           void loadCertificates(true)
           continue
@@ -302,7 +331,7 @@ const handleIssueSubmitted = (payload: {
   if (taskId) {
     if (payload.task?.id) {
       handleTaskCreated(payload.task)
-    } else {
+    } else if (canReadTask.value) {
       taskDrawer.taskId = taskId
       taskDrawer.visible = true
       void loadTasks(true)
@@ -319,7 +348,7 @@ const handleIssueSubmitted = (payload: {
 }
 
 const deleteCertificate = async (certificate: ManagedCertificate) => {
-  if (!canWrite.value) return
+  if (!canDeleteCertificate.value) return
   const detailResponse = await Api.getCertificateDetail(certificate.id)
   const activeBindings = (detailResponse.data?.bindings || []).filter((item: any) => item.status === 'active')
   if (activeBindings.length) {
@@ -346,7 +375,7 @@ const deleteCertificate = async (certificate: ManagedCertificate) => {
 }
 
 const cancelTask = async (task: CertificateTask) => {
-  if (!canWrite.value) return
+  if (!canManageTask.value) return
   try {
     await ElMessageBox.confirm(t('certificate.confirm.cancelTask'), t('certificate.confirm.cancelTaskTitle'), {
       type: 'warning',
@@ -362,18 +391,18 @@ const cancelTask = async (task: CertificateTask) => {
 }
 
 const editDnsAccount = (account?: DnsAccount) => {
-  if (!canWrite.value) return
+  if (!canManageDnsAccount.value) return
   dnsDrawer.account = account || null
   dnsDrawer.visible = true
 }
 const openDnsManagerFromIssue = () => {
-  if (!canWrite.value) return
+  if (!canManageDnsAccount.value) return
   issueDrawer.visible = false
   activeTab.value = 'dnsAccounts'
   editDnsAccount()
 }
 const deleteDnsAccount = async (account: DnsAccount) => {
-  if (!canWrite.value) return
+  if (!canManageDnsAccount.value) return
   try {
     await ElMessageBox.confirm(
       t('certificate.confirm.deleteDns', '', { name: account.name }),
@@ -404,7 +433,8 @@ const onTaskPageSize = () => {
 }
 
 onMounted(async () => {
-  if (!canRead.value) return
+  ensureActiveTab()
+  if (!canReadAnyTab.value && !canApplyCertificate.value && !canUploadCertificate.value && !canCreateSelfSigned.value) return
   await Promise.allSettled([loadMetadata(), loadCertificates(), loadTasks(), loadDnsAccounts()])
   taskPollTimer = window.setInterval(() => {
     if (hasActiveTasks.value) void loadTasks(true)
@@ -426,21 +456,21 @@ onBeforeUnmount(() => {
         <p>{{ $t('certificate.pageDescription') }}</p>
       </div>
       <div class="toolbar-actions">
-        <el-button v-if="canRead" :icon="Refresh" @click="refreshCurrent">{{ $t('common.refresh') }}</el-button>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openIssue">
+        <el-button v-if="canReadActiveTab" :icon="Refresh" @click="refreshCurrent">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canApplyCertificate" type="primary" :icon="Plus" @click="openIssue">
           {{ $t('certificate.actions.issue') }}
         </el-button>
-        <el-button v-if="canWrite" :icon="Upload" @click="openCreate('upload')">
+        <el-button v-if="canUploadCertificate" :icon="Upload" @click="openCreate('upload')">
           {{ $t('certificate.actions.upload') }}
         </el-button>
-        <el-button v-if="canWrite" :icon="Plus" @click="openCreate('self-signed')">
+        <el-button v-if="canCreateSelfSigned" :icon="Plus" @click="openCreate('self-signed')">
           {{ $t('certificate.actions.selfSigned') }}
         </el-button>
       </div>
     </section>
 
     <el-alert
-      v-if="!canRead"
+      v-if="!canReadAnyTab"
       :title="$t('certificate.permissions.read')"
       type="warning"
       show-icon
@@ -479,10 +509,10 @@ onBeforeUnmount(() => {
             <template #notAfter="{ row }">{{ certificateTime(row.notAfter) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
-                <el-button link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
-                <el-button v-if="canWrite" link type="primary" :icon="Link" @click="openBind(row)">{{ $t('certificate.actions.bind') }}</el-button>
-                <el-button v-if="canRead" link type="primary" :icon="Download" @click="Api.downloadCertificate(row.id)">{{ $t('common.download') }}</el-button>
-                <el-button v-if="canWrite" link type="danger" :icon="Delete" @click="deleteCertificate(row)">{{ $t('common.delete') }}</el-button>
+                <el-button v-if="canViewCertificateDetail" link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+                <el-button v-if="canBindWebsite" link type="primary" :icon="Link" @click="openBind(row)">{{ $t('certificate.actions.bind') }}</el-button>
+                <el-button v-if="canDownloadCertificate" link type="primary" :icon="Download" @click="downloadCertificate(row)">{{ $t('common.download') }}</el-button>
+                <el-button v-if="canDeleteCertificate" link type="danger" :icon="Delete" @click="deleteCertificate(row)">{{ $t('common.delete') }}</el-button>
               </div>
             </template>
           </custom-table>
@@ -517,8 +547,8 @@ onBeforeUnmount(() => {
             <template #createdAt="{ row }">{{ certificateTime(row.createdAt) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
-                <el-button v-if="canRead" link type="primary" :icon="Document" @click="openTask(row)">{{ $t('common.detail') }}</el-button>
-                <el-button v-if="canWrite && activeStatuses.has(row.status)" link type="danger" :icon="CircleClose" @click="cancelTask(row)">
+                <el-button v-if="canReadTask" link type="primary" :icon="Document" @click="openTask(row)">{{ $t('common.detail') }}</el-button>
+                <el-button v-if="canManageTask && activeStatuses.has(row.status)" link type="danger" :icon="CircleClose" @click="cancelTask(row)">
                   {{ $t('certificate.actions.cancelTask') }}
                 </el-button>
               </div>
@@ -528,7 +558,7 @@ onBeforeUnmount(() => {
 
         <div v-else-if="activeTab === 'dnsAccounts'" class="certificate-tab-content">
           <div class="tab-tools tab-tools--right">
-            <el-button v-if="canWrite" type="primary" :icon="Plus" @click="editDnsAccount()">
+            <el-button v-if="canManageDnsAccount" type="primary" :icon="Plus" @click="editDnsAccount()">
               {{ $t('certificate.actions.addDnsAccount') }}
             </el-button>
           </div>
@@ -547,8 +577,8 @@ onBeforeUnmount(() => {
             <template #updatedAt="{ row }">{{ certificateTime(row.updatedAt) }}</template>
             <template #actionColumn="{ row }">
               <div class="table-row-actions">
-                <el-button v-if="canWrite" link type="primary" :icon="EditPen" @click="editDnsAccount(row)">{{ $t('common.edit') }}</el-button>
-                <el-button v-if="canWrite" link type="danger" :icon="Delete" @click="deleteDnsAccount(row)">{{ $t('common.delete') }}</el-button>
+                <el-button v-if="canManageDnsAccount" link type="primary" :icon="EditPen" @click="editDnsAccount(row)">{{ $t('common.edit') }}</el-button>
+                <el-button v-if="canManageDnsAccount" link type="danger" :icon="Delete" @click="deleteDnsAccount(row)">{{ $t('common.delete') }}</el-button>
               </div>
             </template>
           </custom-table>
@@ -560,36 +590,42 @@ onBeforeUnmount(() => {
       v-model:visible="formDrawer.visible"
       :mode="formDrawer.mode"
       :algorithms="algorithms"
+      :can-submit="formDrawer.mode === 'upload' ? canUploadCertificate : canCreateSelfSigned"
       @created="handleTaskCreated"
     />
     <certificate-issue-drawer
       v-model:visible="issueDrawer.visible"
       :dns-accounts="dnsAccounts"
+      :can-submit="canApplyCertificate"
+      :can-manage-dns="canManageDnsAccount"
       @manage-dns="openDnsManagerFromIssue"
       @submitted="handleIssueSubmitted"
     />
     <certificate-detail-drawer
       v-model:visible="detailDrawer.visible"
       :certificate-id="detailDrawer.certificateId"
-      :can-write="canWrite"
+      :can-bind-website="canBindWebsite"
+      :can-download="canDownloadCertificate"
       @changed="loadCertificates"
       @task-created="handleTaskCreated"
     />
     <certificate-bind-drawer
       v-model:visible="bindDrawer.visible"
       :certificate-id="bindDrawer.certificateId"
+      :can-submit="canBindWebsite"
       @created="handleTaskCreated"
     />
     <certificate-task-drawer
       v-model:visible="taskDrawer.visible"
       :task-id="taskDrawer.taskId"
-      :can-write="canWrite"
+      :can-manage="canManageTask"
       @finished="() => { loadTasks(true); loadCertificates(true) }"
     />
     <dns-account-drawer
       v-model:visible="dnsDrawer.visible"
       :account="dnsDrawer.account"
       :providers="dnsProviders"
+      :can-submit="canManageDnsAccount"
       @saved="loadDnsAccounts"
     />
   </div>

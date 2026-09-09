@@ -6,7 +6,7 @@ import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import CustomDrawer from '@/components/custom-drawer.vue'
-import { hasOperationAccess } from '@/utils/access'
+import { hasFileButtonAccess } from '../access'
 
 const props = defineProps<{
   modelValue: boolean
@@ -41,7 +41,7 @@ const state = reactive({
 const editorRef = ref<HTMLTextAreaElement>()
 const dirty = computed(() => state.content !== state.original)
 const canEdit = computed(() => Boolean(props.canEdit) && !state.loadError && !state.readOnlyReason)
-const canRead = computed(() => hasOperationAccess('file', 'read'))
+const canRead = computed(() => hasFileButtonAccess('read'))
 const textPreviewExtensions = new Set([
   '.txt',
   '.md',

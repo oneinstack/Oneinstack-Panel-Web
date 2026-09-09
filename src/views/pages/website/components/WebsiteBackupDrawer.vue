@@ -12,6 +12,8 @@ const props = defineProps<{
   website?: Record<string, any> | null
   canRead?: boolean
   canWrite?: boolean
+  canRestore?: boolean
+  canDelete?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -38,6 +40,8 @@ const activeStatuses = new Set(['queued', 'running', 'canceling'])
 const selectedWebsiteId = computed(() => Number(props.website?.id || 0))
 const canReadWebsite = computed(() => props.canRead === true)
 const canWriteWebsite = computed(() => props.canWrite === true)
+const canRestoreWebsite = computed(() => props.canRestore !== false)
+const canDeleteWebsiteBackup = computed(() => props.canDelete !== false)
 const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
 const title = computed(() =>
   selectedWebsiteId.value
@@ -138,7 +142,7 @@ const createBackup = async () => {
 }
 
 const restoreBackup = async (backup: Record<string, any>) => {
-  if (!canWriteWebsite.value) return
+  if (!canRestoreWebsite.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('website.backupDrawer.restorePrompt', { database: backup.databaseId ? t('website.backupDrawer.restoreDatabase') : '', name: backup.websiteName }),
@@ -161,7 +165,7 @@ const restoreBackup = async (backup: Record<string, any>) => {
 }
 
 const deleteBackup = async (backup: Record<string, any>) => {
-  if (!canWriteWebsite.value) return
+  if (!canDeleteWebsiteBackup.value) return
   try {
     const { value } = await ElMessageBox.prompt(
       t('website.backupDrawer.deletePrompt', { file: backup.fileName, name: backup.websiteName }),
@@ -189,7 +193,6 @@ const downloadBackup = (backup: Record<string, any>) => {
 }
 
 const cancelTask = async (task: Record<string, any>) => {
-  if (!canWriteWebsite.value) return
   await Api.cancelWebsiteTask(task.id)
   ElMessage.success(i18n.t('website.notifications.cancelSubmitted'))
   await loadData()
@@ -272,8 +275,8 @@ onBeforeUnmount(() => {
           <template #backupAction="{ row }">
               <div class="table-row-actions">
                 <el-button v-if="canReadWebsite" type="primary" link :icon="Download" @click="downloadBackup(row)">{{ t('website.backupDrawer.download') }}</el-button>
-                <el-button v-if="canWriteWebsite" type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">{{ t('website.backupDrawer.restore') }}</el-button>
-                <el-button v-if="canWriteWebsite" type="danger" link :icon="Delete" @click="deleteBackup(row)">{{ t('website.backupDrawer.delete') }}</el-button>
+                <el-button v-if="canRestoreWebsite" type="primary" link :icon="RefreshLeft" @click="restoreBackup(row)">{{ t('website.backupDrawer.restore') }}</el-button>
+                <el-button v-if="canDeleteWebsiteBackup" type="danger" link :icon="Delete" @click="deleteBackup(row)">{{ t('website.backupDrawer.delete') }}</el-button>
               </div>
           </template>
         </custom-table>
@@ -294,7 +297,7 @@ onBeforeUnmount(() => {
               <div class="table-row-actions">
                 <el-button v-if="canReadWebsite" type="primary" link :icon="Document" @click="showLog(row)">{{ t('website.backupDrawer.log') }}</el-button>
                 <el-button
-                  v-if="activeStatuses.has(row.status) && canWriteWebsite"
+                  v-if="activeStatuses.has(row.status)"
                   type="danger"
                   link
                   :icon="CircleClose"

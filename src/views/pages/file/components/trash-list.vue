@@ -6,7 +6,7 @@ import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
-import { hasOperationAccess } from '@/utils/access'
+import { hasFileButtonAccess } from '../access'
 import { formatFileTime } from '@/utils/fileTime'
 
 interface TrashEntry {
@@ -44,14 +44,10 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
-const canReadFile = computed(() => hasOperationAccess('file', 'read'))
-const canRestoreTrash = computed(() => hasOperationAccess('file', 'restore'))
-const canDeleteTrash = computed(() => hasOperationAccess('file', 'delete_permanently', {
-  actions: ['file.delete']
-}))
-const canEmptyTrash = computed(() => hasOperationAccess('file', 'empty_trash', {
-  actions: ['file.delete']
-}))
+const canReadFile = computed(() => hasFileButtonAccess('read'))
+const canRestoreTrash = computed(() => hasFileButtonAccess('restore'))
+const canDeleteTrash = computed(() => hasFileButtonAccess('delete'))
+const canEmptyTrash = computed(() => hasFileButtonAccess('delete'))
 
 const state = reactive({
   loading: false,

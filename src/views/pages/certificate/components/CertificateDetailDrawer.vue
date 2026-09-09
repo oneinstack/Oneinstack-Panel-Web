@@ -16,7 +16,8 @@ import i18n from '@/lang'
 const props = defineProps<{
   visible: boolean
   certificateId: string
-  canWrite: boolean
+  canBindWebsite: boolean
+  canDownload: boolean
 }>()
 
 const emit = defineEmits<{
@@ -122,10 +123,12 @@ const copyText = async (content: string) => {
 }
 
 const download = async () => {
+  if (!props.canDownload) return
   if (props.certificateId) await Api.downloadCertificate(props.certificateId)
 }
 
 const unbind = async (binding: CertificateBinding) => {
+  if (!props.canBindWebsite) return
   try {
     await ElMessageBox.confirm(t('certificate.confirm.unbind'), t('certificate.confirm.unbindTitle'), {
       type: 'warning',
@@ -206,7 +209,7 @@ watch(
                   <strong>{{ $t('certificate.detail.bindings') }}</strong>
                   <span>{{ bindings.length }}</span>
                 </div>
-                <el-button v-if="canWrite" type="primary" :icon="Link" @click="bindVisible = true">
+                <el-button v-if="canBindWebsite" type="primary" :icon="Link" @click="bindVisible = true">
                   {{ $t('certificate.actions.bind') }}
                 </el-button>
               </div>
@@ -225,7 +228,7 @@ watch(
                 <template #deployedAt="{ row }">{{ certificateTime(row.deployedAt) }}</template>
                 <template #actionColumn="{ row }">
                   <div class="table-row-actions">
-                    <el-button v-if="canWrite && row.status === 'active'" link type="danger" :icon="Connection" @click="unbind(row)">
+                    <el-button v-if="canBindWebsite && row.status === 'active'" link type="danger" :icon="Connection" @click="unbind(row)">
                       {{ $t('certificate.actions.unbind') }}
                     </el-button>
                   </div>
@@ -241,7 +244,7 @@ watch(
               <el-button :icon="CopyDocument" :disabled="!certificatePem" @click="copyText(certificatePem)">
                 {{ $t('certificate.actions.copyCertificate') }}
               </el-button>
-              <el-button :icon="Download" @click="download">{{ $t('common.download') }}</el-button>
+              <el-button v-if="canDownload" :icon="Download" @click="download">{{ $t('common.download') }}</el-button>
             </div>
             <pre>{{ certificatePem || $t('certificate.detail.materialEmpty') }}</pre>
           </div>
@@ -274,6 +277,7 @@ watch(
     v-model:visible="bindVisible"
     :certificate-id="certificateId"
     :bound-website-ids="activeBindingIds"
+    :can-submit="canBindWebsite"
     @created="handleTaskCreated"
   />
 </template>

@@ -5,11 +5,8 @@ import { Delete, Edit, InfoFilled, Plus, Refresh } from '@element-plus/icons-vue
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import { Api } from '@/api/modules'
 import BasicChart from '@/components/echarts/basic-chart.vue'
-import { useConfigStore } from '@/stores/modules/config';
-import { hasOperationAccess } from '@/utils/access'
+import { hasBastionButtonAccess } from './access'
 import i18n from '@/lang'
-
-const sconfig = useConfigStore()
 
 type BastionStatus = 'online' | 'offline' | 'error' | 'unknown'
 type AuthMethod = 'password' | 'key'
@@ -101,11 +98,14 @@ const form = reactive({
   enabled: true
 })
 
-const canRead = computed(() => hasOperationAccess('bastion', 'read'))
-const canTestConnection = computed(() => hasOperationAccess('bastion', 'identityRead', {
-  actions: ['bastion.identityRead', 'bastion.test']
-}))
-const canWrite = computed(() => hasOperationAccess('bastion', 'write'))
+const canRead = computed(() => hasBastionButtonAccess('read'))
+const canCreateServer = computed(() => hasBastionButtonAccess('server.create'))
+const canUpdateServer = computed(() => hasBastionButtonAccess('server.update'))
+const canDeleteServer = computed(() => hasBastionButtonAccess('server.delete'))
+const canTestConnection = computed(() => hasBastionButtonAccess('server.test'))
+const canReadServerDetail = computed(() => hasBastionButtonAccess('server.detail'))
+const canUpdateCollection = computed(() => hasBastionButtonAccess('server.collect.update'))
+const canAccessSession = computed(() => hasBastionButtonAccess('session.access'))
 
 const rules = computed<FormRules>(() => ({
   name: [{ required: true, message: t('bastion.serverNameRequired', '请输入服务器名称'), trigger: 'blur' }],
@@ -269,7 +269,7 @@ const fetchServers = async () => {
 }
 
 const loadMetrics = async (serverId: number) => {
-  if (!canRead.value) return
+  if (!canReadServerDetail.value) return
   metricsLoading.value = true
   try {
     const option = timeRangeOptions.value.find((item) => item.value === timeRange.value)!
@@ -287,7 +287,7 @@ const loadMetrics = async (serverId: number) => {
 }
 
 const openDetail = async (server: BastionServer) => {
-  if (!canRead.value) return
+  if (!canReadServerDetail.value) return
   selectedServer.value = server
   detailVisible.value = true
   metrics.value = []
@@ -319,7 +319,7 @@ const fillForm = (server?: BastionServer) => {
 }
 
 const openForm = async (server?: BastionServer) => {
-  if (!canWrite.value) return
+  if (server ? !canUpdateServer.value : !canCreateServer.value) return
   if (!server) {
     formLoading.value = false
     fillForm()
@@ -344,7 +344,7 @@ const closeForm = () => {
 }
 
 const submitForm = async () => {
-  if (!canWrite.value) return
+  if (editingId.value !== null ? !canUpdateServer.value : !canCreateServer.value) return
   const valid = await formRef.value?.validate().catch(() => false)
   if (!valid) return
   saving.value = true
@@ -356,7 +356,7 @@ const submitForm = async () => {
       username: form.username,
       authMethod: form.authMethod,
       tags: form.tags,
-      enabled: form.enabled
+      ...(editingId.value === null || canUpdateCollection.value ? { enabled: form.enabled } : {})
     }
     if (form.authMethod === 'password' && form.password) payload.password = form.password
     if (form.authMethod === 'key' && form.privateKey.trim()) payload.privateKey = form.privateKey
@@ -379,7 +379,7 @@ const submitForm = async () => {
 }
 
 const deleteServer = async (server: BastionServer) => {
-  if (!canWrite.value) return
+  if (!canDeleteServer.value) return
   try {
     await ElMessageBox.confirm(
       t('bastion.deleteConfirmMessage', '确定删除 {name}？该服务器的历史指标数据也会一起删除。', { name: server.name }),
@@ -432,7 +432,7 @@ const testConnection = async (server: BastionServer) => {
 }
 
 const refreshDetailMetrics = async () => {
-  if (!canRead.value || !selectedServer.value) return
+  if (!canReadServerDetail.value || !selectedServer.value) return
   await loadMetrics(selectedServer.value.id)
 }
 
@@ -546,7 +546,7 @@ onUnmounted(stopRealtimeRefresh)
       </div>
       <div class="toolbar-actions">
         <el-button :icon="Refresh" :loading="loading" @click="fetchServers">{{ $t('common.refresh') }}</el-button>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
+        <el-button v-if="canCreateServer" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
       </div>
     </section>
 
@@ -671,15 +671,22 @@ onUnmounted(stopRealtimeRefresh)
           class="server-card"
           :class="[`status-${server.status}`, { disabled: !server.enabled }]"
         >
-          <button class="server-card__main" type="button" @click="openDetail(server)">
+          <button
+            class="server-card__main"
+            :class="{ 'is-view-disabled': !canReadServerDetail }"
+            type="button"
+            :disabled="!canReadServerDetail"
+            @click="openDetail(server)"
+          >
             <div class="server-card__header">
               <div class="server-identity">
                 <span class="server-initial">{{ server.name.slice(0, 1).toUpperCase() }}</span>
                 <div>
                   <strong>{{ server.name }}</strong>
-                  <a :href="openServerLink(server)" @click.stop>
+                  <a v-if="canAccessSession" class="server-address" :href="openServerLink(server)" @click.stop>
                     {{ server.host }}:{{ server.port }}
                   </a>
+                  <span v-else class="server-address">{{ server.host }}:{{ server.port }}</span>
                 </div>
               </div>
               <el-tag :type="statusType(server.status)" effect="light">
@@ -725,9 +732,9 @@ onUnmounted(stopRealtimeRefresh)
             <el-button v-if="canTestConnection" link type="primary" :loading="testingId === server.id" @click="testConnection(server)">
               {{ $t('bastion.testConnection') }}
             </el-button>
-            <template v-if="canWrite">
-              <el-button link type="primary" :icon="Edit" @click="openForm(server)">{{ $t('common.edit') }}</el-button>
-              <el-button link type="danger" :icon="Delete" @click="deleteServer(server)">{{ $t('common.delete') }}</el-button>
+            <template v-if="canUpdateServer || canDeleteServer">
+              <el-button v-if="canUpdateServer" link type="primary" :icon="Edit" @click="openForm(server)">{{ $t('common.edit') }}</el-button>
+              <el-button v-if="canDeleteServer" link type="danger" :icon="Delete" @click="deleteServer(server)">{{ $t('common.delete') }}</el-button>
             </template>
           </div>
         </article>
@@ -742,7 +749,7 @@ onUnmounted(stopRealtimeRefresh)
         <img src="/static/images/empty.webp" alt="" />
         <strong>{{ $t('bastion.noServers') }}</strong>
         <span>{{ $t('bastion.noServersDescription') }}</span>
-        <el-button v-if="canWrite" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
+        <el-button v-if="canCreateServer" type="primary" :icon="Plus" @click="openForm()">{{ $t('bastion.addServer') }}</el-button>
       </div>
     </section>
 
@@ -821,7 +828,7 @@ onUnmounted(stopRealtimeRefresh)
         <el-form-item :label="$t('bastion.tags')" prop="tags">
           <el-input v-model="form.tags" :placeholder="$t('bastion.tagsPlaceholder')" />
         </el-form-item>
-        <el-form-item :label="$t('bastion.enableCollection')" prop="enabled">
+        <el-form-item v-if="!editingId || canUpdateCollection" :label="$t('bastion.enableCollection')" prop="enabled">
           <el-switch v-model="form.enabled" />
         </el-form-item>
         <el-alert
@@ -881,7 +888,7 @@ onUnmounted(stopRealtimeRefresh)
             :options="timeRangeOptions.map((item) => ({ label: item.label, value: item.value }))"
             @change="refreshDetailMetrics"
           />
-          <el-button v-if="canRead" :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">{{ $t('bastion.refreshMetrics') }}</el-button>
+          <el-button v-if="canReadServerDetail" :icon="Refresh" :loading="metricsLoading" @click="refreshDetailMetrics">{{ $t('bastion.refreshMetrics') }}</el-button>
         </div>
 
         <div v-loading="metricsLoading" class="chart-grid">
@@ -1262,6 +1269,10 @@ onUnmounted(stopRealtimeRefresh)
   background: transparent;
   text-align: left;
   cursor: pointer;
+
+  &.is-view-disabled {
+    cursor: default;
+  }
 }
 
 .server-card__header {
@@ -1293,7 +1304,7 @@ onUnmounted(stopRealtimeRefresh)
   }
 
   strong,
-  a {
+  .server-address {
     display: block;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1306,7 +1317,7 @@ onUnmounted(stopRealtimeRefresh)
     font-weight: 680;
   }
 
-  a {
+  .server-address {
     margin-top: 4px;
     color: rgb(var(--primary-color));
     font-size: 12px;

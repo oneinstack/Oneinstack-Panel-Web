@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive } from 'vue'
+import { computed, onMounted, reactive, watch } from 'vue'
 import settingForm, { FormItem } from './setting-form.vue'
 import { Api } from '@/api/modules'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -8,12 +8,15 @@ import { useConfigStore } from '@/stores/modules/config';
 import System from '@/utils/System'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { getPanelSettingsCapabilities } from '../access'
 
 const sconfig = useConfigStore()
-const canWritePanelSettings = computed(() => hasOperationAccess('panelSettings', 'write', {
-  actions: ['panelSettings.write', 'system.settings.write']
-}))
+const capabilities = computed(getPanelSettingsCapabilities)
+const canReadPanelSettings = computed(() => capabilities.value.canReadPanelSettings)
+const canUpdatePanelAlias = computed(() => capabilities.value.canUpdatePanelAlias)
+const canUpdatePanelUsername = computed(() => capabilities.value.canUpdatePanelUsername)
+const canUpdatePanelPassword = computed(() => capabilities.value.canUpdatePanelPassword)
+const canUpdatePanelEntry = computed(() => capabilities.value.canUpdatePanelEntry)
 
 
 
@@ -95,7 +98,7 @@ const promptCurrentPassword = async (title: string, message: string, confirmButt
 }
 
 async function savePanelTitle() {
-  if (!canWritePanelSettings.value) return
+  if (!canUpdatePanelAlias.value) return
   const title = getSettingValue('title')
   if (!title) {
     ElMessage.warning(t('setting.panel.inputAlias', 'Enter a panel alias'))
@@ -125,7 +128,7 @@ async function savePanelTitle() {
 }
 
 async function savePanelUsername() {
-  if (!canWritePanelSettings.value) return
+  if (!canUpdatePanelUsername.value) return
   const username = getSettingValue('username')
   if (!username) {
     ElMessage.warning(t('setting.panel.inputAccount', 'Enter a panel account'))
@@ -147,7 +150,7 @@ async function savePanelUsername() {
 }
 
 async function savePanelPassword() {
-  if (!canWritePanelSettings.value) return
+  if (!canUpdatePanelPassword.value) return
   const password = getSettingValue('password')
   if (!password || password === '******') {
     ElMessage.warning(t('setting.panel.inputNewPassword', 'Enter a new password first'))
@@ -418,6 +421,27 @@ const panelEntryStatusText = computed(() => {
 })
 const panelEntryAccessText = computed(() => currentPanelAccessURL.value || window.location.origin)
 
+const updateSettingPermissions = () => {
+  conf.settingData.forEach(item => {
+    const canUpdate = item.prop === 'title'
+      ? canUpdatePanelAlias.value
+      : item.prop === 'username'
+        ? canUpdatePanelUsername.value
+        : item.prop === 'password'
+          ? canUpdatePanelPassword.value
+          : false
+    item.visible = canReadPanelSettings.value || canUpdate
+    item.disabled = !canUpdate
+    if (Array.isArray(item.action)) {
+      item.action.forEach(button => { button.visible = canUpdate })
+    } else if (item.action) {
+      item.action.visible = canUpdate
+    }
+  })
+}
+
+watch(capabilities, updateSettingPermissions, { immediate: true })
+
 const applyPanelEntry = (data?: Record<string, any>) => {
   if (!data) return
   panelEntry.bindAddress = data.bindAddress || '0.0.0.0'
@@ -434,6 +458,7 @@ const applyPanelEntry = (data?: Record<string, any>) => {
 }
 
 const loadPanelEntry = async () => {
+  if (!canReadPanelSettings.value && !canUpdatePanelEntry.value) return
   panelEntry.loading = true
   try {
     const { data } = await Api.getPanelNetwork()
@@ -492,7 +517,7 @@ const writeClipboardText = async (text: string) => {
 }
 
 const savePanelEntry = async (rotatePanelEntry = false) => {
-  if (!canWritePanelSettings.value) return
+  if (!canUpdatePanelEntry.value) return
   const panelEntryPath = panelEntry.panelEntryPath.trim()
   if (panelEntry.panelEntryEnabled && panelEntryPath && !/^\/[^/?#\s]+$/.test(panelEntryPath)) {
     ElMessage.warning(t('setting.panel.invalidEntryPath', 'Secure entry path must be /<random-string>'))
@@ -582,10 +607,10 @@ onMounted(() => {
       <div class="basic-card__title">{{ t('setting.panel.title', 'Panel settings') }}</div>
     </div>
     <div class="basic-card__body">
-      <setting-form :data="conf.settingData" :readonly="!canWritePanelSettings" />
+      <setting-form :data="conf.settingData" />
     </div>
 
-    <div class="panel-entry-card" v-loading="panelEntry.loading">
+    <div v-if="canReadPanelSettings || canUpdatePanelEntry" class="panel-entry-card" v-loading="panelEntry.loading">
       <div class="panel-entry-card__header">
         <div>
           <div class="panel-entry-card__title">
@@ -621,7 +646,7 @@ onMounted(() => {
             <el-tag class="risk-tag" size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
           </label>
           <div class="panel-entry-form__control panel-entry-form__control--inline">
-            <el-switch v-model="panelEntry.panelEntryEnabled" :disabled="!canWritePanelSettings" />
+            <el-switch v-model="panelEntry.panelEntryEnabled" :disabled="!canUpdatePanelEntry" />
             <span class="panel-entry-form__hint">{{ t('setting.panel.entrySwitchHint', 'When off, root path access remains available; when on, root path returns 404.') }}</span>
           </div>
         </div>
@@ -631,7 +656,7 @@ onMounted(() => {
           <div class="panel-entry-form__control">
             <el-input
               v-model="panelEntry.panelEntryPath"
-              :disabled="!canWritePanelSettings || !panelEntry.panelEntryEnabled"
+              :disabled="!canUpdatePanelEntry || !panelEntry.panelEntryEnabled"
               :placeholder="t('setting.panel.entryPlaceholder', 'Leave empty for backend generation, e.g. /AbCd123456')"
             />
             <span class="panel-entry-form__hint">{{ t('setting.panel.entryFormatHint', 'Format is `/<slug>`. Leave empty to generate automatically. Rotating the entry ignores this value.') }}</span>
@@ -644,12 +669,13 @@ onMounted(() => {
           <el-tag size="small" type="danger">{{ t('setting.panel.highRisk', 'High risk') }}</el-tag>
           <span>{{ t('setting.panel.entryRiskTip', 'Changing the entry path affects the panel access address. Save the new address before leaving.') }}</span>
         </div>
-        <el-button type="primary" :disabled="!canWritePanelSettings" :loading="panelEntry.saving" @click="savePanelEntry(false)">{{ t('setting.panel.saveConfig', 'Save configuration') }}</el-button>
-        <el-button :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">{{ t('setting.panel.copyAccessAddress', 'Copy access address') }}</el-button>
+        <el-button v-if="canUpdatePanelEntry" type="primary" :loading="panelEntry.saving" @click="savePanelEntry(false)">{{ t('setting.panel.saveConfig', 'Save configuration') }}</el-button>
+        <el-button v-if="canReadPanelSettings" :disabled="!currentPanelAccessURL" @click="copyPanelAccessURL">{{ t('setting.panel.copyAccessAddress', 'Copy access address') }}</el-button>
         <el-button
+          v-if="canUpdatePanelEntry"
           type="primary"
           plain
-          :disabled="!canWritePanelSettings || !panelEntry.panelEntryEnabled"
+          :disabled="!panelEntry.panelEntryEnabled"
           :loading="panelEntry.saving"
           @click="savePanelEntry(true)"
         >

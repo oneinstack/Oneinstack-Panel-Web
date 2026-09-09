@@ -10,6 +10,7 @@ const props = defineProps<{
   visible: boolean
   account?: DnsAccount | null
   providers: DnsProviderOption[]
+  canSubmit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -55,6 +56,7 @@ const close = () => {
 }
 
 const submit = async () => {
+  if (props.canSubmit === false) return
   const valid = await formRef.value?.validate?.().catch(() => false)
   if (!valid) return
   loading.value = true
@@ -88,6 +90,7 @@ watch(() => [props.visible, props.account, props.providers] as const, ([visible]
     size="580px"
     destroy-on-close
     :loading="loading"
+    :confirm-disabled="canSubmit === false"
     :on-close="close"
     :on-confirm="submit"
   >

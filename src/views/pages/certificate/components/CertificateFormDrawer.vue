@@ -10,6 +10,7 @@ const props = defineProps<{
   visible: boolean
   mode: 'upload' | 'self-signed'
   algorithms: CertificateAlgorithm[]
+  canSubmit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -131,6 +132,7 @@ const close = () => {
 }
 
 const submit = async () => {
+  if (props.canSubmit === false) return
   const valid = await formRef.value?.validate?.().catch(() => false)
   if (!valid) return
   clearSubmitErrors()
@@ -191,6 +193,7 @@ watch(() => form.algorithm, () => {
     size="680px"
     destroy-on-close
     :loading="loading"
+    :confirm-disabled="canSubmit === false"
     :on-close="close"
     :on-confirm="submit"
   >

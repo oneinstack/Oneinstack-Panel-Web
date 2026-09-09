@@ -14,6 +14,10 @@ interface Props {
   modelValue: boolean
   website: Record<string, any> | null
   canWrite?: boolean
+  canToggle?: boolean
+  canSsl?: boolean
+  canConfigRead?: boolean
+  canConfigWrite?: boolean
 }
 
 const props = defineProps<Props>()
@@ -42,6 +46,10 @@ const currentWebsite = computed(() => state.document?.website || props.website |
 const certificate = reactive({ show: false, website: {} as Record<string, any> })
 const t = i18n.t as any
 const canWrite = computed(() => props.canWrite === true)
+const canToggle = computed(() => props.canToggle !== false)
+const canManageSsl = computed(() => props.canSsl !== false)
+const canReadConfig = computed(() => props.canConfigRead !== false)
+const canWriteConfig = computed(() => props.canConfigWrite !== false)
 
 const menus = computed(() => [
   { key: 'domain', label: t('website.settingsDrawer.menus.domain') },
@@ -51,8 +59,8 @@ const menus = computed(() => [
   { key: 'traffic', label: t('website.settingsDrawer.menus.traffic') },
   { key: 'rewrite', label: t('website.settingsDrawer.menus.rewrite'), hidden: currentWebsite.value.type === 'proxy' },
   { key: 'documents', label: t('website.settingsDrawer.menus.documents'), hidden: currentWebsite.value.type === 'proxy' },
-  { key: 'config', label: t('website.settingsDrawer.menus.config') },
-  { key: 'ssl', label: t('website.settingsDrawer.menus.ssl') },
+  { key: 'config', label: t('website.settingsDrawer.menus.config'), hidden: !canReadConfig.value },
+  { key: 'ssl', label: t('website.settingsDrawer.menus.ssl'), hidden: !canManageSsl.value },
   { key: 'php', label: t('website.settingsDrawer.menus.php'), hidden: currentWebsite.value.type !== 'php' },
   { key: 'redirect', label: t('website.settingsDrawer.menus.redirect') },
   { key: 'proxy', label: t('website.settingsDrawer.menus.proxy') },
@@ -176,7 +184,7 @@ const saveWebsiteProfile = async (domainOnly = false) => {
   } finally { state.saving = false }
 }
 const toggleStatus = async (enabled: boolean) => {
-  if (!canWrite.value) return
+  if (!canToggle.value) return
   statusLoading.value = true
   try {
     await submitOperation('website.toggle', {
@@ -192,6 +200,7 @@ const toggleStatus = async (enabled: boolean) => {
   } finally { statusLoading.value = false }
 }
 const loadConfig = async () => {
+  if (!canReadConfig.value) return
   state.config.loading = true
   state.config.error = ''
   try {
@@ -204,7 +213,7 @@ const loadConfig = async () => {
   } finally { state.config.loading = false }
 }
 const saveConfig = async () => {
-  if (!canWrite.value) return
+  if (!canWrite.value || !canWriteConfig.value) return
   state.config.saving = true
   try {
     await submitOperation('website.config.update', {
@@ -237,6 +246,7 @@ const openRoot = () => {
   if (path) System.router.push({ path: '/file', query: { path } })
 }
 const openCertificate = () => {
+  if (!canManageSsl.value) return
   certificate.website = currentWebsite.value
   certificate.show = true
 }
@@ -273,7 +283,7 @@ const openCertificate = () => {
               {{ getWebsiteEngineLabel(currentWebsite.engine) }}
             </el-tag>
           </div>
-          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" :disabled="!canWrite" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
+          <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" :disabled="!canToggle" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
         </div>
       </header>
       <div class="settings-body">
@@ -332,17 +342,17 @@ const openCertificate = () => {
           </section>
 
           <section v-else-if="activeMenu === 'config'" v-loading="state.config.loading" class="setting-panel setting-panel--fill">
-            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.config') }}</h3><p>{{ state.config.path || t('website.settingsDrawer.configDescription') }}</p></div><el-button :icon="Refresh" @click="loadConfig">{{ t('website.settingsDrawer.reread') }}</el-button></div>
-            <el-alert v-if="state.config.error" :title="state.config.error" type="error" show-icon :closable="false"><template #default><el-button type="primary" link @click="loadConfig">{{ t('website.settingsDrawer.readAgain') }}</el-button></template></el-alert>
+            <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.config') }}</h3><p>{{ state.config.path || t('website.settingsDrawer.configDescription') }}</p></div><el-button v-if="canReadConfig" :icon="Refresh" @click="loadConfig">{{ t('website.settingsDrawer.reread') }}</el-button></div>
+            <el-alert v-if="state.config.error" :title="state.config.error" type="error" show-icon :closable="false"><template #default><el-button v-if="canReadConfig" type="primary" link @click="loadConfig">{{ t('website.settingsDrawer.readAgain') }}</el-button></template></el-alert>
             <el-alert :title="t('website.settingsDrawer.configWarning')" type="warning" show-icon :closable="false" />
-            <el-input v-if="state.config.loaded" v-model="state.config.content" type="textarea" class="code-input config-editor" />
+            <el-input v-if="state.config.loaded" v-model="state.config.content" type="textarea" class="code-input config-editor" :disabled="!canWriteConfig" />
             <el-empty v-else-if="!state.config.loading && !state.config.error" :description="t('website.settingsDrawer.configUnread')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!canWrite || !currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!canWrite || !canWriteConfig || !currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'ssl'" class="setting-panel">
             <div class="panel-heading"><div><h3>{{ t('website.settingsDrawer.menus.ssl') }}</h3><p>{{ t('website.settingsDrawer.sslDescription') }}</p></div></div>
-            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? t('website.settingsDrawer.sslEnabled') : t('website.settingsDrawer.sslDisabled') }}</strong><p>{{ currentWebsite.certificate_expires_at ? t('website.settingsDrawer.certificateExpires', { time: formatTime(currentWebsite.certificate_expires_at) }) : t('website.settingsDrawer.certificateAvailable') }}</p></div><el-button type="primary" :disabled="!canWrite" @click="openCertificate">{{ t('website.settingsDrawer.manageSsl') }}</el-button></div>
+            <div class="feature-card"><el-icon><Lock /></el-icon><div><strong>{{ currentWebsite.ssl_enabled ? t('website.settingsDrawer.sslEnabled') : t('website.settingsDrawer.sslDisabled') }}</strong><p>{{ currentWebsite.certificate_expires_at ? t('website.settingsDrawer.certificateExpires', { time: formatTime(currentWebsite.certificate_expires_at) }) : t('website.settingsDrawer.certificateAvailable') }}</p></div><el-button v-if="canManageSsl" type="primary" :disabled="!canWrite" @click="openCertificate">{{ t('website.settingsDrawer.manageSsl') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'php'" class="setting-panel">
@@ -419,7 +429,7 @@ const openCertificate = () => {
         </main>
       </div>
     </div>
-    <website-certificate-drawer v-model="certificate.show" :website="certificate.website" :can-read="true" :can-write="canWrite" @changed="load(); emit('changed')" />
+    <website-certificate-drawer v-model="certificate.show" :website="certificate.website" :can-read="canManageSsl" :can-write="canManageSsl" @changed="load(); emit('changed')" />
   </custom-drawer>
 </template>
 

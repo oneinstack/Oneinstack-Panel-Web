@@ -333,6 +333,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
 import { Plus, Delete } from '@element-plus/icons-vue'
 import i18n from '@/lang'
+import { hasTaskButtonAccess } from '../access'
 
 const props = defineProps<{
   modelValue: boolean
@@ -346,6 +347,7 @@ const drawer = ref(false)
 const ruleFormRef = ref<FormInstance>()
 const copy_content = ref('')
 const confirmUnsafeShell = ref(false)
+const canSubmit = computed(() => hasTaskButtonAccess(props.type ? 'create' : 'update'))
 const fallbackWeekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六']
 
 interface TemplateParameter {
@@ -525,7 +527,7 @@ const handleClose = () => {
 }
 
 const handleSubmit = async () => {
-  if (!ruleFormRef.value) return
+  if (!canSubmit.value || !ruleFormRef.value) return
 
   // 手动验证执行周期
   if (!ruleForm.cycles || ruleForm.cycles.length === 0) {

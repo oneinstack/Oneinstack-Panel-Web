@@ -11,7 +11,7 @@ import type {
 } from '@/api/modules'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
-import { hasOperationAccess } from '@/utils/access'
+import { getConfigSnapshotCapabilities } from './access'
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot
@@ -93,14 +93,16 @@ const statusOptions = computed(() => [
   { label: t('configSnapshots.status.rollbackFailed', 'Rollback failed'), value: 'rollback_failed' }
 ])
 
-const canRead = computed(() => hasOperationAccess('configSnapshots', 'read', {
-  scopes: ['config.snapshot'],
-  actions: ['config.snapshot.read']
-}))
-const canWrite = computed(() => hasOperationAccess('configSnapshots', 'write', {
-  scopes: ['config.snapshot'],
-  actions: ['config.snapshot.write']
-}))
+const capabilities = computed(() => getConfigSnapshotCapabilities())
+const canReadSnapshot = computed(() => capabilities.value.canReadSnapshot)
+const canViewSnapshotDetail = computed(() => capabilities.value.canViewSnapshotDetail)
+const canReadSnapshotDiff = computed(() => capabilities.value.canReadSnapshotDiff)
+const canReadSnapshotResources = computed(() => capabilities.value.canReadSnapshotResources)
+const canCreateSnapshot = computed(() => capabilities.value.canCreateSnapshot)
+const canPreviewRestore = computed(() => capabilities.value.canPreviewRestore)
+const canRestoreSnapshot = computed(() => capabilities.value.canRestoreSnapshot)
+const canForceRestore = computed(() => capabilities.value.canForceRestore)
+const canDeleteSnapshot = computed(() => capabilities.value.canDeleteSnapshot)
 
 const succeededCount = computed(() => snapshots.value.filter((item) => item.status === 'succeeded').length)
 const failedCount = computed(() =>
@@ -108,6 +110,7 @@ const failedCount = computed(() =>
 )
 const restoreCount = computed(() => snapshots.value.filter((item) => item.operation === 'restore').length)
 const restoreRequiresForce = computed(() => Boolean(restorePreview.value?.hasDrift || restorePreview.value?.requiresForce))
+const canExecuteRestore = computed(() => restoreRequiresForce.value ? canForceRestore.value : canRestoreSnapshot.value)
 const columns = computed<ColumnItem<ConfigurationSnapshot>[]>(() => [
   { prop: 'name', label: t('configSnapshots.snapshot'), minWidth: 240, slot: 'snapshotName' },
   { prop: 'resourceType', label: t('configSnapshots.resource'), minWidth: 320, slot: 'resource' },
@@ -298,6 +301,7 @@ const formatNginxOption = (item: any): SnapshotResourceOption | null => {
 }
 
 const loadCreateResourceOptions = async (type = createForm.resourceType) => {
+  if (!canReadSnapshotResources.value) return
   if (type !== 'website' && type !== 'nginx') return
   if (type === 'website' && websiteResourceOptions.value.length) return
   if (type === 'nginx' && nginxResourceOptions.value.length) return
@@ -331,7 +335,7 @@ const buildParams = () => ({
 })
 
 const loadSnapshots = async () => {
-  if (!canRead.value) return
+  if (!canReadSnapshot.value) return
   loading.value = true
   try {
     const { data } = await Api.getConfigurationSnapshots(buildParams())
@@ -364,7 +368,7 @@ const resetCreateForm = () => {
 }
 
 const openCreateSnapshot = () => {
-  if (!canWrite.value) return
+  if (!canCreateSnapshot.value) return
   resetCreateForm()
   createVisible.value = true
   void loadCreateResourceOptions()
@@ -384,7 +388,7 @@ const syncCreateResourceId = () => {
 }
 
 const submitCreateSnapshot = async () => {
-  if (!canWrite.value) return
+  if (!canCreateSnapshot.value) return
   if (!createForm.resourceType || !createForm.resourceId.trim()) {
     ElMessage.warning(useResourceSelect.value ? t('configSnapshots.messages.selectResourceIdentifier', 'Select a resource identifier') : t('configSnapshots.messages.selectTypeAndIdentifier', 'Select a resource type and enter a resource identifier'))
     return
@@ -411,7 +415,7 @@ const submitCreateSnapshot = async () => {
 }
 
 const openDetail = async (row: ConfigurationSnapshot) => {
-  if (!canRead.value) return
+  if (!canViewSnapshotDetail.value) return
   detailVisible.value = true
   selectedSnapshot.value = row
   detail.value = null
@@ -419,11 +423,15 @@ const openDetail = async (row: ConfigurationSnapshot) => {
   try {
     const [detailResponse, diffResponse] = await Promise.all([
       Api.getConfigurationSnapshot(row.id),
-      Api.getConfigurationSnapshotDiff(row.id).catch(() => ({ data: null }))
+      canReadSnapshotDiff.value
+        ? Api.getConfigurationSnapshotDiff(row.id).catch(() => ({ data: null }))
+        : Promise.resolve({ data: null })
     ])
     detail.value = {
       ...detailResponse.data,
-      diff: detailResponse.data?.diff || diffResponse.data?.diff || diffResponse.data
+      diff: canReadSnapshotDiff.value
+        ? detailResponse.data?.diff || diffResponse.data?.diff || diffResponse.data
+        : undefined
     }
   } catch (error: any) {
     // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.detailReadFailed', 'Failed to read snapshot details')))
@@ -433,7 +441,7 @@ const openDetail = async (row: ConfigurationSnapshot) => {
 }
 
 const openRestore = async (row: ConfigurationSnapshot) => {
-  if (!canWrite.value) return
+  if (!canPreviewRestore.value) return
   selectedSnapshot.value = row
   restoreVisible.value = true
   restorePreview.value = null
@@ -450,9 +458,10 @@ const openRestore = async (row: ConfigurationSnapshot) => {
 }
 
 const executeRestore = async () => {
-  if (!canWrite.value) return
   if (!selectedSnapshot.value || !restorePreview.value) return
+  if (!canExecuteRestore.value) return
   const force = restoreRequiresForce.value && forceRestoreConfirmed.value
+  if (restoreRequiresForce.value && !canForceRestore.value) return
   if (restoreRequiresForce.value && !forceRestoreConfirmed.value) {
     ElMessage.warning(t('configSnapshots.messages.confirmOverwriteFirst', 'Confirm overwriting current manual changes first'))
     return
@@ -479,7 +488,7 @@ const executeRestore = async () => {
 }
 
 const deleteSnapshot = async (row: ConfigurationSnapshot) => {
-  if (!canWrite.value) return
+  if (!canDeleteSnapshot.value) return
   await ElMessageBox.confirm(t('configSnapshots.deleteConfirmMessage', 'Delete snapshot {id}? Active snapshots cannot be deleted.', { id: row.id }), t('configSnapshots.deleteSnapshot', 'Delete configuration snapshot'), {
     type: 'warning',
     confirmButtonText: t('common.delete', 'Delete'),
@@ -510,13 +519,13 @@ onMounted(() => {
         <p>{{ $t('configSnapshots.pageDescription') }}</p>
       </div>
       <div class="toolbar-actions">
-        <el-button type="primary" :icon="Plus" :disabled="!canWrite" @click="openCreateSnapshot">{{ $t('configSnapshots.createSnapshot') }}</el-button>
-        <el-button v-if="canRead" :icon="Refresh" :loading="loading" @click="loadSnapshots">{{ $t('common.refresh') }}</el-button>
+        <el-button v-if="canCreateSnapshot" type="primary" :icon="Plus" @click="openCreateSnapshot">{{ $t('configSnapshots.createSnapshot') }}</el-button>
+        <el-button v-if="canReadSnapshot" :icon="Refresh" :loading="loading" @click="loadSnapshots">{{ $t('common.refresh') }}</el-button>
       </div>
     </section>
 
     <el-alert
-      v-if="!canRead"
+      v-if="!canReadSnapshot"
       class="snapshot-alert"
       :title="$t('configSnapshots.noReadPermission')"
       type="warning"
@@ -547,7 +556,7 @@ onMounted(() => {
       </div>
     </section> -->
 
-    <section class="snapshot-panel">
+    <section v-if="canReadSnapshot" class="snapshot-panel">
       <div class="filter-bar">
         <el-select v-model="filters.resourceType" :placeholder="$t('configSnapshots.resourceType')" clearable style="width: 170px">
           <el-option
@@ -566,8 +575,8 @@ onMounted(() => {
             :value="item.value"
           />
         </el-select>
-        <el-button v-if="canRead" type="primary" @click="filters.page = 1; loadSnapshots()">{{ $t('common.query') }}</el-button>
-        <el-button v-if="canRead" @click="resetFilters">{{ $t('common.reset') }}</el-button>
+        <el-button type="primary" @click="filters.page = 1; loadSnapshots()">{{ $t('common.query') }}</el-button>
+        <el-button @click="resetFilters">{{ $t('common.reset') }}</el-button>
       </div>
 
       <custom-table v-loading="loading" :data="snapshots" :columns="columns" :pagination="false" :auto-pagination="false" row-key="id" :empty-text="$t('configSnapshots.noSnapshots')">
@@ -648,22 +657,23 @@ onMounted(() => {
         </template>
         <template #actionColumn="{ row }">
             <div class="action-group">
-              <el-button v-if="canRead" link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
+              <el-button v-if="canViewSnapshotDetail" link type="primary" :icon="View" @click="openDetail(row)">{{ $t('common.detail') }}</el-button>
               <el-button
+                v-if="canPreviewRestore && row.status === 'succeeded'"
                 link
                 type="warning"
                 :icon="RefreshLeft"
-                :disabled="!canWrite || row.status !== 'succeeded'"
                 @click="openRestore(row)"
               >
                 {{ $t('configSnapshots.operations.restore') }}
               </el-button>
               <el-button
+                v-if="canDeleteSnapshot"
                 link
                 type="danger"
                 :icon="Delete"
                 :loading="deletingId === row.id"
-                :disabled="!canWrite || row.status === 'pending' || row.status === 'applying'"
+                :disabled="row.status === 'pending' || row.status === 'applying'"
                 @click="deleteSnapshot(row)"
               >
                 {{ $t('common.delete') }}
@@ -693,6 +703,7 @@ onMounted(() => {
       size="760px"
       :confirm-text="$t('common.confirm')"
       :loading="createLoading"
+      :confirm-disabled="!canCreateSnapshot"
       :on-close="() => { createVisible = false }"
       :on-confirm="submitCreateSnapshot"
     >
@@ -770,25 +781,27 @@ onMounted(() => {
       :on-close="() => { detailVisible = false }"
     >
       <div v-loading="detailLoading" class="snapshot-detail">
-        <div class="diff-summary">
-          <el-tag type="primary" effect="light">{{ detail?.diff?.summary || $t('configSnapshots.noDiffSummary') }}</el-tag>
-          <span>{{ $t('configSnapshots.changedFieldsCount', { count: diffCount(detail?.diff) }) }}</span>
-        </div>
-        <div class="diff-lists">
-          <div><strong>{{ $t('configSnapshots.diffAdded') }}</strong><span>{{ detail?.diff?.added?.join('，') || $t('configSnapshots.none') }}</span></div>
-          <div><strong>{{ $t('configSnapshots.diffChanged') }}</strong><span>{{ detail?.diff?.changed?.join('，') || $t('configSnapshots.none') }}</span></div>
-          <div><strong>{{ $t('configSnapshots.diffRemoved') }}</strong><span>{{ detail?.diff?.removed?.join('，') || $t('configSnapshots.none') }}</span></div>
-        </div>
-        <div class="json-grid">
-          <section>
-            <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
-            <pre>{{ formatJson(detail?.before) }}</pre>
-          </section>
-          <section>
-            <h4>{{ $t('configSnapshots.afterChange') }}</h4>
-            <pre>{{ formatJson(detail?.after) }}</pre>
-          </section>
-        </div>
+        <template v-if="canReadSnapshotDiff">
+          <div class="diff-summary">
+            <el-tag type="primary" effect="light">{{ detail?.diff?.summary || $t('configSnapshots.noDiffSummary') }}</el-tag>
+            <span>{{ $t('configSnapshots.changedFieldsCount', { count: diffCount(detail?.diff) }) }}</span>
+          </div>
+          <div class="diff-lists">
+            <div><strong>{{ $t('configSnapshots.diffAdded') }}</strong><span>{{ detail?.diff?.added?.join('，') || $t('configSnapshots.none') }}</span></div>
+            <div><strong>{{ $t('configSnapshots.diffChanged') }}</strong><span>{{ detail?.diff?.changed?.join('，') || $t('configSnapshots.none') }}</span></div>
+            <div><strong>{{ $t('configSnapshots.diffRemoved') }}</strong><span>{{ detail?.diff?.removed?.join('，') || $t('configSnapshots.none') }}</span></div>
+          </div>
+          <div class="json-grid">
+            <section>
+              <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
+              <pre>{{ formatJson(detail?.before) }}</pre>
+            </section>
+            <section>
+              <h4>{{ $t('configSnapshots.afterChange') }}</h4>
+              <pre>{{ formatJson(detail?.after) }}</pre>
+            </section>
+          </div>
+        </template>
       </div>
     </custom-drawer>
 
@@ -799,7 +812,8 @@ onMounted(() => {
       confirm-type="warning"
       :confirm-text="restoreRequiresForce ? $t('configSnapshots.forceOverwriteAndRollback') : $t('configSnapshots.confirmRollback')"
       :loading="restoreLoading"
-      :confirm-disabled="!restorePreview || (restoreRequiresForce && !forceRestoreConfirmed)"
+      :show-confirm="canExecuteRestore"
+      :confirm-disabled="!restorePreview || (restoreRequiresForce && (!forceRestoreConfirmed || !canForceRestore))"
       :on-close="() => { restoreVisible = false }"
       :on-confirm="executeRestore"
     >
@@ -812,7 +826,7 @@ onMounted(() => {
           show-icon
           :closable="false"
         />
-        <div v-if="restoreRequiresForce" class="force-restore-box">
+        <div v-if="restoreRequiresForce && canForceRestore" class="force-restore-box">
           <el-checkbox v-model="forceRestoreConfirmed">
             {{ $t('configSnapshots.confirmOverwriteManualChanges') }}
           </el-checkbox>

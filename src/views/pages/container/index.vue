@@ -62,6 +62,7 @@ import type {
   TemplateItem,
   VolumeItem,
 } from "./types";
+import { hasContainerButtonAccess } from "./access";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
 
@@ -74,7 +75,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 };
 
 const activeTab = ref<ResourceTab>("containers");
-const resourceTabItems = [
+const resourceTabDefinitions = [
   { key: "containers", label: "Containers", labelKey: "container.containers" },
   { key: "images", label: "Images", labelKey: "container.images" },
   { key: "networks", label: "Networks", labelKey: "container.networks" },
@@ -263,69 +264,76 @@ const dockerConfigPlaceholder = computed(
 ${JSON.stringify({ "log-driver": "json-file" }, null, 2)}`,
 );
 
-const containerScope = computed(() => sconfig.scopeAccess?.container || {});
-const canRead = computed(() => sconfig.hasScopeAccess("container", "read"));
-const canWrite = computed(
-  () =>
-    containerScope.value.write || sconfig.hasScopeAccess("container", "write"),
+const containerButtonAccess = (key: string) =>
+  computed(() => hasContainerButtonAccess(key));
+const canRead = containerButtonAccess("read");
+const canCreateContainer = containerButtonAccess("create");
+const canUpdateContainer = containerButtonAccess("update");
+const canDelete = containerButtonAccess("delete");
+const canStart = containerButtonAccess("start");
+const canStop = containerButtonAccess("stop");
+const canRestart = containerButtonAccess("restart");
+const canPause = containerButtonAccess("pause");
+const canUnpause = containerButtonAccess("unpause");
+const canKill = containerButtonAccess("kill");
+const canReadLogs = containerButtonAccess("logs");
+const canNetworkConnect = containerButtonAccess("networkConnect");
+const canImagePull = containerButtonAccess("pullImage");
+const canImageImport = containerButtonAccess("importImage");
+const canImageBuild = containerButtonAccess("buildImage");
+const canImageDetail = containerButtonAccess("imageDetail");
+const canImageTag = containerButtonAccess("tagImage");
+const canImagePush = containerButtonAccess("pushImage");
+const canImageExport = containerButtonAccess("exportImage");
+const canImageDelete = containerButtonAccess("deleteImage");
+const canImageCleanup = containerButtonAccess("cleanupImage");
+const canBuildCacheCleanup = containerButtonAccess("cleanupBuildCache");
+const canReadNetworks = containerButtonAccess("networkRead");
+const canCreateNetwork = containerButtonAccess("networkCreate");
+const canDeleteNetwork = containerButtonAccess("networkDelete");
+const canReadVolumes = containerButtonAccess("volumeRead");
+const canCreateVolume = containerButtonAccess("volumeCreate");
+const canDeleteVolume = containerButtonAccess("volumeDelete");
+const canReadCompose = containerButtonAccess("composeRead");
+const canCreateCompose = containerButtonAccess("composeCreate");
+const canUpdateCompose = containerButtonAccess("composeUpdate");
+const canStartCompose = containerButtonAccess("composeStart");
+const canStopCompose = containerButtonAccess("composeStop");
+const canRestartCompose = containerButtonAccess("composeRestart");
+const canUpdateComposeProject = containerButtonAccess("composeUpdateProject");
+const canDeleteCompose = containerButtonAccess("composeDelete");
+const canReadTemplates = containerButtonAccess("templateRead");
+const canCreateTemplate = containerButtonAccess("templateCreate");
+const canUpdateTemplate = containerButtonAccess("templateUpdate");
+const canDeleteTemplate = containerButtonAccess("templateDelete");
+const canDeployTemplate = containerButtonAccess("templateDeploy");
+const canReadRegistries = containerButtonAccess("registryRead");
+const canCreateRegistry = containerButtonAccess("registryCreate");
+const canUpdateRegistry = containerButtonAccess("registryUpdate");
+const canDeleteRegistry = containerButtonAccess("registryDelete");
+const canTestRegistry = containerButtonAccess("registryTest");
+const canReadConfig = containerButtonAccess("configRead");
+const canWriteConfig = containerButtonAccess("configWrite");
+const canCleanup = containerButtonAccess("cleanup");
+
+const hasResourceTabAccess = (tab: ResourceTab) => {
+  if (tab === "containers" || tab === "images") return canRead.value;
+  if (tab === "networks") return canReadNetworks.value;
+  if (tab === "volumes") return canReadVolumes.value;
+  if (tab === "compose") return canReadCompose.value;
+  if (tab === "templates") return canReadTemplates.value;
+  if (tab === "registries") return canReadRegistries.value;
+  return canReadConfig.value;
+};
+
+const resourceTabItems = computed(() =>
+  resourceTabDefinitions.filter((item) =>
+    hasResourceTabAccess(item.key as ResourceTab),
+  ),
 );
-const canDelete = computed(
-  () =>
-    containerScope.value.delete ||
-    sconfig.hasScopeAccess("container", "delete"),
-);
-const canForceAction = computed(() =>
-  sconfig.hasActionAccess("container.force_action"),
-);
-const canReadLogs = computed(
-  () =>
-    containerScope.value.logsRead ||
-    sconfig.hasScopeAccess("container", "logsRead"),
-);
-const canUseTerminal = computed(
-  () =>
-    sconfig.hasActionAccess("container.terminal") ||
-    sconfig.hasScopeAccess("container", "terminal"),
-);
-const canCreateContainer = computed(
-  () => canWrite.value || sconfig.hasActionAccess("container.create"),
-);
-const canImageWrite = computed(
-  () =>
-    containerScope.value.imageWrite ||
-    sconfig.hasScopeAccess("container", "imageWrite"),
-);
-const canNetworkWrite = computed(
-  () =>
-    containerScope.value.networkWrite ||
-    sconfig.hasScopeAccess("container", "networkWrite"),
-);
-const canVolumeWrite = computed(
-  () =>
-    containerScope.value.volumeWrite ||
-    sconfig.hasScopeAccess("container", "volumeWrite"),
-);
-const canComposeWrite = computed(
-  () =>
-    containerScope.value.composeWrite ||
-    sconfig.hasScopeAccess("container", "composeWrite"),
-);
-const canRegistryWrite = computed(
-  () =>
-    containerScope.value.registryWrite ||
-    sconfig.hasScopeAccess("container", "registryWrite"),
-);
-const canConfigWrite = computed(
-  () =>
-    containerScope.value.configWrite ||
-    sconfig.hasScopeAccess("container", "configWrite"),
-);
-const canCleanup = computed(
-  () =>
-    sconfig.hasActionAccess("container.dangerous.cleanup") ||
-    containerScope.value.dangerousCleanup ||
-    sconfig.hasScopeAccess("container", "dangerousCleanup"),
-);
+
+const canUseTerminal = containerButtonAccess("terminal");
+const canRestartRuntime = containerButtonAccess("restartRuntime");
 
 const capabilityFallbackAvailability: Record<RuntimeCapabilityKey, boolean> = {
   runtime: false,
@@ -391,7 +399,7 @@ const registryManageDisabledReason = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
   return getCapabilityDisabledReason(
     "registryManage",
-    canRegistryWrite.value,
+    canCreateRegistry.value,
     t(
       "container.registryWriteDisabled",
       "当前账号没有 Registry 管理权限",
@@ -402,7 +410,7 @@ const registryTestDisabledReason = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
   return getCapabilityDisabledReason(
     "registryTest",
-    canRegistryWrite.value,
+    canTestRegistry.value,
     t(
       "container.registryWriteDisabled",
       "当前账号没有 Registry 管理权限",
@@ -413,7 +421,7 @@ const dockerConfigDisabledReason = computed(() => {
   if (runtimeLoading.value) return t("container.checking", "Checking");
   return getCapabilityDisabledReason(
     "dockerConfig",
-    canConfigWrite.value,
+    canWriteConfig.value,
     t(
       "container.configWriteDisabled",
       "当前账号没有 Docker 配置写入权限",
@@ -435,10 +443,7 @@ const runningContainers = computed(
     ).length,
 );
 const canReadContainerTask = computed(
-  () =>
-    sconfig.hasMenuAccess("task.read") &&
-    (sconfig.hasScopeAccess("task", "readAll") ||
-      sconfig.hasScopeAccess("task", "readSelf")),
+  () => canRead.value,
 );
 const activeTaskCount = computed(
   () =>
@@ -1048,7 +1053,7 @@ const loadContainerSummary = async () => {
 };
 
 const loadActiveTab = async (force = false) => {
-  if (!canRead.value) return;
+  if (!hasResourceTabAccess(activeTab.value)) return;
   if (!force && loadedTabs[activeTab.value]) return;
   listLoading.value = true;
   try {
@@ -1181,7 +1186,41 @@ const ensureTemplatesLoaded = async () => {
   }
 };
 
+const canOpenDialog = (type: DialogType, target?: any) => {
+  switch (type) {
+    case "container":
+      return canCreateContainer.value;
+    case "image":
+      return canImagePull.value;
+    case "image-import":
+      return canImageImport.value;
+    case "image-build":
+      return canImageBuild.value;
+    case "image-tag":
+      return canImageTag.value;
+    case "image-push":
+      return canImagePush.value;
+    case "network":
+      return canCreateNetwork.value;
+    case "volume":
+      return canCreateVolume.value;
+    case "compose-create":
+      return canCreateCompose.value;
+    case "compose-edit":
+      return canUpdateCompose.value;
+    case "compose-template-deploy":
+      return canCreateCompose.value && canDeployTemplate.value;
+    case "registry":
+      return target ? canUpdateRegistry.value : canCreateRegistry.value;
+    case "template":
+      return target ? canUpdateTemplate.value : canCreateTemplate.value;
+    default:
+      return true;
+  }
+};
+
 const openDialog = (type: DialogType, target?: any) => {
+  if (!canOpenDialog(type, target)) return;
   resetForm();
   dialogType.value = type;
   dialogTarget.value = target || null;
@@ -1221,6 +1260,7 @@ const openDialog = (type: DialogType, target?: any) => {
 };
 
 const openComposeEditDialog = async (row: ComposeProjectItem) => {
+  if (!canUpdateCompose.value) return;
   const name = composeProjectName(row);
   if (!name) return;
   if (row.configReadable === false) {
@@ -2553,6 +2593,16 @@ const runContainerAction = async (
   row: ContainerItem,
   action: ContainerAction,
 ) => {
+  const allowed = {
+    start: canStart.value,
+    stop: canStop.value,
+    restart: canRestart.value,
+    pause: canPause.value,
+    unpause: canUnpause.value,
+    kill: canKill.value,
+    rm: canDelete.value,
+  }[action];
+  if (!allowed) return;
   const actionLabels: Record<string, string> = {
     start: t("container.start"),
     stop: t("container.stop"),
@@ -2585,7 +2635,7 @@ const runContainerAction = async (
     const { data } = await Api.runContainerAction(row.ID, {
       action,
       confirm: dangerous,
-      force: action === "kill" || (action === "rm" && canForceAction.value),
+      force: action === "kill",
     });
 
     if (action === "start" || action === "restart") {
@@ -2716,6 +2766,16 @@ const showBatchResult = async (
 
 const runBatchContainerAction = async (action: ContainerAction) => {
   if (!selectedContainers.value.length) return;
+  const allowed = {
+    start: canStart.value,
+    stop: canStop.value,
+    restart: canRestart.value,
+    pause: canPause.value,
+    unpause: canUnpause.value,
+    kill: canKill.value,
+    rm: canDelete.value,
+  }[action];
+  if (!allowed) return;
   const actionLabels: Record<ContainerAction, string> = {
     start: t("container.start"),
     stop: t("container.stop"),
@@ -2752,7 +2812,7 @@ const runBatchContainerAction = async (action: ContainerAction) => {
       ids: selectedContainers.value.map((item) => item.ID),
       action,
       confirm: dangerous,
-      force: action === "kill" || (action === "rm" && canForceAction.value),
+      force: action === "kill",
     });
     const batchItems =
       action === "start" || action === "restart"
@@ -2781,6 +2841,7 @@ const runBatchContainerAction = async (action: ContainerAction) => {
 };
 
 const cleanupStoppedContainers = async () => {
+  if (!canCleanup.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.cleanupStoppedNotice"),
     t("container.cleanupStopped"),
@@ -2802,6 +2863,7 @@ const cleanupStoppedContainers = async () => {
 };
 
 const openLogs = async (row: ContainerItem) => {
+  if (!canReadLogs.value) return;
   logTarget.value = {
     kind: "container",
     id: row.ID,
@@ -2814,6 +2876,7 @@ const openLogs = async (row: ContainerItem) => {
 };
 
 const openTerminal = (row: ContainerItem) => {
+  if (!canUseTerminal.value) return;
   terminalDrawer.target = row;
   terminalDrawer.show = true;
 };
@@ -2881,6 +2944,7 @@ const loadLogs = async (target = logTarget.value) => {
 
 const downloadLogs = async (target = logTarget.value) => {
   if (!target?.id || logDownloading.value) return;
+  if (!canReadLogs.value) return;
   if (target.kind === "compose") {
     ElMessage.info(t("container.notifications.composeLogDownloadUnsupported"));
     return;
@@ -2914,6 +2978,13 @@ const loadContainerStats = async (id: string) => {
 };
 
 const openDetail = async (type: DetailType, row: any) => {
+  const allowed = {
+    container: canRead.value,
+    image: canImageDetail.value,
+    network: canReadNetworks.value,
+    volume: canReadVolumes.value,
+  }[type];
+  if (!allowed) return;
   clearStatsTimer();
   detailType.value = type;
   detailTarget.value = row;
@@ -2958,6 +3029,7 @@ const handleDetailClose = () => {
 };
 
 const deleteImage = async (row: ImageItem) => {
+  if (!canImageDelete.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.deleteImageMessage", undefined, {
       name: imageReference(row),
@@ -2981,6 +3053,7 @@ const deleteImage = async (row: ImageItem) => {
 };
 
 const deleteNetwork = async (row: NetworkItem) => {
+  if (!canDeleteNetwork.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.deleteNetworkMessage", undefined, {
       name: row.Name,
@@ -3004,6 +3077,7 @@ const deleteNetwork = async (row: NetworkItem) => {
 };
 
 const deleteVolume = async (row: VolumeItem) => {
+  if (!canDeleteVolume.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.deleteVolumeMessage", undefined, {
       name: row.Name,
@@ -3027,7 +3101,7 @@ const deleteVolume = async (row: VolumeItem) => {
 };
 
 const batchDeleteNetworks = async () => {
-  if (!selectedNetworks.value.length) return;
+  if (!selectedNetworks.value.length || !canDeleteNetwork.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.batchDeleteNetworkMessage", undefined, {
       count: selectedNetworks.value.length,
@@ -3056,7 +3130,7 @@ const batchDeleteNetworks = async () => {
 };
 
 const batchDeleteVolumes = async () => {
-  if (!selectedVolumes.value.length) return;
+  if (!selectedVolumes.value.length || !canDeleteVolume.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.batchDeleteVolumeMessage", undefined, {
       count: selectedVolumes.value.length,
@@ -3085,6 +3159,7 @@ const batchDeleteVolumes = async () => {
 };
 
 const pruneNetworks = async () => {
+  if (!canCleanup.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.cleanupNetworkNotice"),
     t("container.cleanupUnusedNetworks"),
@@ -3106,6 +3181,7 @@ const pruneNetworks = async () => {
 };
 
 const pruneVolumes = async () => {
+  if (!canCleanup.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.cleanupVolumeNotice"),
     t("container.cleanupUnusedVolumes"),
@@ -3224,6 +3300,7 @@ const pickReconnectTargetNetwork = async (row: ContainerItem) => {
 };
 
 const reconnectContainerNetwork = async (row: ContainerItem) => {
+  if (!canNetworkConnect.value) return;
   const selection = await pickReconnectTargetNetwork(row);
   const result = await Api.runContainerNetworkAction(row.ID, {
     action: selection.action,
@@ -3244,6 +3321,7 @@ const reconnectContainerNetwork = async (row: ContainerItem) => {
 };
 
 const exportImage = async (row: ImageItem) => {
+  if (!canImageExport.value) return;
   actionLoading.value = `export:${row.ID}`;
   try {
     await Api.exportContainerImage(
@@ -3256,6 +3334,12 @@ const exportImage = async (row: ImageItem) => {
 };
 
 const pruneImages = async (type: "images" | "build-cache") => {
+  if (
+    (type === "images" && !canImageCleanup.value) ||
+    (type === "build-cache" && !canBuildCacheCleanup.value)
+  ) {
+    return;
+  }
   const label =
     type === "images"
       ? t("container.cleanupImages")
@@ -3286,6 +3370,7 @@ const pruneImages = async (type: "images" | "build-cache") => {
 };
 
 const deleteRegistry = async (row: RegistryItem) => {
+  if (!canDeleteRegistry.value) return;
   await ElMessageBox.confirm(
     t("container.confirmations.deleteRegistryMessage", undefined, {
       name: row.name,
@@ -3309,6 +3394,7 @@ const deleteRegistry = async (row: RegistryItem) => {
 };
 
 const testRegistry = async (row: RegistryItem) => {
+  if (!canTestRegistry.value) return;
   actionLoading.value = `registry-test:${row.id}`;
   try {
     await Api.testContainerRegistry(row.id);
@@ -3321,6 +3407,7 @@ const testRegistry = async (row: RegistryItem) => {
 };
 
 const deleteTemplate = async (row: TemplateItem) => {
+  if (!canDeleteTemplate.value) return;
   if (!row.id) return;
   await ElMessageBox.confirm(
     t("container.confirmations.deleteTemplateMessage", undefined, {
@@ -3345,6 +3432,7 @@ const deleteTemplate = async (row: TemplateItem) => {
 };
 
 const openComposeLogs = async (row: ComposeProjectItem) => {
+  if (!canReadLogs.value) return;
   const name = composeProjectName(row);
   if (!name) return;
   logTarget.value = {
@@ -3362,6 +3450,14 @@ const runComposeAction = async (
   row: ComposeProjectItem,
   action: "start" | "stop" | "restart" | "update" | "delete",
 ) => {
+  const allowed = {
+    start: canStartCompose.value,
+    stop: canStopCompose.value,
+    restart: canRestartCompose.value,
+    update: canUpdateComposeProject.value,
+    delete: canDeleteCompose.value,
+  }[action];
+  if (!allowed) return;
   const name = composeProjectName(row);
   if (!name) return;
 
@@ -3403,6 +3499,7 @@ const runComposeAction = async (
 };
 
 const saveDockerConfig = async () => {
+  if (!canWriteConfig.value) return;
   let parsed: Record<string, any>;
   try {
     parsed = JSON.parse(configForm.raw || "{}");
@@ -3437,6 +3534,7 @@ const saveDockerConfig = async () => {
 };
 
 const runRuntimeAction = async (action: "stop" | "restart") => {
+  if (!canRestartRuntime.value) return;
   const label =
     action === "restart"
       ? t("container.confirmations.restartService")
@@ -3554,7 +3652,7 @@ onBeforeUnmount(() => {
           {{ t("container.task.containerTask", "Container task")
           }}<span v-if="activeTaskCount">（{{ activeTaskCount }}）</span>
         </el-button>
-        <div class="action-with-reason">
+        <div v-if="canCreateContainer" class="action-with-reason">
           <el-tooltip
             :content="createContainerDisabledReason"
             :disabled="!createContainerDisabledReason"
@@ -3624,7 +3722,7 @@ onBeforeUnmount(() => {
         />
         <div class="panel-actions">
           <el-button
-            v-if="activeTab === 'containers'"
+            v-if="activeTab === 'containers' && canCleanup"
             class="cleanup-action-button"
             type="warning"
             plain
@@ -3635,90 +3733,90 @@ onBeforeUnmount(() => {
             {{ t("container.cleanupStopped", "Clean stopped") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'images'"
+            v-if="activeTab === 'images' && canImagePull"
             type="primary"
             :icon="Plus"
-            :disabled="!runtimeAvailable || !canImageWrite"
+            :disabled="!runtimeAvailable"
             @click="openDialog('image')"
           >
             {{ t("container.pullImage", "Pull image") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'images'"
-            :disabled="!runtimeAvailable || !canImageWrite"
+            v-if="activeTab === 'images' && canImageImport"
+            :disabled="!runtimeAvailable"
             @click="openDialog('image-import')"
           >
             {{ t("container.import", "Import") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'images'"
-            :disabled="!runtimeAvailable || !canImageWrite"
+            v-if="activeTab === 'images' && canImageBuild"
+            :disabled="!runtimeAvailable"
             @click="openDialog('image-build')"
           >
             {{ t("container.build", "Build") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'images'"
+            v-if="activeTab === 'images' && canImageCleanup"
             type="warning"
             plain
             :loading="actionLoading === 'prune:images'"
-            :disabled="!runtimeAvailable || !canCleanup"
+            :disabled="!runtimeAvailable"
             @click="pruneImages('images')"
           >
             {{ t("container.cleanupImages", "Clean images") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'images'"
+            v-if="activeTab === 'images' && canBuildCacheCleanup"
             plain
             :loading="actionLoading === 'prune:build-cache'"
-            :disabled="!runtimeAvailable || !canCleanup"
+            :disabled="!runtimeAvailable"
             @click="pruneImages('build-cache')"
           >
             {{ t("container.cleanupBuildCache", "Clean build cache") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'networks'"
+            v-if="activeTab === 'networks' && canCreateNetwork"
             type="primary"
             :icon="Plus"
-            :disabled="!runtimeAvailable || !canNetworkWrite"
+            :disabled="!runtimeAvailable"
             @click="openDialog('network')"
           >
             {{ t("container.createNetwork", "Create network") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'networks'"
+            v-if="activeTab === 'networks' && canCleanup"
             plain
             type="warning"
             :loading="actionLoading === 'prune:networks'"
-            :disabled="!runtimeAvailable || !canCleanup"
+            :disabled="!runtimeAvailable"
             @click="pruneNetworks"
           >
             {{ t("container.cleanupUnusedNetworks", "Clean unused networks") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'volumes'"
+            v-if="activeTab === 'volumes' && canCreateVolume"
             type="primary"
             :icon="Plus"
-            :disabled="!runtimeAvailable || !canVolumeWrite"
+            :disabled="!runtimeAvailable"
             @click="openDialog('volume')"
           >
             {{ t("container.createVolume", "Create volume") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'volumes'"
+            v-if="activeTab === 'volumes' && canCleanup"
             plain
             type="warning"
             :loading="actionLoading === 'prune:volumes'"
-            :disabled="!runtimeAvailable || !canCleanup"
+            :disabled="!runtimeAvailable"
             @click="pruneVolumes"
           >
             {{ t("container.cleanupUnusedVolumes", "Clean unused volumes") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'compose'"
+            v-if="activeTab === 'compose' && canCreateCompose"
             type="primary"
             :icon="Plus"
-            :disabled="!runtimeAvailable || !canComposeWrite"
+            :disabled="!runtimeAvailable"
             @click="openDialog('compose-create')"
           >
             {{ t("container.createCompose", "Create Compose") }}
@@ -3732,27 +3830,27 @@ onBeforeUnmount(() => {
             {{ t("common.refresh", "Refresh") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'templates'"
+            v-if="activeTab === 'templates' && canCreateTemplate"
             type="primary"
             :icon="Plus"
             :disabled="
-              !runtimeAvailable || !canComposeWrite || !templatesSupported
+              !runtimeAvailable || !templatesSupported
             "
             @click="openDialog('template')"
           >
             {{ t("container.createTemplate", "Create template") }}
           </el-button>
           <el-button
-            v-if="activeTab === 'templates'"
+            v-if="activeTab === 'templates' && canDeployTemplate"
             plain
             :disabled="
-              !runtimeAvailable || !canComposeWrite || !templatesSupported
+              !runtimeAvailable || !templatesSupported
             "
             @click="openDialog('compose-template-deploy')"
           >
             {{ t("container.deployFromTemplate", "Deploy from template") }}
           </el-button>
-          <div v-if="activeTab === 'registries'" class="action-with-reason">
+          <div v-if="activeTab === 'registries' && canCreateRegistry" class="action-with-reason">
             <el-tooltip
               :content="registryManageDisabledReason"
               :disabled="!registryManageDisabledReason"
@@ -3761,7 +3859,7 @@ onBeforeUnmount(() => {
                 <el-button
                   type="primary"
                   :icon="Plus"
-                  :disabled="!registryManageAvailable || !canRegistryWrite"
+                  :disabled="!registryManageAvailable"
                   @click="openDialog('registry')"
                 >
                   {{ t("container.addRegistry", "Add Registry") }}
@@ -3777,7 +3875,7 @@ onBeforeUnmount(() => {
               <span>{{ registryManageDisabledReason }}</span>
             </div>
           </div>
-          <div v-if="activeTab === 'config'" class="action-with-reason">
+          <div v-if="activeTab === 'config' && canWriteConfig" class="action-with-reason">
             <el-tooltip
               :content="dockerConfigDisabledReason"
               :disabled="!dockerConfigDisabledReason"
@@ -3786,7 +3884,7 @@ onBeforeUnmount(() => {
                 <el-button
                   type="primary"
                   :loading="actionLoading === 'config:save'"
-                  :disabled="!dockerConfigAvailable || !canConfigWrite"
+                  :disabled="!dockerConfigAvailable"
                   @click="saveDockerConfig"
                 >
                   {{ t("container.saveConfig", "Save config") }}
@@ -3803,11 +3901,11 @@ onBeforeUnmount(() => {
             </div>
           </div>
           <el-button
-            v-if="activeTab === 'config'"
+            v-if="activeTab === 'config' && canRestartRuntime"
             type="warning"
             plain
             :loading="actionLoading === 'runtime:restart'"
-            :disabled="!runtimeAvailable || !canConfigWrite"
+            :disabled="!runtimeAvailable"
             @click="runRuntimeAction('restart')"
           >
             {{ t("container.restartDocker", "Restart Docker") }}
@@ -3932,7 +4030,7 @@ onBeforeUnmount(() => {
             }}</span>
             <el-dropdown
               :disabled="
-                !selectedContainers.length || !runtimeAvailable || !canWrite
+                !selectedContainers.length || !runtimeAvailable
               "
               popper-class="table-action-popper"
               @command="
@@ -3961,7 +4059,7 @@ onBeforeUnmount(() => {
                   }}</el-dropdown-item>
                   <el-dropdown-item
                     command="kill"
-                    :disabled="!canForceAction"
+                    :disabled="!canKill"
                     >{{
                       t("container.forceStop", "Force stop")
                     }}</el-dropdown-item
@@ -3988,7 +4086,7 @@ onBeforeUnmount(() => {
               :disabled="
                 !selectedNetworks.length ||
                 !runtimeAvailable ||
-                !canNetworkWrite
+                !canDeleteNetwork
               "
               @click="batchDeleteNetworks"
             >
@@ -4004,7 +4102,7 @@ onBeforeUnmount(() => {
             <el-button
               :loading="actionLoading === 'batch:volumes'"
               :disabled="
-                !selectedVolumes.length || !runtimeAvailable || !canVolumeWrite
+                !selectedVolumes.length || !runtimeAvailable || !canDeleteVolume
               "
               @click="batchDeleteVolumes"
             >
@@ -4107,7 +4205,7 @@ onBeforeUnmount(() => {
                 <el-dropdown-menu class="table-action-menu">
                   <el-dropdown-item
                     command="connectNetwork"
-                    :disabled="!runtimeAvailable || !canNetworkWrite"
+                    :disabled="!runtimeAvailable || !canNetworkConnect"
                   >
                     <el-icon><Connection /></el-icon>
                     {{
@@ -4119,7 +4217,7 @@ onBeforeUnmount(() => {
                   <el-dropdown-item
                     v-if="canStartContainer(row)"
                     command="start"
-                    :disabled="!runtimeAvailable || !canWrite"
+                    :disabled="!runtimeAvailable || !canStart"
                   >
                     <el-icon><VideoPlay /></el-icon>
                     {{ t("container.start", "Start") }}
@@ -4127,7 +4225,7 @@ onBeforeUnmount(() => {
                   <el-dropdown-item
                     v-if="canStopContainer(row)"
                     command="stop"
-                    :disabled="!runtimeAvailable || !canWrite"
+                    :disabled="!runtimeAvailable || !canStop"
                   >
                     <el-icon><SwitchButton /></el-icon>
                     {{ t("container.stop", "Stop") }}
@@ -4135,7 +4233,7 @@ onBeforeUnmount(() => {
                   <el-dropdown-item
                     v-if="canPauseContainer(row)"
                     command="pause"
-                    :disabled="!runtimeAvailable || !canWrite"
+                    :disabled="!runtimeAvailable || !canPause"
                   >
                     <el-icon><VideoPause /></el-icon>
                     {{ t("container.pause", "Pause") }}
@@ -4143,7 +4241,7 @@ onBeforeUnmount(() => {
                   <el-dropdown-item
                     v-if="canUnpauseContainer(row)"
                     command="unpause"
-                    :disabled="!runtimeAvailable || !canWrite"
+                    :disabled="!runtimeAvailable || !canUnpause"
                   >
                     <el-icon><VideoPlay /></el-icon>
                     {{ t("container.resume", "Resume") }}
@@ -4151,7 +4249,7 @@ onBeforeUnmount(() => {
                   <el-dropdown-item
                     v-if="canRestartContainer(row)"
                     command="restart"
-                    :disabled="!runtimeAvailable || !canWrite"
+                    :disabled="!runtimeAvailable || !canRestart"
                   >
                     <el-icon><Refresh /></el-icon>
                     {{ t("container.restart", "Restart") }}
@@ -4209,7 +4307,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="CollectionTag"
-              :disabled="!runtimeAvailable || !canImageWrite"
+              :disabled="!runtimeAvailable"
               @click="openDialog('image-tag', row)"
               >{{ t("container.tag", "Tag") }}</el-button
             >
@@ -4217,7 +4315,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="Upload"
-              :disabled="!runtimeAvailable || !canImageWrite"
+              :disabled="!runtimeAvailable"
               @click="openDialog('image-push', row)"
               >{{ t("container.push", "Push") }}</el-button
             >
@@ -4236,7 +4334,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === row.ID"
-              :disabled="!runtimeAvailable || !canDelete"
+              :disabled="!runtimeAvailable"
               @click="deleteImage(row)"
             >
               {{ t("container.delete", "Delete") }}
@@ -4293,7 +4391,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === row.ID"
-              :disabled="!runtimeAvailable || !canNetworkWrite"
+              :disabled="!runtimeAvailable"
               @click="deleteNetwork(row)"
             >
               {{ t("container.delete", "Delete") }}
@@ -4330,7 +4428,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === row.Name"
-              :disabled="!runtimeAvailable || !canVolumeWrite"
+              :disabled="!runtimeAvailable"
               @click="deleteVolume(row)"
             >
               {{ t("container.delete", "Delete") }}
@@ -4407,7 +4505,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="EditPen"
-              :disabled="!canComposeWrite || row.editable === false"
+              :disabled="row.editable === false"
               @click="openComposeEditDialog(row)"
             >
               {{ t("container.edit", "Edit") }}
@@ -4418,7 +4516,7 @@ onBeforeUnmount(() => {
               type="primary"
               :icon="VideoPlay"
               :loading="actionLoading === `compose:${composeProjectName(row)}:start`"
-              :disabled="!runtimeAvailable || !canComposeWrite"
+              :disabled="!runtimeAvailable"
               @click="runComposeAction(row, 'start')"
             >
               {{ t("container.start", "Start") }}
@@ -4429,7 +4527,7 @@ onBeforeUnmount(() => {
               type="primary"
               :icon="SwitchButton"
               :loading="actionLoading === `compose:${composeProjectName(row)}:stop`"
-              :disabled="!runtimeAvailable || !canComposeWrite"
+              :disabled="!runtimeAvailable"
               @click="runComposeAction(row, 'stop')"
             >
               {{ t("container.stop", "Stop") }}
@@ -4440,7 +4538,7 @@ onBeforeUnmount(() => {
               type="primary"
               :icon="Refresh"
               :loading="actionLoading === `compose:${composeProjectName(row)}:restart`"
-              :disabled="!runtimeAvailable || !canComposeWrite"
+              :disabled="!runtimeAvailable"
               @click="runComposeAction(row, 'restart')"
             >
               {{ t("container.restart", "Restart") }}
@@ -4451,7 +4549,7 @@ onBeforeUnmount(() => {
               type="primary"
               :icon="Upload"
               :loading="actionLoading === `compose:${composeProjectName(row)}:update`"
-              :disabled="!runtimeAvailable || !canComposeWrite"
+              :disabled="!runtimeAvailable"
               @click="runComposeAction(row, 'update')"
             >
               {{ t("container.update", "Update") }}
@@ -4462,7 +4560,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === `compose:${composeProjectName(row)}:delete`"
-              :disabled="!runtimeAvailable || !canComposeWrite"
+              :disabled="!runtimeAvailable"
               @click="runComposeAction(row, 'delete')"
             >
               {{ t("container.delete", "Delete") }}
@@ -4501,7 +4599,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="Plus"
-              :disabled="!canComposeWrite || !templatesSupported"
+              :disabled="!templatesSupported"
               @click="openDialog('compose-template-deploy', row)"
               >{{ t("container.deployFromTemplate", "Deploy from template") }}</el-button
             >
@@ -4509,7 +4607,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="EditPen"
-              :disabled="!canComposeWrite || !templatesSupported"
+              :disabled="!templatesSupported"
               @click="openDialog('template', row)"
               >{{ t("container.edit", "Edit") }}</el-button
             >
@@ -4518,7 +4616,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === `template:${row.id}`"
-              :disabled="!canDelete || !row.id || !templatesSupported"
+              :disabled="!row.id || !templatesSupported"
               @click="deleteTemplate(row)"
             >
               {{ t("container.delete", "Delete") }}
@@ -4557,7 +4655,7 @@ onBeforeUnmount(() => {
                   type="primary"
                   :icon="Connection"
                   :loading="actionLoading === `registry-test:${row.id}`"
-                  :disabled="!registryTestAvailable || !canRegistryWrite"
+                  :disabled="!registryTestAvailable"
                   @click="testRegistry(row)"
                 >
                   {{ t("container.test", "Test") }}
@@ -4568,7 +4666,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="EditPen"
-              :disabled="!canRegistryWrite"
+              :disabled="false"
               @click="openDialog('registry', row)"
               >{{ t("container.edit", "Edit") }}</el-button
             >
@@ -4577,7 +4675,7 @@ onBeforeUnmount(() => {
               type="danger"
               :icon="Delete"
               :loading="actionLoading === `registry:${row.id}`"
-              :disabled="!canRegistryWrite"
+              :disabled="false"
               @click="deleteRegistry(row)"
             >
               {{ t("container.delete", "Delete") }}

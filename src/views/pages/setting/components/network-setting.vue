@@ -7,14 +7,11 @@ import {
   isOperationCancelled,
   submitOperation,
 } from "@/utils/operationPreview";
-import { hasOperationAccess } from "@/utils/access";
+import { getPanelSettingsCapabilities } from "../access";
 
-const canReadPanelSettings = computed(() => hasOperationAccess("panelSettings", "read", {
-  actions: ["panelSettings.read", "system.settings.read"],
-}));
-const canWritePanelSettings = computed(() => hasOperationAccess("panelSettings", "write", {
-  actions: ["panelSettings.write", "system.settings.write"],
-}));
+const capabilities = computed(getPanelSettingsCapabilities);
+const canReadPanelNetwork = computed(() => capabilities.value.canReadPanelNetwork);
+const canUpdatePanelNetwork = computed(() => capabilities.value.canUpdatePanelNetwork);
 
 interface CertificateStatus {
   valid: boolean;
@@ -170,7 +167,7 @@ const applySettings = (settings: NetworkSettings) => {
 };
 
 const loadSettings = async (notify = false) => {
-  if (!canReadPanelSettings.value) return;
+  if (!canReadPanelNetwork.value) return;
   loading.value = true;
   try {
     const { data } = await Api.getPanelNetwork();
@@ -329,7 +326,7 @@ const followNetworkTransaction = async (
 };
 
 const saveSettings = async () => {
-  if (!canWritePanelSettings.value) return;
+  if (!canUpdatePanelNetwork.value) return;
   if (!formRef.value) return;
   const valid = await formRef.value.validate().catch(() => false);
   if (!valid) return;
@@ -414,7 +411,7 @@ onBeforeUnmount(stopApplyPolling);
         </p>
       </div>
       <el-button
-        v-if="canReadPanelSettings"
+        v-if="canReadPanelNetwork"
         class="network-setting__refresh"
         :loading="loading"
         :disabled="saving || applyPolling"
@@ -536,7 +533,7 @@ onBeforeUnmount(stopApplyPolling);
             :label="t('setting.network.bindIp', '监听 IP')"
             prop="bindAddress"
           >
-            <el-input v-model="form.bindAddress" :disabled="!canWritePanelSettings" placeholder="0.0.0.0" />
+            <el-input v-model="form.bindAddress" :disabled="!canUpdatePanelNetwork" placeholder="0.0.0.0" />
             <div class="form-tip">
               {{
                 t(
@@ -551,7 +548,7 @@ onBeforeUnmount(stopApplyPolling);
             :label="t('setting.network.httpPort', 'HTTP 端口')"
             prop="httpPort"
           >
-            <el-input v-model="form.httpPort" :disabled="!canWritePanelSettings" placeholder="8089" />
+            <el-input v-model="form.httpPort" :disabled="!canUpdatePanelNetwork" placeholder="8089" />
             <div class="form-tip">
               {{
                 t(
@@ -580,7 +577,7 @@ onBeforeUnmount(stopApplyPolling);
               )
             }}</span>
           </div>
-          <el-switch v-model="form.httpsEnabled" :disabled="!canWritePanelSettings" />
+          <el-switch v-model="form.httpsEnabled" :disabled="!canUpdatePanelNetwork" />
         </div>
 
         <template v-if="form.httpsEnabled">
@@ -603,7 +600,7 @@ onBeforeUnmount(stopApplyPolling);
               :label="t('setting.network.httpsPort', 'HTTPS 端口')"
               prop="httpsPort"
             >
-              <el-input v-model="form.httpsPort" :disabled="!canWritePanelSettings" placeholder="8443" />
+              <el-input v-model="form.httpsPort" :disabled="!canUpdatePanelNetwork" placeholder="8443" />
             </el-form-item>
 
             <div class="form-grid__spacer" />
@@ -615,7 +612,7 @@ onBeforeUnmount(stopApplyPolling);
             >
               <el-input
                 v-model="form.httpsCertificateFile"
-                :disabled="!canWritePanelSettings"
+                :disabled="!canUpdatePanelNetwork"
                 placeholder="/usr/local/one/certificates/panel/fullchain.pem"
               />
             </el-form-item>
@@ -626,7 +623,7 @@ onBeforeUnmount(stopApplyPolling);
             >
               <el-input
                 v-model="form.httpsPrivateKeyFile"
-                :disabled="!canWritePanelSettings"
+                :disabled="!canUpdatePanelNetwork"
                 placeholder="/usr/local/one/certificates/panel/privkey.pem"
               />
             </el-form-item>
@@ -682,7 +679,7 @@ onBeforeUnmount(stopApplyPolling);
         >
           <el-input
             v-model="proxyText"
-            :disabled="!canWritePanelSettings"
+            :disabled="!canUpdatePanelNetwork"
             type="textarea"
             :rows="4"
             :placeholder="
@@ -705,9 +702,10 @@ onBeforeUnmount(stopApplyPolling);
 
       <div class="network-form__footer">
         <el-button
+          v-if="canUpdatePanelNetwork"
           type="primary"
           :loading="saving || applyPolling"
-          :disabled="!canWritePanelSettings"
+          :disabled="!canUpdatePanelNetwork"
           @click="saveSettings"
         >
           {{

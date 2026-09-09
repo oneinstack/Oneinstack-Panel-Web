@@ -5,18 +5,18 @@ import { CircleClose } from '@element-plus/icons-vue'
 import QrcodeVue from 'qrcode.vue'
 import { Api } from '@/api/modules'
 import { useConfigStore } from '@/stores/modules/config';
-import { hasOperationAccess } from '@/utils/access'
+import { getPanelSettingsCapabilities } from '../access'
 import System from '@/utils/System'
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 
 const sconfig = useConfigStore()
-const canReadSecurity = computed(() => hasOperationAccess('panelSettings', 'read', {
-  actions: ['panelSettings.read', 'security.read']
-}))
-const canWriteSecurity = computed(() => hasOperationAccess('panelSettings', 'write', {
-  actions: ['panelSettings.write', 'security.write']
-}))
+const capabilities = computed(getPanelSettingsCapabilities)
+const canReadAccountSecurity = computed(() => capabilities.value.canReadAccountSecurity)
+const canSetupTotp = computed(() => capabilities.value.canSetupTotp)
+const canDisableTotp = computed(() => capabilities.value.canDisableTotp)
+const canRegenerateRecoveryCodes = computed(() => capabilities.value.canRegenerateRecoveryCodes)
+const canRevokeSession = computed(() => capabilities.value.canRevokeSession)
 
 interface SecurityStatus {
   totpEnabled: boolean
@@ -104,11 +104,13 @@ const sessionColumns = computed<ColumnItem[]>(() => [
   { prop: 'createdAt', label: t('setting.accountSecurity.loginTime', 'Login time'), minWidth: 160, slot: 'createdAt' },
   { prop: 'lastSeenAt', label: t('setting.accountSecurity.lastActivity', 'Last activity'), minWidth: 160, slot: 'lastSeenAt' },
   { prop: 'expiresAt', label: t('setting.accountSecurity.expiresAt', 'Expires at'), minWidth: 160, slot: 'expiresAt' },
-  { prop: 'actionColumn', label: t('common.action', 'Action'), width: 132, align: 'right', fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }
+  ...(canRevokeSession.value
+    ? ([{ prop: 'actionColumn', label: t('common.action', 'Action'), width: 132, align: 'right', fixed: 'right', slot: 'actionColumn', className: 'table-action-column' }] as ColumnItem[])
+    : [])
 ])
 
 const load = async (notify = false) => {
-  if (!canReadSecurity.value) return
+  if (!canReadAccountSecurity.value) return
   loading.value = true
   try {
     const [statusResponse, sessionsResponse] = await Promise.all([
@@ -128,7 +130,7 @@ const load = async (notify = false) => {
 }
 
 const openSetup = async () => {
-  if (!canWriteSecurity.value) return
+  if (!canSetupTotp.value) return
   setupLoading.value = true
   try {
     const { data } = await Api.setupTOTP()
@@ -149,7 +151,7 @@ const openSetup = async () => {
 }
 
 const confirmSetup = async () => {
-  if (!canWriteSecurity.value) return
+  if (!canSetupTotp.value) return
   if (!setup.password || !setup.code) {
     ElMessage.warning(t('setting.accountSecurity.inputPasswordAndTotpCode', 'Enter current password and 6-digit TOTP code'))
     return
@@ -174,7 +176,7 @@ const confirmSetup = async () => {
 }
 
 const openVerification = (mode: 'disable' | 'regenerate') => {
-  if (!canWriteSecurity.value) return
+  if (mode === 'disable' ? !canDisableTotp.value : !canRegenerateRecoveryCodes.value) return
   verifyMode.value = mode
   verifyForm.password = ''
   verifyForm.code = ''
@@ -182,7 +184,7 @@ const openVerification = (mode: 'disable' | 'regenerate') => {
 }
 
 const submitVerification = async () => {
-  if (!canWriteSecurity.value) return
+  if (verifyMode.value === 'disable' ? !canDisableTotp.value : !canRegenerateRecoveryCodes.value) return
   if (!verifyForm.password || !verifyForm.code) {
     ElMessage.warning(t('setting.accountSecurity.inputPasswordAndCode', 'Enter current password and TOTP code'))
     return
@@ -209,7 +211,7 @@ const copyRecoveryCodes = async () => {
 }
 
 const revokeSession = async (item: SessionItem) => {
-  if (!canWriteSecurity.value) return
+  if (!canRevokeSession.value) return
   await ElMessageBox.confirm(
     t('setting.accountSecurity.revokeSessionConfirm', 'High-risk operation: sign out the session from {ip} immediately? The next request from that device will be invalid.', { ip: item.remoteIp || t('setting.accountSecurity.unknownAddress', 'Unknown address') }),
     t('setting.accountSecurity.revokeSession', 'Revoke session'),
@@ -225,7 +227,7 @@ const revokeSession = async (item: SessionItem) => {
 }
 
 const revokeOthers = async () => {
-  if (!canWriteSecurity.value) return
+  if (!canRevokeSession.value) return
   await ElMessageBox.confirm(
     t('setting.accountSecurity.revokeOthersConfirm', 'High-risk operation: sign out all sessions except the current browser? Other devices need to sign in again.'),
     t('setting.accountSecurity.signOutOtherDevices', 'Sign out other devices'),
@@ -252,7 +254,7 @@ onMounted(() => load())
         <div class="section-title">{{ $t('setting.accountSecurity.title') }}</div>
         <div class="section-description">{{ $t('setting.accountSecurity.description') }}</div>
       </div>
-      <el-button v-if="canReadSecurity" :loading="loading" @click="load(true)">{{ $t('setting.accountSecurity.refreshSessionStatus') }}</el-button>
+      <el-button v-if="canReadAccountSecurity" :loading="loading" @click="load(true)">{{ $t('setting.accountSecurity.refreshSessionStatus') }}</el-button>
     </div>
 
     <div class="security-row">
@@ -269,12 +271,12 @@ onMounted(() => load())
         </div>
       </div>
       <div class="row-actions">
-        <el-button v-if="!status.totpEnabled && canWriteSecurity" type="primary" :loading="setupLoading" @click="openSetup">
+        <el-button v-if="!status.totpEnabled && canSetupTotp" type="primary" :loading="setupLoading" @click="openSetup">
           {{ setupButtonText }}
         </el-button>
         <template v-else>
-          <el-button v-if="canWriteSecurity" @click="openVerification('regenerate')">{{ $t('setting.accountSecurity.regenerateRecoveryCodes') }}</el-button>
-          <el-button v-if="canWriteSecurity" type="danger" plain @click="openVerification('disable')">{{ $t('setting.accountSecurity.disable') }}</el-button>
+          <el-button v-if="canRegenerateRecoveryCodes" @click="openVerification('regenerate')">{{ $t('setting.accountSecurity.regenerateRecoveryCodes') }}</el-button>
+          <el-button v-if="canDisableTotp" type="danger" plain @click="openVerification('disable')">{{ $t('setting.accountSecurity.disable') }}</el-button>
         </template>
       </div>
     </div>
@@ -287,7 +289,7 @@ onMounted(() => load())
         </div>
         <div class="row-description">{{ $t('setting.accountSecurity.sessionDescription') }}</div>
       </div>
-      <el-button v-if="canWriteSecurity" type="primary" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
+      <el-button v-if="canRevokeSession" type="primary" plain :disabled="otherSessionCount === 0" @click="revokeOthers">
         {{ $t('setting.accountSecurity.signOutOtherDevices') }}
       </el-button>
     </div>
@@ -323,7 +325,7 @@ onMounted(() => load())
       <template #lastSeenAt="{ row }">{{ formatDate(row.lastSeenAt) }}</template>
       <template #expiresAt="{ row }">{{ formatDate(row.expiresAt) }}</template>
       <template #actionColumn="{ row }">
-        <el-button v-if="!row.current && canWriteSecurity" link type="danger" :icon="CircleClose" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
+        <el-button v-if="!row.current && canRevokeSession" link type="danger" :icon="CircleClose" @click="revokeSession(row)">{{ $t('setting.accountSecurity.revokeSession') }}</el-button>
       </template>
     </custom-table>
   </div>
@@ -340,7 +342,7 @@ onMounted(() => load())
     </div>
     <template #footer>
       <el-button @click="setupVisible = false">{{ $t('common.cancel') }}</el-button>
-      <el-button type="primary" :loading="setupLoading" :disabled="!canWriteSecurity" @click="confirmSetup">{{ $t('setting.accountSecurity.verifyAndEnable') }}</el-button>
+      <el-button type="primary" :loading="setupLoading" :disabled="!canSetupTotp" @click="confirmSetup">{{ $t('setting.accountSecurity.verifyAndEnable') }}</el-button>
     </template>
   </el-dialog>
 
@@ -366,7 +368,7 @@ onMounted(() => load())
     />
     <template #footer>
       <el-button @click="verifyVisible = false">{{ $t('common.cancel') }}</el-button>
-      <el-button :type="verifyMode === 'disable' ? 'danger' : 'primary'" :disabled="!canWriteSecurity" @click="submitVerification">
+      <el-button :type="verifyMode === 'disable' ? 'danger' : 'primary'" :disabled="verifyMode === 'disable' ? !canDisableTotp : !canRegenerateRecoveryCodes" @click="submitVerification">
         {{ $t('common.confirm') }}
       </el-button>
     </template>

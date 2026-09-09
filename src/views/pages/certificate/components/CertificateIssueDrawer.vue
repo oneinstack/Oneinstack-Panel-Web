@@ -28,6 +28,8 @@ interface ChallengeOption {
 const props = defineProps<{
   visible: boolean
   dnsAccounts: DnsAccount[]
+  canSubmit?: boolean
+  canManageDns?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -317,6 +319,7 @@ const loadWebsites = async () => {
 }
 
 const submit = async () => {
+  if (props.canSubmit === false) return
   const valid = await formRef.value?.validate?.().catch(() => false)
   if (!valid) return
   clearSubmitErrors()
@@ -390,6 +393,7 @@ watch(() => form.challengeType, (value) => {
     size="720px"
     destroy-on-close
     :loading="loading"
+    :confirm-disabled="canSubmit === false"
     :on-close="close"
     :on-confirm="submit"
   >
@@ -459,7 +463,7 @@ watch(() => form.challengeType, (value) => {
                 :value="item.id"
               />
             </el-select>
-            <el-button @click="emit('manage-dns')">{{ $t('certificate.actions.addDnsAccount') }}</el-button>
+            <el-button v-if="canManageDns" @click="emit('manage-dns')">{{ $t('certificate.actions.addDnsAccount') }}</el-button>
           </div>
           <div v-if="!availableDnsAccounts.length" class="field-tip field-tip--warning">
             {{ $t('certificate.form.noDnsAccountHint') }}

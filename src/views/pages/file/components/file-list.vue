@@ -59,7 +59,8 @@ import FileSearchDialog from "./FileSearchDialog.vue";
 import FileOperationDrawer from "./FileOperationDrawer.vue";
 import FileEditorDrawer from "./FileEditorDrawer.vue";
 import i18n from "@/lang";
-import { hasOperationAccess, hasTerminalAccess } from "@/utils/access";
+import { hasTerminalAccess } from "@/utils/access";
+import { hasFileButtonAccess } from "../access";
 import { HttpRequestError } from "@/api";
 
 interface Emits {
@@ -107,7 +108,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 const filePermissionLabel = (permission: FilePermission) =>
   t(`file.permissionLabels.${permission}`, permission);
 const canFilePermission = (permission: FilePermission) =>
-  hasOperationAccess("file", permission, { actions: [`file.${permission}`] });
+  hasFileButtonAccess(permission);
 const requireFilePermission = (permission: FilePermission) => {
   if (canFilePermission(permission)) return true;
   ElMessage.warning(
@@ -1099,6 +1100,17 @@ const conf = reactive({
       conf.linkDownload.instance?.clearValidate();
     },
     confirm: async () => {
+      if (
+        (conf.fileDialog.type === "upload" ||
+          conf.fileDialog.type === "linkDownload") &&
+        !requireFilePermission("create")
+      )
+        return;
+      if (
+        conf.fileDialog.type === "delete" &&
+        !requireFilePermission("delete")
+      )
+        return;
       if (conf.fileDialog.type === "upload")
         return conf.upload.instance?.submit();
       if (conf.fileDialog.type === "linkDownload") {
@@ -1194,6 +1206,13 @@ const conf = reactive({
     },
     confirm: async () => {
       const dialog = conf.operationDialog;
+      const permission =
+        dialog.type === "rename"
+          ? "modify"
+          : dialog.type === "archive" || dialog.type === "extract"
+            ? "archive"
+            : "read";
+      if (!requireFilePermission(permission)) return;
       if (dialog.type === "properties") {
         dialog.close();
         return;

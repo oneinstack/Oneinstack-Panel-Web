@@ -7,7 +7,7 @@ import { FormItem } from '@/components/custom-form.vue'
 import System from '@/utils/System'
 import { ColumnItem } from '@/components/custom-table.vue'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { hasDatabaseButtonAccess } from './access'
 
 export interface ConfProps {
   conf: typeof conf
@@ -18,8 +18,10 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
-const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
-const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
+const databaseType = computed(() => conf.list.params.type === 'redis' ? 'redis' : 'mysql')
+const canReadDatabase = computed(() => hasDatabaseButtonAccess(`${databaseType.value}.read`))
+const canReadAccount = computed(() => hasDatabaseButtonAccess('mysql.account.read'))
+const canCreateDatabase = computed(() => databaseType.value === 'mysql' && hasDatabaseButtonAccess('mysql.create'))
 
 const conf = reactive({
   themeColor: {
@@ -52,7 +54,7 @@ const conf = reactive({
     username: '',
     password: '',
     open: (value: any) => {
-      if (!canReadDatabase.value) return
+      if (!canReadAccount.value) return
       conf.credential.database = value.database || ''
       conf.credential.username = value.username || ''
       conf.credential.password = value.password || ''
@@ -88,7 +90,7 @@ const conf = reactive({
       // }
     ],
     clickActive: (item: any) => {
-      if (!canReadDatabase.value) return
+      if (!hasDatabaseButtonAccess(`${item.value}.read`)) return
       if (conf.tabs.activeIndex === item.index) return
       conf.list.params = {
         page: 1,
@@ -156,7 +158,7 @@ const conf = reactive({
     type: 'add',
     loading: false,
     open: (type: 'add') => {
-      if (!canWriteDatabase.value) return
+      if (!canCreateDatabase.value) return
       conf.drawer.type = type
       conf.drawer.show = true
       conf.drawer.title = t('database.addDatabase', 'Add database')
@@ -167,7 +169,7 @@ const conf = reactive({
       conf.drawer.show = false
     },
     onConfirm: () => {
-      if (!canWriteDatabase.value) return
+      if (!canCreateDatabase.value) return
       conf.form.instance?.validate(async (valid) => {
         if (!valid) return
         conf.drawer.loading = true
@@ -238,7 +240,7 @@ conf.tabs.activeIndex = conf.tabs.list.find((item) => item.value === routeName)!
 conf.list.params.type = routeName
 
 const copyCredential = async () => {
-  if (!canReadDatabase.value) return
+  if (!canReadAccount.value) return
   const text = `${t('database.database', 'Database')}: ${conf.credential.database}\n${t('common.username', 'Username')}: ${conf.credential.username}\n${t('common.password', 'Password')}: ${conf.credential.password}`
   try {
     let copied = false
@@ -329,7 +331,7 @@ const copyCredential = async () => {
       </el-form>
       <template #footer>
         <el-button @click="conf.credential.show = false">{{ t('common.close', '关闭') }}</el-button>
-        <el-button v-if="canReadDatabase" type="primary" @click="copyCredential">{{ t('database.copyCredential', '复制账号密码') }}</el-button>
+        <el-button v-if="canReadAccount" type="primary" @click="copyCredential">{{ t('database.copyCredential', '复制账号密码') }}</el-button>
       </template>
     </custom-dialog>
   </div>

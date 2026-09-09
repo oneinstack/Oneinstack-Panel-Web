@@ -6,7 +6,6 @@ import { Api } from "@/api/modules";
 import i18n from "@/lang";
 import type { ColumnItem } from "@/components/custom-table.vue";
 import SectionTabs from "@/components/section-tabs.vue";
-import { hasOperationAccess } from '@/utils/access'
 
 interface DatabaseLibrary {
   id: number;
@@ -36,10 +35,19 @@ interface DatabaseTask {
   createdAt: string;
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean;
   library: DatabaseLibrary | null;
-}>();
+  canRead?: boolean;
+  canBackup?: boolean;
+  canRestore?: boolean;
+  canDelete?: boolean;
+}>(), {
+  canRead: true,
+  canBackup: true,
+  canRestore: true,
+  canDelete: true,
+});
 
 const emit = defineEmits<{
   "update:modelValue": [value: boolean];
@@ -56,9 +64,10 @@ const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
   return value && value !== key ? value : fallback;
 };
-const canReadDatabase = computed(() => hasOperationAccess('database', 'read'))
-const canWriteDatabase = computed(() => hasOperationAccess('database', 'write'))
-const canBackupDatabase = computed(() => hasOperationAccess('database', 'backup', { actions: ['database.write'] }))
+const canReadDatabase = computed(() => props.canRead)
+const canBackupDatabase = computed(() => props.canBackup)
+const canRestoreDatabase = computed(() => props.canRestore)
+const canDeleteDatabaseBackup = computed(() => props.canDelete)
 
 const state = reactive({
   activeTab: "backups",
@@ -183,7 +192,7 @@ const createBackup = async () => {
 };
 
 const restoreBackup = async (backup: DatabaseBackup) => {
-  if (!props.library || !canWriteDatabase.value) return;
+  if (!props.library || !canRestoreDatabase.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
       t(
@@ -225,7 +234,7 @@ const restoreBackup = async (backup: DatabaseBackup) => {
 };
 
 const deleteBackup = async (backup: DatabaseBackup) => {
-  if (!props.library || !canWriteDatabase.value) return;
+  if (!props.library || !canDeleteDatabaseBackup.value) return;
   try {
     const { value } = await ElMessageBox.prompt(
       t(
@@ -257,7 +266,6 @@ const deleteBackup = async (backup: DatabaseBackup) => {
 };
 
 const cancelTask = async (task: DatabaseTask) => {
-  if (!canWriteDatabase.value) return;
   await Api.cancelDatabaseTask(task.id);
   ElMessage.success(
     t("database.backup.cancelSubmitted", "Cancel request submitted"),
@@ -404,7 +412,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
                 type="primary"
                 link
                 :icon="RefreshLeft"
-                :disabled="hasActiveTask || !canWriteDatabase"
+                :disabled="hasActiveTask || !canRestoreDatabase"
                 @click="restoreBackup(row)"
                 >{{ t("database.backup.restore", "恢复") }}</el-button
               >
@@ -412,7 +420,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
                 type="danger"
                 link
                 :icon="Delete"
-                :disabled="hasActiveTask || !canWriteDatabase"
+                :disabled="hasActiveTask || !canDeleteDatabaseBackup"
                 @click="deleteBackup(row)"
                 >{{ t("common.delete", "删除") }}</el-button
               >
@@ -463,7 +471,7 @@ onBeforeUnmount(() => window.clearInterval(pollTimer));
             </div>
             <div class="task-actions">
               <el-button
-                v-if="!terminalStatuses.has(task.status) && canWriteDatabase"
+                v-if="!terminalStatuses.has(task.status)"
                 type="danger"
                 link
                 @click="cancelTask(task)"

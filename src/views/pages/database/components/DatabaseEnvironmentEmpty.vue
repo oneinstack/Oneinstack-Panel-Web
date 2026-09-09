@@ -7,6 +7,7 @@ import i18n from '@/lang'
 const props = defineProps<{
   type: 'mysql' | 'redis'
   installed: boolean
+  canRemoteCreate?: boolean
 }>()
 
 const displayName = computed(() => (props.type === 'mysql' ? 'MySQL' : 'Redis'))
@@ -39,7 +40,7 @@ const openSoftware = () => System.router.push(`/software?component=${props.type}
       <span>{{ description }}</span>
     </div>
     <div class="environment-actions">
-      <el-button :icon="Connection" @click="openRemote">{{ t('database.environment.addRemoteDatabase', '添加远程数据库') }}</el-button>
+      <el-button v-if="canRemoteCreate !== false" :icon="Connection" @click="openRemote">{{ t('database.environment.addRemoteDatabase', '添加远程数据库') }}</el-button>
       <el-button type="primary" :icon="Download" @click="openSoftware">
         {{ installed ? t('database.environment.viewSoftware', '查看 {name}', { name: displayName }) : t('database.environment.installSoftware', '安装 {name}', { name: displayName }) }}
       </el-button>

@@ -15,7 +15,7 @@ import i18n from '@/lang'
 const props = defineProps<{
   visible: boolean
   taskId: string
-  canWrite: boolean
+  canManage: boolean
 }>()
 
 const emit = defineEmits<{
@@ -75,7 +75,7 @@ const startPolling = () => {
 }
 
 const cancelTask = async () => {
-  if (!task.value || !isActive.value) return
+  if (!props.canManage || !task.value || !isActive.value) return
   try {
     await ElMessageBox.confirm(
       t('certificate.confirm.cancelTask'),
@@ -143,7 +143,7 @@ onBeforeUnmount(clearPolling)
             <el-tag :type="statusType(task.status)">{{ certificateStatusLabel(task.status) }}</el-tag>
             <el-button :icon="Refresh" @click="loadTask()">{{ $t('common.refresh') }}</el-button>
             <el-button
-              v-if="isActive && canWrite"
+              v-if="isActive && canManage"
               type="danger"
               plain
               :icon="CircleClose"

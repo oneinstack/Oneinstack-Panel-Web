@@ -2,8 +2,10 @@
 import CardTabs from '@/components/card-tabs.vue'
 import { computed, markRaw, nextTick, onMounted, reactive, ref } from 'vue'
 import { Api } from '@/api/modules'
+import { useConfigStore } from '@/stores/modules/config'
 import Firewall from './components/firewall.vue'
 import Fail2ban from './components/fail2ban.vue'
+import { getSecurityCapabilities, type SecurityCapabilities } from './access'
 import i18n from '@/lang'
 
 const t = (key: string, fallback?: string) => {
@@ -11,36 +13,26 @@ const t = (key: string, fallback?: string) => {
   return value && value !== key ? value : fallback || key
 }
 
-interface Fail2banCapabilities {
-  showSecurityMenu: boolean
-  canReadSecurity: boolean
-  canWriteSecurity: boolean
-  canChangeFirewallRules: boolean
-  canChangePortForward: boolean
-  canToggleFirewall: boolean
-  canTogglePing: boolean
-  showFail2banTab: boolean
-  canChangePolicy: boolean
-  canBan: boolean
-  canUnban: boolean
-  canInstall: boolean
-  canReadAuditEvidence: boolean
-}
-
-const defaultCapabilities = (): Fail2banCapabilities => ({
+const defaultCapabilities = (): SecurityCapabilities => ({
   showSecurityMenu: true,
   canReadSecurity: false,
-  canWriteSecurity: false,
-  canChangeFirewallRules: false,
-  canChangePortForward: false,
   canToggleFirewall: false,
   canTogglePing: false,
-  showFail2banTab: false,
-  canChangePolicy: false,
-  canBan: false,
-  canUnban: false,
-  canInstall: false,
-  canReadAuditEvidence: false
+  canClearFirewallCache: false,
+  canInstallFirewall: false,
+  canReadPortRule: false,
+  canCreatePortRule: false,
+  canUpdatePortRule: false,
+  canDeletePortRule: false,
+  canImportPortRule: false,
+  canExportPortRule: false,
+  canManageIpRule: false,
+  canManagePortForward: false,
+  canManageRegionRule: false,
+  canManageMaliciousIp: false,
+  canReadIntrusion: false,
+  canManageIntrusion: false,
+  canReadAuditEvidence: true
 })
 
 const firewallRef = ref<any>()
@@ -95,7 +87,13 @@ const conf = reactive({
 })
 
 const visibleList = computed(() =>
-  conf.list.filter((item: any) => item.index !== 5 || conf.fail2banCapabilities.showFail2banTab)
+  conf.list.filter((item: any) =>
+    item.index === 0
+      ? conf.fail2banCapabilities.canReadSecurity
+      : item.index === 5
+        ? conf.fail2banCapabilities.canReadIntrusion
+        : true,
+  )
 )
 
 const activeTab = computed(
@@ -105,27 +103,13 @@ const activeTab = computed(
 const loadAccessMatrix = async () => {
   try {
     const response = await Api.getAccessMatrix()
-    const matrix = response?.data || {}
-    conf.fail2banCapabilities = {
-      showSecurityMenu: Boolean(matrix?.menu?.security),
-      canReadSecurity: Boolean(matrix?.scopes?.security?.read),
-      canWriteSecurity: Boolean(matrix?.scopes?.security?.write),
-      canChangeFirewallRules: Boolean(matrix?.actions?.['firewall.rule_change']),
-      canChangePortForward: Boolean(matrix?.actions?.['firewall.port_forward']),
-      canToggleFirewall: Boolean(matrix?.actions?.['firewall.toggle']),
-      canTogglePing: Boolean(matrix?.actions?.['firewall.ping']),
-      showFail2banTab: Boolean(matrix?.scopes?.security?.read),
-      canChangePolicy: Boolean(matrix?.actions?.['fail2ban.policy_change']),
-      canBan: Boolean(matrix?.actions?.['fail2ban.ban']),
-      canUnban: Boolean(matrix?.actions?.['fail2ban.unban']),
-      canInstall: Boolean(matrix?.actions?.['software.install']),
-      canReadAuditEvidence: Boolean(matrix?.scopes?.audit?.read)
-    }
-    if (!conf.fail2banCapabilities.showFail2banTab && conf.activeIndex === 5) {
-      conf.activeIndex = 0
-    }
+    useConfigStore().setAccessMatrix(response?.data || {})
   } catch {
-    conf.fail2banCapabilities = defaultCapabilities()
+    useConfigStore().setUserAccessSnapshot(useConfigStore().userInfo)
+  }
+  conf.fail2banCapabilities = getSecurityCapabilities()
+  if (!visibleList.value.some((item: any) => item.index === conf.activeIndex)) {
+    conf.activeIndex = visibleList.value[0]?.index ?? 0
   }
 }
 

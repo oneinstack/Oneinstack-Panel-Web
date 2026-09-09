@@ -53,10 +53,15 @@ interface ConfigurationHistoryEntry {
   createdAt: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   modelValue: boolean
   component: string
-}>()
+  canRead?: boolean
+  canWrite?: boolean
+}>(), {
+  canRead: true,
+  canWrite: true
+})
 
 const emit = defineEmits<{
   (event: 'update:modelValue', value: boolean): void
@@ -178,7 +183,7 @@ const hydrateValues = (current: ComponentConfiguration) => {
 }
 
 const load = async () => {
-  if (!props.component) return
+  if (!props.component || !props.canRead) return
   loading.value = true
   try {
     const { data } = await Api.getComponentServiceConfiguration(props.component)
@@ -191,7 +196,7 @@ const load = async () => {
 }
 
 const loadHistory = async () => {
-  if (!props.component || historyLoading.value) return
+  if (!props.component || !props.canRead || historyLoading.value) return
   historyLoading.value = true
   try {
     const { data } = await Api.getComponentServiceConfigurationHistory(props.component, {
@@ -205,7 +210,7 @@ const loadHistory = async () => {
 }
 
 const buildPreview = async () => {
-  if (!configuration.value || previewing.value) return
+  if (!props.canWrite || !configuration.value || previewing.value) return
   previewing.value = true
   try {
     preview.value = await createOperationPreview('software.configure', {
@@ -225,7 +230,7 @@ const buildPreview = async () => {
 }
 
 const apply = async () => {
-  if (!preview.value?.previewId || applying.value) return
+  if (!props.canWrite || !preview.value?.previewId || applying.value) return
   applying.value = true
   const currentPreview = preview.value
   // A preview can be consumed even when execution fails, so never offer it again.
@@ -244,7 +249,7 @@ const apply = async () => {
 }
 
 const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
-  if (entry.status !== 'succeeded' || restoringId.value) return
+  if (!props.canWrite || entry.status !== 'succeeded' || restoringId.value) return
   restoringId.value = entry.id
   try {
     preview.value = await createOperationPreview('software.configure', {
@@ -334,8 +339,9 @@ watch(values, () => {
           <span>{{ $t('software.config.applyMode') }}</span>
           <strong>{{ applyModeLabel }}</strong>
         </div>
-        <el-button
-          class="reload-button"
+          <el-button
+            v-if="canRead"
+            class="reload-button"
           link
           :icon="RefreshRight"
           :loading="loading"
@@ -358,7 +364,7 @@ watch(values, () => {
         <el-form label-position="top" class="configuration-form">
           <template v-for="field in configuration.fields" :key="field.key">
             <div v-if="field.type === 'boolean'" class="boolean-field">
-              <el-checkbox :id="`config-${field.key}`" v-model="values[field.key]">
+              <el-checkbox :id="`config-${field.key}`" v-model="values[field.key]" :disabled="!canWrite || applying">
                 {{ field.label }}
               </el-checkbox>
               <p v-if="field.description">{{ field.description }}</p>
@@ -376,12 +382,14 @@ watch(values, () => {
                 :max="field.max"
                 :step="1"
                 :placeholder="fieldPlaceholder(field)"
+                :disabled="!canWrite || applying"
                 controls-position="right"
               />
               <el-select
                 v-else-if="field.type === 'select'"
                 :id="`config-${field.key}`"
                 v-model="values[field.key]"
+                :disabled="!canWrite || applying"
                 style="width: 100%"
               >
                 <el-option
@@ -396,6 +404,7 @@ watch(values, () => {
                 :id="`config-${field.key}`"
                 v-model="values[field.key]"
                 :placeholder="fieldPlaceholder(field)"
+                :disabled="!canWrite || applying"
               />
               <p v-if="field.description" class="field-description">
                 {{ field.description }}
@@ -412,6 +421,7 @@ watch(values, () => {
             <p>{{ $t('software.config.configHistoryDescription') }}</p>
           </div>
           <el-button
+            v-if="canRead"
             link
             :icon="RefreshRight"
             :loading="historyLoading"
@@ -447,6 +457,7 @@ watch(values, () => {
               </p>
             </div>
             <el-button
+              v-if="canWrite"
               class="history-restore-button"
               link
               type="primary"
@@ -488,17 +499,18 @@ watch(values, () => {
       :sub-title="$t('software.config.readFailedSubtitle')"
     >
       <template #extra>
-        <el-button type="primary" :icon="RefreshRight" @click="load">{{ $t('software.config.reloadConfig') }}</el-button>
+        <el-button v-if="canRead" type="primary" :icon="RefreshRight" @click="load">{{ $t('software.config.reloadConfig') }}</el-button>
       </template>
     </el-result>
 
     <template #footer>
       <div class="drawer-footer">
-        <span v-if="preview">{{ $t('software.config.previewedChangeCount', { count: changeCount }) }}</span>
-        <span v-else>{{ $t('software.config.previewFirstHint') }}</span>
+        <span v-if="canWrite && preview">{{ $t('software.config.previewedChangeCount', { count: changeCount }) }}</span>
+        <span v-else-if="canWrite">{{ $t('software.config.previewFirstHint') }}</span>
         <div class="drawer-actions">
           <el-button :disabled="applying" @click="visible = false">{{ $t('common.cancel') }}</el-button>
           <el-button
+            v-if="canWrite"
             :icon="View"
             :loading="previewing"
             :disabled="loading || applying"
@@ -507,6 +519,7 @@ watch(values, () => {
             {{ $t('software.config.previewChanges') }}
           </el-button>
           <el-button
+            v-if="canWrite"
             type="primary"
             :loading="applying"
             :disabled="!preview?.previewId || previewing"

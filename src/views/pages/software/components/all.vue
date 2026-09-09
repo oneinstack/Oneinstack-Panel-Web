@@ -10,10 +10,9 @@ import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
-import { useConfigStore } from '@/stores/modules/config'
+import { hasSoftwareButtonAccess } from '../access'
 
 const softwareTaskStore = useSoftwareTaskStore()
-const sconfig = useConfigStore()
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -135,57 +134,18 @@ const drawer = reactive({
 })
 
 const recentTasks = computed(() => softwareTaskStore.recentTasks())
-const canReadSoftware = computed(() =>
-  sconfig.hasActionAccess('software.read') ||
-  sconfig.hasScopeAccess('software', 'read') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.read'])
-)
-const canWriteSoftware = computed(() =>
-  sconfig.hasActionAccess('software.write') ||
-  sconfig.hasScopeAccess('software', 'write') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.write) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.write'])
-)
-const canReadSoftwareService = computed(() =>
-  sconfig.hasActionAccess('software.service.read') ||
-  sconfig.hasScopeAccess('software.service', 'read') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.service?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service.read']) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service']?.read)
-)
-const canWriteSoftwareService = computed(() =>
-  sconfig.hasActionAccess('software.service.write') ||
-  sconfig.hasScopeAccess('software.service', 'write') ||
-  Boolean((sconfig.scopeAccess as any)?.software?.service?.write) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service.write']) ||
-  Boolean((sconfig.scopeAccess as any)?.['software.service']?.write)
-)
-const canReadWebsite = computed(() =>
-  sconfig.hasMenuAccess('website') ||
-  sconfig.hasActionAccess('website.read') ||
-  Boolean((sconfig.scopeAccess as any)?.website?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['website.read'])
-)
-const canReadDatabase = computed(() =>
-  sconfig.hasMenuAccess('database') ||
-  sconfig.hasActionAccess('database.read') ||
-  Boolean((sconfig.scopeAccess as any)?.database?.read) ||
-  Boolean((sconfig.scopeAccess as any)?.['database.read'])
-)
-const allowedManageScopes = computed(() => {
-  if (canWriteSoftware.value) return new Set<string>(['*'])
-  const scopes = new Set<string>()
-  if (canReadWebsite.value) {
-    scopes.add('web_service')
-    scopes.add('runtime')
-  }
-  if (canReadDatabase.value) {
-    scopes.add('database')
-    scopes.add('cache')
-  }
-  return scopes
-})
+const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
+const canInstallSoftware = computed(() => hasSoftwareButtonAccess('install'))
+const canUpdateSoftware = computed(() => hasSoftwareButtonAccess('update'))
+const canUninstallSoftware = computed(() => hasSoftwareButtonAccess('uninstall'))
+const canReadSoftwareService = computed(() => hasSoftwareButtonAccess('service.read'))
+const canManageSoftwareService = computed(() => hasSoftwareButtonAccess('service.manage'))
+const canReadSoftwareServiceConfig = computed(() => hasSoftwareButtonAccess('service.config.read'))
+const canWriteSoftwareServiceConfig = computed(() => hasSoftwareButtonAccess('service.config.write'))
+const canReadSoftwareTask = computed(() => hasSoftwareButtonAccess('task.read'))
+const canCancelSoftwareTask = computed(() => hasSoftwareButtonAccess('task.cancel'))
+const canRetrySoftwareTask = computed(() => hasSoftwareButtonAccess('task.retry'))
+const canReadSoftwareTaskLog = computed(() => hasSoftwareButtonAccess('task.log'))
 
 const activeTask = (item: any) => softwareTaskStore.activeForKey(item.key)
 
@@ -290,23 +250,11 @@ const serviceStateType = (status?: ComponentServiceStatus) => {
   return 'info'
 }
 
-const getManageScopes = (item: any, status?: ComponentServiceStatus) => {
-  const scopes = status?.manageScopes ?? item?.manageScopes
-  return Array.isArray(scopes)
-    ? scopes.map((scope) => String(scope || '').trim()).filter(Boolean)
-    : []
-}
-
-const canManageService = (item: any, status?: ComponentServiceStatus) => {
-  if (!canReadSoftwareService.value || !canWriteSoftwareService.value) return false
-  if (allowedManageScopes.value.has('*')) return true
-  const scopes = getManageScopes(item, status)
-  if (!scopes.length) return false
-  return scopes.some((scope) => allowedManageScopes.value.has(scope))
-}
+const canManageService = (_item: any, _status?: ComponentServiceStatus) =>
+  canReadSoftware.value && canManageSoftwareService.value
 
 const loadServiceStatuses = async () => {
-  if (!canReadSoftwareService.value) {
+  if (!canReadSoftware.value || !canReadSoftwareService.value) {
     serviceStatuses.value = {}
     return
   }
@@ -326,7 +274,7 @@ const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action
   !(action === 'reload' && !status.canReload)
 
 const canShowConfigureButton = (item: any, status?: ComponentServiceStatus) =>
-  Boolean(status?.canConfigure) && canManageService(item, status)
+  canReadSoftware.value && Boolean(status?.canConfigure) && canReadSoftwareServiceConfig.value
 
 const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => {
   const deadline = Date.now() + timeoutMs
@@ -379,8 +327,10 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
       await loadServiceStatuses()
       return
     }
-    taskDrawer.taskId = result.taskId
-    taskDrawer.show = true
+    if (canReadSoftwareTask.value) {
+      taskDrawer.taskId = result.taskId
+      taskDrawer.show = true
+    }
     ElMessage.success(t('software.serviceActionTaskCreated', '{action} task created and can continue in the background', { action: actionLabels[action] }))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
@@ -391,10 +341,10 @@ const handleServiceAction = async (item: any, action: ServiceAction) => {
 
 const openServiceConfiguration = (item: any) => {
   const status = serviceStatus(item)
-  if (!status || !canManageService(item, status)) return
+  if (!canReadSoftware.value || !status || !canReadSoftwareServiceConfig.value) return
   const task = activeTask(item)
   if (task || status.activeTaskId) {
-    showTask(task?.id || status.activeTaskId!)
+    if (canReadSoftwareTask.value) showTask(task?.id || status.activeTaskId!)
     return
   }
   configDrawer.component = status.component
@@ -409,8 +359,10 @@ const handleConfigurationTaskCreated = (result: any) => {
     version: result.version,
     action: 'configure'
   })
-  taskDrawer.taskId = result.taskId
-  taskDrawer.show = true
+  if (canReadSoftwareTask.value) {
+    taskDrawer.taskId = result.taskId
+    taskDrawer.show = true
+  }
   if (status) {
     serviceStatuses.value[status.softwareKey] = {
       ...status,
@@ -421,7 +373,7 @@ const handleConfigurationTaskCreated = (result: any) => {
 }
 
 const handleInstallClick = (item: any) => {
-  if (!canWriteSoftware.value) return
+  if (!canReadSoftware.value || !canInstallSoftware.value) return
   if (activeTask(item)) {
     showTask(activeTask(item)!.id)
     return
@@ -597,7 +549,7 @@ const buildInstallPayload = (request: Record<string, any>) => {
 }
 
 const handleInstall = async () => {
-  if (submitting.value || !canWriteSoftware.value) return
+  if (submitting.value || !canReadSoftware.value || !canInstallSoftware.value) return
   const request = { ...installForm.value }
   const versionField = installForm.items.find((field) => isSoftwareVersionField(field))
   if (versionField) {
@@ -614,8 +566,10 @@ const handleInstall = async () => {
       forceConfirm: true
     })
     softwareTaskStore.acceptCreated(result, payload)
-    taskDrawer.taskId = result.taskId
-    taskDrawer.show = true
+    if (canReadSoftwareTask.value) {
+      taskDrawer.taskId = result.taskId
+      taskDrawer.show = true
+    }
     drawer.show = false
     clearSecretFields()
   } catch (error) {
@@ -636,30 +590,39 @@ const clearSecretFields = () => {
 }
 
 const showTask = (taskId: string) => {
+  if (!canReadSoftware.value || !canReadSoftwareTask.value) return
   taskPopoverVisible.value = false
   taskDrawer.taskId = taskId
   taskDrawer.show = true
 }
 
 const retryTask = (taskId: string) => {
+  if (!canRetrySoftwareTask.value) return
   const task = softwareTaskStore.tasks[taskId]
+  if (!task) return
+  const canRetryOperation = task.operation === 'upgrade'
+    ? canUpdateSoftware.value
+    : canInstallSoftware.value
+  if (!canRetryOperation) return
   taskDrawer.show = false
-  const item = props.list.find((candidate: any) => candidate.key === task?.softwareKey)
+  const item = props.list.find((candidate: any) => candidate.key === task.softwareKey)
   if (item) {
     openInstallForm(item, task.requestedVersion)
   }
 }
 
 const handleUninstall = async (item: any) => {
-  if (submitting.value || !canWriteSoftware.value) return
+  if (submitting.value || !canReadSoftware.value || !canUninstallSoftware.value) return
   const version = item.install_version || item.versions?.[0] || ''
   submitting.value = true
   try {
     const request = { name: item.key, key: item.key, version }
     const { data: result } = await submitOperation('software.uninstall', request)
     softwareTaskStore.acceptCreated(result, request)
-    taskDrawer.taskId = result.taskId
-    taskDrawer.show = true
+    if (canReadSoftwareTask.value) {
+      taskDrawer.taskId = result.taskId
+      taskDrawer.show = true
+    }
     ElMessage.success(t('software.uninstallTaskCreated', 'Uninstall task created and can continue in the background'))
   } catch (error) {
     if (!isOperationCancelled(error)) throw error
@@ -669,7 +632,7 @@ const handleUninstall = async (item: any) => {
 }
 
 const handleUpgrade = (item: any) => {
-  if (!canWriteSoftware.value) return
+  if (!canReadSoftware.value || !canUpdateSoftware.value) return
   const task = activeTask(item)
   if (task) {
     showTask(task.id)
@@ -689,8 +652,10 @@ watch(
 )
 
 onMounted(() => {
-  void softwareTaskStore.loadAll()
-  if (canReadSoftwareService.value) {
+  if (canReadSoftware.value && canReadSoftwareTask.value) {
+    void softwareTaskStore.loadAll()
+  }
+  if (canReadSoftware.value && canReadSoftwareService.value) {
     void loadServiceStatuses().catch(() => undefined)
   }
 })
@@ -698,8 +663,10 @@ onMounted(() => {
 watch(
   () => i18n.locale,
   () => {
-    void softwareTaskStore.loadAll()
-    if (canReadSoftwareService.value) {
+    if (canReadSoftware.value && canReadSoftwareTask.value) {
+      void softwareTaskStore.loadAll()
+    }
+    if (canReadSoftware.value && canReadSoftwareService.value) {
       void loadServiceStatuses().catch(() => undefined)
     }
   }
@@ -711,7 +678,7 @@ watch(
     <div class="section-header">
       <div class="title">{{ t('software.apps', 'Apps') }}</div>
       <el-popover
-        v-if="recentTasks.length"
+        v-if="recentTasks.length && canReadSoftwareTask"
         v-model:visible="taskPopoverVisible"
         placement="bottom-end"
         width="360"
@@ -766,14 +733,14 @@ watch(
                   <span class="menuTitle">{{ item.name }}</span>
                   <span v-if="item.tags" class="remark">（{{ localizedSoftwareTags(item.tags) }}）</span>
                   <span
-                    v-if="activeTask(item)"
+                    v-if="activeTask(item) && canReadSoftwareTask"
                     class="status installing"
                     @click="showTask(activeTask(item)!.id)"
                   >
                     {{ taskStatusLabel(activeTask(item)) }} {{ activeTask(item)!.progress }}%
                   </span>
                   <span
-                    v-else-if="statusBadge(item)"
+                    v-else-if="!activeTask(item) && statusBadge(item)"
                     class="status"
                     :class="statusBadge(item)?.className"
                   >
@@ -785,7 +752,7 @@ watch(
             </div>
 
             <el-progress
-              v-if="activeTask(item)"
+              v-if="activeTask(item) && canReadSoftwareTask"
               class="card-progress"
               :percentage="activeTask(item)!.progress"
               :stroke-width="6"
@@ -820,7 +787,10 @@ watch(
                   {{ t('common.refresh', 'Refresh') }}
                 </el-button>
               </div>
-              <div v-if="canManageService(item, serviceStatus(item))" class="service-actions">
+              <div
+                v-if="canManageService(item, serviceStatus(item)) || canShowConfigureButton(item, serviceStatus(item))"
+                class="service-actions"
+              >
                 <el-button
                   v-if="canShowConfigureButton(item, serviceStatus(item))"
                   size="small"
@@ -831,41 +801,43 @@ watch(
                 >
                   {{ t('software.configure', 'Configure') }}
                 </el-button>
-                <el-button
-                  v-if="serviceStatus(item)?.state !== 'running'"
-                  size="small"
-                  :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
-                  @click="handleServiceAction(item, 'start')"
-                >
-                  {{ t('software.actionLabels.start', 'Start') }}
-                </el-button>
-                <el-button
-                  v-if="serviceStatus(item)?.state === 'running'"
-                  size="small"
-                  :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
-                  @click="handleServiceAction(item, 'stop')"
-                >
-                  {{ t('software.actionLabels.stop', 'Stop') }}
-                </el-button>
-                <el-button
-                  size="small"
-                  :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
-                  @click="handleServiceAction(item, 'restart')"
-                >
-                  {{ t('software.actionLabels.restart', 'Restart') }}
-                </el-button>
-                <el-button
-                  v-if="serviceActionAllowed(serviceStatus(item), 'reload')"
-                  size="small"
-                  :disabled="
-                    serviceStatus(item)?.state !== 'running' ||
-                    !!activeTask(item) ||
-                    serviceStatus(item)?.busy
-                  "
-                  @click="handleServiceAction(item, 'reload')"
-                >
-                  {{ t('software.reload', 'Reload') }}
-                </el-button>
+                <template v-if="canManageService(item, serviceStatus(item))">
+                  <el-button
+                    v-if="serviceStatus(item)?.state !== 'running'"
+                    size="small"
+                    :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
+                    @click="handleServiceAction(item, 'start')"
+                  >
+                    {{ t('software.actionLabels.start', 'Start') }}
+                  </el-button>
+                  <el-button
+                    v-if="serviceStatus(item)?.state === 'running'"
+                    size="small"
+                    :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
+                    @click="handleServiceAction(item, 'stop')"
+                  >
+                    {{ t('software.actionLabels.stop', 'Stop') }}
+                  </el-button>
+                  <el-button
+                    size="small"
+                    :disabled="!!activeTask(item) || serviceStatus(item)?.busy"
+                    @click="handleServiceAction(item, 'restart')"
+                  >
+                    {{ t('software.actionLabels.restart', 'Restart') }}
+                  </el-button>
+                  <el-button
+                    v-if="serviceActionAllowed(serviceStatus(item), 'reload')"
+                    size="small"
+                    :disabled="
+                      serviceStatus(item)?.state !== 'running' ||
+                      !!activeTask(item) ||
+                      serviceStatus(item)?.busy
+                    "
+                    @click="handleServiceAction(item, 'reload')"
+                  >
+                    {{ t('software.reload', 'Reload') }}
+                  </el-button>
+                </template>
               </div>
             </div>
             <div v-else class="divider" />
@@ -883,16 +855,16 @@ watch(
               </div>
               <div class="software-card-actions">
                 <button
-                  v-if="activeTask(item)"
+                  v-if="activeTask(item) && canReadSoftwareTask"
                   type="button"
                   class="btn task"
                   @click="showTask(activeTask(item)!.id)"
                 >
                   {{ t('software.viewProgress', 'View progress') }}
                 </button>
-                <template v-else-if="isInstalled(item)">
+                <template v-else-if="!activeTask(item) && isInstalled(item)">
                   <button
-                    v-if="hasUpgrade(item) && canWriteSoftware"
+                    v-if="hasUpgrade(item) && canUpdateSoftware"
                     type="button"
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
@@ -900,7 +872,7 @@ watch(
                     {{ t('software.upgrade', 'Upgrade') }}
                   </button>
                   <button
-                    v-if="canWriteSoftware"
+                    v-if="canUninstallSoftware"
                     type="button"
                     class="btn uninstall"
                     :disabled="submitting"
@@ -909,17 +881,18 @@ watch(
                     {{ t('software.uninstall', 'Uninstall') }}
                   </button>
                 </template>
-                <button
-                  v-else
-                  type="button"
-                  v-if="canWriteSoftware"
-                  class="btn"
-                  :disabled="item.installable === false"
-                  :class="{ disabled: item.installable === false }"
-                  @click="handleInstallClick(item)"
-                >
-                  {{ item.installable === false ? t('software.disabled', 'Disabled') : t('software.install', 'Install') }}
-                </button>
+                <template v-else-if="!activeTask(item) && !isInstalled(item)">
+                  <button
+                    v-if="canInstallSoftware"
+                    type="button"
+                    class="btn"
+                    :disabled="item.installable === false"
+                    :class="{ disabled: item.installable === false }"
+                    @click="handleInstallClick(item)"
+                  >
+                    {{ item.installable === false ? t('software.disabled', 'Disabled') : t('software.install', 'Install') }}
+                  </button>
+                </template>
               </div>
             </div>
           </div>
@@ -963,11 +936,16 @@ watch(
     <install-task-drawer
       v-model="taskDrawer.show"
       :task-id="taskDrawer.taskId"
+      :can-cancel="canCancelSoftwareTask"
+      :can-retry="canRetrySoftwareTask"
+      :can-log="canReadSoftwareTaskLog"
       @retry="retryTask"
     />
     <service-config-drawer
       v-model="configDrawer.show"
       :component="configDrawer.component"
+      :can-read="canReadSoftwareServiceConfig"
+      :can-write="canWriteSoftwareServiceConfig"
       @task-created="handleConfigurationTaskCreated"
     />
   </div>

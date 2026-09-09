@@ -6,7 +6,7 @@ import { Api } from '@/api/modules'
 import { formatBytes } from '@/utils/fileSize'
 import { formatFileTime } from '@/utils/fileTime'
 import i18n from '@/lang'
-import { hasOperationAccess } from '@/utils/access'
+import { hasFileButtonAccess } from '../access'
 
 const props = defineProps<{
   modelValue: boolean
@@ -26,7 +26,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
 }
-const canReadFile = computed(() => hasOperationAccess('file', 'read'))
+const canReadFile = computed(() => hasFileButtonAccess('read'))
 
 const state = reactive({
   loading: false,

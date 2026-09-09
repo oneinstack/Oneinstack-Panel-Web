@@ -15,6 +15,7 @@ const props = defineProps<{
   visible: boolean
   certificateId: string
   boundWebsiteIds?: number[]
+  canSubmit?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -67,6 +68,7 @@ const loadWebsites = async () => {
 const close = () => emit('update:visible', false)
 
 const submit = async () => {
+  if (props.canSubmit === false) return
   const valid = await formRef.value?.validate?.().catch(() => false)
   if (!valid || !form.websiteId) return
   loading.value = true
@@ -102,6 +104,7 @@ watch(
     size="560px"
     destroy-on-close
     :loading="loading"
+    :confirm-disabled="canSubmit === false"
     :on-close="close"
     :on-confirm="submit"
   >

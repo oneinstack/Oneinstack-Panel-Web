@@ -8,6 +8,7 @@ import { Api } from '@/api/modules'
 import { ElMessage } from 'element-plus'
 import i18n from '@/lang'
 import System from '@/utils/System'
+import { hasSoftwareButtonAccess } from './access'
 
 export interface ChildProps {
   list: any[]
@@ -30,6 +31,8 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 
 const showCatalogSyncButton = !import.meta.env.PROD
 const pageLoading = ref(true)
+const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
+const canSyncSoftwareCatalog = computed(() => hasSoftwareButtonAccess('catalog.sync'))
 
 const buildCategoryQuery = () => {
   if (conf.activeIndex === 1) return { installed: true }
@@ -67,12 +70,18 @@ const conf = reactive({
       return `${item.name}${typeof item.count === 'number' ? ` (${item.count})` : ''}`
     },
     handleClick: async ({ props }: TabsPaneContext) => {
+      if (!canReadSoftware.value) return
       const tab = conf.tabs.list.find((item) => item.value === String(props.name))
       conf.list.params.page = 1
       conf.list.params.tags = tab?.value || undefined
       await conf.list.getData()
     },
     getData: async (query?: { installed?: boolean; isUpdate?: boolean }) => {
+      if (!canReadSoftware.value) {
+        conf.tabs.list = []
+        conf.tabs.selected = ''
+        return
+      }
       const { data } = await Api.getSoftCategories(query)
       const categories = Array.isArray(data) ? data : []
       conf.tabs.list = categories
@@ -99,7 +108,7 @@ const conf = reactive({
       conf.catalog.status = data
     },
     sync: async () => {
-      if (conf.catalog.loading) return
+      if (conf.catalog.loading || !canSyncSoftwareCatalog.value) return
       conf.catalog.loading = true
       try {
         const { data } = await Api.syncSoftwareCatalog()
@@ -116,6 +125,7 @@ const conf = reactive({
     }
   },
   clickActive: (item: any) => {
+    if (!canReadSoftware.value) return
     conf.activeIndex = item.index
     conf.list.params.isUpdate = item.index === 2 ? true : undefined
     conf.list.params.installed = item.index === 0 ? undefined : true
@@ -141,6 +151,12 @@ const conf = reactive({
     },
     total: 0,
     getData: async () => {
+      if (!canReadSoftware.value) {
+        conf.list.loading = false
+        conf.list.data = []
+        conf.list.total = 0
+        return
+      }
       conf.list.loading = true
       const { data: res } = await Api.getSoftList(conf.list.params)
       conf.list.loading = false
@@ -176,6 +192,15 @@ const conf = reactive({
 })
 
 const reloadSoftwarePageData = async () => {
+  if (!canReadSoftware.value) {
+    conf.catalog.status = null
+    conf.tabs.list = []
+    conf.tabs.selected = ''
+    conf.list.data = []
+    conf.list.total = 0
+    pageLoading.value = false
+    return
+  }
   pageLoading.value = true
   try {
     await Promise.all([
@@ -247,7 +272,7 @@ const catalogDetail = computed(() => {
           :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"
         >
           <el-button
-            v-if="showCatalogSyncButton && conf.catalog.status"
+            v-if="showCatalogSyncButton && canSyncSoftwareCatalog && conf.catalog.status"
             :loading="conf.catalog.loading"
             :disabled="!conf.catalog.status?.enabled"
             plain
