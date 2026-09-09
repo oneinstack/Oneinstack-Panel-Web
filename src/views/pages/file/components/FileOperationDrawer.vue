@@ -112,7 +112,7 @@ const columns = computed<ColumnItem[]>(() => [
   { prop: 'path', label: t('file.operations.filePath', 'File path'), minWidth: 300, showOverflowTooltip: true },
   { prop: 'username', label: t('file.operations.operator', 'Operator'), minWidth: 96, slot: 'username' },
   { prop: 'remoteIp', label: t('file.operations.sourceIp', 'Source IP'), minWidth: 128 },
-  { prop: 'outcome', label: t('file.operations.result', 'Result'), minWidth: 80, slot: 'outcome' },
+  { prop: 'outcome', label: t('file.operations.result', 'Result'), minWidth: 120, align: 'center', slot: 'outcome' },
   { prop: 'message', label: t('file.operations.message', 'Description'), minWidth: 220, showOverflowTooltip: true }
 ])
 </script>

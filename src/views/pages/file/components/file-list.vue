@@ -2916,7 +2916,6 @@ const archiveTaskRunningCount = computed(
                 </div>
                 <el-tag
                   size="small"
-                  effect="plain"
                   :type="archiveTaskStatusTagType[task.status]"
                 >
                   {{ archiveTaskStatusLabel(task.status) }}
@@ -2984,7 +2983,6 @@ const archiveTaskRunningCount = computed(
                 </div>
                 <el-tag
                   size="small"
-                  effect="plain"
                   :type="archiveTaskStatusTagType[task.status]"
                 >
                   {{ archiveTaskStatusLabel(task.status) }}
