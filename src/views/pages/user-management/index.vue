@@ -11,7 +11,7 @@ import {
 } from '@/api/modules'
 import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User } from '@element-plus/icons-vue'
+import { ArrowRight, CircleCheck, CollectionTag, Delete, Edit, Key, Plus, User, View } from '@element-plus/icons-vue'
 import i18n from '@/lang'
 import { getUserManagementCapabilities } from './access'
 
@@ -514,7 +514,28 @@ const loadUsers = async () => {
   }
 }
 
+const roleDetailDrawer = reactive({
+  show: false,
+  loading: false,
+  role: null as AccessRole | null
+})
+
+const openRoleDetail = async (role: AccessRole) => {
+  if (!canReadPermissions.value) return
+  const key = role.key || role.code || ''
+  roleDetailDrawer.role = { ...role }
+  roleDetailDrawer.show = true
+  roleDetailDrawer.loading = true
+  try {
+    const response = await Api.getAccessRoleDetail(key)
+    roleDetailDrawer.role = { ...role, ...response.data }
+  } finally {
+    roleDetailDrawer.loading = false
+  }
+}
+
 const openRoleEditor = async (role?: AccessRole | null) => {
+  if (role?.builtin) return
   if (role ? !canUpdateRole.value : !canCreateRole.value) return
   await roleEditorDialog.open(role || null)
 }
@@ -978,7 +999,16 @@ onMounted(async () => {
         <template #action="{ row }">
           <div class="table-row-actions">
             <el-button
-              v-if="canUpdateRole"
+              v-if="row.builtin && canReadPermissions"
+              link
+              type="primary"
+              :icon="View"
+              @click="openRoleDetail(row)"
+            >
+              {{ t('common.detail', 'Details') }}
+            </el-button>
+            <el-button
+              v-if="canUpdateRole && !row.builtin"
               link
               type="primary"
               :icon="Edit"
@@ -988,7 +1018,7 @@ onMounted(async () => {
               {{ t('common.edit', 'Edit') }}
             </el-button>
             <el-button
-              v-if="canDeleteRole"
+              v-if="canDeleteRole && !row.builtin"
               link
               type="danger"
               :icon="Delete"
@@ -1079,6 +1109,39 @@ onMounted(async () => {
             {{ roleLabel(item) }}
           </el-checkbox>
         </el-checkbox-group>
+      </div>
+    </custom-drawer>
+
+    <custom-drawer
+      :visible="roleDetailDrawer.show"
+      :title="t('userManagement.roleDetails', 'Role details')"
+      size="720px"
+      :show-confirm="false"
+      :cancel-text="$t('common.close')"
+      :on-close="() => { roleDetailDrawer.show = false }"
+    >
+      <div v-loading="roleDetailDrawer.loading" class="dialog-form role-detail-body">
+        <el-descriptions v-if="roleDetailDrawer.role" :column="1" border>
+          <el-descriptions-item :label="$t('userManagement.roleKey')">
+            {{ roleDetailDrawer.role.key || roleDetailDrawer.role.code }}
+          </el-descriptions-item>
+          <el-descriptions-item :label="$t('userManagement.roleName')">
+            {{ roleDetailDrawer.role.name }}
+          </el-descriptions-item>
+          <el-descriptions-item :label="$t('userManagement.roleDescription')">
+            {{ roleDetailDrawer.role.description || '—' }}
+          </el-descriptions-item>
+        </el-descriptions>
+        <section class="role-summary-section">
+          <strong>{{ t('userManagement.selectedPermissionCodes', 'Selected permission codes') }} ({{ (roleDetailDrawer.role?.permissions || []).length }})</strong>
+          <div v-if="roleDetailDrawer.role?.permissions?.length" class="role-summary-permission-list">
+            <div v-for="code in roleDetailDrawer.role.permissions" :key="code" class="role-summary-permission">
+              <code>{{ code }}</code>
+              <span>{{ permissions.find((permission) => permission.code === code)?.name || code }}</span>
+            </div>
+          </div>
+          <el-empty v-else :description="t('common.noData', 'No data')" />
+        </section>
       </div>
     </custom-drawer>
 
@@ -2401,6 +2464,17 @@ onMounted(async () => {
   color: rgb(var(--primary-color));
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
+}
+
+.role-detail-body .role-summary-permission {
+  cursor: default;
+  flex-wrap: wrap;
+
+  code,
+  span {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
 
 .role-summary-empty {

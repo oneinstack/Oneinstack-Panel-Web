@@ -3,6 +3,7 @@ import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomTable, { type ColumnItem } from '@/components/custom-table.vue'
 import {
   Api,
+  type AccessPermission,
   type AccessMenuFeatureKey,
   type AccessMenuNode,
   type AccessMenuPayload,
@@ -53,6 +54,9 @@ const loading = reactive({
   menuStatusKey: ''
 })
 const menus = ref<AccessMenuNode[]>([])
+const permissions = ref<AccessPermission[]>([])
+const permissionsLoading = ref(false)
+const permissionsLoaded = ref(false)
 const expandedMenuKeys = ref<string[]>([])
 
 const menuEditorDialog = reactive({
@@ -75,6 +79,25 @@ const menuEditorDialog = reactive({
     permissionCodes: [] as string[]
   } as MenuEditorForm
 })
+
+const menuPermissionsRequired = computed(() =>
+  menuEditorDialog.form.type !== 'directory' && !menuEditorDialog.form.superAdminOnly
+)
+
+const loadPermissions = async () => {
+  permissionsLoading.value = true
+  permissionsLoaded.value = false
+  try {
+    const response = await Api.getAccessPermissions()
+    permissions.value = Array.isArray(response) ? response : Array.isArray(response.data) ? response.data : []
+    permissionsLoaded.value = true
+  } catch {
+    permissions.value = []
+    ElMessage.warning(t('userManagement.menuPermissionsLoadFailed', 'Could not load permissions. Reopen the form to retry.'))
+  } finally {
+    permissionsLoading.value = false
+  }
+}
 
 const canManageMenus = computed(() => hasOperationAccess('userManagement', 'write', {
   actions: ['userManagement.write', 'menu.write', 'menu.status.write']
@@ -323,6 +346,7 @@ const openMenuEditor = (menu?: AccessMenuNode | null) => {
     ...(menu?.permissionCodes || menu?.permissions?.map((item) => item.code) || [])
   ]
   menuEditorDialog.show = true
+  void loadPermissions()
 }
 const handleMenuTypeChange = (value: AccessMenuType) => {
   if (value === 'directory') {
@@ -378,6 +402,18 @@ const submitMenuEditor = async () => {
   }
 
   if (type !== 'directory') {
+    if (menuPermissionsRequired.value && !permissionCodes.length) {
+      ElMessage.warning(t('userManagement.menuPermissionsRequired', 'Select at least one registered permission'))
+      return
+    }
+    if (permissionCodes.length && !permissionsLoaded.value) {
+      ElMessage.warning(t('userManagement.menuPermissionsLoadFailed', 'Could not load permissions. Reopen the form to retry.'))
+      return
+    }
+    if (permissionCodes.some((code) => !permissions.value.some((permission) => permission.code === code))) {
+      ElMessage.warning(t('userManagement.menuPermissionsNotRegistered', 'Select permissions from the registered permission list'))
+      return
+    }
     const expectedTargetType: AccessMenuTargetType = type === 'page' ? 'route' : 'action'
     if (targetType !== expectedTargetType || !targetKey) {
       ElMessage.warning(t('userManagement.inputMenuTargetKey', 'Enter a target key'))
@@ -405,7 +441,7 @@ const submitMenuEditor = async () => {
       enabled: type === 'button' ? true : menuEditorDialog.form.enabled,
       superAdminOnly: menuEditorDialog.form.superAdminOnly,
       featureKey: menuEditorDialog.form.featureKey || undefined,
-      permissionCodes: type === 'directory' || !permissionCodes.length ? undefined : permissionCodes
+      permissionCodes: type === 'directory' ? [] : permissionCodes
     }
     if (menuEditorDialog.mode === 'create') {
       await Api.createAccessMenu(payload as AccessMenuPayload & { key: string })
@@ -558,6 +594,7 @@ onMounted(() => {
       size="980px"
       :confirm-text="$t('common.save')"
       :loading="menuEditorDialog.loading"
+      :confirm-disabled="permissionsLoading"
       :on-close="() => { menuEditorDialog.show = false }"
       :on-confirm="submitMenuEditor"
     >
@@ -616,6 +653,28 @@ onMounted(() => {
           <el-form-item :label="$t('userManagement.superAdminOnly', 'Super admin only')">
             <el-switch v-model="menuEditorDialog.form.superAdminOnly" />
           </el-form-item>
+          <el-form-item
+            v-if="menuEditorDialog.form.type !== 'directory'"
+            :label="t('userManagement.menuPermissionCodes', 'Permissions')"
+            :required="menuPermissionsRequired"
+          >
+            <el-select
+              v-model="menuEditorDialog.form.permissionCodes"
+              multiple
+              filterable
+              clearable
+              :loading="permissionsLoading"
+              :placeholder="t('userManagement.menuPermissionsSelect', 'Select registered permissions')"
+            >
+              <el-option
+                v-for="permission in permissions"
+                :key="permission.code"
+                :value="permission.code"
+                :label="`${permission.code} - ${permission.name || permission.code}`"
+              />
+            </el-select>
+            <p class="menu-permission-hint">{{ t('userManagement.menuPermissionsHint', 'Pages and buttons require at least one permission unless restricted to super administrators. Any one of the selected permissions grants visibility.') }}</p>
+          </el-form-item>
         </el-form>
       </div>
     </custom-drawer>
@@ -625,6 +684,13 @@ onMounted(() => {
 <style scoped lang="less">
 .menu-page {
   padding-bottom: 32px;
+}
+
+.menu-permission-hint {
+  margin: 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .panel-card {
