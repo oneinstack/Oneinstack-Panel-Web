@@ -526,12 +526,18 @@ color-mix(in srgb, var(--surface-card) 94%, white 6%) 0%, var(--surface-card) 10
 
   .el-select:not(.is-disabled) .el-select__selected-item,
     .el-select:not(.is-disabled) .el-select__selected-item > span {
-      color: rgba(244, 247, 255, 0.96) !important;
-      -webkit-text-fill-color: rgba(244, 247, 255, 0.96) !important;
+      color: var(--text-primary) !important;
+      -webkit-text-fill-color: var(--text-primary) !important;
+    }
+
+    .el-select:not(.is-disabled) .el-select__selected-item.is-transparent,
+    .el-select:not(.is-disabled) .el-select__selected-item.is-transparent > span {
+      color: var(--text-placeholder) !important;
+      -webkit-text-fill-color: var(--text-placeholder) !important;
     }
 
     .el-select:not(.is-disabled) .el-select__caret {
-      color: rgba(194, 205, 229, 0.9) !important;
+      color: var(--text-tertiary) !important;
     }
 
     .el-select:not(.is-disabled) .el-select__wrapper:hover .el-select__caret {
