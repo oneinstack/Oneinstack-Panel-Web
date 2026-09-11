@@ -73,7 +73,14 @@ onMounted(() => {
 <template>
   <el-form ref="ruleFormRef" :model="data.value" :rules="conf.rules" label-width="auto" class="custom-form">
     <template v-for="(item, index) in data.items">
-      <el-form-item v-if="item.ifShow?.(data.value) ?? true" :key="index" :label="item.label" :prop="item.prop" :error="item.error">
+      <el-form-item
+        v-if="item.ifShow?.(data.value) ?? true"
+        :key="index"
+        :label="item.type === 'checkbox' ? '' : item.label"
+        :prop="item.prop"
+        :error="item.error"
+        :class="{ 'custom-form-checkbox-item': item.type === 'checkbox' }"
+      >
         <template v-if="item.type === 'input' || item.type === 'password'">
           <el-input
             v-model="data.value[item.prop]"
@@ -96,7 +103,9 @@ onMounted(() => {
           </el-checkbox-group>
         </template>
         <template v-else-if="item.type === 'checkbox'">
-          <el-checkbox v-model="data.value[item.prop]" :label="item.label" @change="item.change" />
+          <el-checkbox v-model="data.value[item.prop]" @change="item.change">
+            {{ item.label }}
+          </el-checkbox>
         </template>
         <template v-else-if="item.type === 'textarea'">
           <el-input
@@ -141,6 +150,10 @@ onMounted(() => {
   :deep(.el-input),
   :deep(.el-select) {
     width: 100%;
+  }
+
+  :deep(.custom-form-checkbox-item .el-form-item__label) {
+    display: none;
   }
 }
 

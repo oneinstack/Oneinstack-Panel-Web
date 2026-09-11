@@ -120,6 +120,7 @@ const installRecommendedVersion = ref('')
 
 const drawer = reactive({
   show: false,
+  size: 'min(760px, 94vw)',
   title: t('software.install', 'Install'),
   onClose: () => {
     formRef.value?.clearValidate()
@@ -432,8 +433,62 @@ const isPasswordInstallField = (field: any) => {
   )
 }
 
+const installFieldLabelKeys: Record<string, string> = {
+  管理员密码: 'software.installFields.adminPassword',
+  密码: 'software.installFields.password',
+  安装目录: 'software.installFields.installDirectory',
+  日志目录: 'software.installFields.logDirectory',
+  运行账号: 'software.installFields.runningAccount',
+  运行用户组: 'software.installFields.runningUserGroup',
+  组件状态目录: 'software.installFields.componentStatusDirectory',
+  组件状态路径: 'software.installFields.componentStatusDirectory',
+  php内存限制: 'software.installFields.phpMemoryLimit',
+  迁移外部phpfpm: 'software.installFields.migrateExternalPhpFpm',
+  确认迁移外部phpfpm: 'software.installFields.confirmExternalPhpFpmMigration',
+  卸载数据策略: 'software.installFields.uninstallDataPolicy',
+  确认删除php组件数据: 'software.installFields.confirmDeleteComponentData',
+  adminpassword: 'software.installFields.adminPassword',
+  rootpassword: 'software.installFields.adminPassword',
+  mysqlpassword: 'software.installFields.adminPassword',
+  mariadbpassword: 'software.installFields.adminPassword',
+  mysqlrootpassword: 'software.installFields.adminPassword',
+  mariadbrootpassword: 'software.installFields.adminPassword',
+  password: 'software.installFields.password',
+  installdirectory: 'software.installFields.installDirectory',
+  installpath: 'software.installFields.installDirectory',
+  logdirectory: 'software.installFields.logDirectory',
+  logpath: 'software.installFields.logDirectory',
+  phpfpmsocket: 'software.installFields.phpFpmSocket',
+  socket: 'software.installFields.phpFpmSocket',
+  runningaccount: 'software.installFields.runningAccount',
+  runuser: 'software.installFields.runningAccount',
+  runningusergroup: 'software.installFields.runningUserGroup',
+  runusergroup: 'software.installFields.runningUserGroup',
+  componentstatusdirectory: 'software.installFields.componentStatusDirectory',
+  componentstatuspath: 'software.installFields.componentStatusDirectory',
+  phpmemorylimit: 'software.installFields.phpMemoryLimit',
+  migrateexternalphpfpm: 'software.installFields.migrateExternalPhpFpm',
+  confirmmigrationexternalphpfpm: 'software.installFields.confirmExternalPhpFpmMigration',
+  uninstalldatapolicy: 'software.installFields.uninstallDataPolicy',
+  confirmdeletingphpcomponentdata: 'software.installFields.confirmDeleteComponentData'
+}
+
+const normalizeInstallFieldToken = (value: unknown) =>
+  String(value || '').trim().toLowerCase().replace(/[\s_\-()/.]+/g, '')
+
+const installFieldLabel = (field: any) => {
+  const rawLabel = String(field?.name || field?.value || field?.key || '').trim()
+  const candidates = [field?.key, field?.name, field?.value]
+    .map(normalizeInstallFieldToken)
+    .filter(Boolean)
+  const translationKey = candidates
+    .map((candidate) => installFieldLabelKeys[candidate])
+    .find(Boolean)
+  return translationKey ? t(translationKey, rawLabel) : rawLabel
+}
+
 const buildInstallFieldRules = (field: any) => {
-  const label = field.value || field.name || field.key
+  const label = installFieldLabel(field)
   const ruleText = String(field?.rule || '').trim()
   const required =
     field.required === true ||
@@ -500,7 +555,7 @@ const installFieldPlaceholder = (field: any) => {
     return t('software.recommendedValue', 'Recommended: {value}', { value: defaultValue })
   }
   return t('software.inputField', 'Enter {field}', {
-    field: field?.name || field?.value || field?.key
+    field: installFieldLabel(field)
   })
 }
 
@@ -525,7 +580,7 @@ const openInstallForm = (item: any, requestedVersion = '') => {
         ? version
         : defaultInstallFieldValue(field)
       return {
-        label: field.name || field.value || field.key,
+        label: installFieldLabel(field),
         type: installFieldType(field),
         prop: field.key,
         placeholder: installFieldPlaceholder(field),
@@ -536,6 +591,9 @@ const openInstallForm = (item: any, requestedVersion = '') => {
     void handleInstall()
     return
   }
+  drawer.size = installForm.items.length <= 2
+    ? 'min(620px, 94vw)'
+    : 'min(760px, 94vw)'
   drawer.title = t('software.installTitle', 'Install {name}', { name: item.name })
   drawer.show = true
 }
@@ -909,9 +967,15 @@ watch(
       :title="drawer.title"
       :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm"
+      :size="drawer.size"
+      body-mode="compact"
     >
       <div class="software-install-panel">
-        <custom-form :data="installForm" :on-init="(el) => (formRef = el)">
+        <custom-form
+          class="software-install-form"
+          :data="installForm"
+          :on-init="(el) => (formRef = el)"
+        >
           <template #software-version="{ row }">
             <div class="software-version-control">
               <el-select
@@ -1367,27 +1431,82 @@ watch(
 }
 
 .software-install-panel {
-
-
   :deep(.custom-form) {
     padding: 0;
   }
 
   :deep(.el-form-item) {
-    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    column-gap: 20px;
+    align-items: start;
+    min-width: 0;
+    margin: 0;
+    padding: 16px 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-subtle) 88%, transparent);
   }
 
   :deep(.el-form-item:last-child) {
-    margin-bottom: 0;
+    border-bottom: 0;
   }
 
   :deep(.el-form-item__label) {
-    min-width: 112px;
-    padding-right: 16px;
+    width: auto !important;
+    max-width: 100%;
+    min-width: 0;
+    height: auto;
+    margin: 0;
+    padding: 0;
+    color: var(--text-secondary) !important;
+    font-size: 14px;
+    font-weight: 650;
+    line-height: 1.45;
+    text-align: right;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    justify-content: flex-end;
   }
 
   :deep(.el-form-item__content) {
+    display: block;
+    width: 100%;
     min-width: 0;
+    margin-left: 0 !important;
+    line-height: normal;
+  }
+
+  :deep(.el-input__wrapper),
+  :deep(.el-select__wrapper) {
+    min-height: 48px;
+    border-radius: 11px;
+    box-shadow: 0 0 0 1px var(--border-default) inset;
+
+    &:hover {
+      box-shadow: 0 0 0 1px rgba(var(--primary-color), 0.46) inset;
+    }
+  }
+
+  :deep(.custom-form-checkbox-item) {
+    display: block;
+    padding: 16px 0;
+  }
+
+  :deep(.el-checkbox) {
+    max-width: 100%;
+    align-items: flex-start;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    white-space: normal;
+  }
+
+  :deep(.el-checkbox__label) {
+    min-width: 0;
+    padding-left: 9px;
+    color: inherit;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
   }
 }
 
@@ -1427,6 +1546,22 @@ watch(
     gap: 10px;
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .software-install-panel {
+    :deep(.el-form-item) {
+      grid-template-columns: 1fr;
+      row-gap: 8px;
+      padding: 13px 0;
+    }
+
+    :deep(.el-form-item__label) {
+      text-align: left;
+      font-size: 13px;
+      justify-content: flex-start;
+    }
   }
 }
 

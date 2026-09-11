@@ -64,6 +64,21 @@ export default {
   servicePort: 'Service port: {port}',
   recommendedValue: 'Recommended: {value}',
   installTitle: 'Install {name}',
+  installFields: {
+    adminPassword: 'Admin password',
+    password: 'Password',
+    installDirectory: 'Installation directory',
+    logDirectory: 'Log directory',
+    phpFpmSocket: 'PHP-FPM Socket',
+    runningAccount: 'Running account',
+    runningUserGroup: 'Running User Group',
+    componentStatusDirectory: 'Component status directory',
+    phpMemoryLimit: 'PHP memory limit',
+    migrateExternalPhpFpm: 'Migrate the external PHP-FPM',
+    confirmExternalPhpFpmMigration: 'Confirm the migration of external PHP-FPM',
+    uninstallDataPolicy: 'Uninstall data policy',
+    confirmDeleteComponentData: 'Confirm deleting the PHP component data'
+  },
   componentTags: {
     runtime: 'Runtime',
     database: 'Database',

@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { createI18n } from 'vue-i18n'
 
 const supportedLocales = ['zh-CN', 'en-US']
-const defaultLocale = 'zh-CN'
+const defaultLocale = 'en-US'
 const languageModules = import.meta.glob('./modules/**/*.ts', { eager: true })
 const localeMessages: Record<string, any> = {}
 

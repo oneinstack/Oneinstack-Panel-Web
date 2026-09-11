@@ -64,6 +64,21 @@ export default {
   servicePort: '服务端口：{port}',
   recommendedValue: '推荐值：{value}',
   installTitle: '安装 {name}',
+  installFields: {
+    adminPassword: '管理员密码',
+    password: '密码',
+    installDirectory: '安装目录',
+    logDirectory: '日志目录',
+    phpFpmSocket: 'PHP-FPM Socket',
+    runningAccount: '运行账号',
+    runningUserGroup: '运行用户组',
+    componentStatusDirectory: '组件状态目录',
+    phpMemoryLimit: 'PHP 内存限制',
+    migrateExternalPhpFpm: '迁移外部 PHP-FPM',
+    confirmExternalPhpFpmMigration: '确认迁移外部 PHP-FPM',
+    uninstallDataPolicy: '卸载数据策略',
+    confirmDeleteComponentData: '确认删除 PHP 组件数据'
+  },
   componentTags: {
     runtime: '运行环境',
     database: '数据库',

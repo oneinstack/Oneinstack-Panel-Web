@@ -1282,9 +1282,9 @@ const openComposeEditDialog = async (row: ComposeProjectItem) => {
     composeForm.redactionReason = String(data?.redactionReason || "");
     dialogVisible.value = true;
   } catch (error: any) {
-    ElMessage.error(
-      error?.message || t("container.compose.configUnreadable"),
-    );
+    // ElMessage.error(
+    //   error?.message || t("container.compose.configUnreadable"),
+    // );
   } finally {
     saving.value = false;
   }
@@ -1315,7 +1315,7 @@ const revealComposeConfig = async () => {
     composeForm.redactionReason = "";
   } catch (error: any) {
     if (error === "cancel" || error === "close") return;
-    ElMessage.error(error?.message || t("container.resourceDialog.revealSensitiveConfigFailed", "Unable to view sensitive configuration"));
+    // ElMessage.error(error?.message || t("container.resourceDialog.revealSensitiveConfigFailed", "Unable to view sensitive configuration"));
   }
 };
 
@@ -2075,9 +2075,9 @@ const submitDialog = async () => {
       try {
         payload = buildContainerPayload();
       } catch (error: any) {
-        ElMessage.error(
-          error?.message || t("container.notifications.invalidCreateParams"),
-        );
+        // ElMessage.error(
+        //   error?.message || t("container.notifications.invalidCreateParams"),
+        // );
         return;
       }
       await confirmContainerCreate(payload);

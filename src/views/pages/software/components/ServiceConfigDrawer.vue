@@ -223,7 +223,7 @@ const buildPreview = async () => {
       ElMessage.info(t('software.config.noChanges', 'Configuration has no changes'))
     }
   } catch (error: any) {
-    handleOperationError(error)
+    // handleOperationError(error)
   } finally {
     previewing.value = false
   }
@@ -242,7 +242,7 @@ const apply = async () => {
     emit('task-created', task)
     visible.value = false
   } catch (error: any) {
-    if (!isOperationCancelled(error)) handleOperationError(error)
+    // if (!isOperationCancelled(error)) handleOperationError(error)
   } finally {
     applying.value = false
   }
@@ -261,7 +261,7 @@ const restoreHistory = async (entry: ConfigurationHistoryEntry) => {
       ElMessage.info(t('software.config.sameAsHistory', 'Current configuration already matches this history version'))
     }
   } catch (error: any) {
-    if (!isOperationCancelled(error)) handleOperationError(error)
+    // if (!isOperationCancelled(error)) handleOperationError(error)
   } finally {
     restoringId.value = ''
   }
