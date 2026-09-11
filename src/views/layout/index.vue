@@ -49,6 +49,8 @@ import softwareStoreIcon from '../../../public/static/menu/software-store.svg?ra
 import softwareStoreActiveIcon from '../../../public/static/menu/software-store-active.svg?raw'
 import systemManagementIcon from '../../../public/static/menu/system-management.svg?raw'
 import systemManagementActiveIcon from '../../../public/static/menu/system-management-active.svg?raw'
+import menuManagementIcon from '../../../public/static/menu/menu-management.svg?raw'
+import menuManagementActiveIcon from '../../../public/static/menu/menu-management-active.svg?raw'
 import systemSettingsIcon from '../../../public/static/menu/system-settings.svg?raw'
 import systemSettingsActiveIcon from '../../../public/static/menu/system-settings-active.svg?raw'
 import terminalIcon from '../../../public/static/menu/terminal.svg?raw'
@@ -182,7 +184,7 @@ const conf = reactive({
       children: [
         { name: 'System management', path: '/system-management', icon: systemManagementIcon, activeIcon: systemManagementActiveIcon, actionKeys: ['system.settings.read'], activeColor: navActiveColor },
         { name: 'User management', path: '/user-management', icon: userManagementIcon, activeIcon: userManagementActiveIcon, matrixKeys: ['userManagement'], activeColor: navActiveColor },
-        { name: 'Menu management', path: '/menu-management', icon: systemManagementIcon, activeIcon: systemManagementActiveIcon, actionKeys: ['userManagement.write', 'menu.write', 'menu.status.write'], activeColor: navActiveColor },
+        { name: 'Menu management', path: '/menu-management', icon: menuManagementIcon, activeIcon: menuManagementActiveIcon, actionKeys: ['userManagement.write', 'menu.write', 'menu.status.write'], activeColor: navActiveColor },
         { name: 'Panel settings', path: '/setting', icon: panelSettingsIcon, activeIcon: panelSettingsActiveIcon, matrixKeys: ['panelSettings'], activeColor: navActiveColor }
       ]
     }
@@ -571,7 +573,7 @@ const BindButton = () => {
               >
                 <template #title>
                   <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
-                  <span class="menu-item-name">{{ getMenuName(item) }}</span>
+                  <span class="menu-item-name" :title="getMenuName(item)">{{ getMenuName(item) }}</span>
                   <span class="menu-expand-arrow" aria-hidden="true"></span>
                 </template>
                 <el-menu-item
@@ -583,7 +585,7 @@ const BindButton = () => {
                   @click="navigateNavItem(child)"
                 >
                   <span class="menu-icon" :aria-label="getMenuName(child)" v-html="getMenuItemIcon(child)"></span>
-                  <span class="menu-item-name">{{ getMenuName(child) }}</span>
+                  <span class="menu-item-name" :title="getMenuName(child)">{{ getMenuName(child) }}</span>
                 </el-menu-item>
               </el-sub-menu>
               <el-menu-item
@@ -594,7 +596,7 @@ const BindButton = () => {
                 @click="navigateNavItem(item)"
               >
                 <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
-                <span class="menu-item-name">{{ getMenuName(item) }}</span>
+                <span class="menu-item-name" :title="getMenuName(item)">{{ getMenuName(item) }}</span>
               </el-menu-item>
             </template>
           </el-menu>
@@ -875,8 +877,8 @@ const BindButton = () => {
     position: relative;
 
     &-left {
-      width: 232px;
-      flex: 0 0 232px;
+      width: 264px;
+      flex: 0 0 264px;
       padding: 18px 12px 14px;
       display: flex;
       flex-direction: column;
@@ -915,6 +917,21 @@ const BindButton = () => {
   .nav-scrollbar {
     min-height: 0;
     flex: 1;
+    min-width: 0;
+    overflow: hidden;
+
+    :deep(.el-scrollbar__wrap) {
+      overflow-x: hidden;
+    }
+
+    :deep(.el-scrollbar__view) {
+      width: 100%;
+      min-width: 0;
+    }
+
+    :deep(.el-scrollbar__bar.is-horizontal) {
+      display: none;
+    }
   }
 
   .el-menu {
@@ -938,6 +955,8 @@ const BindButton = () => {
     }
 
     .menu-item-name {
+      min-width: 0;
+      flex: 1 1 auto;
       margin-left: 12px;
       color: var(--menu-item-name-color);
       font-size: 14px;
@@ -1008,7 +1027,7 @@ const BindButton = () => {
       width: calc(100% - 18px);
       margin: 2px 0 8px 18px;
       padding: 4px 0 3px 10px;
-      border-left: 1px solid var(--border-subtle);
+      // border-left: 1px solid var(--border-subtle);
       background: transparent !important;
     }
 
