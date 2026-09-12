@@ -12,12 +12,27 @@
 - `dist`：构建后的输出目录。
 - `index.html`：项目的入口 HTML 文件。
 ## 项目依赖
-- Node.js：用于运行 Node.js 应用程序。
+- Node.js 22：与 `.node-version`、`.nvmrc` 和 CI 保持一致，请勿使用 Node.js 16 构建。
 - Vite：用于快速开发、构建和预览 Vue.js 应用程序的工具。
 ## 项目介绍
 这是一个基于 Vue.js 和 Vite 的前端项目。
-## 安装命令
-npm install
+## 安装与验证
+
+```sh
+nvm install
+nvm use
+npm ci
+npm test
+npm run typecheck
+npm run build
+```
+
+未使用 nvm 时，请先使用其他版本管理器切换到 Node.js 22。
+
+终端依赖保持同一兼容系列：`xterm@5.3.0`、`xterm-addon-fit@0.8.0`、
+`xterm-addon-canvas@0.5.0`。不要只替换为 `@xterm/addon-canvas`：该包属于
+`@xterm/xterm` 系列，迁移时需要同时检查所有终端组件、插件与样式引用。
+配套关系见 [xterm.js 5.3.0 发布说明](https://github.com/xtermjs/xterm.js/releases/tag/5.3.0)。
 ## 运行命令
 npm run dev
 ## 技术框架

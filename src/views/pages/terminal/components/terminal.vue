@@ -166,7 +166,7 @@ import {
   WarningFilled
 } from '@element-plus/icons-vue'
 import { Terminal } from 'xterm'
-import { CanvasAddon } from '@xterm/addon-canvas'
+import { CanvasAddon } from 'xterm-addon-canvas'
 import { FitAddon } from 'xterm-addon-fit'
 import 'xterm/css/xterm.css'
 import { Api } from '@/api/modules'
@@ -453,9 +453,12 @@ const syncTerminalTitle = (title: string) => {
 const destroyTerminal = () => {
   resizeObserver?.disconnect()
   resizeObserver = undefined
+  // Canvas disposal restores the DOM renderer. Do it while xterm's render
+  // service is still alive; terminal.dispose() destroys that service first.
+  canvasAddon?.dispose()
+  canvasAddon = undefined
   terminal?.dispose()
   terminal = undefined
-  canvasAddon = undefined
   fitAddon = undefined
   if (terminalDiv.value) terminalDiv.value.innerHTML = ''
   resetTerminalState()

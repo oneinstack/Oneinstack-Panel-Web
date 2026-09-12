@@ -3,12 +3,16 @@
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "vite --force --mode dev",
     "ll": "vite --force --mode ll",
     "ac": "vite --force --mode ac",
     "dev:test": "vite --force --mode test",
     "typecheck": "vue-tsc --noEmit",
+    "test": "node --test scripts/*.test.mjs",
     "buildNocnd": "npm run typecheck && vite build --mode pro",
     "build": "npm run typecheck && vite build --mode h5",
     "buildcdn": "npm run typecheck && vite build --mode cdn",
@@ -18,7 +22,6 @@
     "format": "prettier --write . "
   },
   "dependencies": {
-    "@xterm/addon-canvas": "^0.6.0",
     "axios": "^1.13.2",
     "echarts": "5.6.0",
     "element-plus": "2.9.2",
@@ -33,6 +36,7 @@
     "vue-i18n": "10.0.4",
     "vue-router": "4.4.5",
     "xterm": "^5.3.0",
+    "xterm-addon-canvas": "0.5.0",
     "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {

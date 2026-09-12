@@ -156,6 +156,7 @@ const conf = reactive({
       children: [
         { name: 'Monitoring', path: '/monitor', icon: monitoringIcon, activeIcon: monitoringActiveIcon, adminOnly: true, matrixKeys: ['monitoring'], activeColor: navActiveColor },
         { name: 'Bastion', path: '/bastion', icon: bastionIcon, activeIcon: bastionActiveIcon, matrixKeys: ['bastion'], activeColor: navActiveColor },
+        { name: 'Cluster nodes', path: '/cluster', icon: bastionIcon, activeIcon: bastionActiveIcon, adminOnly: true, activeColor: navActiveColor },
         { name: 'Runtime logs', path: '/runtime-log', icon: runtimeLogIcon, activeIcon: runtimeLogActiveIcon, adminOnly: true, matrixKeys: ['runtimeLog'], activeColor: navActiveColor }
       ]
     },
@@ -271,6 +272,7 @@ const menuPathLocaleKey: Record<string, string> = {
   '/database': 'database',
   '/monitor': 'monitoring',
   '/bastion': 'bastion',
+  '/cluster': 'cluster',
   '/container': 'container',
   '/security': 'security',
   '/certificate': 'certificate',
