@@ -26,6 +26,9 @@ const emit = defineEmits<{
   (event: 'remove-mount', index: number): void
 }>()
 
+const removePort = (index: string | number) => emit('remove-port', Number(index))
+const removeMount = (index: string | number) => emit('remove-mount', Number(index))
+
 const formRef = ref<FormInstance>()
 
 watch(
@@ -128,7 +131,7 @@ defineExpose({
                 <el-option label="udp" value="udp" />
                 <el-option label="sctp" value="sctp" />
               </el-select>
-              <el-button link type="primary" @click="emit('remove-port', index)">{{ t('common.delete') }}</el-button>
+              <el-button link type="primary" @click="removePort(index)">{{ t('common.delete') }}</el-button>
             </div>
             <el-button class="port-add-button" @click="emit('add-port')">{{ t('common.add') }}</el-button>
           </div>
@@ -191,7 +194,7 @@ defineExpose({
                 <el-radio value="volume">{{ t('container.create.volumeMount') }}</el-radio>
                 <el-radio value="bind">{{ t('container.create.bindMount') }}</el-radio>
               </el-radio-group>
-              <el-button link type="primary" @click="emit('remove-mount', index)">{{ t('common.delete') }}</el-button>
+              <el-button link type="primary" @click="removeMount(index)">{{ t('common.delete') }}</el-button>
             </div>
             <div class="mount-card__grid">
               <label>

@@ -40,7 +40,9 @@ class RequestHttp {
    * @param config Axios 请求配置及项目扩展选项
    */
   request<T = any>(config: RequestOptions): Promise<T> {
-    return this.service.request<any, T>(config);
+    // Axios 1.20 models response interceptors as `AxiosResponseResult`; our
+    // interceptor intentionally unwraps the business payload before returning.
+    return this.service.request<any, T>(config) as unknown as Promise<T>;
   }
 
   /**
@@ -115,8 +117,8 @@ class RequestHttp {
 
     return {
       blob: response.data,
-      disposition: response.headers["content-disposition"] || "",
-      contentType: response.headers["content-type"] || response.data.type || "",
+      disposition: String(response.headers["content-disposition"] || ""),
+      contentType: String(response.headers["content-type"] || response.data.type || ""),
     };
   }
 

@@ -240,7 +240,7 @@ const loadLog = async () => {
 const addBinding = () => { if (canWrite.value) state.settings.bindings.push({ path: '', directory: '', enabled: true }) }
 const addRedirect = () => { if (canWrite.value) state.settings.redirects.push({ source: '', target: '', status: 301, enabled: true }) }
 const addProxy = () => { if (canWrite.value) state.settings.proxy_rules.push({ path: '', target: '', host: '$host', enabled: true }) }
-const removeAt = (list: any[], index: number) => { if (canWrite.value) list.splice(index, 1) }
+const removeAt = (list: any[], index: string | number) => { if (canWrite.value) list.splice(Number(index), 1) }
 const openRoot = () => {
   const path = String(currentWebsite.value.root_dir || '')
   if (path) System.router.push({ path: '/file', query: { path } })

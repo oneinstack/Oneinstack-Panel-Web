@@ -12,7 +12,7 @@
 - `dist`：构建后的输出目录。
 - `index.html`：项目的入口 HTML 文件。
 ## 项目依赖
-- Node.js 22：与 `.node-version`、`.nvmrc` 和 CI 保持一致，请勿使用 Node.js 16 构建。
+- Node.js 22.12+：与 `.node-version`、`.nvmrc` 和 CI 保持一致，请勿使用 Node.js 16 或早于 22.12 的版本构建。
 - Vite：用于快速开发、构建和预览 Vue.js 应用程序的工具。
 ## 项目介绍
 这是一个基于 Vue.js 和 Vite 的前端项目。

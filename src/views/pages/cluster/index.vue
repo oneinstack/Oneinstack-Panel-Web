@@ -39,7 +39,7 @@ const load = async () => {
   try { const { data } = await Api.listClusterNodes(); nodes.value = data?.items || [] } finally { loading.value = false }
 }
 const openCreate = () => { editingId.value = null; Object.assign(form, { name: '', endpoint: '', group: '', tags: '', enabled: true }); formVisible.value = true }
-const openEdit = (node: Node) => { editingId.value = node.id; Object.assign(form, { name: node.name, endpoint: node.endpoint, group: node.group || '', tags: node.tags || '', enabled: node.enabled }); formVisible.value = true }
+const openEdit = (node: Node | Record<string, any>) => { const item = node as Node; editingId.value = item.id; Object.assign(form, { name: item.name, endpoint: item.endpoint, group: item.group || '', tags: item.tags || '', enabled: item.enabled }); formVisible.value = true }
 const save = async () => {
   if (!(await formRef.value?.validate())) return
   saving.value = true
@@ -49,17 +49,20 @@ const save = async () => {
     ElMessage.success(editingId.value ? '节点已更新' : '节点已创建'); formVisible.value = false; await load()
   } finally { saving.value = false }
 }
-const rotate = async (node: Node) => {
+const rotate = async (node: Node | Record<string, any>) => {
+  node = node as Node
   await ElMessageBox.confirm(`轮换后节点“${node.name}”的旧令牌将立即失效，是否继续？`, '轮换令牌', { type: 'warning' })
   const { data } = await Api.rotateClusterNodeToken(node.id); generatedToken.value = data?.token || ''; tokenVisible.value = true; await load()
 }
-const remove = async (node: Node) => {
+const remove = async (node: Node | Record<string, any>) => {
+  node = node as Node
   await ElMessageBox.confirm(`确定移除节点“${node.name}”？`, '移除节点', { type: 'warning' })
   await Api.deleteClusterNode(node.id); ElMessage.success('节点已移除'); await load()
 }
-const showMetrics = async (node: Node) => {
-  selectedNode.value = node; metricsVisible.value = true; metricsLoading.value = true
-  try { const { data } = await Api.getClusterNodeMetrics(node.id); metrics.value = data?.items || []; const taskResult = await Api.listClusterTasks(node.id); tasks.value = taskResult.data?.items || [] } finally { metricsLoading.value = false }
+const showMetrics = async (node: Node | Record<string, any>) => {
+  const item = node as Node
+  selectedNode.value = item; metricsVisible.value = true; metricsLoading.value = true
+  try { const { data } = await Api.getClusterNodeMetrics(item.id); metrics.value = data?.items || []; const taskResult = await Api.listClusterTasks(item.id); tasks.value = taskResult.data?.items || [] } finally { metricsLoading.value = false }
 }
 const dispatchWebsite = async () => {
   if (!dispatch.websiteId) { ElMessage.warning('请输入网站 ID'); return }

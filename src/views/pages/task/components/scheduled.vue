@@ -10,7 +10,7 @@ import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import { hasTaskButtonAccess } from '../access'
 
-const tableRef = ref<InstanceType<typeof import('element-plus')['ElTable']>>()
+const tableRef = ref<any>()
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key

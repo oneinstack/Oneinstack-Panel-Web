@@ -33,7 +33,7 @@ export const getBuild = (env: globalType) => {
         drop_debugger: true, // 打包时删除 debugger
         pure_funcs: ['console.log']
       },
-      output: {
+      format: {
         comments: false // false-去掉注释内容 true-保留
       }
     },
