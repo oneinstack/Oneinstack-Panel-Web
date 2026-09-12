@@ -1,5 +1,12 @@
 # OneinStack Panel Web
 
+[![Latest Release](https://img.shields.io/github/v/release/oneinstack/Oneinstack-Panel-Web?sort=semver&display_name=tag)](https://github.com/oneinstack/Oneinstack-Panel-Web/releases)
+[![CI](https://github.com/oneinstack/Oneinstack-Panel-Web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/oneinstack/Oneinstack-Panel-Web/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-22.12%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
+[![License](https://img.shields.io/github/license/oneinstack/Oneinstack-Panel)](https://github.com/oneinstack/Oneinstack-Panel/blob/main/LICENSE)
+[![GitHub Stars](https://img.shields.io/github/stars/oneinstack/Oneinstack-Panel-Web?style=flat)](https://github.com/oneinstack/Oneinstack-Panel-Web/stargazers)
+
 OneinStack Panel Web is the Vue 3 + TypeScript frontend for [OneinStack Panel](https://github.com/oneinstack/Oneinstack-Panel). It provides the browser interface for server administration, software, websites, databases, containers, security, monitoring, and multi-node operations.
 
 ## Included pages
@@ -73,4 +80,8 @@ npm run build
 
 ## License
 
-This project is licensed under [Apache License 2.0](LICENSE).
+This project is licensed under [Apache License 2.0](https://github.com/oneinstack/Oneinstack-Panel/blob/main/LICENSE).
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=oneinstack/Oneinstack-Panel-Web&type=Date)](https://star-history.com/#oneinstack/Oneinstack-Panel-Web&Date)
