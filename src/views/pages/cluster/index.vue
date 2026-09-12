@@ -25,6 +25,8 @@ const tasks = ref<any[]>([])
 const selectedNode = ref<Node | null>(null)
 const editingId = ref<number | null>(null)
 const dispatching = ref(false)
+const agentSaving = ref(false)
+const agent = reactive({ role: 'controller', enabled: false, controllerUrl: '', token: '', tokenConfigured: false, intervalSeconds: 30, requestTimeoutSeconds: 10 })
 const dispatch = reactive({ websiteId: 0, strategy: 'least_load', nodeIds: [] as number[], tags: '', includeContent: false })
 const form = reactive({ name: '', endpoint: '', group: '', tags: '', enabled: true })
 let timer: number | undefined
@@ -37,6 +39,22 @@ const rules = computed<FormRules>(() => ({
 const load = async () => {
   loading.value = true
   try { const { data } = await Api.listClusterNodes(); nodes.value = data?.items || [] } finally { loading.value = false }
+}
+const loadAgent = async () => {
+  const { data } = await Api.getClusterAgentSettings()
+  Object.assign(agent, data || {})
+  agent.role = agent.enabled ? 'node' : 'controller'
+  agent.token = ''
+}
+const saveAgent = async () => {
+  agentSaving.value = true
+  try {
+    const result = await Api.updateClusterAgentSettings({ enabled: agent.role === 'node', controllerUrl: agent.controllerUrl, token: agent.token || undefined, intervalSeconds: agent.intervalSeconds, requestTimeoutSeconds: agent.requestTimeoutSeconds })
+    Object.assign(agent, result.data || {})
+    agent.role = agent.enabled ? 'node' : 'controller'
+    agent.token = ''
+    ElMessage.success(agent.enabled ? '节点模式已开启' : '控制端模式已开启')
+  } finally { agentSaving.value = false }
 }
 const openCreate = () => { editingId.value = null; Object.assign(form, { name: '', endpoint: '', group: '', tags: '', enabled: true }); formVisible.value = true }
 const openEdit = (node: Node | Record<string, any>) => { const item = node as Node; editingId.value = item.id; Object.assign(form, { name: item.name, endpoint: item.endpoint, group: item.group || '', tags: item.tags || '', enabled: item.enabled }); formVisible.value = true }
@@ -75,12 +93,13 @@ const dispatchWebsite = async () => {
 const statusType = (status: string) => status === 'online' ? 'success' : status === 'pending' ? 'warning' : 'info'
 const formatTime = (value?: string) => value ? new Date(value).toLocaleString() : '-'
 const copyToken = async () => { await navigator.clipboard?.writeText(generatedToken.value); ElMessage.success('已复制') }
-onMounted(() => { void load(); timer = window.setInterval(load, 30000) })
+onMounted(() => { void load(); void loadAgent(); timer = window.setInterval(load, 30000) })
 onUnmounted(() => { if (timer) window.clearInterval(timer) })
 </script>
 
 <template>
   <div class="cluster-page">
+    <el-card class="agent-card" shadow="never"><template #header><div class="card-title">本机集群角色</div></template><el-form inline label-width="110px"><el-form-item label="运行角色"><el-radio-group v-model="agent.role"><el-radio-button label="controller">控制端</el-radio-button><el-radio-button label="node">节点端</el-radio-button></el-radio-group></el-form-item><el-form-item v-if="agent.role === 'node'" label="节点模式"><el-switch v-model="agent.enabled" active-text="已开启" inactive-text="已关闭" @change="(value) => { if (value) agent.role = 'node'; else agent.role = 'controller' }" /></el-form-item><template v-if="agent.role === 'node'"><el-form-item label="主控地址"><el-input v-model="agent.controllerUrl" placeholder="https://主控Panel地址/v1" style="width:280px" /></el-form-item><el-form-item label="节点令牌"><el-input v-model="agent.token" type="password" show-password :placeholder="agent.tokenConfigured ? '已配置，留空保持不变' : '请输入节点令牌'" style="width:240px" /></el-form-item><el-form-item label="上报间隔"><el-input-number v-model="agent.intervalSeconds" :min="5" :max="3600" /></el-form-item><el-form-item label="请求超时"><el-input-number v-model="agent.requestTimeoutSeconds" :min="1" :max="120" /></el-form-item></template><el-button type="primary" :loading="agentSaving" @click="saveAgent">保存集群配置</el-button></el-form><div class="muted">控制端模式不会启动节点代理；节点端开启后会自动注册到主控 Panel。</div></el-card>
     <div class="page-header"><div><h1>多节点管理</h1><p>管理独立部署的 OneinStack Panel 节点，并查看实时资源状态。</p></div><div class="actions"><el-button :icon="Refresh" :loading="loading" @click="load">刷新</el-button><el-button type="primary" :icon="Plus" @click="openCreate">添加节点</el-button></div></div>
     <el-card shadow="never"><el-table v-loading="loading" :data="nodes" row-key="id" empty-text="暂无管理节点">
       <el-table-column label="节点" min-width="220"><template #default="scope"><div class="node-name">{{ scope.row.name }} <el-tag size="small" :type="statusType(scope.row.status)">{{ scope.row.status }}</el-tag></div><div class="muted">{{ scope.row.endpoint }}</div></template></el-table-column>
@@ -97,5 +116,5 @@ onUnmounted(() => { if (timer) window.clearInterval(timer) })
 </template>
 
 <style scoped lang="less">
-.cluster-page { padding: 24px; min-height: 100%; background: var(--el-bg-color-page); }.page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }h1 { margin:0 0 8px; font-size:24px; }.page-header p { margin:0; color:var(--el-text-color-secondary); }.actions { display:flex; gap:10px; }.node-name { display:flex; align-items:center; gap:8px; font-weight:600; }.muted { margin-top:4px; color:var(--el-text-color-secondary); font-size:12px; }.resource { font-size:12px; margin-bottom:6px; }.token-input { margin-top:18px; }.dispatch-card { margin-top: 16px; }.card-title { font-weight: 600; }.cluster-page h3 { margin:24px 0 12px; font-size:15px; }
+.cluster-page { padding: 24px; min-height: 100%; background: var(--el-bg-color-page); }.page-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:20px; }h1 { margin:0 0 8px; font-size:24px; }.page-header p { margin:0; color:var(--el-text-color-secondary); }.actions { display:flex; gap:10px; }.node-name { display:flex; align-items:center; gap:8px; font-weight:600; }.muted { margin-top:4px; color:var(--el-text-color-secondary); font-size:12px; }.resource { font-size:12px; margin-bottom:6px; }.token-input { margin-top:18px; }.agent-card { margin-bottom: 16px; }.dispatch-card { margin-top: 16px; }.card-title { font-weight: 600; }.cluster-page h3 { margin:24px 0 12px; font-size:15px; }
 </style>

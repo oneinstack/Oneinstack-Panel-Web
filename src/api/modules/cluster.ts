@@ -1,6 +1,8 @@
 import http from '@/api'
 
 export const clusterApi = {
+  getClusterAgentSettings: () => http.get('/cluster/agent/settings'),
+  updateClusterAgentSettings: (data: { enabled: boolean; controllerUrl: string; token?: string; intervalSeconds: number; requestTimeoutSeconds: number }) => http.put('/cluster/agent/settings', data),
   listClusterNodes: () => http.get('/cluster/nodes'),
   getClusterNode: (id: number | string) => http.get(`/cluster/nodes/${id}`),
   getClusterNodeMetrics: (id: number | string, since?: string) => http.get(`/cluster/nodes/${id}/metrics`, since ? { since } : undefined),
