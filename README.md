@@ -1,40 +1,76 @@
-# Oneinstack-Panel-Web
+# OneinStack Panel Web
 
-## 项目目录结构
-- `build`：构建相关的文件或目录。
-- `node_modules`：项目依赖的 Node.js 模块。
-- `src`：源代码目录。
-- `tsconfig.json`：TypeScript 配置文件。
-- `verson`：可能与版本相关的文件或目录。
-- `public`：公共资源目录。
-- `package.json`：项目的依赖和脚本配置。
-- `vite.config.ts`：Vite 配置文件。
-- `dist`：构建后的输出目录。
-- `index.html`：项目的入口 HTML 文件。
-## 项目依赖
-- Node.js 22.12+：与 `.node-version`、`.nvmrc` 和 CI 保持一致，请勿使用 Node.js 16 或早于 22.12 的版本构建。
-- Vite：用于快速开发、构建和预览 Vue.js 应用程序的工具。
-## 项目介绍
-这是一个基于 Vue.js 和 Vite 的前端项目。
-## 安装与验证
+OneinStack Panel Web is the Vue 3 + TypeScript frontend for [OneinStack Panel](https://github.com/oneinstack/Oneinstack-Panel). It provides the browser interface for server administration, software, websites, databases, containers, security, monitoring, and multi-node operations.
 
-```sh
+## Included pages
+
+- Dashboard and resource monitoring
+- Software store, installation tasks, service configuration, and updates
+- Websites, Nginx/reverse proxy, certificates, ACME, backups, and restore
+- Databases, Redis, backups, and remote connections
+- Docker containers, images, Compose, and controlled terminals
+- Files, SSH, firewall, Fail2ban, scheduled tasks, and runtime logs
+- Users, roles, menu visibility, approvals, audit, configuration snapshots, and settings
+- Multi-node management: controller/node role, node-mode switch, node registration, token rotation, metrics, task history, and website dispatch
+
+## Multi-node configuration
+
+Open **Multi-node Management → Local cluster role** to choose:
+
+- **Controller**: manage other Panel nodes and dispatch tasks.
+- **Node**: enable node mode, enter the controller URL and node token, and configure heartbeat/request intervals.
+
+The form calls `GET/PUT /v1/cluster/agent/settings`; values are persisted by the backend. The node agent automatically reloads changes, so manual YAML editing is not required.
+
+The website dispatch form supports fixed-node, tag, and least-load strategies, plus optional website-content synchronization.
+
+## Requirements
+
+- Node.js **22.12 or newer** (the version in `.nvmrc` and CI)
+- npm with the committed `package-lock.json`
+
+Do not build with Node.js 16. Vite 7 and the current lockfile require the Node 22 toolchain.
+
+## Install and run
+
+```bash
 nvm install
 nvm use
 npm ci
-npm test
+npm run dev
+```
+
+Useful commands:
+
+```bash
+npm run typecheck  # Vue/TypeScript validation
+npm test           # Node test suite
+npm run build      # production H5 build and version archive
+```
+
+The development server uses the Vite configuration in `vite.config.ts`. API requests are configured through the project environment files; do not commit credentials or private keys.
+
+## CI and publishing
+
+GitHub Actions runs the secret scan, `npm ci`, type checking, tests, production build, artifact verification, and supply-chain inventory. The publish workflow builds `main` and force-updates the `Publish` branch with the immutable frontend assets.
+
+Before pushing, run:
+
+```bash
+./scripts/secret-scan.sh
 npm run typecheck
+npm test
 npm run build
 ```
 
-未使用 nvm 时，请先使用其他版本管理器切换到 Node.js 22。
+## Project layout
 
-终端依赖保持同一兼容系列：`xterm@5.3.0`、`xterm-addon-fit@0.8.0`、
-`xterm-addon-canvas@0.5.0`。不要只替换为 `@xterm/addon-canvas`：该包属于
-`@xterm/xterm` 系列，迁移时需要同时检查所有终端组件、插件与样式引用。
-配套关系见 [xterm.js 5.3.0 发布说明](https://github.com/xtermjs/xterm.js/releases/tag/5.3.0)。
-## 运行命令
-npm run dev
-## 技术框架
-- 前端使用了 Vite 构建工具。
-- 编程语言主要为 TypeScript。
+- `src/`: Vue pages, components, stores, API modules, and localization
+- `public/`: static public assets
+- `scripts/`: validation, secret scanning, packaging, and supply-chain scripts
+- `version/`: generated release archives
+- `vite.config.ts`: Vite build configuration
+
+## License
+
+This project is licensed under [Apache License 2.0](LICENSE).
