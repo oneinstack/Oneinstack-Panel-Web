@@ -9,5 +9,5 @@ export const clusterApi = {
   rotateClusterNodeToken: (id: number | string) => http.post(`/cluster/nodes/${id}/token/rotate`),
   deleteClusterNode: (id: number | string) => http.delete(`/cluster/nodes/${id}`),
   listClusterTasks: (id: number | string) => http.get(`/cluster/nodes/${id}/tasks`),
-  dispatchWebsiteToCluster: (data: { websiteId: number; strategy: string; nodeIds?: number[]; tags?: string[]; idempotencyKey?: string }) => http.post('/cluster/website/dispatch', data)
+  dispatchWebsiteToCluster: (data: { websiteId: number; strategy: string; nodeIds?: number[]; tags?: string[]; includeContent?: boolean; idempotencyKey?: string }) => http.post('/cluster/website/dispatch', data)
 }
