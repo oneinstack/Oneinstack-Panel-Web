@@ -818,7 +818,7 @@ onUnmounted(stopRealtimeRefresh)
               resize="vertical"
               maxlength="65536"
               show-word-limit
-              :placeholder="editingId ? $t('bastion.privateKeyReplacePlaceholder') : '-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----'"
+              :placeholder="$t('bastion.privateKeyHint')"
             />
             <span class="private-key-field__hint">
               {{ $t('bastion.privateKeyHint') }}

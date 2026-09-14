@@ -1,5 +1,5 @@
 import * as fs from 'fs'
-import archiver from 'archiver'
+import { ZipArchive } from 'archiver'
 import path from 'path'
 
 /**
@@ -10,7 +10,7 @@ import path from 'path'
 export async function tozip(sourceDir: string, outPath: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const output = fs.createWriteStream(outPath)
-    const archive = archiver.create('zip', {
+    const archive = new ZipArchive({
       zlib: { level: 9 } // Set the compression level
     })
 

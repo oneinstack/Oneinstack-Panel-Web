@@ -20,7 +20,7 @@ export interface ColumnItem<T = any> {
   showOverflowTooltip?: boolean
   sortable?: boolean
   sortMethod?: (a: any, b: any) => number
-  formatter?: (row: T, column?: TableColumnCtx<T>, cellValue?: any, index?: number) => any
+  formatter?: (row: T, column?: TableColumnCtx<any>, cellValue?: any, index?: number) => any
   slot?: string
   headerSlot?: string
   isShow?: boolean
