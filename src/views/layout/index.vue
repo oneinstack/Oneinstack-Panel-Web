@@ -344,6 +344,18 @@ const openGlobalTask = (task: SoftwareTask) => {
   globalTaskDrawer.show = true
 }
 
+const retryGlobalSoftwareTask = (taskId: string) => {
+  const task = softwareTaskStore.tasks[taskId]
+  if (!task || !['install', 'upgrade'].includes(task.operation)) return
+
+  taskPopoverVisible.value = false
+  globalTaskDrawer.show = false
+  void router.push({
+    path: '/software',
+    query: { retryTaskId: taskId }
+  }).catch(() => undefined)
+}
+
 watch(
   () => Object.values(softwareTaskStore.tasks).map((task) => `${task.id}:${task.status}`).sort(),
   () => {
@@ -619,6 +631,7 @@ const BindButton = () => {
   <InstallTaskDrawer
     v-model="globalTaskDrawer.show"
     :task-id="globalTaskDrawer.taskId"
+    @retry="retryGlobalSoftwareTask"
   />
 </template>
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, FormInstance } from 'element-plus'
+import { useRoute } from 'vue-router'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
@@ -11,8 +12,10 @@ import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import { hasSoftwareButtonAccess } from '../access'
+import System from '@/utils/System'
 
 const softwareTaskStore = useSoftwareTaskStore()
+const route = useRoute()
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -449,10 +452,6 @@ const installFieldLabelKeys: Record<string, string> = {
   确认删除php组件数据: 'software.installFields.confirmDeleteComponentData',
   adminpassword: 'software.installFields.adminPassword',
   rootpassword: 'software.installFields.adminPassword',
-  mysqlpassword: 'software.installFields.adminPassword',
-  mariadbpassword: 'software.installFields.adminPassword',
-  mysqlrootpassword: 'software.installFields.adminPassword',
-  mariadbrootpassword: 'software.installFields.adminPassword',
   password: 'software.installFields.password',
   installdirectory: 'software.installFields.installDirectory',
   installpath: 'software.installFields.installDirectory',
@@ -490,10 +489,10 @@ const installFieldLabel = (field: any) => {
 const buildInstallFieldRules = (field: any) => {
   const label = installFieldLabel(field)
   const ruleText = String(field?.rule || '').trim()
-  const required =
-    field.required === true ||
-    field.required === 'true' ||
-    isPasswordInstallField(field)
+  const hasRequiredValue = field.required !== undefined && field.required !== null && field.required !== ''
+  const required = hasRequiredValue
+    ? field.required === true || field.required === 'true'
+    : isPasswordInstallField(field)
 
   const rules: any[] = []
   if (required) {
@@ -559,7 +558,11 @@ const installFieldPlaceholder = (field: any) => {
   })
 }
 
-const openInstallForm = (item: any, requestedVersion = '') => {
+const openInstallForm = (
+  item: any,
+  requestedVersion = '',
+  operation: 'install' | 'upgrade' = 'install'
+) => {
   if (!item) return
   installVersions.value = getInstallVersions(item)
   installRecommendedVersion.value = String(recommendedVersion(item) || '').trim()
@@ -594,7 +597,11 @@ const openInstallForm = (item: any, requestedVersion = '') => {
   drawer.size = installForm.items.length <= 2
     ? 'min(620px, 94vw)'
     : 'min(760px, 94vw)'
-  drawer.title = t('software.installTitle', 'Install {name}', { name: item.name })
+  drawer.title = t(
+    operation === 'upgrade' ? 'software.upgradeTitle' : 'software.installTitle',
+    operation === 'upgrade' ? 'Upgrade {name}' : 'Install {name}',
+    { name: item.name }
+  )
   drawer.show = true
 }
 
@@ -654,19 +661,66 @@ const showTask = (taskId: string) => {
   taskDrawer.show = true
 }
 
-const retryTask = (taskId: string) => {
-  if (!canRetrySoftwareTask.value) return
+const findSoftwareItem = async (softwareKey: string) => {
+  const matchesSoftwareKey = (item: any) => String(item?.key || '') === String(softwareKey || '')
+  const currentItem = props.list.find(matchesSoftwareKey)
+  if (currentItem) return currentItem
+
+  const { data: result } = await Api.getSoftList({ page: 1, pageSize: 100 })
+  const items = Array.isArray(result) ? result : result?.data
+  return (Array.isArray(items) ? items : []).find(matchesSoftwareKey)
+}
+
+const retryTask = async (taskId: string): Promise<boolean> => {
+  if (!canRetrySoftwareTask.value) return false
   const task = softwareTaskStore.tasks[taskId]
-  if (!task) return
+  if (!task) return false
   const canRetryOperation = task.operation === 'upgrade'
     ? canUpdateSoftware.value
     : canInstallSoftware.value
-  if (!canRetryOperation) return
-  taskDrawer.show = false
-  const item = props.list.find((candidate: any) => candidate.key === task.softwareKey)
-  if (item) {
-    openInstallForm(item, task.requestedVersion)
+  if (!canRetryOperation) return false
+
+  let item
+  try {
+    item = await findSoftwareItem(task.softwareKey)
+  } catch {
+    ElMessage.warning(t('software.retryUnavailable', 'Unable to restore the installation parameters. Refresh the Software store and try again.'))
+    return false
   }
+
+  if (!item) {
+    ElMessage.warning(t('software.retryUnavailable', 'Unable to restore the installation parameters. Refresh the Software store and try again.'))
+    return false
+  }
+
+  taskDrawer.show = false
+  openInstallForm(item, task.requestedVersion, task.operation === 'upgrade' ? 'upgrade' : 'install')
+  return true
+}
+
+const retryTaskFromRoute = async (taskId: string) => {
+  if (!taskId) return
+
+  if (!softwareTaskStore.tasks[taskId]) {
+    try {
+      await softwareTaskStore.loadAll()
+    } catch {
+      ElMessage.warning(t('software.retryUnavailable', 'Unable to restore the installation parameters. Refresh the Software store and try again.'))
+      return
+    }
+  }
+
+  if (!softwareTaskStore.tasks[taskId]) {
+    ElMessage.warning(t('software.retryUnavailable', 'Unable to restore the installation parameters. Refresh the Software store and try again.'))
+    return
+  }
+
+  const restored = await retryTask(taskId)
+  if (!restored) return
+
+  const query = { ...route.query }
+  delete query.retryTaskId
+  await System.router.replace({ path: route.path, query }).catch(() => undefined)
 }
 
 const handleUninstall = async (item: any) => {
@@ -696,7 +750,7 @@ const handleUpgrade = (item: any) => {
     showTask(task.id)
     return
   }
-  openInstallForm(item, recommendedVersion(item))
+  openInstallForm(item, recommendedVersion(item), 'upgrade')
 }
 
 watch(
@@ -717,6 +771,15 @@ onMounted(() => {
     void loadServiceStatuses().catch(() => undefined)
   }
 })
+
+watch(
+  () => route.query.retryTaskId,
+  (value) => {
+    const taskId = Array.isArray(value) ? value[0] : value
+    if (taskId) void retryTaskFromRoute(String(taskId))
+  },
+  { immediate: true }
+)
 
 watch(
   () => i18n.locale,
