@@ -3,3 +3,4 @@ supply-chain/
 *.timestamp-*.mjs
 .DS_Store
 dist/
+/.idea/
