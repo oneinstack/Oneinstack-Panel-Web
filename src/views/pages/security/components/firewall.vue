@@ -519,6 +519,12 @@ const ruleColumns = computed<ColumnItem<FirewallRule>[]>(() => [
     slot: "strategy",
   },
   {
+    prop: "backend",
+    label: t("security.backend", "后端"),
+    width: 104,
+    slot: "backend",
+  },
+  {
     prop: "state",
     label: t("common.status", "状态"),
     width: 92,
@@ -1722,6 +1728,9 @@ onMounted(() => {
             {{ strategyLabel(row.strategy) }}
           </el-tag>
         </template>
+        <template #backend="{ row }">
+          <el-tag size="small" effect="plain">{{ backendLabel(row.backend) }}</el-tag>
+        </template>
         <template #state="{ row }">
           <el-tooltip :content="actionReason(row, 'state')" :disabled="!actionReason(row, 'state')">
             <span class="disabled-action-wrapper">
@@ -1751,24 +1760,16 @@ onMounted(() => {
         }}</template>
         <template #actionColumn="{ row }">
           <div class="table-row-actions">
-            <el-button
-              v-if="canRuleAction(row, 'update')"
-              link
-              type="primary"
-              :icon="EditPen"
-              :disabled="Boolean(actionReason(row, 'update'))"
-              @click="editRule(row)"
-              >{{ t("common.edit", "编辑") }}</el-button
-            >
-            <el-button
-              v-if="canRuleAction(row, 'delete')"
-              link
-              type="danger"
-              :icon="Delete"
-              :disabled="Boolean(actionReason(row, 'delete'))"
-              @click="deleteRule(row)"
-              >{{ t("common.delete", "删除") }}</el-button
-            >
+            <el-tooltip v-if="canRuleAction(row, 'update')" :content="actionReason(row, 'update')" :disabled="!actionReason(row, 'update')">
+              <span class="disabled-action-wrapper">
+                <el-button link type="primary" :icon="EditPen" :disabled="Boolean(actionReason(row, 'update'))" @click="editRule(row)">{{ t("common.edit", "编辑") }}</el-button>
+              </span>
+            </el-tooltip>
+            <el-tooltip v-if="canRuleAction(row, 'delete')" :content="actionReason(row, 'delete')" :disabled="!actionReason(row, 'delete')">
+              <span class="disabled-action-wrapper">
+                <el-button link type="danger" :icon="Delete" :disabled="Boolean(actionReason(row, 'delete'))" @click="deleteRule(row)">{{ t("common.delete", "删除") }}</el-button>
+              </span>
+            </el-tooltip>
           </div>
         </template>
       </custom-table>
