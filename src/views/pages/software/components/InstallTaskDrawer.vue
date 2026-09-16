@@ -60,6 +60,11 @@ const operationLabel = computed(() => {
   }
   return labels[task.value?.operation || ''] || t('layout.task', 'Task')
 })
+const scriptOutputHint = computed(() => t(
+  'software.task.scriptOutputHint',
+  '{operation} script output keeps appending here to help locate the current step.',
+  { operation: operationLabel.value }
+))
 const logs = computed(() => softwareTaskStore.logs[props.taskId] || t('software.task.waitingScriptOutput', 'Waiting for script output...'))
 const terminal = computed(() => softwareTaskStore.isTerminal(task.value?.status))
 const failed = computed(() => ['failed', 'interrupted'].includes(task.value?.status))
@@ -435,7 +440,7 @@ onBeforeUnmount(() => {
               <span class="log-live-dot"></span>
               <div class="log-toolbar__copy">
                 <strong>{{ $t('software.task.realtimeLogs') }}</strong>
-                <span>{{ $t('software.task.scriptOutputHint') }}</span>
+                <span>{{ scriptOutputHint }}</span>
               </div>
             </div>
             <el-checkbox v-model="autoScroll">{{ $t('software.task.autoScroll') }}</el-checkbox>

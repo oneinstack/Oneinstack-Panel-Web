@@ -149,7 +149,7 @@ export default {
     executionFailed: 'Task execution failed',
     restartVerification: 'Restart verification',
     realtimeLogs: 'Real-time task logs',
-    scriptOutputHint: 'Install script output keeps appending here to help locate the current step.',
+    scriptOutputHint: '{operation} script output keeps appending here to help locate the current step.',
     autoScroll: 'Auto scroll',
     autoScrollEnabled: 'Auto scroll on',
     manualViewing: 'Manual viewing',

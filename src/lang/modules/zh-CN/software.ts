@@ -149,7 +149,7 @@ export default {
     executionFailed: '任务执行失败',
     restartVerification: '重启核验',
     realtimeLogs: '实时任务日志',
-    scriptOutputHint: '安装脚本输出会持续追加到这里，便于定位当前步骤。',
+    scriptOutputHint: '{operation}脚本输出会持续追加到这里，便于定位当前步骤。',
     autoScroll: '自动滚动',
     autoScrollEnabled: '自动滚动开启',
     manualViewing: '手动查看',
