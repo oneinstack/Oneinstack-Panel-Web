@@ -263,7 +263,7 @@ const loadServiceStatuses = async () => {
   }
 }
 
-type WebServerKind = 'nginx' | 'openresty' | 'caddy' | 'unknown'
+type WebServerKind = 'nginx' | 'openresty' | 'tengine' | 'apache' | 'caddy' | 'unknown'
 
 const webServerKind = computed<WebServerKind>(() => {
   const identity = [
@@ -277,6 +277,8 @@ const webServerKind = computed<WebServerKind>(() => {
     .toLowerCase()
 
   if (identity.includes('openresty')) return 'openresty'
+  if (identity.includes('tengine')) return 'tengine'
+  if (identity.includes('apache') || identity.includes('httpd')) return 'apache'
   if (identity.includes('caddy')) return 'caddy'
   if (identity.includes('nginx') || /(^|\s)ng(\s|$)/.test(identity)) return 'nginx'
   return 'unknown'
@@ -291,6 +293,11 @@ const webServerAliases = computed(() => {
     aliases.add(key)
     if (key.includes('nginx')) aliases.add('nginx')
     if (key.includes('openresty')) aliases.add('openresty')
+    if (key.includes('tengine')) aliases.add('tengine')
+    if (key.includes('apache') || key.includes('httpd')) {
+      aliases.add('apache')
+      aliases.add('httpd')
+    }
     if (key.includes('caddy')) aliases.add('caddy')
   }
   if (webServerKind.value !== 'unknown') aliases.add(webServerKind.value)
@@ -325,7 +332,7 @@ const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action
 const webServerDisplayName = computed(() =>
   webServer.data.available
     ? webServer.data.name || webServerServiceStatus.value?.displayName || webServer.data.component || 'Web Server'
-    : t('website.webServerNotDetected', '未检测到 Nginx、OpenResty 或 Caddy')
+    : t('website.webServerNotDetected', '未检测到受支持的 Web 服务')
 )
 
 const webServerVersionText = computed(() =>
@@ -337,6 +344,8 @@ const webServerVersionText = computed(() =>
 
 const webServerLogoText = computed(() => {
   if (webServerKind.value === 'openresty') return 'O'
+  if (webServerKind.value === 'tengine') return 'T'
+  if (webServerKind.value === 'apache') return 'A'
   if (webServerKind.value === 'caddy') return 'C'
   if (webServerKind.value === 'nginx') return 'N'
   return webServer.data.available ? 'W' : '?'
@@ -408,6 +417,31 @@ const websiteMetrics = computed(() => {
     expiringCount
   }
 })
+
+const normalizeWebsiteEngine = (value: unknown) => {
+  const engine = String(value || '').trim().toLowerCase()
+  return engine === 'httpd' || engine.includes('apache') ? 'apache' : engine
+}
+
+const mismatchedWebsiteEngines = computed(() => {
+  if (webServerKind.value === 'unknown') return []
+  const engines = new Set<string>()
+  const list = (Array.isArray(conf.website.data) ? conf.website.data : []) as Array<Record<string, any>>
+  list.forEach((item) => {
+    const engine = normalizeWebsiteEngine(item?.engine)
+    if (engine && engine !== webServerKind.value) engines.add(engine)
+  })
+  return Array.from(engines)
+})
+
+const websiteEngineMismatchDescription = computed(() => t(
+  'website.engineMismatchDescription',
+  '当前运行环境为 {runtime}，但列表中仍有归属于 {engines} 的网站；请核对迁移或同步结果。',
+  {
+    runtime: getWebsiteEngineLabel(webServerKind.value),
+    engines: mismatchedWebsiteEngines.value.map(getWebsiteEngineLabel).join('、')
+  }
+))
 
 const waitForServiceTask = async (taskId: string, timeoutMs = 5 * 60 * 1000) => {
   const deadline = Date.now() + timeoutMs
@@ -1057,6 +1091,15 @@ loadServiceStatuses()
       </div>
     </section>
     <div class="website-table-panel">
+      <el-alert
+        v-if="mismatchedWebsiteEngines.length"
+        class="website-engine-mismatch"
+        type="warning"
+        show-icon
+        :closable="false"
+        :title="$t('website.engineMismatchTitle')"
+        :description="websiteEngineMismatchDescription"
+      />
       <custom-table v-model:page="conf.website.params.page" v-model:page-size="conf.website.params.pageSize" :loading="conf.website.loading" :empty-text="$t('common.noData')" :data="conf.website.data"
         :columns="conf.website.columns" :auto-pagination="false" :total="conf.website.total"
         @update:page="conf.website.getData" @update:page-size="() => { conf.website.params.page = 1; conf.website.getData() }">
@@ -1457,6 +1500,10 @@ loadServiceStatuses()
   box-shadow:
     inset 0 0 0 1px rgba(148, 163, 184, 0.06),
     0 14px 30px rgba(15, 23, 42, 0.05);
+}
+
+.website-engine-mismatch {
+  margin-bottom: 14px;
 }
 
 .website-table-summary {
