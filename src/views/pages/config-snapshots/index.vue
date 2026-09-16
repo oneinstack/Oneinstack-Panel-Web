@@ -103,6 +103,8 @@ const canPreviewRestore = computed(() => capabilities.value.canPreviewRestore)
 const canRestoreSnapshot = computed(() => capabilities.value.canRestoreSnapshot)
 const canForceRestore = computed(() => capabilities.value.canForceRestore)
 const canDeleteSnapshot = computed(() => capabilities.value.canDeleteSnapshot)
+const detailSnapshot = computed(() => detail.value?.snapshot || selectedSnapshot.value)
+const hasDetailContent = computed(() => detail.value?.before !== undefined || detail.value?.after !== undefined)
 
 const succeededCount = computed(() => snapshots.value.filter((item) => item.status === 'succeeded').length)
 const failedCount = computed(() =>
@@ -781,6 +783,16 @@ onMounted(() => {
       :on-close="() => { detailVisible = false }"
     >
       <div v-loading="detailLoading" class="snapshot-detail">
+        <el-descriptions v-if="detailSnapshot" class="snapshot-detail-overview" :column="2" border>
+          <el-descriptions-item :label="$t('configSnapshots.snapshotName')">{{ localizedSnapshotText(detailSnapshot.name) }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('configSnapshots.resourceType')">{{ resourceLabel(detailSnapshot.resourceType) }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('configSnapshots.resourceIdentifier')">{{ detailSnapshot.resourceId || '—' }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('configSnapshots.action')">{{ operationLabel(detailSnapshot.operation, detailSnapshot.operationLabel) }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('common.status')"><el-tag :type="statusType(detailSnapshot.status)" effect="light">{{ statusLabel(detailSnapshot.status, detailSnapshot.statusLabel) }}</el-tag></el-descriptions-item>
+          <el-descriptions-item :label="$t('common.size')">{{ formatBytes(detailSnapshot.sizeBytes) }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('configSnapshots.createdAt')">{{ formatTime(detailSnapshot.createdAt) }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('configSnapshots.configPath')">{{ detailSnapshot.configPath || '—' }}</el-descriptions-item>
+        </el-descriptions>
         <template v-if="canReadSnapshotDiff">
           <div class="diff-summary">
             <el-tag type="primary" effect="light">{{ detail?.diff?.summary || $t('configSnapshots.noDiffSummary') }}</el-tag>
@@ -791,17 +803,18 @@ onMounted(() => {
             <div><strong>{{ $t('configSnapshots.diffChanged') }}</strong><span>{{ detail?.diff?.changed?.join('，') || $t('configSnapshots.none') }}</span></div>
             <div><strong>{{ $t('configSnapshots.diffRemoved') }}</strong><span>{{ detail?.diff?.removed?.join('，') || $t('configSnapshots.none') }}</span></div>
           </div>
-          <div class="json-grid">
-            <section>
-              <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
-              <pre>{{ formatJson(detail?.before) }}</pre>
-            </section>
-            <section>
-              <h4>{{ $t('configSnapshots.afterChange') }}</h4>
-              <pre>{{ formatJson(detail?.after) }}</pre>
-            </section>
-          </div>
         </template>
+        <div v-if="hasDetailContent" class="json-grid">
+          <section>
+            <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
+            <pre>{{ formatJson(detail?.before) }}</pre>
+          </section>
+          <section>
+            <h4>{{ $t('configSnapshots.afterChange') }}</h4>
+            <pre>{{ formatJson(detail?.after) }}</pre>
+          </section>
+        </div>
+        <el-empty v-else :description="$t('configSnapshots.noSnapshotContent')" :image-size="72" />
       </div>
     </custom-drawer>
 
