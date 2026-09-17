@@ -8,6 +8,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { useConfigStore } from '@/stores/modules/config';
 import { Api } from '@/api/modules'
+import type { PanelRuntimeWarning } from '@/api/modules/system'
 import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
@@ -66,6 +67,8 @@ import { scheduleInteractionRecovery } from '@/utils/theme'
 const sapp = useAppStore()
 const sconfig = useConfigStore()
 const softwareTaskStore = useSoftwareTaskStore()
+const runtimeWarning = ref<PanelRuntimeWarning | null>(null)
+const runtimeWarningVisible = ref(false)
 
 
 interface ItemColor {
@@ -295,6 +298,41 @@ const translateWithFallback = (key: string, fallback: string, params?: Record<st
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback
 }
+
+const runtimeWarningTitle = computed(() =>
+  runtimeWarning.value?.title?.trim()
+  || translateWithFallback('layout.runtimePrivilegeWarningTitle', 'Panel is not running as root')
+)
+const runtimeWarningDescription = computed(() => {
+  const message = runtimeWarning.value?.message?.trim()
+    || translateWithFallback(
+      'layout.runtimePrivilegeWarningMessage',
+      'The Panel can continue running, but some system-level features may be unavailable.'
+    )
+  const detail = runtimeWarning.value?.detail?.trim()
+    || translateWithFallback(
+      'layout.runtimePrivilegeWarningDetail',
+      'Component lifecycle operations, service control, Panel updates, backup restore, and network configuration normally require Linux root privileges.'
+    )
+  return `${message} ${detail}`
+})
+
+const loadRuntimeStatus = async () => {
+  try {
+    const response = await Api.getRuntimeStatus({ silentError: true })
+    const status = response?.data
+    if (status?.mode === 'non-root' && status.warning?.code === 'PANEL_NOT_RUNNING_AS_ROOT') {
+      runtimeWarning.value = status.warning
+      runtimeWarningVisible.value = true
+      return
+    }
+    runtimeWarning.value = null
+    runtimeWarningVisible.value = false
+  } catch {
+    runtimeWarning.value = null
+    runtimeWarningVisible.value = false
+  }
+}
 const getMenuLocaleKey = (item?: NavItem) => {
   if (!item) return ''
   if (item.localeKey) return item.localeKey
@@ -399,6 +437,7 @@ onMounted(() => {
   document.addEventListener('visibilitychange', handleVisibilityRecovery)
   window.addEventListener('focus', recoverInteractionState)
   window.addEventListener('pageshow', recoverInteractionState)
+  void loadRuntimeStatus()
   void softwareTaskStore.loadActive().catch(() => undefined)
   void Api.getAccessMatrix()
     .then((response) => {
@@ -626,6 +665,16 @@ const BindButton = () => {
         @click="mobileNavigationOpen = false"
       />
       <el-main class="layout-container__body-main">
+        <el-alert
+          v-if="runtimeWarningVisible && runtimeWarning"
+          class="runtime-privilege-warning"
+          type="warning"
+          show-icon
+          closable
+          :title="runtimeWarningTitle"
+          :description="runtimeWarningDescription"
+          @close="runtimeWarningVisible = false"
+        />
         <div class="route-stage">
           <router-view />
         </div>
@@ -916,6 +965,9 @@ const BindButton = () => {
       min-width: 0;
       height: 100%;
       padding: 22px 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
       overflow: hidden;
       background:
         radial-gradient(circle at 100% 0, rgba(var(--primary-color), 0.045), transparent 26rem),
@@ -1084,10 +1136,15 @@ const BindButton = () => {
 
   .route-stage {
     width: 100%;
-    height: 100%;
+    min-height: 0;
+    flex: 1;
     scrollbar-gutter: stable;
     overflow-x: hidden;
     overflow-y: auto;
+  }
+
+  .runtime-privilege-warning {
+    flex: 0 0 auto;
   }
 
   .mobile-navigation-backdrop {

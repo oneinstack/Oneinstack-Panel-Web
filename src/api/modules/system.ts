@@ -5,10 +5,41 @@ type SilentRequestOptions = Pick<
   "silentError" | "ignoreUnauthorizedLogout"
 >;
 
+export interface PanelRuntimeWarning {
+  code: "PANEL_NOT_RUNNING_AS_ROOT";
+  level: "warning";
+  title: string;
+  message: string;
+  detail: string;
+  affectedScopes: string[];
+}
+
+export interface PanelRuntimeStatus {
+  platform: string;
+  mode: "root" | "non-root" | "unknown";
+  runningAsRoot: boolean | null;
+  warning: PanelRuntimeWarning | null;
+}
+
+interface PanelRuntimeStatusResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: PanelRuntimeStatus;
+}
+
 export const systemApi = {
   /** 获取系统信息/面板设置 */
   getSystemInfo: () => {
     return http.get("/sys/systeminfo");
+  },
+  /** 获取 Panel 进程的系统权限运行状态 */
+  getRuntimeStatus: (options: SilentRequestOptions = {}) => {
+    return http.get<PanelRuntimeStatusResponse>(
+      "/sys/runtime-status",
+      undefined,
+      options,
+    );
   },
   /** 获取当前面板构建版本 */
   getPanelVersion: (options: SilentRequestOptions = {}) => {
