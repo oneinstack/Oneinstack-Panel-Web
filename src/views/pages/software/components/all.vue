@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue'
-import { ElMessage, FormInstance } from 'element-plus'
+import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { useRoute } from 'vue-router'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
@@ -723,12 +723,40 @@ const retryTaskFromRoute = async (taskId: string) => {
   await System.router.replace({ path: route.path, query }).catch(() => undefined)
 }
 
+const selectUninstallDataPolicy = async (): Promise<'preserve' | 'delete' | ''> => {
+  try {
+    await ElMessageBox.confirm(
+      t('software.uninstallDataPolicyMessage', 'Preserved data can be restored later. Deleted data cannot be recovered. Choose how to uninstall this component.'),
+      t('software.uninstallDataPolicyTitle', 'Choose uninstall data policy'),
+      {
+        type: 'warning',
+        distinguishCancelAndClose: true,
+        closeOnClickModal: false,
+        confirmButtonClass: 'el-button--danger',
+        confirmButtonText: t('software.deleteDataAndUninstall', 'Delete data and uninstall'),
+        cancelButtonText: t('software.preserveDataAndUninstall', 'Preserve data and uninstall')
+      }
+    )
+    return 'delete'
+  } catch (action) {
+    return action === 'cancel' ? 'preserve' : ''
+  }
+}
+
 const handleUninstall = async (item: any) => {
   if (submitting.value || !canReadSoftware.value || !canUninstallSoftware.value) return
   const version = item.install_version || item.versions?.[0] || ''
+  const dataPolicy = await selectUninstallDataPolicy()
+  if (!dataPolicy) return
   submitting.value = true
   try {
-    const request = { name: item.key, key: item.key, version }
+    const request = {
+      name: item.key,
+      key: item.key,
+      version,
+      dataPolicy,
+      confirmDataDeletion: dataPolicy === 'delete'
+    }
     const { data: result } = await submitOperation('software.uninstall', request)
     softwareTaskStore.acceptCreated(result, request)
     if (canReadSoftwareTask.value) {

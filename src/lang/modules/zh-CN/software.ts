@@ -99,6 +99,10 @@ export default {
     mysql: 'MySQL 数据库，默认端口 3306，root 密码由 Panel 随机生成',
     docker: '容器运行环境与 Docker 服务管理'
   },
+  uninstallDataPolicyTitle: '选择卸载数据策略',
+  uninstallDataPolicyMessage: '保留数据可用于后续受控恢复；删除数据后无法恢复。请选择本次卸载方式。',
+  preserveDataAndUninstall: '保留数据并卸载',
+  deleteDataAndUninstall: '删除数据并卸载',
   uninstallTaskCreated: '卸载任务已创建，可在后台继续运行',
   serviceActionTimeout: '等待服务操作完成超时，请在右上角任务中心查看结果',
   serviceActionTaskCreated: '{action}任务已创建，可在后台继续运行',
