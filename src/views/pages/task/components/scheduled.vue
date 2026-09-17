@@ -413,7 +413,7 @@ const columns = computed<ColumnItem[]>(() => [
   { prop: 'taskType', label: t('task.type', 'Type'), minWidth: 150, slot: 'taskType' },
   { prop: 'schedule', label: t('task.schedule', 'Schedule'), minWidth: 220, slot: 'schedule' },
   { prop: 'last_run_at', label: t('task.lastRunAt', 'Last run time'), minWidth: 190, slot: 'lastRunAt' },
-  { prop: 'actionColumn', label: t('task.action', 'Action'), width: 480, fixed: 'right', slot: 'actionColumn', className: 'task-actions-column table-action-column' }
+  { prop: 'actionColumn', label: t('task.action', 'Action'), width: 380, fixed: 'right', slot: 'actionColumn', className: 'task-actions-column table-action-column' }
 ])
 
 // 全选过滤函数，控制全选逻辑
@@ -758,6 +758,9 @@ watch(hasRunningExecutions, (running) => {
 .row-actions {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+  min-width: 0;
   gap: 4px 10px;
   flex-wrap: wrap;
 }
