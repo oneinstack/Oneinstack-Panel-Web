@@ -430,7 +430,7 @@ const isPasswordInstallField = (field: any) => {
     .filter(Boolean)
 
   return candidates.some((value) =>
-    ['pwd', 'password', 'secret', 'admin'].some((keyword) =>
+    ['pwd', 'password', 'secret', 'token'].some((keyword) =>
       value.includes(keyword)
     )
   )
