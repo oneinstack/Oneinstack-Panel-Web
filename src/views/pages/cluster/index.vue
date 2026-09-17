@@ -4,7 +4,7 @@ import type { EChartsOption } from 'echarts'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, type FormInstance, type FormRules } from 'element-plus'
 import {
-  Connection, CopyDocument, DataAnalysis, Delete, EditPen, Grid, Key,
+  ArrowRight, Connection, CopyDocument, DataAnalysis, Delete, EditPen, Grid, Key,
   List, MoreFilled, Plus, Refresh, Search, SwitchButton
 } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
@@ -97,6 +97,18 @@ interface TaskSummary {
   createdAt: string
   updatedAt?: string
   websiteId?: number
+  websiteName?: string
+  websiteDomain?: string
+  websiteType?: string
+}
+
+interface WebsiteSummary {
+  id: number
+  name: string
+  domain: string
+  type: string
+  enabled: boolean
+  disabled_reason?: string
 }
 
 interface TaskEvent {
@@ -161,8 +173,19 @@ const dispatching = ref(false)
 const dispatchHistoryLoading = ref(false)
 const dispatchHistoryError = ref(false)
 const dispatchTasks = ref<TaskSummary[]>([])
-const lastDispatch = ref<{ websiteId: number; taskIds: number[] } | null>(null)
-const dispatch = reactive({ websiteId: 1, strategy: 'least_load', nodeIds: [] as number[], tags: '', includeContent: false })
+const dispatchPage = ref(1)
+const dispatchPageSize = ref(10)
+const lastDispatch = ref<{ websiteId: number; websiteName?: string; taskIds: number[] } | null>(null)
+const dispatch = reactive({ websiteId: null as number | null, strategy: 'least_load', nodeIds: [] as number[], tags: '', includeContent: false })
+const selectedWebsite = ref<WebsiteSummary | null>(null)
+const websitePickerVisible = ref(false)
+const websitePickerLoading = ref(false)
+const websitePickerError = ref(false)
+const websitePickerItems = ref<WebsiteSummary[]>([])
+const websitePickerTotal = ref(0)
+const websitePickerPage = ref(1)
+const websitePickerPageSize = ref(10)
+const websitePickerFilters = reactive({ name: '', domain: '' })
 const agentSaving = ref(false)
 const agentForm = reactive({ controllerUrl: '', token: '', intervalSeconds: 30, requestTimeoutSeconds: 10 })
 const agentFormSnapshot = reactive({ controllerUrl: '', intervalSeconds: 30, requestTimeoutSeconds: 10 })
@@ -176,9 +199,27 @@ let taskDetailPollTimer: number | undefined
 const canAction = (action: string) => configStore.isAdministrator() || configStore.hasActionAccess(action)
 const asNode = (row: unknown) => row as ClusterNode
 const asTask = (row: unknown) => row as TaskSummary
+const asWebsite = (row: unknown) => row as WebsiteSummary
 const canResetRole = computed(() => canAction('cluster.role.reset'))
 const canSelectRole = computed(() => canAction('cluster.role.select'))
 const hasActiveFilters = computed(() => Boolean(keyword.value || roleFilter.value || statusFilter.value))
+
+const websiteTypeLabel = (type?: string) => {
+  const normalized = String(type || '').trim().toLowerCase()
+  if (!['php', 'proxy', 'static'].includes(normalized)) return normalized || t('unknown')
+  const value = i18n.t(`website.tabs.${normalized}`)
+  return value === `website.tabs.${normalized}` ? normalized : value
+}
+
+const websiteTypeTag = (type?: string) => {
+  if (type === 'php') return 'success'
+  if (type === 'proxy') return 'warning'
+  return 'info'
+}
+
+const taskWebsiteName = (task: TaskSummary) => task.websiteName || (task.websiteId ? t('websiteFallback', { id: task.websiteId }) : '-')
+const taskWebsiteDomain = (task: TaskSummary) => task.websiteDomain || '-'
+const hasWebsiteMetadata = (task?: TaskSummary | null) => Boolean(task && isWebsiteDispatchTask(task))
 
 const validateHttpUrl = (value: string) => {
   try {
@@ -235,6 +276,11 @@ const paginatedNodes = computed(() => {
 
 const onlineWorkers = computed(() => nodes.value.filter((node) => !node.local && node.enabled && node.status === 'online'))
 const activeDispatchTasks = computed(() => dispatchTasks.value.filter((task) => task.status === 'queued' || task.status === 'running'))
+const dispatchTotal = computed(() => dispatchTasks.value.length)
+const paginatedDispatchTasks = computed(() => {
+  const start = (dispatchPage.value - 1) * dispatchPageSize.value
+  return dispatchTasks.value.slice(start, start + dispatchPageSize.value)
+})
 const lastDispatchTasks = computed(() => {
   const taskIds = new Set(lastDispatch.value?.taskIds || [])
   return dispatchTasks.value.filter((task) => taskIds.has(Number(task.id)))
@@ -339,6 +385,11 @@ const metricChartOption = computed<EChartsOption>(() => ({
 }))
 
 watch([keyword, roleFilter, statusFilter, pageSize], () => { currentPage.value = 1 })
+watch(dispatchPageSize, () => { dispatchPage.value = 1 })
+watch(dispatchTotal, () => {
+  const lastPage = Math.max(1, Math.ceil(dispatchTotal.value / dispatchPageSize.value))
+  if (dispatchPage.value > lastPage) dispatchPage.value = lastPage
+})
 
 const resetFilters = () => {
   keyword.value = ''
@@ -466,11 +517,65 @@ const startDetailPolling = () => {
 
 const isWebsiteDispatchTask = (task: TaskSummary) => task.type === 'website.sync' || task.type === 'website.content_sync'
 
+const loadWebsitePicker = async () => {
+  websitePickerLoading.value = true
+  try {
+    const { data } = await Api.getWebsiteList({
+      name: websitePickerFilters.name.trim(),
+      domain: websitePickerFilters.domain.trim(),
+      type: '',
+      page: websitePickerPage.value,
+      pageSize: websitePickerPageSize.value
+    })
+    websitePickerItems.value = Array.isArray(data?.data) ? data.data : []
+    websitePickerTotal.value = Number(data?.total || 0)
+    websitePickerError.value = false
+  } catch {
+    websitePickerItems.value = []
+    websitePickerTotal.value = 0
+    websitePickerError.value = true
+  } finally {
+    websitePickerLoading.value = false
+  }
+}
+
+const openWebsitePicker = () => {
+  websitePickerVisible.value = true
+  websitePickerPage.value = 1
+  void loadWebsitePicker()
+}
+
+const searchWebsites = () => {
+  websitePickerPage.value = 1
+  void loadWebsitePicker()
+}
+
+const resetWebsiteSearch = () => {
+  websitePickerFilters.name = ''
+  websitePickerFilters.domain = ''
+  searchWebsites()
+}
+
+const chooseWebsite = (website: WebsiteSummary) => {
+  selectedWebsite.value = website
+  dispatch.websiteId = Number(website.id)
+  websitePickerVisible.value = false
+}
+
 const mergeDispatchTasks = (freshTasks: TaskSummary[], replace = false) => {
   const existingByID = new Map(dispatchTasks.value.map((task) => [Number(task.id), task]))
   const candidates = freshTasks
     .filter(isWebsiteDispatchTask)
-    .map((task) => ({ ...task, websiteId: task.websiteId || existingByID.get(Number(task.id))?.websiteId }))
+    .map((task) => {
+      const existing = existingByID.get(Number(task.id))
+      return {
+        ...task,
+        websiteId: task.websiteId || existing?.websiteId,
+        websiteName: task.websiteName || existing?.websiteName,
+        websiteDomain: task.websiteDomain || existing?.websiteDomain,
+        websiteType: task.websiteType || existing?.websiteType
+      }
+    })
   const combined = replace ? candidates : [...candidates, ...dispatchTasks.value]
   const unique = new Map<number, TaskSummary>()
   combined.forEach((task) => {
@@ -479,7 +584,6 @@ const mergeDispatchTasks = (freshTasks: TaskSummary[], replace = false) => {
   })
   dispatchTasks.value = [...unique.values()]
     .sort((left, right) => new Date(right.updatedAt || right.createdAt).getTime() - new Date(left.updatedAt || left.createdAt).getTime())
-    .slice(0, 30)
 }
 
 const loadDispatchHistory = async () => {
@@ -488,12 +592,13 @@ const loadDispatchHistory = async () => {
     .map((node) => Number(node.id))
   if (!workerIDs.length) {
     dispatchTasks.value = []
+    dispatchPage.value = 1
     dispatchHistoryError.value = false
     return
   }
   dispatchHistoryLoading.value = true
   try {
-    const results = await Promise.allSettled(workerIDs.map((nodeID) => Api.listClusterTasks(nodeID)))
+    const results = await Promise.allSettled(workerIDs.map((nodeID) => Api.listClusterTasks(nodeID, { page: 1, pageSize: 100 })))
     const successfulNodeIDs = new Set<number>()
     const freshTasks: TaskSummary[] = []
     results.forEach((result, index) => {
@@ -513,7 +618,7 @@ const loadDispatchHistory = async () => {
 const refreshActiveDispatchTasks = async () => {
   const nodeIDs = [...new Set(activeDispatchTasks.value.map((task) => Number(task.nodeId)).filter(Boolean))]
   if (!nodeIDs.length) return
-  const results = await Promise.allSettled(nodeIDs.map((nodeID) => Api.listClusterTasks(nodeID)))
+  const results = await Promise.allSettled(nodeIDs.map((nodeID) => Api.listClusterTasks(nodeID, { page: 1, pageSize: 100 })))
   const freshByID = new Map<number, TaskSummary>()
   results.forEach((result) => {
     if (result.status !== 'fulfilled') return
@@ -523,7 +628,13 @@ const refreshActiveDispatchTasks = async () => {
   if (!freshByID.size) return
   dispatchTasks.value = dispatchTasks.value.map((task) => {
     const fresh = freshByID.get(Number(task.id))
-    return fresh ? { ...fresh, websiteId: task.websiteId } : task
+    return fresh ? {
+      ...fresh,
+      websiteId: fresh.websiteId || task.websiteId,
+      websiteName: fresh.websiteName || task.websiteName,
+      websiteDomain: fresh.websiteDomain || task.websiteDomain,
+      websiteType: fresh.websiteType || task.websiteType
+    } : task
   })
 }
 
@@ -720,7 +831,7 @@ const dispatchWebsite = async () => {
   }
   dispatching.value = true
   try {
-    const websiteId = dispatch.websiteId
+    const websiteId = Number(dispatch.websiteId)
     const { data } = await Api.dispatchWebsiteToCluster({
       websiteId,
       strategy: dispatch.strategy,
@@ -732,7 +843,8 @@ const dispatchWebsite = async () => {
     const createdTasks = (Array.isArray(data?.tasks) ? data.tasks : [])
       .map((task: TaskSummary) => ({ ...task, websiteId }))
     mergeDispatchTasks(createdTasks)
-    lastDispatch.value = { websiteId, taskIds: createdTasks.map((task: TaskSummary) => Number(task.id)) }
+    dispatchPage.value = 1
+    lastDispatch.value = { websiteId, websiteName: selectedWebsite.value?.name, taskIds: createdTasks.map((task: TaskSummary) => Number(task.id)) }
     ElMessage.success(t('dispatchCreated', { count: createdTasks.length }))
     startDispatchPolling()
   } finally {
@@ -954,7 +1066,7 @@ onUnmounted(() => {
           <el-table-column :label="t('memory')" min-width="145"><template #default="scope"><div class="usage-cell"><span>{{ formatPercent(scope.row.memoryPercent) }}</span><el-progress :percentage="Math.round(scope.row.memoryPercent || 0)" :show-text="false" :stroke-width="5" /></div></template></el-table-column>
           <el-table-column :label="t('lastReport')" min-width="170"><template #default="scope">{{ formatTime(scope.row.lastSeenAt) }}</template></el-table-column>
           <el-table-column :label="t('operations')" min-width="270" fixed="right">
-            <template #default="scope">
+            <template #default="scope"><div class="node-table-actions">
               <el-button link type="primary" @click="openDetail(asNode(scope.row))">{{ t('detail') }}</el-button>
               <template v-if="!scope.row.local">
                 <el-button v-if="canAction('cluster.node.update')" link @click="openEdit(asNode(scope.row))">{{ t('edit') }}</el-button>
@@ -964,7 +1076,7 @@ onUnmounted(() => {
                   <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.node.update')" command="toggle">{{ scope.row.enabled ? t('disable') : t('enable') }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.delete')" command="delete" :icon="Delete" divided class="danger-item">{{ t('delete') }}</el-dropdown-item></el-dropdown-menu></template>
                 </el-dropdown>
               </template>
-            </template>
+            </div></template>
           </el-table-column>
         </el-table>
 
@@ -974,7 +1086,17 @@ onUnmounted(() => {
             <div class="node-card-ip">{{ node.ipAddress || '-' }} · {{ statusLabel(node.status) }}</div>
             <div class="card-resource"><span>CPU {{ formatPercent(node.cpuPercent) }}</span><el-progress :percentage="Math.round(node.cpuPercent || 0)" :show-text="false" :stroke-width="6" color="#ff7a1a" /></div>
             <div class="card-resource"><span>{{ t('memory') }} {{ formatPercent(node.memoryPercent) }}</span><el-progress :percentage="Math.round(node.memoryPercent || 0)" :show-text="false" :stroke-width="6" /></div>
-            <footer><el-button link type="primary" @click="openDetail(node)">{{ t('detail') }}</el-button><el-button v-if="!node.local && canAction('cluster.node.update')" link @click="openEdit(node)">{{ t('edit') }}</el-button><el-button v-if="!node.local && canAction('cluster.node.restart')" link :disabled="node.status !== 'online'" @click="restartNode(node)">{{ t('restart') }}</el-button></footer>
+            <footer>
+              <el-button link type="primary" @click="openDetail(node)">{{ t('detail') }}</el-button>
+              <template v-if="!node.local">
+                <el-button v-if="canAction('cluster.node.update')" link @click="openEdit(node)">{{ t('edit') }}</el-button>
+                <el-button v-if="canAction('cluster.node.restart')" link :disabled="node.status !== 'online' || !node.enabled" :loading="Boolean(restartTracking[String(node.id)])" @click="restartNode(node)">{{ t('restart') }}</el-button>
+                <el-dropdown v-if="canAction('cluster.node.update') || canAction('cluster.node.token.rotate') || canAction('cluster.node.delete')" trigger="click" @command="(command: string) => handleMore(command, node)">
+                  <el-button link>{{ t('more') }}<el-icon><MoreFilled /></el-icon></el-button>
+                  <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.node.update')" command="toggle">{{ node.enabled ? t('disable') : t('enable') }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.delete')" command="delete" :icon="Delete" divided class="danger-item">{{ t('delete') }}</el-dropdown-item></el-dropdown-menu></template>
+                </el-dropdown>
+              </template>
+            </footer>
           </article>
           <el-empty v-if="!paginatedNodes.length" :description="t('empty')" />
         </div>
@@ -983,21 +1105,34 @@ onUnmounted(() => {
       </section>
 
       <section v-if="canAction('cluster.website.dispatch')" class="panel-card dispatch-panel">
-        <div class="section-header"><div><h2>{{ t('websiteDispatch') }}</h2><p>{{ t('dispatchDescription') }}</p></div><el-button text :icon="Refresh" :loading="dispatchHistoryLoading" @click="loadDispatchHistory">{{ t('refreshDispatchHistory') }}</el-button></div>
-        <el-form class="dispatch-form" label-position="top">
-          <el-form-item :label="t('websiteId')"><el-input-number v-model="dispatch.websiteId" :min="1" controls-position="right" /></el-form-item>
-          <el-form-item :label="t('strategy')"><el-select v-model="dispatch.strategy"><el-option :label="t('leastLoad')" value="least_load" /><el-option :label="t('fixedNodes')" value="fixed" /><el-option :label="t('byTags')" value="tag" /></el-select></el-form-item>
-          <el-form-item v-if="dispatch.strategy === 'fixed'" :label="t('fixedNodes')"><el-select v-model="dispatch.nodeIds" multiple collapse-tags :placeholder="t('onlineWorkersOnly')"><el-option v-for="node in onlineWorkers" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select></el-form-item>
-          <el-form-item v-if="dispatch.strategy === 'tag'" :label="t('tags')"><el-input v-model="dispatch.tags" placeholder="prod,cn-east" /></el-form-item>
-          <el-form-item :label="t('content')"><el-checkbox v-model="dispatch.includeContent">{{ t('includeContent') }}</el-checkbox></el-form-item>
-          <el-button type="primary" :loading="dispatching" @click="dispatchWebsite">{{ t('dispatch') }}</el-button>
+        <div class="section-header"><div><h2>{{ t('websiteDispatch') }}</h2><p>{{ t('dispatchDescription') }}</p></div></div>
+        <el-form :class="['dispatch-form', { 'has-target': dispatch.strategy !== 'least_load' }]" label-position="top">
+          <el-form-item class="website-dispatch-field" :label="t('website')">
+            <div class="website-selection-control">
+              <div v-if="selectedWebsite" class="selected-website" role="button" tabindex="0" :aria-label="t('changeWebsite')" @click="openWebsitePicker" @keydown.enter.prevent="openWebsitePicker" @keydown.space.prevent="openWebsitePicker">
+                <div><strong>{{ selectedWebsite.name }}</strong><small>{{ selectedWebsite.domain }} · ID {{ selectedWebsite.id }}</small></div>
+                <el-tag size="small" :type="websiteTypeTag(selectedWebsite.type)">{{ websiteTypeLabel(selectedWebsite.type) }}</el-tag>
+              </div>
+              <button v-else class="website-selection-placeholder" type="button" @click="openWebsitePicker"><span>{{ t('websiteRequired') }}</span><el-icon><ArrowRight /></el-icon></button>
+            </div>
+          </el-form-item>
+          <div class="dispatch-settings">
+            <el-form-item class="dispatch-strategy-field" :label="t('strategy')"><el-select v-model="dispatch.strategy"><el-option :label="t('leastLoad')" value="least_load" /><el-option :label="t('fixedNodes')" value="fixed" /><el-option :label="t('byTags')" value="tag" /></el-select></el-form-item>
+            <el-form-item v-if="dispatch.strategy === 'fixed'" class="dispatch-target-field" :label="t('fixedNodes')"><el-select v-model="dispatch.nodeIds" multiple collapse-tags :placeholder="t('onlineWorkersOnly')"><el-option v-for="node in onlineWorkers" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select></el-form-item>
+            <el-form-item v-if="dispatch.strategy === 'tag'" class="dispatch-target-field" :label="t('tags')"><el-input v-model="dispatch.tags" placeholder="prod,cn-east" /></el-form-item>
+            <el-form-item class="dispatch-content-field" :label="t('content')"><el-checkbox v-model="dispatch.includeContent">{{ t('includeContent') }}</el-checkbox></el-form-item>
+            <el-button class="dispatch-submit" type="primary" :disabled="!selectedWebsite" :loading="dispatching" @click="dispatchWebsite">{{ t('dispatch') }}</el-button>
+          </div>
         </el-form>
-        <el-alert v-if="lastDispatch" class="dispatch-progress" :type="dispatchProgressType" :closable="false" show-icon :title="t('dispatchProgress', { websiteId: lastDispatch.websiteId, total: lastDispatchProgress.total, succeeded: lastDispatchProgress.succeeded, failed: lastDispatchProgress.failed, active: lastDispatchProgress.active })" />
+        <el-alert v-if="lastDispatch" class="dispatch-progress" :type="dispatchProgressType" :closable="false" show-icon :title="t('dispatchProgress', { websiteId: lastDispatch.websiteId, websiteName: lastDispatch.websiteName || t('websiteFallback', { id: lastDispatch.websiteId }), total: lastDispatchProgress.total, succeeded: lastDispatchProgress.succeeded, failed: lastDispatchProgress.failed, active: lastDispatchProgress.active })" />
         <el-alert v-if="dispatchHistoryError" class="dispatch-history-alert" type="warning" :closable="false" show-icon :title="t('dispatchHistoryPartial')" />
-        <div class="dispatch-history-head"><h3>{{ t('dispatchHistory') }}</h3><span>{{ t('dispatchHistoryHint') }}</span></div>
-        <el-table v-if="dispatchTasks.length" :data="dispatchTasks" size="small" class="dispatch-table">
+        <div class="dispatch-history-head">
+          <h3>{{ t('dispatchHistory') }}</h3>
+          <div class="dispatch-history-actions"><span>{{ t('dispatchHistoryHint') }}</span><el-button class="dispatch-history-refresh" type="primary" :icon="Refresh" :loading="dispatchHistoryLoading" @click="loadDispatchHistory">{{ t('refreshDispatchHistory') }}</el-button></div>
+        </div>
+        <el-table v-if="dispatchTasks.length" :data="paginatedDispatchTasks" size="small" class="dispatch-table">
           <el-table-column prop="id" :label="t('taskId')" width="90" />
-          <el-table-column :label="t('dispatchWebsiteId')" width="100"><template #default="scope">{{ scope.row.websiteId || '-' }}</template></el-table-column>
+          <el-table-column :label="t('website')" min-width="240"><template #default="scope"><div class="task-website-cell"><div><strong>{{ taskWebsiteName(asTask(scope.row)) }}</strong><small>{{ taskWebsiteDomain(asTask(scope.row)) }}<span v-if="scope.row.websiteId"> · ID {{ scope.row.websiteId }}</span></small></div><el-tag v-if="scope.row.websiteType" size="small" :type="websiteTypeTag(scope.row.websiteType)">{{ websiteTypeLabel(scope.row.websiteType) }}</el-tag></div></template></el-table-column>
           <el-table-column :label="t('dispatchTargetNode')" min-width="190"><template #default="scope">{{ dispatchNodeName(scope.row.nodeId) }}</template></el-table-column>
           <el-table-column :label="t('taskType')" min-width="150"><template #default="scope">{{ dispatchTaskTypeLabel(scope.row.type) }}</template></el-table-column>
           <el-table-column :label="t('taskStatus')" width="110"><template #default="scope"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag></template></el-table-column>
@@ -1007,6 +1142,7 @@ onUnmounted(() => {
           <el-table-column :label="t('operations')" width="90" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row))">{{ t('detail') }}</el-button></template></el-table-column>
         </el-table>
         <el-empty v-else :description="t('noDispatchHistory')" :image-size="72" />
+        <div v-if="dispatchTasks.length" class="pagination dispatch-pagination"><span>{{ t('totalItems', { count: dispatchTotal }) }}</span><el-pagination v-model:current-page="dispatchPage" v-model:page-size="dispatchPageSize" layout="prev, pager, next, sizes" :page-sizes="[10, 20, 50]" :total="dispatchTotal" /></div>
       </section>
     </template>
 
@@ -1053,7 +1189,7 @@ onUnmounted(() => {
         <div v-if="detailTab === 'basic'" class="drawer-stack"><section class="detail-card"><div class="detail-title"><span>{{ t('nodeInfo') }}</span><el-tag :type="selectedNode.local ? 'warning' : 'info'">{{ selectedNode.local ? t('master') : t('worker') }}</el-tag></div><el-descriptions :column="1"><el-descriptions-item :label="t('nodeName')">{{ selectedNode.name }}</el-descriptions-item><el-descriptions-item :label="t('hostname')">{{ selectedNode.hostname || '-' }}</el-descriptions-item><el-descriptions-item :label="t('ipAddress')">{{ selectedNode.ipAddress || '-' }}</el-descriptions-item><el-descriptions-item :label="t('architecture')">{{ selectedNode.architecture || '-' }}</el-descriptions-item><el-descriptions-item :label="t('panelVersion')">{{ selectedNode.panelVersion || '-' }}</el-descriptions-item><el-descriptions-item :label="t('status')"><el-tag :type="statusType(selectedNode.status)">{{ statusLabel(selectedNode.status) }}</el-tag></el-descriptions-item><el-descriptions-item :label="t('lastRegistered')">{{ formatTime(selectedNode.lastRegisteredAt) }}</el-descriptions-item><el-descriptions-item :label="t('uptime')">{{ formatUptime(selectedNode.uptimeSeconds) }}</el-descriptions-item></el-descriptions></section><section class="detail-card"><div class="detail-title">{{ t('networkInfo') }}</div><el-descriptions :column="1"><el-descriptions-item :label="t('ipAddress')">{{ selectedNode.ipAddress || '-' }}</el-descriptions-item><el-descriptions-item :label="t('subnetMask')">{{ selectedNode.subnetMask || '-' }}</el-descriptions-item><el-descriptions-item :label="t('gateway')">{{ selectedNode.gateway || '-' }}</el-descriptions-item><el-descriptions-item :label="t('macAddress')">{{ selectedNode.macAddress || '-' }}</el-descriptions-item></el-descriptions></section></div>
         <section v-else-if="detailTab === 'resource'" class="detail-card"><div class="detail-title">{{ t('currentResources') }}</div><div class="resource-circles"><el-progress type="circle" :percentage="Math.round(selectedNode.cpuPercent || 0)" color="#ff7a1a"><template #default><strong>{{ formatPercent(selectedNode.cpuPercent) }}</strong><small>{{ t('cpu') }}</small></template></el-progress><el-progress type="circle" :percentage="Math.round(selectedNode.memoryPercent || 0)"><template #default><strong>{{ formatPercent(selectedNode.memoryPercent) }}</strong><small>{{ t('memory') }}</small></template></el-progress></div><div class="resource-lines"><div><span>{{ t('cpuCores') }}</span><strong>{{ Number(selectedNode.cpuUsedCores || 0).toFixed(1) }} / {{ selectedNode.cpuTotalCores || '-' }}</strong></div><div><span>{{ t('memory') }}</span><strong>{{ formatBytes(selectedNode.memoryUsedBytes) }} / {{ formatBytes(selectedNode.memoryTotalBytes) }}</strong></div><div><span>{{ t('disk') }}</span><strong>{{ formatBytes(selectedNode.diskUsedBytes) }} / {{ formatBytes(selectedNode.diskTotalBytes) }}</strong></div><div><span>{{ t('networkTraffic') }}</span><strong>{{ formatRate(selectedNode.networkReceiveBps) }} / {{ formatRate(selectedNode.networkSendBps) }}</strong></div></div></section>
         <section v-else-if="detailTab === 'metrics'" class="detail-card metric-card"><div class="metric-meta"><span class="live-indicator" :class="{ error: metricsRefreshError }"><i />{{ metricsRefreshError ? t('metricRefreshFailed') : t('metricAutoRefresh') }}</span><span>{{ t('metricLastUpdated', { time: formatTime(metricsUpdatedAt) }) }}</span></div><div v-if="metrics.length" class="metric-chart"><BasicChart :option="metricChartOption" /></div><el-empty v-else :description="t('noMetrics')" /></section>
-        <section v-else-if="detailTab === 'tasks'" class="detail-card"><el-table v-if="tasks.length" :data="tasks" size="small"><el-table-column prop="id" :label="t('taskId')" width="90" /><el-table-column :label="t('taskType')" min-width="150"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column><el-table-column :label="t('taskStatus')" width="110"><template #default="scope"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag></template></el-table-column><el-table-column :label="t('taskAttempts')" width="90"><template #default="scope">{{ scope.row.attempts }}/{{ scope.row.maxAttempts }}</template></el-table-column><el-table-column :label="t('taskTime')" min-width="170"><template #default="scope">{{ formatTime(scope.row.createdAt) }}</template></el-table-column><el-table-column :label="t('operations')" width="80" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row), Number(selectedNode?.id))">{{ t('detail') }}</el-button></template></el-table-column></el-table><el-empty v-else :description="t('noTasks')" /></section>
+        <section v-else-if="detailTab === 'tasks'" class="detail-card"><el-table v-if="tasks.length" :data="tasks" size="small"><el-table-column prop="id" :label="t('taskId')" width="90" /><el-table-column :label="t('website')" min-width="220"><template #default="scope"><div v-if="isWebsiteDispatchTask(asTask(scope.row))" class="task-website-cell"><div><strong>{{ taskWebsiteName(asTask(scope.row)) }}</strong><small>{{ taskWebsiteDomain(asTask(scope.row)) }}<span v-if="scope.row.websiteId"> · ID {{ scope.row.websiteId }}</span></small></div><el-tag v-if="scope.row.websiteType" size="small" :type="websiteTypeTag(scope.row.websiteType)">{{ websiteTypeLabel(scope.row.websiteType) }}</el-tag></div><span v-else>-</span></template></el-table-column><el-table-column :label="t('taskType')" min-width="150"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column><el-table-column :label="t('taskStatus')" width="110"><template #default="scope"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag></template></el-table-column><el-table-column :label="t('taskAttempts')" width="90"><template #default="scope">{{ scope.row.attempts }}/{{ scope.row.maxAttempts }}</template></el-table-column><el-table-column :label="t('taskTime')" min-width="170"><template #default="scope">{{ formatTime(scope.row.createdAt) }}</template></el-table-column><el-table-column :label="t('operations')" width="80" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row), Number(selectedNode?.id))">{{ t('detail') }}</el-button></template></el-table-column></el-table><el-empty v-else :description="t('noTasks')" /></section>
       </template></template>
     </el-drawer>
 
@@ -1064,6 +1200,10 @@ onUnmounted(() => {
         </el-alert>
         <template v-if="taskDetail">
           <el-descriptions :column="2" border>
+            <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteName')">{{ taskWebsiteName(taskDetail) }}</el-descriptions-item>
+            <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteDomain')">{{ taskWebsiteDomain(taskDetail) }}</el-descriptions-item>
+            <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteType')"><el-tag size="small" :type="websiteTypeTag(taskDetail.websiteType)">{{ websiteTypeLabel(taskDetail.websiteType) }}</el-tag></el-descriptions-item>
+            <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteId')">{{ taskDetail.websiteId || '-' }}</el-descriptions-item>
             <el-descriptions-item :label="t('taskType')">{{ taskTypeLabel(taskDetail.type) }}</el-descriptions-item>
             <el-descriptions-item :label="t('taskStatus')"><el-tag :type="statusType(taskDetail.status === 'succeeded' ? 'online' : taskDetail.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(taskDetail.status) }}</el-tag></el-descriptions-item>
             <el-descriptions-item :label="t('taskAttempts')">{{ taskDetail.attempts }}/{{ taskDetail.maxAttempts }}</el-descriptions-item>
@@ -1083,40 +1223,163 @@ onUnmounted(() => {
         </template>
       </div>
     </el-dialog>
+
+    <el-dialog v-model="websitePickerVisible" :title="t('websitePickerTitle')" width="860px" class="website-picker-dialog" append-to-body>
+      <div class="website-picker">
+        <div class="website-picker-filters">
+          <el-input v-model="websitePickerFilters.name" :placeholder="t('websiteNamePlaceholder')" clearable @keyup.enter="searchWebsites" />
+          <el-input v-model="websitePickerFilters.domain" :placeholder="t('websiteDomainPlaceholder')" clearable @keyup.enter="searchWebsites" />
+          <el-button type="primary" :icon="Search" @click="searchWebsites">{{ t('searchWebsite') }}</el-button>
+          <el-button @click="resetWebsiteSearch">{{ t('resetFilters') }}</el-button>
+        </div>
+        <el-alert v-if="websitePickerError" :title="t('websitePickerLoadFailed')" type="error" show-icon :closable="false" class="load-alert" />
+        <el-table v-loading="websitePickerLoading" :data="websitePickerItems" row-key="id" class="website-picker-table" @row-click="(row: WebsiteSummary) => chooseWebsite(row)">
+          <el-table-column :label="t('websiteName')" min-width="180"><template #default="scope"><strong>{{ scope.row.name }}</strong></template></el-table-column>
+          <el-table-column :label="t('websiteDomain')" min-width="210" prop="domain" />
+          <el-table-column :label="t('websiteType')" width="150"><template #default="scope"><el-tag size="small" :type="websiteTypeTag(scope.row.type)">{{ websiteTypeLabel(scope.row.type) }}</el-tag></template></el-table-column>
+          <el-table-column :label="t('websiteStatus')" width="110"><template #default="scope"><el-tag size="small" :type="scope.row.enabled ? 'success' : 'info'">{{ scope.row.enabled ? t('online') : t('disable') }}</el-tag></template></el-table-column>
+          <el-table-column :label="t('operations')" width="104"><template #default="scope"><el-button link type="primary" @click.stop="chooseWebsite(asWebsite(scope.row))">{{ t('selectWebsite') }}</el-button></template></el-table-column>
+        </el-table>
+        <el-empty v-if="!websitePickerLoading && !websitePickerItems.length" :description="t('websitePickerEmpty')" :image-size="72" />
+        <div class="website-picker-pagination"><span>{{ t('totalItems', { count: websitePickerTotal }) }}</span><el-pagination v-model:current-page="websitePickerPage" v-model:page-size="websitePickerPageSize" layout="prev, pager, next, sizes" :page-sizes="[10, 20, 50]" :total="websitePickerTotal" @current-change="loadWebsitePicker" @size-change="searchWebsites" /></div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped lang="less">
-.cluster-page { min-height: 100%; padding: 22px; color: var(--el-text-color-primary); background: var(--el-bg-color-page); }
-.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; h1 { margin: 0 0 7px; font-size: 25px; } p { margin: 0; color: var(--el-text-color-secondary); } }
-.panel-card { border: 1px solid var(--el-border-color-lighter); border-radius: 10px; background: var(--el-bg-color); box-shadow: 0 4px 18px rgb(20 35 60 / 4%); }
+.cluster-page { min-height: 100%; padding: 22px; color: var(--text-primary); background: var(--surface-page); }
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; h1 { margin: 0 0 7px; color: var(--text-primary); font-size: 25px; } p { margin: 0; color: var(--text-tertiary); } }
+.panel-card { border: 1px solid var(--border-subtle); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-xs); }
 .node-panel { padding: 18px 20px 12px; }
 .section-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; h2 { margin: 0; font-size: 18px; } }
 .header-actions { display: flex; gap: 10px; }
 .filters { display: grid; grid-template-columns: minmax(260px, 1.4fr) minmax(150px, .55fr) minmax(150px, .55fr) auto; gap: 10px; margin: 14px 0; }
 .filter-actions { display: flex; align-items: center; gap: 10px; }
-.view-switch { display: flex; .el-button { margin: 0; border-radius: 0; } .el-button:first-child { border-radius: 6px 0 0 6px; } .el-button:last-child { border-radius: 0 6px 6px 0; } .active { color: var(--el-color-primary); border-color: var(--el-color-primary); background: var(--el-color-primary-light-9); } }
+.view-switch { display: flex; .el-button { margin: 0; border-radius: 0; } .el-button:first-child { border-radius: 7px 0 0 7px; } .el-button:last-child { border-radius: 0 7px 7px 0; } .active { color: rgb(var(--primary-color)); border-color: rgb(var(--primary-color)); background: rgba(var(--primary-color), 0.1); } }
 .load-alert { margin-bottom: 12px; }
-.node-table { border: 1px solid var(--el-border-color-lighter); border-radius: 8px; overflow: hidden; }
-.node-identity { display: flex; align-items: center; min-width: 0; gap: 11px; strong, small { display: block; } strong { line-height: 22px; } small { overflow: hidden; color: var(--el-text-color-secondary); text-overflow: ellipsis; white-space: nowrap; } }
+.node-table { border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+.node-table-actions { display: flex; align-items: center; flex-wrap: nowrap; min-height: 28px; gap: 4px; white-space: nowrap; :deep(.el-button) { display: inline-flex; align-items: center; margin-left: 0; line-height: 20px; } :deep(.el-dropdown) { display: inline-flex; align-items: center; vertical-align: middle; } }
+.node-identity { display: flex; align-items: center; min-width: 0; gap: 11px; strong, small { display: block; } strong { color: var(--text-primary); line-height: 22px; } small { overflow: hidden; color: var(--text-tertiary); text-overflow: ellipsis; white-space: nowrap; } }
 .status-dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: var(--el-color-info); &.online { background: var(--el-color-success); } &.offline, &.error { background: var(--el-color-danger); } &.pending { background: var(--el-color-warning); } }
 .usage-cell { width: 100%; font-size: 12px; span { display: block; margin-bottom: 5px; } }
-.pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 12px; color: var(--el-text-color-secondary); font-size: 13px; }
+.pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 12px; color: var(--text-tertiary); font-size: 13px; }
 .node-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); min-height: 180px; gap: 14px; }
-.node-card { padding: 16px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px; background: var(--el-fill-color-blank); .node-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; } .node-card-ip { margin: 14px 0; color: var(--el-text-color-secondary); font-size: 13px; } .card-resource { margin-top: 10px; font-size: 12px; span { display: block; margin-bottom: 5px; } } footer { display: flex; padding-top: 12px; margin-top: 14px; border-top: 1px solid var(--el-border-color-lighter); } }
-.dispatch-panel { padding: 18px 20px 20px; margin-top: 14px; h2 { margin: 0; font-size: 17px; } .section-header p { margin: 6px 0 0; color: var(--el-text-color-secondary); font-size: 12px; } }
-.dispatch-form { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 24px; :deep(.el-form-item) { min-width: 170px; margin: 0; } }
+.node-card { padding: 16px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-subtle); .node-card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; } .node-card-ip { margin: 14px 0; color: var(--text-tertiary); font-size: 13px; } .card-resource { margin-top: 10px; font-size: 12px; span { display: block; margin-bottom: 5px; } } footer { display: flex; padding-top: 12px; margin-top: 14px; border-top: 1px solid var(--border-subtle); } }
+.dispatch-panel { padding: 18px 20px 20px; margin-top: 14px; h2 { margin: 0; font-size: 17px; } .section-header p { margin: 6px 0 0; color: var(--text-tertiary); font-size: 12px; } }
+.dispatch-form { --dispatch-control-height: 52px; display: grid; grid-template-columns: repeat(2, minmax(200px, 1fr)) minmax(200px, 1fr) minmax(130px, auto); align-items: start; gap: 14px; padding: 16px 18px; margin-top: 16px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-subtle); :deep(.el-form-item) { min-width: 0; margin: 0; } :deep(.el-select), :deep(.el-input), :deep(.el-input-number) { width: 100%; } }
+.dispatch-form.has-target { grid-template-columns: repeat(3, minmax(180px, 1fr)) minmax(190px, .9fr) minmax(130px, auto); }
+.website-dispatch-field { display: flex; grid-column: 1; grid-row: 1; flex-direction: column; justify-content: flex-start; min-width: 0 !important; }
+.dispatch-settings { display: contents; }
+.dispatch-strategy-field { grid-column: 2; grid-row: 1; }
+.dispatch-content-field { grid-column: 3; grid-row: 1; }
+.dispatch-target-field { grid-column: 3; grid-row: 1; }
+.dispatch-submit { grid-column: 4; grid-row: 1; align-self: end; justify-self: end; min-width: 130px; }
+.dispatch-form.has-target .dispatch-content-field { grid-column: 4; }
+.dispatch-form.has-target .dispatch-submit { grid-column: 5; }
+.dispatch-strategy-field :deep(.el-select__wrapper), .dispatch-target-field :deep(.el-select__wrapper), .dispatch-target-field :deep(.el-input__wrapper) { min-height: var(--dispatch-control-height); }
+.website-selection-control { width: 100%; height: var(--dispatch-control-height); }
+.website-selection-placeholder { display: flex; align-items: center; justify-content: space-between; width: 100%; height: var(--dispatch-control-height); padding: 0 12px; color: var(--text-tertiary); font: inherit; text-align: left; border: 1px dashed var(--border-default); border-radius: 10px; background: var(--surface-card); cursor: pointer; transition: .18s; &:hover { color: rgb(var(--primary-color)); border-color: rgb(var(--primary-color)); background: rgba(var(--primary-color), .04); } }
+.selected-website { display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; height: var(--dispatch-control-height); gap: 10px; padding: 6px 12px; border: 1px solid rgba(var(--primary-color), .25); border-radius: 10px; background: rgba(var(--primary-color), .06); cursor: pointer; transition: .18s; &:hover { border-color: rgb(var(--primary-color)); background: rgba(var(--primary-color), .1); } &:focus-visible { outline: 2px solid rgba(var(--primary-color), .35); outline-offset: 2px; } div { min-width: 0; } strong, small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } strong { line-height: 18px; } small { color: var(--text-tertiary); font-size: 12px; line-height: 16px; } }
 .dispatch-progress, .dispatch-history-alert { margin-top: 16px; }
-.dispatch-history-head { display: flex; align-items: baseline; justify-content: space-between; gap: 14px; padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--el-border-color-lighter); h3 { margin: 0; font-size: 15px; } span { color: var(--el-text-color-secondary); font-size: 12px; } }
-.dispatch-table { margin-top: 12px; border: 1px solid var(--el-border-color-lighter); border-radius: 8px; overflow: hidden; }
+.dispatch-history-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--border-subtle); h3 { margin: 0; font-size: 15px; } span { color: var(--text-tertiary); font-size: 12px; } }
+.dispatch-history-actions { display: flex; align-items: center; gap: 12px; }
+.dispatch-history-refresh { min-width: 112px; height: 38px; border-radius: 9px; font-weight: 600; box-shadow: 0 6px 16px rgba(var(--primary-color), .22); transition: transform .18s ease, box-shadow .18s ease; &:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(var(--primary-color), .3); } }
+.dispatch-table { margin-top: 12px; border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+.task-website-cell { display: flex; align-items: center; justify-content: space-between; width: 100%; min-width: 0; gap: 10px; overflow: hidden; strong, small { display: block; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } > div { min-width: 0; overflow: hidden; } small { margin-top: 2px; color: var(--text-tertiary); font-size: 12px; } .el-tag { flex: 0 0 auto; } }
+.website-picker-filters { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 8px; margin-bottom: 10px; }
+.website-picker-filters :deep(.el-input__wrapper) { min-height: 36px; }
+.website-picker-filters :deep(.el-button) { min-height: 36px; padding: 7px 14px; }
+.website-picker-table { border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; }
+.website-picker-pagination { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 10px; color: var(--text-tertiary); font-size: 13px; }
+.website-picker :deep(.website-picker-table th.el-table__cell) { height: 40px; padding: 6px 0; }
+.website-picker :deep(.website-picker-table td.el-table__cell) { min-height: 44px; padding: 8px 0; }
+.website-picker :deep(.website-picker-table .cell) { padding: 0 10px; line-height: 20px; }
+.website-picker :deep(.website-picker-table .el-button.is-link) { white-space: nowrap; }
+.website-picker :deep(.website-picker-table .el-table__inner-wrapper),
+.website-picker :deep(.website-picker-table .el-table__body-wrapper),
+.website-picker :deep(.website-picker-table .el-table__body),
+.website-picker :deep(.website-picker-table .el-table__body tr),
+.website-picker :deep(.website-picker-table .el-table__body td.el-table__cell) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+.website-picker :deep(.website-picker-table .el-table__header-wrapper tr),
+.website-picker :deep(.website-picker-table .el-table__header-wrapper th.el-table__cell) {
+  background: var(--surface-subtle) !important;
+  background-color: var(--surface-subtle) !important;
+  background-image: none !important;
+}
+.website-picker :deep(.website-picker-table .el-loading-mask) {
+  background: var(--surface-overlay) !important;
+  background-color: var(--surface-overlay) !important;
+  background-image: none !important;
+}
+.cluster-page :deep(.node-table .el-table__inner-wrapper),
+.cluster-page :deep(.dispatch-table .el-table__inner-wrapper),
+.cluster-page :deep(.node-table .el-table__header-wrapper),
+.cluster-page :deep(.dispatch-table .el-table__header-wrapper),
+.cluster-page :deep(.node-table .el-table__body-wrapper),
+.cluster-page :deep(.dispatch-table .el-table__body-wrapper),
+.cluster-page :deep(.node-table .el-table__header),
+.cluster-page :deep(.dispatch-table .el-table__header),
+.cluster-page :deep(.node-table .el-table__body),
+.cluster-page :deep(.dispatch-table .el-table__body) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+.cluster-page :deep(.node-table .el-table__header-wrapper tr),
+.cluster-page :deep(.dispatch-table .el-table__header-wrapper tr),
+.cluster-page :deep(.node-table .el-table__header-wrapper th.el-table__cell),
+.cluster-page :deep(.dispatch-table .el-table__header-wrapper th.el-table__cell) {
+  background: var(--surface-subtle) !important;
+  background-color: var(--surface-subtle) !important;
+  background-image: none !important;
+}
+.cluster-page :deep(.node-table .el-table__body tr),
+.cluster-page :deep(.dispatch-table .el-table__body tr),
+.cluster-page :deep(.node-table .el-table__body td.el-table__cell),
+.cluster-page :deep(.dispatch-table .el-table__body td.el-table__cell),
+.cluster-page :deep(.node-table .el-table__fixed-right),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__body),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__body),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__body tr),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__body tr),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__body td.el-table__cell),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__body td.el-table__cell),
+.cluster-page :deep(.node-table .el-table__fixed-right-patch),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right-patch) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__header),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__header),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__header tr),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__header tr),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__header th.el-table__cell),
+.cluster-page :deep(.dispatch-table .el-table__fixed-right .el-table__header th.el-table__cell) {
+  background: var(--surface-subtle) !important;
+  background-color: var(--surface-subtle) !important;
+  background-image: none !important;
+}
+.cluster-page :deep(.node-table .el-loading-mask),
+.cluster-page :deep(.dispatch-table .el-loading-mask) {
+  background: var(--surface-overlay) !important;
+  background-color: var(--surface-overlay) !important;
+  background-image: none !important;
+}
 .task-error { color: var(--el-color-danger); }
-.task-detail-dialog { min-height: 180px; }
-.task-progress-block { padding: 16px 0 8px; > div:first-child { display: flex; justify-content: space-between; margin-bottom: 8px; } }
-.task-timeline-title { margin: 18px 0 14px; font-size: 15px; }
-.task-detail-dialog :deep(.el-timeline-item__content p) { margin: 6px 0 0; color: var(--el-text-color-secondary); line-height: 1.6; word-break: break-word; }
-.role-hint { margin: -4px 0 14px; color: var(--el-text-color-secondary); font-size: 13px; }
+.task-detail-dialog { min-height: 180px; color: var(--text-secondary); }
+.task-progress-block { padding: 16px 0 8px; color: var(--text-secondary); > div:first-child { display: flex; justify-content: space-between; margin-bottom: 8px; } :deep(.el-progress-bar__outer) { background: var(--surface-muted); } }
+.task-timeline-title { margin: 18px 0 14px; color: var(--text-primary); font-size: 15px; }
+.task-detail-dialog :deep(.el-timeline-item__content p) { margin: 6px 0 0; color: var(--text-tertiary); line-height: 1.6; word-break: break-word; }
+.role-hint { margin: -4px 0 14px; color: var(--text-tertiary); font-size: 13px; }
 .role-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.role-option { position: relative; display: grid; grid-template-columns: 46px 1fr; align-items: center; min-height: 106px; padding: 16px; text-align: left; color: var(--el-text-color-primary); border: 1px solid var(--el-border-color); border-radius: 9px; background: var(--el-bg-color); cursor: pointer; transition: .18s; strong, small { display: block; } small { margin-top: 7px; color: var(--el-text-color-secondary); line-height: 20px; } &.selected { border: 2px solid var(--el-color-primary); background: var(--el-color-primary-light-9); } .role-check { position: absolute; top: 12px; right: 12px; display: none; width: 18px; height: 18px; text-align: center; color: white; border-radius: 50%; background: var(--el-color-primary); } &.selected .role-check { display: block; } }
+.role-option { position: relative; display: grid; grid-template-columns: 46px 1fr; align-items: center; min-height: 106px; padding: 16px; text-align: left; color: var(--text-primary); border: 1px solid var(--border-default); border-radius: 12px; background: var(--surface-card); cursor: pointer; transition: .18s; strong, small { display: block; } small { margin-top: 7px; color: var(--text-tertiary); line-height: 20px; } &.selected { border: 2px solid rgb(var(--primary-color)); background: rgba(var(--primary-color), 0.1); } .role-check { position: absolute; top: 12px; right: 12px; display: none; width: 18px; height: 18px; text-align: center; color: var(--primary-button-text); border-radius: 50%; background: rgb(var(--primary-color)); } &.selected .role-check { display: block; } }
 .role-visual { position: relative; display: block; width: 34px; height: 36px; color: var(--el-color-info); i { position: absolute; box-sizing: border-box; display: block; border: 2px solid currentColor; } &.controller i { left: 3px; width: 28px; height: 11px; border-radius: 4px; &:first-child { top: 5px; } &:last-child { top: 20px; } } &.worker i { width: 17px; height: 17px; transform: rotate(30deg); &:nth-child(1) { top: 1px; left: 9px; } &:nth-child(2) { top: 17px; left: 0; } &:nth-child(3) { top: 17px; left: 18px; } } }
 .role-option.selected .role-visual { color: var(--el-color-primary); }
 .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -1124,17 +1387,118 @@ onUnmounted(() => {
 .node-mode-grid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(360px, .75fr); gap: 16px; .panel-card { padding: 22px; } .section-icon { font-size: 24px; color: var(--el-color-primary); } }
 .connection-card :deep(.el-input-number) { width: 100%; }
 .runtime-card :deep(.el-descriptions) { margin-top: 18px; } .runtime-error { color: var(--el-color-danger); word-break: break-word; }
-.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 22px 10px; h2 { margin: 0; font-size: 21px; } }
-.drawer-tabs { :deep(.el-tabs__header) { padding: 0 22px; } :deep(.el-tabs__content) { padding: 4px 22px 24px; } }
+:global(.cluster-drawer.el-drawer) {
+  --el-drawer-bg-color: var(--surface-raised);
+  color: var(--text-secondary);
+  border-left-color: var(--border-subtle);
+  background: var(--surface-raised) !important;
+  background-color: var(--surface-raised) !important;
+}
+:global(.website-picker-dialog.el-dialog) {
+  --el-dialog-padding-primary: 12px;
+  display: flex;
+  width: min(860px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px);
+  flex-direction: column;
+}
+:global(.website-picker-dialog .el-dialog__header) {
+  flex: 0 0 auto;
+  padding-bottom: 8px;
+}
+:global(.website-picker-dialog .el-dialog__body) {
+  min-height: 0;
+  overflow-y: auto;
+}
+:global(.cluster-drawer .el-drawer__body) {
+  color: var(--text-secondary);
+  background: var(--surface-raised) !important;
+  background-color: var(--surface-raised) !important;
+}
+:global(.cluster-drawer .el-skeleton) {
+  --el-skeleton-color: var(--surface-muted);
+  --el-skeleton-to-color: var(--surface-subtle);
+  box-sizing: border-box;
+  padding: 10px 22px 24px;
+  background: var(--surface-raised);
+}
+:global(.cluster-drawer .el-skeleton__item) {
+  border-radius: 6px;
+}
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 22px 10px; color: var(--text-primary); background: var(--surface-raised); h2 { margin: 0; font-size: 21px; } }
+.drawer-tabs { color: var(--text-secondary); background: var(--surface-raised); :deep(.el-tabs__header) { padding: 0 22px; background: var(--surface-raised); } :deep(.el-tabs__content) { padding: 4px 22px 24px; background: var(--surface-raised); } }
 .drawer-stack { display: grid; gap: 14px; }
-.detail-card { padding: 18px; border: 1px solid var(--el-border-color-lighter); border-radius: 9px; background: var(--el-fill-color-blank); }
+.detail-card { padding: 18px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-card); }
 .detail-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; font-weight: 600; }
-.resource-circles { display: grid; grid-template-columns: 1fr 1fr; justify-items: center; gap: 24px; padding: 8px 0 22px; :deep(.el-progress__text) { display: flex; flex-direction: column; } strong { font-size: 22px; } small { margin-top: 5px; color: var(--el-text-color-secondary); font-size: 11px; } }
-.resource-lines { display: grid; gap: 13px; > div { display: flex; justify-content: space-between; gap: 20px; padding-top: 12px; border-top: 1px solid var(--el-border-color-lighter); span { color: var(--el-text-color-secondary); } } }
+.task-detail-dialog :deep(.el-descriptions),
+.detail-card :deep(.el-descriptions),
+.runtime-card :deep(.el-descriptions) {
+  --el-descriptions-table-border: 1px solid var(--border-subtle);
+  --el-descriptions-item-bordered-label-background: var(--surface-subtle);
+  color: var(--text-secondary);
+}
+.task-detail-dialog :deep(.el-descriptions__body),
+.task-detail-dialog :deep(.el-descriptions__table),
+.detail-card :deep(.el-descriptions__body),
+.detail-card :deep(.el-descriptions__table),
+.runtime-card :deep(.el-descriptions__body),
+.runtime-card :deep(.el-descriptions__table) {
+  color: var(--text-secondary) !important;
+  background: transparent !important;
+  background-color: transparent !important;
+}
+.task-detail-dialog :deep(.el-descriptions__label.el-descriptions__cell),
+.detail-card :deep(.el-descriptions__label.el-descriptions__cell),
+.runtime-card :deep(.el-descriptions__label.el-descriptions__cell) {
+  color: var(--text-tertiary) !important;
+}
+.task-detail-dialog :deep(.el-descriptions__content.el-descriptions__cell),
+.detail-card :deep(.el-descriptions__content.el-descriptions__cell),
+.runtime-card :deep(.el-descriptions__content.el-descriptions__cell) {
+  color: var(--text-secondary) !important;
+}
+.task-detail-dialog :deep(.el-descriptions__label.el-descriptions__cell.is-bordered-label),
+.detail-card :deep(.el-descriptions__label.el-descriptions__cell.is-bordered-label),
+.runtime-card :deep(.el-descriptions__label.el-descriptions__cell.is-bordered-label) {
+  background: var(--surface-subtle) !important;
+  background-color: var(--surface-subtle) !important;
+}
+.task-detail-dialog :deep(.el-descriptions__content.el-descriptions__cell.is-bordered-content),
+.detail-card :deep(.el-descriptions__content.el-descriptions__cell.is-bordered-content),
+.runtime-card :deep(.el-descriptions__content.el-descriptions__cell.is-bordered-content) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+}
+.detail-card :deep(.el-table) {
+  --el-table-bg-color: var(--surface-card);
+  --el-table-tr-bg-color: var(--surface-card);
+  --el-table-header-bg-color: var(--surface-subtle);
+  --el-table-border-color: var(--border-subtle);
+}
+.detail-card :deep(.el-table__inner-wrapper),
+.detail-card :deep(.el-table__header-wrapper),
+.detail-card :deep(.el-table__body-wrapper),
+.detail-card :deep(.el-table__header),
+.detail-card :deep(.el-table__body),
+.detail-card :deep(.el-table__body tr),
+.detail-card :deep(.el-table__body td.el-table__cell),
+.detail-card :deep(.el-table__fixed-right),
+.detail-card :deep(.el-table__fixed-right-patch) {
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  background-image: none !important;
+}
+.detail-card :deep(.el-table__header-wrapper tr),
+.detail-card :deep(.el-table__header-wrapper th.el-table__cell) {
+  background: var(--surface-subtle) !important;
+  background-color: var(--surface-subtle) !important;
+  background-image: none !important;
+}
+.resource-circles { display: grid; grid-template-columns: 1fr 1fr; justify-items: center; gap: 24px; padding: 8px 0 22px; :deep(.el-progress__text) { display: flex; flex-direction: column; } strong { font-size: 22px; } small { margin-top: 5px; color: var(--text-tertiary); font-size: 11px; } }
+.resource-lines { display: grid; gap: 13px; > div { display: flex; justify-content: space-between; gap: 20px; padding-top: 12px; border-top: 1px solid var(--border-subtle); span { color: var(--text-tertiary); } } }
 .metric-card { min-height: 330px; }
-.metric-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; color: var(--el-text-color-secondary); font-size: 12px; .live-indicator { display: inline-flex; align-items: center; gap: 7px; color: var(--el-color-success); &.error { color: var(--el-color-danger); } } i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px var(--el-color-success-light-9); } .error i { box-shadow: 0 0 0 4px var(--el-color-danger-light-9); } }
+.metric-meta { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 24px; color: var(--text-tertiary); font-size: 12px; .live-indicator { display: inline-flex; align-items: center; gap: 7px; color: var(--el-color-success); &.error { color: var(--el-color-danger); } } i { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 0 4px rgba(var(--success-color), 0.14); } .error i { box-shadow: 0 0 0 4px rgba(var(--error-color), 0.14); } }
 .metric-chart { width: 100%; height: 280px; }
 .danger-item { color: var(--el-color-danger); }
 @media (max-width: 1100px) { .node-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .node-mode-grid { grid-template-columns: 1fr; } }
-@media (max-width: 760px) { .cluster-page { padding: 14px; } .page-header { flex-direction: column; } .filters { grid-template-columns: 1fr 1fr; } .filters > :first-child, .filter-actions { grid-column: 1 / -1; } .filter-actions { justify-content: space-between; } .node-grid, .role-options, .two-columns { grid-template-columns: 1fr; } .pagination { align-items: flex-start; flex-direction: column; overflow-x: auto; } .dispatch-form { display: grid; grid-template-columns: 1fr; :deep(.el-form-item) { width: 100%; } } .dispatch-history-head { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .cluster-page { padding: 14px; } .page-header { flex-direction: column; } .filters { grid-template-columns: 1fr 1fr; } .filters > :first-child, .filter-actions { grid-column: 1 / -1; } .filter-actions { justify-content: space-between; } .node-grid, .role-options, .two-columns { grid-template-columns: 1fr; } .pagination { align-items: flex-start; flex-direction: column; overflow-x: auto; } .dispatch-form, .dispatch-form.has-target { display: grid; grid-template-columns: 1fr; padding: 14px; :deep(.el-form-item) { width: 100%; } } .website-dispatch-field, .dispatch-settings, .dispatch-strategy-field, .dispatch-target-field, .dispatch-content-field, .dispatch-submit, .dispatch-form.has-target .dispatch-content-field, .dispatch-form.has-target .dispatch-submit { grid-column: 1; grid-row: auto; } .website-dispatch-field { padding-right: 0; border-right: 0; } .dispatch-settings { display: grid; grid-template-columns: 1fr; gap: 12px; } .dispatch-submit { width: 100%; } .website-selection-control { align-items: stretch; flex-direction: column; } .website-picker-filters { grid-template-columns: 1fr; } .website-picker-pagination { align-items: flex-start; flex-direction: column; overflow-x: auto; } .dispatch-history-head, .dispatch-history-actions { align-items: flex-start; flex-direction: column; } .dispatch-history-actions, .dispatch-history-refresh { width: 100%; } }
 </style>
