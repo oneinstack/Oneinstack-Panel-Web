@@ -5,6 +5,7 @@ import { useRoute } from 'vue-router'
 import { ChildEmits, ChildProps } from '../index.vue'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import CustomForm, { type FormItem, type Props as FormProps } from '@/components/custom-form.vue'
+import { HttpRequestError } from '@/api'
 import { Api } from '@/api/modules'
 import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from './InstallTaskDrawer.vue'
@@ -228,6 +229,24 @@ const isInstalled = (item: any) =>
 
 const recommendedVersion = (item: any) =>
   item.recommendedVersion || item.versions?.[0] || ''
+
+const upgradeSummary = (item: any) => {
+  if (item.updateReason === 'component_package' && item.latestPackageVersion) {
+    return t('software.componentPackageUpgrade', '组件包：{installedVersion} → {latestVersion}', {
+      installedVersion: item.installedPackageVersion || '-',
+      latestVersion: item.latestPackageVersion
+    })
+  }
+  if (item.updateReason === 'both' && item.latestPackageVersion) {
+    return t('software.upgradeToWithPackage', '可升级至 {version}（组件包 {packageVersion}）', {
+      version: recommendedVersion(item),
+      packageVersion: item.latestPackageVersion
+    })
+  }
+  return t('software.upgradeTo', '可升级至 {version}', {
+    version: recommendedVersion(item)
+  })
+}
 
 const hasUpgrade = (item: any) =>
   isInstalled(item) && item.isUpdate === true &&
@@ -486,6 +505,60 @@ const installFieldLabel = (field: any) => {
   return translationKey ? t(translationKey, rawLabel) : rawLabel
 }
 
+const installFieldToken = (field: any) => normalizeInstallFieldToken(field?.key || field?.prop)
+
+const isInstallPortField = (field: any) => String(field?.type || '').toLowerCase() === 'port'
+
+const isInstallPathField = (field: any) => String(field?.type || '').toLowerCase() === 'path'
+
+const isInstallUsernameField = (field: any) => {
+  const token = installFieldToken(field)
+  return String(field?.type || '').toLowerCase() === 'username' ||
+    ['runuser', 'rungroup', 'mysqlusername', 'databaseusername'].includes(token)
+}
+
+const isInstallAddressField = (field: any) => {
+  const token = installFieldToken(field)
+  return token === 'mysqlbindaddress' || token === 'mariadbbindaddress'
+}
+
+const isValidIPv4 = (value: string) => {
+  const parts = value.split('.')
+  return parts.length === 4 && parts.every((part) => {
+    if (!/^\d{1,3}$/.test(part)) return false
+    const number = Number(part)
+    return number >= 0 && number <= 255
+  })
+}
+
+const isValidIPv6 = (value: string) => {
+  if (!/^[0-9a-f:.]+$/i.test(value) || value.includes('...')) return false
+  const sections = value.split('::')
+  if (sections.length > 2) return false
+  const countGroups = (part: string) => part
+    .split(':')
+    .filter(Boolean)
+    .every((group) => /^[0-9a-f]{1,4}$/i.test(group))
+    ? part.split(':').filter(Boolean).length
+    : -1
+  const left = countGroups(sections[0] || '')
+  const right = countGroups(sections[1] || '')
+  if (left < 0 || right < 0) return false
+  return sections.length === 2 ? left + right < 8 : left === 8
+}
+
+const isValidIPAddress = (value: string) => isValidIPv4(value) || isValidIPv6(value)
+
+const isNormalizedInstallPath = (value: string) => {
+  if (!value.startsWith('/') || value === '/' || value.endsWith('/')) return false
+  if (value.includes('//') || value.includes('/./') || value.includes('/../') || value.endsWith('/.') || value.endsWith('/..')) {
+    return false
+  }
+  return !['/usr', '/usr/local', '/etc', '/var', '/data', '/home', '/root'].includes(value)
+}
+
+const isValidInstallAccount = (value: string) => /^[a-z_][a-z0-9_-]{0,31}$/.test(value)
+
 const buildInstallFieldRules = (field: any) => {
   const label = installFieldLabel(field)
   const ruleText = String(field?.rule || '').trim()
@@ -501,6 +574,53 @@ const buildInstallFieldRules = (field: any) => {
       message: t('software.inputField', 'Enter {field}', { field: label }),
       trigger: 'blur'
     })
+  }
+
+  const addValidator = (validator: (value: string) => string) => {
+    rules.push({
+      validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
+        const text = String(value ?? '').trim()
+        if (!text) {
+          callback()
+          return
+        }
+        const message = validator(text)
+        if (message) {
+          callback(new Error(message))
+          return
+        }
+        callback()
+      },
+      trigger: 'blur'
+    })
+  }
+
+  if (isInstallPortField(field)) {
+    addValidator((value) => {
+      if (!/^\d+$/.test(value)) return t('software.portRange', '{field}必须是 1 到 65535 之间的端口', { field: label })
+      const port = Number(value)
+      return port >= 1 && port <= 65535
+        ? ''
+        : t('software.portRange', '{field}必须是 1 到 65535 之间的端口', { field: label })
+    })
+  } else if (isInstallPathField(field)) {
+    addValidator((value) => isNormalizedInstallPath(value)
+      ? ''
+      : t('software.pathFormat', '{field}必须是具体的规范绝对路径', { field: label }))
+  } else if (isInstallUsernameField(field)) {
+    addValidator((value) => isValidInstallAccount(value)
+      ? ''
+      : t('software.usernameFormat', '{field}只能包含小写字母、数字、下划线和连字符，长度为 1-32 位', { field: label }))
+  } else if (isInstallAddressField(field)) {
+    addValidator((value) => isValidIPAddress(value)
+      ? ''
+      : t('software.ipFormat', '{field}必须是合法 IPv4 或 IPv6 地址', { field: label }))
+  }
+
+  if (isPasswordInstallField(field) && installFieldToken(field).includes('mysqlpassword')) {
+    addValidator((value) => /^[A-Za-z0-9_@%+=:,.!#?-]{12,128}$/.test(value)
+      ? ''
+      : t('software.mysqlPasswordFormat', '{field}必须为 12-128 位安全字符', { field: label }))
   }
 
   if (!ruleText) return rules
@@ -587,7 +707,11 @@ const openInstallForm = (
         type: installFieldType(field),
         prop: field.key,
         placeholder: installFieldPlaceholder(field),
-        rules: buildInstallFieldRules(field)
+        rules: buildInstallFieldRules(field),
+        change: () => {
+          const current = installForm.items.find((item) => item.prop === field.key)
+          if (current) current.error = ''
+        }
       }
     })
   if (installForm.items.length === 0) {
@@ -638,10 +762,22 @@ const handleInstall = async () => {
     drawer.show = false
     clearSecretFields()
   } catch (error) {
+    showInstallParameterError(error)
     if (!isOperationCancelled(error)) throw error
   } finally {
     submitting.value = false
   }
+}
+
+const showInstallParameterError = (error: unknown) => {
+  if (!(error instanceof HttpRequestError) || !error.data || typeof error.data !== 'object') return
+  const payload = error.data as any
+  const field = String(payload.field || payload.error?.field || '').trim()
+  if (!field) return
+  const target = installForm.items.find((item) => normalizeInstallFieldToken(item.prop) === normalizeInstallFieldToken(field))
+  if (!target) return
+  target.error = error.message
+  formRef.value?.scrollToField?.(target.prop)
 }
 
 const clearSecretFields = () => {
@@ -999,7 +1135,7 @@ watch(
                   <span v-if="item.port !== undefined && item.port !== null && item.port !== ''">
                     · {{ t('software.servicePort', 'Service port: {port}', { port: item.port }) }}
                   </span>
-                  <span v-if="hasUpgrade(item)"> · {{ t('software.upgradeTo', 'Upgradeable to {version}', { version: recommendedVersion(item) }) }}</span>
+                  <span v-if="hasUpgrade(item)"> · {{ upgradeSummary(item) }}</span>
                 </template>
               </div>
               <div class="software-card-actions">
@@ -1074,6 +1210,7 @@ watch(
                 :placeholder="row.placeholder"
                 :disabled="installVersions.length === 0"
                 style="width: 100%"
+                @change="row.change"
               >
                 <el-option
                   v-for="version in installVersions"

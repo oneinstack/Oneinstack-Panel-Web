@@ -24,6 +24,7 @@ export interface ErrorPayload {
   success?: boolean;
   code?: string | number;
   message?: string;
+  field?: string;
   detail?: string;
   error?:
     | string
@@ -31,6 +32,7 @@ export interface ErrorPayload {
         code?: string | number;
         message?: string;
         detail?: string;
+        field?: string;
       };
 }
 
