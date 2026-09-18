@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import ThemeSwitch from './components/theme-switch.vue'
 import LanguageSwitch from './components/language-switch.vue'
+import PanelUpdateNotice from './components/panel-update-notice.vue'
 import { useAppStore } from '@/stores/modules/app';
 import { Bell, Expand, Fold } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -522,6 +523,7 @@ const BindButton = () => {
         <div class="page-description">{{ pageDescription }}</div>
       </div>
       <div class="layout-container__header-right">
+        <PanelUpdateNotice />
         <el-popover
           v-model:visible="taskPopoverVisible"
           placement="bottom-end"

@@ -1,11 +1,25 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CopyDocument } from '@element-plus/icons-vue'
 
 import { Api } from '@/api/modules'
 import i18n from '@/lang'
+import {
+  publishPanelUpdateCheck,
+  requestPanelUpdateCheck,
+  type PanelUpdateCheckResult
+} from '@/utils/panel-update'
 import { getPanelSettingsCapabilities } from '../access'
+
+const props = withDefaults(defineProps<{
+  autoCheck?: boolean
+}>(), {
+  autoCheck: false
+})
+const emit = defineEmits<{
+  (event: 'auto-check-consumed'): void
+}>()
 
 const capabilities = computed(getPanelSettingsCapabilities)
 const canReadPanelUpdate = computed(() => capabilities.value.canReadPanelUpdate)
@@ -22,26 +36,6 @@ interface VersionInfo {
   arch: string
 }
 
-interface UpdateCheck {
-  enabled: boolean
-  source?: 'center' | 'manifest'
-  instanceId?: string
-  currentVersion: string
-  latestVersion?: string
-  updateAvailable: boolean
-  channel: string
-  publishedAt?: string
-  releaseNotes?: string
-  compatible: boolean
-  artifactSize?: number
-  signingKeyId?: string
-  trustRevision?: number
-  trustSource?: 'center' | 'static'
-  trustedKeyCount: number
-  revokedKeyCount: number
-  trustUpdatedAt?: string
-}
-
 interface UpdateStatus {
   state: string
   currentVersion?: string
@@ -56,7 +50,7 @@ interface UpdateStatus {
 }
 
 const version = ref<VersionInfo>()
-const check = ref<UpdateCheck>()
+const check = ref<PanelUpdateCheckResult>()
 const status = ref<UpdateStatus>({ state: 'idle', rollbackAttempted: false, rollbackSucceeded: false })
 const loading = ref(false)
 const applying = ref(false)
@@ -171,28 +165,38 @@ const loadBaseState = async () => {
   status.value = statusResponse.data || status.value
 }
 
-const checkForUpdate = async () => {
+const checkForUpdate = async (notify: boolean) => {
   if (!canCheckPanelUpdate.value) return
   loading.value = true
   errorMessage.value = ''
   try {
-    const { data } = await Api.checkPanelUpdate({ silentError: true })
+    const data = await requestPanelUpdateCheck()
     check.value = data
-    if (data.updateAvailable && data.latestVersion !== data.currentVersion) {
+    if (notify && data.updateAvailable && data.latestVersion !== data.currentVersion) {
       ElMessage.success(
         data.source === 'center'
           ? t('setting.update.centerAssignedVersion', 'Center assigned version {version} to this instance', { version: data.latestVersion })
           : t('setting.update.newVersionFound', 'New version {version} found', { version: data.latestVersion })
       )
-    } else {
+    } else if (notify) {
       ElMessage.success(t('setting.update.alreadyLatest', 'Already on the latest version'))
     }
   } catch (error) {
     const message = getErrorMessage(error, t('setting.update.checkFailed', 'Failed to check updates'))
     errorMessage.value = message
-    ElMessage.error(message)
+    if (notify) ElMessage.error(message)
   } finally {
     loading.value = false
+  }
+}
+
+const runManualCheck = () => checkForUpdate(true)
+
+const runAutomaticCheck = async () => {
+  try {
+    if (canCheckPanelUpdate.value && !isRunning.value) await checkForUpdate(false)
+  } finally {
+    emit('auto-check-consumed')
   }
 }
 
@@ -242,6 +246,13 @@ const beginReconnectPolling = () => {
               ? t('setting.update.completed', 'Panel update completed')
               : status.value.message || t('setting.update.ended', 'Panel update ended')
           )
+          if (status.value.state === 'succeeded') {
+            publishPanelUpdateCheck()
+            // The response comes from the restarted Panel process. Reload the
+            // document so its no-store index selects the new hashed assets.
+            window.location.reload()
+            return
+          }
           await loadBaseState()
           return
         }
@@ -254,15 +265,24 @@ const beginReconnectPolling = () => {
   reconnectTimer = window.setTimeout(poll, 3000)
 }
 
-onMounted(() => {
-  loadBaseState().then(() => {
+onMounted(async () => {
+  try {
+    await loadBaseState()
     if (activeStates.includes(status.value.state)) {
       applying.value = true
       beginReconnectPolling()
     }
-  }).catch((error) => {
+  } catch (error) {
     errorMessage.value = getErrorMessage(error, t('setting.update.loadStatusFailed', 'Failed to load update status'))
-  })
+  }
+
+  // Entering this section always refreshes availability. A concurrent header
+  // check is shared by requestPanelUpdateCheck instead of issuing twice.
+  await runAutomaticCheck()
+})
+
+watch(() => props.autoCheck, (requested, previous) => {
+  if (requested && !previous) void runAutomaticCheck()
 })
 
 onBeforeUnmount(() => {
@@ -358,7 +378,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div class="update-actions">
-      <el-button v-if="canCheckPanelUpdate" :loading="loading" :disabled="isRunning" @click="checkForUpdate">{{ $t('setting.update.checkUpdate') }}</el-button>
+      <el-button v-if="canCheckPanelUpdate" :loading="loading" :disabled="isRunning" @click="runManualCheck">{{ $t('setting.update.checkUpdate') }}</el-button>
       <el-button
         v-if="canApplyPanelUpdate && (!check || canApplyUpdate)"
         type="primary"

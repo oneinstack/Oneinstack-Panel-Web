@@ -12,10 +12,13 @@ import { ElMessage } from 'element-plus'
 import i18n from '@/lang'
 import { useConfigStore } from '@/stores/modules/config'
 import { getPanelSettingsCapabilities } from '../access'
+import { useRoute, useRouter, type LocationQueryRaw } from 'vue-router'
 
 const allinfo = ref<any>()
 const sconfig = useConfigStore()
 const capabilities = computed(getPanelSettingsCapabilities)
+const route = useRoute()
+const router = useRouter()
 
 const tabItems = markRaw([
   {
@@ -82,10 +85,41 @@ const activeComponentProps = computed(() => {
       allinfo: allinfo.value
     }
   }
+  if (activeTab.value?.key === 'update') {
+    return {
+      autoCheck: route.query.check === '1',
+      onAutoCheckConsumed: consumeUpdateCheckQuery
+    }
+  }
   return {}
 })
 
-watch(visibleTabItems, items => {
+const requestedSection = () => typeof route.query.section === 'string'
+  ? route.query.section.trim()
+  : ''
+
+const consumeUpdateCheckQuery = async () => {
+  if (route.query.check !== '1') return
+  const query: LocationQueryRaw = { ...route.query }
+  delete query.check
+  await router.replace({ query }).catch(() => undefined)
+}
+
+const selectTab = async (key: string) => {
+  activeTabKey.value = key
+  const query: LocationQueryRaw = { ...route.query, section: key }
+  delete query.check
+  await router.replace({ query }).catch(() => undefined)
+}
+
+watch([visibleTabItems, () => route.query.section], ([items]) => {
+  const requested = requestedSection()
+  if (requested) {
+    activeTabKey.value = items.some(item => item.key === requested)
+      ? requested
+      : items[0]?.key || ''
+    return
+  }
   if (!items.some(item => item.key === activeTabKey.value)) {
     activeTabKey.value = items[0]?.key || ''
   }
@@ -114,7 +148,7 @@ onMounted(() => {
     <SettingSectionTabs
       :items="visibleTabItems"
       :active-key="activeTabKey"
-      @update:active-key="activeTabKey = $event"
+      @update:active-key="selectTab"
     />
 
     <div class="all-container__panel">

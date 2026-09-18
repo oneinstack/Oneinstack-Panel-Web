@@ -24,6 +24,21 @@ export default {
   taskIncomplete: '{operation}未完成',
   taskCompleteMessage: '{component} 已处理完成，页面状态已自动更新',
   taskDetailHint: '请打开任务查看详情',
+  panelUpdate: {
+    available: '可更新 {version}',
+    availableAria: '发现面板新版本 {version}',
+    eyebrow: '面板更新',
+    title: '发现面板新版本',
+    releaseNotes: '版本说明',
+    noReleaseNotes: '本次发布暂无版本说明。',
+    goToUpdate: '前往更新',
+    signedManifest: '签名清单',
+    channels: {
+      stable: '稳定版',
+      beta: '测试版',
+      development: '开发版'
+    }
+  },
   menu: {
     dashboard: '首页',
     operations: '运维工具',

@@ -24,6 +24,21 @@ export default {
   taskIncomplete: '{operation} incomplete',
   taskCompleteMessage: '{component} has completed. The page state was refreshed automatically.',
   taskDetailHint: 'Open the task to view details',
+  panelUpdate: {
+    available: 'Update {version}',
+    availableAria: 'Panel update {version} is available',
+    eyebrow: 'Panel update',
+    title: 'A new Panel version is available',
+    releaseNotes: 'Release notes',
+    noReleaseNotes: 'No release notes were provided for this version.',
+    goToUpdate: 'View update',
+    signedManifest: 'Signed manifest',
+    channels: {
+      stable: 'Stable',
+      beta: 'Beta',
+      development: 'Development'
+    }
+  },
   menu: {
     dashboard: 'Home',
     operations: 'Operations',

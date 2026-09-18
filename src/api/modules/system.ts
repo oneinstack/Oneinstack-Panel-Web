@@ -62,10 +62,14 @@ export const systemApi = {
   },
   /** 静默轮询面板更新状态，用于更新期间等待服务重启 */
   pollPanelUpdateStatus: () => {
-    return http.get("/sys/update/status", undefined, {
-      ignoreUnauthorizedLogout: true,
-      silentError: true,
-    });
+    return http.get(
+      "/sys/update/status",
+      { _panelUpdatePoll: Date.now() },
+      {
+        ignoreUnauthorizedLogout: true,
+        silentError: true,
+      },
+    );
   },
   /** 获取 Panel 配置、数据库与证书备份 */
   getPanelBackups: () => {
