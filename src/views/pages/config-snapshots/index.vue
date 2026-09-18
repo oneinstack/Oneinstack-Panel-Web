@@ -12,12 +12,25 @@ import type {
 import i18n from '@/lang'
 import type { ColumnItem } from '@/components/custom-table.vue'
 import { getConfigSnapshotCapabilities } from './access'
+import SnapshotSplitDiff from './components/SnapshotSplitDiff.vue'
+
+interface SnapshotContentAvailability {
+  state: 'complete' | 'partial' | 'missing'
+  beforeStored: boolean
+  afterStored: boolean
+  artifactAvailable: boolean
+  artifactSide?: 'before' | 'after'
+  artifactState: string
+}
 
 interface SnapshotDetail {
   snapshot?: ConfigurationSnapshot
   before?: unknown
   after?: unknown
   diff?: SnapshotDiff
+  diffAvailable?: boolean
+  contentAvailability?: SnapshotContentAvailability
+  artifactContent?: string
 }
 
 interface RestorePreview {
@@ -104,7 +117,22 @@ const canRestoreSnapshot = computed(() => capabilities.value.canRestoreSnapshot)
 const canForceRestore = computed(() => capabilities.value.canForceRestore)
 const canDeleteSnapshot = computed(() => capabilities.value.canDeleteSnapshot)
 const detailSnapshot = computed(() => detail.value?.snapshot || selectedSnapshot.value)
-const hasDetailContent = computed(() => detail.value?.before !== undefined || detail.value?.after !== undefined)
+const detailContentAvailability = computed(() => detail.value?.contentAvailability)
+const detailBeforeStored = computed(() =>
+  detailContentAvailability.value?.beforeStored ?? detail.value?.before !== undefined
+)
+const detailAfterStored = computed(() =>
+  detailContentAvailability.value?.afterStored ?? detail.value?.after !== undefined
+)
+const detailDiffAvailable = computed(() =>
+  detail.value?.diffAvailable ?? (detailBeforeStored.value && detailAfterStored.value)
+)
+const hasRecoveredArtifact = computed(() => Boolean(
+  detailContentAvailability.value?.artifactAvailable && detail.value?.artifactContent !== undefined
+))
+const hasDetailContent = computed(() =>
+  detailBeforeStored.value || detailAfterStored.value || hasRecoveredArtifact.value
+)
 
 const succeededCount = computed(() => snapshots.value.filter((item) => item.status === 'succeeded').length)
 const failedCount = computed(() =>
@@ -213,6 +241,98 @@ const formatBytes = (value?: number) => {
 
 const diffCount = (diff?: SnapshotDiff) =>
   (diff?.added?.length || 0) + (diff?.changed?.length || 0) + (diff?.removed?.length || 0)
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === 'object' && !Array.isArray(value)
+
+const extractConfigContent = (value: unknown) => {
+  if (!isRecord(value) || typeof value.content !== 'string') return undefined
+  return value.content
+}
+
+const beforeConfigContent = computed(() => {
+  if (detailBeforeStored.value) {
+    const content = extractConfigContent(detail.value?.before)
+    if (content !== undefined) return content
+  }
+  if (hasRecoveredArtifact.value && detailContentAvailability.value?.artifactSide !== 'after') {
+    return detail.value?.artifactContent
+  }
+  return undefined
+})
+
+const afterConfigContent = computed(() => {
+  if (detailAfterStored.value) {
+    const content = extractConfigContent(detail.value?.after)
+    if (content !== undefined) return content
+  }
+  if (hasRecoveredArtifact.value && detailContentAvailability.value?.artifactSide === 'after') {
+    return detail.value?.artifactContent
+  }
+  return undefined
+})
+
+const hasConfigContent = computed(() =>
+  beforeConfigContent.value !== undefined || afterConfigContent.value !== undefined
+)
+
+const withoutConfigContent = (value: unknown) => {
+  if (!isRecord(value)) return value
+  const normalized = { ...value }
+  delete normalized.content
+  return normalized
+}
+
+const hasStructuredContent = (stored: boolean, value: unknown) => {
+  if (!stored) return false
+  const normalized = withoutConfigContent(value)
+  return !isRecord(normalized) || Object.keys(normalized).length > 0
+}
+
+const beforeJsonText = computed(() =>
+  hasStructuredContent(detailBeforeStored.value, detail.value?.before)
+    ? JSON.stringify(withoutConfigContent(detail.value?.before), null, 2)
+    : undefined
+)
+
+const afterJsonText = computed(() =>
+  hasStructuredContent(detailAfterStored.value, detail.value?.after)
+    ? JSON.stringify(withoutConfigContent(detail.value?.after), null, 2)
+    : undefined
+)
+
+const hasJsonSnapshotContent = computed(() =>
+  beforeJsonText.value !== undefined || afterJsonText.value !== undefined
+)
+
+const contentWarningDescription = computed(() => {
+  if (hasRecoveredArtifact.value) {
+    return t(
+      'configSnapshots.historicalArtifactRecovered',
+      'The pre-change configuration was recovered from the historical artifact, but another side was not stored, so a reliable diff cannot be calculated.'
+    )
+  }
+  if (detailBeforeStored.value || detailAfterStored.value) {
+    return t(
+      'configSnapshots.historicalContentMissing',
+      'This historical record did not store a complete configuration body, so it cannot be treated as having no differences.'
+    )
+  }
+  const artifactState = detailContentAvailability.value?.artifactState
+  if (
+    detailSnapshot.value?.artifactSha256 ||
+    (artifactState && artifactState !== 'not_recorded' && artifactState !== 'not_needed')
+  ) {
+    return t(
+      'configSnapshots.historicalArtifactUnavailable',
+      'Artifact metadata is retained, but its body is not readable. This is historical content loss, not a zero-change snapshot.'
+    )
+  }
+  return t(
+    'configSnapshots.historicalContentMissing',
+    'This historical record did not store a complete configuration body, so it cannot be treated as having no differences.'
+  )
+})
 
 const snapshotErrorMessages = computed<Record<string, string>>(() => ({
   BAD_REQUEST: t('configSnapshots.errors.badRequest', 'Invalid request parameters. Check the resource type and identifier.'),
@@ -793,7 +913,15 @@ onMounted(() => {
           <el-descriptions-item :label="$t('configSnapshots.createdAt')">{{ formatTime(detailSnapshot.createdAt) }}</el-descriptions-item>
           <el-descriptions-item :label="$t('configSnapshots.configPath')">{{ detailSnapshot.configPath || '—' }}</el-descriptions-item>
         </el-descriptions>
-        <template v-if="canReadSnapshotDiff">
+        <el-alert
+          v-if="detail && detailContentAvailability && detailContentAvailability.state !== 'complete'"
+          :title="$t('configSnapshots.historicalContentIncomplete')"
+          :description="contentWarningDescription"
+          type="warning"
+          show-icon
+          :closable="false"
+        />
+        <template v-if="canReadSnapshotDiff && detailDiffAvailable">
           <div class="diff-summary">
             <el-tag type="primary" effect="light">{{ detail?.diff?.summary || $t('configSnapshots.noDiffSummary') }}</el-tag>
             <span>{{ $t('configSnapshots.changedFieldsCount', { count: diffCount(detail?.diff) }) }}</span>
@@ -804,17 +932,40 @@ onMounted(() => {
             <div><strong>{{ $t('configSnapshots.diffRemoved') }}</strong><span>{{ detail?.diff?.removed?.join('，') || $t('configSnapshots.none') }}</span></div>
           </div>
         </template>
-        <div v-if="hasDetailContent" class="json-grid">
-          <section>
-            <h4>{{ $t('configSnapshots.beforeChange') }}</h4>
-            <pre>{{ formatJson(detail?.before) }}</pre>
-          </section>
-          <section>
-            <h4>{{ $t('configSnapshots.afterChange') }}</h4>
-            <pre>{{ formatJson(detail?.after) }}</pre>
-          </section>
+        <div v-if="hasDetailContent" class="structured-diff">
+          <snapshot-split-diff
+            v-if="hasJsonSnapshotContent"
+            :title="$t('configSnapshots.fieldDiff')"
+            :before-text="beforeJsonText"
+            :after-text="afterJsonText"
+            :before-label="$t('configSnapshots.beforeChange')"
+            :after-label="$t('configSnapshots.afterChange')"
+            :change-column-label="$t('configSnapshots.changeType')"
+            :added-label="$t('configSnapshots.diffAdded')"
+            :changed-label="$t('configSnapshots.diffChanged')"
+            :removed-label="$t('configSnapshots.diffRemoved')"
+            :incomplete-label="$t('configSnapshots.recoveredArtifactOnly')"
+          />
+          <snapshot-split-diff
+            v-if="hasConfigContent"
+            :title="$t('configSnapshots.nginxLineDiff')"
+            :before-text="beforeConfigContent"
+            :after-text="afterConfigContent"
+            :before-label="$t('configSnapshots.beforeChange')"
+            :after-label="$t('configSnapshots.afterChange')"
+            :change-column-label="$t('configSnapshots.changeType')"
+            :added-label="$t('configSnapshots.diffAdded')"
+            :changed-label="$t('configSnapshots.diffChanged')"
+            :removed-label="$t('configSnapshots.diffRemoved')"
+            :incomplete-label="$t('configSnapshots.recoveredArtifactOnly')"
+          />
+          <el-empty
+            v-if="!hasJsonSnapshotContent && !hasConfigContent"
+            :description="detailDiffAvailable ? $t('configSnapshots.noLineChanges') : $t('configSnapshots.historicalContentMissing')"
+            :image-size="72"
+          />
         </div>
-        <el-empty v-else :description="$t('configSnapshots.noSnapshotContent')" :image-size="72" />
+        <el-empty v-else-if="detail" :description="$t('configSnapshots.historicalContentMissing')" :image-size="72" />
       </div>
     </custom-drawer>
 
@@ -1787,6 +1938,12 @@ onMounted(() => {
   }
 }
 
+.structured-diff {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .json-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1836,5 +1993,6 @@ onMounted(() => {
   .json-grid {
     grid-template-columns: 1fr;
   }
+
 }
 </style>
