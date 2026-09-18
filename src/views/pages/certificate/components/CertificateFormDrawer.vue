@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { HttpRequestError } from '@/api'
 import { Api } from '@/api/modules'
 import type { CertificateAlgorithm, CertificateTask } from '@/api/modules'
+import AccessibleSwitch from '@/components/AccessibleSwitch.vue'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -269,8 +270,12 @@ watch(() => form.algorithm, () => {
         <el-input v-model="form.remark" :maxlength="256" show-word-limit />
       </el-form-item>
       <div class="form-grid">
-        <el-form-item :label="$t('certificate.form.autoRenew')">
-          <el-switch v-model="form.autoRenew" />
+        <el-form-item :label="$t('certificate.form.autoRenew')" for="certificate-form-auto-renew">
+          <accessible-switch
+            id="certificate-form-auto-renew"
+            v-model="form.autoRenew"
+            :aria-label="$t('certificate.form.autoRenew')"
+          />
         </el-form-item>
         <el-form-item :label="$t('certificate.form.renewBeforeDays')">
           <el-input-number v-model="form.renewBeforeDays" :min="1" :max="90" controls-position="right" />

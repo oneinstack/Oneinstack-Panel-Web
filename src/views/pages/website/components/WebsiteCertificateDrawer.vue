@@ -4,6 +4,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { Api } from '@/api/modules'
 import { CircleClose, Document } from '@element-plus/icons-vue'
 import type { ColumnItem } from '@/components/custom-table.vue'
+import AccessibleSwitch from '@/components/AccessibleSwitch.vue'
 import i18n from '@/lang'
 
 const props = defineProps<{
@@ -262,8 +263,13 @@ onBeforeUnmount(() => {
         <el-form-item :label="t('website.certificateDrawer.accountEmail')" required>
           <el-input v-model="form.email" placeholder="admin@example.com" :disabled="!canWriteWebsite || !!activeTask" />
         </el-form-item>
-        <el-form-item :label="t('website.certificateDrawer.autoRenew')">
-          <el-switch v-model="form.autoRenew" :disabled="!canWriteWebsite || !!activeTask" />
+        <el-form-item :label="t('website.certificateDrawer.autoRenew')" for="website-certificate-auto-renew">
+          <accessible-switch
+            id="website-certificate-auto-renew"
+            v-model="form.autoRenew"
+            :aria-label="t('website.certificateDrawer.autoRenew')"
+            :disabled="!canWriteWebsite || !!activeTask"
+          />
         </el-form-item>
         <el-form-item :label="t('website.certificateDrawer.renewEarly')">
           <el-input-number v-model="form.renewBeforeDays" :min="1" :max="90" :disabled="!canWriteWebsite || !!activeTask" />

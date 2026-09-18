@@ -34,10 +34,39 @@ const t = (key: string, fallback?: string) => {
 }
 const isEdit = computed(() => Boolean(props.account?.id))
 const title = computed(() => isEdit.value ? t('certificate.actions.editDnsAccount') : t('certificate.actions.addDnsAccount'))
+const selectedProvider = computed(() => props.providers.find((item) => item.value === form.provider))
+const credentialOneLabel = computed(() => selectedProvider.value?.credentialOneLabel || t('certificate.form.credentialOne'))
+const credentialTwoLabel = computed(() => selectedProvider.value?.credentialTwoLabel || '')
+const freshCredentialsRequired = computed(() => !isEdit.value || !props.account?.credentialConfigured || props.account?.provider !== form.provider)
+const credentialTwoRequired = computed(() => Boolean(selectedProvider.value?.credentialTwoRequired) && freshCredentialsRequired.value)
+const providerPermissionHint = computed(() => {
+  if (!form.provider) return ''
+  const key = `certificate.dnsPermissionHints.${form.provider}`
+  return t(key, t('certificate.dnsPermissionHints.default'))
+})
+const credentialPlaceholder = (label: string) => (i18n.t as any)('certificate.form.credentialPlaceholder', { field: label })
+const credentialRequiredMessage = (label: string) => (i18n.t as any)('certificate.messages.credentialRequired', { field: label })
 const rules = computed(() => ({
   name: [{ required: true, message: t('certificate.messages.dnsNameRequired'), trigger: 'blur' }],
   provider: [{ required: true, message: t('certificate.messages.dnsProviderRequired'), trigger: 'change' }],
-  credentialOne: isEdit.value ? [] : [{ required: true, message: t('certificate.messages.credentialRequired'), trigger: 'blur' }]
+  credentialOne: freshCredentialsRequired.value
+    ? [
+        {
+          required: true,
+          message: credentialRequiredMessage(credentialOneLabel.value),
+          trigger: 'blur'
+        }
+      ]
+    : [],
+  credentialTwo: credentialTwoRequired.value
+    ? [
+        {
+          required: true,
+          message: credentialRequiredMessage(credentialTwoLabel.value),
+          trigger: 'blur'
+        }
+      ]
+    : []
 }))
 
 const reset = () => {
@@ -53,6 +82,12 @@ const close = () => {
   form.credentialOne = ''
   form.credentialTwo = ''
   emit('update:visible', false)
+}
+
+const handleProviderChange = () => {
+  form.credentialOne = ''
+  form.credentialTwo = ''
+  formRef.value?.clearValidate?.(['credentialOne', 'credentialTwo'])
 }
 
 const submit = async () => {
@@ -106,10 +141,18 @@ watch(() => [props.visible, props.account, props.providers] as const, ([visible]
         <el-input v-model="form.name" :maxlength="128" />
       </el-form-item>
       <el-form-item prop="provider" :label="$t('certificate.form.dnsProvider')" required>
-        <el-select v-model="form.provider" style="width: 100%">
+        <el-select v-model="form.provider" style="width: 100%" @change="handleProviderChange">
           <el-option v-for="item in providers" :key="item.value" :label="certificateDnsProviderLabel(item.value, item.label)" :value="item.value" />
         </el-select>
       </el-form-item>
+      <el-alert
+        v-if="providerPermissionHint"
+        class="credential-hint"
+        :title="providerPermissionHint"
+        type="info"
+        show-icon
+        :closable="false"
+      />
       <el-alert
         v-if="isEdit && account?.credentialConfigured"
         class="credential-hint"
@@ -117,11 +160,11 @@ watch(() => [props.visible, props.account, props.providers] as const, ([visible]
         type="success"
         :closable="false"
       />
-      <el-form-item prop="credentialOne" :label="$t('certificate.form.credentialOne')" :required="!isEdit">
-        <el-input v-model="form.credentialOne" type="password" show-password autocomplete="new-password" />
+      <el-form-item prop="credentialOne" :label="credentialOneLabel" :required="freshCredentialsRequired">
+        <el-input v-model="form.credentialOne" type="password" show-password autocomplete="new-password" :placeholder="credentialPlaceholder(credentialOneLabel)" />
       </el-form-item>
-      <el-form-item :label="$t('certificate.form.credentialTwo')">
-        <el-input v-model="form.credentialTwo" type="password" show-password autocomplete="new-password" />
+      <el-form-item v-if="credentialTwoLabel" prop="credentialTwo" :label="credentialTwoLabel" :required="credentialTwoRequired">
+        <el-input v-model="form.credentialTwo" type="password" show-password autocomplete="new-password" :placeholder="credentialPlaceholder(credentialTwoLabel)" />
       </el-form-item>
       <el-form-item :label="$t('certificate.form.enabled')">
         <el-switch v-model="form.enabled" />

@@ -152,6 +152,9 @@ export interface CertificateAlgorithm {
 export interface DnsProviderOption {
   value: string;
   label: string;
+  credentialOneLabel: string;
+  credentialTwoLabel?: string;
+  credentialTwoRequired: boolean;
 }
 
 export interface ManagedCertificate {

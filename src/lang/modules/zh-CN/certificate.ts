@@ -69,6 +69,12 @@ export default {
     aliyun: '阿里云',
     tencentcloud: '腾讯云'
   },
+  dnsPermissionHints: {
+    cloudflare: '权限要求：API Token 需包含 Zone → Zone → Read 和 Zone → DNS → Edit，并授权目标域名区域；无需填写邮箱。',
+    aliyun: '权限要求：建议使用 RAM 用户 AccessKey，并授予目标域名的云解析 DNS 记录查询、新增和删除权限；可使用 AliyunDNSFullAccess，生产环境建议按最小权限自定义策略。',
+    tencentcloud: '权限要求：建议使用 CAM 子用户密钥，并授予目标域名的 DNSPod 记录读取、新增和删除权限；可使用 QcloudDNSPodFullAccess，生产环境建议按最小权限授权。',
+    default: '请确保该凭据具备查询、新增和删除目标域名 DNS 记录的权限。'
+  },
   form: {
     challengeType: '申请方式',
     accountEmail: '账户邮箱',
@@ -93,7 +99,8 @@ export default {
     dnsProvider: 'DNS 服务商',
     credentialOne: '凭据一',
     credentialTwo: '凭据二',
-    credentialKeepHint: '编辑时留空会保留服务端已保存的凭据。',
+    credentialPlaceholder: '请输入 {field}',
+    credentialKeepHint: '服务商不变时，凭据留空会保留服务端已保存的值；切换服务商后需重新填写。',
     enabled: '启用账号',
     uploadHint: '证书和私钥仅用于服务端校验与受管存储，不会写入浏览器持久化状态。',
     selfSignedHint: '自签证书适合内网或测试环境，浏览器默认不会信任。',
@@ -179,6 +186,7 @@ export default {
     dnsDeleted: 'DNS 账号已删除',
     copyFailed: '复制失败，请手动选择内容复制',
     domainsRequired: '请至少填写一个域名或 IP',
+    acmeDomainsRequired: '请至少填写一个域名',
     certificateRequired: '请填写证书 PEM',
     privateKeyRequired: '请填写私钥 PEM',
     algorithmRequired: '请选择密钥算法',
@@ -192,7 +200,7 @@ export default {
     remarkTooLong: '备注不能超过 512 个字符',
     dnsNameRequired: '请填写账号名称',
     dnsProviderRequired: '请选择 DNS 服务商',
-    credentialRequired: '新增账号时请填写凭据一'
+    credentialRequired: '请填写 {field}'
   },
   issue: {
     challengeDns: 'DNS 账号申请',

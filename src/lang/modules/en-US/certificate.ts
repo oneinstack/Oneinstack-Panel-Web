@@ -69,6 +69,12 @@ export default {
     aliyun: 'Alibaba Cloud',
     tencentcloud: 'Tencent Cloud'
   },
+  dnsPermissionHints: {
+    cloudflare: 'Required permissions: grant the API Token Zone → Zone → Read and Zone → DNS → Edit for the target zone. No email address is required.',
+    aliyun: 'Required permissions: use a RAM user AccessKey with permission to read, create, and delete DNS records for the target domain. AliyunDNSFullAccess works; prefer a least-privilege custom policy in production.',
+    tencentcloud: 'Required permissions: use CAM sub-user credentials with permission to read, create, and delete DNSPod records for the target domain. QcloudDNSPodFullAccess works; prefer least privilege in production.',
+    default: 'Make sure the credentials can read, create, and delete DNS records for the target domain.'
+  },
   form: {
     challengeType: 'Issuance method',
     accountEmail: 'Account email',
@@ -93,7 +99,8 @@ export default {
     dnsProvider: 'DNS provider',
     credentialOne: 'Credential one',
     credentialTwo: 'Credential two',
-    credentialKeepHint: 'Leave credentials blank while editing to keep the values stored on the server.',
+    credentialPlaceholder: 'Enter {field}',
+    credentialKeepHint: 'Leave credentials blank to keep the stored values when the provider is unchanged. Enter new credentials after switching providers.',
     enabled: 'Enable account',
     uploadHint: 'The certificate and private key are sent only for server validation and managed storage. They are never persisted in the browser.',
     selfSignedHint: 'Self-signed certificates suit internal or test environments and are not trusted by browsers by default.',
@@ -179,6 +186,7 @@ export default {
     dnsDeleted: 'DNS account deleted',
     copyFailed: 'Copy failed. Select and copy the content manually.',
     domainsRequired: 'Enter at least one domain or IP address',
+    acmeDomainsRequired: 'Enter at least one domain',
     certificateRequired: 'Enter the certificate PEM',
     privateKeyRequired: 'Enter the private key PEM',
     algorithmRequired: 'Select a key algorithm',
@@ -192,7 +200,7 @@ export default {
     remarkTooLong: 'Remark cannot exceed 512 characters',
     dnsNameRequired: 'Enter an account name',
     dnsProviderRequired: 'Select a DNS provider',
-    credentialRequired: 'Credential one is required for a new account'
+    credentialRequired: 'Enter {field}'
   },
   issue: {
     challengeDns: 'DNS account issuance',

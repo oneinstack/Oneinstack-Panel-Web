@@ -4,6 +4,7 @@ import { ElMessage } from 'element-plus'
 import { HttpRequestError } from '@/api'
 import { Api } from '@/api/modules'
 import type { CertificateTask, DnsAccount } from '@/api/modules'
+import AccessibleSwitch from '@/components/AccessibleSwitch.vue'
 import i18n from '@/lang'
 
 interface WebsiteOption {
@@ -170,7 +171,7 @@ const rules = computed(() => ({
   domains: form.challengeType === 'dns-01'
     ? [{ validator: (_rule: unknown, _value: unknown, callback: (error?: Error) => void) => {
       if (!parsedDomains.value.length) {
-        callback(new Error(t('certificate.messages.domainsRequired')))
+        callback(new Error(t('certificate.messages.acmeDomainsRequired')))
         return
       }
       const invalidIp = parsedDomains.value.find((item) => isIpAddress(item.replace(/^\[(.*)\]$/, '$1')))
@@ -510,8 +511,12 @@ watch(() => form.challengeType, (value) => {
       </div>
 
       <div class="form-grid form-grid--compact">
-        <el-form-item :label="$t('certificate.form.autoRenew')">
-          <el-switch v-model="form.autoRenew" />
+        <el-form-item :label="$t('certificate.form.autoRenew')" for="certificate-issue-auto-renew">
+          <accessible-switch
+            id="certificate-issue-auto-renew"
+            v-model="form.autoRenew"
+            :aria-label="$t('certificate.form.autoRenew')"
+          />
         </el-form-item>
       </div>
 
