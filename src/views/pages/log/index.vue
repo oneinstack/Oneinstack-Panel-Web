@@ -4,6 +4,7 @@ import { Api } from "@/api/modules";
 import { ElMessage } from "element-plus";
 import { View } from "@element-plus/icons-vue";
 import i18n from "@/lang";
+import { useRouter } from "vue-router";
 import type { ColumnItem } from "@/components/custom-table.vue";
 import { hasOperationAccess } from '@/utils/access'
 
@@ -51,6 +52,7 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
   return value && value !== key ? value : fallback || key;
 };
+const router = useRouter();
 
 const loading = ref(false);
 const verifying = ref(false);
@@ -100,6 +102,7 @@ const columns = computed<ColumnItem<AuditEvent>[]>(() => [
     label: t("approvalCenter.action"),
     minWidth: 220,
     showOverflowTooltip: true,
+    slot: "action",
   },
   {
     prop: "message",
@@ -260,6 +263,24 @@ const exportEvents = async () => {
 const formatTime = (value?: string) =>
   value ? new Date(value).toLocaleString() : "—";
 
+const actionLabel = (action: string) => {
+  if (!action.startsWith('cluster.')) return action
+  return t(`audit.clusterActions.${action}`, action)
+}
+
+const clusterLocation = (event: AuditEvent) => {
+  if (!event.action.startsWith('cluster.')) return null
+  const batchId = event.message.match(/(?:^|\s)batch=([A-Za-z0-9-]+)/)?.[1]
+  const nodeId = event.message.match(/(?:^|\s)node=(\d+)/)?.[1]
+  if (!batchId && !nodeId) return null
+  return { ...(batchId ? { batchId } : {}), ...(nodeId ? { nodeId } : {}) }
+}
+
+const locateClusterEvent = (event: AuditEvent) => {
+  const query = clusterLocation(event)
+  if (query) void router.push({ path: '/cluster', query })
+}
+
 onMounted(async () => {
   await Promise.all([loadEvents(), loadStats()]);
 });
@@ -413,6 +434,7 @@ onMounted(async () => {
         <template #username="{ row }">{{
           row.username || $t("common.unauthenticated")
         }}</template>
+        <template #action="{ row }"><span>{{ actionLabel(row.action) }}</span><el-button v-if="clusterLocation(row)" link type="primary" @click="locateClusterEvent(row)">{{ t('audit.locateCluster') }}</el-button></template>
         <template #message="{ row }">{{ row.message || "—" }}</template>
         <template #remoteIp="{ row }">{{ row.remoteIp || "—" }}</template>
         <template #result="{ row }">
@@ -493,7 +515,7 @@ onMounted(async () => {
             <span class="audit-detail__eyebrow">
               {{ $t("audit.sequence") }} #{{ detail.sequence }}
             </span>
-            <h3>{{ detail.action }}</h3>
+            <h3>{{ actionLabel(detail.action) }}</h3>
             <p>{{ detail.route || detail.path }}</p>
           </div>
           <div class="audit-detail__hero-side">
@@ -541,7 +563,7 @@ onMounted(async () => {
             >#{{ detail.sequence }}</el-descriptions-item
           >
           <el-descriptions-item :label="$t('approvalCenter.action')" :span="2">{{
-            detail.action
+            actionLabel(detail.action)
           }}</el-descriptions-item>
           <el-descriptions-item :label="$t('audit.route')" :span="2">{{
             detail.route || detail.path
