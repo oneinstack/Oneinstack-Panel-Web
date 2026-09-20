@@ -1311,7 +1311,10 @@ const refreshKnownPanelUpdates = async (silent = true) => {
   const activeIDs = Object.entries(panelUpdates)
     .filter(([, state]) => Boolean(state.activeTask))
     .map(([id]) => id)
-  const ids = new Set([...activeIDs, ...Object.keys(panelUpdateTracking)])
+  const visibleIDs = paginatedNodes.value
+    .filter((node) => !node.local)
+    .map((node) => String(node.id))
+  const ids = new Set([...activeIDs, ...Object.keys(panelUpdateTracking), ...visibleIDs])
   const targetNodes = [...ids]
     .map((id) => nodes.value.find((item) => String(item.id) === id))
     .filter((node): node is ClusterNode => Boolean(node && !node.local))
