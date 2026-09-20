@@ -225,7 +225,18 @@ const resourceTertiaryText = (row: ConfigurationSnapshot) => {
 }
 
 const formatTime = (value?: string | null) => value ? new Date(value).toLocaleString() : '—'
-const formatJson = (value: unknown) => JSON.stringify(value ?? {}, null, 2)
+const sortJsonKeys = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(sortJsonKeys)
+  if (value === null || typeof value !== 'object') return value
+
+  return Object.keys(value)
+    .sort((left, right) => left.localeCompare(right))
+    .reduce<Record<string, unknown>>((result, key) => {
+      result[key] = sortJsonKeys((value as Record<string, unknown>)[key])
+      return result
+    }, {})
+}
+const formatJson = (value: unknown) => JSON.stringify(sortJsonKeys(value ?? {}), null, 2)
 const shortHash = (value?: string) => value ? value.replace(/^sha256:?/, '').slice(0, 12) : '—'
 const formatBytes = (value?: number) => {
   if (!Number.isFinite(value)) return '—'
@@ -573,6 +584,7 @@ const openRestore = async (row: ConfigurationSnapshot) => {
     const { data } = await Api.previewConfigurationSnapshotRestore(row.id)
     restorePreview.value = data || {}
   } catch (error: any) {
+    restoreVisible.value = false
     // ElMessage.error(getSnapshotErrorMessage(error, t('configSnapshots.messages.restorePreviewReadFailed', 'Failed to read rollback preview')))
   } finally {
     restoreLoading.value = false
