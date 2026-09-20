@@ -38,6 +38,10 @@ export default {
     notInstalledTitle: '当前未安装 {name} 环境，也没有远程数据库',
     connectionMissingDescription: '本机服务已安装，但连接尚未就绪。可以添加当前或远程服务器连接。',
     notInstalledDescription: '安装本机 {name}，或连接一台已有的远程服务器后即可开始管理。',
+    unmanagedNotice: '已检测到本机数据库或已有数据库记录，但 MySQL 未纳入面板管理。软件商城显示“未安装”是受管状态，不代表数据库文件不存在；当前可继续使用已配置连接。',
+    addDisabledUnmanaged: '当前没有可用于新增数据库的连接；已有数据库记录不等于 MySQL 已纳入面板管理，请先安装/接管 MySQL，或添加并测试一个数据库连接。',
+    addDisabledNoConnection: 'MySQL 已纳入面板管理，但尚未记录可用连接，请先刷新或添加一个数据库连接。',
+    addDisabledNotInstalled: '未检测到受面板管理的 MySQL 或可用数据库连接，请先安装/接管 MySQL，或添加并测试一个数据库连接。',
     addRemoteDatabase: '添加远程数据库',
     viewSoftware: '查看 {name}',
     installSoftware: '安装 {name}'

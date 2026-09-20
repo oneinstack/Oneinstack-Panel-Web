@@ -7,6 +7,7 @@ import i18n from '@/lang'
 const props = defineProps<{
   type: 'mysql' | 'redis'
   installed: boolean
+  reason?: string
   canRemoteCreate?: boolean
 }>()
 
@@ -21,9 +22,9 @@ const title = computed(() =>
     : t('database.environment.notInstalledTitle', '当前未安装 {name} 环境，也没有远程数据库', { name: displayName.value })
 )
 const description = computed(() =>
-  props.installed
+  props.reason || (props.installed
     ? t('database.environment.connectionMissingDescription', '本机服务已安装，但连接尚未就绪。可以添加当前或远程服务器连接。')
-    : t('database.environment.notInstalledDescription', '安装本机 {name}，或连接一台已有的远程服务器后即可开始管理。', { name: displayName.value })
+    : t('database.environment.notInstalledDescription', '安装本机 {name}，或连接一台已有的远程服务器后即可开始管理。', { name: displayName.value }))
 )
 
 const openRemote = () => System.router.push(`/database/remote?type=${props.type}`)

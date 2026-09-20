@@ -38,6 +38,10 @@ export default {
     notInstalledTitle: '{name} is not installed and no remote database is connected',
     connectionMissingDescription: 'The local service is installed, but the connection is not ready yet. You can add a local or remote server connection.',
     notInstalledDescription: 'Install local {name}, or connect an existing remote server to start managing databases.',
+    unmanagedNotice: 'A local database or existing database records were detected, but MySQL is not managed by the Panel. “Not installed” in Software store means not Panel-managed; it does not mean the database files are absent. Existing connections can still be used.',
+    addDisabledUnmanaged: 'There is no connection available for creating a database. Existing records do not mean MySQL is Panel-managed; install/adopt MySQL or add and test a database connection first.',
+    addDisabledNoConnection: 'MySQL is Panel-managed, but no usable connection is recorded. Refresh or add a database connection first.',
+    addDisabledNotInstalled: 'No Panel-managed MySQL or usable database connection was detected. Install/adopt MySQL or add and test a database connection first.',
     addRemoteDatabase: 'Add remote database',
     viewSoftware: 'View {name}',
     installSoftware: 'Install {name}'

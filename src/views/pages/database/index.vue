@@ -13,6 +13,17 @@ export interface ConfProps {
   conf: typeof conf
 }
 
+interface StorageEnvironmentStatus {
+  installed: boolean
+  state?: string
+  reasonCode?: string
+  reason?: string
+  connectionCount?: number
+  localConnectionCount?: number
+  managedConnectionCount?: number
+  libraryCount?: number
+}
+
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
   return value && value !== key ? value : fallback || key
@@ -33,6 +44,8 @@ const conf = reactive({
     loading: true,
     mysql: false,
     redis: false,
+    mysqlStatus: null as StorageEnvironmentStatus | null,
+    redisStatus: null as StorageEnvironmentStatus | null,
     getData: async () => {
       if (!canReadDatabase.value) {
         conf.environment.loading = false
@@ -43,6 +56,8 @@ const conf = reactive({
         const { data } = await Api.getStorageInfo()
         conf.environment.mysql = Boolean(data?.mysql)
         conf.environment.redis = Boolean(data?.redis)
+        conf.environment.mysqlStatus = data?.mysqlStatus || null
+        conf.environment.redisStatus = data?.redisStatus || null
       } finally {
         conf.environment.loading = false
       }

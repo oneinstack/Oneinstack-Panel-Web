@@ -211,11 +211,55 @@ const connectionState = reactive({
 
 const showEnvironmentEmpty = computed(() => {
   if (connectionState.loading || conf.environment.loading) return false
-  const hasRemoteConnection = connectionState.data.some((item: any) => !item.managed)
-  const hasManagedLocalConnection = connectionState.data.some((item: any) => item.managed)
-  const hasUsableConnection = hasRemoteConnection ||
-    (conf.environment.mysql && hasManagedLocalConnection)
-  return !hasUsableConnection
+  // A configured connection is usable for database operations regardless of
+  // whether the local server itself is managed by the Panel.
+  return connectionState.data.length === 0
+})
+
+const hasDatabaseRecords = computed(() => Array.isArray(conf.list.data) && conf.list.data.length > 0)
+const hasLocalConnection = computed(() => connectionState.data.some((item: any) => {
+  const address = String(item.addr || '').trim().toLowerCase()
+  return address === '127.0.0.1' || address === 'localhost' || address === '::1'
+}))
+const databaseEnvironmentNotice = computed(() => {
+  if (connectionState.loading || conf.environment.loading) return ''
+  const status = conf.environment.mysqlStatus
+  if (status?.state === 'unmanaged' && (
+    hasLocalConnection.value ||
+    hasDatabaseRecords.value ||
+    Number(status.libraryCount || 0) > 0
+  )) {
+    return t(
+      'database.environment.unmanagedNotice',
+      '已检测到本机数据库或已有数据库记录，但 MySQL 未纳入面板管理。软件商城显示“未安装”是受管状态，不代表数据库文件不存在；当前可继续使用已配置连接。'
+    )
+  }
+  if (!conf.environment.mysql && hasDatabaseRecords.value) {
+    return t(
+      'database.environment.unmanagedNotice',
+      '已检测到已有数据库记录，但 MySQL 未纳入面板管理。软件商城显示“未安装”是受管状态，不代表数据库文件不存在。'
+    )
+  }
+  return ''
+})
+const addDatabaseDisabledReason = computed(() => {
+  if (!showEnvironmentEmpty.value) return ''
+  if (databaseEnvironmentNotice.value) {
+    return t(
+      'database.environment.addDisabledUnmanaged',
+      '当前没有可用于新增数据库的连接；已有数据库记录不等于 MySQL 已纳入面板管理，请先安装/接管 MySQL，或添加并测试一个数据库连接。'
+    )
+  }
+  if (conf.environment.mysql) {
+    return t(
+      'database.environment.addDisabledNoConnection',
+      'MySQL 已纳入面板管理，但尚未记录可用连接，请先刷新或添加一个数据库连接。'
+    )
+  }
+  return t(
+    'database.environment.addDisabledNotInstalled',
+    '未检测到受面板管理的 MySQL 或可用数据库连接，请先安装/接管 MySQL，或添加并测试一个数据库连接。'
+  )
 })
 
 void Promise.allSettled([
@@ -459,9 +503,21 @@ const handleMoreAction = async (command: string, row: any) => {
     <el-icon class="cursor-pointer" size="26" color="#A2A2A2" @click="conf.showTips = false" style="margin-left: 24px;"><CircleClose /></el-icon>
   </div>
   <div class="container">
+    <el-alert
+      v-if="databaseEnvironmentNotice"
+      class="database-environment-notice"
+      type="warning"
+      :closable="false"
+      show-icon
+      :title="databaseEnvironmentNotice"
+    />
     <div class="tool-bar">
       <el-space class="btn-group" :size="14">
-        <el-button v-if="canCreateDatabase" type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
+        <el-tooltip v-if="canCreateDatabase" :content="addDatabaseDisabledReason" :disabled="!addDatabaseDisabledReason" placement="top">
+          <span>
+            <el-button type="primary" :disabled="showEnvironmentEmpty" @click="conf.drawer.open('add')">{{ t('database.addDatabase', '添加数据库') }}</el-button>
+          </span>
+        </el-tooltip>
         <el-button v-if="canCreateRemoteDatabase" type="primary" @click="System.router.push('/database/remote?type=mysql')">{{ t('database.remoteDatabase', '远程数据库') }}</el-button>
         <el-button v-if="canManagePhpMyAdmin" :icon="DataAnalysis" @click="openPhpMyAdminPanel">
           phpMyAdmin
@@ -497,6 +553,7 @@ const handleMoreAction = async (command: string, row: any) => {
             v-if="showEnvironmentEmpty"
             type="mysql"
             :installed="conf.environment.mysql"
+            :reason="databaseEnvironmentNotice || addDatabaseDisabledReason"
             :can-remote-create="canCreateRemoteDatabase"
           />
           <div v-else style="margin-top: 40px">
