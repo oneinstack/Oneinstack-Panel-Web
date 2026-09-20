@@ -868,6 +868,7 @@ const selectUninstallDataPolicy = async (): Promise<'preserve' | 'delete' | ''> 
         type: 'warning',
         distinguishCancelAndClose: true,
         closeOnClickModal: false,
+        customClass: 'uninstall-data-policy-message-box',
         confirmButtonClass: 'el-button--danger',
         confirmButtonText: t('software.deleteDataAndUninstall', 'Delete data and uninstall'),
         cancelButtonText: t('software.preserveDataAndUninstall', 'Preserve data and uninstall')
@@ -1882,5 +1883,34 @@ watch(
     padding: 0 10px;
   }
 
+}
+
+:global(.uninstall-data-policy-message-box) {
+  width: 520px;
+  max-width: calc(100vw - 32px);
+}
+
+:global(.uninstall-data-policy-message-box .el-message-box__btns) {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 10px;
+  justify-content: end;
+}
+
+:global(.uninstall-data-policy-message-box .el-message-box__btns .el-button) {
+  margin-left: 0;
+}
+
+@media (max-width: 768px) {
+  :global(.uninstall-data-policy-message-box .el-message-box__btns) {
+    grid-template-columns: 1fr;
+  }
+
+  :global(.uninstall-data-policy-message-box .el-message-box__btns .el-button) {
+    width: 100%;
+    height: auto;
+    min-height: 32px;
+    white-space: normal;
+  }
 }
 </style>
