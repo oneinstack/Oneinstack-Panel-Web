@@ -6,7 +6,11 @@ import { useAppStore } from "@/stores/modules/app";
 import { App } from "vue";
 import System from "./System";
 import Components from "@/components";
-import { clearChunkReloadFlag } from "./chunk-reload";
+import {
+  clearChunkReloadFlag,
+  clearChunkReloadRecovery,
+  getPendingChunkReloadTarget,
+} from "./chunk-reload";
 export default class Config {
   /**
    * 初始化
@@ -40,7 +44,19 @@ export default class Config {
     router.isReady().then(async () => {
       // 初始化完成
       app.mount("#app");
+      const pendingTarget = getPendingChunkReloadTarget();
       clearChunkReloadFlag();
+      if (!pendingTarget || router.currentRoute.value.fullPath === pendingTarget) {
+        clearChunkReloadRecovery();
+        return;
+      }
+      try {
+        await router.replace(pendingTarget);
+      } catch (error) {
+        console.error(`[router] Failed to restore route ${pendingTarget}`, error);
+      } finally {
+        clearChunkReloadRecovery();
+      }
     });
   }
 }

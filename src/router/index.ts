@@ -101,9 +101,9 @@ export const initRouter = () => {
   // Route components are lazy-loaded. A deployment can briefly serve an old
   // index with chunks from a newer build, so recover at the router boundary
   // instead of leaving navigation on the previous page.
-  router.onError((error) => {
+  router.onError((error, to) => {
     if (isDynamicImportError(error)) {
-      reloadOnceForChunkFailure()
+      reloadOnceForChunkFailure(to.fullPath)
     }
   })
 

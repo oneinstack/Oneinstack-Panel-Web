@@ -260,9 +260,13 @@ const navigateNavItem = async (item: NavItem) => {
       await router.push(item.path)
     } catch (error) {
       if (isDynamicImportError(error)) {
-        reloadOnceForChunkFailure()
+        if (!reloadOnceForChunkFailure(item.path)) {
+          console.error(`[navigation] Failed to load route ${item.path}`, error)
+          ElMessage.error(translateWithFallback('layout.menu.navigationFailed', 'Unable to open this page'))
+        }
       } else {
-        ElMessage.error(translateWithFallback('layout.navigationFailed', 'Unable to open this page'))
+        console.error(`[navigation] Failed to open route ${item.path}`, error)
+        ElMessage.error(translateWithFallback('layout.menu.navigationFailed', 'Unable to open this page'))
       }
     }
     if (route.path === currentPath) {
