@@ -515,6 +515,7 @@ html {
     letter-spacing: 0.04em;
     background: var(--surface-subtle);
     border-right-color: transparent !important;
+    border-bottom-color: var(--border-subtle);
   }
 
   td.el-table__cell {
@@ -527,6 +528,19 @@ html {
   tr:last-child td.el-table__cell {
     border-bottom: 0;
   }
+}
+
+:root:root.dark .el-table {
+  --el-table-border-color: transparent;
+}
+
+:root:root.dark .el-table th.el-table__cell,
+:root:root.dark .el-table td.el-table__cell {
+  border-bottom-color: transparent !important;
+}
+
+:root:root.dark .el-tabs__nav-wrap::after {
+  background-color: transparent !important;
 }
 
 :root:root.dark .el-table {

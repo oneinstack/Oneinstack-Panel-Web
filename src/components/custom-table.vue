@@ -293,6 +293,11 @@ defineExpose({
   border-bottom: 1px solid var(--border-subtle) !important;
 }
 
+:global(:root:root.dark .smart-table th.el-table__cell),
+:global(:root:root.dark .smart-table td.el-table__cell) {
+  border-bottom-color: transparent !important;
+}
+
 :deep(.smart-table td.el-table-fixed-column--left),
 :deep(.smart-table td.el-table-fixed-column--right) {
   background-color: var(--el-table-tr-bg-color);
