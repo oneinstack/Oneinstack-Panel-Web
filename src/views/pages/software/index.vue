@@ -33,6 +33,7 @@ const showCatalogSyncButton = !import.meta.env.PROD
 const pageLoading = ref(true)
 const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
 const canSyncSoftwareCatalog = computed(() => hasSoftwareButtonAccess('catalog.sync'))
+let latestListRequest = 0
 
 const buildCategoryQuery = () => {
   if (conf.activeIndex === 1) return { installed: true }
@@ -151,6 +152,7 @@ const conf = reactive({
     },
     total: 0,
     getData: async () => {
+      const requestId = ++latestListRequest
       if (!canReadSoftware.value) {
         conf.list.loading = false
         conf.list.data = []
@@ -158,17 +160,24 @@ const conf = reactive({
         return
       }
       conf.list.loading = true
-      const { data: res } = await Api.getSoftList(conf.list.params)
-      conf.list.loading = false
-      conf.list.total = res.total
-      conf.list.data = (res.data ?? []).map((item: Record<string, any>) => {
-        const port = item?.http_port ?? item?.httpPort
-        if (port === undefined || port === null || port === '') return item
-        return {
-          ...item,
-          port
+      const params = { ...conf.list.params }
+      try {
+        const { data: res } = await Api.getSoftList(params)
+        if (requestId !== latestListRequest) return
+        conf.list.total = res.total
+        conf.list.data = (res.data ?? []).map((item: Record<string, any>) => {
+          const port = item?.http_port ?? item?.httpPort
+          if (port === undefined || port === null || port === '') return item
+          return {
+            ...item,
+            port
+          }
+        })
+      } finally {
+        if (requestId === latestListRequest) {
+          conf.list.loading = false
         }
-      })
+      }
     },
     pageChange: (value: number) => {
       conf.list.params.page = value
