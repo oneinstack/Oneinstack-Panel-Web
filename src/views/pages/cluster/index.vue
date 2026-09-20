@@ -41,7 +41,8 @@ interface ClusterNode {
   local?: boolean
   role: 'controller' | 'node'
   name: string
-  endpoint?: string
+	endpoint?: string
+	endpointAddressMismatch?: boolean
   group?: string
   tags?: string
   enabled: boolean
@@ -128,8 +129,9 @@ interface TaskSummary {
   progress?: number
   attempts: number
   maxAttempts: number
-  error?: string
-  errorCode?: string
+	error?: string
+	errorCode?: string
+	diagnosisOverallStatus?: 'healthy' | 'warning' | 'critical'
   queuedAt?: string
   startedAt?: string
   finishedAt?: string
@@ -339,6 +341,7 @@ let detailPollTimer: number | undefined
 let dispatchPollTimer: number | undefined
 let taskDetailPollTimer: number | undefined
 let operationsPollTimer: number | undefined
+let componentUnmounted = false
 
 const canAction = (action: string) => configStore.isAdministrator() || configStore.hasActionAccess(action)
 const asNode = (row: unknown) => row as ClusterNode
@@ -451,6 +454,10 @@ const paginatedNodes = computed(() => {
   const start = (currentPage.value - 1) * pageSize.value
   return filteredNodes.value.slice(start, start + pageSize.value)
 })
+
+const selectableVisibleNodes = computed(() => paginatedNodes.value.filter((node) => !node.local))
+const allVisibleNodesSelected = computed(() => selectableVisibleNodes.value.length > 0 && selectableVisibleNodes.value.every((node) => selectedNodeIds.value.includes(Number(node.id))))
+const someVisibleNodesSelected = computed(() => selectableVisibleNodes.value.some((node) => selectedNodeIds.value.includes(Number(node.id))) && !allVisibleNodesSelected.value)
 
 const onlineWorkers = computed(() => nodes.value.filter((node) => !node.local && node.enabled && node.status === 'online'))
 const activeDispatchTasks = computed(() => dispatchTasks.value.filter((task) => task.status === 'queued' || task.status === 'running'))
@@ -744,19 +751,15 @@ const stopOperationsPolling = () => {
 
 const startOperationsPolling = () => {
   stopOperationsPolling()
-  if (document.hidden || !visibleOperationsActive.value) return
+  if (componentUnmounted || document.hidden || !visibleOperationsActive.value) return
   operationsPollTimer = window.setTimeout(async () => {
     operationsPollTimer = undefined
     try {
       await loadVisibleOperations(true)
     } finally {
-      startOperationsPolling()
+      if (!componentUnmounted) startOperationsPolling()
     }
   }, 10000)
-}
-
-const handleNodeSelection = (rows: ClusterNode[]) => {
-  selectedNodeIds.value = rows.filter((row) => !row.local).map((row) => Number(row.id))
 }
 
 const toggleCardSelection = (node: ClusterNode, selected: boolean) => {
@@ -764,6 +767,16 @@ const toggleCardSelection = (node: ClusterNode, selected: boolean) => {
   const values = new Set(selectedNodeIds.value)
   if (selected) values.add(id)
   else values.delete(id)
+  selectedNodeIds.value = [...values]
+}
+
+const toggleVisibleSelection = (selected: boolean) => {
+  const values = new Set(selectedNodeIds.value)
+  selectableVisibleNodes.value.forEach((node) => {
+    const id = Number(node.id)
+    if (selected) values.add(id)
+    else values.delete(id)
+  })
   selectedNodeIds.value = [...values]
 }
 
@@ -880,17 +893,20 @@ const restartBlockedReason = (node: ClusterNode) => {
 
 const lifecycleActions = (node: ClusterNode) => {
   const lifecycle = node.lifecycleStatus || 'active'
-  const items: Array<{ action: string; label: string; danger?: boolean }> = []
+  const items: Array<{ action: string; label: string; danger?: boolean; disabled?: boolean; reason?: string }> = []
   if (lifecycle === 'active') items.push({ action: 'enter_maintenance', label: t('enterMaintenance') }, { action: 'drain', label: t('drain') })
   if (lifecycle === 'maintenance') items.push({ action: 'exit_maintenance', label: t('exitMaintenance') }, { action: 'drain', label: t('drain') })
   if (lifecycle === 'draining' || lifecycle === 'drained') items.push({ action: 'resume', label: t('resume') })
   if (lifecycle === 'drained' || ((node.connectionStatus || node.status) === 'offline' && !['disabled', 'pending_delete'].includes(lifecycle))) items.push({ action: 'disable', label: t('disable') })
   if (lifecycle === 'disabled') items.push({ action: 'enable', label: t('enable') })
   if (lifecycle === 'drained' || lifecycle === 'disabled') items.push({ action: 'mark_delete', label: t('markDelete'), danger: true })
-  if (lifecycle === 'pending_delete') {
+	if (lifecycle === 'pending_delete') {
     items.push({ action: 'restore_delete', label: t('restoreDelete') })
     if (canAction('cluster.node.delete.confirm')) items.push({ action: 'delete', label: t('finalDelete'), danger: true })
   }
+	if (lifecycle === 'active' && (node.connectionStatus || node.status) === 'pending') {
+		items.push({ action: 'delete', label: t('finalDelete'), danger: true, disabled: true, reason: t('deleteRequiresDrain') })
+	}
   return items
 }
 
@@ -911,7 +927,7 @@ const stopPolling = () => {
 
 const startPolling = () => {
   stopPolling()
-  if (document.hidden || !settings.value?.selected) return
+  if (componentUnmounted || document.hidden || !settings.value?.selected) return
   if (settings.value.role === 'controller') {
     const hasRestartTracking = Object.keys(restartTracking).length > 0
     const hasPanelUpdateTracking = Object.keys(panelUpdateTracking).length > 0 || Object.values(panelUpdates).some((state) => Boolean(state.activeTask))
@@ -920,13 +936,13 @@ const startPolling = () => {
       pollTimer = undefined
       await loadNodes(true)
       await refreshKnownPanelUpdates(true)
-      startPolling()
+      if (!componentUnmounted) startPolling()
     }, interval)
   } else if (settings.value.role === 'node') {
     pollTimer = window.setTimeout(async () => {
       pollTimer = undefined
       await loadSettings(false)
-      startPolling()
+      if (!componentUnmounted) startPolling()
     }, 30000)
   }
 }
@@ -1451,6 +1467,27 @@ const dispatchNodeName = (nodeId?: number) => {
 
 const dispatchTaskTypeLabel = (type: string) => type === 'website.content_sync' ? t('websiteContentTask') : t('websiteConfigTask')
 
+const dispatchResultText = (task: TaskSummary) => {
+  const value = task.error || (task.status === 'succeeded' ? t('dispatchApplied') : '-')
+  return String(value).trim()
+}
+
+const dispatchResultSummary = (task: TaskSummary) => {
+  const normalized = dispatchResultText(task).replace(/\s+/g, ' ')
+  return normalized.length > 36 ? `${normalized.slice(0, 36)}…` : normalized
+}
+
+const shouldShowDispatchResultTooltip = (task: TaskSummary) => Boolean(task.error && dispatchResultText(task))
+
+const formatTaskResult = (result: unknown) => {
+  if (typeof result === 'string') return result
+  try {
+    return JSON.stringify(result, null, 2)
+  } catch {
+    return String(result)
+  }
+}
+
 const taskTypeLabel = (type: string) => {
   if (type === 'website.sync') return t('websiteConfigTask')
   if (type === 'website.content_sync') return t('websiteContentTask')
@@ -1583,11 +1620,33 @@ const copyToken = async () => {
 }
 
 const statusLabel = (status: string) => {
-  const known = ['online', 'offline', 'pending', 'error', 'active', 'maintenance', 'draining', 'drained', 'disabled', 'pending_delete']
+  const known = ['online', 'offline', 'pending', 'pending_registration', 'error', 'active', 'maintenance', 'draining', 'drained', 'disabled', 'pending_delete']
   return known.includes(status) ? t(status) : t('notConfigured')
 }
-const statusType = (status: string) => status === 'online' ? 'success' : ['pending', 'connecting', 'maintenance', 'draining'].includes(status) ? 'warning' : ['error', 'pending_delete'].includes(status) ? 'danger' : 'info'
+const statusType = (status: string) => status === 'online' ? 'success' : ['pending', 'pending_registration', 'connecting', 'maintenance', 'draining'].includes(status) ? 'warning' : ['error', 'pending_delete'].includes(status) ? 'danger' : 'info'
 const effectiveStatus = (node: ClusterNode) => node.effectiveStatus || node.status
+const displayLifecycleStatus = (node: ClusterNode) => !node.local && ((node.connectionStatus || node.status) === 'pending' || !node.lastRegisteredAt) ? 'pending_registration' : (node.lifecycleStatus || 'active')
+const panelVersionValue = (node: ClusterNode) => panelUpdateFor(node)?.currentVersion || panelUpdateFor(node)?.lastCheck?.currentVersion || node.panelVersion || '-'
+const comparePanelVersions = (left: string, right: string) => {
+  const parse = (value: string) => String(value || '').trim().replace(/^v/i, '').split('.').map((part) => Number.parseInt(part, 10) || 0)
+  const a = parse(left); const b = parse(right)
+  for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+    if ((a[index] || 0) !== (b[index] || 0)) return (a[index] || 0) - (b[index] || 0)
+  }
+  return 0
+}
+const panelTargetVersion = (node: ClusterNode) => {
+  const state = panelUpdateFor(node)
+  if (!state) return t('panelUpdateNotChecked')
+  const current = panelVersionValue(node)
+  const latest = state.lastCheck?.latestVersion
+  return latest && comparePanelVersions(latest, current) > 0 ? latest : current
+}
+const diagnosisOverallLabel = (status?: string) => {
+  if (!status) return ''
+  const value = t(`diagnosisOverall.${status}`)
+  return value === `cluster.diagnosisOverall.${status}` ? status : value
+}
 const metricFor = (node: ClusterNode, key: 'cpu' | 'memory' | 'disk') => node.metricHealth?.[key]
 const metricColor = (node: ClusterNode, key: 'cpu' | 'memory' | 'disk') => {
   const level = metricFor(node, key)?.level || ((node.connectionStatus || node.status) === 'online' ? 'normal' : 'unknown')
@@ -1653,8 +1712,10 @@ const handleVisibility = () => {
 }
 
 onMounted(async () => {
+  componentUnmounted = false
   document.addEventListener('visibilitychange', handleVisibility)
   await loadSettings(true)
+  if (componentUnmounted) return
   if (settings.value?.role === 'controller') {
     const batchId = String(route.query.batchId || '').trim()
     const nodeId = Number(route.query.nodeId || 0)
@@ -1662,11 +1723,13 @@ onMounted(async () => {
     if (Number.isInteger(nodeId) && nodeId > 0) taskFilters.nodeId = nodeId
     if (batchId || nodeId > 0) operationsTab.value = 'tasks'
     await refreshControllerData()
+    if (componentUnmounted) return
   }
   startPolling()
 })
 
 onUnmounted(() => {
+  componentUnmounted = true
   stopPolling()
   stopDetailPolling()
   stopDispatchPolling()
@@ -1697,15 +1760,15 @@ onUnmounted(() => {
           </div>
         </div>
         <div class="filters">
-          <el-input v-model="keyword" :prefix-icon="Search" :placeholder="t('searchPlaceholder')" clearable />
-          <el-select v-model="roleFilter" :placeholder="t('allRoles')"><el-option :label="t('allRoles')" value="" /><el-option :label="t('master')" value="controller" /><el-option :label="t('worker')" value="node" /></el-select>
-          <el-select v-model="statusFilter" :placeholder="t('allStatus')"><el-option :label="t('allStatus')" value="" /><el-option v-for="value in ['online', 'offline', 'pending', 'error', 'maintenance', 'draining', 'drained', 'disabled', 'pending_delete']" :key="value" :label="statusLabel(value)" :value="value" /></el-select>
+          <el-input v-model="keyword" :prefix-icon="Search" :placeholder="t('searchPlaceholder')" :aria-label="t('searchPlaceholder')" clearable />
+          <el-select v-model="roleFilter" :placeholder="t('allRoles')" :aria-label="t('allRoles')"><el-option :label="t('allRoles')" value="" /><el-option :label="t('master')" value="controller" /><el-option :label="t('worker')" value="node" /></el-select>
+          <el-select v-model="statusFilter" :placeholder="t('allStatus')" :aria-label="t('allStatus')"><el-option :label="t('allStatus')" value="" /><el-option v-for="value in ['online', 'offline', 'pending', 'error', 'maintenance', 'draining', 'drained', 'disabled', 'pending_delete']" :key="value" :label="statusLabel(value)" :value="value" /></el-select>
           <div class="filter-actions"><el-button :disabled="!hasActiveFilters" @click="resetFilters">{{ t('resetFilters') }}</el-button><div class="view-switch"><el-button :class="{ active: viewMode === 'card' }" :icon="Grid" :title="t('cardView')" @click="viewMode = 'card'" /><el-button :class="{ active: viewMode === 'table' }" :icon="List" :title="t('tableView')" @click="viewMode = 'table'" /></div></div>
         </div>
         <el-alert v-if="nodesError" :title="t('loadFailed')" type="error" show-icon :closable="false" class="load-alert" />
         <div class="batch-toolbar">
           <span>{{ t('selectedNodes', { count: selectedNodeIds.length }) }}</span>
-          <el-select v-model="batchAction" :placeholder="t('batchAction')">
+          <el-select v-model="batchAction" :placeholder="t('batchAction')" :aria-label="t('batchAction')">
             <el-option v-if="canAction('cluster.node.diagnose')" :label="t('batchDiagnose')" value="diagnose" />
             <el-option v-if="canAction('cluster.node.lifecycle')" :label="t('enterMaintenance')" value="enter_maintenance" />
             <el-option v-if="canAction('cluster.node.lifecycle')" :label="t('exitMaintenance')" value="exit_maintenance" />
@@ -1722,15 +1785,18 @@ onUnmounted(() => {
           <el-button type="primary" :disabled="!selectedNodeIds.length" :loading="batchExecuting" @click="runSelectedBatch">{{ t('previewAndExecute') }}</el-button>
         </div>
 
-        <el-table v-if="viewMode === 'table'" v-loading="nodesLoading" :data="paginatedNodes" row-key="id" class="node-table" :empty-text="t('empty')" @selection-change="handleNodeSelection">
-          <el-table-column type="selection" width="44" :selectable="(row: ClusterNode) => !row.local" />
+        <el-table v-if="viewMode === 'table'" v-loading="nodesLoading" :data="paginatedNodes" row-key="id" class="node-table" :empty-text="t('empty')">
+          <el-table-column width="58">
+            <template #header><el-checkbox :model-value="allVisibleNodesSelected" :indeterminate="someVisibleNodesSelected" :aria-label="t('selectAllNodes')" @change="(value) => toggleVisibleSelection(Boolean(value))" /></template>
+            <template #default="scope"><el-checkbox v-if="!scope.row.local" :model-value="selectedNodeIds.includes(Number(scope.row.id))" :aria-label="`${t('selectNode')}: ${scope.row.name}`" @change="(value) => toggleCardSelection(asNode(scope.row), Boolean(value))" /></template>
+          </el-table-column>
           <el-table-column :label="t('nodeName')" min-width="200">
-            <template #default="scope"><div class="node-identity"><span class="status-dot" :class="effectiveStatus(asNode(scope.row))" /><div><strong>{{ scope.row.name }}<span v-if="scope.row.local">（{{ t('master') }}）</span></strong><small>{{ scope.row.hostname || scope.row.endpoint || '-' }}</small></div></div></template>
+            <template #default="scope"><div class="node-identity"><span class="status-dot" :class="effectiveStatus(asNode(scope.row))" /><div><strong>{{ scope.row.name }}<span v-if="scope.row.local">（{{ t('master') }}）</span></strong><small>{{ scope.row.endpoint || scope.row.hostname || '-' }}</small></div></div></template>
           </el-table-column>
           <el-table-column :label="t('ipAddress')" min-width="135"><template #default="scope">{{ scope.row.ipAddress || '-' }}</template></el-table-column>
           <el-table-column :label="t('role')" width="112"><template #default="scope"><el-tag :type="scope.row.local ? 'warning' : 'info'" effect="light">{{ scope.row.local ? t('master') : t('worker') }}</el-tag></template></el-table-column>
           <el-table-column :label="t('status')" width="118"><template #default="scope"><el-tag :type="statusType(effectiveStatus(asNode(scope.row)))" effect="light">{{ statusLabel(effectiveStatus(asNode(scope.row))) }}</el-tag></template></el-table-column>
-          <el-table-column :label="t('panelVersion')" min-width="145"><template #default="scope"><div class="version-status-cell"><strong>{{ scope.row.panelVersion || '-' }}</strong><el-tag v-if="panelUpdateFor(asNode(scope.row))?.lastCheck?.updateAvailable" size="small" type="warning">{{ t('panelUpdateAvailable') }}</el-tag><small v-else>{{ panelUpdateFor(asNode(scope.row))?.activeTask ? t('panelUpdateRunning') : panelUpdateFor(asNode(scope.row))?.lastCheck ? (panelUpdateFor(asNode(scope.row))?.lastCheck?.compatible ? t('panelUpdateAlreadyLatest') : t('panelUpdateIncompatible')) : t('panelUpdateNotChecked') }}</small></div></template></el-table-column>
+          <el-table-column :label="t('panelVersion')" min-width="145"><template #default="scope"><div class="version-status-cell"><strong>{{ panelVersionValue(asNode(scope.row)) }}</strong><el-tag v-if="panelUpdateFor(asNode(scope.row))?.lastCheck?.updateAvailable" size="small" type="warning">{{ t('panelUpdateAvailable') }}</el-tag><small v-else>{{ panelUpdateFor(asNode(scope.row))?.activeTask ? t('panelUpdateRunning') : panelUpdateFor(asNode(scope.row))?.lastCheck ? (panelUpdateFor(asNode(scope.row))?.lastCheck?.compatible ? t('panelUpdateAlreadyLatest') : t('panelUpdateIncompatible')) : t('panelUpdateNotChecked') }}</small></div></template></el-table-column>
           <el-table-column :label="t('cpu')" min-width="130"><template #default="scope"><div class="usage-cell"><span>{{ formatNodePercent(asNode(scope.row), 'cpu', scope.row.cpuPercent) }}</span><el-progress :percentage="Math.round(scope.row.cpuPercent || 0)" :show-text="false" :stroke-width="5" :color="metricColor(asNode(scope.row), 'cpu')" /></div></template></el-table-column>
           <el-table-column :label="t('memory')" min-width="130"><template #default="scope"><div class="usage-cell"><span>{{ formatNodePercent(asNode(scope.row), 'memory', scope.row.memoryPercent) }}</span><el-progress :percentage="Math.round(scope.row.memoryPercent || 0)" :show-text="false" :stroke-width="5" :color="metricColor(asNode(scope.row), 'memory')" /></div></template></el-table-column>
           <el-table-column :label="t('disk')" min-width="130"><template #default="scope"><div class="usage-cell"><span>{{ formatNodePercent(asNode(scope.row), 'disk', scope.row.diskPercent) }}</span><el-progress :percentage="Math.round(scope.row.diskPercent || 0)" :show-text="false" :stroke-width="5" :color="metricColor(asNode(scope.row), 'disk')" /></div></template></el-table-column>
@@ -1745,7 +1811,7 @@ onUnmounted(() => {
                 <el-button v-if="canAction('cluster.batch.update') && panelUpdateFor(asNode(scope.row))?.lastCheck?.updateAvailable" link type="warning" :disabled="Boolean(panelUpdateBlockedReason(asNode(scope.row), 'apply'))" :title="panelUpdateBlockedReason(asNode(scope.row), 'apply')" :loading="Boolean(panelUpdateLoading[String(scope.row.id)])" @click="applyPanelUpdate(asNode(scope.row))">{{ t('panelUpdateAction') }}</el-button>
                 <el-dropdown v-if="canAction('cluster.node.lifecycle') || canAction('cluster.node.token.rotate') || canAction('cluster.batch.update')" trigger="click" @command="(command: string) => handleMore(command, asNode(scope.row))">
                   <el-button link>{{ t('more') }}<el-icon><MoreFilled /></el-icon></el-button>
-                  <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.batch.update')" command="panel-check" :disabled="Boolean(panelUpdateBlockedReason(asNode(scope.row), 'check'))" :title="panelUpdateBlockedReason(asNode(scope.row), 'check')">{{ t('panelUpdateCheck') }}</el-dropdown-item><el-dropdown-item v-for="item in canAction('cluster.node.lifecycle') ? lifecycleActions(asNode(scope.row)) : []" :key="item.action" :command="`lifecycle:${item.action}`" :divided="item.danger" :class="{ 'danger-item': item.danger }">{{ item.label }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate') && !['disabled', 'pending_delete'].includes(asNode(scope.row).lifecycleStatus || 'active')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item></el-dropdown-menu></template>
+                  <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.batch.update')" command="panel-check" :disabled="Boolean(panelUpdateBlockedReason(asNode(scope.row), 'check'))" :title="panelUpdateBlockedReason(asNode(scope.row), 'check')">{{ t('panelUpdateCheck') }}</el-dropdown-item><el-dropdown-item v-for="item in canAction('cluster.node.lifecycle') ? lifecycleActions(asNode(scope.row)) : []" :key="item.action" :command="`lifecycle:${item.action}`" :divided="item.danger" :disabled="item.disabled" :title="item.reason" :class="{ 'danger-item': item.danger }">{{ item.label }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate') && !['disabled', 'pending_delete'].includes(asNode(scope.row).lifecycleStatus || 'active')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item></el-dropdown-menu></template>
                 </el-dropdown>
               </template>
             </div></template>
@@ -1754,9 +1820,10 @@ onUnmounted(() => {
 
         <div v-else v-loading="nodesLoading" class="node-grid">
           <article v-for="node in paginatedNodes" :key="node.id" class="node-card">
-            <div class="node-card-head"><div class="node-identity"><el-checkbox v-if="!node.local" :model-value="selectedNodeIds.includes(Number(node.id))" @change="(value) => toggleCardSelection(node, Boolean(value))" /><span class="status-dot" :class="effectiveStatus(node)" /><div><strong>{{ node.name }}</strong><small>{{ node.hostname || node.endpoint || '-' }}</small></div></div><el-tag :type="node.local ? 'warning' : 'info'">{{ node.local ? t('master') : t('worker') }}</el-tag></div>
+            <div class="node-card-head"><div class="node-identity"><el-checkbox v-if="!node.local" :model-value="selectedNodeIds.includes(Number(node.id))" :aria-label="`${t('selectNode')}: ${node.name}`" @change="(value) => toggleCardSelection(node, Boolean(value))" /><span class="status-dot" :class="effectiveStatus(node)" /><div><strong>{{ node.name }}</strong><small>{{ node.endpoint || node.hostname || '-' }}</small></div></div><el-tag :type="node.local ? 'warning' : 'info'">{{ node.local ? t('master') : t('worker') }}</el-tag></div>
             <div class="node-card-ip">{{ node.ipAddress || '-' }} · {{ statusLabel(effectiveStatus(node)) }}</div>
-            <div class="node-card-version"><span>{{ t('panelVersion') }}</span><strong>{{ node.panelVersion || '-' }}</strong><el-tag v-if="panelUpdateFor(node)?.lastCheck?.updateAvailable" size="small" type="warning">{{ t('panelUpdateAvailable') }}</el-tag><small v-else>{{ panelUpdateFor(node)?.activeTask ? t('panelUpdateRunning') : panelUpdateFor(node)?.lastCheck ? (panelUpdateFor(node)?.lastCheck?.compatible ? t('panelUpdateAlreadyLatest') : t('panelUpdateIncompatible')) : t('panelUpdateNotChecked') }}</small></div>
+            <el-alert v-if="node.endpointAddressMismatch" class="node-address-alert" :title="t('endpointAddressMismatch')" type="warning" :closable="false" show-icon />
+            <div class="node-card-version"><span>{{ t('panelVersion') }}</span><strong>{{ panelVersionValue(node) }}</strong><el-tag v-if="panelUpdateFor(node)?.lastCheck?.updateAvailable" size="small" type="warning">{{ t('panelUpdateAvailable') }}</el-tag><small v-else>{{ panelUpdateFor(node)?.activeTask ? t('panelUpdateRunning') : panelUpdateFor(node)?.lastCheck ? (panelUpdateFor(node)?.lastCheck?.compatible ? t('panelUpdateAlreadyLatest') : t('panelUpdateIncompatible')) : t('panelUpdateNotChecked') }}</small></div>
             <div class="card-resource"><span>CPU {{ formatNodePercent(node, 'cpu', node.cpuPercent) }}</span><el-progress :percentage="Math.round(node.cpuPercent || 0)" :show-text="false" :stroke-width="6" :color="metricColor(node, 'cpu')" /></div>
             <div class="card-resource"><span>{{ t('memory') }} {{ formatNodePercent(node, 'memory', node.memoryPercent) }}</span><el-progress :percentage="Math.round(node.memoryPercent || 0)" :show-text="false" :stroke-width="6" :color="metricColor(node, 'memory')" /></div>
             <div class="card-resource"><span>{{ t('disk') }} {{ formatNodePercent(node, 'disk', node.diskPercent) }}</span><el-progress :percentage="Math.round(node.diskPercent || 0)" :show-text="false" :stroke-width="6" :color="metricColor(node, 'disk')" /></div>
@@ -1769,7 +1836,7 @@ onUnmounted(() => {
                 <el-button v-if="canAction('cluster.batch.update') && panelUpdateFor(node)?.lastCheck?.updateAvailable" link type="warning" :disabled="Boolean(panelUpdateBlockedReason(node, 'apply'))" :title="panelUpdateBlockedReason(node, 'apply')" :loading="Boolean(panelUpdateLoading[String(node.id)])" @click="applyPanelUpdate(node)">{{ t('panelUpdateAction') }}</el-button>
                 <el-dropdown v-if="canAction('cluster.node.lifecycle') || canAction('cluster.node.token.rotate') || canAction('cluster.batch.update')" trigger="click" @command="(command: string) => handleMore(command, node)">
                   <el-button link>{{ t('more') }}<el-icon><MoreFilled /></el-icon></el-button>
-                  <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.batch.update')" command="panel-check" :disabled="Boolean(panelUpdateBlockedReason(node, 'check'))" :title="panelUpdateBlockedReason(node, 'check')">{{ t('panelUpdateCheck') }}</el-dropdown-item><el-dropdown-item v-for="item in canAction('cluster.node.lifecycle') ? lifecycleActions(node) : []" :key="item.action" :command="`lifecycle:${item.action}`" :divided="item.danger" :class="{ 'danger-item': item.danger }">{{ item.label }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate') && !['disabled', 'pending_delete'].includes(node.lifecycleStatus || 'active')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item></el-dropdown-menu></template>
+                  <template #dropdown><el-dropdown-menu><el-dropdown-item v-if="canAction('cluster.batch.update')" command="panel-check" :disabled="Boolean(panelUpdateBlockedReason(node, 'check'))" :title="panelUpdateBlockedReason(node, 'check')">{{ t('panelUpdateCheck') }}</el-dropdown-item><el-dropdown-item v-for="item in canAction('cluster.node.lifecycle') ? lifecycleActions(node) : []" :key="item.action" :command="`lifecycle:${item.action}`" :divided="item.danger" :disabled="item.disabled" :title="item.reason" :class="{ 'danger-item': item.danger }">{{ item.label }}</el-dropdown-item><el-dropdown-item v-if="canAction('cluster.node.token.rotate') && !['disabled', 'pending_delete'].includes(node.lifecycleStatus || 'active')" command="token" :icon="Key">{{ t('rotateToken') }}</el-dropdown-item></el-dropdown-menu></template>
                 </el-dropdown>
               </template>
             </footer>
@@ -1796,13 +1863,13 @@ onUnmounted(() => {
             <div class="pagination"><span>{{ t('totalItems', { count: batchTotal }) }}</span><el-pagination v-model:current-page="batchPage" v-model:page-size="batchPageSize" layout="prev, pager, next, sizes" :page-sizes="[10, 20, 50]" :total="batchTotal" /></div>
           </el-tab-pane>
           <el-tab-pane :label="t('tasks')" name="tasks">
-            <div class="task-filters"><el-select v-model="taskFilters.nodeId" clearable :placeholder="t('allNodes')"><el-option v-for="node in nodes.filter((item) => !item.local)" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select><el-input v-model="taskFilters.batchId" clearable :placeholder="t('batchId')" /><el-select v-model="taskFilters.type" clearable :placeholder="t('taskType')"><el-option :label="t('diagnosisTask')" value="node.diagnose.v1" /><el-option :label="t('panelRestartTask')" value="panel.restart" /><el-option :label="t('panelUpdateCheckTask')" value="panel.update.check" /><el-option :label="t('panelUpdateApplyTask')" value="panel.update.apply" /></el-select><el-select v-model="taskFilters.status" clearable :placeholder="t('taskStatus')"><el-option v-for="value in ['queued', 'running', 'succeeded', 'failed', 'canceled']" :key="value" :label="taskStatusLabel(value)" :value="value" /></el-select><el-button type="primary" :icon="Search" @click="clusterTaskPage = 1; loadClusterTasks()">{{ t('search') }}</el-button><el-button @click="resetTaskFilters">{{ t('resetFilters') }}</el-button></div>
+            <div class="task-filters"><el-select v-model="taskFilters.nodeId" clearable :placeholder="t('allNodes')" :aria-label="t('allNodes')"><el-option v-for="node in nodes.filter((item) => !item.local)" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select><el-input v-model="taskFilters.batchId" clearable :placeholder="t('batchId')" :aria-label="t('batchId')" /><el-select v-model="taskFilters.type" clearable :placeholder="t('taskType')" :aria-label="t('taskType')"><el-option :label="t('diagnosisTask')" value="node.diagnose.v1" /><el-option :label="t('panelRestartTask')" value="panel.restart" /><el-option :label="t('panelUpdateCheckTask')" value="panel.update.check" /><el-option :label="t('panelUpdateApplyTask')" value="panel.update.apply" /></el-select><el-select v-model="taskFilters.status" clearable :placeholder="t('taskStatus')" :aria-label="t('taskStatus')"><el-option v-for="value in ['queued', 'running', 'succeeded', 'failed', 'canceled']" :key="value" :label="taskStatusLabel(value)" :value="value" /></el-select><el-button type="primary" :icon="Search" @click="clusterTaskPage = 1; loadClusterTasks()">{{ t('search') }}</el-button><el-button @click="resetTaskFilters">{{ t('resetFilters') }}</el-button></div>
             <el-table v-loading="clusterTasksLoading" :data="clusterTasks" class="dispatch-table" size="small">
               <el-table-column prop="id" :label="t('taskId')" width="90" />
               <el-table-column :label="t('dispatchTargetNode')" min-width="170"><template #default="scope">{{ dispatchNodeName(scope.row.nodeId) }}</template></el-table-column>
               <el-table-column prop="batchId" :label="t('batchId')" min-width="190" />
               <el-table-column :label="t('taskType')" min-width="160"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column>
-              <el-table-column :label="t('taskStatus')" width="105"><template #default="scope"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : scope.row.status === 'canceled' ? 'offline' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag></template></el-table-column>
+              <el-table-column :label="t('taskStatus')" width="165"><template #default="scope"><div class="task-status-cell"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : scope.row.status === 'canceled' ? 'offline' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag><small v-if="scope.row.diagnosisOverallStatus">{{ t('diagnosisHealth') }}：{{ diagnosisOverallLabel(scope.row.diagnosisOverallStatus) }}</small></div></template></el-table-column>
               <el-table-column :label="t('taskProgress')" width="120"><template #default="scope"><el-progress :percentage="Number(scope.row.progress || 0)" :show-text="false" :stroke-width="6" /></template></el-table-column>
               <el-table-column :label="t('taskTime')" min-width="170"><template #default="scope">{{ formatTime(scope.row.createdAt) }}</template></el-table-column>
               <el-table-column :label="t('operations')" width="150" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row))">{{ t('detail') }}</el-button><el-button v-if="canAction('cluster.task.cancel')" link type="danger" :disabled="!canCancelTask(asTask(scope.row))" :title="scope.row.status === 'running' && !nodes.find((item) => Number(item.id) === Number(scope.row.nodeId))?.capabilities?.includes('task.cancel.v1') ? t('cancelUpgradeRequired') : ''" @click="cancelTask(asTask(scope.row))">{{ t('cancel') }}</el-button></template></el-table-column>
@@ -1846,7 +1913,13 @@ onUnmounted(() => {
           <el-table-column :label="t('taskStatus')" width="110"><template #default="scope"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(scope.row.status) }}</el-tag></template></el-table-column>
           <el-table-column :label="t('taskAttempts')" width="90"><template #default="scope">{{ scope.row.attempts }}/{{ scope.row.maxAttempts }}</template></el-table-column>
           <el-table-column :label="t('dispatchUpdatedAt')" min-width="170"><template #default="scope">{{ formatTime(scope.row.updatedAt || scope.row.createdAt) }}</template></el-table-column>
-          <el-table-column :label="t('dispatchResult')" min-width="180"><template #default="scope"><span :class="{ 'task-error': scope.row.error }">{{ scope.row.error || (scope.row.status === 'succeeded' ? t('dispatchApplied') : '-') }}</span></template></el-table-column>
+          <el-table-column :label="t('dispatchResult')" min-width="180">
+            <template #default="scope">
+              <el-tooltip :content="dispatchResultText(asTask(scope.row))" :disabled="!shouldShowDispatchResultTooltip(asTask(scope.row))" placement="top" effect="dark" popper-class="cluster-result-tooltip" :show-after="200">
+                <span class="task-result-summary" :class="{ 'task-error': scope.row.error }">{{ dispatchResultSummary(asTask(scope.row)) }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
           <el-table-column :label="t('operations')" width="90" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row))">{{ t('detail') }}</el-button></template></el-table-column>
         </el-table>
         <el-empty v-else :description="t('noDispatchHistory')" :image-size="72" />
@@ -1873,7 +1946,7 @@ onUnmounted(() => {
       </div>
     </template>
 
-    <el-dialog v-model="roleDialogVisible" :title="t('roleDialogTitle')" width="620px" :close-on-click-modal="false" :close-on-press-escape="false" :before-close="cancelRoleSelection" destroy-on-close>
+    <el-dialog v-model="roleDialogVisible" class="cluster-dialog" :title="t('roleDialogTitle')" width="620px" :close-on-click-modal="false" :close-on-press-escape="false" :before-close="cancelRoleSelection" destroy-on-close>
       <p class="role-hint">{{ t('roleDialogHint') }}</p>
       <div class="role-options">
         <button type="button" class="role-option" :class="{ selected: roleSelection === 'controller' }" @click="roleSelection = 'controller'"><span class="role-visual controller"><i /><i /></span><span><strong>{{ t('controller') }}</strong><small>{{ t('controllerDescription') }}</small></span><span class="role-check">✓</span></button>
@@ -1882,14 +1955,14 @@ onUnmounted(() => {
       <template #footer><el-button @click="leaveCluster">{{ t('cancel') }}</el-button><el-button type="primary" :loading="roleSaving" :disabled="!canSelectRole" @click="selectRole">{{ t('confirm') }}</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="formVisible" :title="t(editingId ? 'nodeDialogEdit' : 'nodeDialogAdd')" width="520px">
+    <el-dialog v-model="formVisible" class="cluster-dialog" :title="t(editingId ? 'nodeDialogEdit' : 'nodeDialogAdd')" width="520px" destroy-on-close>
       <el-form ref="formRef" :model="nodeForm" :rules="formRules" label-position="top"><el-form-item :label="t('nodeName')" prop="name"><el-input v-model="nodeForm.name" maxlength="120" show-word-limit /></el-form-item><el-form-item :label="t('endpoint')" prop="endpoint"><el-input v-model="nodeForm.endpoint" placeholder="https://node.example.com" /></el-form-item><div class="two-columns"><el-form-item :label="t('group')" prop="group"><el-input v-model="nodeForm.group" maxlength="120" show-word-limit /></el-form-item><el-form-item :label="t('tags')" prop="tags"><el-input v-model="nodeForm.tags" maxlength="512" show-word-limit placeholder="prod,cn-east" /></el-form-item></div></el-form>
       <template #footer><el-button @click="formVisible = false">{{ t('cancel') }}</el-button><el-button type="primary" :loading="formSaving" @click="saveNode">{{ t('save') }}</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="tokenVisible" :title="t('tokenTitle')" width="560px"><el-alert :title="t('tokenWarning')" type="warning" :closable="false" show-icon /><el-input class="token-input" :model-value="generatedToken" readonly><template #append><el-button :icon="CopyDocument" :disabled="!generatedToken" @click="copyToken">{{ t('copy') }}</el-button></template></el-input></el-dialog>
+    <el-dialog v-model="tokenVisible" class="cluster-dialog" :title="t('tokenTitle')" width="560px"><el-alert :title="t('tokenWarning')" type="warning" :closable="false" show-icon /><el-input class="token-input" :model-value="generatedToken" readonly><template #append><el-button :icon="CopyDocument" :disabled="!generatedToken" @click="copyToken">{{ t('copy') }}</el-button></template></el-input></el-dialog>
 
-    <el-dialog v-model="policyVisible" :title="t('clusterPolicy')" width="760px" append-to-body>
+    <el-dialog v-model="policyVisible" class="cluster-dialog" :title="t('clusterPolicy')" width="760px" append-to-body>
       <el-form label-position="top" class="policy-form">
         <el-alert :title="t('policyHint')" type="info" :closable="false" show-icon />
         <el-divider content-position="left">{{ t('metricThresholds') }}</el-divider>
@@ -1908,15 +1981,15 @@ onUnmounted(() => {
       <el-skeleton v-if="detailLoading" :rows="8" animated />
       <template v-else>
 		<div v-if="detailTab === 'basic'" class="drawer-stack">
-		  <section class="detail-card"><div class="detail-title"><span>{{ t('nodeInfo') }}</span><el-tag :type="selectedNode.local ? 'warning' : 'info'">{{ selectedNode.local ? t('master') : t('worker') }}</el-tag></div><el-descriptions :column="1"><el-descriptions-item :label="t('nodeName')">{{ selectedNode.name }}</el-descriptions-item><el-descriptions-item :label="t('hostname')">{{ selectedNode.hostname || '-' }}</el-descriptions-item><el-descriptions-item :label="t('ipAddress')">{{ selectedNode.ipAddress || '-' }}</el-descriptions-item><el-descriptions-item :label="t('architecture')">{{ selectedNode.architecture || '-' }}</el-descriptions-item><el-descriptions-item :label="t('panelVersion')">{{ selectedNode.panelVersion || '-' }}</el-descriptions-item><el-descriptions-item :label="t('connectionStatus')"><el-tag :type="statusType(selectedNode.connectionStatus || selectedNode.status)">{{ statusLabel(selectedNode.connectionStatus || selectedNode.status) }}</el-tag></el-descriptions-item><el-descriptions-item v-if="!selectedNode.local" :label="t('lifecycleStatus')"><el-tag :type="statusType(selectedNode.lifecycleStatus || 'active')">{{ statusLabel(selectedNode.lifecycleStatus || 'active') }}</el-tag></el-descriptions-item><el-descriptions-item :label="t('lastRegistered')">{{ formatTime(selectedNode.lastRegisteredAt) }}</el-descriptions-item><el-descriptions-item :label="t('uptime')">{{ formatUptime(selectedNode.uptimeSeconds) }}</el-descriptions-item></el-descriptions></section>
+			  <section class="detail-card"><div class="detail-title"><span>{{ t('nodeInfo') }}</span><el-tag :type="selectedNode.local ? 'warning' : 'info'">{{ selectedNode.local ? t('master') : t('worker') }}</el-tag></div><el-alert v-if="selectedNode.endpointAddressMismatch" class="node-address-alert" :title="t('endpointAddressMismatch')" type="warning" :closable="false" show-icon /><el-descriptions :column="1"><el-descriptions-item :label="t('nodeName')">{{ selectedNode.name }}</el-descriptions-item><el-descriptions-item :label="t('endpoint')">{{ selectedNode.endpoint || '-' }}</el-descriptions-item><el-descriptions-item :label="t('hostname')">{{ selectedNode.hostname || '-' }}</el-descriptions-item><el-descriptions-item :label="t('ipAddress')">{{ selectedNode.ipAddress || '-' }}</el-descriptions-item><el-descriptions-item :label="t('architecture')">{{ selectedNode.architecture || '-' }}</el-descriptions-item><el-descriptions-item :label="t('panelVersion')">{{ panelVersionValue(selectedNode) }}</el-descriptions-item><el-descriptions-item :label="t('connectionStatus')"><el-tag :type="statusType(selectedNode.connectionStatus || selectedNode.status)">{{ statusLabel(selectedNode.connectionStatus || selectedNode.status) }}</el-tag></el-descriptions-item><el-descriptions-item v-if="!selectedNode.local" :label="t('lifecycleStatus')"><el-tag :type="statusType(displayLifecycleStatus(selectedNode))">{{ statusLabel(displayLifecycleStatus(selectedNode)) }}</el-tag></el-descriptions-item><el-descriptions-item :label="t('lastRegistered')">{{ formatTime(selectedNode.lastRegisteredAt) }}</el-descriptions-item><el-descriptions-item :label="t('uptime')">{{ formatUptime(selectedNode.uptimeSeconds) }}</el-descriptions-item></el-descriptions></section>
 		  <section class="detail-card"><div class="detail-title">{{ t('networkInfo') }}</div><el-descriptions :column="1"><el-descriptions-item :label="t('ipAddress')">{{ selectedNode.ipAddress || '-' }}</el-descriptions-item><el-descriptions-item :label="t('subnetMask')">{{ selectedNode.subnetMask || '-' }}</el-descriptions-item><el-descriptions-item :label="t('gateway')">{{ selectedNode.gateway || '-' }}</el-descriptions-item><el-descriptions-item :label="t('macAddress')">{{ selectedNode.macAddress || '-' }}</el-descriptions-item></el-descriptions></section>
 		  <section class="detail-card panel-update-detail">
 			<div class="detail-title"><span>{{ t('panelUpdateTitle') }}</span><el-tag v-if="!selectedNode.local && panelUpdateFor(selectedNode)?.activeTask" type="warning">{{ t('panelUpdateRunning') }}</el-tag></div>
 			<template v-if="selectedNode.local"><p class="detail-muted">{{ t('localUpdateHint') }}</p><el-button v-if="canAccessPath('/setting')" type="primary" @click="openLocalPanelUpdate">{{ t('openPanelSettings') }}</el-button></template>
 			<template v-else>
 			  <el-descriptions :column="1">
-				<el-descriptions-item :label="t('panelUpdateCurrentVersion')">{{ selectedNode.panelVersion || '-' }}</el-descriptions-item>
-				<el-descriptions-item :label="t('panelUpdateLatestVersion')">{{ panelUpdateFor(selectedNode)?.lastCheck?.latestVersion || t('panelUpdateNotChecked') }}</el-descriptions-item>
+					<el-descriptions-item :label="t('panelUpdateCurrentVersion')">{{ panelVersionValue(selectedNode) }}</el-descriptions-item>
+					<el-descriptions-item :label="t('panelUpdateLatestVersion')">{{ panelTargetVersion(selectedNode) }}</el-descriptions-item>
 				<el-descriptions-item :label="t('panelUpdateChannel')">{{ panelUpdateFor(selectedNode)?.lastCheck?.channel || '-' }}</el-descriptions-item>
 				<el-descriptions-item :label="t('panelUpdatePublishedAt')">{{ formatTime(panelUpdateFor(selectedNode)?.lastCheck?.publishedAt) }}</el-descriptions-item>
 				<el-descriptions-item :label="t('panelUpdatePackageSize')">{{ formatBytes(panelUpdateFor(selectedNode)?.lastCheck?.artifactSize) }}</el-descriptions-item>
@@ -1940,7 +2013,7 @@ onUnmounted(() => {
       </template></template>
     </el-drawer>
 
-    <el-dialog v-model="taskDetailVisible" :title="t('taskDetailTitle', { id: taskDetail?.id || '' })" width="640px" class="task-detail-modal" append-to-body>
+    <el-dialog v-model="taskDetailVisible" :title="t('taskDetailTitle', { id: taskDetail?.id || '' })" width="640px" class="cluster-dialog task-detail-modal" append-to-body>
       <div v-loading="taskDetailLoading" class="task-detail-dialog">
         <el-alert v-if="taskDetailError" type="error" :closable="false" show-icon :title="t('taskDetailLoadFailed')">
           <template #default><el-button link type="primary" @click="retryTaskDetail">{{ t('retry') }}</el-button></template>
@@ -1959,7 +2032,11 @@ onUnmounted(() => {
             <el-descriptions-item :label="t('taskFinishedAt')">{{ formatTime(taskDetail.finishedAt) }}</el-descriptions-item>
           </el-descriptions>
           <div class="task-progress-block"><div><strong>{{ t('taskProgress') }}</strong><span>{{ Math.max(0, Math.min(100, Number(taskDetail.progress || 0))) }}%</span></div><el-progress :percentage="Math.max(0, Math.min(100, Number(taskDetail.progress || 0)))" :status="taskDetail.status === 'failed' ? 'exception' : taskDetail.status === 'succeeded' ? 'success' : undefined" /></div>
-          <el-alert v-if="taskDetail.error" type="error" :closable="false" show-icon :title="taskDetail.error" />
+          <el-alert v-if="taskDetail.error" class="task-detail-error" type="error" :closable="false" show-icon :title="taskDetail.error" />
+          <section v-if="taskDetail.result && !diagnosisResult" class="task-result-detail">
+            <strong>{{ t('dispatchResult') }}</strong>
+            <pre>{{ formatTaskResult(taskDetail.result) }}</pre>
+          </section>
           <section v-if="diagnosisResult" class="diagnosis-result">
             <div class="diagnosis-summary"><el-tag :type="diagnosisResult.overallStatus === 'healthy' ? 'success' : diagnosisResult.overallStatus === 'warning' ? 'warning' : 'danger'">{{ t(`diagnosisOverall.${diagnosisResult.overallStatus}`) }}</el-tag><span>{{ t('diagnosisSummary', diagnosisResult.summary) }}</span></div>
             <el-table :data="diagnosisResult.checks" size="small" class="diagnosis-table"><el-table-column :label="t('diagnosisCheck')" min-width="145"><template #default="scope">{{ diagnosisCheckLabel(scope.row.key) }}</template></el-table-column><el-table-column :label="t('status')" width="105"><template #default="scope"><el-tag size="small" :type="diagnosisStatusType(scope.row.status)">{{ diagnosisStatusLabel(scope.row.status) }}</el-tag></template></el-table-column><el-table-column :label="t('diagnosisValue')" min-width="150"><template #default="scope">{{ diagnosisValue(scope.row.value) }}</template></el-table-column><el-table-column :label="t('diagnosisDetail')" min-width="220"><template #default="scope"><span>{{ scope.row.detail || '-' }}</span><details v-if="scope.row.evidence"><summary>{{ t('evidence') }}</summary><pre>{{ scope.row.evidence }}</pre></details></template></el-table-column></el-table>
@@ -1976,7 +2053,7 @@ onUnmounted(() => {
       <template #footer><el-button v-if="taskDetail && canAction('cluster.task.cancel') && canCancelTask(taskDetail)" type="danger" :disabled="taskDetail.cancelRequested" @click="cancelTask(taskDetail)">{{ taskDetail.cancelRequested ? t('taskCancelRequested') : t('cancelTask') }}</el-button><el-button @click="taskDetailVisible = false">{{ t('close') }}</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="websitePickerVisible" :title="t('websitePickerTitle')" width="860px" class="website-picker-dialog" append-to-body>
+    <el-dialog v-model="websitePickerVisible" :title="t('websitePickerTitle')" width="860px" class="cluster-dialog website-picker-dialog" append-to-body>
       <div class="website-picker">
         <div class="website-picker-filters">
           <el-input v-model="websitePickerFilters.name" :placeholder="t('websiteNamePlaceholder')" clearable @keyup.enter="searchWebsites" />
@@ -2012,6 +2089,12 @@ onUnmounted(() => {
 .load-alert { margin-bottom: 12px; }
 .batch-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 10px 0; color: var(--text-tertiary); font-size: 13px; :deep(.el-select) { width: 210px; } }
 .node-table { border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
+.cluster-page :deep(.node-table .el-table__body td.el-table__cell),
+.cluster-page :deep(.node-table .el-table__fixed-right .el-table__body td.el-table__cell) {
+  border-bottom-color: transparent !important;
+}
+.node-address-alert { margin-top: 10px; }
+.task-status-cell { display: flex; align-items: flex-start; flex-direction: column; gap: 3px; small { color: var(--text-tertiary); line-height: 16px; } }
 .node-table-actions { display: flex; align-items: center; flex-wrap: nowrap; min-height: 28px; gap: 4px; white-space: nowrap; :deep(.el-button) { display: inline-flex; align-items: center; margin-left: 0; line-height: 20px; } :deep(.el-dropdown) { display: inline-flex; align-items: center; vertical-align: middle; } }
 .node-identity { display: flex; align-items: center; min-width: 0; gap: 11px; strong, small { display: block; } strong { color: var(--text-primary); line-height: 22px; } small { overflow: hidden; color: var(--text-tertiary); text-overflow: ellipsis; white-space: nowrap; } }
 .status-dot { width: 10px; height: 10px; flex: 0 0 auto; border-radius: 50%; background: var(--el-color-info); &.online { background: var(--el-color-success); } &.offline, &.error, &.pending_delete { background: var(--el-color-danger); } &.pending, &.maintenance, &.draining { background: var(--el-color-warning); } &.drained, &.disabled { background: var(--el-color-info); } }
@@ -2132,7 +2215,11 @@ onUnmounted(() => {
   background-image: none !important;
 }
 .task-error { color: var(--el-color-danger); }
+.task-result-summary { display: -webkit-box; max-height: 36px; overflow: hidden; line-height: 18px; word-break: break-all; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+:global(.cluster-result-tooltip.el-popper) { max-width: min(900px, calc(100vw - 48px)); white-space: pre-wrap; line-height: 1.45; word-break: break-word; }
 .task-detail-dialog { min-height: 180px; color: var(--text-secondary); }
+.task-detail-error { margin-top: 8px; :deep(.el-alert__title) { line-height: 1.45; word-break: break-word; } }
+.task-result-detail { margin-top: 14px; color: var(--text-secondary); strong { display: block; margin-bottom: 8px; color: var(--text-primary); } pre { max-height: 240px; padding: 10px 12px; margin: 0; overflow: auto; white-space: pre-wrap; line-height: 1.45; word-break: break-word; border-radius: 8px; background: var(--surface-subtle); } }
 .task-progress-block { padding: 16px 0 8px; color: var(--text-secondary); > div:first-child { display: flex; justify-content: space-between; margin-bottom: 8px; } :deep(.el-progress-bar__outer) { background: var(--surface-muted); } }
 .task-timeline-title { margin: 18px 0 14px; color: var(--text-primary); font-size: 15px; }
 .task-detail-dialog :deep(.el-timeline-item__content p) { margin: 6px 0 0; color: var(--text-tertiary); line-height: 1.6; word-break: break-word; }
@@ -2150,6 +2237,39 @@ onUnmounted(() => {
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
+}
+:global(.cluster-dialog.el-dialog) {
+  --el-dialog-bg-color: var(--surface-raised);
+  color: var(--text-secondary);
+  background: var(--surface-raised) !important;
+  background-color: var(--surface-raised) !important;
+}
+:global(.cluster-dialog .el-dialog__header),
+:global(.cluster-dialog .el-dialog__body),
+:global(.cluster-dialog .el-dialog__footer) {
+  color: var(--text-secondary);
+  background: var(--surface-raised) !important;
+  background-color: var(--surface-raised) !important;
+}
+:global(.cluster-dialog .el-dialog__title) { color: var(--text-primary); }
+:global(.cluster-dialog .el-form-item__label) { color: var(--text-secondary); }
+:global(.cluster-dialog .el-input__wrapper),
+:global(.cluster-dialog .el-select__wrapper),
+:global(.cluster-dialog .el-input-number),
+:global(.cluster-dialog .el-textarea__inner) {
+  color: var(--text-primary);
+  background: var(--surface-card) !important;
+  background-color: var(--surface-card) !important;
+  box-shadow: 0 0 0 1px var(--border-default) inset;
+}
+:global(.cluster-dialog .el-input__inner),
+:global(.cluster-dialog .el-textarea__inner) { color: var(--text-primary); }
+:global(:root:root.dark .cluster-dialog .el-divider) {
+  border-top-color: transparent !important;
+}
+:global(:root:root.dark .cluster-dialog .el-divider__text) {
+  color: var(--text-primary) !important;
+  background: var(--surface-raised) !important;
 }
 .role-hint { margin: -4px 0 14px; color: var(--text-tertiary); font-size: 13px; }
 .role-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
