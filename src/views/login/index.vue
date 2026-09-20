@@ -16,6 +16,42 @@ const updateViewport = () => {
   isDesktop.value = window.innerWidth > 980
 }
 
+interface RememberedLoginCredentials {
+  username: string
+  password: string
+}
+
+const REMEMBERED_LOGIN_CREDENTIALS_KEY = 'oneinstack_remembered_login_credentials'
+const LEGACY_REMEMBER_PREFERENCE_KEY = 'oneinstack_remember_credentials'
+
+const readRememberedLoginCredentials = (): RememberedLoginCredentials | null => {
+  try {
+    const raw = localStorage.getItem(REMEMBERED_LOGIN_CREDENTIALS_KEY)
+    if (!raw) return null
+    const credentials = JSON.parse(raw) as Partial<RememberedLoginCredentials>
+    if (typeof credentials.username !== 'string' || typeof credentials.password !== 'string') return null
+    return { username: credentials.username, password: credentials.password }
+  } catch {
+    return null
+  }
+}
+
+const saveRememberedLoginCredentials = (remember: boolean, username: string, password: string) => {
+  try {
+    localStorage.removeItem(LEGACY_REMEMBER_PREFERENCE_KEY)
+    if (!remember) {
+      localStorage.removeItem(REMEMBERED_LOGIN_CREDENTIALS_KEY)
+      return
+    }
+    localStorage.setItem(
+      REMEMBERED_LOGIN_CREDENTIALS_KEY,
+      JSON.stringify({ username: username.trim(), password })
+    )
+  } catch {
+    // 浏览器禁用站点存储时无法使用记住账号密码功能。
+  }
+}
+
 onMounted(() => window.addEventListener('resize', updateViewport))
 onBeforeUnmount(() => window.removeEventListener('resize', updateViewport))
 
@@ -44,12 +80,13 @@ const loginRules = computed<FormRules>(() => ({
   totpCode: [{ required: true, message: i18n.t('login.totpRequired'), trigger: 'blur' }]
 }))
 
+const rememberedLoginCredentials = readRememberedLoginCredentials()
 const conf = reactive({
   form: {
-    username: '',
-    password: '',
+    username: rememberedLoginCredentials?.username || '',
+    password: rememberedLoginCredentials?.password || '',
     totpCode: '',
-    remember: false
+    remember: Boolean(rememberedLoginCredentials)
   },
   requiresTwoFactor: false,
   loading: false,
@@ -72,6 +109,8 @@ const conf = reactive({
         ElMessage.info(i18n.t('login.totpMessage'))
         return
       }
+
+      saveRememberedLoginCredentials(conf.form.remember, conf.form.username, conf.form.password)
 
       sconfig.login(res)
       sconfig.setUserAccessSnapshot(res)
@@ -122,7 +161,16 @@ const conf = reactive({
         </p>
       </div>
 
-      <el-form ref="formRef" :model="conf.form" :rules="loginRules" :disabled="conf.loading" class="login-form">
+      <el-form
+        ref="formRef"
+        :model="conf.form"
+        :rules="loginRules"
+        :disabled="conf.loading"
+        class="login-form"
+        method="post"
+        autocomplete="on"
+        @submit.prevent="conf.handleLogin"
+      >
         <el-alert
           v-if="conf.requiresTwoFactor"
           :title="$t('login.twoFactorTitle')"
@@ -141,10 +189,10 @@ const conf = reactive({
         >
           <el-input
             v-model="conf.form.username"
+            name="username"
             :placeholder="$t('login.usernamePlaceholder')"
             clearable
             autocomplete="username"
-            @keyup.enter="conf.handleLogin"
           >
             <template #prefix>
               <v-s-icon name="user" size="19" />
@@ -155,11 +203,11 @@ const conf = reactive({
         <el-form-item v-if="!conf.requiresTwoFactor" prop="password" :label="$t('login.password')">
           <el-input
             v-model="conf.form.password"
+            name="password"
             :placeholder="$t('login.passwordPlaceholder')"
             type="password"
             show-password
             autocomplete="current-password"
-            @keyup.enter="conf.handleLogin"
           >
             <template #prefix>
               <v-s-icon name="password" size="19" />
@@ -170,10 +218,10 @@ const conf = reactive({
         <el-form-item v-else prop="totpCode" :label="$t('login.totpCode')">
           <el-input
             v-model="conf.form.totpCode"
+            name="totpCode"
             :placeholder="$t('login.totpPlaceholder')"
             clearable
             autocomplete="one-time-code"
-            @keyup.enter="conf.handleLogin"
           >
             <template #prefix>
               <v-s-icon name="password" size="19" />
@@ -202,10 +250,9 @@ const conf = reactive({
 
         <button
           :class="className.loginBtn"
-          type="button"
+          type="submit"
           :disabled="conf.loading"
           :aria-busy="conf.loading"
-          @click="conf.handleLogin"
         >
           <span>
             {{ conf.loading ? $t('common.loading') : conf.requiresTwoFactor ? $t('login.verifyAndLogin') : $t('login.secureLogin') }}
