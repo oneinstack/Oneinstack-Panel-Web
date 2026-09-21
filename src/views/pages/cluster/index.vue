@@ -79,6 +79,16 @@ interface ClusterNode {
   interfaceName?: string
 }
 
+interface EndpointCheckResult {
+  endpoint: string
+  status: 'healthy' | 'warning' | 'invalid'
+  code: string
+  detail?: string
+  reachable: boolean
+  panelDetected: boolean
+  ready: boolean
+}
+
 interface MetricLevel {
   value: number
   level: 'normal' | 'warning' | 'critical' | 'unknown'
@@ -287,6 +297,10 @@ const formVisible = ref(false)
 const formRef = ref<FormInstance>()
 const agentFormRef = ref<FormInstance>()
 const formSaving = ref(false)
+const endpointChecking = ref(false)
+const endpointCheckResult = ref<EndpointCheckResult | null>(null)
+const endpointCheckAddress = ref('')
+const initialNodeEndpoint = ref('')
 const editingId = ref<number | null>(null)
 const nodeForm = reactive({ name: '', endpoint: '', group: '', tags: '' })
 
@@ -382,7 +396,7 @@ const validateHttpUrl = (value: string) => {
   try {
     const parsed = new URL(value.trim())
     const port = parsed.port ? Number(parsed.port) : 0
-    return ['http:', 'https:'].includes(parsed.protocol) && Boolean(parsed.hostname) && Boolean(parsed.host) && (!parsed.port || (Number.isInteger(port) && port >= 1 && port <= 65535)) && !parsed.username && !parsed.password && !parsed.search && !parsed.hash
+    return ['http:', 'https:'].includes(parsed.protocol) && Boolean(parsed.hostname) && Boolean(parsed.host) && !parsed.pathname.startsWith('//') && (!parsed.port || (Number.isInteger(port) && port >= 1 && port <= 65535)) && !parsed.username && !parsed.password && !parsed.search && !parsed.hash
   } catch {
     return false
   }
@@ -423,6 +437,10 @@ const formRules = computed<FormRules>(() => ({
   group: [{ validator: maxLengthValidator('groupTooLong', 120), trigger: ['blur', 'change'] }],
   tags: [{ validator: maxLengthValidator('tagsTooLong', 512), trigger: ['blur', 'change'] }]
 }))
+
+const currentEndpointCheck = computed(() => endpointCheckAddress.value === nodeForm.endpoint.trim() ? endpointCheckResult.value : null)
+const endpointCheckText = computed(() => currentEndpointCheck.value ? t(`endpointCheckCodes.${currentEndpointCheck.value.code}`) : '')
+const endpointCheckAlertType = computed(() => currentEndpointCheck.value?.status === 'healthy' ? 'success' : currentEndpointCheck.value?.status === 'invalid' ? 'error' : 'warning')
 
 const agentFormRules = computed<FormRules>(() => ({
   controllerUrl: [{ validator: controllerValidator, trigger: ['blur', 'change'] }],
@@ -1182,6 +1200,9 @@ const resetRole = async () => {
 
 const openCreate = () => {
   editingId.value = null
+  initialNodeEndpoint.value = ''
+  endpointCheckResult.value = null
+  endpointCheckAddress.value = ''
   Object.assign(nodeForm, { name: '', endpoint: '', group: '', tags: '' })
   formVisible.value = true
 }
@@ -1190,16 +1211,81 @@ const openEdit = (node: ClusterNode) => {
   if (node.local) return
   editingId.value = Number(node.id)
   Object.assign(nodeForm, { name: node.name, endpoint: node.endpoint || '', group: node.group || '', tags: node.tags || '' })
+  initialNodeEndpoint.value = nodeForm.endpoint.trim()
+  endpointCheckResult.value = null
+  endpointCheckAddress.value = ''
   formVisible.value = true
 }
 
+const clearEndpointCheck = () => {
+  endpointCheckResult.value = null
+  endpointCheckAddress.value = ''
+}
+
+const checkNodeEndpoint = async (notify = true): Promise<EndpointCheckResult | null> => {
+  const endpoint = nodeForm.endpoint.trim()
+  if (!validateHttpUrl(endpoint)) {
+    formRef.value?.validateField('endpoint').catch(() => undefined)
+    return null
+  }
+  endpointChecking.value = true
+  try {
+    const { data } = await Api.checkClusterNodeEndpoint({ endpoint })
+    const result = data as EndpointCheckResult
+    endpointCheckResult.value = result
+    endpointCheckAddress.value = endpoint
+    if (notify) {
+      const message = t(`endpointCheckCodes.${result.code}`)
+      if (result.status === 'healthy') ElMessage.success(message)
+      else ElMessage.warning(message)
+    }
+    return result
+  } catch {
+    const result: EndpointCheckResult = {
+      endpoint,
+      status: 'warning',
+      code: 'ENDPOINT_CHECK_FAILED',
+      reachable: false,
+      panelDetected: false,
+      ready: false
+    }
+    endpointCheckResult.value = result
+    endpointCheckAddress.value = endpoint
+    if (notify) ElMessage.warning(t('endpointCheckCodes.ENDPOINT_CHECK_FAILED'))
+    return result
+  } finally {
+    endpointChecking.value = false
+  }
+}
+
 const saveNode = async () => {
+  if (formSaving.value || endpointChecking.value) return
   if (!(await formRef.value?.validate())) return
+  const endpoint = nodeForm.endpoint.trim()
+  let endpointForSave = endpoint
+  const endpointChanged = editingId.value === null || endpoint !== initialNodeEndpoint.value
+  if (endpointChanged) {
+    const result = currentEndpointCheck.value || await checkNodeEndpoint(false)
+    if (!result) return
+    const checkedEndpoint = String(result.endpoint || '').trim()
+    if (validateHttpUrl(checkedEndpoint)) endpointForSave = checkedEndpoint
+    if (result.status !== 'healthy') {
+      try {
+        await ElMessageBox.confirm(
+          t('endpointCheckSaveConfirm', { reason: t(`endpointCheckCodes.${result.code}`) }),
+          t('endpointCheckWarningTitle'),
+          { type: 'warning', confirmButtonText: t('saveAnyway'), cancelButtonText: t('cancel') }
+        )
+      } catch {
+        return
+      }
+    }
+  }
   formSaving.value = true
   try {
     const payload = {
       name: nodeForm.name.trim(),
-      endpoint: nodeForm.endpoint.trim(),
+      endpoint: endpointForSave,
       group: nodeForm.group.trim(),
       tags: nodeForm.tags.trim()
     }
@@ -1966,8 +2052,17 @@ onUnmounted(() => {
     </el-dialog>
 
     <el-dialog v-model="formVisible" class="cluster-dialog" :title="t(editingId ? 'nodeDialogEdit' : 'nodeDialogAdd')" width="520px" destroy-on-close>
-      <el-form ref="formRef" :model="nodeForm" :rules="formRules" label-position="top"><el-form-item :label="t('nodeName')" prop="name"><el-input v-model="nodeForm.name" maxlength="120" show-word-limit /></el-form-item><el-form-item :label="t('endpoint')" prop="endpoint"><el-input v-model="nodeForm.endpoint" placeholder="https://node.example.com" /></el-form-item><div class="two-columns"><el-form-item :label="t('group')" prop="group"><el-input v-model="nodeForm.group" maxlength="120" show-word-limit /></el-form-item><el-form-item :label="t('tags')" prop="tags"><el-input v-model="nodeForm.tags" maxlength="512" show-word-limit placeholder="prod,cn-east" /></el-form-item></div></el-form>
-      <template #footer><el-button @click="formVisible = false">{{ t('cancel') }}</el-button><el-button type="primary" :loading="formSaving" @click="saveNode">{{ t('save') }}</el-button></template>
+      <el-form ref="formRef" :model="nodeForm" :rules="formRules" label-position="top">
+        <el-form-item :label="t('nodeName')" prop="name"><el-input v-model="nodeForm.name" maxlength="120" show-word-limit /></el-form-item>
+        <el-form-item :label="t('endpoint')" prop="endpoint">
+          <el-input v-model="nodeForm.endpoint" class="endpoint-input" placeholder="https://node.example.com" @input="clearEndpointCheck">
+            <template #append><el-button :loading="endpointChecking" @click="checkNodeEndpoint(true)">{{ t('checkEndpoint') }}</el-button></template>
+          </el-input>
+          <el-alert v-if="currentEndpointCheck" class="endpoint-check-alert" :title="endpointCheckText" :type="endpointCheckAlertType" :closable="false" show-icon />
+        </el-form-item>
+        <div class="two-columns"><el-form-item :label="t('group')" prop="group"><el-input v-model="nodeForm.group" maxlength="120" show-word-limit /></el-form-item><el-form-item :label="t('tags')" prop="tags"><el-input v-model="nodeForm.tags" maxlength="512" show-word-limit placeholder="prod,cn-east" /></el-form-item></div>
+      </el-form>
+      <template #footer><el-button @click="formVisible = false">{{ t('cancel') }}</el-button><el-button type="primary" :loading="formSaving || endpointChecking" @click="saveNode">{{ t('save') }}</el-button></template>
     </el-dialog>
 
     <el-dialog v-model="tokenVisible" class="cluster-dialog" :title="t('tokenTitle')" width="560px"><el-alert :title="t('tokenWarning')" type="warning" :closable="false" show-icon /><el-input class="token-input" :model-value="generatedToken" readonly><template #append><el-button :icon="CopyDocument" :disabled="!generatedToken" @click="copyToken">{{ t('copy') }}</el-button></template></el-input></el-dialog>
@@ -2099,6 +2194,7 @@ onUnmounted(() => {
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .view-switch { display: flex; .el-button { margin: 0; border-radius: 0; } .el-button:first-child { border-radius: 7px 0 0 7px; } .el-button:last-child { border-radius: 0 7px 7px 0; } .active { color: rgb(var(--primary-color)); border-color: rgb(var(--primary-color)); background: rgba(var(--primary-color), 0.1); } }
 .load-alert { margin-bottom: 12px; }
+.endpoint-check-alert { width: 100%; margin-top: 10px; }
 .batch-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 10px 0; color: var(--text-tertiary); font-size: 13px; :deep(.el-select) { width: 210px; } }
 .node-table { border: 1px solid var(--border-subtle); border-radius: 12px; overflow: hidden; }
 .cluster-page :deep(.node-table .el-table__body td.el-table__cell),
@@ -2267,7 +2363,6 @@ onUnmounted(() => {
 :global(.cluster-dialog .el-form-item__label) { color: var(--text-secondary); }
 :global(.cluster-dialog .el-input__wrapper),
 :global(.cluster-dialog .el-select__wrapper),
-:global(.cluster-dialog .el-input-number),
 :global(.cluster-dialog .el-textarea__inner) {
   color: var(--text-primary);
   background: var(--surface-card) !important;
@@ -2276,6 +2371,31 @@ onUnmounted(() => {
 }
 :global(.cluster-dialog .el-input__inner),
 :global(.cluster-dialog .el-textarea__inner) { color: var(--text-primary); }
+:global(.cluster-dialog .el-input-number),
+:global(.cluster-dialog .el-input-number > .el-input) {
+  border: none !important;
+  border-radius: 10px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+:global(.cluster-dialog .endpoint-input .el-input-group__append) {
+  align-items: stretch;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 0 10px 10px 0;
+}
+:global(.cluster-dialog .endpoint-input.el-input-group--append > .el-input__wrapper) {
+  border-radius: 10px 0 0 10px !important;
+}
+:global(.cluster-dialog .endpoint-input .el-input-group__append .el-button) {
+  min-height: 40px;
+  padding: 0 18px;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
 :global(:root:root.dark .cluster-dialog .el-divider) {
   border-top-color: transparent !important;
 }

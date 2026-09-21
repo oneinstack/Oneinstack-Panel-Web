@@ -10,6 +10,7 @@ export const clusterApi = {
   updateClusterPolicy: (data: Record<string, unknown>) => http.put('/cluster/policy', data),
   getClusterNode: (id: number | string) => http.get(`/cluster/nodes/${id}`),
   getClusterNodeMetrics: (id: number | string, since?: string) => http.get(`/cluster/nodes/${id}/metrics`, since ? { since } : undefined),
+  checkClusterNodeEndpoint: (data: { endpoint: string }) => http.post('/cluster/nodes/endpoint-check', data),
   createClusterNode: (data: { name: string; endpoint: string; group?: string; tags?: string }) => http.post('/cluster/nodes', data),
   updateClusterNode: (id: number | string, data: Record<string, any>) => http.put(`/cluster/nodes/${id}`, data),
   rotateClusterNodeToken: (id: number | string) => http.post(`/cluster/nodes/${id}/token/rotate`),
