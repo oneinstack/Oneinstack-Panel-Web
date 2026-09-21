@@ -26,6 +26,9 @@ const handleSearch = () => {
 <template>
   <el-input
     v-model="searchValue"
+    type="search"
+    name="oneinstack-search"
+    autocomplete="off"
     :placeholder="placeholder"
     clearable
     @keydown.enter="handleSearch"
