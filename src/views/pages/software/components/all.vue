@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage, ElMessageBox, FormInstance } from 'element-plus'
 import { useRoute } from 'vue-router'
 import { ChildEmits, ChildProps } from '../index.vue'
@@ -10,6 +10,7 @@ import { Api } from '@/api/modules'
 import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwareTask';
 import InstallTaskDrawer from './InstallTaskDrawer.vue'
 import ServiceConfigDrawer from './ServiceConfigDrawer.vue'
+import PanelPasswordPrompt from './PanelPasswordPrompt.vue'
 import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import { hasSoftwareButtonAccess } from '../access'
@@ -17,6 +18,7 @@ import System from '@/utils/System'
 
 const softwareTaskStore = useSoftwareTaskStore()
 const route = useRoute()
+const passwordPrompt = ref<InstanceType<typeof PanelPasswordPrompt>>()
 
 type ServiceAction = 'start' | 'stop' | 'restart' | 'reload'
 
@@ -128,6 +130,7 @@ const drawer = reactive({
   title: t('software.install', 'Install'),
   onClose: () => {
     formRef.value?.clearValidate()
+    clearSecretFields()
     drawer.show = false
   },
   onConfirm: () => {
@@ -657,8 +660,14 @@ const buildInstallFieldRules = (field: any) => {
   return rules
 }
 
-const defaultInstallFieldValue = (field: any) => {
-  if (isPasswordInstallField(field)) return ''
+const credentialFieldValue = (field: any, credentials: Record<string, string>) => {
+  const target = normalizeInstallFieldToken(field?.key || field?.prop)
+  const entry = Object.entries(credentials).find(([key]) => normalizeInstallFieldToken(key) === target)
+  return entry?.[1] || ''
+}
+
+const defaultInstallFieldValue = (field: any, credentials: Record<string, string> = {}) => {
+  if (isPasswordInstallField(field)) return credentialFieldValue(field, credentials)
   const value = field?.default ?? field?.defaultValue ?? field?.default_value
   if (value === undefined || value === null) return ''
   if (String(field?.type || '').toLowerCase() === 'boolean') {
@@ -681,7 +690,8 @@ const installFieldPlaceholder = (field: any) => {
 const openInstallForm = (
   item: any,
   requestedVersion = '',
-  operation: 'install' | 'upgrade' = 'install'
+  operation: 'install' | 'upgrade' = 'install',
+  credentials: Record<string, string> = {}
 ) => {
   if (!item) return
   installVersions.value = getInstallVersions(item)
@@ -701,7 +711,7 @@ const openInstallForm = (
     .map<FormItem>((field: any) => {
       installForm.value[field.key] = isSoftwareVersionField(field)
         ? version
-        : defaultInstallFieldValue(field)
+        : defaultInstallFieldValue(field, credentials)
       return {
         label: installFieldLabel(field),
         type: installFieldType(field),
@@ -727,6 +737,48 @@ const openInstallForm = (
     { name: item.name }
   )
   drawer.show = true
+}
+
+const hasPasswordInstallField = (item: any) =>
+  parseParams(item?.params).some((field: any) => isPasswordInstallField(field))
+
+const requestUpgradeCredentials = async (item: any): Promise<Record<string, string> | null> => {
+  if (!item?.credentialConfigured) return {}
+  try {
+    const value = await passwordPrompt.value?.open({
+      title: t('software.config.verifyPasswordTitle', 'Verify Panel password'),
+      message: t('software.config.upgradeVerifyPasswordMessage', 'Verify your current Panel password before opening an upgrade form with managed credentials.'),
+      placeholder: t('software.config.panelPasswordPlaceholder', 'Current Panel password'),
+      requiredMessage: t('software.config.panelPasswordRequired', 'Enter your current Panel password'),
+      confirmText: t('software.config.verifyAndContinue', 'Verify and continue'),
+      cancelText: t('common.cancel', 'Cancel')
+    })
+    if (value === null || value === undefined) return null
+    const component = serviceStatus(item)?.component || item.component || item.key
+    const { data } = await Api.revealComponentServiceCredentials(String(component), {
+      panelPassword: value
+    })
+    return Object.fromEntries(
+      ((data?.fields || []) as Array<{ key: string; value: string; secret?: boolean }>)
+        .filter((field) => field.secret && field.value)
+        .map((field) => [field.key, field.value])
+    )
+  } catch (error: any) {
+    if (error !== 'cancel' && error !== 'close') {
+      ElMessage.error(error?.message || t('software.config.credentialRevealFailed', 'Unable to read managed credentials'))
+    }
+    return null
+  }
+}
+
+const openUpgradeForm = async (item: any, requestedVersion = ''): Promise<boolean> => {
+  const credentials = await requestUpgradeCredentials(item)
+  if (credentials === null) return false
+  if (!item?.credentialConfigured && hasPasswordInstallField(item)) {
+    ElMessage.info(t('software.config.credentialNotManagedUpgrade', 'Historical credentials are not managed. Enter the required password again to continue.'))
+  }
+  openInstallForm(item, requestedVersion, 'upgrade', credentials)
+  return true
 }
 
 const buildInstallPayload = (request: Record<string, any>) => {
@@ -829,8 +881,12 @@ const retryTask = async (taskId: string): Promise<boolean> => {
     return false
   }
 
+  if (task.operation === 'upgrade') {
+    if (!await openUpgradeForm(item, task.requestedVersion)) return false
+  } else {
+    openInstallForm(item, task.requestedVersion, 'install')
+  }
   taskDrawer.show = false
-  openInstallForm(item, task.requestedVersion, task.operation === 'upgrade' ? 'upgrade' : 'install')
   return true
 }
 
@@ -908,15 +964,22 @@ const handleUninstall = async (item: any) => {
   }
 }
 
-const handleUpgrade = (item: any) => {
+const handleUpgrade = async (item: any) => {
   if (!canReadSoftware.value || !canUpdateSoftware.value) return
   const task = activeTask(item)
   if (task) {
     showTask(task.id)
     return
   }
-  openInstallForm(item, recommendedVersion(item), 'upgrade')
+  await openUpgradeForm(item, recommendedVersion(item))
 }
+
+watch(() => route.path, () => {
+  clearSecretFields()
+  drawer.show = false
+})
+
+onBeforeUnmount(clearSecretFields)
 
 watch(
   () => softwareTaskStore.terminalRevision,
@@ -1241,6 +1304,7 @@ watch(
       :can-write="canWriteSoftwareServiceConfig"
       @task-created="handleConfigurationTaskCreated"
     />
+    <panel-password-prompt ref="passwordPrompt" />
   </div>
 </template>
 

@@ -50,6 +50,17 @@ export const softwareApi = {
   getComponentServiceConfiguration: (component: string) => {
     return http.get(`/soft/services/${component}/config`);
   },
+  /** 二次验证后读取当前组件的托管安装凭据 */
+  revealComponentServiceCredentials: (
+    component: string,
+    obj: { panelPassword: string },
+  ) => {
+    return http.post(
+      `/soft/services/${encodeURIComponent(component)}/credentials/reveal`,
+      obj,
+      { ignoreUnauthorizedLogout: true, silentError: true },
+    );
+  },
   /** 获取组件配置发布历史 */
   getComponentServiceConfigurationHistory: (
     component: string,

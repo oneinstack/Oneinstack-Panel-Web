@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Clock, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
+import { Clock, CopyDocument, Hide, Key, Lock, RefreshLeft, RefreshRight, View } from '@element-plus/icons-vue'
 import { Api } from '@/api/modules'
 import CustomDrawer from '@/components/custom-drawer.vue'
 import OperationPreviewContent from '@/components/operation-preview-content.vue'
+import PanelPasswordPrompt from './PanelPasswordPrompt.vue'
 import {
   createOperationPreview,
   executeOperationPreview,
@@ -35,6 +36,22 @@ interface ComponentConfiguration {
   fields: ConfigurationField[]
   values: Record<string, unknown>
   packageSource: string
+  credentialConfigured?: boolean
+  installParameters?: Array<{
+    key: string
+    label: string
+    type: string
+    secret?: boolean
+    credentialConfigured?: boolean
+  }>
+}
+
+interface CredentialField {
+  key: string
+  label: string
+  type: string
+  value: string
+  secret?: boolean
 }
 
 interface ConfigurationHistoryEntry {
@@ -77,6 +94,11 @@ const configuration = ref<ComponentConfiguration>()
 const preview = ref<OperationPreview>()
 const previewOrigin = ref<'update' | 'restore'>('update')
 const history = ref<ConfigurationHistoryEntry[]>([])
+const revealingCredentials = ref(false)
+const credentialDialogVisible = ref(false)
+const credentialFields = ref<CredentialField[]>([])
+const visibleCredentialFields = reactive<Record<string, boolean>>({})
+const passwordPrompt = ref<InstanceType<typeof PanelPasswordPrompt>>()
 const values = reactive<Record<string, any>>({})
 let hydrating = false
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
@@ -105,6 +127,87 @@ const applyModeLabel = computed(() =>
 const changeCount = computed(() =>
   (preview.value?.files?.length || 0) + (preview.value?.actions?.length || 0)
 )
+
+const hasCredentialFields = computed(() => Boolean(
+  configuration.value?.credentialConfigured ||
+  configuration.value?.installParameters?.some((field) =>
+    field.credentialConfigured || field.secret || field.type?.toLowerCase() === 'password'
+  )
+))
+
+const clearRevealedCredentials = () => {
+  credentialFields.value.forEach((field) => { field.value = '' })
+  credentialFields.value = []
+  Object.keys(visibleCredentialFields).forEach((key) => delete visibleCredentialFields[key])
+  credentialDialogVisible.value = false
+}
+
+const credentialDisplayValue = (field: CredentialField) =>
+  field.secret && !visibleCredentialFields[field.key] ? '••••••••••••' : field.value
+
+const revealCredentials = async () => {
+  if (!props.component || !props.canRead || revealingCredentials.value) return
+  try {
+    const value = await passwordPrompt.value?.open({
+      title: t('software.config.verifyPasswordTitle', 'Verify Panel password'),
+      message: t('software.config.verifyPasswordMessage', 'Enter your current Panel password to view managed credentials.'),
+      placeholder: t('software.config.panelPasswordPlaceholder', 'Current Panel password'),
+      requiredMessage: t('software.config.panelPasswordRequired', 'Enter your current Panel password'),
+      confirmText: t('software.config.verifyAndView', 'Verify and view'),
+      cancelText: t('common.cancel', 'Cancel')
+    })
+    if (value === null || value === undefined) return
+    revealingCredentials.value = true
+    const { data } = await Api.revealComponentServiceCredentials(props.component, {
+      panelPassword: value
+    })
+    clearRevealedCredentials()
+    credentialFields.value = ((data?.fields || []) as CredentialField[]).map((field) => ({ ...field }))
+    credentialDialogVisible.value = true
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    ElMessage.error(errorMessage(error))
+  } finally {
+    revealingCredentials.value = false
+  }
+}
+
+const copyCredential = async (field: CredentialField) => {
+  try {
+    let copied = false
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(field.value)
+        copied = true
+      } catch {
+        // Fall back to the compatibility copy below.
+      }
+    }
+
+    if (!copied) {
+      const textarea = document.createElement('textarea')
+      textarea.value = field.value
+      textarea.setAttribute('readonly', 'readonly')
+      textarea.style.position = 'fixed'
+      textarea.style.left = '-9999px'
+      textarea.style.top = '-9999px'
+      document.body.appendChild(textarea)
+      try {
+        textarea.focus()
+        textarea.select()
+        textarea.setSelectionRange(0, textarea.value.length)
+        copied = document.execCommand('copy')
+      } finally {
+        textarea.remove()
+      }
+    }
+
+    if (!copied) throw new Error('copy failed')
+    ElMessage.success(t('software.config.credentialCopied', '{label} copied', { label: field.label }))
+  } catch {
+    ElMessage.error(t('software.config.credentialCopyFailed', 'Copy failed. Please copy manually.'))
+  }
+}
 
 const historyStatus = (status: ConfigurationHistoryEntry['status']) => {
   const labels = {
@@ -286,7 +389,8 @@ const handleOperationError = async (error: any) => {
 
 watch(
   () => [props.modelValue, props.component],
-  ([isVisible]) => {
+  ([isVisible], previous) => {
+    if (!isVisible || previous?.[1] !== props.component) clearRevealedCredentials()
     if (isVisible && props.component) {
       void load().catch(() => undefined)
     }
@@ -297,6 +401,8 @@ watch(
 watch(values, () => {
   if (!hydrating) preview.value = undefined
 }, { deep: true })
+
+onBeforeUnmount(clearRevealedCredentials)
 </script>
 
 <template>
@@ -510,6 +616,15 @@ watch(values, () => {
         <div class="drawer-actions">
           <el-button :disabled="applying" @click="visible = false">{{ $t('common.cancel') }}</el-button>
           <el-button
+            v-if="canRead && hasCredentialFields"
+            :icon="Key"
+            :loading="revealingCredentials"
+            :disabled="loading || applying"
+            @click="revealCredentials"
+          >
+            {{ $t('software.config.getPassword') }}
+          </el-button>
+          <el-button
             v-if="canWrite"
             :icon="View"
             :loading="previewing"
@@ -533,6 +648,49 @@ watch(values, () => {
       </div>
     </template>
   </custom-drawer>
+
+  <el-dialog
+    v-model="credentialDialogVisible"
+    width="min(520px, 92vw)"
+    append-to-body
+    destroy-on-close
+    :title="$t('software.config.managedCredentials')"
+    :close-on-click-modal="false"
+    @closed="clearRevealedCredentials"
+  >
+    <p class="credential-dialog__hint">{{ $t('software.config.credentialSecurityHint') }}</p>
+    <div class="credential-list">
+      <div v-for="field in credentialFields" :key="field.key" class="credential-item">
+        <label>{{ field.label }}</label>
+        <el-input
+          :model-value="credentialDisplayValue(field)"
+          type="text"
+          :name="`oneinstack-managed-credential-${field.key}`"
+          readonly
+          autocomplete="off"
+        >
+          <template #append>
+            <el-button
+              v-if="field.secret"
+              :icon="visibleCredentialFields[field.key] ? Hide : View"
+              :aria-label="$t('software.config.toggleCredentialVisibility')"
+              @click="visibleCredentialFields[field.key] = !visibleCredentialFields[field.key]"
+            />
+            <el-button
+              :icon="CopyDocument"
+              :aria-label="$t('software.config.copyCredential')"
+              @click="copyCredential(field)"
+            />
+          </template>
+        </el-input>
+      </div>
+    </div>
+    <template #footer>
+      <el-button type="primary" @click="clearRevealedCredentials">{{ $t('common.close') }}</el-button>
+    </template>
+  </el-dialog>
+
+  <panel-password-prompt ref="passwordPrompt" />
 </template>
 
 <style scoped lang="less">
@@ -580,6 +738,24 @@ watch(values, () => {
   width: 100%;
   max-width: 680px;
   margin: 0 auto;
+}
+
+.credential-dialog__hint {
+  margin: 0 0 16px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.credential-list {
+  display: grid;
+  gap: 14px;
+}
+
+.credential-item label {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--text-primary);
+  font-weight: 600;
 }
 
 .configuration-notice {
