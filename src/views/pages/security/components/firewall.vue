@@ -43,6 +43,7 @@ interface FirewallStatus {
   managedBackend?: string;
   persistent: boolean;
   canToggle: boolean;
+  canManageOffline: boolean;
   repairRequired: boolean;
   warning?: string;
   panelPort: number;
@@ -113,6 +114,7 @@ const defaultStatus = (): FirewallStatus => ({
   backend: "none",
   persistent: false,
   canToggle: false,
+  canManageOffline: false,
   repairRequired: false,
   panelPort: 8089,
   panelPortProtected: false,
@@ -416,10 +418,33 @@ const baseActionDisabledReason = computed(() => {
     return t("security.firewallPersistentRequired", "当前防火墙规则无法持久化");
   return "";
 });
+const offlineRuleManagementAvailable = computed(
+  () =>
+    status.value.backend === "firewalld" &&
+    !status.value.enabled &&
+    status.value.canManageOffline &&
+    !status.value.repairRequired,
+);
+const ruleActionDisabledReason = computed(() => {
+  if (!status.value.install)
+    return t("security.firewallUnsupportedReason", "未检测到受支持的防火墙");
+  if (status.value.repairRequired)
+    return t("security.firewallRepairReason", "防火墙配置需要先修复");
+  if (!status.value.enabled && !offlineRuleManagementAvailable.value)
+    return t("security.firewallEnableRequired", "需先启用防火墙");
+  if (!status.value.persistent)
+    return t("security.firewallPersistentRequired", "当前防火墙规则无法持久化");
+  return "";
+});
 const firewallDisabledNotice = computed(() => {
   if (!status.value.install || status.value.repairRequired) return "";
   if (!canManageCurrentTab.value)
     return t("security.readOnlyHint", "当前账号只有安全配置读取权限，可查看但不能修改安全配置。");
+  if (offlineRuleManagementAvailable.value)
+    return t(
+      "security.firewallOfflineManageHint",
+      "firewalld 未运行，可离线停用、编辑或删除现有规则；修改将在下次启动时生效。",
+    );
   if (!status.value.enabled)
     return t("security.firewallDisabledHint", "防火墙已关闭，启用后才能修改规则。");
   if (!status.value.persistent)
@@ -468,7 +493,7 @@ const batchActionReason = computed(() => {
   if (batchAction.value === "delete" && !canDeleteCurrentTab.value) {
     return t("security.rulePermissionDenied", "当前账号没有防火墙规则修改权限");
   }
-  return baseActionDisabledReason.value;
+  return ruleActionDisabledReason.value;
 });
 const ruleColumns = computed<ColumnItem<FirewallRule>[]>(() => [
   { type: "selection", width: 48, selectable: (row) => !row.protected },
@@ -1356,7 +1381,7 @@ const actionReason = (row?: FirewallRule, action: RuleAction = "state") => {
     return t("security.protectedRuleReadonly", "系统保护规则不可修改");
   if (row && !canRuleAction(row, action))
     return t("security.rulePermissionDenied", "当前账号没有防火墙规则修改权限");
-  return baseActionDisabledReason.value;
+  return ruleActionDisabledReason.value;
 };
 
 const forwardActionReason = () => {
@@ -1475,7 +1500,7 @@ onMounted(() => {
           :loading="cleanupLoading"
           @click="handleCleanup"
         >{{
-          t("security.cleanupCache", "清理缓存")
+          t("security.cleanupExpiredRules", "清理过期规则")
         }}</el-button>
         <div class="status-summary">
           <el-tag :type="status.install ? 'success' : 'danger'">
