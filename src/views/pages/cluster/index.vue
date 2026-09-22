@@ -58,6 +58,8 @@ interface ClusterNode {
   panelVersion?: string
   agentVersion?: string
   capabilities?: string[]
+  serviceActions?: ServiceActionCapability[]
+  serviceActionsReportedAt?: string
   lastRegisteredAt?: string
   lastSeenAt?: string
   cpuPercent?: number
@@ -77,6 +79,28 @@ interface ClusterNode {
   gateway?: string
   macAddress?: string
   interfaceName?: string
+}
+
+interface ServiceActionCapability {
+  component: string
+  displayName: string
+  serviceName: string
+  softwareVersion?: string
+  activeState?: string
+  availableActions: Array<'start' | 'stop' | 'restart' | 'reload'>
+}
+
+interface ServiceActionPreview {
+  id: string
+  component: string
+  displayName: string
+  action: 'start' | 'stop' | 'restart' | 'reload'
+  executable: Array<{ nodeId: number; name?: string; reason?: string }>
+  blocked: Array<{ nodeId: number; name?: string; reason?: string }>
+  skipped: Array<{ nodeId: number; name?: string; reason?: string }>
+  impact?: string
+  confirmText?: string
+  fingerprint: string
 }
 
 interface EndpointCheckResult {
@@ -133,6 +157,9 @@ interface TaskSummary {
   type: string
   status: string
   batchId?: string
+  workflowId?: string
+  component?: string
+  action?: 'start' | 'stop' | 'restart' | 'reload'
   cancelRequested?: boolean
   cancelable?: boolean
   stage?: string
@@ -325,6 +352,11 @@ const taskDetailError = ref(false)
 const taskDetail = ref<TaskDetail | null>(null)
 const taskDetailNodeId = ref<number | null>(null)
 
+const serviceActionVisible = ref(false)
+const serviceActionLoading = ref(false)
+const serviceActionTargets = ref<number[]>([])
+const serviceActionForm = reactive({ component: '', action: '' as '' | 'start' | 'stop' | 'restart' | 'reload' })
+
 const dispatching = ref(false)
 const dispatchHistoryLoading = ref(false)
 const dispatchHistoryError = ref(false)
@@ -365,6 +397,32 @@ const asWebsite = (row: unknown) => row as WebsiteSummary
 const canResetRole = computed(() => canAction('cluster.role.reset'))
 const canSelectRole = computed(() => canAction('cluster.role.select'))
 const hasActiveFilters = computed(() => Boolean(keyword.value || roleFilter.value || statusFilter.value))
+const serviceActionTargetNodes = computed(() => serviceActionTargets.value
+  .map((id) => nodes.value.find((node) => Number(node.id) === Number(id)))
+  .filter(Boolean) as ClusterNode[])
+const serviceActionComponents = computed(() => {
+  const values = new Map<string, ServiceActionCapability>()
+  serviceActionTargetNodes.value.forEach((node) => {
+    ;(node.serviceActions || []).forEach((item) => {
+      if (!values.has(item.component)) values.set(item.component, item)
+    })
+  })
+  return [...values.values()]
+})
+const serviceActionOptions = computed(() => {
+  if (!serviceActionForm.component) return [] as Array<'start' | 'stop' | 'restart' | 'reload'>
+  const values = new Set<'start' | 'stop' | 'restart' | 'reload'>()
+  serviceActionTargetNodes.value.forEach((node) => {
+    const item = (node.serviceActions || []).find((candidate) => candidate.component === serviceActionForm.component)
+    item?.availableActions?.forEach((action) => values.add(action))
+  })
+  return [...values]
+})
+
+const serviceActionLabel = (action: string) => {
+  const value = t(`serviceActionActions.${action}`)
+  return value === `cluster.serviceActionActions.${action}` ? action : value
+}
 
 const websiteTypeLabel = (type?: string) => {
   const normalized = String(type || '').trim().toLowerCase()
@@ -804,6 +862,75 @@ const batchPermission = (action: string) => {
   if (action === 'update_check' || action === 'update_apply') return 'cluster.batch.update'
   if (action === 'delete') return 'cluster.node.delete.confirm'
   return 'cluster.node.lifecycle'
+}
+
+const openServiceAction = async (nodeIds: number[]) => {
+  if (!canAction('cluster.service.dispatch')) return
+  const ids = [...new Set(nodeIds.map(Number).filter(Boolean))]
+  if (!ids.length) return
+  serviceActionTargets.value = ids
+  serviceActionForm.component = ''
+  serviceActionForm.action = ''
+  serviceActionVisible.value = true
+  if (ids.length !== 1) return
+  serviceActionLoading.value = true
+  try {
+    const { data } = await Api.listClusterNodeServiceActions(ids[0])
+    const node = nodes.value.find((item) => Number(item.id) === ids[0])
+    if (node) {
+      node.serviceActions = Array.isArray(data?.items) ? data.items : []
+      node.serviceActionsReportedAt = data?.reportedAt
+    }
+  } finally {
+    serviceActionLoading.value = false
+  }
+}
+
+const serviceActionComponentChanged = () => {
+  if (!serviceActionOptions.value.includes(serviceActionForm.action as any)) serviceActionForm.action = ''
+}
+
+const submitServiceAction = async () => {
+  if (!canAction('cluster.service.dispatch') || !serviceActionForm.component || !serviceActionForm.action || !serviceActionTargets.value.length) return
+  serviceActionLoading.value = true
+  try {
+    const { data } = await Api.previewClusterServiceAction({
+      nodeIds: serviceActionTargets.value,
+      component: serviceActionForm.component,
+      action: serviceActionForm.action as 'start' | 'stop' | 'restart' | 'reload'
+    })
+    const preview = data as ServiceActionPreview
+    const executable = Array.isArray(preview?.executable) ? preview.executable : []
+    const blocked = Array.isArray(preview?.blocked) ? preview.blocked : []
+    const skipped = Array.isArray(preview?.skipped) ? preview.skipped : []
+    const details = [...blocked, ...skipped].slice(0, 12).map((item) => `${item.name || `#${item.nodeId}`}: ${item.reason}`).join('\n')
+    const summary = [preview.impact, t('batchPreviewCounts', { executable: executable.length, blocked: blocked.length, skipped: skipped.length }), details].filter(Boolean).join('\n')
+    if (!executable.length) {
+      await ElMessageBox.alert(summary || t('serviceActionNoEligibleNodes'), t('serviceActionTitle'), { type: 'warning' })
+      return
+    }
+    let confirm = ''
+    if (preview.confirmText) {
+      const result = await ElMessageBox.prompt(summary, t('serviceActionTitle'), {
+        type: serviceActionForm.action === 'stop' ? 'error' : 'warning', inputPlaceholder: preview.confirmText,
+        inputValidator: (value) => value === preview.confirmText || t('batchConfirmIncorrect', { text: preview.confirmText }), confirmButtonText: t('execute')
+      })
+      confirm = result.value
+    } else {
+      await ElMessageBox.confirm(summary, t('serviceActionTitle'), { type: 'warning', confirmButtonText: t('execute') })
+    }
+    const { data: batch } = await Api.executeClusterServiceAction({ previewId: preview.id, fingerprint: preview.fingerprint, confirm })
+    ElMessage.success(t('serviceActionCreated', { count: batch?.total || executable.length }))
+    serviceActionVisible.value = false
+    await Promise.all([loadNodes(true), loadOperations()])
+    startPolling()
+    startOperationsPolling()
+  } catch (error: any) {
+    if (error === 'cancel' || error === 'close') return
+    throw error
+  } finally {
+    serviceActionLoading.value = false
+  }
 }
 
 const executeBatchAction = async (action: string, nodeIds: number[]) => {
@@ -1585,6 +1712,8 @@ const taskTypeLabel = (type: string) => {
   if (type === 'panel.update.check') return t('panelUpdateCheckTask')
   if (type === 'panel.update.apply') return t('panelUpdateApplyTask')
   if (type === 'node.diagnose.v1') return t('diagnosisTask')
+  if (type === 'service.action.preflight.v1') return t('serviceActionPreflightTask')
+  if (type === 'service.action.execute.v1') return t('serviceActionExecuteTask')
   if (type.startsWith('node.')) return batchActionLabel(type.slice('node.'.length))
   return type
 }
@@ -1879,6 +2008,7 @@ onUnmounted(() => {
             <el-option v-if="canAction('cluster.node.delete.confirm')" :label="t('finalDelete')" value="delete" />
           </el-select>
           <el-button type="primary" :disabled="!selectedNodeIds.length" :loading="batchExecuting" @click="runSelectedBatch">{{ t('previewAndExecute') }}</el-button>
+          <el-button v-if="canAction('cluster.service.dispatch')" :disabled="!selectedNodeIds.length" @click="openServiceAction(selectedNodeIds)">{{ t('serviceAction') }}</el-button>
         </div>
 
         <el-table v-if="viewMode === 'table'" v-loading="nodesLoading" :data="paginatedNodes" row-key="id" class="node-table" :empty-text="t('empty')">
@@ -1959,12 +2089,13 @@ onUnmounted(() => {
             <div class="pagination"><span>{{ t('totalItems', { count: batchTotal }) }}</span><el-pagination v-model:current-page="batchPage" v-model:page-size="batchPageSize" layout="prev, pager, next, sizes" :page-sizes="[10, 20, 50]" :total="batchTotal" /></div>
           </el-tab-pane>
           <el-tab-pane :label="t('tasks')" name="tasks">
-            <div class="task-filters"><el-select v-model="taskFilters.nodeId" clearable :placeholder="t('allNodes')" :aria-label="t('allNodes')"><el-option v-for="node in nodes.filter((item) => !item.local)" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select><el-input v-model="taskFilters.batchId" clearable :placeholder="t('batchId')" :aria-label="t('batchId')" /><el-select v-model="taskFilters.type" clearable :placeholder="t('taskType')" :aria-label="t('taskType')"><el-option :label="t('diagnosisTask')" value="node.diagnose.v1" /><el-option :label="t('panelRestartTask')" value="panel.restart" /><el-option :label="t('panelUpdateCheckTask')" value="panel.update.check" /><el-option :label="t('panelUpdateApplyTask')" value="panel.update.apply" /></el-select><el-select v-model="taskFilters.status" clearable :placeholder="t('taskStatus')" :aria-label="t('taskStatus')"><el-option v-for="value in ['queued', 'running', 'succeeded', 'failed', 'canceled']" :key="value" :label="taskStatusLabel(value)" :value="value" /></el-select><el-button type="primary" :icon="Search" @click="clusterTaskPage = 1; loadClusterTasks()">{{ t('search') }}</el-button><el-button @click="resetTaskFilters">{{ t('resetFilters') }}</el-button></div>
+            <div class="task-filters"><el-select v-model="taskFilters.nodeId" clearable :placeholder="t('allNodes')" :aria-label="t('allNodes')"><el-option v-for="node in nodes.filter((item) => !item.local)" :key="node.id" :label="node.name" :value="Number(node.id)" /></el-select><el-input v-model="taskFilters.batchId" clearable :placeholder="t('batchId')" :aria-label="t('batchId')" /><el-select v-model="taskFilters.type" clearable :placeholder="t('taskType')" :aria-label="t('taskType')"><el-option :label="t('diagnosisTask')" value="node.diagnose.v1" /><el-option :label="t('panelRestartTask')" value="panel.restart" /><el-option :label="t('panelUpdateCheckTask')" value="panel.update.check" /><el-option :label="t('panelUpdateApplyTask')" value="panel.update.apply" /><el-option :label="t('serviceActionPreflightTask')" value="service.action.preflight.v1" /><el-option :label="t('serviceActionExecuteTask')" value="service.action.execute.v1" /></el-select><el-select v-model="taskFilters.status" clearable :placeholder="t('taskStatus')" :aria-label="t('taskStatus')"><el-option v-for="value in ['queued', 'running', 'succeeded', 'failed', 'canceled']" :key="value" :label="taskStatusLabel(value)" :value="value" /></el-select><el-button type="primary" :icon="Search" @click="clusterTaskPage = 1; loadClusterTasks()">{{ t('search') }}</el-button><el-button @click="resetTaskFilters">{{ t('resetFilters') }}</el-button></div>
             <el-table v-loading="clusterTasksLoading" :data="clusterTasks" class="dispatch-table" size="small">
               <el-table-column prop="id" :label="t('taskId')" width="90" />
               <el-table-column :label="t('dispatchTargetNode')" min-width="170"><template #default="scope">{{ dispatchNodeName(scope.row.nodeId) }}</template></el-table-column>
-              <el-table-column prop="batchId" :label="t('batchId')" min-width="190" />
+              <el-table-column :label="t('batchId')" min-width="190"><template #default="scope">{{ scope.row.batchId || scope.row.workflowId || '-' }}</template></el-table-column>
               <el-table-column :label="t('taskType')" min-width="160"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column>
+              <el-table-column :label="t('serviceActionComponent')" min-width="150"><template #default="scope"><el-space v-if="scope.row.component && scope.row.action" wrap><el-tag size="small" type="info">{{ scope.row.component }}</el-tag><el-tag size="small" type="warning">{{ serviceActionLabel(scope.row.action) }}</el-tag></el-space><span v-else>-</span></template></el-table-column>
               <el-table-column :label="t('taskStatus')" width="200"><template #default="scope"><div class="task-status-cell"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : scope.row.status === 'canceled' ? 'offline' : 'pending')">{{ taskExecutionStatusLabel(asTask(scope.row)) }}</el-tag><el-tag v-if="scope.row.diagnosisOverallStatus" size="small" :type="diagnosisOverallTagType(scope.row.diagnosisOverallStatus)">{{ t('diagnosisHealth') }}：{{ diagnosisOverallLabel(scope.row.diagnosisOverallStatus) }}</el-tag></div></template></el-table-column>
               <el-table-column :label="t('taskProgress')" width="120"><template #default="scope"><el-progress :percentage="Number(scope.row.progress || 0)" :show-text="false" :stroke-width="6" /></template></el-table-column>
               <el-table-column :label="t('taskTime')" min-width="170"><template #default="scope">{{ formatTime(scope.row.createdAt) }}</template></el-table-column>
@@ -2080,6 +2211,25 @@ onUnmounted(() => {
       <template #footer><el-button @click="policyVisible = false">{{ t('cancel') }}</el-button><el-button v-if="canAction('cluster.policy.update')" type="primary" :loading="policySaving" @click="savePolicy">{{ t('save') }}</el-button></template>
     </el-dialog>
 
+    <el-dialog v-model="serviceActionVisible" class="cluster-dialog" :title="t('serviceActionTitle')" width="560px" append-to-body>
+      <el-form v-loading="serviceActionLoading" label-position="top">
+        <el-alert :title="t('serviceActionDescription')" type="info" :closable="false" show-icon />
+        <el-form-item :label="t('serviceActionTargets')"><span>{{ serviceActionTargetNodes.map((node) => node.name).join('、') || '-' }}</span></el-form-item>
+        <el-form-item :label="t('serviceActionComponent')">
+          <el-select v-model="serviceActionForm.component" :placeholder="t('serviceActionComponent')" @change="serviceActionComponentChanged">
+            <el-option v-for="item in serviceActionComponents" :key="item.component" :label="`${item.displayName || item.component}${item.softwareVersion ? ` · ${item.softwareVersion}` : ''}`" :value="item.component" />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="t('serviceActionOperation')">
+          <el-select v-model="serviceActionForm.action" :disabled="!serviceActionForm.component" :placeholder="t('serviceActionOperation')">
+            <el-option v-for="action in serviceActionOptions" :key="action" :label="serviceActionLabel(action)" :value="action" />
+          </el-select>
+        </el-form-item>
+        <el-alert v-if="!serviceActionComponents.length" :title="t('serviceActionUnavailable')" type="warning" :closable="false" show-icon />
+      </el-form>
+      <template #footer><el-button @click="serviceActionVisible = false">{{ t('cancel') }}</el-button><el-button type="primary" :loading="serviceActionLoading" :disabled="!serviceActionForm.component || !serviceActionForm.action" @click="submitServiceAction">{{ t('previewAndExecute') }}</el-button></template>
+    </el-dialog>
+
     <el-drawer v-model="detailVisible" :size="'min(720px, 100vw)'" :with-header="false" class="cluster-drawer">
       <template v-if="selectedNode"><div class="drawer-head"><div class="node-identity"><span class="status-dot" :class="effectiveStatus(selectedNode)" /><div><h2>{{ selectedNode.name }}<span v-if="selectedNode.local">（{{ t('master') }}）</span></h2><small>{{ selectedNode.hostname || '-' }}　·　{{ selectedNode.ipAddress || '-' }}</small></div></div><el-button circle text @click="detailVisible = false">×</el-button></div>
       <el-tabs v-model="detailTab" class="drawer-tabs"><el-tab-pane :label="t('basicInfo')" name="basic" /><el-tab-pane :label="t('resourceMonitor')" name="resource" /><el-tab-pane v-if="!selectedNode.local" :label="t('metrics')" name="metrics" /><el-tab-pane v-if="!selectedNode.local" :label="t('logs')" name="tasks" /></el-tabs>
@@ -2111,6 +2261,17 @@ onUnmounted(() => {
 			  <div class="panel-update-actions"><el-button v-if="canAction('cluster.batch.update')" :loading="Boolean(panelUpdateLoading[String(selectedNode.id)])" :disabled="Boolean(panelUpdateBlockedReason(selectedNode, 'check'))" @click="checkPanelUpdate(selectedNode)">{{ t('panelUpdateCheck') }}</el-button><el-button v-if="canAction('cluster.batch.update')" type="warning" :loading="Boolean(panelUpdateLoading[String(selectedNode.id)])" :disabled="Boolean(panelUpdateBlockedReason(selectedNode, 'apply'))" @click="applyPanelUpdate(selectedNode)">{{ t('panelUpdateAction') }}</el-button></div>
 			</template>
 		  </section>
+		  <section v-if="!selectedNode.local && canAction('cluster.service.dispatch')" class="detail-card">
+			<div class="detail-title"><span>{{ t('serviceAction') }}</span><el-tag v-if="selectedNode.serviceActions?.length" type="success">{{ selectedNode.serviceActions.length }}</el-tag></div>
+			<p class="detail-muted">{{ selectedNode.serviceActions?.length ? t('serviceActionDescription') : t('serviceActionUnavailable') }}</p>
+			<el-descriptions :column="1">
+			  <el-descriptions-item :label="t('serviceActionReportedAt')">{{ formatTime(selectedNode.serviceActionsReportedAt) }}</el-descriptions-item>
+			  <el-descriptions-item v-if="selectedNode.serviceActions?.length" :label="t('serviceActionAvailable')">
+				<el-space wrap><el-tag v-for="item in selectedNode.serviceActions" :key="item.component" size="small">{{ item.displayName || item.component }} · {{ item.availableActions.map(serviceActionLabel).join(', ') }}</el-tag></el-space>
+			  </el-descriptions-item>
+			</el-descriptions>
+			<div class="panel-update-actions"><el-button type="primary" :disabled="!selectedNode.serviceActions?.length" @click="openServiceAction([Number(selectedNode.id)])">{{ t('previewAndExecute') }}</el-button></div>
+		  </section>
 		</div>
         <section v-else-if="detailTab === 'resource'" class="detail-card"><div class="detail-title">{{ t('currentResources') }}</div><div class="resource-circles"><el-progress type="circle" :percentage="Math.round(selectedNode.cpuPercent || 0)" :color="metricColor(selectedNode, 'cpu')"><template #default><strong>{{ formatNodePercent(selectedNode, 'cpu', selectedNode.cpuPercent) }}</strong><small>{{ t('cpu') }}</small></template></el-progress><el-progress type="circle" :percentage="Math.round(selectedNode.memoryPercent || 0)" :color="metricColor(selectedNode, 'memory')"><template #default><strong>{{ formatNodePercent(selectedNode, 'memory', selectedNode.memoryPercent) }}</strong><small>{{ t('memory') }}</small></template></el-progress><el-progress type="circle" :percentage="Math.round(selectedNode.diskPercent || 0)" :color="metricColor(selectedNode, 'disk')"><template #default><strong>{{ formatNodePercent(selectedNode, 'disk', selectedNode.diskPercent) }}</strong><small>{{ t('disk') }}</small></template></el-progress></div><div class="resource-lines"><div><span>{{ t('cpuCores') }}</span><strong>{{ Number(selectedNode.cpuUsedCores || 0).toFixed(1) }} / {{ selectedNode.cpuTotalCores || '-' }}</strong></div><div><span>{{ t('memory') }}</span><strong>{{ formatBytes(selectedNode.memoryUsedBytes) }} / {{ formatBytes(selectedNode.memoryTotalBytes) }}</strong></div><div><span>{{ t('disk') }}</span><strong>{{ formatBytes(selectedNode.diskUsedBytes) }} / {{ formatBytes(selectedNode.diskTotalBytes) }}</strong></div><div><span>{{ t('networkTraffic') }}</span><strong>{{ formatRate(selectedNode.networkReceiveBps) }} / {{ formatRate(selectedNode.networkSendBps) }}</strong></div></div></section>
         <section v-else-if="detailTab === 'metrics'" class="detail-card metric-card"><div class="metric-meta"><span class="live-indicator" :class="{ error: metricsRefreshError }"><i />{{ metricsRefreshError ? t('metricRefreshFailed') : t('metricAutoRefresh') }}</span><span>{{ t('metricLastUpdated', { time: formatTime(metricsUpdatedAt) }) }}</span></div><div v-if="metrics.length" class="metric-chart"><BasicChart :option="metricChartOption" /></div><el-empty v-else :description="t('noMetrics')" /></section>
@@ -2130,6 +2291,8 @@ onUnmounted(() => {
             <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteType')"><el-tag size="small" :type="websiteTypeTag(taskDetail.websiteType)">{{ websiteTypeLabel(taskDetail.websiteType) }}</el-tag></el-descriptions-item>
             <el-descriptions-item v-if="hasWebsiteMetadata(taskDetail)" :label="t('websiteId')">{{ taskDetail.websiteId || '-' }}</el-descriptions-item>
             <el-descriptions-item :label="t('taskType')">{{ taskTypeLabel(taskDetail.type) }}</el-descriptions-item>
+            <el-descriptions-item v-if="taskDetail.component" :label="t('serviceActionComponent')"><el-tag size="small" type="info">{{ taskDetail.component }}</el-tag></el-descriptions-item>
+            <el-descriptions-item v-if="taskDetail.action" :label="t('serviceActionOperation')"><el-tag size="small" type="warning">{{ serviceActionLabel(taskDetail.action) }}</el-tag></el-descriptions-item>
             <el-descriptions-item :label="t('taskStatus')"><el-tag :type="statusType(taskDetail.status === 'succeeded' ? 'online' : taskDetail.status === 'failed' ? 'error' : 'pending')">{{ taskExecutionStatusLabel(taskDetail) }}</el-tag></el-descriptions-item>
             <el-descriptions-item v-if="taskDetail.diagnosisOverallStatus" :label="t('diagnosisHealth')"><el-tag :type="diagnosisOverallTagType(taskDetail.diagnosisOverallStatus)">{{ diagnosisOverallLabel(taskDetail.diagnosisOverallStatus) }}</el-tag></el-descriptions-item>
             <el-descriptions-item :label="t('taskAttempts')">{{ taskDetail.attempts }}/{{ taskDetail.maxAttempts }}</el-descriptions-item>
