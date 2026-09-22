@@ -84,12 +84,68 @@ export default {
     fileChange: '文件',
     actionChange: '命令',
     service: '服务',
+    target: '操作目标',
+    component: '组件',
+    action: '动作',
+    softwareVersion: '软件版本',
+    componentPackageVersion: '组件包版本',
+    targetSystem: '目标系统',
+    packageSHA256: '组件包 SHA-256',
+    packageChanges: '系统软件包变化',
+    packageChangeCount: '共 {count} 个软件包',
+    serviceAction: '{action} {service}',
+    packageAction: '{action}系统软件包',
+    uninstallSummary: '将使用已固定的组件包卸载 {component} {version}。',
+    serviceSummary: '将使用已固定的组件包对 {component} 执行{action}。',
+    lifecycleActions: {
+      start: '启动',
+      stop: '停止',
+      restart: '重启',
+      reload: '重载',
+      uninstall: '卸载',
+      disable_now: '停止并禁用'
+    },
+    packageActions: {
+      purge: '彻底卸载',
+      remove: '卸载'
+    },
+    fileActions: {
+      preserve: '保留目录',
+      remove: '移除受管目录',
+      delete: '删除目录',
+      remove_contents: '移除组件状态内容',
+      remove_managed: '仅移除组件管理的目录内容'
+    },
     prechecks: '执行前检查',
     prechecksPassed: '{count} 项检查已通过',
     prechecksDeferred: '{count} 项检查将在执行时完成',
     rollback: '失败回滚',
     rollbackSupported: '支持失败回滚',
     rollbackUnsupported: '不支持自动回滚',
+    rollbackStrategies: {
+      none: '无自动回滚',
+      best_effort: '尽力回滚',
+      automatic: '自动回滚'
+    },
+    unrecoverable: {
+      packages_removed: '已移除的系统软件包需要重新安装',
+      deleted_paths: '按删除策略移除的数据和配置无法由本任务恢复',
+      runtime_or_packages_removed: '已移除的运行文件或软件包需要重新安装'
+    },
+    lifecyclePrechecks: {
+      lifecycle_contract: {
+        name: '组件预览契约',
+        message: '服务、软件包和目录来自已签名组件清单'
+      },
+      fixed_package: {
+        name: '固定组件包',
+        message: '组件包 {version} 与 SHA-256 已固定，执行时将精确解析同一制品'
+      },
+      actual_state: {
+        name: '实际系统状态',
+        message: '执行阶段将重新检查服务和受管资源状态'
+      }
+    },
     rollbackConfirmTip: '该操作不支持自动回滚，请确认后继续',
     failedPrechecks: '存在未通过的预检项，不能继续执行',
     precheckFailed: '预检未通过',
@@ -109,7 +165,10 @@ export default {
       manifestDefault: '组件清单默认值',
       derived: '服务端推导',
       backendNormalized: '服务端规范化',
-      serverResolved: '服务端解析'
+      serverResolved: '服务端解析',
+      centerResolve: 'Center 精确解析',
+      installedState: '已安装状态',
+      componentManifest: '组件清单'
     },
     expiresAt: '预览有效期至',
     noDetails: '本次预览未返回详细变更项，请确认目标操作无误后再继续。',

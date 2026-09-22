@@ -84,12 +84,68 @@ export default {
     fileChange: 'File',
     actionChange: 'Command',
     service: 'Service',
+    target: 'Operation target',
+    component: 'Component',
+    action: 'Action',
+    softwareVersion: 'Software version',
+    componentPackageVersion: 'Component package version',
+    targetSystem: 'Target system',
+    packageSHA256: 'Component package SHA-256',
+    packageChanges: 'System package changes',
+    packageChangeCount: '{count} packages',
+    serviceAction: '{action} {service}',
+    packageAction: '{action} system packages',
+    uninstallSummary: 'Uninstall {component} {version} using the fixed component package.',
+    serviceSummary: '{action} {component} using the fixed component package.',
+    lifecycleActions: {
+      start: 'Start',
+      stop: 'Stop',
+      restart: 'Restart',
+      reload: 'Reload',
+      uninstall: 'Uninstall',
+      disable_now: 'Stop and disable'
+    },
+    packageActions: {
+      purge: 'Purge',
+      remove: 'Remove'
+    },
+    fileActions: {
+      preserve: 'Preserve directory',
+      remove: 'Remove managed directory',
+      delete: 'Delete directory',
+      remove_contents: 'Remove component state contents',
+      remove_managed: 'Remove only component-managed directory contents'
+    },
     prechecks: 'Prechecks',
     prechecksPassed: '{count} checks passed',
     prechecksDeferred: '{count} checks will run during execution',
     rollback: 'Failure rollback',
     rollbackSupported: 'Failure rollback is supported',
     rollbackUnsupported: 'Automatic rollback is not supported',
+    rollbackStrategies: {
+      none: 'No automatic rollback',
+      best_effort: 'Best-effort rollback',
+      automatic: 'Automatic rollback'
+    },
+    unrecoverable: {
+      packages_removed: 'Removed system packages must be installed again',
+      deleted_paths: 'Data and configuration selected for deletion cannot be restored by this task',
+      runtime_or_packages_removed: 'Removed runtime files or packages must be installed again'
+    },
+    lifecyclePrechecks: {
+      lifecycle_contract: {
+        name: 'Component preview contract',
+        message: 'Services, packages, and paths come from the signed component manifest'
+      },
+      fixed_package: {
+        name: 'Fixed component package',
+        message: 'Component package {version} and its SHA-256 are pinned for exact resolution during execution'
+      },
+      actual_state: {
+        name: 'Actual system state',
+        message: 'Service and managed resource state will be checked again during execution'
+      }
+    },
     rollbackConfirmTip: 'This operation does not support automatic rollback. Confirm before continuing.',
     failedPrechecks: 'Some prechecks failed. The operation cannot continue.',
     precheckFailed: 'Precheck failed',
@@ -109,7 +165,10 @@ export default {
       manifestDefault: 'Manifest default',
       derived: 'Derived by server',
       backendNormalized: 'Backend normalized',
-      serverResolved: 'Resolved by server'
+      serverResolved: 'Resolved by server',
+      centerResolve: 'Resolved by Center',
+      installedState: 'Installed state',
+      componentManifest: 'Component manifest'
     },
     expiresAt: 'Preview valid until',
     noDetails: 'No detailed changes were returned for this preview. Confirm the target operation before continuing.',

@@ -13,9 +13,25 @@ export interface OperationPreview {
     riskLevel: 'low' | 'medium' | 'high' | string
     reason?: string
   }
+  target?: {
+    component: string
+    displayName?: string
+    softwareVersion?: string
+    componentPackageVersion?: string
+    packageSHA256?: string
+    system?: string
+    architecture?: string
+    action: string
+  }
+  packageChanges?: Array<{
+    manager: string
+    name: string
+    action: string
+  }>
   files?: Array<{
     path: string
     action: string
+    role?: string
     changeSummary?: string
     diff?: string
   }>
@@ -24,8 +40,10 @@ export interface OperationPreview {
     name: string
     displayCommand?: string
     service?: string
+    verb?: string
   }>
   prechecks?: Array<{
+    code?: string
     name: string
     status: 'passed' | 'failed' | 'deferred' | string
     message?: string
@@ -39,6 +57,7 @@ export interface OperationPreview {
   }
   rollback?: {
     supported: boolean
+    strategy?: string
     summary?: string
     unrecoverable?: string[]
   }
@@ -64,6 +83,9 @@ export const normalizeOperationPreview = (response: any): OperationPreview => {
     plan?.effectiveValues ??
     plan?.effective_values ??
     []
+  const target = preview?.target ?? plan?.target
+  const packageChanges = preview?.packageChanges ?? preview?.package_changes ??
+    plan?.packageChanges ?? plan?.package_changes ?? []
 
   return {
     ...preview,
@@ -76,6 +98,15 @@ export const normalizeOperationPreview = (response: any): OperationPreview => {
       riskLevel: review?.riskLevel ?? review?.risk_level ?? 'low',
       reason: review?.reason
     },
+    target: target
+      ? {
+          ...target,
+          componentPackageVersion: target?.componentPackageVersion ?? target?.component_package_version,
+          packageSHA256: target?.packageSHA256 ?? target?.package_sha256,
+          softwareVersion: target?.softwareVersion ?? target?.software_version
+        }
+      : undefined,
+    packageChanges,
     files: preview?.files ?? plan?.files ?? [],
     actions: preview?.actions ?? plan?.actions ?? [],
     prechecks: preview?.prechecks ?? plan?.prechecks ?? [],

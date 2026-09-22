@@ -49,9 +49,21 @@ const hasDeferredPrecheck = computed(() =>
   (props.preview.prechecks || []).some((item) => item.status === 'deferred')
 )
 
+const precheckName = (item: NonNullable<OperationPreview['prechecks']>[number]) => {
+  if (!props.preview.target || !item.code) return item.name
+  return t(`common.operationPreview.lifecyclePrechecks.${item.code}.name`, item.name)
+}
+
+const precheckMessage = (item: NonNullable<OperationPreview['prechecks']>[number]) => {
+  if (!props.preview.target || !item.code) return item.message || item.status
+  return t(`common.operationPreview.lifecyclePrechecks.${item.code}.message`, item.message || item.status, {
+    version: props.preview.target.componentPackageVersion || ''
+  })
+}
+
 const precheckSummary = computed(() => {
   const checks = props.preview.prechecks || []
-  const messages = checks.map((item) => item.message).filter(Boolean)
+  const messages = checks.map((item) => precheckMessage(item)).filter(Boolean)
   if (messages.length) return messages.join(' · ')
   if (failedPrechecks.value.length) {
     return t('common.operationPreview.failedPrechecks', 'Some prechecks failed. The operation cannot continue.')
@@ -64,7 +76,29 @@ const precheckSummary = computed(() => {
   return t('common.operationPreview.prechecksPassed', '{count} checks passed', { count: checks.length })
 })
 
+const lifecycleActionLabel = (action?: string) => {
+  if (!action) return ''
+  return t(`common.operationPreview.lifecycleActions.${action}`, action)
+}
+
+const lifecycleSummary = computed(() => {
+  const target = props.preview.target
+  if (!target) return ''
+  const component = target.displayName || target.component
+  if (target.action === 'uninstall') {
+    return t('common.operationPreview.uninstallSummary', 'Uninstall {component} {version} using the fixed component package.', {
+      component,
+      version: target.softwareVersion || ''
+    })
+  }
+  return t('common.operationPreview.serviceSummary', '{action} {component} using the fixed component package.', {
+    action: lifecycleActionLabel(target.action),
+    component
+  })
+})
+
 const primarySummary = computed(() =>
+  lifecycleSummary.value ||
   props.preview.review?.reason ||
   props.preview.summary ||
   t(
@@ -74,12 +108,15 @@ const primarySummary = computed(() =>
 )
 
 const secondarySummary = computed(() => {
+  if (props.preview.target) return ''
   if (!props.preview.review?.reason || !props.preview.summary) return ''
   return props.preview.review.reason === props.preview.summary ? '' : props.preview.summary
 })
 
+const packageChanges = computed(() => props.preview.packageChanges || [])
+
 const changeCount = computed(
-  () => (props.preview.files?.length || 0) + (props.preview.actions?.length || 0)
+  () => (props.preview.files?.length || 0) + (props.preview.actions?.length || 0) + packageChanges.value.length
 )
 
 const fileCount = computed(() => props.preview.files?.length || 0)
@@ -88,13 +125,54 @@ const actionCount = computed(() => props.preview.actions?.length || 0)
 
 const effectiveValues = computed(() => props.preview.effectiveValues || [])
 
+const targetRows = computed(() => {
+  const target = props.preview.target
+  if (!target) return []
+  return [
+    [t('common.operationPreview.component', 'Component'), target.displayName || target.component],
+    [t('common.operationPreview.action', 'Action'), lifecycleActionLabel(target.action)],
+    [t('common.operationPreview.softwareVersion', 'Software version'), target.softwareVersion],
+    [t('common.operationPreview.componentPackageVersion', 'Component package'), target.componentPackageVersion],
+    [t('common.operationPreview.targetSystem', 'Target system'), [target.system, target.architecture].filter(Boolean).join(' / ')],
+    [t('common.operationPreview.packageSHA256', 'Package SHA-256'), target.packageSHA256]
+  ].filter((row) => row[1]) as string[][]
+})
+
+const packageActionLabel = (action: string) =>
+  t(`common.operationPreview.packageActions.${action}`, action)
+
+const fileChangeLabel = (action: string, fallback?: string) => {
+  if (!['preserve', 'remove', 'delete', 'remove_contents', 'remove_managed'].includes(action)) {
+    return fallback || action
+  }
+  return t(`common.operationPreview.fileActions.${action}`, fallback || action)
+}
+
+const actionDisplayName = (action: NonNullable<OperationPreview['actions']>[number]) => {
+  if (action.type === 'service' && action.service && action.verb) {
+    return t('common.operationPreview.serviceAction', '{action} {service}', {
+      action: lifecycleActionLabel(action.verb),
+      service: action.service
+    })
+  }
+  if (action.type === 'package' && action.verb) {
+    return t('common.operationPreview.packageAction', '{action} system packages', {
+      action: packageActionLabel(action.verb)
+    })
+  }
+  return action.name
+}
+
 const effectiveValueSourceKeys: Record<string, string> = {
   request: 'request',
   server_default: 'serverDefault',
   manifest_default: 'manifestDefault',
   derived: 'derived',
   backend_normalized: 'backendNormalized',
-  server_resolved: 'serverResolved'
+  server_resolved: 'serverResolved',
+  center_resolve: 'centerResolve',
+  installed_state: 'installedState',
+  component_manifest: 'componentManifest'
 }
 
 const isSensitiveEffectiveValue = (item: NonNullable<OperationPreview['effectiveValues']>[number]) => {
@@ -137,11 +215,27 @@ const formattedExpiresAt = computed(() => {
 const rollbackSummary = computed(() => {
   const rollback = props.preview.rollback
   if (!rollback) return ''
-  if (rollback.unrecoverable?.length) return rollback.unrecoverable.join(' · ')
+  if (rollback.unrecoverable?.length) {
+    return rollback.unrecoverable.map((item) => {
+      if (!props.preview.target || !['packages_removed', 'deleted_paths', 'runtime_or_packages_removed'].includes(item)) return item
+      return t(`common.operationPreview.unrecoverable.${item}`, item)
+    }).join(' · ')
+  }
+  if (props.preview.target && rollback.strategy) {
+    return rollback.supported
+      ? t('common.operationPreview.rollbackSupported', 'Failure rollback is supported')
+      : t('common.operationPreview.rollbackUnsupported', 'Automatic rollback is not supported')
+  }
   if (rollback.summary) return rollback.summary
   return rollback.supported
     ? t('common.operationPreview.rollbackSupported', 'Failure rollback is supported')
     : t('common.operationPreview.rollbackUnsupported', 'Automatic rollback is not supported')
+})
+
+const rollbackStrategy = computed(() => {
+  const strategy = props.preview.rollback?.strategy
+  if (!strategy) return ''
+  return t(`common.operationPreview.rollbackStrategies.${strategy}`, strategy)
 })
 </script>
 
@@ -162,6 +256,35 @@ const rollbackSummary = computed(() => {
     </section>
 
     <p v-if="secondarySummary" class="preview-description">{{ secondarySummary }}</p>
+
+    <section v-if="targetRows.length" class="preview-section target-section">
+      <div class="preview-section__title">
+        <h4>{{ t('common.operationPreview.target', 'Operation target') }}</h4>
+      </div>
+      <div class="effective-values-list">
+        <div v-for="row in targetRows" :key="row[0]" class="effective-value-item">
+          <span>{{ row[0] }}</span>
+          <strong>{{ row[1] }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section v-if="packageChanges.length" class="preview-section">
+      <div class="preview-section__title">
+        <h4>{{ t('common.operationPreview.packageChanges', 'System package changes') }}</h4>
+        <span>{{ t('common.operationPreview.packageChangeCount', '{count} packages', { count: packageChanges.length }) }}</span>
+      </div>
+      <div class="preview-list">
+        <div v-for="item in packageChanges" :key="`${item.manager}-${item.name}`" class="preview-item">
+          <el-icon class="preview-item__icon"><Document /></el-icon>
+          <div class="preview-item__content">
+            <span class="preview-item__type">{{ item.manager }}</span>
+            <strong>{{ item.name }}</strong>
+            <small>{{ packageActionLabel(item.action) }}</small>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <section v-if="activeImpacts.length" class="preview-impact">
       <span class="preview-label">{{ t('common.operationPreview.impactScope', 'Impact scope') }}</span>
@@ -209,7 +332,7 @@ const rollbackSummary = computed(() => {
           <div class="preview-item__content">
             <span class="preview-item__type">{{ t('common.operationPreview.fileChange', 'File') }}</span>
             <strong>{{ file.path }}</strong>
-            <small>{{ file.changeSummary || file.action }}</small>
+            <small>{{ fileChangeLabel(file.action, file.changeSummary) }}</small>
             <pre v-if="file.diff" class="preview-diff">{{ file.diff }}</pre>
           </div>
         </div>
@@ -222,7 +345,7 @@ const rollbackSummary = computed(() => {
           <el-icon class="preview-item__icon"><VideoPlay /></el-icon>
           <div class="preview-item__content">
             <span class="preview-item__type">{{ t('common.operationPreview.actionChange', 'Command') }}</span>
-            <strong>{{ action.name }}</strong>
+            <strong>{{ actionDisplayName(action) }}</strong>
             <code v-if="action.displayCommand">{{ action.displayCommand }}</code>
             <small v-else>{{ action.type }}</small>
             <small v-if="action.service">{{ t('common.operationPreview.service', 'Service') }}: {{ action.service }}</small>
@@ -271,8 +394,8 @@ const rollbackSummary = computed(() => {
           class="preview-check"
           :class="`is-${check.status}`"
         >
-          <strong>{{ check.name }}</strong>
-          <span>{{ check.message || check.status }}</span>
+          <strong>{{ precheckName(check) }}</strong>
+          <span>{{ precheckMessage(check) }}</span>
         </div>
       </div>
 
@@ -287,7 +410,7 @@ const rollbackSummary = computed(() => {
         </el-icon>
         <div>
           <strong>{{ t('common.operationPreview.rollback', 'Failure rollback') }}</strong>
-          <span>{{ rollbackSummary }}</span>
+          <span>{{ rollbackSummary }}<template v-if="rollbackStrategy"> · {{ rollbackStrategy }}</template></span>
         </div>
       </div>
     </section>
