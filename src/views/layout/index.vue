@@ -5,8 +5,9 @@ import LanguageSwitch from './components/language-switch.vue'
 import PanelUpdateNotice from './components/panel-update-notice.vue'
 import { useAppStore } from '@/stores/modules/app';
 import { Bell, Expand, Fold } from '@element-plus/icons-vue'
-import { useRoute, useRouter } from 'vue-router'
+import { isNavigationFailure, useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+import type { MenuInstance } from 'element-plus'
 import { useConfigStore } from '@/stores/modules/config';
 import { Api } from '@/api/modules'
 import type { PanelRuntimeWarning } from '@/api/modules/system'
@@ -14,7 +15,11 @@ import { useSoftwareTaskStore, type SoftwareTask } from '@/stores/modules/softwa
 import InstallTaskDrawer from '@/views/pages/software/components/InstallTaskDrawer.vue'
 import i18n from '@/lang'
 import { hasTerminalAccess } from '@/utils/access'
-import { isDynamicImportError, reloadOnceForChunkFailure } from '@/utils/chunk-reload'
+import {
+  isDynamicImportError,
+  reloadOnceForChunkFailure,
+  reloadOnceForNavigationStall
+} from '@/utils/chunk-reload'
 import approvalCenterIcon from '../../../public/static/menu/approval-center.svg?raw'
 import approvalCenterActiveIcon from '../../../public/static/menu/approval-center-active.svg?raw'
 import auditLogIcon from '../../../public/static/menu/audit-log.svg?raw'
@@ -227,12 +232,15 @@ const currentNav = computed(() => {
   return matched ?? navigableNavItems.value[0]
 })
 const activeMenuIndex = computed(() => currentNav.value?.path || '')
-const menuRenderSeed = ref(0)
-const menuRenderKey = computed(() => `${activeMenuIndex.value}:${menuRenderSeed.value}`)
+const navigationMenuRef = ref<MenuInstance>()
+let pendingNavigationPath = ''
+const NAVIGATION_TIMEOUT = Symbol('navigation-timeout')
+const NAVIGATION_TIMEOUT_MS = 5_000
 const isNavItemActive = (item: NavItem): boolean =>
   item.children?.some(isNavItemActive) || (item.path.startsWith('/') && route.path.startsWith(item.path))
 const hoveredMenuKey = ref('')
-const getMenuItemKey = (item: NavItem) => item.path || item.name
+const getMenuItemIndex = (item: NavItem) => item.path || `action:${item.name}`
+const getMenuItemKey = getMenuItemIndex
 const isMenuItemHovered = (item: NavItem) => hoveredMenuKey.value === getMenuItemKey(item)
 const setHoveredMenuItem = (item?: NavItem) => {
   hoveredMenuKey.value = item ? getMenuItemKey(item) : ''
@@ -254,10 +262,23 @@ const activeGroupIndexes = computed(() =>
   visibleNavList.value.filter((item) => item.children?.length && isNavItemActive(item)).map((item) => item.path)
 )
 const navigateNavItem = async (item: NavItem) => {
-  if (item.path && route.path !== item.path) {
+  if (item.path && route.path !== item.path && pendingNavigationPath !== item.path) {
     const currentPath = route.path
+    pendingNavigationPath = item.path
+    let timer: number | undefined
     try {
-      await router.push(item.path)
+      const navigationResult = await Promise.race([
+        router.push(item.path),
+        new Promise<symbol>((resolve) => {
+          timer = window.setTimeout(() => resolve(NAVIGATION_TIMEOUT), NAVIGATION_TIMEOUT_MS)
+        })
+      ])
+      if (navigationResult === NAVIGATION_TIMEOUT) {
+        if (pendingNavigationPath === item.path && reloadOnceForNavigationStall(item.path)) return
+        ElMessage.error(translateWithFallback('layout.menu.navigationFailed', 'Unable to open this page'))
+      } else if (isNavigationFailure(navigationResult)) {
+        console.warn(`[navigation] Navigation was not completed for ${item.path}`, navigationResult)
+      }
     } catch (error) {
       if (isDynamicImportError(error)) {
         if (!reloadOnceForChunkFailure(item.path)) {
@@ -268,13 +289,20 @@ const navigateNavItem = async (item: NavItem) => {
         console.error(`[navigation] Failed to open route ${item.path}`, error)
         ElMessage.error(translateWithFallback('layout.menu.navigationFailed', 'Unable to open this page'))
       }
+    } finally {
+      if (timer) window.clearTimeout(timer)
+      if (pendingNavigationPath === item.path) pendingNavigationPath = ''
     }
     if (route.path === currentPath) {
-      menuRenderSeed.value += 1
+      navigationMenuRef.value?.updateActiveIndex(activeMenuIndex.value)
     }
   }
   mobileNavigationOpen.value = false
   item.event?.()
+}
+const handleMenuSelect = (index: string) => {
+  const item = navigableNavItems.value.find((candidate) => getMenuItemIndex(candidate) === index)
+  if (item) void navigateNavItem(item)
 }
 const menuPathLocaleKey: Record<string, string> = {
   '/home': 'dashboard',
@@ -425,7 +453,7 @@ watch(
           ? translateWithFallback('layout.taskCompleteMessage', `${task.component} has completed. Page state was refreshed automatically.`, { component: task.component })
           : `${task.component}: ${task.errorMessage || task.message || translateWithFallback('layout.taskDetailHint', 'Open the task for details')}`,
         type: succeeded ? 'success' : 'error',
-        duration: succeeded ? 5000 : 0,
+        duration: succeeded ? 5000 : 180000,
         position: 'top-right',
         onClick: () => openGlobalTask(task)
       })
@@ -617,11 +645,12 @@ const BindButton = () => {
         <div class="navigation-label" v-show="isMobileNavigation || !conf.isCollapse">{{ $t('layout.navigation') }}</div>
         <el-scrollbar class="nav-scrollbar">
           <el-menu
+            ref="navigationMenuRef"
             :collapse="!isMobileNavigation && conf.isCollapse"
-            :key="menuRenderKey"
             :default-active="activeMenuIndex"
             :default-openeds="activeGroupIndexes"
             :unique-opened="true"
+            @select="handleMenuSelect"
           >
             <template v-for="item in visibleNavList" :key="item.path || item.name">
               <el-sub-menu
@@ -643,7 +672,6 @@ const BindButton = () => {
                   :index="child.path"
                   @mouseenter="setHoveredMenuItem(child)"
                   @mouseleave="setHoveredMenuItem(item)"
-                  @click="navigateNavItem(child)"
                 >
                   <span class="menu-icon" :aria-label="getMenuName(child)" v-html="getMenuItemIcon(child)"></span>
                   <span class="menu-item-name" :title="getMenuName(child)">{{ getMenuName(child) }}</span>
@@ -654,7 +682,6 @@ const BindButton = () => {
                 :index="item.path || `action:${item.name}`"
                 @mouseenter="setHoveredMenuItem(item)"
                 @mouseleave="setHoveredMenuItem()"
-                @click="navigateNavItem(item)"
               >
                 <span class="menu-icon" :aria-label="getMenuName(item)" v-html="getMenuItemIcon(item)"></span>
                 <span class="menu-item-name" :title="getMenuName(item)">{{ getMenuName(item) }}</span>

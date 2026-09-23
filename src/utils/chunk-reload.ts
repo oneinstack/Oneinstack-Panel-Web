@@ -1,6 +1,7 @@
 const CHUNK_RELOAD_FLAG = '__oneinstack_chunk_reload__'
 const CHUNK_RELOAD_TARGET = '__oneinstack_chunk_reload_target__'
 const CHUNK_RELOAD_ATTEMPTS = '__oneinstack_chunk_reload_attempts__'
+const NAVIGATION_STALL_TARGET = '__oneinstack_navigation_stall_target__'
 const MAX_CHUNK_RELOAD_ATTEMPTS = 1
 
 const normalizeTarget = (target?: string) => {
@@ -59,4 +60,21 @@ export const clearChunkReloadRecovery = () => {
   sessionStorage.removeItem(CHUNK_RELOAD_FLAG)
   sessionStorage.removeItem(CHUNK_RELOAD_TARGET)
   sessionStorage.removeItem(CHUNK_RELOAD_ATTEMPTS)
+}
+
+export const getPendingNavigationStallTarget = () =>
+  normalizeTarget(sessionStorage.getItem(NAVIGATION_STALL_TARGET) || '')
+
+export const reloadOnceForNavigationStall = (target?: string) => {
+  const normalizedTarget = normalizeTarget(target)
+  if (!normalizedTarget || getPendingNavigationStallTarget() === normalizedTarget) return false
+
+  sessionStorage.setItem(NAVIGATION_STALL_TARGET, normalizedTarget)
+  window.location.hash = normalizedTarget
+  window.location.reload()
+  return true
+}
+
+export const clearNavigationStallRecovery = () => {
+  sessionStorage.removeItem(NAVIGATION_STALL_TARGET)
 }

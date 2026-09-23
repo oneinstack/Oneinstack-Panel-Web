@@ -10,7 +10,12 @@ import { ElMessage } from 'element-plus'
 import { canAccessPath, getFirstAccessiblePath, resolveMenuKeyByPath, resolveMenuLabelByKey } from '@/utils/access'
 import { getPanelEntryStatus, isPanelEntryPathAllowed } from '@/utils/panel-entry'
 import i18n from '@/lang'
-import { isDynamicImportError, reloadOnceForChunkFailure } from '@/utils/chunk-reload'
+import {
+  clearNavigationStallRecovery,
+  getPendingNavigationStallTarget,
+  isDynamicImportError,
+  reloadOnceForChunkFailure
+} from '@/utils/chunk-reload'
 
 const t = (key: string, fallback: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params)
@@ -108,6 +113,9 @@ export const initRouter = () => {
   })
 
   router.afterEach((guard) => {
+    if (getPendingNavigationStallTarget() === guard.fullPath) {
+      clearNavigationStallRecovery()
+    }
     const _arr = prefetchRouteData[guard.path]
     if (_arr) {
       _arr.forEach((v: string) => {
