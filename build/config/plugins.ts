@@ -1,5 +1,5 @@
 import vue from '@vitejs/plugin-vue'
-import { readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
 import { UIViteAutoImport } from 'ui-vite/src/autoimport'
 import AutoImport from 'unplugin-auto-import/vite'
@@ -40,6 +40,45 @@ const toolsJavascriptCSPPlugin = (): PluginOption => ({
   }
 })
 
+const relativeBundleReferencePattern = /\b(?:import|from)\s*\(?["']([^"']+\.(?:js|css)(?:[?#][^"']*)?)["']/g
+
+const verifyLazyBundleReferences = (distDir: string) => {
+  const files = new Set<string>()
+  const collectFiles = (directory: string) => {
+    readdirSync(directory, { withFileTypes: true }).forEach((entry) => {
+      const fullPath = path.join(directory, entry.name)
+      if (entry.isDirectory()) {
+        collectFiles(fullPath)
+        return
+      }
+      files.add(path.relative(distDir, fullPath).split(path.sep).join('/'))
+    })
+  }
+
+  collectFiles(distDir)
+  const missingReferences = new Set<string>()
+  for (const file of files) {
+    if (!file.endsWith('.js')) continue
+    const source = readFileSync(path.join(distDir, file), 'utf8')
+    for (const match of source.matchAll(relativeBundleReferencePattern)) {
+      const reference = match[1]
+      if (!reference.startsWith('.')) continue
+      const target = path.posix.normalize(
+        path.posix.join(path.posix.dirname(file), reference.replace(/[?#].*$/, ''))
+      )
+      if (!files.has(target)) {
+        missingReferences.add(`${file} -> ${target}`)
+      }
+    }
+  }
+
+  if (missingReferences.size) {
+    throw new Error(
+      `Production bundle has missing lazy-load assets:\n${[...missingReferences].sort().join('\n')}`
+    )
+  }
+}
+
 export const getPlugins = (env: globalType) => {
   const isBuild = env.env.pro === 'build'
 
@@ -76,6 +115,7 @@ export const getPlugins = (env: globalType) => {
           const versionDir = path.join(__dirname, '../../dist/version.json')
           const appName = `app-${env.version}.zip`
           writeFileSync(versionDir, JSON.stringify({ version: env.version, url: appName }))
+          verifyLazyBundleReferences(path.join(__dirname, '../../dist'))
           await tozip(path.join(__dirname, '../../dist'), path.join(__dirname, `../../version/${appName}`))
           rmSync(versionDir)
         }
