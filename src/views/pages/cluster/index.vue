@@ -212,6 +212,10 @@ interface ClusterBatch {
   finishedAt?: string
 }
 
+interface ServiceActionBatchDetail extends ClusterBatch {
+  tasks: TaskSummary[]
+}
+
 interface PanelUpdateCheckResult {
   currentVersion: string
   latestVersion?: string
@@ -355,7 +359,11 @@ const taskDetailNodeId = ref<number | null>(null)
 const serviceActionVisible = ref(false)
 const serviceActionLoading = ref(false)
 const serviceActionTargets = ref<number[]>([])
+const serviceActionComponentLocked = ref(false)
 const serviceActionForm = reactive({ component: '', action: '' as '' | 'start' | 'stop' | 'restart' | 'reload' })
+const serviceActionBatchID = ref('')
+const serviceActionBatchLoading = ref(false)
+const serviceActionBatch = ref<ServiceActionBatchDetail | null>(null)
 
 const dispatching = ref(false)
 const dispatchHistoryLoading = ref(false)
@@ -393,6 +401,7 @@ const canAction = (action: string) => configStore.isAdministrator() || configSto
 const asNode = (row: unknown) => row as ClusterNode
 const asTask = (row: unknown) => row as TaskSummary
 const asBatch = (row: unknown) => row as ClusterBatch
+const asServiceActionCapability = (row: unknown) => row as ServiceActionCapability
 const asWebsite = (row: unknown) => row as WebsiteSummary
 const canResetRole = computed(() => canAction('cluster.role.reset'))
 const canSelectRole = computed(() => canAction('cluster.role.select'))
@@ -418,10 +427,33 @@ const serviceActionOptions = computed(() => {
   })
   return [...values]
 })
+const selectedNodeServiceActions = computed(() => selectedNode.value?.serviceActions || [])
+const serviceActionBatchTasks = computed(() => {
+  const nodeID = Number(selectedNode.value?.id || 0)
+  return (serviceActionBatch.value?.tasks || []).filter((task) => Number(task.nodeId) === nodeID && task.type.startsWith('service.action.'))
+})
+const serviceActionBatchProgress = computed(() => {
+  const batch = serviceActionBatch.value
+  if (!batch?.total) return 0
+  return Math.round(((batch.succeeded + batch.failed + batch.canceled) / batch.total) * 100)
+})
+const hasActiveServiceActionBatch = computed(() => ['queued', 'running'].includes(serviceActionBatch.value?.status || ''))
 
 const serviceActionLabel = (action: string) => {
   const value = t(`serviceActionActions.${action}`)
   return value === `cluster.serviceActionActions.${action}` ? action : value
+}
+const serviceActionStateLabel = (state?: string) => {
+  const normalized = String(state || '').trim().toLowerCase()
+  const value = t(`serviceActionStates.${normalized || 'unknown'}`)
+  return value === `cluster.serviceActionStates.${normalized || 'unknown'}` ? (normalized || t('unknown')) : value
+}
+const serviceActionStateType = (state?: string) => {
+  const normalized = String(state || '').trim().toLowerCase()
+  if (normalized === 'active') return 'success'
+  if (normalized === 'failed') return 'danger'
+  if (normalized === 'activating' || normalized === 'deactivating') return 'warning'
+  return 'info'
 }
 
 const websiteTypeLabel = (type?: string) => {
@@ -864,12 +896,13 @@ const batchPermission = (action: string) => {
   return 'cluster.node.lifecycle'
 }
 
-const openServiceAction = async (nodeIds: number[]) => {
+const openServiceAction = async (nodeIds: number[], component = '') => {
   if (!canAction('cluster.service.dispatch')) return
   const ids = [...new Set(nodeIds.map(Number).filter(Boolean))]
   if (!ids.length) return
   serviceActionTargets.value = ids
-  serviceActionForm.component = ''
+  serviceActionComponentLocked.value = Boolean(component)
+  serviceActionForm.component = component
   serviceActionForm.action = ''
   serviceActionVisible.value = true
   if (ids.length !== 1) return
@@ -878,12 +911,23 @@ const openServiceAction = async (nodeIds: number[]) => {
     const { data } = await Api.listClusterNodeServiceActions(ids[0])
     const node = nodes.value.find((item) => Number(item.id) === ids[0])
     if (node) {
-      node.serviceActions = Array.isArray(data?.items) ? data.items : []
+      const serviceActions = Array.isArray(data?.items) ? data.items as ServiceActionCapability[] : []
+      node.serviceActions = serviceActions
       node.serviceActionsReportedAt = data?.reportedAt
+      if (component && !serviceActions.some((item) => item.component === component)) {
+        serviceActionForm.component = ''
+        serviceActionComponentLocked.value = false
+      }
     }
   } finally {
     serviceActionLoading.value = false
   }
+}
+
+const openSingleServiceAction = (capability: ServiceActionCapability) => {
+  const node = selectedNode.value
+  if (!node) return
+  void openServiceAction([Number(node.id)], capability.component)
 }
 
 const serviceActionComponentChanged = () => {
@@ -922,6 +966,14 @@ const submitServiceAction = async () => {
     const { data: batch } = await Api.executeClusterServiceAction({ previewId: preview.id, fingerprint: preview.fingerprint, confirm })
     ElMessage.success(t('serviceActionCreated', { count: batch?.total || executable.length }))
     serviceActionVisible.value = false
+    if (batch?.id) {
+      serviceActionBatchID.value = String(batch.id)
+      serviceActionBatch.value = { ...(batch as ClusterBatch), tasks: [] }
+      if (detailVisible.value && selectedNode.value && serviceActionTargets.value.includes(Number(selectedNode.value.id))) {
+        detailTab.value = 'services'
+        await loadServiceActionBatch()
+      }
+    }
     await Promise.all([loadNodes(true), loadOperations()])
     startPolling()
     startOperationsPolling()
@@ -1100,6 +1152,28 @@ const canRefreshMetrics = () => (
   Boolean(selectedNode.value && !selectedNode.value.local)
 )
 
+const canRefreshServiceActionBatch = () => (
+  !document.hidden &&
+  detailVisible.value &&
+  detailTab.value === 'services' &&
+  Boolean(serviceActionBatchID.value)
+)
+
+const loadServiceActionBatch = async (silent = false) => {
+  const batchID = serviceActionBatchID.value
+  if (!batchID || serviceActionBatchLoading.value) return
+  if (!silent) serviceActionBatchLoading.value = true
+  try {
+    const { data } = await Api.getClusterBatch(batchID)
+    if (serviceActionBatchID.value === batchID) serviceActionBatch.value = data as ServiceActionBatchDetail
+  } catch {
+    // Keep the last received batch snapshot. A transient refresh failure must not
+    // make an already-created service operation look like it was rejected.
+  } finally {
+    if (!silent) serviceActionBatchLoading.value = false
+  }
+}
+
 const loadMetrics = async () => {
   const node = selectedNode.value
   if (!node || node.local || metricsRefreshing.value) return
@@ -1126,8 +1200,13 @@ const stopDetailPolling = () => {
 
 const startDetailPolling = () => {
   stopDetailPolling()
-  if (!canRefreshMetrics()) return
-  detailPollTimer = window.setInterval(() => void loadMetrics(), 30000)
+  if (canRefreshMetrics()) {
+    detailPollTimer = window.setInterval(() => void loadMetrics(), 30000)
+    return
+  }
+  if (canRefreshServiceActionBatch() && hasActiveServiceActionBatch.value) {
+    detailPollTimer = window.setInterval(() => void loadServiceActionBatch(true), 5000)
+  }
 }
 
 const isWebsiteDispatchTask = (task: TaskSummary) => task.type === 'website.sync' || task.type === 'website.content_sync'
@@ -1589,6 +1668,8 @@ const openDetail = async (node: ClusterNode) => {
   selectedNode.value = node
   detailTab.value = 'basic'
   detailVisible.value = true
+  serviceActionBatchID.value = ''
+  serviceActionBatch.value = null
   metrics.value = []
   metricsUpdatedAt.value = ''
   metricsRefreshError.value = false
@@ -1907,8 +1988,11 @@ const formatUptime = (seconds?: number) => {
 
 watch([detailVisible, detailTab, () => selectedNode.value?.id], ([visible, tab]) => {
   if (visible && tab === 'metrics' && !document.hidden) void loadMetrics()
+  if (visible && tab === 'services' && !document.hidden) void loadServiceActionBatch()
   startDetailPolling()
 })
+
+watch(() => serviceActionBatch.value?.status, startDetailPolling)
 
 watch(() => activeDispatchTasks.value.map((task) => task.id).join(','), startDispatchPolling)
 watch(operationsTab, () => void loadVisibleOperations())
@@ -1926,6 +2010,7 @@ const handleVisibility = () => {
   if (!document.hidden) {
     void refreshCurrentRole()
     if (canRefreshMetrics()) void loadMetrics()
+    if (canRefreshServiceActionBatch()) void loadServiceActionBatch(true)
     if (activeDispatchTasks.value.length) void refreshActiveDispatchTasks()
     if (taskDetailVisible.value && taskDetail.value && taskDetailNodeId.value) void loadTaskDetail(taskDetailNodeId.value, Number(taskDetail.value.id), true)
   }
@@ -2216,7 +2301,7 @@ onUnmounted(() => {
         <el-alert :title="t('serviceActionDescription')" type="info" :closable="false" show-icon />
         <el-form-item :label="t('serviceActionTargets')"><span>{{ serviceActionTargetNodes.map((node) => node.name).join('、') || '-' }}</span></el-form-item>
         <el-form-item :label="t('serviceActionComponent')">
-          <el-select v-model="serviceActionForm.component" :placeholder="t('serviceActionComponent')" @change="serviceActionComponentChanged">
+          <el-select v-model="serviceActionForm.component" :disabled="serviceActionComponentLocked" :placeholder="t('serviceActionComponent')" @change="serviceActionComponentChanged">
             <el-option v-for="item in serviceActionComponents" :key="item.component" :label="`${item.displayName || item.component}${item.softwareVersion ? ` · ${item.softwareVersion}` : ''}`" :value="item.component" />
           </el-select>
         </el-form-item>
@@ -2232,7 +2317,7 @@ onUnmounted(() => {
 
     <el-drawer v-model="detailVisible" :size="'min(720px, 100vw)'" :with-header="false" class="cluster-drawer">
       <template v-if="selectedNode"><div class="drawer-head"><div class="node-identity"><span class="status-dot" :class="effectiveStatus(selectedNode)" /><div><h2>{{ selectedNode.name }}<span v-if="selectedNode.local">（{{ t('master') }}）</span></h2><small>{{ selectedNode.hostname || '-' }}　·　{{ selectedNode.ipAddress || '-' }}</small></div></div><el-button circle text @click="detailVisible = false">×</el-button></div>
-      <el-tabs v-model="detailTab" class="drawer-tabs"><el-tab-pane :label="t('basicInfo')" name="basic" /><el-tab-pane :label="t('resourceMonitor')" name="resource" /><el-tab-pane v-if="!selectedNode.local" :label="t('metrics')" name="metrics" /><el-tab-pane v-if="!selectedNode.local" :label="t('logs')" name="tasks" /></el-tabs>
+      <el-tabs v-model="detailTab" class="drawer-tabs"><el-tab-pane :label="t('basicInfo')" name="basic" /><el-tab-pane v-if="!selectedNode.local && canAction('cluster.service.dispatch')" :label="t('serviceAction')" name="services" /><el-tab-pane :label="t('resourceMonitor')" name="resource" /><el-tab-pane v-if="!selectedNode.local" :label="t('metrics')" name="metrics" /><el-tab-pane v-if="!selectedNode.local" :label="t('logs')" name="tasks" /></el-tabs>
       <el-skeleton v-if="detailLoading" :rows="8" animated />
       <template v-else>
 		<div v-if="detailTab === 'basic'" class="drawer-stack">
@@ -2261,18 +2346,35 @@ onUnmounted(() => {
 			  <div class="panel-update-actions"><el-button v-if="canAction('cluster.batch.update')" :loading="Boolean(panelUpdateLoading[String(selectedNode.id)])" :disabled="Boolean(panelUpdateBlockedReason(selectedNode, 'check'))" @click="checkPanelUpdate(selectedNode)">{{ t('panelUpdateCheck') }}</el-button><el-button v-if="canAction('cluster.batch.update')" type="warning" :loading="Boolean(panelUpdateLoading[String(selectedNode.id)])" :disabled="Boolean(panelUpdateBlockedReason(selectedNode, 'apply'))" @click="applyPanelUpdate(selectedNode)">{{ t('panelUpdateAction') }}</el-button></div>
 			</template>
 		  </section>
-		  <section v-if="!selectedNode.local && canAction('cluster.service.dispatch')" class="detail-card">
-			<div class="detail-title"><span>{{ t('serviceAction') }}</span><el-tag v-if="selectedNode.serviceActions?.length" type="success">{{ selectedNode.serviceActions.length }}</el-tag></div>
-			<p class="detail-muted">{{ selectedNode.serviceActions?.length ? t('serviceActionDescription') : t('serviceActionUnavailable') }}</p>
-			<el-descriptions :column="1">
-			  <el-descriptions-item :label="t('serviceActionReportedAt')">{{ formatTime(selectedNode.serviceActionsReportedAt) }}</el-descriptions-item>
-			  <el-descriptions-item v-if="selectedNode.serviceActions?.length" :label="t('serviceActionAvailable')">
-				<el-space wrap><el-tag v-for="item in selectedNode.serviceActions" :key="item.component" size="small">{{ item.displayName || item.component }} · {{ item.availableActions.map(serviceActionLabel).join(', ') }}</el-tag></el-space>
-			  </el-descriptions-item>
-			</el-descriptions>
-			<div class="panel-update-actions"><el-button type="primary" :disabled="!selectedNode.serviceActions?.length" @click="openServiceAction([Number(selectedNode.id)])">{{ t('previewAndExecute') }}</el-button></div>
-		  </section>
 		</div>
+        <div v-else-if="detailTab === 'services'" class="drawer-stack">
+          <section class="detail-card">
+            <div class="detail-title"><span>{{ t('serviceActionAvailable') }}</span><el-tag v-if="selectedNodeServiceActions.length" type="success">{{ selectedNodeServiceActions.length }}</el-tag></div>
+            <p class="detail-muted">{{ selectedNodeServiceActions.length ? t('serviceActionDescription') : t('serviceActionUnavailable') }}</p>
+            <el-descriptions :column="1"><el-descriptions-item :label="t('serviceActionReportedAt')">{{ formatTime(selectedNode.serviceActionsReportedAt) }}</el-descriptions-item></el-descriptions>
+            <el-table v-if="selectedNodeServiceActions.length" :data="selectedNodeServiceActions" size="small" class="service-action-table">
+              <el-table-column :label="t('serviceActionService')" min-width="150"><template #default="scope"><div class="task-website-cell"><div><strong>{{ scope.row.displayName || scope.row.component }}</strong><small>{{ scope.row.component }}</small></div></div></template></el-table-column>
+              <el-table-column :label="t('serviceActionVersion')" min-width="100"><template #default="scope">{{ scope.row.softwareVersion || '-' }}</template></el-table-column>
+              <el-table-column :label="t('serviceActionRuntimeState')" min-width="105"><template #default="scope"><el-tag size="small" :type="serviceActionStateType(scope.row.activeState)">{{ serviceActionStateLabel(scope.row.activeState) }}</el-tag></template></el-table-column>
+              <el-table-column :label="t('serviceActionAllowedActions')" min-width="170"><template #default="scope"><el-space wrap><el-tag v-for="action in scope.row.availableActions" :key="action" size="small" type="info">{{ serviceActionLabel(action) }}</el-tag></el-space></template></el-table-column>
+              <el-table-column :label="t('operations')" width="100" fixed="right"><template #default="scope"><el-button link type="primary" @click="openSingleServiceAction(asServiceActionCapability(scope.row))">{{ t('serviceActionOperate') }}</el-button></template></el-table-column>
+            </el-table>
+            <el-empty v-else :description="t('serviceActionUnavailable')" />
+          </section>
+          <section v-if="serviceActionBatch" v-loading="serviceActionBatchLoading" class="detail-card">
+            <div class="detail-title"><span>{{ t('serviceActionProgress') }}</span><el-tag :type="statusType(serviceActionBatch.status === 'succeeded' ? 'online' : serviceActionBatch.status === 'failed' ? 'error' : 'pending')">{{ taskStatusLabel(serviceActionBatch.status) }}</el-tag></div>
+            <el-descriptions :column="2"><el-descriptions-item :label="t('batchId')">{{ serviceActionBatch.id }}</el-descriptions-item><el-descriptions-item :label="t('taskProgress')">{{ serviceActionBatch.succeeded }}/{{ serviceActionBatch.total }}</el-descriptions-item></el-descriptions>
+            <el-progress :percentage="serviceActionBatchProgress" :status="serviceActionBatch.failed ? 'exception' : serviceActionBatch.status === 'succeeded' ? 'success' : undefined" />
+            <el-table v-if="serviceActionBatchTasks.length" :data="serviceActionBatchTasks" size="small" class="task-pagination service-action-table">
+              <el-table-column prop="id" :label="t('taskId')" width="80" />
+              <el-table-column :label="t('taskType')" min-width="145"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column>
+              <el-table-column :label="t('serviceActionOperation')" min-width="90"><template #default="scope"><el-tag v-if="scope.row.action" size="small" type="warning">{{ serviceActionLabel(scope.row.action) }}</el-tag><span v-else>-</span></template></el-table-column>
+              <el-table-column :label="t('taskStatus')" min-width="110"><template #default="scope"><el-tag size="small" :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskExecutionStatusLabel(asTask(scope.row)) }}</el-tag></template></el-table-column>
+              <el-table-column :label="t('operations')" width="76" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row), Number(selectedNode.id))">{{ t('detail') }}</el-button></template></el-table-column>
+            </el-table>
+            <el-empty v-else :description="t('serviceActionProgressWaiting')" :image-size="56" />
+          </section>
+        </div>
         <section v-else-if="detailTab === 'resource'" class="detail-card"><div class="detail-title">{{ t('currentResources') }}</div><div class="resource-circles"><el-progress type="circle" :percentage="Math.round(selectedNode.cpuPercent || 0)" :color="metricColor(selectedNode, 'cpu')"><template #default><strong>{{ formatNodePercent(selectedNode, 'cpu', selectedNode.cpuPercent) }}</strong><small>{{ t('cpu') }}</small></template></el-progress><el-progress type="circle" :percentage="Math.round(selectedNode.memoryPercent || 0)" :color="metricColor(selectedNode, 'memory')"><template #default><strong>{{ formatNodePercent(selectedNode, 'memory', selectedNode.memoryPercent) }}</strong><small>{{ t('memory') }}</small></template></el-progress><el-progress type="circle" :percentage="Math.round(selectedNode.diskPercent || 0)" :color="metricColor(selectedNode, 'disk')"><template #default><strong>{{ formatNodePercent(selectedNode, 'disk', selectedNode.diskPercent) }}</strong><small>{{ t('disk') }}</small></template></el-progress></div><div class="resource-lines"><div><span>{{ t('cpuCores') }}</span><strong>{{ Number(selectedNode.cpuUsedCores || 0).toFixed(1) }} / {{ selectedNode.cpuTotalCores || '-' }}</strong></div><div><span>{{ t('memory') }}</span><strong>{{ formatBytes(selectedNode.memoryUsedBytes) }} / {{ formatBytes(selectedNode.memoryTotalBytes) }}</strong></div><div><span>{{ t('disk') }}</span><strong>{{ formatBytes(selectedNode.diskUsedBytes) }} / {{ formatBytes(selectedNode.diskTotalBytes) }}</strong></div><div><span>{{ t('networkTraffic') }}</span><strong>{{ formatRate(selectedNode.networkReceiveBps) }} / {{ formatRate(selectedNode.networkSendBps) }}</strong></div></div></section>
         <section v-else-if="detailTab === 'metrics'" class="detail-card metric-card"><div class="metric-meta"><span class="live-indicator" :class="{ error: metricsRefreshError }"><i />{{ metricsRefreshError ? t('metricRefreshFailed') : t('metricAutoRefresh') }}</span><span>{{ t('metricLastUpdated', { time: formatTime(metricsUpdatedAt) }) }}</span></div><div v-if="metrics.length" class="metric-chart"><BasicChart :option="metricChartOption" /></div><el-empty v-else :description="t('noMetrics')" /></section>
         <section v-else-if="detailTab === 'tasks'" v-loading="tasksLoading" class="detail-card"><el-table v-if="tasks.length" :data="tasks" size="small"><el-table-column prop="id" :label="t('taskId')" width="90" /><el-table-column :label="t('taskTarget')" min-width="220"><template #default="scope"><div class="task-website-cell"><div><strong>{{ taskTargetName(asTask(scope.row)) }}</strong><small>{{ taskTargetDetail(asTask(scope.row)) }}</small></div><el-tag v-if="isWebsiteDispatchTask(asTask(scope.row))" size="small" :type="scope.row.websiteType ? websiteTypeTag(scope.row.websiteType) : 'success'">{{ scope.row.websiteType ? websiteTypeLabel(scope.row.websiteType) : t('websiteObject') }}</el-tag><el-tag v-else size="small" type="info">{{ t('nodeObject') }}</el-tag></div></template></el-table-column><el-table-column :label="t('taskType')" min-width="150"><template #default="scope">{{ taskTypeLabel(scope.row.type) }}</template></el-table-column><el-table-column :label="t('taskStatus')" width="200"><template #default="scope"><div class="task-status-cell"><el-tag :type="statusType(scope.row.status === 'succeeded' ? 'online' : scope.row.status === 'failed' ? 'error' : 'pending')">{{ taskExecutionStatusLabel(asTask(scope.row)) }}</el-tag><el-tag v-if="scope.row.diagnosisOverallStatus" size="small" :type="diagnosisOverallTagType(scope.row.diagnosisOverallStatus)">{{ t('diagnosisHealth') }}：{{ diagnosisOverallLabel(scope.row.diagnosisOverallStatus) }}</el-tag></div></template></el-table-column><el-table-column :label="t('taskAttempts')" width="90"><template #default="scope">{{ scope.row.attempts }}/{{ scope.row.maxAttempts }}</template></el-table-column><el-table-column :label="t('taskTime')" min-width="170"><template #default="scope">{{ formatTime(scope.row.createdAt) }}</template></el-table-column><el-table-column :label="t('operations')" width="80" fixed="right"><template #default="scope"><el-button link type="primary" @click="openTaskDetail(asTask(scope.row), Number(selectedNode?.id))">{{ t('detail') }}</el-button></template></el-table-column></el-table><el-empty v-else :description="t('noTasks')" /><div v-if="taskTotal" class="pagination task-pagination"><span>{{ t('totalItems', { count: taskTotal }) }}</span><el-pagination v-model:current-page="taskPage" v-model:page-size="taskPageSize" layout="prev, pager, next, sizes" :page-sizes="[10, 20, 50]" :total="taskTotal" @current-change="loadNodeTasks" @size-change="loadNodeTasks" /></div></section>
@@ -2578,8 +2680,11 @@ onUnmounted(() => {
 .runtime-card :deep(.el-descriptions) { margin-top: 18px; } .runtime-error { color: var(--el-color-danger); word-break: break-word; }
 :global(.cluster-drawer.el-drawer) {
   --el-drawer-bg-color: var(--surface-raised);
+  width: min(720px, 100vw) !important;
+  max-width: 100vw;
   color: var(--text-secondary);
   border-left-color: var(--border-subtle);
+  overflow: hidden;
   background: var(--surface-raised) !important;
   background-color: var(--surface-raised) !important;
 }
@@ -2599,6 +2704,10 @@ onUnmounted(() => {
   overflow-y: auto;
 }
 :global(.cluster-drawer .el-drawer__body) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   color: var(--text-secondary);
   background: var(--surface-raised) !important;
   background-color: var(--surface-raised) !important;
@@ -2613,10 +2722,14 @@ onUnmounted(() => {
 :global(.cluster-drawer .el-skeleton__item) {
   border-radius: 6px;
 }
-.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; padding: 22px 22px 10px; color: var(--text-primary); background: var(--surface-raised); h2 { margin: 0; font-size: 21px; } }
-.drawer-tabs { color: var(--text-secondary); background: var(--surface-raised); :deep(.el-tabs__header) { padding: 0 22px; background: var(--surface-raised); } :deep(.el-tabs__content) { padding: 4px 22px 24px; background: var(--surface-raised); } }
-.drawer-stack { display: grid; gap: 14px; }
-.detail-card { padding: 18px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-card); }
+.drawer-head { display: flex; align-items: flex-start; justify-content: space-between; min-width: 0; max-width: 100%; padding: 22px 22px 10px; color: var(--text-primary); background: var(--surface-raised); h2 { margin: 0; font-size: 21px; } }
+.drawer-tabs { min-width: 0; max-width: 100%; overflow: hidden; color: var(--text-secondary); background: var(--surface-raised); :deep(.el-tabs__header) { padding: 0 22px; overflow-x: auto; background: var(--surface-raised); scrollbar-width: none; } :deep(.el-tabs__header::-webkit-scrollbar) { display: none; } :deep(.el-tabs__content) { min-width: 0; padding: 4px 22px 24px; background: var(--surface-raised); } }
+.drawer-stack { display: grid; min-width: 0; max-width: 100%; gap: 14px; }
+.detail-card { min-width: 0; max-width: 100%; padding: 18px; border: 1px solid var(--border-subtle); border-radius: 12px; background: var(--surface-card); }
+.service-action-table { width: 100%; max-width: 100%; min-width: 0; }
+.detail-card :deep(.service-action-table .el-table__inner-wrapper),
+.detail-card :deep(.service-action-table .el-table__header-wrapper),
+.detail-card :deep(.service-action-table .el-table__body-wrapper) { min-width: 0; max-width: 100%; }
 .panel-update-detail { .detail-muted { margin: 0 0 14px; color: var(--text-tertiary); line-height: 1.6; } .release-notes { padding: 12px; margin: 12px 0; border-radius: 8px; color: var(--text-secondary); background: var(--surface-subtle); p { margin: 6px 0 0; white-space: pre-wrap; } } }
 .panel-update-progress { display: flex; justify-content: space-between; margin: 14px 0 5px; color: var(--text-secondary); font-size: 12px; }
 .panel-update-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 14px; }
