@@ -1258,6 +1258,11 @@ watch(
       :title="drawer.title"
       :on-close="drawer.onClose"
       :on-confirm="drawer.onConfirm"
+      :loading="submitting"
+      :confirm-disabled="submitting"
+      :close-disabled="submitting"
+      :close-on-click-modal="!submitting"
+      :close-on-press-escape="!submitting"
       :size="drawer.size"
       body-mode="compact"
     >
