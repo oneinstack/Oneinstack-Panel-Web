@@ -662,27 +662,31 @@ onBeforeUnmount(clearRevealedCredentials)
     <div class="credential-list">
       <div v-for="field in credentialFields" :key="field.key" class="credential-item">
         <label>{{ field.label }}</label>
-        <el-input
-          :model-value="credentialDisplayValue(field)"
-          type="text"
-          :name="`oneinstack-managed-credential-${field.key}`"
-          readonly
-          autocomplete="off"
-        >
-          <template #append>
+        <div class="credential-control">
+          <el-input
+            class="credential-control__input"
+            :model-value="credentialDisplayValue(field)"
+            type="text"
+            :name="`oneinstack-managed-credential-${field.key}`"
+            readonly
+            autocomplete="off"
+          />
+          <div class="credential-control__actions">
             <el-button
               v-if="field.secret"
+              class="credential-control__button"
               :icon="visibleCredentialFields[field.key] ? Hide : View"
               :aria-label="$t('software.config.toggleCredentialVisibility')"
               @click="visibleCredentialFields[field.key] = !visibleCredentialFields[field.key]"
             />
             <el-button
+              class="credential-control__button"
               :icon="CopyDocument"
               :aria-label="$t('software.config.copyCredential')"
               @click="copyCredential(field)"
             />
-          </template>
-        </el-input>
+          </div>
+        </div>
       </div>
     </div>
     <template #footer>
@@ -749,6 +753,61 @@ onBeforeUnmount(clearRevealedCredentials)
 .credential-list {
   display: grid;
   gap: 14px;
+}
+
+.credential-control {
+  display: flex;
+  width: 100%;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--surface-card);
+  box-sizing: border-box;
+}
+
+.credential-control__input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+
+  :deep(.el-input__wrapper) {
+    height: 100%;
+    min-height: 0;
+    padding: 0 13px;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none !important;
+  }
+}
+
+.credential-control__actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+  border-left: 1px solid var(--border-default);
+}
+
+.credential-control__button {
+  width: 48px;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  border-radius: 0;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+
+  &:hover,
+  &:focus-visible,
+  &:active {
+    border: 0 !important;
+    background: rgba(var(--primary-color), 0.08) !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
 }
 
 .credential-item label {
