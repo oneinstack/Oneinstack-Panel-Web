@@ -579,10 +579,10 @@ const buildInstallFieldRules = (field: any) => {
     })
   }
 
-  const addValidator = (validator: (value: string) => string) => {
+  const addValidator = (validator: (value: string) => string, preserveWhitespace = false) => {
     rules.push({
       validator: (_rule: unknown, value: unknown, callback: (error?: Error) => void) => {
-        const text = String(value ?? '').trim()
+        const text = preserveWhitespace ? String(value ?? '') : String(value ?? '').trim()
         if (!text) {
           callback()
           return
@@ -624,6 +624,11 @@ const buildInstallFieldRules = (field: any) => {
     addValidator((value) => /^[A-Za-z0-9_@%+=:,.!#?-]{12,128}$/.test(value)
       ? ''
       : t('software.mysqlPasswordFormat', '{field}必须为 12-128 位安全字符', { field: label }))
+  }
+  if (installFieldToken(field) === 'webdavpassword') {
+    addValidator((value) => /^[A-Za-z0-9._@%+=!#?-]{12,72}$/.test(value)
+      ? ''
+      : t('software.webdavPasswordFormat', '{field}必须为 12-72 位，且只能包含字母、数字或 ._@%+=!#?-', { field: label }), true)
   }
 
   if (!ruleText) return rules

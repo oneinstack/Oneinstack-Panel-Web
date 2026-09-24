@@ -68,6 +68,7 @@ export default {
   pathFormat: '{field} must be a specific normalized absolute path',
   usernameFormat: '{field} may contain lowercase letters, digits, underscores, and hyphens only, with 1-32 characters',
   ipFormat: '{field} must be a valid IPv4 or IPv6 address',
+  webdavPasswordFormat: '{field} must be 12-72 characters using only letters, digits, or ._@%+=!#?-',
   mysqlPasswordFormat: '{field} must contain 12-128 safe characters',
   servicePort: 'Service port: {port}',
   recommendedValue: 'Recommended: {value}',

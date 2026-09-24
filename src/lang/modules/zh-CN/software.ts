@@ -68,6 +68,7 @@ export default {
   pathFormat: '{field}必须是具体的规范绝对路径',
   usernameFormat: '{field}只能包含小写字母、数字、下划线和连字符，长度为 1-32 位',
   ipFormat: '{field}必须是合法 IPv4 或 IPv6 地址',
+  webdavPasswordFormat: '{field}必须为 12-72 位，且只能包含字母、数字或 ._@%+=!#?-',
   mysqlPasswordFormat: '{field}必须为 12-128 位安全字符',
   servicePort: '服务端口：{port}',
   recommendedValue: '推荐值：{value}',
