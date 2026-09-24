@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, markRaw, reactive, ref, watch } from 'vue'
+import { computed, markRaw, onUnmounted, reactive, ref, watch } from 'vue'
 import AllSoft from './components/all.vue'
 import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
@@ -29,11 +29,19 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   return value && value !== key ? value : fallback || key
 }
 
-const showCatalogSyncButton = !import.meta.env.PROD
 const pageLoading = ref(true)
 const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
 const canSyncSoftwareCatalog = computed(() => hasSoftwareButtonAccess('catalog.sync'))
 let latestListRequest = 0
+let initialCatalogPollTimer: number | undefined
+let initialCatalogPollAttempts = 0
+
+const stopInitialCatalogPolling = () => {
+  if (initialCatalogPollTimer !== undefined) {
+    window.clearTimeout(initialCatalogPollTimer)
+    initialCatalogPollTimer = undefined
+  }
+}
 
 const buildCategoryQuery = () => {
   if (conf.activeIndex === 1) return { installed: true }
@@ -201,6 +209,8 @@ const conf = reactive({
 })
 
 const reloadSoftwarePageData = async () => {
+  stopInitialCatalogPolling()
+  initialCatalogPollAttempts = 0
   if (!canReadSoftware.value) {
     conf.catalog.status = null
     conf.tabs.list = []
@@ -212,14 +222,39 @@ const reloadSoftwarePageData = async () => {
   }
   pageLoading.value = true
   try {
+    await conf.catalog.getStatus()
     await Promise.all([
-      conf.catalog.getStatus(),
       conf.tabs.getData(buildCategoryQuery()),
       conf.list.getData()
     ])
   } finally {
     pageLoading.value = false
+    pollForInitialCatalogSync()
   }
+}
+
+const pollForInitialCatalogSync = () => {
+  const status = conf.catalog.status
+  if (!status?.enabled || status.mode !== 'local-fallback' || status.lastError || initialCatalogPollAttempts >= 75) return
+  stopInitialCatalogPolling()
+  initialCatalogPollTimer = window.setTimeout(async () => {
+    initialCatalogPollTimer = undefined
+    initialCatalogPollAttempts += 1
+    try {
+      await conf.catalog.getStatus()
+      if (conf.catalog.status?.mode === 'center') {
+        await Promise.all([
+          conf.tabs.getData(buildCategoryQuery()),
+          conf.list.getData()
+        ])
+        return
+      }
+    } catch {
+      stopInitialCatalogPolling()
+      return
+    }
+    pollForInitialCatalogSync()
+  }, 2000)
 }
 
 const requestedComponent = String(System.getRouterParams().component || '').toLowerCase()
@@ -243,6 +278,8 @@ watch(
   }
 )
 
+onUnmounted(stopInitialCatalogPolling)
+
 const catalogLabel = computed(() => {
   const status = conf.catalog.status
   if (!status) return t('software.catalogReading', 'Reading store source')
@@ -256,6 +293,9 @@ const catalogLabel = computed(() => {
 const catalogDetail = computed(() => {
   const status = conf.catalog.status
   if (!status) return ''
+  if (status.lastError) {
+    return t('software.lastSyncFailed', '最近同步失败：{message}', { message: status.lastError })
+  }
   if (status.lastSyncedAt) {
     return t('software.catalogDetail', 'Channel {channel} · last synced {time}', {
       channel: status.channel,
@@ -280,8 +320,15 @@ const catalogDetail = computed(() => {
           class="catalog-source"
           :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }"
         >
+          <div class="catalog-source-copy">
+            <span class="source-dot" :class="{ warning: conf.catalog.status?.stale || !!conf.catalog.status?.lastError }" />
+            <span>
+              <strong>{{ catalogLabel }}</strong>
+              <small :class="{ 'source-error': !!conf.catalog.status?.lastError }">{{ catalogDetail }}</small>
+            </span>
+          </div>
           <el-button
-            v-if="showCatalogSyncButton && canSyncSoftwareCatalog && conf.catalog.status"
+            v-if="canSyncSoftwareCatalog && conf.catalog.status"
             :loading="conf.catalog.loading"
             :disabled="!conf.catalog.status?.enabled"
             plain
@@ -337,7 +384,7 @@ const catalogDetail = computed(() => {
 
 .catalog-source {
   display: flex;
-  justify-content: end;
+  justify-content: space-between;
   // min-height: 66px;
   // padding: 12px 14px 12px 16px;
   // align-items: center;
@@ -360,6 +407,7 @@ const catalogDetail = computed(() => {
 
 .catalog-source-copy {
   display: flex;
+  flex: 1 1 auto;
   min-width: 0;
   align-items: center;
   gap: 11px;
@@ -397,6 +445,10 @@ const catalogDetail = computed(() => {
   border-radius: 50%;
   background: var(--el-color-success);
   box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 10%, transparent);
+
+  &.warning {
+    background: var(--el-color-warning);
+  }
 }
 
 .category {
