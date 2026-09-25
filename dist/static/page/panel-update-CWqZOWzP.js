@@ -1,0 +1,1 @@
+import{A as t}from"./index-CemFaypq.js";const e="oneinstack:panel-update-checked";let n;const a=t=>{window.dispatchEvent(new CustomEvent(e,{detail:t}))},o=()=>n||(n=t.checkPanelUpdate({silentError:!0}).then((({data:t})=>{const e=t;return a(e),e})).catch((t=>{throw a(),t})).finally((()=>{n=void 0})),n);export{e as P,a as p,o as r};
