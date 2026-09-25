@@ -31,7 +31,6 @@ const t = (key: string, fallback?: string, params?: Record<string, any>) => {
 
 const pageLoading = ref(true)
 const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
-const canSyncSoftwareCatalog = computed(() => hasSoftwareButtonAccess('catalog.sync'))
 let latestListRequest = 0
 let initialCatalogPollTimer: number | undefined
 let initialCatalogPollAttempts = 0
@@ -100,7 +99,6 @@ const conf = reactive({
     }
   },
   catalog: {
-    loading: false,
     status: null as null | {
       enabled: boolean
       mode: string
@@ -116,22 +114,6 @@ const conf = reactive({
       const { data } = await Api.getSoftwareCatalogStatus()
       conf.catalog.status = data
     },
-    sync: async () => {
-      if (conf.catalog.loading || !canSyncSoftwareCatalog.value) return
-      conf.catalog.loading = true
-      try {
-        const { data } = await Api.syncSoftwareCatalog()
-        conf.catalog.status = data
-        await conf.tabs.getData(buildCategoryQuery())
-        await conf.list.getData()
-        ElMessage.success(t('software.syncSuccess', 'Software store updated from Center'))
-      } catch (error) {
-        await conf.catalog.getStatus().catch(() => {})
-        throw error
-      } finally {
-        conf.catalog.loading = false
-      }
-    }
   },
   clickActive: (item: any) => {
     if (!canReadSoftware.value) return
@@ -304,6 +286,7 @@ const catalogDetail = computed(() => {
   }
   return status.enabled ? t('software.catalogWaitingFirstSync', 'Waiting for first sync') : t('software.catalogEnableHint', 'Enable Script Center in settings')
 })
+
 </script>
 
 <template>
@@ -327,15 +310,6 @@ const catalogDetail = computed(() => {
               <small :class="{ 'source-error': !!conf.catalog.status?.lastError }">{{ catalogDetail }}</small>
             </span>
           </div>
-          <el-button
-            v-if="canSyncSoftwareCatalog && conf.catalog.status"
-            :loading="conf.catalog.loading"
-            :disabled="!conf.catalog.status?.enabled"
-            plain
-            @click="conf.catalog.sync"
-          >
-            {{ $t('software.syncNow') }}
-          </el-button>
         </div>
         <div class="category">
           <el-tabs class="category-tabs" v-model="conf.tabs.selected" @tab-click="conf.tabs.handleClick">
@@ -383,72 +357,7 @@ const catalogDetail = computed(() => {
 }
 
 .catalog-source {
-  display: flex;
-  justify-content: space-between;
-  // min-height: 66px;
-  // padding: 12px 14px 12px 16px;
-  // align-items: center;
-  // justify-content: space-between;
-  // gap: 16px;
-  margin-bottom: 14px;
-  // border: 1px solid color-mix(in srgb, var(--el-color-success) 24%, var(--border-subtle));
-  // border-radius: 12px;
-  // background: color-mix(in srgb, var(--el-color-success) 5%, var(--surface-card));
-
-  // &.warning {
-  //   border-color: color-mix(in srgb, var(--el-color-warning) 30%, var(--border-subtle));
-  //   background: color-mix(in srgb, var(--el-color-warning) 6%, var(--surface-card));
-
-  //   .source-dot {
-  //     background: var(--el-color-warning);
-  //   }
-  // }
-}
-
-.catalog-source-copy {
-  display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-items: center;
-  gap: 11px;
-
-  > span:last-child {
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-  }
-
-  strong {
-    color: var(--text-primary);
-    font-size: 13px;
-  }
-
-  small {
-    margin-top: 3px;
-    color: var(--text-tertiary);
-    font-size: 11px;
-  }
-
-  .source-error {
-    overflow: hidden;
-    max-width: min(760px, 65vw);
-    color: var(--el-color-warning-dark-2);
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-}
-
-.source-dot {
-  width: 9px;
-  height: 9px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background: var(--el-color-success);
-  box-shadow: 0 0 0 5px color-mix(in srgb, currentColor 10%, transparent);
-
-  &.warning {
-    background: var(--el-color-warning);
-  }
+  display: none;
 }
 
 .category {
@@ -594,15 +503,6 @@ const catalogDetail = computed(() => {
 }
 
 @media (max-width: 960px) {
-  .catalog-source {
-    align-items: stretch;
-    flex-direction: column;
-  }
-
-  .catalog-source :deep(.el-button) {
-    align-self: flex-start;
-  }
-
   .category {
     display: flex;
     align-items: stretch;
@@ -643,10 +543,6 @@ const catalogDetail = computed(() => {
     padding: 10px 12px;
   }
 
-  .catalog-source-copy .source-error {
-    max-width: 100%;
-  }
-
   .pagination {
     justify-content: center;
   }
@@ -660,15 +556,6 @@ const catalogDetail = computed(() => {
 @media (max-width: 560px) {
   .software-content {
     padding-bottom: 24px;
-  }
-
-  .catalog-source {
-    padding: 12px;
-    gap: 12px;
-  }
-
-  .catalog-source :deep(.el-button) {
-    width: 100%;
   }
 
   :deep(.el-tabs__item) {
