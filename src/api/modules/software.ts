@@ -11,6 +11,9 @@ export const softwareApi = {
   },
   /** 创建系统变更操作预览票据 */
   previewOperation: (obj: { operation: string; payload: unknown }) => {
+    if (obj.operation === "software.install") {
+      return http.post("/operations/preview", obj, { timeout: 180000 });
+    }
     return http.post("/operations/preview", obj);
   },
   /** 执行已确认的系统变更操作 */
