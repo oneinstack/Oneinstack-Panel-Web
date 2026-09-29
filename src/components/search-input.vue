@@ -26,7 +26,7 @@ const handleSearch = () => {
 <template>
   <el-input
     v-model="searchValue"
-    type="search"
+    type="text"
     name="oneinstack-search"
     autocomplete="off"
     :placeholder="placeholder"
@@ -62,6 +62,12 @@ const handleSearch = () => {
         0 0 0 1px rgb(var(--primary-color)) inset,
         0 0 0 4px var(--focus-ring);
     }
+  }
+
+  :deep(.el-input__suffix-inner) {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
   }
 }
 
