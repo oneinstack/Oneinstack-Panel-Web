@@ -92,12 +92,16 @@ const conf = reactive({
   loading: false,
   formRef: useTemplateRef<FormInstance>('formRef'),
   handleLogin: async () => {
-    const valid = await conf.formRef?.validate().catch(() => false)
-    if (!valid || conf.loading) return
+    if (conf.loading) return
 
-    let nextRoute = ''
+    // Set the guard before the asynchronous validation so rapid submits cannot
+    // start multiple login requests while validation is still pending.
     conf.loading = true
+    let nextRoute = ''
     try {
+      const valid = await conf.formRef?.validate().catch(() => false)
+      if (!valid) return
+
       const { data: res } = await Api.login({
         username: conf.form.username,
         password: conf.form.password,
