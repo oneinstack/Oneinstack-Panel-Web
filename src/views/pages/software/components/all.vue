@@ -1101,7 +1101,15 @@ watch(
                     {{ statusBadge(item)?.text }}
                   </span>
                 </div>
-                <div class="tip">{{ localizedSoftwareDescription(item) }}</div>
+                <el-tooltip
+                  :content="localizedSoftwareDescription(item)"
+                  placement="top-start"
+                  :show-after="200"
+                  :disabled="!localizedSoftwareDescription(item)"
+                  popper-class="software-description-tooltip"
+                >
+                  <div class="tip">{{ localizedSoftwareDescription(item) }}</div>
+                </el-tooltip>
               </div>
             </div>
 
@@ -1572,6 +1580,7 @@ watch(
 }
 
 .tip {
+  width: 100%;
   margin-top: 14px;
   color: var(--font-color-gray-light);
   font-size: 12px;
@@ -1581,6 +1590,14 @@ watch(
   text-overflow: ellipsis;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+}
+
+:global(.software-description-tooltip.el-popper) {
+  max-width: min(420px, calc(100vw - 32px));
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .status {
