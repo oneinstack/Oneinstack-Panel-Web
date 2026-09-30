@@ -456,6 +456,7 @@ export default {
     registryCreated: 'Registry created',
     templateUpdated: 'Template updated',
     templateCreated: 'Template created',
+    templateContentLoadFailed: 'Could not load the template YAML. Please try again.',
     operationFailed: 'Operation failed',
     stoppedContainersCleaned: 'Stopped containers cleaned',
     logDownloadStarted: 'Container log download started',

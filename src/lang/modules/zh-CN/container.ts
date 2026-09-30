@@ -450,6 +450,7 @@ export default {
     registryCreated: 'Registry 已创建',
     templateUpdated: '模板已更新',
     templateCreated: '模板已创建',
+    templateContentLoadFailed: '无法读取模板 YAML，请重试',
     operationFailed: '操作失败',
     stoppedContainersCleaned: '已清理停止的容器',
     logDownloadStarted: '容器日志下载已开始',

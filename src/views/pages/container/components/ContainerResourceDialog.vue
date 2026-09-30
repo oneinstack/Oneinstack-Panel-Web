@@ -20,6 +20,8 @@ const props = defineProps<{
   templateForm: Record<string, any>
   registries: RegistryItem[]
   templates: TemplateItem[]
+  templateContentLoading: boolean
+  templateContentError: string
   imageReference: (row: ImageItem) => string
   registryLabel: (row: RegistryItem) => string
   revealComposeConfig: () => void | Promise<void>
@@ -82,7 +84,7 @@ defineExpose({
     size="720px"
     :confirm-text="t('container.resourceDialog.confirm')"
     :loading="saving"
-    :confirm-disabled="pushRegistryAuthMissing"
+    :confirm-disabled="pushRegistryAuthMissing || templateContentLoading || !!templateContentError"
     :on-close="() => emit('update:visible', false)"
     :on-confirm="() => emit('confirm')"
   >
@@ -204,7 +206,9 @@ defineExpose({
           v-if="dialogType === 'compose-template-deploy'"
           :label="t('container.resourceDialog.yamlPreview')"
           class="readonly-field"
+          v-loading="templateContentLoading"
         >
+          <el-alert v-if="templateContentError" :title="templateContentError" type="error" :closable="false" show-icon />
           <el-input :model-value="composeForm.content || ''" type="textarea" :rows="12" disabled />
         </el-form-item>
       </template>

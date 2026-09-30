@@ -421,6 +421,10 @@ export const containerApi = {
   getContainerTemplates: () => {
     return http.get("/containers/templates");
   },
+  /** 获取编排模板详情（包含 YAML） */
+  getContainerTemplate: (id: number | string) => {
+    return http.get(`/containers/templates/${encodeURIComponent(id)}`);
+  },
   /** 创建编排模板 */
   createContainerTemplate: (obj: {
     name: string;

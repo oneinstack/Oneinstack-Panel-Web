@@ -96,6 +96,11 @@ const volumes = ref<VolumeItem[]>([]);
 const composeProjects = ref<ComposeProjectItem[]>([]);
 const registries = ref<RegistryItem[]>([]);
 const templates = ref<TemplateItem[]>([]);
+const templateDetailLoading = ref("");
+const templateContentLoading = ref(false);
+const templateContentError = ref("");
+let dialogOpenRequest = 0;
+let templateContentRequest = 0;
 const templatesSupported = ref(true);
 const templatesMessage = ref("");
 const dockerConfig = ref<Record<string, any> | null>(null);
@@ -983,13 +988,6 @@ const templateColumns = computed<ColumnItem<TemplateItem>[]>(() => [
     showOverflowTooltip: true,
   },
   {
-    prop: "content",
-    label: t("container.columns.content", "Content"),
-    minWidth: 260,
-    showOverflowTooltip: true,
-    slot: "templateContent",
-  },
-  {
     prop: "actionColumn",
     label: t("container.columns.action", "Actions"),
     width: 240,
@@ -1219,8 +1217,29 @@ const canOpenDialog = (type: DialogType, target?: any) => {
   }
 };
 
-const openDialog = (type: DialogType, target?: any) => {
+const openDialog = async (type: DialogType, target?: any) => {
   if (!canOpenDialog(type, target)) return;
+  const request = ++dialogOpenRequest;
+  templateDetailLoading.value = "";
+  if (target && (type === "template" || type === "compose-template-deploy")) {
+    if (target.id == null) return;
+    templateDetailLoading.value = `${type}:${target.id}`;
+    try {
+      const { data } = await Api.getContainerTemplate(target.id);
+      if (request !== dialogOpenRequest) return;
+      if (!data || typeof data.content !== "string" || !data.content.trim()) {
+        throw new Error(t("container.notifications.templateContentLoadFailed"));
+      }
+      target = data;
+    } catch {
+      if (request === dialogOpenRequest) {
+        ElMessage.error(t("container.notifications.templateContentLoadFailed"));
+      }
+      return;
+    } finally {
+      if (request === dialogOpenRequest) templateDetailLoading.value = "";
+    }
+  }
   resetForm();
   dialogType.value = type;
   dialogTarget.value = target || null;
@@ -2038,6 +2057,11 @@ const openTaskDrawer = () => {
 const handleDialogVisibleChange = (visible: boolean) => {
   dialogVisible.value = visible;
   if (visible) return;
+  ++dialogOpenRequest;
+  ++templateContentRequest;
+  templateDetailLoading.value = "";
+  templateContentLoading.value = false;
+  templateContentError.value = "";
   // Do not keep a revealed Compose secret in reactive state after the drawer closes.
   composeForm.content = "";
   composeForm.contentMode = "redacted";
@@ -2055,17 +2079,45 @@ watch(
 
 watch(
   () => composeForm.templateId,
-  (templateId) => {
+  async (templateId) => {
+    const request = ++templateContentRequest;
+    if (dialogType.value !== "compose-template-deploy" || !dialogVisible.value) return;
+    composeForm.content = "";
+    templateContentLoading.value = false;
+    templateContentError.value = "";
     if (!templateId) return;
-    const current = templates.value.find((item) => item.id === templateId);
-    if (!current) return;
+    const current = templates.value.find((item) => String(item.id) === String(templateId));
+    if (!current) {
+      templateContentError.value = t("container.notifications.templateContentLoadFailed");
+      return;
+    }
     composeForm.templateName = current.name || "";
     composeForm.templateDescription = current.description || "";
-    composeForm.content = current.content || "";
+    templateContentLoading.value = true;
+    try {
+      const { data } = await Api.getContainerTemplate(templateId);
+      if (request !== templateContentRequest || !dialogVisible.value) return;
+      if (!data || typeof data.content !== "string" || !data.content.trim()) {
+        throw new Error(t("container.notifications.templateContentLoadFailed"));
+      }
+      composeForm.content = data.content;
+    } catch {
+      if (request === templateContentRequest && dialogVisible.value) {
+        templateContentError.value = t("container.notifications.templateContentLoadFailed");
+      }
+    } finally {
+      if (request === templateContentRequest) templateContentLoading.value = false;
+    }
   },
+  { flush: "sync" },
 );
 
 const submitDialog = async () => {
+  if (dialogType.value === "compose-template-deploy" &&
+      (templateContentLoading.value || templateContentError.value || !composeForm.content.trim())) {
+    ElMessage.error(templateContentError.value || t("container.notifications.templateContentLoadFailed"));
+    return;
+  }
   if (dialogType.value === "container") await createDrawerRef.value?.validate();
   else await resourceDialogRef.value?.validate();
   saving.value = true;
@@ -4590,15 +4642,13 @@ onBeforeUnmount(() => {
         :row-key="getRowKey"
         :empty-text="t('container.empty.templates', 'No templates')"
       >
-        <template #templateContent="{ row }">{{
-          row.content || "--"
-        }}</template>
         <template #templateAction="{ row }">
           <div class="row-actions table-row-actions">
             <el-button
               link
               type="primary"
               :icon="Plus"
+              :loading="templateDetailLoading === `compose-template-deploy:${row.id}`"
               :disabled="!templatesSupported"
               @click="openDialog('compose-template-deploy', row)"
               >{{ t("container.deployFromTemplate", "Deploy from template") }}</el-button
@@ -4607,6 +4657,7 @@ onBeforeUnmount(() => {
               link
               type="primary"
               :icon="EditPen"
+              :loading="templateDetailLoading === `template:${row.id}`"
               :disabled="!templatesSupported"
               @click="openDialog('template', row)"
               >{{ t("container.edit", "Edit") }}</el-button
@@ -4812,6 +4863,8 @@ onBeforeUnmount(() => {
       :template-form="templateForm"
       :registries="registries"
       :templates="templates"
+      :template-content-loading="templateContentLoading"
+      :template-content-error="templateContentError"
       :image-reference="imageReference"
       :registry-label="registryLabel"
       :reveal-compose-config="revealComposeConfig"
