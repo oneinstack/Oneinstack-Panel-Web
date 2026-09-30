@@ -625,6 +625,11 @@ const buildInstallFieldRules = (field: any) => {
       ? ''
       : t('software.mysqlPasswordFormat', '{field}必须为 12-128 位安全字符', { field: label }))
   }
+  if (installFieldToken(field) === 'miniorootpassword') {
+    addValidator((value) => /^[A-Za-z0-9._@+=:,%^*!\/-]{12,128}$/.test(value)
+      ? ''
+      : t('software.minioPasswordFormat', '{field}必须为 12-128 位，且只能包含字母、数字或 ._@+=:,%^*!/-', { field: label }), true)
+  }
   if (installFieldToken(field) === 'webdavpassword') {
     addValidator((value) => /^[A-Za-z0-9._@%+=!#?-]{12,72}$/.test(value)
       ? ''

@@ -70,6 +70,7 @@ export default {
   ipFormat: '{field} must be a valid IPv4 or IPv6 address',
   webdavPasswordFormat: '{field} must be 12-72 characters using only letters, digits, or ._@%+=!#?-',
   mysqlPasswordFormat: '{field} must contain 12-128 safe characters',
+  minioPasswordFormat: '{field} must be 12-128 characters using only letters, digits, or ._@+=:,%^*!/-',
   servicePort: 'Service port: {port}',
   recommendedValue: 'Recommended: {value}',
   installTitle: 'Install {name}',
