@@ -70,7 +70,7 @@ export default {
   ipFormat: '{field}必须是合法 IPv4 或 IPv6 地址',
   webdavPasswordFormat: '{field}必须为 12-72 位，且只能包含字母、数字或 ._@%+=!#?-',
   mysqlPasswordFormat: '{field}必须为 12-128 位安全字符',
-  minioPasswordFormat: '{field}必须为 12-128 位，且只能包含字母、数字或 ._@+=:,%^*!/-',
+  minioPasswordFormat: '{field}需为 12–128 位，仅可使用英文字母、数字和符号 ._{\'@\'}+=:,%^*!/-',
   servicePort: '服务端口：{port}',
   recommendedValue: '推荐值：{value}',
   installTitle: '安装 {name}',
