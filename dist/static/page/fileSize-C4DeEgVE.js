@@ -1,0 +1,1 @@
+const t=(t=0)=>{if(!Number.isFinite(t)||t<=0)return"0 B";const o=["B","KB","MB","GB","TB"],e=Math.min(Math.floor(Math.log(t)/Math.log(1024)),o.length-1);return`${(t/1024**e).toFixed(0===e?0:2)} ${o[e]}`};export{t as f};
