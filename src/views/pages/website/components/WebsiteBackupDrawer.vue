@@ -59,6 +59,7 @@ const backupColumns = computed<ColumnItem[]>(() => [
 ])
 
 const taskColumns = computed<ColumnItem[]>(() => [
+  { prop: 'id', label: 'Task ID', minWidth: 280 },
   { prop: 'websiteName', label: t('website.backupDrawer.website'), minWidth: 150 },
   { prop: 'operation', label: t('website.backupDrawer.action'), width: 110, slot: 'operation' },
   { prop: 'status', label: t('website.backupDrawer.status'), width: 110, slot: 'status' },

@@ -150,7 +150,7 @@ export default {
   },
   backupDrawer: {
     title: '整站备份 · {name}', manager: '整站备份管理', website: '网站', source: '来源', database: '数据库', size: '大小', createdAt: '创建时间', action: '操作', status: '状态', progress: '进度',
-    statuses: { queued: '排队中', running: '执行中', canceling: '取消中', succeeded: '成功', failed: '失败', canceled: '已取消', interrupted: '已中断' }, operations: { backup: '备份', restore: '恢复', delete: '安全删除' }, sources: { manual: '手动备份', pre_restore: '恢复前安全快照', pre_delete: '删除前强制快照' },
+    statuses: { queued: '排队中', running: '执行中', canceling: '取消中', succeeded: '成功', failed: '失败', canceled: '已取消', interrupted: '已中断', unknown: '状态读取失败' }, operations: { backup: '备份', restore: '恢复', delete: '安全删除', settings_update: '设置发布' }, sources: { manual: '手动备份', pre_restore: '恢复前安全快照', pre_delete: '删除前强制快照' },
     tip: '备份包使用逐文件摘要和整包 SHA-256 校验，包含网站文件、网站元数据、Web 服务器配置快照及一个可选 MySQL 数据库；证书私钥不会写入备份。', databasePlaceholder: '可选：关联一个 MySQL 数据库', excludeDatabase: '不包含数据库', backupNow: '立即备份', deletedSiteTip: '这里保留已删除网站的强制快照，可直接重新恢复站点。', refresh: '刷新', backupFiles: '备份文件', noBackups: '暂无整站备份', notIncluded: '未包含', download: '下载', restore: '恢复', delete: '删除', taskRecords: '任务记录', noTasks: '暂无网站任务', log: '日志', cancel: '取消', noLog: '暂无日志', logSuffix: '日志',
     restorePrompt: '恢复会先创建当前站点的安全快照，再替换网站文件、重新生成 Web 服务器配置{database}。证书私钥不在备份包内。请输入网站名 {name} 确认：', restoreDatabase: '并恢复关联数据库', restoreTitle: '恢复整站备份', startRestore: '开始恢复', nameMismatch: '网站名不匹配', deletePrompt: '永久删除备份 {file}。请输入网站名 {name} 确认：', deleteTitle: '删除整站备份', permanentDelete: '永久删除'
   },
@@ -160,6 +160,9 @@ export default {
   notifications: {
     domainRequired: '至少保留一个网站域名',
     settingsPublished: '网站设置已发布',
+    settingsTaskCreated: '网站设置任务已创建：{id}',
+    settingsTaskStatus: '网站设置任务 {id}：{status}',
+    settingsTaskMissing: '确认响应未返回网站任务 ID',
     domainUpdated: '域名配置已更新',
     profileUpdated: '网站基本设置已更新',
     enabled: '网站已启用',

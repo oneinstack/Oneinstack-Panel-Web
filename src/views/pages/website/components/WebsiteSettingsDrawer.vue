@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onUnmounted, reactive, ref, watch } from 'vue'
 import { Api } from '@/api/modules'
 import System from '@/utils/System'
 import { ElMessage } from 'element-plus'
@@ -42,6 +42,8 @@ const activeMenu = ref('domain')
 const domainLines = ref('')
 const expiresAt = ref<Date | string | undefined>()
 const statusLoading = ref(false)
+const settingsTask = reactive({ id: '', status: '', message: '', success: '' })
+let settingsTaskTimer: ReturnType<typeof setTimeout> | undefined
 const currentWebsite = computed(() => state.document?.website || props.website || {})
 const certificate = reactive({ show: false, website: {} as Record<string, any> })
 const t = i18n.t as any
@@ -135,6 +137,32 @@ const load = async () => {
   } finally { state.loading = false }
 }
 
+const pollSettingsTask = async () => {
+  if (!settingsTask.id) return
+  try {
+    const { data: task } = await Api.getWebsiteTask(settingsTask.id)
+    settingsTask.status = task.status
+    settingsTask.message = task.errorMessage || task.message || ''
+    if (task.status === 'succeeded') {
+      void load().then(() => emit('changed'))
+      ElMessage.success(settingsTask.success)
+      return
+    }
+    if (['failed', 'canceled', 'interrupted'].includes(task.status)) return
+    settingsTaskTimer = setTimeout(() => void pollSettingsTask(), 2000)
+  } catch (error: any) {
+    settingsTask.message = error?.message || String(error)
+    settingsTask.status = 'unknown'
+  }
+}
+
+onUnmounted(() => { if (settingsTaskTimer) clearTimeout(settingsTaskTimer) })
+
+watch(() => props.website?.id, () => {
+  if (settingsTaskTimer) clearTimeout(settingsTaskTimer)
+  Object.assign(settingsTask, { id: '', status: '', message: '', success: '' })
+})
+
 watch(() => props.modelValue, (value) => {
   if (!value) return
   activeMenu.value = 'domain'
@@ -154,13 +182,16 @@ const saveSettings = async (success = i18n.t('website.notifications.settingsPubl
   if (!websiteId) return
   state.saving = true
   try {
-    await submitOperation('website.settings.update', {
+    const response = await submitOperation('website.settings.update', {
       websiteId,
       settings: cloneSettingsPayload()
     })
-    await load()
-    ElMessage.success(success)
-    emit('changed')
+    const taskId = String(response?.data?.taskId || '')
+    if (!taskId) { ElMessage.error(t('website.notifications.settingsTaskMissing')); return }
+    if (settingsTaskTimer) clearTimeout(settingsTaskTimer)
+    Object.assign(settingsTask, { id: taskId, status: 'queued', message: '', success })
+    ElMessage.success(t('website.notifications.settingsTaskCreated', { id: taskId }))
+    void pollSettingsTask()
   } catch (error: any) {
     if (isOperationCancelled(error)) return
     // ElMessage.error(error?.message || i18n.t('common.operationFailed'))
@@ -286,6 +317,15 @@ const openCertificate = () => {
           <el-switch :model-value="Boolean(currentWebsite.enabled)" :loading="statusLoading" :disabled="!canToggle" inline-prompt :active-text="t('website.settingsDrawer.enabled')" :inactive-text="t('website.settingsDrawer.disabled')" @change="toggleStatus(Boolean($event))" />
         </div>
       </header>
+      <el-alert
+        v-if="settingsTask.id"
+        class="settings-task-alert"
+        :type="settingsTask.status === 'failed' || settingsTask.status === 'canceled' || settingsTask.status === 'interrupted' || settingsTask.status === 'unknown' ? 'error' : settingsTask.status === 'succeeded' ? 'success' : 'info'"
+        :title="t('website.notifications.settingsTaskStatus', { id: settingsTask.id, status: t(`website.backupDrawer.statuses.${settingsTask.status}`) })"
+        :description="settingsTask.message"
+        :closable="false"
+        show-icon
+      />
       <div class="settings-body">
         <aside class="settings-nav">
           <button v-for="item in menus" :key="item.key" type="button" :class="{ active: activeMenu === item.key }" @click="selectMenu(item.key)">{{ item.label }}</button>
