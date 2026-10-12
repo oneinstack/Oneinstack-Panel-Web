@@ -140,8 +140,10 @@ const normalizeEffectiveValues = (values: unknown) => {
   return values.map((item) => {
     const raw = item && typeof item === 'object' ? item as Record<string, any> : {}
     const key = String(raw.key || '')
-    const sensitive = raw.sensitive === true || raw.source === 'server_resolved' ||
-      /password|passwd|secret|token|credential|private.?key/i.test(key)
+    const rootResetSwitch = /^reset-existing-root-password(?:-confirm)?$/i.test(key)
+    const sensitive = raw.sensitive === true || (!rootResetSwitch && (
+      raw.source === 'server_resolved' || /password|passwd|secret|token|credential|private.?key/i.test(key)
+    ))
     if (sensitive) {
       return {
         key,

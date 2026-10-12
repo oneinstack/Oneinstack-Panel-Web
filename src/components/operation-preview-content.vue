@@ -176,7 +176,9 @@ const effectiveValueSourceKeys: Record<string, string> = {
 }
 
 const isSensitiveEffectiveValue = (item: NonNullable<OperationPreview['effectiveValues']>[number]) => {
-  if (item.sensitive === true || item.source === 'server_resolved') return true
+  if (item.sensitive === true) return true
+  if (/^reset-existing-root-password(?:-confirm)?$/i.test(item.key)) return false
+  if (item.source === 'server_resolved') return true
   return /password|passwd|secret|token|credential|private.?key/i.test(item.key)
 }
 

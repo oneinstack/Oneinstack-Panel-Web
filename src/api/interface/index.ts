@@ -30,6 +30,7 @@ export interface ErrorPayload {
     | string
     | {
         code?: string | number;
+        stableCode?: string;
         message?: string;
         detail?: string;
         field?: string;

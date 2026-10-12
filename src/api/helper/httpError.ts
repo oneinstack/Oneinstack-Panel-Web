@@ -1,4 +1,5 @@
 import type { AxiosError } from "axios";
+import { ElNotification } from "element-plus";
 import { HttpCode } from "@/enum/HttpCode";
 import i18n from "@/lang";
 import { useConfigStore } from "@/stores/modules/config";
@@ -10,14 +11,17 @@ import { checkAxiosError, checkStatus } from "./checkStatus";
 /** 包含业务错误码、HTTP 状态码和原始响应数据的统一请求异常。 */
 export class HttpRequestError extends Error {
   code?: string | number;
+  stableCode?: string;
   status?: number;
   data?: unknown;
   headers?: Record<string, unknown>;
+  requestId?: string;
 
   constructor(
     message: string,
     options: {
       code?: string | number;
+      stableCode?: string;
       status?: number;
       data?: unknown;
       headers?: Record<string, unknown>;
@@ -26,9 +30,22 @@ export class HttpRequestError extends Error {
     super(message);
     this.name = "HttpRequestError";
     this.code = options.code;
+    this.stableCode = options.stableCode;
     this.status = options.status;
     this.data = options.data;
     this.headers = options.headers;
+    const responseHeaders = options.headers as
+      | (Record<string, unknown> & {
+          get?: (name: string) => unknown;
+        })
+      | undefined;
+    this.requestId =
+      String(
+        responseHeaders?.get?.("x-request-id") ||
+          responseHeaders?.["x-request-id"] ||
+          responseHeaders?.["X-Request-ID"] ||
+          "",
+      ).trim() || undefined;
   }
 }
 
@@ -123,12 +140,21 @@ export const createHttpError = (
         payload && typeof payload === "object"
           ? getErrorCode(payload)
           : undefined,
+      stableCode:
+        payload &&
+        typeof payload === "object" &&
+        payload.error &&
+        typeof payload.error === "object"
+          ? payload.error.stableCode
+          : undefined,
       status,
       data,
       headers,
     },
   );
 };
+
+let closePreviewErrorNotification: (() => void) | undefined;
 
 /**
  * 统一处理错误提示、初始密码跳转和登录失效退出。
@@ -141,6 +167,19 @@ export const handleHttpError = (
 ) => {
   const sconfig = useConfigStore();
   if (config.silentError) return error;
+
+  const diagnostic = [
+    error.status ? `HTTP ${error.status}` : "",
+    error.stableCode || error.code !== undefined
+      ? `${i18n.locale === "en-US" ? "Code" : "错误码"}: ${error.stableCode || error.code}`
+      : "",
+    error.requestId ? `${i18n.t("audit.requestId")}: ${error.requestId}` : "",
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const displayMessage = diagnostic
+    ? `${error.message} (${diagnostic})`
+    : error.message;
 
   if (error.code === "PASSWORD_CHANGE_REQUIRED") {
     if (System.getRouterPath() !== "/first-login") {
@@ -156,17 +195,29 @@ export const handleHttpError = (
     error.status === HttpCode.LOGIN_EXPIRED ||
     [1100, 1101, 1109].includes(Number(error.code));
   if (loginExpired && !config.ignoreUnauthorizedLogout) {
-    System.er(error.message, {
+    System.er(displayMessage, {
       type: "error",
-      groupKey: `${error.status || ""}|${error.code || ""}|${error.message}`,
+      groupKey: `${error.status || ""}|${error.code || ""}|${error.requestId || ""}|${error.message}`,
     });
     sconfig.logout(true);
     return error;
   }
 
-  System.er(error.message, {
+  if (config.url?.split("?")[0] === "/operations/preview") {
+    closePreviewErrorNotification?.();
+    const notification = ElNotification.error({
+      title: i18n.locale === "en-US" ? "Preview failed" : "操作预览失败",
+      message: displayMessage,
+      duration: 0,
+      showClose: true,
+    });
+    closePreviewErrorNotification = () => notification.close();
+    return error;
+  }
+
+  System.er(displayMessage, {
     type: "error",
-    groupKey: `${error.status || ""}|${error.code || ""}|${error.message}`,
+    groupKey: `${error.status || ""}|${error.code || ""}|${error.requestId || ""}|${error.message}`,
   });
   return error;
 };
