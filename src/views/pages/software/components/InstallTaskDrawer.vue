@@ -60,11 +60,9 @@ const operationLabel = computed(() => {
   }
   return labels[task.value?.operation || ''] || t('layout.task', 'Task')
 })
-const scriptOutputHint = computed(() => t(
-  'software.task.scriptOutputHint',
-  '{operation} script output keeps appending here to help locate the current step.',
-  { operation: operationLabel.value }
-))
+const scriptOutputHint = computed(() => terminal.value
+  ? t('software.task.historicalLogHint', 'This task has ended. The log is historical script output, not the current service log.')
+  : t('software.task.scriptOutputHint', '{operation} script output keeps appending here to help locate the current step.', { operation: operationLabel.value }))
 const logs = computed(() => softwareTaskStore.logs[props.taskId] || t('software.task.waitingScriptOutput', 'Waiting for script output...'))
 const terminal = computed(() => softwareTaskStore.isTerminal(task.value?.status))
 const failed = computed(() => ['failed', 'interrupted'].includes(task.value?.status))
@@ -111,12 +109,14 @@ const createdAtText = computed(() => {
   const value = new Date(task.value.createdAt)
   if (Number.isNaN(value.getTime())) return t('software.task.unknownTime', 'Unknown time')
   return new Intl.DateTimeFormat(i18n.locale || 'zh-CN', {
+    year: 'numeric',
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    hour12: false
+    hour12: false,
+    timeZoneName: 'shortOffset'
   }).format(value)
 })
 const fallbackErrorCode = computed(() => {
@@ -132,8 +132,8 @@ const metaCards = computed(() => [
     className: 'task-meta-card--mono task-meta-card--wide'
   },
   {
-    label: terminal.value ? t('software.task.summary.taskType', 'Task type') : t('software.task.summary.createdAt', 'Created at'),
-    value: terminal.value ? t('software.task.historyTask', 'History task') : createdAtText.value,
+    label: t('software.task.summary.createdAt', 'Created at'),
+    value: createdAtText.value,
     className: terminal.value ? 'task-meta-card--accent' : ''
   },
   {
@@ -437,9 +437,9 @@ onBeforeUnmount(() => {
         <section v-if="canLog" class="log-section">
           <div class="log-toolbar">
             <div class="log-toolbar__title">
-              <span class="log-live-dot"></span>
+              <span class="log-live-dot" :class="{ 'is-history': terminal }"></span>
               <div class="log-toolbar__copy">
-                <strong>{{ $t('software.task.realtimeLogs') }}</strong>
+                <strong>{{ terminal ? $t('software.task.historicalLogs') : $t('software.task.realtimeLogs') }}</strong>
                 <span>{{ scriptOutputHint }}</span>
               </div>
             </div>
@@ -966,6 +966,11 @@ onBeforeUnmount(() => {
   border-radius: 50%;
   background: rgb(var(--success-color));
   box-shadow: 0 0 0 4px rgba(var(--success-color), 0.1);
+
+  &.is-history {
+    background: var(--text-placeholder);
+    box-shadow: 0 0 0 4px var(--surface-subtle);
+  }
 }
 
 .task-log {

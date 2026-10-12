@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import CardTabs from '@/components/card-tabs.vue'
-import { computed, markRaw, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, markRaw, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import AllSoft from './components/all.vue'
 import SearchInput from '@/components/search-input.vue'
 import { TabsPaneContext } from 'element-plus'
@@ -34,6 +34,9 @@ const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
 let latestListRequest = 0
 let initialCatalogPollTimer: number | undefined
 let initialCatalogPollAttempts = 0
+let catalogRefreshTimer: number | undefined
+let catalogRefreshInFlight = false
+let renderedCatalogSyncAt = ''
 
 const stopInitialCatalogPolling = () => {
   if (initialCatalogPollTimer !== undefined) {
@@ -209,6 +212,7 @@ const reloadSoftwarePageData = async () => {
       conf.tabs.getData(buildCategoryQuery()),
       conf.list.getData()
     ])
+    renderedCatalogSyncAt = conf.catalog.status?.lastSyncedAt || ''
   } finally {
     pageLoading.value = false
     pollForInitialCatalogSync()
@@ -229,6 +233,7 @@ const pollForInitialCatalogSync = () => {
           conf.tabs.getData(buildCategoryQuery()),
           conf.list.getData()
         ])
+        renderedCatalogSyncAt = conf.catalog.status?.lastSyncedAt || ''
         return
       }
     } catch {
@@ -237,6 +242,30 @@ const pollForInitialCatalogSync = () => {
     }
     pollForInitialCatalogSync()
   }, 2000)
+}
+
+const refreshAfterCatalogSync = async () => {
+  if (!canReadSoftware.value || catalogRefreshInFlight || document.visibilityState !== 'visible') return
+  catalogRefreshInFlight = true
+  try {
+    await conf.catalog.getStatus()
+    const currentSync = conf.catalog.status?.lastSyncedAt
+    if (currentSync && currentSync !== renderedCatalogSyncAt) {
+      await Promise.all([
+        conf.tabs.getData(buildCategoryQuery()),
+        conf.list.getData()
+      ])
+      renderedCatalogSyncAt = currentSync
+    }
+  } catch {
+    // Keep the current catalog visible while Center or Panel is unavailable.
+  } finally {
+    catalogRefreshInFlight = false
+  }
+}
+
+const handleCatalogVisibilityChange = () => {
+  if (document.visibilityState === 'visible') void refreshAfterCatalogSync()
 }
 
 const requestedComponent = String(System.getRouterParams().component || '').toLowerCase()
@@ -260,7 +289,16 @@ watch(
   }
 )
 
-onUnmounted(stopInitialCatalogPolling)
+onMounted(() => {
+  catalogRefreshTimer = window.setInterval(() => void refreshAfterCatalogSync(), 60_000)
+  document.addEventListener('visibilitychange', handleCatalogVisibilityChange)
+})
+
+onUnmounted(() => {
+  stopInitialCatalogPolling()
+  if (catalogRefreshTimer !== undefined) window.clearInterval(catalogRefreshTimer)
+  document.removeEventListener('visibilitychange', handleCatalogVisibilityChange)
+})
 
 const catalogLabel = computed(() => {
   const status = conf.catalog.status

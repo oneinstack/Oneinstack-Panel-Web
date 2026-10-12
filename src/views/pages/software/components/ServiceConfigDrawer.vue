@@ -70,6 +70,18 @@ interface ConfigurationHistoryEntry {
   createdAt: string
 }
 
+interface ServiceLog {
+  source: 'clamd' | 'freshclam'
+  path: string
+  exists: boolean
+  readAt: string
+  modifiedAt?: string
+  firstAt?: string
+  lastAt?: string
+  truncated: boolean
+  lines: Array<{ occurredAt?: string; text: string }>
+}
+
 const props = withDefaults(defineProps<{
   modelValue: boolean
   component: string
@@ -94,6 +106,11 @@ const configuration = ref<ComponentConfiguration>()
 const preview = ref<OperationPreview>()
 const previewOrigin = ref<'update' | 'restore'>('update')
 const history = ref<ConfigurationHistoryEntry[]>([])
+const serviceLog = ref<ServiceLog>()
+const serviceLogSource = ref<'clamd' | 'freshclam'>('clamd')
+const serviceLogLoading = ref(false)
+const serviceLogError = ref('')
+let serviceLogRequest = 0
 const revealingCredentials = ref(false)
 const credentialDialogVisible = ref(false)
 const credentialFields = ref<CredentialField[]>([])
@@ -228,11 +245,33 @@ const historyTagType = (status: ConfigurationHistoryEntry['status']) => {
 }
 
 const formatDate = (value: string) => new Intl.DateTimeFormat(i18n.locale || 'zh-CN', {
+  year: 'numeric',
   month: '2-digit',
   day: '2-digit',
   hour: '2-digit',
-  minute: '2-digit'
+  minute: '2-digit',
+  second: '2-digit',
+  timeZoneName: 'shortOffset'
 }).format(new Date(value))
+
+const loadServiceLog = async () => {
+  if (!props.canRead || props.component !== 'clamav') return
+  const request = ++serviceLogRequest
+  const source = serviceLogSource.value
+  serviceLogLoading.value = true
+  serviceLogError.value = ''
+  try {
+    const { data } = await Api.getComponentServiceLog(props.component, source)
+    if (request === serviceLogRequest) serviceLog.value = data as ServiceLog
+  } catch (error: any) {
+    if (request === serviceLogRequest) {
+      serviceLog.value = undefined
+      serviceLogError.value = errorMessage(error)
+    }
+  } finally {
+    if (request === serviceLogRequest) serviceLogLoading.value = false
+  }
+}
 
 const historyChangeCount = (entry: ConfigurationHistoryEntry) => Object.keys(entry.after)
   .filter((key) => entry.before[key] !== entry.after[key])
@@ -293,6 +332,7 @@ const load = async () => {
     configuration.value = data as ComponentConfiguration
     hydrateValues(configuration.value)
     void loadHistory().catch(() => undefined)
+    if (props.component === 'clamav') void loadServiceLog()
   } finally {
     loading.value = false
   }
@@ -401,6 +441,11 @@ watch(
 watch(values, () => {
   if (!hydrating) preview.value = undefined
 }, { deep: true })
+
+watch(serviceLogSource, () => {
+  serviceLog.value = undefined
+  void loadServiceLog()
+})
 
 onBeforeUnmount(clearRevealedCredentials)
 </script>
@@ -520,6 +565,33 @@ onBeforeUnmount(clearRevealedCredentials)
         </el-form>
       </section>
 
+      <section v-if="component === 'clamav'" class="service-log-panel">
+        <div class="service-log-panel__header">
+          <div>
+            <h3>{{ $t('software.config.serviceLogTitle') }}</h3>
+            <p>{{ $t('software.config.serviceLogDescription') }}</p>
+          </div>
+          <el-select v-model="serviceLogSource" :aria-label="$t('software.config.serviceLogSource')" size="small" class="service-log-source">
+            <el-option label="clamd" value="clamd" />
+            <el-option label="freshclam" value="freshclam" />
+          </el-select>
+          <el-button link :icon="RefreshRight" :loading="serviceLogLoading" @click="loadServiceLog">
+            {{ $t('common.refresh') }}
+          </el-button>
+        </div>
+        <div class="service-log-panel__body" v-loading="serviceLogLoading">
+          <el-alert v-if="serviceLogError" type="error" :closable="false" :title="serviceLogError" />
+          <template v-else-if="serviceLog">
+            <p class="service-log-meta">{{ $t('software.config.serviceLogSource') }}：{{ serviceLog.path }}</p>
+            <p class="service-log-meta">{{ $t('software.config.serviceLogReadAt') }}：{{ formatDate(serviceLog.readAt) }} · {{ $t('software.config.serviceLogModifiedAt') }}：{{ serviceLog.modifiedAt ? formatDate(serviceLog.modifiedAt) : '-' }}</p>
+            <p class="service-log-meta">{{ $t('software.config.serviceLogRange') }}：{{ serviceLog.firstAt ? formatDate(serviceLog.firstAt) : '-' }} — {{ serviceLog.lastAt ? formatDate(serviceLog.lastAt) : '-' }}</p>
+            <p v-if="serviceLog.truncated" class="service-log-meta">{{ $t('software.config.serviceLogTruncated') }}</p>
+            <pre v-if="serviceLog.lines.length" class="service-log-content">{{ serviceLog.lines.map((line) => line.text).join('\n') }}</pre>
+            <el-empty v-else :description="serviceLog.exists ? $t('software.config.serviceLogEmpty') : $t('software.config.serviceLogMissing')" :image-size="56" />
+          </template>
+        </div>
+      </section>
+
       <section class="history-panel">
         <div class="history-panel__header">
           <div>
@@ -542,7 +614,7 @@ onBeforeUnmount(clearRevealedCredentials)
             <span class="history-marker" :class="`is-${entry.status}`" />
             <div class="history-copy">
               <div class="history-item__heading">
-                <strong class="history-date">{{ formatDate(entry.createdAt) }}</strong>
+                <strong class="history-date" :title="formatDate(entry.createdAt)">{{ formatDate(entry.createdAt) }}</strong>
                 <div class="history-tags">
                   <el-tag
                     class="history-status-tag"
@@ -558,8 +630,8 @@ onBeforeUnmount(clearRevealedCredentials)
                 </div>
               </div>
               <p>
-                {{ entry.softwareVersion }} · {{ $t('software.config.changeCount', { count: historyChangeCount(entry) }) }} ·
-                {{ entry.baseRevision.slice(0, 10) }}…
+                {{ $t('software.config.historySource') }} · {{ entry.softwareVersion }} · {{ $t('software.config.changeCount', { count: historyChangeCount(entry) }) }} ·
+                {{ $t('software.config.historyTaskId') }} {{ entry.taskId.slice(0, 8) }}… · {{ entry.baseRevision.slice(0, 10) }}…
               </p>
             </div>
             <el-button
@@ -1060,6 +1132,7 @@ onBeforeUnmount(clearRevealedCredentials)
   box-shadow: 0 4px 14px rgba(16, 24, 40, 0.035);
 }
 
+.service-log-panel,
 .history-panel {
   overflow: hidden;
   margin-top: 18px;
@@ -1068,6 +1141,25 @@ onBeforeUnmount(clearRevealedCredentials)
   background: var(--surface-card);
   box-shadow: 0 4px 14px rgba(16, 24, 40, 0.035);
 }
+
+.service-log-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-subtle);
+
+  > div:first-child { flex: 1; }
+  h3, p { margin: 0; }
+  h3 { color: var(--text-primary); font-size: 15px; }
+  p { margin-top: 4px; color: var(--text-tertiary); font-size: 12px; }
+}
+
+.service-log-source { width: 130px; }
+.service-log-panel__body { min-height: 90px; padding: 14px 18px; }
+.service-log-meta { margin: 0 0 5px; color: var(--text-secondary); font-size: 12px; overflow-wrap: anywhere; }
+.service-log-content { max-height: 280px; overflow: auto; margin: 10px 0 0; padding: 12px; border-radius: 8px; background: var(--surface-subtle); color: var(--text-primary); font-size: 11px; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .history-panel__header {
   display: flex;

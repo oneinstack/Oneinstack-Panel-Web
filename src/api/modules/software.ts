@@ -53,6 +53,10 @@ export const softwareApi = {
   getComponentServiceConfiguration: (component: string) => {
     return http.get(`/soft/services/${component}/config`);
   },
+  /** 直接读取受管 ClamAV 服务日志，区别于历史软件任务日志 */
+  getComponentServiceLog: (component: string, source: 'clamd' | 'freshclam') => {
+    return http.get(`/soft/services/${component}/logs`, { source });
+  },
   /** 二次验证后读取当前组件的托管安装凭据 */
   revealComponentServiceCredentials: (
     component: string,

@@ -1,7 +1,7 @@
 export default {
   title: '运行日志中心',
-  description: '查看面板与服务运行期间的实时日志、来源和级别',
-  fullDescription: '持久化面板进程与 HTTP 访问日志，使用游标和 SSE 实时续传；密码、Token、Cookie 等凭据会在写入前脱敏。',
+  description: '查看面板进程与 HTTP 访问日志的来源和级别',
+  fullDescription: '此处仅展示面板进程与 HTTP 访问日志；ClamAV 服务文件日志请到“软件商店 → ClamAV → 配置”查看。这里使用游标和 SSE 实时续传，凭据会在写入前脱敏。',
   connecting: '正在连接',
   live: '实时连接',
   reconnecting: '断线重连',

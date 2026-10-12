@@ -1,7 +1,7 @@
 export default {
   title: 'Runtime log center',
-  description: 'View runtime logs, sources, and levels for the panel and services',
-  fullDescription: 'Persists panel process and HTTP access logs with cursor-based SSE streaming. Credentials such as passwords, tokens, and cookies are redacted before writing.',
+  description: 'View sources and levels for Panel process and HTTP access logs',
+  fullDescription: 'This page shows Panel process and HTTP access logs. Open Software Store → ClamAV → Configuration for ClamAV service file logs. Cursor-based SSE keeps this view current, and credentials are redacted before writing.',
   connecting: 'Connecting',
   live: 'Live',
   reconnecting: 'Reconnecting',

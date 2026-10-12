@@ -170,9 +170,17 @@ const latestTerminalTask = (softwareKey: string) =>
       Date.parse(left.updatedAt || left.finishedAt || left.createdAt)
     )[0]
 
+const hasUnverifiedInstallResidue = (item: any) => {
+  if (item.residueUnverified === true) return true
+  const task = latestTerminalTask(item.key)
+  return !isInstalled(item) && !!task && ['install', 'upgrade'].includes(task.operation) &&
+    ['failed', 'interrupted'].includes(task.status) &&
+    (task.rollbackStatus === 'failed' || task.recoveryStatus === 'recovery_required')
+}
+
 const shouldShowInstallFailure = (item: any) => {
   if (isInstalled(item)) return false
-  if (item.status !== 3) return false
+  if (item.status !== 3 && !hasUnverifiedInstallResidue(item)) return false
 
   const task = latestTerminalTask(item.key)
   if (!task) return true
@@ -293,6 +301,11 @@ const loadServiceStatuses = async () => {
   } finally {
     serviceLoading.value = false
   }
+}
+
+const refreshServiceOverview = () => {
+  emit('refresh')
+  void loadServiceStatuses().catch(() => undefined)
 }
 
 const serviceActionAllowed = (status: ComponentServiceStatus | undefined, action: ServiceAction) =>
@@ -442,6 +455,7 @@ const installFieldType = (field: any): FormItem['type'] => {
 }
 
 const isPasswordInstallField = (field: any) => {
+  if (String(field?.type || '').toLowerCase() === 'boolean') return false
   const candidates = [
     field?.key,
     field?.type,
@@ -677,6 +691,7 @@ const credentialFieldValue = (field: any, credentials: Record<string, string>) =
 }
 
 const defaultInstallFieldValue = (field: any, credentials: Record<string, string> = {}) => {
+  if (/^reset-existing-root-password(?:-confirm)?$/i.test(String(field?.key || ''))) return false
   if (isPasswordInstallField(field)) return credentialFieldValue(field, credentials)
   const value = field?.default ?? field?.defaultValue ?? field?.default_value
   if (value === undefined || value === null) return ''
@@ -1149,7 +1164,7 @@ watch(
                   link
                   type="primary"
                   :loading="serviceLoading"
-                  @click="loadServiceStatuses"
+                  @click="refreshServiceOverview"
                 >
                   {{ t('common.refresh', 'Refresh') }}
                 </el-button>
@@ -1211,7 +1226,8 @@ watch(
 
             <div class="below">
               <div class="version-info">
-                <template v-if="!isInstalled(item)">{{ t('software.notInstalled', 'Not installed') }}</template>
+                <template v-if="hasUnverifiedInstallResidue(item)">{{ t('software.installResidueUnverified', 'Host resources need ownership verification') }}</template>
+                <template v-else-if="!isInstalled(item)">{{ t('software.notInstalled', 'Not installed') }}</template>
                 <template v-else>
                   {{ t('software.installedVersion', 'Installed version: {version}', { version: item.install_version || item.versions?.[0] }) }}
                   <span v-if="item.port !== undefined && item.port !== null && item.port !== ''">
