@@ -18,6 +18,7 @@ import SystemManagementTabs from './components/system-management-tabs.vue'
 import ProcessManagementSection from './components/process-management-section.vue'
 import SshConfigSection from './components/ssh-config-section.vue'
 import DiskManagementSection from './components/disk-management-section.vue'
+import ArtifactCleanupSection from './components/artifact-cleanup-section.vue'
 
 type ProcessSort = 'pid' | 'cpu' | 'memory' | 'name'
 type SortOrder = 'asc' | 'desc'
@@ -63,7 +64,8 @@ const processFilters = reactive({
 const tabItems = markRaw([
   { key: 'processes', label: t('systemManagement.tabs.processes', '进程管理'), labelKey: 'systemManagement.tabs.processes' },
   { key: 'ssh', label: t('systemManagement.tabs.ssh', 'SSH 配置'), labelKey: 'systemManagement.tabs.ssh' },
-  { key: 'disks', label: t('systemManagement.tabs.disks', '磁盘管理'), labelKey: 'systemManagement.tabs.disks' }
+  { key: 'disks', label: t('systemManagement.tabs.disks', '磁盘管理'), labelKey: 'systemManagement.tabs.disks' },
+  { key: 'cleanup', label: t('systemManagement.tabs.cleanup', '存储清理'), labelKey: 'systemManagement.tabs.cleanup' }
 ])
 
 const processSortOptions = computed<Array<{ label: string; value: ProcessSort }>>(() => [
@@ -379,7 +381,7 @@ onMounted(() => {
       />
 
       <DiskManagementSection
-        v-else
+        v-else-if="activeTabKey === 'disks'"
         :disk-error="diskError"
         :disk-loading="diskLoading"
         :disks="disks"
@@ -390,6 +392,8 @@ onMounted(() => {
         :usage-percent="usagePercent"
         :format-bytes="formatBytes"
       />
+
+      <ArtifactCleanupSection v-else />
 
       <custom-drawer
         :visible="processDrawerVisible"

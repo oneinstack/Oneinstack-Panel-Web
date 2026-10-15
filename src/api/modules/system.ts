@@ -21,6 +21,41 @@ export interface PanelRuntimeStatus {
   warning: PanelRuntimeWarning | null;
 }
 
+export interface ArtifactCandidate {
+  id: string;
+  kind: 'download_cache' | 'download_partial' | 'uninstall_archive';
+  component?: string;
+  path: string;
+  bytes: number;
+  modifiedAt: string;
+  automatic: boolean;
+  eligible: boolean;
+  reasonCode: string;
+  reason: string;
+}
+
+export interface ArtifactInventory {
+  inventory: {
+    space: { totalBytes: number; availableBytes: number; availableRatio: number; warning: boolean };
+    candidates: ArtifactCandidate[];
+  };
+  taskBusy: boolean;
+}
+
+export interface ArtifactCleanupTask {
+  id: string;
+  candidateId: string;
+  kind: string;
+  component?: string;
+  status: string;
+  bytes: number;
+  automatic: boolean;
+  errorCode?: string;
+  errorMessage?: string;
+  createdAt: string;
+  finishedAt?: string;
+}
+
 interface PanelRuntimeStatusResponse {
   success: boolean;
   code: number;
@@ -29,6 +64,8 @@ interface PanelRuntimeStatusResponse {
 }
 
 export const systemApi = {
+  getArtifactInventory: () => http.get('/artifacts/inventory'),
+  getArtifactCleanupTasks: () => http.get('/artifacts/tasks'),
   /** 获取系统信息/面板设置 */
   getSystemInfo: () => {
     return http.get("/sys/systeminfo");

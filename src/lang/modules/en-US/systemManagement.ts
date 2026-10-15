@@ -2,7 +2,25 @@ export default {
   tabs: {
     processes: 'Processes',
     ssh: 'SSH config',
-    disks: 'Disk management'
+    disks: 'Disk management',
+    cleanup: 'Storage cleanup'
+  },
+  cleanup: {
+    title: 'Storage cleanup',
+    description: 'Review Panel download caches and uninstall archives. Recovering deleted archives requires an external backup or reinstall.',
+    refresh: 'Refresh', loadFailed: 'Unable to load storage inventory', lowSpace: 'Root filesystem space is low; review safe cleanup candidates',
+    available: 'Root filesystem available', busy: 'A component task is active; cleanup is deferred',
+    archive: 'Uninstall archive', partial: 'Incomplete download', cache: 'Online download cache',
+    manualArchive: 'Historical archives require manual preview and confirmation', unsafe: 'Contains a symlink, mount, or unsupported file; cleanup is blocked',
+    latestRecovery: 'The latest archive may still restore configuration; cleanup is blocked', activeRecovery: 'The MongoDB retained-data marker still references this archive; cleanup is blocked',
+    expiredArchive: 'Confirmed 30 day retention has expired', expiredCache: 'Cache retention has expired',
+    capacity: 'Cache exceeds the 2 GiB limit', manualCache: 'Manual cleanup is available; a later online install will download it again',
+    unverifiedCache: 'Older cache lacks a verification marker; manual preview and confirmation are required',
+    submitted: 'Cleanup task created; review its result', submitFailed: 'Unable to create cleanup task',
+    type: 'Type', component: 'Component', path: 'Path', size: 'Size', reason: 'Cleanup condition',
+    action: 'Action', preview: 'Preview cleanup', taskHistory: 'Cleanup history', createdAt: 'Created at',
+    status: 'Status', error: 'Failure reason', queued: 'Queued', executing: 'Running',
+    succeeded: 'Completed', failed: 'Failed', interrupted: 'Interrupted'
   },
   title: 'System management',
   description: 'View processes, effective SSH configuration, and mounted disks. All data reflects the latest API response.',

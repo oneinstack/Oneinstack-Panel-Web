@@ -2,7 +2,25 @@ export default {
   tabs: {
     processes: '进程管理',
     ssh: 'SSH 配置',
-    disks: '磁盘管理'
+    disks: '磁盘管理',
+    cleanup: '存储清理'
+  },
+  cleanup: {
+    title: '存储清理',
+    description: '查看 Panel 生成的下载缓存和组件卸载归档。删除归档后只能通过外部备份或重新安装恢复旧程序与配置。',
+    refresh: '刷新', loadFailed: '读取存储清单失败', lowSpace: '根分区剩余空间偏低，请核对安全清理候选',
+    available: '根分区可用', busy: '组件任务正在运行，清理已暂缓',
+    archive: '卸载归档', partial: '未完成下载', cache: '在线下载缓存',
+    manualArchive: '历史归档仅支持人工预览确认', unsafe: '含符号链接、挂载点或不支持的文件，禁止清理',
+    latestRecovery: '最近一份归档可能仍用于恢复配置，禁止清理', activeRecovery: 'MongoDB 保留数据标记仍引用该归档，禁止清理',
+    expiredArchive: '已确认的 30 天保留期到期', expiredCache: '缓存保留期到期',
+    capacity: '缓存超过 2 GiB 上限', manualCache: '可人工清理，后续在线安装需要重新下载',
+    unverifiedCache: '旧缓存缺少校验标记，仅支持人工预览确认',
+    submitted: '清理任务已创建，请查看任务结果', submitFailed: '清理任务创建失败',
+    type: '类型', component: '组件', path: '路径', size: '占用', reason: '清理条件',
+    action: '操作', preview: '预览清理', taskHistory: '清理记录', createdAt: '创建时间',
+    status: '状态', error: '失败原因', queued: '待执行', executing: '执行中',
+    succeeded: '已完成', failed: '失败', interrupted: '已中断'
   },
   title: '系统管理',
   description: '集中查看系统进程、SSH 生效配置与磁盘挂载状态，所有数据以当前接口最新响应为准。',
