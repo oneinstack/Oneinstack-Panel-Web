@@ -1,4 +1,8 @@
 export default {
+  archiveRetentionTitle: '卸载归档保留策略',
+  archiveRetentionMessage: '推荐保留 30 天且至少保留最近一份。到期归档会自动删除；旧程序与配置只能通过外部备份或重新安装恢复。',
+  archiveRetentionEnable: '启用 30 天自动清理',
+  archiveRetentionKeep: '一直保留',
   tabs: {
     all: '全部',
     installed: '已安装',

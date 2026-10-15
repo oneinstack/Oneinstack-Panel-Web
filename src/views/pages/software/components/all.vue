@@ -961,11 +961,34 @@ const selectUninstallDataPolicy = async (): Promise<'preserve' | 'delete' | ''> 
   }
 }
 
+const supportsArchiveRetention = (item: any) => {
+  return item.archiveRetentionSupported === true
+}
+
+const selectArchiveRetention = async (): Promise<30 | 0 | null> => {
+  try {
+    await ElMessageBox.confirm(
+      t('software.archiveRetentionMessage', 'Keep uninstall archives for 30 days and preserve the newest snapshot. Expired archives are deleted automatically and cannot be restored without an external backup or reinstall.'),
+      t('software.archiveRetentionTitle', 'Uninstall archive retention'),
+      {
+        type: 'warning', distinguishCancelAndClose: true, closeOnClickModal: false,
+        confirmButtonText: t('software.archiveRetentionEnable', 'Enable 30 day cleanup'),
+        cancelButtonText: t('software.archiveRetentionKeep', 'Keep indefinitely')
+      }
+    )
+    return 30
+  } catch (action) {
+    return action === 'cancel' ? 0 : null
+  }
+}
+
 const handleUninstall = async (item: any) => {
   if (submitting.value || !canReadSoftware.value || !canUninstallSoftware.value) return
   const version = item.install_version || item.versions?.[0] || ''
   const dataPolicy = await selectUninstallDataPolicy()
   if (!dataPolicy) return
+  const archiveRetentionDays = supportsArchiveRetention(item) ? await selectArchiveRetention() : 0
+  if (archiveRetentionDays === null) return
   submitting.value = true
   try {
     const request = {
@@ -973,7 +996,9 @@ const handleUninstall = async (item: any) => {
       key: item.key,
       version,
       dataPolicy,
-      confirmDataDeletion: dataPolicy === 'delete'
+      confirmDataDeletion: dataPolicy === 'delete',
+      archiveRetentionDays,
+      confirmArchiveRetention: archiveRetentionDays === 30
     }
     const { data: result } = await submitOperation('software.uninstall', request)
     softwareTaskStore.acceptCreated(result, request)
