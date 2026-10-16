@@ -193,14 +193,14 @@ const createOperationCancelledError = () => {
   return error
 }
 
-const confirmOperationPreview = async (preview: OperationPreview, forceConfirm = false) => {
+const confirmOperationPreview = async (preview: OperationPreview, forceConfirm = false, previewTitle = '') => {
   if (!forceConfirm && !preview.review?.required) return
   try {
     await ElMessageBox.confirm(
       h(OperationPreviewContent, { preview }),
-      operationTitleKeys[preview.operation]
+      previewTitle || (operationTitleKeys[preview.operation]
         ? t(operationTitleKeys[preview.operation], 'Operation preview')
-        : t('common.operationPreview.title', 'Operation preview'),
+        : t('common.operationPreview.title', 'Operation preview')),
       {
         confirmButtonText: hasFailedPrecheck(preview)
           ? t('common.operationPreview.precheckFailed', 'Precheck failed')
@@ -225,10 +225,10 @@ export const createOperationPreview = async (operation: string, payload: unknown
 
 export const executeOperationPreview = async (
   preview: OperationPreview,
-  options: { confirmPreview?: boolean; forceConfirm?: boolean } = {},
+  options: { confirmPreview?: boolean; forceConfirm?: boolean; previewTitle?: string } = {},
 ) => {
   if (options.confirmPreview !== false) {
-    await confirmOperationPreview(preview, options.forceConfirm)
+    await confirmOperationPreview(preview, options.forceConfirm, options.previewTitle)
   }
   return Api.executeOperation(preview.previewId)
 }
@@ -236,7 +236,7 @@ export const executeOperationPreview = async (
 export const submitOperation = async <T = any>(
   operation: string,
   payload: unknown,
-  options: { confirmPreview?: boolean; forceConfirm?: boolean } = {},
+  options: { confirmPreview?: boolean; forceConfirm?: boolean; previewTitle?: string } = {},
 ) => {
   const preview = await createOperationPreview(operation, payload)
   return await executeOperationPreview(preview, options) as T

@@ -692,6 +692,9 @@ const credentialFieldValue = (field: any, credentials: Record<string, string>) =
 
 const defaultInstallFieldValue = (field: any, credentials: Record<string, string> = {}) => {
   if (/^reset-existing-root-password(?:-confirm)?$/i.test(String(field?.key || ''))) return false
+  // A firewall backend takeover must be an explicit choice on every run,
+  // including upgrades from packages whose old manifest default was true.
+  if (/^migrate-external-firewall$/i.test(String(field?.key || ''))) return false
   if (isPasswordInstallField(field)) return credentialFieldValue(field, credentials)
   const value = field?.default ?? field?.defaultValue ?? field?.default_value
   if (value === undefined || value === null) return ''
@@ -829,7 +832,8 @@ const handleInstall = async () => {
   const payload = buildInstallPayload(request)
   try {
     const { data: result } = await submitOperation('software.install', payload, {
-      forceConfirm: true
+      forceConfirm: true,
+      previewTitle: `${drawer.title} · ${t('common.operationPreview.title', '操作预览')}`
     })
     softwareTaskStore.acceptCreated(result, payload)
     if (canReadSoftwareTask.value) {
