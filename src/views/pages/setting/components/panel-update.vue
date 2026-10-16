@@ -49,6 +49,13 @@ interface UpdateStatus {
   finishedAt?: string
 }
 
+interface UpdateAttempt {
+  previousStartedAt?: string
+  startedAt?: string
+  targetVersion?: string
+}
+
+const completedUpdateStorageKey = 'oneinstack:panel-update-completed'
 const version = ref<VersionInfo>()
 const check = ref<PanelUpdateCheckResult>()
 const status = ref<UpdateStatus>({ state: 'idle', rollbackAttempted: false, rollbackSucceeded: false })
@@ -87,6 +94,16 @@ const hasSameVersionTarget = computed(() => {
 })
 const canApplyUpdate = computed(() => {
   return Boolean(check.value?.updateAvailable && check.value?.compatible && !hasSameVersionTarget.value)
+})
+const checkResultMessage = computed(() => {
+  const result = check.value
+  if (!result) return ''
+  if (result.updateAvailable && result.latestVersion !== result.currentVersion) {
+    return result.source === 'center'
+      ? t('setting.update.centerAssignedVersion', 'Center assigned version {version} to this instance', { version: result.latestVersion })
+      : t('setting.update.newVersionFound', 'New version {version} found', { version: result.latestVersion })
+  }
+  return t('setting.update.alreadyLatest', 'Already on the latest version')
 })
 const statusType = computed(() => {
   if (status.value.state === 'succeeded') return 'success'
@@ -155,6 +172,24 @@ const getErrorMessage = (error: unknown, fallback: string) => {
   return fallback
 }
 
+const completedUpdateIdentity = (value: UpdateStatus) => {
+  if (value.state !== 'succeeded' || !value.startedAt || !value.finishedAt || !value.targetVersion) return ''
+  return JSON.stringify([value.startedAt, value.finishedAt, value.targetVersion])
+}
+
+const restoreCompletedUpdateNotice = () => {
+  try {
+    const identity = window.sessionStorage.getItem(completedUpdateStorageKey)
+    if (!identity) return
+    window.sessionStorage.removeItem(completedUpdateStorageKey)
+    if (identity === completedUpdateIdentity(status.value) && version.value?.version === status.value.targetVersion) {
+      ElMessage.success({ message: t('setting.update.completed', 'Panel update completed'), duration: 6000 })
+    }
+  } catch {
+    // Browser storage restrictions must not interrupt the update page.
+  }
+}
+
 const loadBaseState = async () => {
   if (!canReadPanelUpdate.value) return
   const [versionResponse, statusResponse] = await Promise.all([
@@ -172,16 +207,9 @@ const checkForUpdate = async (notify: boolean) => {
   try {
     const data = await requestPanelUpdateCheck()
     check.value = data
-    if (notify && data.updateAvailable && data.latestVersion !== data.currentVersion) {
-      ElMessage.success(
-        data.source === 'center'
-          ? t('setting.update.centerAssignedVersion', 'Center assigned version {version} to this instance', { version: data.latestVersion })
-          : t('setting.update.newVersionFound', 'New version {version} found', { version: data.latestVersion })
-      )
-    } else if (notify) {
-      ElMessage.success(t('setting.update.alreadyLatest', 'Already on the latest version'))
-    }
+    if (notify) ElMessage.success(checkResultMessage.value)
   } catch (error) {
+    check.value = undefined
     const message = getErrorMessage(error, t('setting.update.checkFailed', 'Failed to check updates'))
     errorMessage.value = message
     if (notify) ElMessage.error(message)
@@ -194,7 +222,7 @@ const runManualCheck = () => checkForUpdate(true)
 
 const runAutomaticCheck = async () => {
   try {
-    if (canCheckPanelUpdate.value && !isRunning.value) await checkForUpdate(false)
+    if (canCheckPanelUpdate.value && !isRunning.value) await checkForUpdate(props.autoCheck)
   } finally {
     emit('auto-check-consumed')
   }
@@ -218,9 +246,10 @@ const applyUpdate = async () => {
     )
     applying.value = true
     errorMessage.value = ''
-    await Api.applyPanelUpdate({ confirm: value }, { silentError: true })
+    const { data: previousStatus } = await Api.getPanelUpdateStatus({ silentError: true })
+    const { data: accepted } = await Api.applyPanelUpdate({ confirm: value }, { silentError: true })
     ElMessage.success(t('setting.update.taskStarted', 'Update task started. Waiting for the panel to come back online.'))
-    beginReconnectPolling()
+    beginReconnectPolling({ previousStartedAt: previousStatus?.startedAt, targetVersion: accepted?.version || targetVersion })
   } catch (error) {
     applying.value = false
     if (error !== 'cancel' && error !== 'close') {
@@ -232,28 +261,38 @@ const applyUpdate = async () => {
   }
 }
 
-const beginReconnectPolling = () => {
+const beginReconnectPolling = (attempt: UpdateAttempt) => {
   if (reconnectTimer) window.clearTimeout(reconnectTimer)
   const poll = async () => {
     try {
       const { data } = await Api.pollPanelUpdateStatus()
-      if (data) {
+      if (data?.startedAt && (attempt.startedAt
+        ? data.startedAt === attempt.startedAt
+        : data.startedAt !== attempt.previousStartedAt)) {
+        attempt.startedAt = data.startedAt
+        attempt.targetVersion ||= data.targetVersion
         status.value = data
-        if (!activeStates.includes(status.value.state)) {
+        const terminalStates = ['succeeded', 'failed', 'rolled_back', 'rollback_failed', 'recovery_required']
+        if (terminalStates.includes(data.state) && (data.state !== 'succeeded' || data.targetVersion === attempt.targetVersion)) {
           applying.value = false
-          ElMessage.success(
-            status.value.state === 'succeeded'
-              ? t('setting.update.completed', 'Panel update completed')
-              : status.value.message || t('setting.update.ended', 'Panel update ended')
-          )
           if (status.value.state === 'succeeded') {
+            try {
+              const identity = completedUpdateIdentity(status.value)
+              if (identity) window.sessionStorage.setItem(completedUpdateStorageKey, identity)
+            } catch {
+              // Reloading the new assets must still work without browser storage.
+            }
             publishPanelUpdateCheck()
             // The response comes from the restarted Panel process. Reload the
             // document so its no-store index selects the new hashed assets.
             window.location.reload()
             return
           }
-          await loadBaseState()
+          ElMessage({
+            message: status.value.message || stateNames.value[status.value.state] || t('setting.update.ended', 'Panel update ended'),
+            type: status.value.state === 'rolled_back' ? 'warning' : 'error'
+          })
+          await loadBaseState().catch(() => undefined)
           return
         }
       }
@@ -268,12 +307,14 @@ const beginReconnectPolling = () => {
 onMounted(async () => {
   try {
     await loadBaseState()
+    restoreCompletedUpdateNotice()
     if (activeStates.includes(status.value.state)) {
       applying.value = true
-      beginReconnectPolling()
+      beginReconnectPolling({ startedAt: status.value.startedAt, targetVersion: status.value.targetVersion })
     }
   } catch (error) {
     errorMessage.value = getErrorMessage(error, t('setting.update.loadStatusFailed', 'Failed to load update status'))
+    return
   }
 
   // Entering this section always refreshes availability. A concurrent header
@@ -361,6 +402,15 @@ onBeforeUnmount(() => {
       :closable="true"
       show-icon
       @close="errorMessage = ''"
+    />
+
+    <el-alert
+      v-if="checkResultMessage"
+      class="update-message"
+      :title="checkResultMessage"
+      type="success"
+      :closable="false"
+      show-icon
     />
 
     <el-alert
