@@ -1,4 +1,14 @@
 export default {
+  resourceLoading: {
+    title: 'Loading page resources',
+    failed: 'Page resources could not be loaded',
+    interrupted: 'The download was interrupted or timed out. Refresh to retry.',
+    exhausted: 'One retry has been used. Please try opening this page again later.',
+    retry: 'Refresh and retry',
+    refreshPage: 'Refresh page',
+    reopenContainerTerminal: 'The download was interrupted or timed out. Refresh the page, then open the container terminal again.',
+    home: 'Go to home'
+  },
   brandSubtitle: 'SERVER CONTROL',
   navigation: 'Management',
   expandNavigation: 'Expand navigation',

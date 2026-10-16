@@ -12,15 +12,9 @@ import './styles/index.less'
 import Config from './utils/Config'
 import { isDynamicImportError, reloadOnceForChunkFailure } from './utils/chunk-reload'
 
-window.addEventListener('vite:preloadError', (event) => {
-  event.preventDefault()
-  reloadOnceForChunkFailure()
-})
-
 window.addEventListener('unhandledrejection', (event) => {
   if (!isDynamicImportError(event.reason)) return
-  event.preventDefault()
-  reloadOnceForChunkFailure()
+  if (reloadOnceForChunkFailure()) event.preventDefault()
 })
 
 const app = createApp(App)

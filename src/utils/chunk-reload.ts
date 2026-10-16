@@ -32,8 +32,20 @@ export const isDynamicImportError = (reason: unknown) => {
   ].some((text) => normalizedMessage.includes(text.toLowerCase())) || normalizedMessage === 'load failed'
 }
 
+export const canReloadForChunkFailure = (target?: string) => {
+  try {
+    const normalizedTarget = normalizeTarget(target || window.location.hash.slice(1) || '/')
+    const previousTarget = sessionStorage.getItem(CHUNK_RELOAD_TARGET) || ''
+    if (sessionStorage.getItem(CHUNK_RELOAD_FLAG)) return false
+    return normalizedTarget !== previousTarget || Number(sessionStorage.getItem(CHUNK_RELOAD_ATTEMPTS) || 0) < MAX_CHUNK_RELOAD_ATTEMPTS
+  } catch {
+    return false
+  }
+}
+
 export const reloadOnceForChunkFailure = (target?: string) => {
-  const normalizedTarget = normalizeTarget(target)
+  if (!canReloadForChunkFailure(target)) return false
+  const normalizedTarget = normalizeTarget(target || window.location.hash.slice(1) || '/')
   const previousTarget = sessionStorage.getItem(CHUNK_RELOAD_TARGET) || ''
   if (normalizedTarget && normalizedTarget !== previousTarget) {
     sessionStorage.setItem(CHUNK_RELOAD_TARGET, normalizedTarget)
@@ -60,6 +72,38 @@ export const clearChunkReloadRecovery = () => {
   sessionStorage.removeItem(CHUNK_RELOAD_FLAG)
   sessionStorage.removeItem(CHUNK_RELOAD_TARGET)
   sessionStorage.removeItem(CHUNK_RELOAD_ATTEMPTS)
+}
+
+const contentRetryKey = (target: string, content: string) =>
+  `${CHUNK_RELOAD_ATTEMPTS}:content:${normalizeTarget(target)}:${content}`
+
+export const canReloadChunkContent = (target: string, content: string) => {
+  try {
+    return !sessionStorage.getItem(CHUNK_RELOAD_FLAG) && Number(sessionStorage.getItem(contentRetryKey(target, content)) || 0) < MAX_CHUNK_RELOAD_ATTEMPTS
+  } catch {
+    return false
+  }
+}
+
+export const reloadChunkContentOnce = (target: string, content: string) => {
+  if (!canReloadChunkContent(target, content)) return false
+  try {
+    sessionStorage.setItem(contentRetryKey(target, content), '1')
+    sessionStorage.setItem(CHUNK_RELOAD_TARGET, normalizeTarget(window.location.hash.slice(1)) || normalizeTarget(target))
+    sessionStorage.setItem(CHUNK_RELOAD_FLAG, '1')
+    window.location.reload()
+    return true
+  } catch {
+    return false
+  }
+}
+
+export const clearChunkContentRecovery = (target: string, content: string) => {
+  try {
+    sessionStorage.removeItem(contentRetryKey(target, content))
+  } catch {
+    // Loading the content does not depend on browser storage availability.
+  }
 }
 
 export const getPendingNavigationStallTarget = () =>

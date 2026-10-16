@@ -508,7 +508,8 @@ watch(
       window.clearInterval(statusTimer)
       statusTimer = undefined
     }
-  }
+  },
+  { immediate: true }
 )
 </script>
 

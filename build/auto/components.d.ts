@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AccessibleSwitch: typeof import('./../../src/components/AccessibleSwitch.vue')['default']
+    AsyncContent: typeof import('./../../src/components/async-content.vue')['default']
     BasicChart: typeof import('./../../src/components/echarts/basic-chart.vue')['default']
     CardTabs: typeof import('./../../src/components/card-tabs.vue')['default']
     CustomDialog: typeof import('./../../src/components/custom-dialog.vue')['default']

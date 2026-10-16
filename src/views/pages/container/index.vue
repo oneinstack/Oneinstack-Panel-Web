@@ -36,7 +36,7 @@ import ContainerCreateDrawer from "./components/ContainerCreateDrawer.vue";
 import ContainerResourceDialog from "./components/ContainerResourceDialog.vue";
 import ContainerDetailDrawer from "./components/ContainerDetailDrawer.vue";
 import ContainerLogsDialog from "./components/ContainerLogsDialog.vue";
-import ContainerTerminalDrawer from "./components/ContainerTerminalDrawer.vue";
+import AsyncContent from "@/components/async-content.vue";
 import ContainerTaskDrawer from "./components/ContainerTaskDrawer.vue";
 import SystemManagementTabs from "@/views/pages/system-management/components/system-management-tabs.vue";
 import { useContainerTaskStore } from "@/stores/modules/containerTask";
@@ -68,6 +68,7 @@ import type { ColumnItem } from "@/components/custom-table.vue";
 
 const sconfig = useConfigStore()
 const containerTaskStore = useContainerTaskStore()
+const loadContainerTerminal = () => import("./components/ContainerTerminalDrawer.vue");
 
 const t = (key: string, fallback?: string, params?: Record<string, any>) => {
   const value = (i18n.t as any)(key, params);
@@ -4901,9 +4902,16 @@ onBeforeUnmount(() => {
       @download="downloadLogs()"
     />
 
-    <ContainerTerminalDrawer
+    <AsyncContent
+      v-if="terminalDrawer.show"
       v-model="terminalDrawer.show"
       :target="terminalDrawer.target"
+      :loader="loadContainerTerminal"
+      recovery-target="/container"
+      resource-key="container-terminal"
+      :retry-hint="t('layout.resourceLoading.reopenContainerTerminal')"
+      drawer
+      @cancel="terminalDrawer.show = false"
     />
 
     <ContainerTaskDrawer

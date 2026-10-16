@@ -10,7 +10,39 @@ import {
   clearChunkReloadFlag,
   clearChunkReloadRecovery,
   getPendingChunkReloadTarget,
+  canReloadChunkContent,
+  reloadChunkContentOnce,
+  clearChunkContentRecovery,
 } from "./chunk-reload";
+
+const showStartupLoadFailure = () => {
+  const root = document.getElementById("app");
+  if (!root) return;
+  const target = window.location.hash.slice(1) || "/";
+  const canRetry = canReloadChunkContent(target, "startup");
+  const panel = document.createElement("section");
+  panel.setAttribute("role", "alert");
+  panel.style.cssText = "display:grid;place-content:center;gap:16px;min-height:100vh;padding:24px;text-align:center;color:var(--text-primary);background:var(--surface-base)";
+  const title = document.createElement("h2");
+  title.textContent = String(i18n.t("layout.resourceLoading.failed"));
+  const description = document.createElement("p");
+  description.textContent = String(i18n.t(canRetry ? "layout.resourceLoading.interrupted" : "layout.resourceLoading.exhausted"));
+  const retry = document.createElement("button");
+  retry.textContent = String(i18n.t("layout.resourceLoading.retry"));
+  retry.disabled = !canRetry;
+  retry.onclick = () => {
+    retry.disabled = true;
+    reloadChunkContentOnce(target, "startup");
+  };
+  const home = document.createElement("button");
+  home.textContent = String(i18n.t("layout.resourceLoading.home"));
+  home.onclick = () => {
+    window.location.hash = "/home";
+    window.location.reload();
+  };
+  panel.append(title, description, retry, home);
+  root.replaceChildren(panel);
+};
 export default class Config {
   /**
    * 初始化
@@ -44,6 +76,7 @@ export default class Config {
     router.isReady().then(async () => {
       // 初始化完成
       app.mount("#app");
+      clearChunkContentRecovery(router.currentRoute.value.fullPath, "startup");
       const pendingTarget = getPendingChunkReloadTarget();
       clearChunkReloadFlag();
       if (!pendingTarget || router.currentRoute.value.fullPath === pendingTarget) {
@@ -57,6 +90,10 @@ export default class Config {
       } finally {
         clearChunkReloadRecovery();
       }
+    }).catch((error) => {
+      console.error("[router] Initial page could not be loaded", error);
+      clearChunkReloadFlag();
+      showStartupLoadFailure();
     });
   }
 }

@@ -1,4 +1,14 @@
 export default {
+  resourceLoading: {
+    title: '正在加载页面资源',
+    failed: '页面资源加载失败',
+    interrupted: '资源下载中断或超时，请刷新重试。',
+    exhausted: '已重试一次，请稍后再打开此页面。',
+    retry: '刷新重试',
+    refreshPage: '刷新页面',
+    reopenContainerTerminal: '资源下载中断或超时。刷新页面后，请重新打开容器终端。',
+    home: '返回首页'
+  },
   brandSubtitle: '服务器管理控制台',
   navigation: '管理中心',
   expandNavigation: '展开导航',
