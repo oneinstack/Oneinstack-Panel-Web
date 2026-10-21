@@ -241,6 +241,9 @@ const isInstalled = (item: any) =>
 const recommendedVersion = (item: any) =>
   item.recommendedVersion || item.versions?.[0] || ''
 
+const componentPackageUpdate = (item: any) => item.updateReason === 'component_package'
+const showPackageUpdateHint = ref(false)
+
 const upgradeSummary = (item: any) => {
   if (item.updateReason === 'component_package' && item.latestPackageVersion) {
     return t('software.componentPackageUpgrade', '组件包：{installedVersion} → {latestVersion}', {
@@ -722,6 +725,7 @@ const openInstallForm = (
   credentials: Record<string, string> = {}
 ) => {
   if (!item) return
+  showPackageUpdateHint.value = operation === 'upgrade' && componentPackageUpdate(item)
   installVersions.value = getInstallVersions(item)
   installRecommendedVersion.value = String(recommendedVersion(item) || '').trim()
   const preferredVersion = requestedVersion || item.install_version || recommendedVersion(item)
@@ -1281,7 +1285,7 @@ watch(
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
                   >
-                    {{ t('software.upgrade', 'Upgrade') }}
+                    {{ componentPackageUpdate(item) ? t('software.updateComponentPackage', 'Update component') : t('software.upgrade', 'Upgrade') }}
                   </button>
                   <button
                     v-if="canUninstallSoftware"
@@ -1330,6 +1334,13 @@ watch(
       body-mode="compact"
     >
       <div class="software-install-panel">
+        <el-alert
+          v-if="showPackageUpdateHint"
+          type="warning"
+          :closable="false"
+          show-icon
+          :title="t('software.componentPackageUpdateHint', 'The software version is unchanged. The component package contains installation and maintenance scripts. Updating reruns the component upgrade process and may replace program files, apply configuration, or restart services. Review the operation preview before continuing.')"
+        />
         <custom-form
           class="software-install-form"
           :data="installForm"
