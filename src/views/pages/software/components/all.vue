@@ -727,9 +727,10 @@ const openInstallForm = (
   if (!item) return
   showPackageUpdateHint.value = operation === 'upgrade' && componentPackageUpdate(item)
   installVersions.value = getInstallVersions(item)
-  installRecommendedVersion.value = String(recommendedVersion(item) || '').trim()
+  const explicitSecurityMigration = operation === 'upgrade' && !!item.securityWarning && !item.recommendedVersion
+  installRecommendedVersion.value = explicitSecurityMigration ? '' : String(recommendedVersion(item) || '').trim()
   const preferredVersion = requestedVersion || item.install_version || recommendedVersion(item)
-  const version = installVersions.value.includes(preferredVersion)
+  const version = explicitSecurityMigration ? '' : installVersions.value.includes(preferredVersion)
     ? preferredVersion
     : installVersions.value[0] || ''
   Object.keys(installForm.value).forEach((key) => {
@@ -737,7 +738,10 @@ const openInstallForm = (
   })
   installForm.value.key = item.key
   installForm.value.version = version
-  const config = parseParams(item.params)
+  const config = [...parseParams(item.params)]
+  if (explicitSecurityMigration && !config.some(isSoftwareVersionField)) {
+    config.unshift({ key: 'software-version', name: t('software.selectVersion', 'Select an available software version'), required: true })
+  }
   installForm.items = config
     .filter((field: any) => field?.key)
     .map<FormItem>((field: any) => {
@@ -1166,6 +1170,15 @@ watch(
               </div>
             </div>
 
+            <el-alert
+              v-if="item.securityWarning"
+              :title="item.securityWarning"
+              type="warning"
+              :closable="false"
+              show-icon
+              class="security-warning"
+            />
+
             <el-progress
               v-if="activeTask(item) && canReadSoftwareTask"
               class="card-progress"
@@ -1280,7 +1293,7 @@ watch(
                 </button>
                 <template v-else-if="!activeTask(item) && isInstalled(item)">
                   <button
-                    v-if="hasUpgrade(item) && canUpdateSoftware"
+                    v-if="(hasUpgrade(item) || item.securityWarning) && canUpdateSoftware"
                     type="button"
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
@@ -1638,6 +1651,11 @@ watch(
   margin-top: 3px;
   color: rgb(var(--primary-color));
   font-size: 11px;
+}
+
+.security-warning {
+  margin-top: 12px;
+  overflow-wrap: anywhere;
 }
 
 .tip {
