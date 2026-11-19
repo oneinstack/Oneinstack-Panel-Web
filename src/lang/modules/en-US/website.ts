@@ -106,6 +106,7 @@ export default {
   noDatabase: 'No database',
   fileHandling: 'File handling',
   deleteFilesAfterSnapshot: 'Delete the website directory and business files after the snapshot succeeds',
+  adoptedSiteKeepFiles: 'Retain the adopted site’s directory and files. The directory may be shared with other sites.',
   confirmWebsiteName: 'Enter website name {name} to confirm',
   websiteNameMismatch: 'Website name does not match',
   deleteTaskCreated: 'Safe deletion task created. The website will be removed only after the full snapshot is verified.',

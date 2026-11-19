@@ -106,6 +106,7 @@ export default {
   noDatabase: '不包含数据库',
   fileHandling: '文件处理',
   deleteFilesAfterSnapshot: '快照成功后同时删除网站目录与业务文件',
+  adoptedSiteKeepFiles: '接管站点保留原目录与文件，该目录可能被其他站点共用。',
   confirmWebsiteName: '请输入网站名 {name} 确认',
   websiteNameMismatch: '网站名不匹配',
   deleteTaskCreated: '安全删除任务已创建，完整快照验证成功后才会删除网站',

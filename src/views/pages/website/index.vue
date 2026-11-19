@@ -1306,7 +1306,8 @@ loadServiceStatuses()
             </el-select>
           </el-form-item>
           <el-form-item :label="$t('website.fileHandling')">
-            <el-checkbox v-model="conf.dialog.deleteFiles">
+            <span v-if="conf.dialog.row.origin === 'oneinstack-script'">{{ $t('website.adoptedSiteKeepFiles') }}</span>
+            <el-checkbox v-else v-model="conf.dialog.deleteFiles">
               {{ $t('website.deleteFilesAfterSnapshot') }}
             </el-checkbox>
           </el-form-item>

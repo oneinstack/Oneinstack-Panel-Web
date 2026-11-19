@@ -45,13 +45,14 @@ const statusLoading = ref(false)
 const settingsTask = reactive({ id: '', status: '', message: '', success: '' })
 let settingsTaskTimer: ReturnType<typeof setTimeout> | undefined
 const currentWebsite = computed(() => state.document?.website || props.website || {})
+const isAdopted = computed(() => props.website?.origin === 'oneinstack-script')
 const certificate = reactive({ show: false, website: {} as Record<string, any> })
 const t = i18n.t as any
-const canWrite = computed(() => props.canWrite === true)
+const canWrite = computed(() => props.canWrite === true && !isAdopted.value)
 const canToggle = computed(() => props.canToggle !== false)
 const canManageSsl = computed(() => props.canSsl !== false)
 const canReadConfig = computed(() => props.canConfigRead !== false)
-const canWriteConfig = computed(() => props.canConfigWrite !== false)
+const canWriteConfig = computed(() => props.canWrite === true && props.canConfigWrite !== false)
 
 const menus = computed(() => [
   { key: 'domain', label: t('website.settingsDrawer.menus.domain') },
@@ -165,9 +166,10 @@ watch(() => props.website?.id, () => {
 
 watch(() => props.modelValue, (value) => {
   if (!value) return
-  activeMenu.value = 'domain'
+  state.document = null
   state.config.loaded = false
   state.config.error = ''
+  selectMenu(isAdopted.value && canReadConfig.value ? 'config' : 'domain')
   void load()
 })
 
@@ -244,7 +246,7 @@ const loadConfig = async () => {
   } finally { state.config.loading = false }
 }
 const saveConfig = async () => {
-  if (!canWrite.value || !canWriteConfig.value) return
+  if (!canWriteConfig.value) return
   state.config.saving = true
   try {
     await submitOperation('website.config.update', {
@@ -387,7 +389,7 @@ const openCertificate = () => {
             <el-alert :title="t('website.settingsDrawer.configWarning')" type="warning" show-icon :closable="false" />
             <el-input v-if="state.config.loaded" v-model="state.config.content" type="textarea" class="code-input config-editor" :disabled="!canWriteConfig" />
             <el-empty v-else-if="!state.config.loading && !state.config.error" :description="t('website.settingsDrawer.configUnread')" :image-size="72" />
-            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!canWrite || !canWriteConfig || !currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
+            <div class="panel-actions"><el-button type="primary" :loading="state.config.saving" :disabled="!canWriteConfig || !currentWebsite.enabled || !state.config.loaded" @click="saveConfig">{{ t('website.settingsDrawer.validatePublish') }}</el-button></div>
           </section>
 
           <section v-else-if="activeMenu === 'ssl'" class="setting-panel">
