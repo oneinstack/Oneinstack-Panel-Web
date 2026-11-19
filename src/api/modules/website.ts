@@ -56,6 +56,9 @@ export const websiteApi = {
   getWebsiteManagedConfig: (websiteId: number) => {
     return http.get(`/website/${websiteId}/config`);
   },
+  probeWebsiteHTTP: (websiteId: number) => {
+    return http.get(`/website/${websiteId}/http-probe`);
+  },
   /** 更新单站点实际运行配置 */
   updateWebsiteManagedConfig: (
     websiteId: number,

@@ -554,6 +554,28 @@ const settingsDrawer = reactive({
 })
 
 const statusLoading = reactive(new Set<number>())
+interface WebsiteHTTPProbe {
+  status: string
+  checkedAt: string
+  listeners?: Array<{ protocol: string; port: number; status: string; httpCode?: number }>
+}
+const httpProbes = reactive<Record<number, WebsiteHTTPProbe>>({})
+const httpProbeLoading = reactive(new Set<number>())
+
+const probeWebsite = async (id: number) => {
+  if (httpProbeLoading.has(id)) return
+  httpProbeLoading.add(id)
+  try {
+    const { data } = await Api.probeWebsiteHTTP(id)
+    httpProbes[id] = data as WebsiteHTTPProbe
+  } catch {
+    httpProbes[id] = { status: 'failed', checkedAt: '' }
+  } finally {
+    httpProbeLoading.delete(id)
+  }
+}
+
+const localProbeText = (state: string) => t(`website.httpProbe.${state}`)
 const toggleWebsiteStatus = async (row: Record<string, any>, enabled: boolean) => {
   if (!canToggleWebsite.value) return
   statusLoading.add(row.id)
@@ -647,7 +669,7 @@ const conf = reactive({
       { prop: 'domain', label: t('website.domain', 'Domain'), width: 180 },
       { prop: 'engine', label: t('website.webServerOwner', '归属 Web Server'), width: 170 },
       { prop: 'root_dir', label: t('website.rootDir', '根目录'), minWidth: 128 },
-      { prop: 'status', label: t('website.status', 'Status'), width: 130 },
+      { prop: 'status', label: t('website.status', 'Status'), width: 190 },
       { prop: 'traffic', label: t('website.todayTraffic', 'Today traffic'), width: 120 },
       { prop: 'expiration', label: t('website.expiration', 'Expiration'), width: 180 },
       { prop: 'ssl', label: 'SSL', width: 120 },
@@ -1186,8 +1208,29 @@ loadServiceStatuses()
               @change="toggleWebsiteStatus(row, Boolean($event))"
             />
             <span :class="{ expired: row.disabled_reason === 'expired' }">
-              {{ row.enabled ? $t('website.running') : row.disabled_reason === 'expired' ? $t('website.expired') : $t('common.disabled') }}
+              {{ row.enabled ? $t('common.enabled') : row.disabled_reason === 'expired' ? $t('website.expired') : $t('common.disabled') }}
             </span>
+          </div>
+          <div v-if="row.enabled" class="website-probe">
+            <el-button
+              size="small"
+              link
+              type="primary"
+              :loading="httpProbeLoading.has(row.id)"
+              @click="probeWebsite(row.id)"
+            >{{ t('website.httpProbe.check') }}</el-button>
+            <template v-if="httpProbes[row.id]">
+              <small v-for="(listener, index) in httpProbes[row.id]?.listeners" :key="index">
+                {{ listener.protocol.toUpperCase() }} :{{ listener.port }}
+                {{ listener.httpCode || localProbeText(listener.status) }}
+              </small>
+              <small v-if="httpProbes[row.id].status !== 'checked'">
+                {{ localProbeText(httpProbes[row.id].status) }}
+              </small>
+              <small v-if="httpProbes[row.id].checkedAt">
+                {{ new Date(httpProbes[row.id].checkedAt).toLocaleString() }}
+              </small>
+            </template>
           </div>
         </template>
         <template #traffic="{ row }">
@@ -1726,6 +1769,14 @@ loadServiceStatuses()
   &.expired {
     color: var(--el-color-danger);
   }
+}
+
+.website-probe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  color: var(--text-secondary);
 }
 
 .website-traffic {
