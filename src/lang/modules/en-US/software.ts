@@ -1,4 +1,5 @@
 export default {
+  redisMigration: 'Migrate Redis',
   externalInstalled: 'External installation',
   externalVersionUnknown: 'Runtime version unverified',
   manageExternalDocker: 'Manage containers',

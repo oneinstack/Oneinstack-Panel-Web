@@ -1,4 +1,5 @@
 export default {
+  redisMigration: '显式迁移',
   externalInstalled: '外部安装',
   externalVersionUnknown: '运行版本未确认',
   manageExternalDocker: '容器管理',

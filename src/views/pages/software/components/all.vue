@@ -1034,6 +1034,20 @@ const handleUninstall = async (item: any) => {
   }
 }
 
+const handleRedisMigration = async (item: any) => {
+  if (!isScriptAdopted(item) || item.component !== 'redis' || submitting.value || !canUpdateSoftware.value) return
+  submitting.value = true
+  try {
+    const { data: result } = await submitOperation('software.redis_migrate', {})
+    softwareTaskStore.acceptCreated(result, { key: item.key, version: item.install_version || '' })
+    if (canReadSoftwareTask.value) showTask(result.taskId)
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
+  } finally {
+    submitting.value = false
+  }
+}
+
 const handleUpgrade = async (item: any) => {
   if (isScriptAdopted(item) || !canReadSoftware.value || !canUpdateSoftware.value) return
   const task = activeTask(item)
@@ -1308,6 +1322,15 @@ watch(
                   </el-button>
                 </template>
                 <template v-else-if="!activeTask(item) && isInstalled(item)">
+                  <button
+                    v-if="isScriptAdopted(item) && item.component === 'redis' && canUpdateSoftware"
+                    type="button"
+                    class="btn upgrade"
+                    :disabled="submitting"
+                    @click="handleRedisMigration(item)"
+                  >
+                    {{ t('software.redisMigration') }}
+                  </button>
                   <button
                     v-if="!isScriptAdopted(item) && (hasUpgrade(item) || item.securityWarning) && canUpdateSoftware"
                     type="button"
