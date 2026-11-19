@@ -1,4 +1,7 @@
 export default {
+  externalInstalled: 'External installation',
+  externalVersionUnknown: 'Runtime version unverified',
+  manageExternalDocker: 'Manage containers',
   archiveRetentionTitle: 'Uninstall archive retention',
   archiveRetentionMessage: 'Recommended: keep archives for 30 days and always preserve the newest snapshot. Expired archives are deleted automatically; restoring old binaries and configuration requires an external backup or reinstall.',
   archiveRetentionEnable: 'Enable 30 day cleanup',

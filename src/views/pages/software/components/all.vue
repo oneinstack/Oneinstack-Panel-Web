@@ -15,6 +15,7 @@ import { isOperationCancelled, submitOperation } from '@/utils/operationPreview'
 import i18n from '@/lang'
 import { hasSoftwareButtonAccess } from '../access'
 import System from '@/utils/System'
+import { hasOperationAccess } from '@/utils/access'
 
 const softwareTaskStore = useSoftwareTaskStore()
 const route = useRoute()
@@ -95,6 +96,7 @@ const localizedSoftwareTags = (tags?: string) => {
 }
 
 const localizedSoftwareDescription = (item: any) => {
+  if (item?.managementNotice) return String(item.managementNotice)
   const raw = String(item?.describe || '')
   const key = softwareDescriptionKeys[String(item?.key || '').toLowerCase()] || softwareDescriptionTextKeys[raw]
   return key ? t(key, raw) : raw
@@ -143,6 +145,7 @@ const drawer = reactive({
 
 const recentTasks = computed(() => softwareTaskStore.recentTasks())
 const canReadSoftware = computed(() => hasSoftwareButtonAccess('read'))
+const canReadContainers = computed(() => hasOperationAccess('container', 'read'))
 const canInstallSoftware = computed(() => hasSoftwareButtonAccess('install'))
 const canUpdateSoftware = computed(() => hasSoftwareButtonAccess('update'))
 const canUninstallSoftware = computed(() => hasSoftwareButtonAccess('uninstall'))
@@ -193,6 +196,9 @@ const shouldShowInstallFailure = (item: any) => {
 
 const statusBadge = (item: any) => {
   if (activeTask(item)) return null
+  if (item.hostInstallation?.source === 'external') {
+    return { text: t('software.externalInstalled', '外部安装'), className: 'success' }
+  }
   if (isInstalled(item)) {
     return {
       text: item.status === 3
@@ -261,6 +267,8 @@ const upgradeSummary = (item: any) => {
     version: recommendedVersion(item)
   })
 }
+
+const isScriptAdopted = (item: any) => item.origin === 'oneinstack-script'
 
 const hasUpgrade = (item: any) =>
   isInstalled(item) && item.isUpdate === true &&
@@ -995,7 +1003,7 @@ const selectArchiveRetention = async (): Promise<30 | 0 | null> => {
 }
 
 const handleUninstall = async (item: any) => {
-  if (submitting.value || !canReadSoftware.value || !canUninstallSoftware.value) return
+  if (isScriptAdopted(item) || submitting.value || !canReadSoftware.value || !canUninstallSoftware.value) return
   const version = item.install_version || item.versions?.[0] || ''
   const dataPolicy = await selectUninstallDataPolicy()
   if (!dataPolicy) return
@@ -1027,7 +1035,7 @@ const handleUninstall = async (item: any) => {
 }
 
 const handleUpgrade = async (item: any) => {
-  if (!canReadSoftware.value || !canUpdateSoftware.value) return
+  if (isScriptAdopted(item) || !canReadSoftware.value || !canUpdateSoftware.value) return
   const task = activeTask(item)
   if (task) {
     showTask(task.id)
@@ -1272,7 +1280,10 @@ watch(
 
             <div class="below">
               <div class="version-info">
-                <template v-if="hasUnverifiedInstallResidue(item)">{{ t('software.installResidueUnverified', 'Host resources need ownership verification') }}</template>
+                <template v-if="item.hostInstallation?.source === 'external'">
+                  {{ item.runtimeVersion || t('software.externalVersionUnknown', '运行版本未确认') }}
+                </template>
+                <template v-else-if="hasUnverifiedInstallResidue(item)">{{ t('software.installResidueUnverified', 'Host resources need ownership verification') }}</template>
                 <template v-else-if="!isInstalled(item)">{{ t('software.notInstalled', 'Not installed') }}</template>
                 <template v-else>
                   {{ t('software.installedVersion', 'Installed version: {version}', { version: item.install_version || item.versions?.[0] }) }}
@@ -1291,9 +1302,14 @@ watch(
                 >
                   {{ t('software.viewProgress', 'View progress') }}
                 </button>
+                <template v-else-if="!activeTask(item) && item.hostInstallation?.source === 'external'">
+                  <el-button v-if="canReadContainers" link type="primary" @click="System.router.push('/container')">
+                    {{ t('software.manageExternalDocker', '容器管理') }}
+                  </el-button>
+                </template>
                 <template v-else-if="!activeTask(item) && isInstalled(item)">
                   <button
-                    v-if="(hasUpgrade(item) || item.securityWarning) && canUpdateSoftware"
+                    v-if="!isScriptAdopted(item) && (hasUpgrade(item) || item.securityWarning) && canUpdateSoftware"
                     type="button"
                     class="btn upgrade"
                     @click="handleUpgrade(item)"
@@ -1301,7 +1317,7 @@ watch(
                     {{ componentPackageUpdate(item) ? t('software.updateComponentPackage', 'Update component') : t('software.upgrade', 'Upgrade') }}
                   </button>
                   <button
-                    v-if="canUninstallSoftware"
+                    v-if="!isScriptAdopted(item) && canUninstallSoftware"
                     type="button"
                     class="btn uninstall"
                     :disabled="submitting"
