@@ -1034,6 +1034,20 @@ const handleUninstall = async (item: any) => {
   }
 }
 
+const handleNginxMigration = async (item: any) => {
+  if (!isScriptAdopted(item) || item.component !== 'nginx' || submitting.value || !canReadSoftware.value || !canUpdateSoftware.value) return
+  submitting.value = true
+  try {
+    const { data: result } = await submitOperation('software.nginx_migrate', {})
+    softwareTaskStore.acceptCreated(result, { key: item.key })
+    if (canReadSoftwareTask.value) showTask(result.taskId)
+  } catch (error) {
+    if (!isOperationCancelled(error)) throw error
+  } finally {
+    submitting.value = false
+  }
+}
+
 const handleRedisMigration = async (item: any) => {
   if (!isScriptAdopted(item) || item.component !== 'redis' || submitting.value || !canUpdateSoftware.value) return
   submitting.value = true
@@ -1322,6 +1336,15 @@ watch(
                   </el-button>
                 </template>
                 <template v-else-if="!activeTask(item) && isInstalled(item)">
+                  <button
+                    v-if="isScriptAdopted(item) && item.component === 'nginx' && canReadSoftware && canUpdateSoftware"
+                    type="button"
+                    class="btn upgrade"
+                    :disabled="submitting"
+                    @click="handleNginxMigration(item)"
+                  >
+                    {{ t('software.nginxMigration') }}
+                  </button>
                   <button
                     v-if="isScriptAdopted(item) && item.component === 'redis' && canUpdateSoftware"
                     type="button"

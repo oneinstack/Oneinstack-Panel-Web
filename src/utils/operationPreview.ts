@@ -167,6 +167,7 @@ const operationTitleKeys: Record<string, string> = {
   'website.toggle': 'common.operationPreview.operationTitles.websiteToggle',
   'software.install': 'common.operationPreview.operationTitles.softwareInstall',
   'software.uninstall': 'common.operationPreview.operationTitles.softwareUninstall',
+  'software.nginx_migrate': 'software.nginxMigration',
   'software.redis_migrate': 'software.redisMigration',
   'software.service_action': 'common.operationPreview.operationTitles.softwareServiceAction',
   'software.configure': 'common.operationPreview.operationTitles.softwareConfigure',

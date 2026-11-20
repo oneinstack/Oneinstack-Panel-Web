@@ -1,4 +1,5 @@
 export default {
+  nginxMigration: '迁移并升级',
   redisMigration: '显式迁移',
   externalInstalled: '外部安装',
   externalVersionUnknown: '运行版本未确认',

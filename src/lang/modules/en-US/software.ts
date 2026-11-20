@@ -1,4 +1,5 @@
 export default {
+  nginxMigration: 'Migrate and upgrade',
   redisMigration: 'Migrate Redis',
   externalInstalled: 'External installation',
   externalVersionUnknown: 'Runtime version unverified',

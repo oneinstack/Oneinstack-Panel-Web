@@ -52,6 +52,7 @@ const operationLabel = computed(() => {
     install: t('layout.operation.install', 'Install'),
     upgrade: t('layout.operation.upgrade', 'Upgrade'),
     uninstall: t('layout.operation.uninstall', 'Uninstall'),
+    nginx_migrate: t('software.nginxMigration', 'Migrate and upgrade Nginx'),
     redis_migrate: t('software.redisMigration', 'Migrate Redis'),
     start: t('layout.operation.start', 'Start'),
     stop: t('layout.operation.stop', 'Stop'),
